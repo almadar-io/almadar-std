@@ -1,0 +1,15 @@
+app file-upload-spec [
+  version: "1.0.0",
+  description: "Design contract for a single-file uploader: a chosen file is sent to object storage, the form gives way to an uploading view, and the storage answer (stored or failed) is reported back and returns to the form."
+]
+
+orbital FileUploadSpec {
+  expects entity UploadTarget {
+    id : string!
+  }
+  expects trait FileUpload {
+    state ready { UPLOAD -> uploading }
+    state uploading { INIT -> ready  FILE_STORED -> ready  FILE_STORE_FAILED -> ready }
+    emits { STORAGE_UPLOAD }
+  }
+}

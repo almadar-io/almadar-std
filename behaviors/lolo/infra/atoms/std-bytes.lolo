@@ -1,0 +1,164 @@
+app std-bytes [
+  version: "1.0.0",
+  description: "std-bytes — read and write the bytes of a standard padded base64 string, and parse strict integer text, over bytes/slice, bytes/length, bytes/equals, array/*, math/* and str/*. BYTE_AT { data, i } answers the byte at i (0-255), no value outside the data; INDEX_OF { data, needle, from? } answers the first offset at or after from, -1 when absent; READ_UINT { data, offset, width, endian } answers the unsigned integer in 1, 2, 4 or 8 bytes, be or le, no value past the data; WRITE_UINT { value, width, endian } answers the base64 text of a whole number; TO_INT { s } answers a strict decimal integer, no value for other text. Non-canonical base64, a fraction where a whole number is due, a width outside 1/2/4/8, an endian outside be/le, a value too large for its width and a width-8 read above 2^53 - 1 are refused as BYTES_REFUSED."
+]
+uses Spec from "almadar-std/bytes"
+
+orbital BytesOrbital {
+  entity BytesRun [runtime] {
+    id : string!
+    result : number @description "The integer a READ_UINT decoded, held until its range is checked." = 0
+  }
+
+  trait BytesCodec -> BytesRun [integration, instance] {
+    initial: idle
+
+    config {
+      alphabet : string = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+        @label "Base64 alphabet"
+        @description "The 64 characters of standard base64, in sextet order."
+        @synonyms "base64 table, sextet table"
+        @tier "domain"
+      base64Pattern : string = "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/][AQgw]==|[A-Za-z0-9+/]{2}[AEIMQUYcgkosw048]=)?$"
+        @label "Canonical padded base64"
+        @description "The pattern a bytes value must match: whole groups of four, optional padding that is correct, and no stray bits in the last character."
+        @synonyms "base64 rule, padded base64"
+        @tier "domain"
+      maxSafe : number = 9007199254740991
+        @label "Largest exact integer"
+        @description "2^53 - 1, the largest whole number a number holds exactly."
+        @synonyms "max safe integer, exact limit"
+        @tier "domain"
+    }
+
+    state idle {
+      BYTE_AT -> idle when (not (and (validate/pattern @payload.data @config.base64Pattern) (!= @payload.i null) (== @payload.i (math/floor @payload.i)) (<= (math/abs @payload.i) @config.maxSafe)))
+        (emit BYTES_REFUSED { operation: "bytes/at", reason: "invalid" })
+      BYTE_AT -> idle when (and (validate/pattern @payload.data @config.base64Pattern) (!= @payload.i null) (== @payload.i (math/floor @payload.i)) (<= (math/abs @payload.i) @config.maxSafe) (or (< @payload.i 0) (>= @payload.i (bytes/length @payload.data))))
+        (emit BYTE_AT_ANSWERED { })
+      BYTE_AT -> idle when (and (validate/pattern @payload.data @config.base64Pattern) (!= @payload.i null) (== @payload.i (math/floor @payload.i)) (<= (math/abs @payload.i) @config.maxSafe) (>= @payload.i 0) (< @payload.i (bytes/length @payload.data)))
+        (emit BYTE_AT_ANSWERED { value: (let ((t (bytes/slice @payload.data @payload.i (+ @payload.i 1))) (al (str/split @config.alphabet ""))) (+ (* (array/indexOf @al (str/slice @t 0 1)) 4) (math/floor (/ (array/indexOf @al (str/slice @t 1 2)) 16)))) })
+
+      INDEX_OF -> idle when (not (and (validate/pattern @payload.data @config.base64Pattern) (validate/pattern @payload.needle @config.base64Pattern)))
+        (emit BYTES_REFUSED { operation: "bytes/index-of", reason: "invalid" })
+      INDEX_OF -> idle when (and (validate/pattern @payload.data @config.base64Pattern) (validate/pattern @payload.needle @config.base64Pattern))
+        (emit INDEX_OF_ANSWERED { value: (let ((n (bytes/length @payload.data)) (m (bytes/length @payload.needle)) (f0 (if (== @payload.from null) 0 (if (< @payload.from 0) (math/ceil @payload.from) (math/floor @payload.from)))) (f (if (and (!= @payload.from null) (< @payload.from 0)) (math/max 0 (+ @n @f0)) (math/min @f0 @n)))) (if (== @m 0) @f (let ((idx (array/findIndex (array/range 0 (+ (- (- @n @f) @m) 1)) (fn p (bytes/equals (bytes/slice @payload.data (+ @f @p) (+ @f @p @m)) @payload.needle))))) (if (< @idx 0) -1 (+ @f @idx))))) })
+
+      READ_UINT -> idle when (not (and (validate/pattern @payload.data @config.base64Pattern) (!= @payload.offset null) (== @payload.offset (math/floor @payload.offset)) (<= (math/abs @payload.offset) @config.maxSafe) (array/includes [1, 2, 4, 8] @payload.width) (array/includes ["be", "le"] @payload.endian)))
+        (emit BYTES_REFUSED { operation: "bytes/read-uint", reason: "invalid" })
+      READ_UINT -> idle when (and (validate/pattern @payload.data @config.base64Pattern) (!= @payload.offset null) (== @payload.offset (math/floor @payload.offset)) (<= (math/abs @payload.offset) @config.maxSafe) (array/includes [1, 2, 4, 8] @payload.width) (array/includes ["be", "le"] @payload.endian) (or (< @payload.offset 0) (> (+ @payload.offset @payload.width) (bytes/length @payload.data))))
+        (emit READ_UINT_ANSWERED { })
+      READ_UINT -> idle when (and (validate/pattern @payload.data @config.base64Pattern) (!= @payload.offset null) (== @payload.offset (math/floor @payload.offset)) (<= (math/abs @payload.offset) @config.maxSafe) (array/includes [1, 2, 4, 8] @payload.width) (array/includes ["be", "le"] @payload.endian) (>= @payload.offset 0) (<= (+ @payload.offset @payload.width) (bytes/length @payload.data)))
+        (set @entity.result (let ((t (bytes/slice @payload.data @payload.offset (+ @payload.offset @payload.width))) (al (str/split @config.alphabet ""))) (let ((sx (array/map (str/split @t "") (fn c (if (== @c "=") 0 (array/indexOf @al @c)))))) (let ((bs (array/map (array/range 0 @payload.width) (fn j (if (== (math/mod @j 3) 0) (+ (* (array/nth @sx (* 4 (math/floor (/ @j 3)))) 4) (math/floor (/ (array/nth @sx (+ (* 4 (math/floor (/ @j 3))) 1)) 16))) (if (== (math/mod @j 3) 1) (+ (* (math/mod (array/nth @sx (+ (* 4 (math/floor (/ @j 3))) 1)) 16) 16) (math/floor (/ (array/nth @sx (+ (* 4 (math/floor (/ @j 3))) 2)) 4))) (+ (* (math/mod (array/nth @sx (+ (* 4 (math/floor (/ @j 3))) 2)) 4) 64) (array/nth @sx (+ (* 4 (math/floor (/ @j 3))) 3))))))))) (array/reduce (if (== @payload.endian "be") @bs (array/reverse @bs)) 0 (fn acc b (+ (* @acc 256) @b)))))))
+        (emit READ_UINT_DECODED { })
+      READ_UINT_DECODED -> idle when (> @entity.result @config.maxSafe)
+        (emit BYTES_REFUSED { operation: "bytes/read-uint", reason: "invalid" })
+      READ_UINT_DECODED -> idle when (<= @entity.result @config.maxSafe)
+        (emit READ_UINT_ANSWERED { value: @entity.result })
+
+      WRITE_UINT -> idle when (not (and (!= @payload.value null) (== @payload.value (math/floor @payload.value)) (<= (math/abs @payload.value) @config.maxSafe) (>= @payload.value 0) (array/includes [1, 2, 4, 8] @payload.width) (array/includes ["be", "le"] @payload.endian) (or (== @payload.width 8) (< @payload.value (math/pow 256 @payload.width)))))
+        (emit BYTES_REFUSED { operation: "bytes/write-uint", reason: "invalid" })
+      WRITE_UINT -> idle when (and (!= @payload.value null) (== @payload.value (math/floor @payload.value)) (<= (math/abs @payload.value) @config.maxSafe) (>= @payload.value 0) (array/includes [1, 2, 4, 8] @payload.width) (array/includes ["be", "le"] @payload.endian) (or (== @payload.width 8) (< @payload.value (math/pow 256 @payload.width))))
+        (emit WRITE_UINT_ANSWERED { value: (let ((al (str/split @config.alphabet ""))
+                (m (math/ceil (/ @payload.width 3)))
+                (p (math/mod (- 3 (math/mod @payload.width 3)) 3))
+                (be (array/map (array/range 0 @payload.width) (fn k (math/mod (math/floor (/ @payload.value (math/pow 256 (- (- @payload.width 1) @k)))) 256)))))
+            (let ((all (array/concat (if (== @payload.endian "be") @be (array/reverse @be)) (array/map (array/range 0 (- (* 3 @m) @payload.width)) (fn z (* @z 0))))))
+              (str/concat
+                (str/slice
+                  (str/join
+                    (array/map (array/range 0 (* 4 @m))
+                      (fn q (let ((g (* 3 (math/floor (/ @q 4)))) (r (math/mod @q 4)))
+                        (array/nth @al
+                          (if (== @r 0) (math/floor (/ (array/nth @all @g) 4))
+                            (if (== @r 1) (+ (* (math/mod (array/nth @all @g) 4) 16) (math/floor (/ (array/nth @all (+ @g 1)) 16)))
+                              (if (== @r 2) (+ (* (math/mod (array/nth @all (+ @g 1)) 16) 4) (math/floor (/ (array/nth @all (+ @g 2)) 64)))
+                                (math/mod (array/nth @all (+ @g 2)) 64))))))))
+                    "")
+                  0 (- (* 4 @m) @p))
+                (str/repeat "=" @p)))) })
+
+      TO_INT -> idle when (not (validate/pattern @payload.s "^[+-]?[0-9]+$"))
+        (emit TO_INT_ANSWERED { })
+      TO_INT -> idle when (and (validate/pattern @payload.s "^[+-]?[0-9]+$") (> (math/abs (str/to-number @payload.s)) @config.maxSafe))
+        (emit TO_INT_ANSWERED { })
+      TO_INT -> idle when (and (validate/pattern @payload.s "^[+-]?[0-9]+$") (<= (math/abs (str/to-number @payload.s)) @config.maxSafe))
+        (emit TO_INT_ANSWERED { value: (+ 0 (str/to-number @payload.s)) })
+    }
+
+    emits {
+      BYTE_AT_ANSWERED -> external {
+        value : number
+      }
+        @description "The byte at the index, 0-255; no value when the index is outside the data."
+        @tier "primary"
+      INDEX_OF_ANSWERED -> external {
+        value : number!
+      }
+        @description "The byte offset of the first match at or after from, -1 when absent."
+        @tier "primary"
+      READ_UINT_ANSWERED -> external {
+        value : number
+      }
+        @description "The unsigned integer read; no value when the bytes run past the data."
+        @tier "primary"
+      WRITE_UINT_ANSWERED -> external {
+        value : string!
+      }
+        @description "The standard padded base64 text of the number as fixed-width unsigned bytes."
+        @tier "primary"
+      TO_INT_ANSWERED -> external {
+        value : number
+      }
+        @description "The integer in the text; no value when the text is not a strict decimal integer within 2^53 - 1."
+        @tier "primary"
+      BYTES_REFUSED -> external {
+        operation : string!
+        reason : string!
+      }
+        @description "The request was refused as invalid: non-canonical base64, a fraction where a whole number is due, a bad width or endian, a value too large for its width, or a width-8 read above 2^53 - 1."
+        @tier "primary"
+      READ_UINT_DECODED -> internal { }
+        @description "Internal: a READ_UINT decoded; its range is checked next."
+        @tier "internal"
+    }
+
+    listens {
+      BYTE_AT -> external {
+        data : string!
+        i : number!
+      }
+        @description "Answer the byte at index i of this base64 data."
+        @synonyms "byte at, read byte, get byte"
+      INDEX_OF -> external {
+        data : string!
+        needle : string!
+        from : number
+      }
+        @description "Answer the offset of the first needle at or after from."
+        @synonyms "find bytes, search bytes, byte offset"
+      READ_UINT -> external {
+        data : string!
+        offset : number!
+        width : number!
+        endian : string!
+      }
+        @description "Answer the unsigned integer in width bytes at offset, be or le."
+        @synonyms "read integer, decode uint, unpack"
+      WRITE_UINT -> external {
+        value : number!
+        width : number!
+        endian : string!
+      }
+        @description "Answer the base64 text of a whole number as width unsigned bytes, be or le."
+        @synonyms "write integer, encode uint, pack"
+      TO_INT -> external {
+        s : string!
+      }
+        @description "Answer the integer in a strict decimal text."
+        @synonyms "parse int, string to integer"
+    }
+  }
+
+  page "/bytes" as BytesPage -> BytesCodec
+}

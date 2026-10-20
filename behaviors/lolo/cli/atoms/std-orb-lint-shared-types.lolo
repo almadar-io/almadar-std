@@ -1,0 +1,142 @@
+app std-orb-lint-shared-types [
+  version: "1.0.0",
+  inbound: ["cli-lint-shared-types"],
+  fs: { "./packages/almadar-std/behaviors/lolo/**": [read], "./packages/almadar-behaviors/behaviors/lolo/**": [read] },
+  description: "std-orb-lint-shared-types — the `orb lint shared-types` command, the guard behind the 'shared types are copies' ruling. It walks every .lolo under the std and io behavior trees (the roots knob, relative to the directory `orb` runs in), lowers each file that declares a type with program/read, collects every type alias by name with its lowered definition, and reports every name whose definitions differ across files: the files of each variant and the fields that differ from the most common one (status 500, exit 1). When every copy agrees the answer is `shared-types: consistent` (status 200, exit 0). A file that could not be read or lowered is listed as UNREAD and fails the run. Any argument is the usage (status 400, exit 2)."
+]
+uses Spec from "almadar-std/orb-lint-shared-types"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type LintTypeCopy = { name : string!, file : string!, definition : string!, fields : [string]! }
+type LintTypeDrift = { name : string!, variants : number!, files : [string]! }
+type LintEntry = { name : string!, kind : string! }
+type LintFile = { root : number!, rel : string! }
+
+orbital OrbLintSharedTypesOrbital {
+  entity OrbLintSharedTypesRun [runtime] {
+    id : string!
+    paths : [LintFile] = []
+    queue : [LintFile] = []
+    cursor : number = 0
+    copies : [LintTypeCopy] = []
+    unread : [string] = []
+    drift : [string] = []
+  }
+
+  trait OrbLintSharedTypes -> OrbLintSharedTypesRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 0)
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint shared-types" })
+      LINT_CALLED -> walking when (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 0)
+        (set @entity.paths [])
+        (set @entity.queue [{ root: 0, rel: "" }, { root: 1, rel: "" }])
+        (set @entity.copies [])
+        (set @entity.unread [])
+        (set @entity.cursor 0)
+        (emit LINT_WALK { })
+      LINT_FINISH -> ready when (and (= (array/len @entity.drift) 0) (= (array/len @entity.unread) 0))
+        (emit LINT_ANSWERED { status: 200, body: "shared-types: consistent" })
+      LINT_FINISH -> ready when (or (> (array/len @entity.drift) 0) (> (array/len @entity.unread) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/concat
+          (array/map @entity.drift (fn n (let ((copies (array/filter @entity.copies (fn c (= (object/get @c "name") @n)))))
+            (let ((variants (array/sort (array/map (array/unique (array/map @copies (fn c (object/get @c "definition")))) (fn d { definition: @d, files: (array/map (array/filter @copies (fn c (= (object/get @c "definition") @d))) (fn c (object/get @c "file"))), fields: (object/get (array/find @copies (fn c (= (object/get @c "definition") @d))) "fields"), count: (array/len (array/filter @copies (fn c (= (object/get @c "definition") @d)))) })) "count" "desc")))
+              (str/join (array/concat
+                [(str/concat @n ": " (array/len @variants) " definitions differ")]
+                (array/map (array/range 0 (array/len @variants)) (fn i (str/concat "  variant " (+ @i 1) " (" (object/get (array/nth @variants @i) "count") " file(s)): " (str/join (object/get (array/nth @variants @i) "files") ", "))))
+                (array/flatten (array/map (array/range 1 (array/len @variants)) (fn i (array/concat
+                  (array/map (array/filter (object/get (array/first @variants) "fields") (fn f (not (array/includes (object/get (array/nth @variants @i) "fields") @f)))) (fn f (str/concat "  variant " (+ @i 1) " lacks " @f)))
+                  (array/map (array/filter (object/get (array/nth @variants @i) "fields") (fn f (not (array/includes (object/get (array/first @variants) "fields") @f)))) (fn f (str/concat "  variant " (+ @i 1) " adds  " @f))))))))
+              "\n")))))
+          (array/map @entity.unread (fn u (str/concat "UNREAD " @u)))) "\n") })
+    }
+
+    state walking {
+      INIT -> walking
+      LINT_WALK -> reading when (= (array/len @entity.queue) 0)
+        (set @entity.cursor 0)
+        (emit LINT_READ { })
+      LINT_WALK -> walking when (and (> (array/len @entity.queue) 0) (= (object/get (array/first @entity.queue) "root") 0))
+        (os/list-dir (str/concat "./packages/almadar-std/behaviors/lolo/" (object/get (array/first @entity.queue) "rel")) { key: "dir" emit: { success: LINT_LISTED, failure: LINT_LIST_FAILED } })
+      LINT_WALK -> walking when (and (> (array/len @entity.queue) 0) (= (object/get (array/first @entity.queue) "root") 1))
+        (os/list-dir (str/concat "./packages/almadar-behaviors/behaviors/lolo/" (object/get (array/first @entity.queue) "rel")) { key: "dir" emit: { success: LINT_LISTED, failure: LINT_LIST_FAILED } })
+      LINT_LISTED -> walking
+        (set @entity.paths (array/concat @entity.paths (array/map (array/filter @payload.entries (fn e (and (!= (object/get @e "kind") "dir") (str/endsWith (object/get @e "name") ".lolo")))) (fn e { root: (object/get (array/first @entity.queue) "root"), rel: (str/concat (object/get (array/first @entity.queue) "rel") (object/get @e "name")) }))))
+        (set @entity.queue (array/concat (array/drop @entity.queue 1) (array/map (array/filter @payload.entries (fn e (= (object/get @e "kind") "dir"))) (fn e { root: (object/get (array/first @entity.queue) "root"), rel: (str/concat (object/get (array/first @entity.queue) "rel") (object/get @e "name") "/") }))))
+        (emit LINT_WALK { })
+      LINT_LIST_FAILED -> walking
+        (set @entity.unread (array/append @entity.unread (str/concat (object/get (array/first @entity.queue) "rel") " (not listed: " @payload.error ")")))
+        (set @entity.queue (array/drop @entity.queue 1))
+        (emit LINT_WALK { })
+    }
+
+    state reading {
+      INIT -> reading
+      LINT_READ -> reading when (and (< @entity.cursor (array/len @entity.paths)) (= (object/get (array/nth @entity.paths @entity.cursor) "root") 0))
+        (os/read-file (str/concat "./packages/almadar-std/behaviors/lolo/" (object/get (array/nth @entity.paths @entity.cursor) "rel")) { key: "file" emit: { success: LINT_FILE_READ, failure: LINT_FILE_UNREAD } })
+      LINT_READ -> reading when (and (< @entity.cursor (array/len @entity.paths)) (= (object/get (array/nth @entity.paths @entity.cursor) "root") 1))
+        (os/read-file (str/concat "./packages/almadar-behaviors/behaviors/lolo/" (object/get (array/nth @entity.paths @entity.cursor) "rel")) { key: "file" emit: { success: LINT_FILE_READ, failure: LINT_FILE_UNREAD } })
+      LINT_READ -> ready when (>= @entity.cursor (array/len @entity.paths))
+        (set @entity.drift (array/filter (array/unique (array/map @entity.copies (fn c (object/get @c "name")))) (fn n (> (array/len (array/unique (array/map (array/filter @entity.copies (fn c (= (object/get @c "name") @n))) (fn c (object/get @c "definition"))))) 1))))
+        (emit LINT_FINISH { })
+      LINT_FILE_READ -> reading when (str/includes (str/concat "\n" (bytes/to-string @payload.data)) "\ntype ")
+        (program/read (bytes/to-string @payload.data) { emit: { success: LINT_PROGRAM_READ, failure: LINT_FILE_UNREAD } })
+      LINT_FILE_READ -> reading when (not (str/includes (str/concat "\n" (bytes/to-string @payload.data)) "\ntype "))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit LINT_READ { })
+      LINT_PROGRAM_READ -> reading
+        (set @entity.copies (array/concat @entity.copies (array/flatten (array/map (object/get @payload.result "orbitals") (fn o (array/map (object/keys (object/get @o "types")) (fn n { name: @n, file: (object/get (array/nth @entity.paths @entity.cursor) "rel"), definition: (json/stringify (object/get (object/get @o "types") @n)), fields: (array/map (object/get (object/get @o "types") @n) (fn f (json/stringify @f))) })))))))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit LINT_READ { })
+      LINT_FILE_UNREAD -> reading
+        (set @entity.unread (array/append @entity.unread (object/get (array/nth @entity.paths @entity.cursor) "rel")))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit LINT_READ { })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_LISTED { entries : [LintEntry]! }
+        @description "A directory listed."
+        @tier "internal"
+      LINT_LIST_FAILED { error : string }
+        @description "A directory that could not be listed."
+        @tier "internal"
+      LINT_FILE_READ { data : bytes! }
+        @description "A file read."
+        @tier "internal"
+      LINT_FILE_UNREAD { error : string }
+        @description "A file that could not be read or lowered."
+        @tier "internal"
+      LINT_PROGRAM_READ { result : string }
+        @description "A file lowered by program/read."
+        @tier "internal"
+      LINT_WALK { }
+        @description "Internal: list the next directory."
+        @tier "internal"
+      LINT_READ { }
+        @description "Internal: read the next file."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-shared-types" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint shared-types` with its arguments and working directory."
+        @synonyms "orb lint shared-types, shared type copies guard"
+    }
+  }
+
+  page "/orb-lint-shared-types" as OrbLintSharedTypesPage -> OrbLintSharedTypes
+}

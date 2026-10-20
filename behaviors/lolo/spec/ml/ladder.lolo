@@ -1,0 +1,36 @@
+app ladder-spec [
+  version: "1.0.0",
+  description: "Design contract for the entry and verdict ends of an escalating decision chain: one request enters at DECIDE and is handed to the first rung; one verdict leaves, either DECIDED tagged with the rung that answered or DECISION_FAILED. Reset returns both ends to idle."
+]
+
+orbital LadderSpec {
+  expects entity LadderRequest [runtime] {
+    status : "idle" | "dispatched"
+  }
+  expects entity LadderVerdict [runtime] {
+    rung : string
+    confidence : number
+    reasoning : string
+    failReason : string
+    status : "idle" | "decided" | "failed"
+  }
+  expects trait LadderEntry {
+    state idle { DECIDE -> dispatched }
+    state dispatched { RESET -> idle }
+    emits { RUN_EXACT RUNGS_RESET }
+  }
+  expects trait LadderVerdictSink {
+    state idle {
+      FROM_EXACT -> decided
+      FROM_LOOKUP -> decided
+      FROM_SIMILARITY -> decided
+      FROM_INFER -> decided
+      FROM_CLASSIFY -> decided
+      FROM_CLASSIFY_FAILURE -> failed
+    }
+    state decided { RESET -> idle }
+    state failed { RESET -> idle }
+    emits { DECIDED DECISION_FAILED }
+  }
+  expects page "/ladder" -> LadderEntry, LadderVerdictSink
+}

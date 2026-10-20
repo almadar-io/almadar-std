@@ -36,6 +36,9 @@ type JevJob = { values : [string] }
 type JevAnswer = { type : string, choice : string, confidence : number }
 type JevUsage = { input_tokens : number, output_tokens : number, cost : number }
 type JevReply = { model : string, id : string, provider : string, answers : Map string JevAnswer, usage : JevUsage }
+type JsonValue = string | number | boolean | [JsonValue] | Map string JsonValue
+type ToolArguments = Map string JsonValue
+type ToolCall = { id : string!, name : string!, arguments : ToolArguments }
 type ToolFunctionCall = { name : string, arguments : string }
 type ToolCallRef = { id : string, type : string, function : ToolFunctionCall }
 type ToolMessage = { role : string, content : string, tool_calls : [ToolCallRef], tool_call_id : string, reasoning_content : string, reasoning : string }
@@ -705,7 +708,7 @@ orbital LlmOrbital {
         (emit LLM_TOOLS_STEP { activity: (array/last (object/get (json/parse @payload.session ToolsSession) steps [])) })
         (emit LLM_TOOLS_REQUESTED {
           session: @payload.session,
-          calls: (array/map (object/get (array/last (object/get (json/parse @payload.session ToolsSession) messages [])) tool_calls []) (fn c { id: @c.id, name: @c.function.name, arguments: @c.function.arguments }))
+          calls: (array/map (object/get (array/last (object/get (json/parse @payload.session ToolsSession) messages [])) tool_calls []) (fn c { id: @c.id, name: @c.function.name, arguments: (if (= (str/trim @c.function.arguments) "") {} (json/parse @c.function.arguments ToolArguments)) }))
         })
 
       LLM_TOOLS_ANSWERED -> idle when (or (= (json/parse @payload.session ToolsSession) null)
@@ -929,7 +932,7 @@ orbital LlmOrbital {
         @tier "primary"
       LLM_TOOLS_REQUESTED -> external {
         session : string!
-        calls : [{ id : string!, name : string!, arguments : string! }]!
+        calls : [ToolCall]!
       }
         @description "The model asked for these tool calls, in order. Run each and answer them all in one LLM_TOOLS_ANSWERED that carries `session` back unchanged."
         @synonyms "tool calls, function calls, tool request"

@@ -1,0 +1,14 @@
+app progress-storage-spec [
+  version: "1.0.0",
+  description: "Design contract for a progress uploader: an upload request asks object storage to store the progress object, and the storage answer is reported back to the user."
+]
+
+orbital ProgressStorageSpec {
+  expects entity ProgressTarget {
+    id : string!
+  }
+  expects trait ProgressStorage {
+    state ready { UPLOAD -> ready  PROGRESS_STORED -> ready  PROGRESS_STORE_FAILED -> ready }
+    emits { STORAGE_UPLOAD }
+  }
+}

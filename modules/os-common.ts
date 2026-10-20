@@ -3,7 +3,12 @@ import { BYTES, EMIT_ENVELOPE, STRING, NUMBER, BOOLEAN, list, lit, openShape, sh
 
 type OsParam = NonNullable<StdOperatorMeta['params']>[number];
 
-export const OS_PATH: OperatorTypeRef = STRING;
+export const OS_ANCHOR: OperatorTypeRef = union(lit('cwd'), lit('exe-dir'), shape({ env: STRING }));
+export const OS_ANCHORED_PATH: OperatorTypeRef = shape({ anchor: OS_ANCHOR, path: STRING });
+export const OS_PATH: OperatorTypeRef = union(STRING, OS_ANCHORED_PATH);
+export const OS_ENV_ANCHORED: OperatorTypeRef = shape({ anchor: shape({ env: STRING }) });
+export const OS_HOST: OperatorTypeRef = union(STRING, OS_ENV_ANCHORED);
+export const OS_PORT: OperatorTypeRef = union(NUMBER, OS_ENV_ANCHORED);
 export const OS_HANDLE: OperatorTypeRef = NUMBER;
 export const OS_DATA: OperatorTypeRef = BYTES;
 export const OS_PERMISSION_BITS: OperatorTypeRef = NUMBER;
@@ -77,3 +82,5 @@ export function osPure(def: { description: string; params: OsParam[]; returnType
     example: def.example,
   };
 }
+
+export const OS_COMMAND: OperatorTypeRef = union(STRING, OS_ANCHORED_PATH, OS_ENV_ANCHORED);

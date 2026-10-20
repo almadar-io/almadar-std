@@ -180,8 +180,6 @@ export const STD_MODULES = [
   'base64',
   'hash',
   'hmac',
-  'jws',
-  'jwk',
   'xml',
 ] as const;
 

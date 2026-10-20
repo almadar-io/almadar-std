@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-10-20T13:34:30.361Z",
+  "generated": "2026-10-20T16:40:30.781Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -9201,131 +9201,6 @@
       ],
       "docsSource": "generated"
     },
-    "http/listen": {
-      "category": "std-os",
-      "minArity": 2,
-      "maxArity": 3,
-      "returnType": "void",
-      "description": "Serve HTTP/1.1 (grant net: listen). The first answer is { sock, address, port }; each request arrives on the onMessage route as { requestId, method, path, query, headers, body, peer, key } (header names lower-cased, repeats joined with \", \"; body as UTF-8 text; query the raw text after ?). Answer each with http/respond. A malformed head is answered 400 and a body without content-length 411 by the host, never delivered. One request per connection. Stream: events are routed to the call site as they arrive, then one final answer; cancel with cancel-call on the key.",
-      "module": "os",
-      "hasSideEffects": true,
-      "runsOn": "server",
-      "host": "os",
-      "params": [
-        {
-          "name": "host",
-          "type": "string",
-          "description": "Address to bind"
-        },
-        {
-          "name": "port",
-          "type": "number",
-          "description": "Port; 0 picks a free one"
-        },
-        {
-          "name": "options",
-          "type": {
-            "kind": "object",
-            "fields": {
-              "key": "string",
-              "emit": {
-                "kind": "object",
-                "fields": {
-                  "success": {
-                    "kind": "eventKey"
-                  },
-                  "failure": {
-                    "kind": "eventKey"
-                  },
-                  "cancelled": {
-                    "kind": "eventKey"
-                  },
-                  "onMessage": {
-                    "kind": "eventKey"
-                  }
-                },
-                "open": true
-              }
-            },
-            "open": true
-          },
-          "description": "Optional trailing options: { key, emit: { success, failure, cancelled, onMessage } } routes the first answer, the { error, kind } failure, the cancellation and each stream event (onMessage); kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
-          "optional": true
-        }
-      ],
-      "examples": [
-        "(http/listen \"127.0.0.1\" 8080 {\"key\":\"server\",\"emit\":{\"success\":\"SERVING\",\"failure\":\"SERVE_FAILED\",\"onMessage\":\"REQUEST\"}})"
-      ],
-      "docsSource": "generated"
-    },
-    "http/respond": {
-      "category": "std-os",
-      "minArity": 4,
-      "maxArity": 5,
-      "returnType": "void",
-      "description": "Answer one http/listen request and close its connection. Status 200 to 599; content-length and connection are written by the host, so content-length, transfer-encoding and connection headers are refused; a 204 or 304 has no body. A refused answer leaves the request pending; a second answer fails closed. Success payload: { bytes }.",
-      "module": "os",
-      "hasSideEffects": true,
-      "runsOn": "server",
-      "host": "os",
-      "params": [
-        {
-          "name": "requestId",
-          "type": "number",
-          "description": "The requestId of the delivered request"
-        },
-        {
-          "name": "status",
-          "type": "number",
-          "description": "Status code"
-        },
-        {
-          "name": "headers",
-          "type": {
-            "kind": "map",
-            "key": "string",
-            "value": "string"
-          },
-          "description": "Response headers"
-        },
-        {
-          "name": "body",
-          "type": "string",
-          "description": "Response body as UTF-8 text"
-        },
-        {
-          "name": "options",
-          "type": {
-            "kind": "object",
-            "fields": {
-              "key": "string",
-              "emit": {
-                "kind": "object",
-                "fields": {
-                  "success": {
-                    "kind": "eventKey"
-                  },
-                  "failure": {
-                    "kind": "eventKey"
-                  },
-                  "cancelled": {
-                    "kind": "eventKey"
-                  }
-                },
-                "open": true
-              }
-            },
-            "open": true
-          },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
-          "optional": true
-        }
-      ],
-      "examples": [
-        "(http/respond @payload.requestId 200 {\"content-type\":\"application/json\"} \"{}\" {\"emit\":{\"failure\":\"RESPOND_FAILED\"}})"
-      ],
-      "docsSource": "generated"
-    },
     "i18n/t": {
       "category": "std-i18n",
       "minArity": 1,
@@ -12226,7 +12101,37 @@
       "params": [
         {
           "name": "path",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "cwd"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "exe-dir"
+                      },
+                      {
+                        "kind": "object",
+                        "fields": {
+                          "env": "string"
+                        }
+                      }
+                    ]
+                  },
+                  "path": "string"
+                }
+              }
+            ]
+          },
           "description": "Path"
         },
         {
@@ -12281,7 +12186,37 @@
       "params": [
         {
           "name": "path",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "cwd"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "exe-dir"
+                      },
+                      {
+                        "kind": "object",
+                        "fields": {
+                          "env": "string"
+                        }
+                      }
+                    ]
+                  },
+                  "path": "string"
+                }
+              }
+            ]
+          },
           "description": "File path"
         },
         {
@@ -12472,7 +12407,37 @@
       "params": [
         {
           "name": "path",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "cwd"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "exe-dir"
+                      },
+                      {
+                        "kind": "object",
+                        "fields": {
+                          "env": "string"
+                        }
+                      }
+                    ]
+                  },
+                  "path": "string"
+                }
+              }
+            ]
+          },
           "description": "Directory path"
         },
         {
@@ -12521,7 +12486,37 @@
       "params": [
         {
           "name": "path",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "cwd"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "exe-dir"
+                      },
+                      {
+                        "kind": "object",
+                        "fields": {
+                          "env": "string"
+                        }
+                      }
+                    ]
+                  },
+                  "path": "string"
+                }
+              }
+            ]
+          },
           "description": "Path"
         },
         {
@@ -12575,7 +12570,37 @@
       "params": [
         {
           "name": "path",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "cwd"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "exe-dir"
+                      },
+                      {
+                        "kind": "object",
+                        "fields": {
+                          "env": "string"
+                        }
+                      }
+                    ]
+                  },
+                  "path": "string"
+                }
+              }
+            ]
+          },
           "description": "Path"
         },
         {
@@ -12727,12 +12752,72 @@
       "params": [
         {
           "name": "from",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "cwd"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "exe-dir"
+                      },
+                      {
+                        "kind": "object",
+                        "fields": {
+                          "env": "string"
+                        }
+                      }
+                    ]
+                  },
+                  "path": "string"
+                }
+              }
+            ]
+          },
           "description": "Source path"
         },
         {
           "name": "to",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "cwd"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "exe-dir"
+                      },
+                      {
+                        "kind": "object",
+                        "fields": {
+                          "env": "string"
+                        }
+                      }
+                    ]
+                  },
+                  "path": "string"
+                }
+              }
+            ]
+          },
           "description": "Destination path"
         },
         {
@@ -13001,7 +13086,37 @@
       "params": [
         {
           "name": "path",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "cwd"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "exe-dir"
+                      },
+                      {
+                        "kind": "object",
+                        "fields": {
+                          "env": "string"
+                        }
+                      }
+                    ]
+                  },
+                  "path": "string"
+                }
+              }
+            ]
+          },
           "description": "Path on the volume to measure"
         },
         {
@@ -13161,7 +13276,37 @@
       "params": [
         {
           "name": "path",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "cwd"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "exe-dir"
+                      },
+                      {
+                        "kind": "object",
+                        "fields": {
+                          "env": "string"
+                        }
+                      }
+                    ]
+                  },
+                  "path": "string"
+                }
+              }
+            ]
+          },
           "description": "Path"
         },
         {
@@ -13687,12 +13832,72 @@
       "params": [
         {
           "name": "target",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "cwd"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "exe-dir"
+                      },
+                      {
+                        "kind": "object",
+                        "fields": {
+                          "env": "string"
+                        }
+                      }
+                    ]
+                  },
+                  "path": "string"
+                }
+              }
+            ]
+          },
           "description": "Existing file"
         },
         {
           "name": "path",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "cwd"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "exe-dir"
+                      },
+                      {
+                        "kind": "object",
+                        "fields": {
+                          "env": "string"
+                        }
+                      }
+                    ]
+                  },
+                  "path": "string"
+                }
+              }
+            ]
+          },
           "description": "New link path"
         },
         {
@@ -13741,7 +13946,37 @@
       "params": [
         {
           "name": "path",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "cwd"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "exe-dir"
+                      },
+                      {
+                        "kind": "object",
+                        "fields": {
+                          "env": "string"
+                        }
+                      }
+                    ]
+                  },
+                  "path": "string"
+                }
+              }
+            ]
+          },
           "description": "Directory path"
         },
         {
@@ -13834,7 +14069,37 @@
       "params": [
         {
           "name": "path",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "cwd"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "exe-dir"
+                      },
+                      {
+                        "kind": "object",
+                        "fields": {
+                          "env": "string"
+                        }
+                      }
+                    ]
+                  },
+                  "path": "string"
+                }
+              }
+            ]
+          },
           "description": "Path"
         },
         {
@@ -13927,7 +14192,37 @@
       "params": [
         {
           "name": "path",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "cwd"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "exe-dir"
+                      },
+                      {
+                        "kind": "object",
+                        "fields": {
+                          "env": "string"
+                        }
+                      }
+                    ]
+                  },
+                  "path": "string"
+                }
+              }
+            ]
+          },
           "description": "Directory path"
         },
         {
@@ -13993,7 +14288,37 @@
         },
         {
           "name": "dir",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "cwd"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "exe-dir"
+                      },
+                      {
+                        "kind": "object",
+                        "fields": {
+                          "env": "string"
+                        }
+                      }
+                    ]
+                  },
+                  "path": "string"
+                }
+              }
+            ]
+          },
           "description": "Parent directory",
           "optional": true
         },
@@ -14295,7 +14620,37 @@
       "params": [
         {
           "name": "path",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "cwd"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "exe-dir"
+                      },
+                      {
+                        "kind": "object",
+                        "fields": {
+                          "env": "string"
+                        }
+                      }
+                    ]
+                  },
+                  "path": "string"
+                }
+              }
+            ]
+          },
           "description": "File path"
         },
         {
@@ -14352,7 +14707,37 @@
       "params": [
         {
           "name": "path",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "cwd"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "exe-dir"
+                      },
+                      {
+                        "kind": "object",
+                        "fields": {
+                          "env": "string"
+                        }
+                      }
+                    ]
+                  },
+                  "path": "string"
+                }
+              }
+            ]
+          },
           "description": "Path",
           "rejectsNull": true
         }
@@ -14372,7 +14757,37 @@
       "params": [
         {
           "name": "path",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "cwd"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "exe-dir"
+                      },
+                      {
+                        "kind": "object",
+                        "fields": {
+                          "env": "string"
+                        }
+                      }
+                    ]
+                  },
+                  "path": "string"
+                }
+              }
+            ]
+          },
           "description": "Path",
           "rejectsNull": true
         }
@@ -14392,7 +14807,37 @@
       "params": [
         {
           "name": "path",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "cwd"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "exe-dir"
+                      },
+                      {
+                        "kind": "object",
+                        "fields": {
+                          "env": "string"
+                        }
+                      }
+                    ]
+                  },
+                  "path": "string"
+                }
+              }
+            ]
+          },
           "description": "Path",
           "rejectsNull": true
         }
@@ -14412,7 +14857,37 @@
       "params": [
         {
           "name": "path",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "cwd"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "exe-dir"
+                      },
+                      {
+                        "kind": "object",
+                        "fields": {
+                          "env": "string"
+                        }
+                      }
+                    ]
+                  },
+                  "path": "string"
+                }
+              }
+            ]
+          },
           "description": "Path",
           "rejectsNull": true
         }
@@ -14452,7 +14927,37 @@
       "params": [
         {
           "name": "path",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "cwd"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "exe-dir"
+                      },
+                      {
+                        "kind": "object",
+                        "fields": {
+                          "env": "string"
+                        }
+                      }
+                    ]
+                  },
+                  "path": "string"
+                }
+              }
+            ]
+          },
           "description": "Path",
           "rejectsNull": true
         }
@@ -14472,13 +14977,73 @@
       "params": [
         {
           "name": "from",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "cwd"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "exe-dir"
+                      },
+                      {
+                        "kind": "object",
+                        "fields": {
+                          "env": "string"
+                        }
+                      }
+                    ]
+                  },
+                  "path": "string"
+                }
+              }
+            ]
+          },
           "description": "Start path",
           "rejectsNull": true
         },
         {
           "name": "to",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "cwd"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "exe-dir"
+                      },
+                      {
+                        "kind": "object",
+                        "fields": {
+                          "env": "string"
+                        }
+                      }
+                    ]
+                  },
+                  "path": "string"
+                }
+              }
+            ]
+          },
           "description": "Target path",
           "rejectsNull": true
         }
@@ -14643,7 +15208,37 @@
       "params": [
         {
           "name": "path",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "cwd"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "exe-dir"
+                      },
+                      {
+                        "kind": "object",
+                        "fields": {
+                          "env": "string"
+                        }
+                      }
+                    ]
+                  },
+                  "path": "string"
+                }
+              }
+            ]
+          },
           "description": "File path"
         },
         {
@@ -14692,7 +15287,37 @@
       "params": [
         {
           "name": "path",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "cwd"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "exe-dir"
+                      },
+                      {
+                        "kind": "object",
+                        "fields": {
+                          "env": "string"
+                        }
+                      }
+                    ]
+                  },
+                  "path": "string"
+                }
+              }
+            ]
+          },
           "description": "Link path"
         },
         {
@@ -14741,7 +15366,37 @@
       "params": [
         {
           "name": "path",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "cwd"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "exe-dir"
+                      },
+                      {
+                        "kind": "object",
+                        "fields": {
+                          "env": "string"
+                        }
+                      }
+                    ]
+                  },
+                  "path": "string"
+                }
+              }
+            ]
+          },
           "description": "Path to resolve"
         },
         {
@@ -14898,7 +15553,37 @@
       "params": [
         {
           "name": "path",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "cwd"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "exe-dir"
+                      },
+                      {
+                        "kind": "object",
+                        "fields": {
+                          "env": "string"
+                        }
+                      }
+                    ]
+                  },
+                  "path": "string"
+                }
+              }
+            ]
+          },
           "description": "File path"
         },
         {
@@ -14947,12 +15632,72 @@
       "params": [
         {
           "name": "from",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "cwd"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "exe-dir"
+                      },
+                      {
+                        "kind": "object",
+                        "fields": {
+                          "env": "string"
+                        }
+                      }
+                    ]
+                  },
+                  "path": "string"
+                }
+              }
+            ]
+          },
           "description": "Source path"
         },
         {
           "name": "to",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "cwd"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "exe-dir"
+                      },
+                      {
+                        "kind": "object",
+                        "fields": {
+                          "env": "string"
+                        }
+                      }
+                    ]
+                  },
+                  "path": "string"
+                }
+              }
+            ]
+          },
           "description": "Destination path"
         },
         {
@@ -15001,7 +15746,37 @@
       "params": [
         {
           "name": "path",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "cwd"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "exe-dir"
+                      },
+                      {
+                        "kind": "object",
+                        "fields": {
+                          "env": "string"
+                        }
+                      }
+                    ]
+                  },
+                  "path": "string"
+                }
+              }
+            ]
+          },
           "description": "Directory path"
         },
         {
@@ -15195,12 +15970,44 @@
         },
         {
           "name": "host",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "object",
+                    "fields": {
+                      "env": "string"
+                    }
+                  }
+                }
+              }
+            ]
+          },
           "description": "Destination host"
         },
         {
           "name": "port",
-          "type": "number",
+          "type": {
+            "kind": "union",
+            "of": [
+              "number",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "object",
+                    "fields": {
+                      "env": "string"
+                    }
+                  }
+                }
+              }
+            ]
+          },
           "description": "Destination port"
         },
         {
@@ -15352,8 +16159,49 @@
       "params": [
         {
           "name": "command",
-          "type": "string",
-          "description": "Command, matched exactly against the exec grant"
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "cwd"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "exe-dir"
+                      },
+                      {
+                        "kind": "object",
+                        "fields": {
+                          "env": "string"
+                        }
+                      }
+                    ]
+                  },
+                  "path": "string"
+                }
+              },
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "object",
+                    "fields": {
+                      "env": "string"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "description": "Command, matched exactly against the exec grant; an anchored record { anchor, path } or { anchor: { env } } is matched against an anchored grant"
         },
         {
           "name": "args",
@@ -15371,7 +16219,37 @@
               "cwd": {
                 "kind": "union",
                 "of": [
-                  "string",
+                  {
+                    "kind": "union",
+                    "of": [
+                      "string",
+                      {
+                        "kind": "object",
+                        "fields": {
+                          "anchor": {
+                            "kind": "union",
+                            "of": [
+                              {
+                                "kind": "literal",
+                                "value": "cwd"
+                              },
+                              {
+                                "kind": "literal",
+                                "value": "exe-dir"
+                              },
+                              {
+                                "kind": "object",
+                                "fields": {
+                                  "env": "string"
+                                }
+                              }
+                            ]
+                          },
+                          "path": "string"
+                        }
+                      }
+                    ]
+                  },
                   {
                     "kind": "literal",
                     "value": null
@@ -15543,7 +16421,37 @@
       "params": [
         {
           "name": "path",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "cwd"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "exe-dir"
+                      },
+                      {
+                        "kind": "object",
+                        "fields": {
+                          "env": "string"
+                        }
+                      }
+                    ]
+                  },
+                  "path": "string"
+                }
+              }
+            ]
+          },
           "description": "Path"
         },
         {
@@ -15787,12 +16695,72 @@
       "params": [
         {
           "name": "target",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "cwd"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "exe-dir"
+                      },
+                      {
+                        "kind": "object",
+                        "fields": {
+                          "env": "string"
+                        }
+                      }
+                    ]
+                  },
+                  "path": "string"
+                }
+              }
+            ]
+          },
           "description": "Link target"
         },
         {
           "name": "path",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "cwd"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "exe-dir"
+                      },
+                      {
+                        "kind": "object",
+                        "fields": {
+                          "env": "string"
+                        }
+                      }
+                    ]
+                  },
+                  "path": "string"
+                }
+              }
+            ]
+          },
           "description": "New link path"
         },
         {
@@ -15841,12 +16809,44 @@
       "params": [
         {
           "name": "host",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "object",
+                    "fields": {
+                      "env": "string"
+                    }
+                  }
+                }
+              }
+            ]
+          },
           "description": "Host name or address"
         },
         {
           "name": "port",
-          "type": "number",
+          "type": {
+            "kind": "union",
+            "of": [
+              "number",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "object",
+                    "fields": {
+                      "env": "string"
+                    }
+                  }
+                }
+              }
+            ]
+          },
           "description": "Port"
         },
         {
@@ -15895,12 +16895,44 @@
       "params": [
         {
           "name": "host",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "object",
+                    "fields": {
+                      "env": "string"
+                    }
+                  }
+                }
+              }
+            ]
+          },
           "description": "Address to bind"
         },
         {
           "name": "port",
-          "type": "number",
+          "type": {
+            "kind": "union",
+            "of": [
+              "number",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "object",
+                    "fields": {
+                      "env": "string"
+                    }
+                  }
+                }
+              }
+            ]
+          },
           "description": "Port"
         },
         {
@@ -15999,7 +17031,37 @@
           "type": {
             "kind": "union",
             "of": [
-              "string",
+              {
+                "kind": "union",
+                "of": [
+                  "string",
+                  {
+                    "kind": "object",
+                    "fields": {
+                      "anchor": {
+                        "kind": "union",
+                        "of": [
+                          {
+                            "kind": "literal",
+                            "value": "cwd"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "exe-dir"
+                          },
+                          {
+                            "kind": "object",
+                            "fields": {
+                              "env": "string"
+                            }
+                          }
+                        ]
+                      },
+                      "path": "string"
+                    }
+                  }
+                ]
+              },
               "number"
             ]
           },
@@ -16105,12 +17167,44 @@
       "params": [
         {
           "name": "host",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "object",
+                    "fields": {
+                      "env": "string"
+                    }
+                  }
+                }
+              }
+            ]
+          },
           "description": "Address to bind"
         },
         {
           "name": "port",
-          "type": "number",
+          "type": {
+            "kind": "union",
+            "of": [
+              "number",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "object",
+                    "fields": {
+                      "env": "string"
+                    }
+                  }
+                }
+              }
+            ]
+          },
           "description": "Port"
         },
         {
@@ -16384,7 +17478,37 @@
       "params": [
         {
           "name": "path",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "cwd"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "exe-dir"
+                      },
+                      {
+                        "kind": "object",
+                        "fields": {
+                          "env": "string"
+                        }
+                      }
+                    ]
+                  },
+                  "path": "string"
+                }
+              }
+            ]
+          },
           "description": "Path"
         },
         {
@@ -16822,7 +17946,23 @@
       "params": [
         {
           "name": "port",
-          "type": "number",
+          "type": {
+            "kind": "union",
+            "of": [
+              "number",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "object",
+                    "fields": {
+                      "env": "string"
+                    }
+                  }
+                }
+              }
+            ]
+          },
           "description": "Port number to monitor"
         },
         {
@@ -17099,7 +18239,37 @@
       "params": [
         {
           "name": "path",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "cwd"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "exe-dir"
+                      },
+                      {
+                        "kind": "object",
+                        "fields": {
+                          "env": "string"
+                        }
+                      }
+                    ]
+                  },
+                  "path": "string"
+                }
+              }
+            ]
+          },
           "description": "File path"
         },
         {

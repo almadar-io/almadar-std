@@ -28,7 +28,7 @@ describe('runsOn', () => {
 
   it('the server set is the data-owning effects, the OS watchers, and the effects that read installed packages through orb', () => {
     expect(getOperatorsRunningOn('server')).toEqual([
-      'atomic', 'behavior/catalog', 'behavior/dependencies', 'behavior/describe', 'behavior/resolve', 'behavior/source', 'call-service', 'cancel-call', 'credential-forget', 'credential-list', 'credential-mode', 'credential-remove', 'credential-rotate', 'credential-set', 'credential-status', 'credential-test', 'fetch', 'fetch-stream', 'http', 'http/listen', 'http/respond',
+      'atomic', 'behavior/catalog', 'behavior/dependencies', 'behavior/describe', 'behavior/resolve', 'behavior/source', 'call-service', 'cancel-call', 'credential-forget', 'credential-list', 'credential-mode', 'credential-remove', 'credential-rotate', 'credential-set', 'credential-status', 'credential-test', 'fetch', 'fetch-stream', 'http',
       'oauth-authorize', 'oauth-connection-forget', 'oauth-connection-status', ...OS_EFFECTS,
       'persist', 'persist/read-named', 'postgres', 'program/compose', 'program/dispatch', 'program/eval', 'program/inputs', 'program/machine', 'program/print', 'program/read', 'program/step', 'program/validate', 'random-bytes', 'redis', 'swap',
     ].sort());
@@ -100,8 +100,9 @@ describe('runsOn', () => {
     for (const op of ['os/write-file', 'os/append-file', 'os/write', 'os/send', 'os/sendto', 'os/stdout-write', 'os/stderr-write']) {
       expect(typeOf(op, 'data'), op).toBe('bytes');
     }
-    expect(typeOf('os/write-file', 'path')).toBe('string');
-    expect(typeOf('os/sendto', 'host')).toBe('string');
+    const anchored = { kind: 'object', fields: { anchor: { kind: 'union', of: [{ kind: 'literal', value: 'cwd' }, { kind: 'literal', value: 'exe-dir' }, { kind: 'object', fields: { env: 'string' } }] }, path: 'string' } };
+    expect(typeOf('os/write-file', 'path')).toEqual({ kind: 'union', of: ['string', anchored] });
+    expect(typeOf('os/sendto', 'port')).toEqual({ kind: 'union', of: ['number', { kind: 'object', fields: { anchor: { kind: 'object', fields: { env: 'string' } } } }] });
   });
 
   it('the client set is rendering, navigation, the server send and the browser device APIs', () => {

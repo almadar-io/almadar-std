@@ -1,0 +1,28 @@
+app agent-completion-spec [
+  version: "1.0.0",
+  description: "Design contract for a one-shot completion: a prompt asked once ends in done, and a generation that fails ends in done with an empty response, never stuck generating. COMPLETED answers the response text. A finished completion can be reset to idle."
+]
+
+orbital AgentCompletionSpec {
+  expects entity Completion [runtime] {
+    prompt : string
+    response : string
+    status : "idle" | "done"
+  }
+  expects trait CompletionGeneration {
+    state idle {
+      GENERATE -> generating
+    }
+    state generating {
+      GENERATED -> done
+      GENERATION_FAILED -> done
+    }
+    state done {
+      RESET -> idle
+    }
+    emits {
+      COMPLETED { response : string! }
+    }
+  }
+  expects page "/agent-completion" -> CompletionGeneration
+}

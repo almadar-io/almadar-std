@@ -1,0 +1,179 @@
+app std-ml-ladder [
+  version: "1.0.0",
+  description: "The two ends of an escalating decision chain — LadderEntry takes DECIDE and starts the first rung, LadderVerdictSink turns whichever rung answered (or the generative floor failing) into the one public DECIDED or DECISION_FAILED."
+]
+uses Spec from "almadar-std/ladder"
+
+orbital MlLadderOrbital {
+  type MatchedText = { type : "text", text : string! }
+  type MatchedIndex = { type : "index", index : int! }
+  type MatchedTensor = { type : "tensor", output : [float]! }
+  type Matched = MatchedText | MatchedIndex | MatchedTensor
+
+  entity LadderRequest [runtime] {
+    status : "idle" | "dispatched" = idle
+  }
+
+  entity LadderVerdict [runtime] {
+    rung       : string = ""
+    confidence : number = 0
+    reasoning  : string = ""
+    failReason : string = ""
+    status     : "idle" | "decided" | "failed" = idle
+  }
+
+  trait LadderEntry (r : Entity) -> LadderRequest [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.status idle)
+
+      DECIDE -> dispatched
+        (set @entity.status dispatched)
+        (emit RUN_EXACT { candidate: ?candidate, key: ?key, candidateNumber: ?candidateNumber, keyNumber: ?keyNumber, request: ? })
+    }
+
+    state dispatched {
+      INIT -> dispatched
+        (set @entity.status dispatched)
+      RESET -> idle
+        (set @entity.status idle)
+        (emit RUNGS_RESET {})
+    }
+
+    emits {
+      RUNGS_RESET -> external {
+      }
+        @description "The ladder was reset; every rung returns to idle so the next DECIDE runs the whole chain again."
+        @tier "secondary"
+      RUN_EXACT -> external {
+        candidate : string!
+        key : string!
+        candidateNumber : number
+        keyNumber : number
+        request : r!
+      }
+        @description "Starts the ladder at the exact-check rung (R0). request is the whole DECIDE payload, carried down the chain so each rung can project its own inputs."
+        @tier "secondary"
+    }
+
+    listens {
+      RESET {}
+      DECIDE -> external {
+        candidate  : string!
+        key        : string!
+        candidateNumber : number
+        keyNumber  : number
+        accepted   : [string]!
+        categories : [string]!
+      }
+        @description "Public entry point — decide the candidate, falling through the ladder until a rung can prove the answer. accepted is R1's table; categories is R3's comparison set (R5's closed label set is the ClassifyRung categories knob, a design-time decision rather than a per-request one)."
+        @tier "primary"
+    }
+  }
+
+  trait LadderVerdictSink -> LadderVerdict [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.rung "")
+        (set @entity.confidence 0)
+        (set @entity.reasoning "")
+        (set @entity.failReason "")
+        (set @entity.status idle)
+
+      FROM_EXACT -> decided
+        (set @entity.rung "R0")
+        (set @entity.confidence 1)
+        (set @entity.reasoning "")
+        (set @entity.status decided)
+        (emit DECIDED { rung: "R0", confidence: 1, matched: { type: "text", text: ?key }, reasoning: "" })
+
+      FROM_LOOKUP -> decided
+        (set @entity.rung "R1")
+        (set @entity.confidence 1)
+        (set @entity.reasoning "")
+        (set @entity.status decided)
+        (emit DECIDED { rung: "R1", confidence: 1, matched: { type: "text", text: ?entry }, reasoning: "" })
+
+      FROM_SIMILARITY -> decided
+        (set @entity.rung "R3")
+        (set @entity.confidence ?score)
+        (set @entity.reasoning "")
+        (set @entity.status decided)
+        (emit DECIDED { rung: "R3", confidence: ?score, matched: { type: "index", index: ?index }, reasoning: "" })
+
+      FROM_INFER -> decided
+        (set @entity.rung "R4")
+        (set @entity.confidence ?confidence)
+        (set @entity.reasoning "")
+        (set @entity.status decided)
+        (emit DECIDED { rung: "R4", confidence: ?confidence, matched: { type: "tensor", output: ?output }, reasoning: "" })
+
+      FROM_CLASSIFY -> decided
+        (set @entity.rung "R5")
+        (set @entity.confidence ?confidence)
+        (set @entity.reasoning ?reasoning)
+        (set @entity.status decided)
+        (emit DECIDED { rung: "R5", confidence: ?confidence, matched: { type: "text", text: ?category }, reasoning: ?reasoning })
+
+      FROM_CLASSIFY_FAILURE -> failed
+        (set @entity.failReason ?error)
+        (set @entity.status failed)
+        (emit DECISION_FAILED { reason: ?error })
+    }
+
+    state decided {
+      INIT -> decided
+        (set @entity.status decided)
+      RESET -> idle
+        (set @entity.rung "")
+        (set @entity.confidence 0)
+        (set @entity.reasoning "")
+        (set @entity.failReason "")
+        (set @entity.status idle)
+    }
+
+    state failed {
+      INIT -> failed
+        (set @entity.status failed)
+      RESET -> idle
+        (set @entity.rung "")
+        (set @entity.confidence 0)
+        (set @entity.reasoning "")
+        (set @entity.failReason "")
+        (set @entity.status idle)
+    }
+
+    emits {
+      DECIDED -> external {
+        rung : string!
+        confidence : number!
+        matched : Matched!
+        reasoning : string!
+      }
+        @description "The ladder proved an answer. rung names which one served it: R0 exact, R1 table, R3 retrieved, R4 learned, R5 generative."
+        @tier "primary"
+
+      DECISION_FAILED -> external {
+        reason : string!
+      }
+        @description "Even the generative floor (R5) could not answer — the classify service call itself failed."
+        @tier "primary"
+    }
+
+    listens {
+      RESET {}
+      FROM_EXACT { key : string! }
+      FROM_LOOKUP { entry : string! }
+      FROM_SIMILARITY { index : int!  score : number! }
+      FROM_INFER { output : [float]!  confidence : number! }
+      FROM_CLASSIFY { category : string!  confidence : number!  reasoning : string! }
+      FROM_CLASSIFY_FAILURE { error : string! }
+    }
+  }
+
+  page "/ladder" as MlLadderPage -> LadderEntry, LadderVerdictSink
+}

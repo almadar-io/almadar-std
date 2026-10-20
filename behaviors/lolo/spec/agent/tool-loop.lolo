@@ -1,0 +1,27 @@
+app agent-tool-loop-spec [
+  version: "1.0.0",
+  description: "Design contract for a tool loop that hands each tool's outcome back to the model. A tool call the loop dispatches stays pending in awaitingResult until the tool answers on a declared result event: TOOL_RESULT { callId, result } is appended as that call id's tool message, TOOL_FAILED { callId, error } as its failure, and the loop then moves to the next call or the next model turn. TOOL_PENDING { callId, tool } tells the tool which call it is answering. A tool declares `fireAndForget: true` in its tool config to be acknowledged as dispatched without waiting; nothing is inferred."
+]
+
+orbital AgentToolLoopSpec {
+  expects entity AgentTurn [runtime] {
+    id : string!
+    status : "idle" | "thinking" | "answered" | "failed"
+    calls : [{ id : string!, name : string! }]
+    cursor : number
+  }
+  expects trait AgentToolLoop {
+    state idle
+    state preparing
+    state thinking
+    state running
+    state awaitingResult {
+      TOOL_RESULT -> running
+      TOOL_FAILED -> running
+    }
+    emits {
+      TOOL_PENDING { callId : string!  tool : string! }
+    }
+  }
+  expects page "/agent-tool-loop" -> AgentToolLoop
+}

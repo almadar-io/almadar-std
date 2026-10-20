@@ -6,6 +6,7 @@ app std-agent-tool-loop [
 
 type AgentToolScope = {
   scope : "declared"!
+  fireAndForget : boolean
 }
 type AgentToolField = {
   name : string!
@@ -18,6 +19,7 @@ type AgentToolField = {
 type AgentToolInput = {
   event : EventAddress!
   payload : [AgentToolField]
+  fireAndForget : boolean
 }
 type AgentToolRead = {
   read : string!
@@ -26,6 +28,7 @@ type AgentTool = AgentToolScope | AgentToolInput | AgentToolRead
 type AgentToolInputData = {
   event : string!
   payload : [AgentToolField]
+  fireAndForget : boolean
 }
 type AgentToolData = AgentToolScope | AgentToolInputData | AgentToolRead
 type AgentChatMessage = {
@@ -80,7 +83,6 @@ type AgentUsage = {
 }
 type LlmSchema = { type : string, additionalProperties : boolean, properties : Map string LlmSchema, required : [string], enum : [string], items : LlmSchema }
 type LlmToolDef = { name : string!, description : string!, parameters : LlmSchema! }
-type LlmToolCall = { id : string!, name : string!, arguments : string! }
 type LlmToolOutcome = { id : string!, tool : string!, kind : "input" | "read" | "invalid"!, success : boolean!, detail : string, rows : number, content : string!, startedAt : number!, endedAt : number! }
 type AgentToolBinding = {
   name : string!
@@ -93,6 +95,7 @@ type AgentToolBinding = {
   readAny : boolean
   contract : [AgentToolField]
   contracted : boolean
+  fireAndForget : boolean
 }
 type AgentReflectedInput = {
   orbital : string!
@@ -123,8 +126,12 @@ type AgentReadArguments = {
   entity : string
 }
 
+uses Spec from "almadar-std/tool-loop"
 uses Llm from "std/behaviors/std-llm"
 
+type JsonValue = string | number | boolean | [JsonValue] | Map string JsonValue
+type ToolArguments = Map string JsonValue
+type ToolCall = { id : string!, name : string!, arguments : ToolArguments }
 orbital AgentToolLoopOrbital {
   entity AgentTurn [runtime] {
     id : string!
@@ -139,10 +146,10 @@ orbital AgentToolLoopOrbital {
     turnTools : [AgentToolData] @description "The tools the current turn may use." = []
     table : [AgentToolBinding] @description "The tools offered to the model, by name." = []
     session : string @description "The model's tool run the calls being executed belong to." = ""
-    calls : [LlmToolCall] @description "The tool calls the model asked for." = []
+    calls : [ToolCall] @description "The tool calls the model asked for." = []
     cursor : number @description "The call being executed." = 0
     results : [LlmToolOutcome] @description "What the calls answered so far." = []
-    current : LlmToolCall @description "The call being executed."
+    current : ToolCall @description "The call being executed."
     binding : AgentToolBinding @description "The tool the call being executed names."
     callStartedAt : number @description "When the call being executed began." = 0
   }
@@ -214,14 +221,14 @@ orbital AgentToolLoopOrbital {
                 (array/concat
                   (array/map (array/range 0 (array/len @payload.result.inputs) 1) (fn k
                     (let ((x (array/nth @payload.result.inputs @k)))
-                      { name: (str/concat @x.event "_" (+ @k 1)), description: (str/concat (str/default @x.description @x.event) " (" @x.orbital " → " @x.trait ")"), parameters: @x.parameters, label: @x.address, kind: input, address: @x.address, contracted: false })))
+                      { name: (str/concat @x.event "_" (+ @k 1)), description: (str/concat (str/default @x.description @x.event) " (" @x.orbital " → " @x.trait ")"), parameters: @x.parameters, label: @x.address, kind: input, address: @x.address, contracted: false, fireAndForget: (object/get @t fireAndForget false) })))
                   (if (> (array/len @payload.result.entities) 0)
                     [{ name: "read", description: "Read the rows of an entity that you may see", parameters: { type: "object", properties: { entity: { type: "string", enum: @payload.result.entities } }, required: ["entity"] }, label: "read", kind: read, readAny: true }]
                     []))
                 (if (object/has @t read)
                   [{ name: (str/concat "read__" @t.read), description: (str/concat "Read the " @t.read " rows you may see"), parameters: { type: "object", properties: {} }, label: @t.read, kind: read, entity: @t.read }]
                   (let ((s (array/nth @payload.result.selected (array/count (array/take @entity.turnTools @i) (fn y (object/has @y event))))))
-                    [{ name: (str/replaceAll @t.event "." "__"), description: (str/default @s.description @t.event), parameters: @s.parameters, label: @t.event, kind: input, address: @s.address, contract: (object/get @t payload []), contracted: (object/has @t payload) }])))))))))
+                    [{ name: (str/replaceAll @t.event "." "__"), description: (str/default @s.description @t.event), parameters: @s.parameters, label: @t.event, kind: input, address: @s.address, contract: (object/get @t payload []), contracted: (object/has @t payload), fireAndForget: (object/get @t fireAndForget false) }])))))))))
           (do
             (set @entity.table @table)
             (emit LLM_CALL_TOOLS {
@@ -306,16 +313,32 @@ orbital AgentToolLoopOrbital {
         (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: @entity.current.name, kind: invalid, success: false, detail: "not an allowed tool", content: (json/stringify { error: (str/concat "'" @entity.current.name "' is not one of your tools"), tools: (array/map @entity.table (fn x @x.name)) }), startedAt: @entity.callStartedAt, endedAt: (time/now) }))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit RUN_NEXT {})
-      CALL_BEGIN -> running when (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name))))) (and (!= @b null) (= @b.kind "input") (not @b.contracted)))
+      CALL_BEGIN -> running when (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name))))) (and (!= @b null) (or (= @b.kind "input") @b.readAny) (= @entity.current.arguments null)))
+        (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: @entity.current.name, kind: invalid, success: false, detail: "arguments are not a JSON object", content: (json/stringify { error: (str/concat "'" @entity.current.name "' arguments are not a JSON object") }), startedAt: @entity.callStartedAt, endedAt: (time/now) }))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit RUN_NEXT {})
+      CALL_BEGIN -> running when (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name))))) (and (!= @b null) (= @b.kind "input") (not @b.contracted) @b.fireAndForget))
         (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name)))))
           (do
             (set @entity.binding @b)
             (program/dispatch @b.address @entity.current.arguments { emit: { success: DISPATCHED, failure: DISPATCH_FAILED } })))
-      CALL_BEGIN -> running when (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name))))) (and (!= @b null) (= @b.kind "input") @b.contracted))
+      CALL_BEGIN -> awaitingResult when (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name))))) (and (!= @b null) (= @b.kind "input") (not @b.contracted) (not @b.fireAndForget)))
+        (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name)))))
+          (do
+            (set @entity.binding @b)
+            (emit TOOL_PENDING { callId: @entity.current.id, tool: @b.label })
+            (program/dispatch @b.address @entity.current.arguments { emit: { success: AWAIT_DISPATCHED, failure: AWAIT_DISPATCH_FAILED } })))
+      CALL_BEGIN -> running when (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name))))) (and (!= @b null) (= @b.kind "input") @b.contracted @b.fireAndForget))
         (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name)))))
           (do
             (set @entity.binding @b)
             (program/dispatch @b.address @entity.current.arguments { schema: @b.contract } { emit: { success: DISPATCHED, failure: DISPATCH_FAILED } })))
+      CALL_BEGIN -> awaitingResult when (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name))))) (and (!= @b null) (= @b.kind "input") @b.contracted (not @b.fireAndForget)))
+        (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name)))))
+          (do
+            (set @entity.binding @b)
+            (emit TOOL_PENDING { callId: @entity.current.id, tool: @b.label })
+            (program/dispatch @b.address @entity.current.arguments { schema: @b.contract } { emit: { success: AWAIT_DISPATCHED, failure: AWAIT_DISPATCH_FAILED } })))
       CALL_BEGIN -> running when (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name))))) (and (!= @b null) (= @b.kind "read") (not @b.readAny)))
         (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name)))))
           (do
@@ -325,7 +348,7 @@ orbital AgentToolLoopOrbital {
         (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name)))))
           (do
             (set @entity.binding @b)
-            (persist/read-named (object/get (json/parse @entity.current.arguments AgentReadArguments) entity "") { emit: { success: READ_DONE, failure: READ_FAILED } })))
+            (persist/read-named (object/get (json/parse (json/stringify @entity.current.arguments) AgentReadArguments) entity "") { emit: { success: READ_DONE, failure: READ_FAILED } })))
       DISPATCHED -> running when @payload.result.ok
         (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: @entity.binding.label, kind: input, success: true, content: ?text, startedAt: @entity.callStartedAt, endedAt: (time/now) }))
         (set @entity.cursor (+ @entity.cursor 1))
@@ -348,6 +371,30 @@ orbital AgentToolLoopOrbital {
         (emit RUN_NEXT {})
       READ_FAILED -> running when (= (array/count ?errors (fn e (= @e.code "unknown-entity"))) 0)
         (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: @entity.binding.label, kind: read, success: false, detail: ?error, content: (json/stringify { error: ?error }), startedAt: @entity.callStartedAt, endedAt: (time/now) }))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit RUN_NEXT {})
+    }
+
+    state awaitingResult {
+      INIT -> idle
+        (set @entity.status idle)
+      CANCEL -> idle
+        (set @entity.status idle)
+      AWAIT_DISPATCHED -> awaitingResult when @payload.result.ok
+      AWAIT_DISPATCHED -> running when (not @payload.result.ok)
+        (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: @entity.binding.label, kind: input, success: false, detail: (str/default @payload.result.error "dispatch failed"), content: ?text, startedAt: @entity.callStartedAt, endedAt: (time/now) }))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit RUN_NEXT {})
+      AWAIT_DISPATCH_FAILED -> running
+        (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: @entity.binding.label, kind: input, success: false, detail: ?error, content: (json/stringify { ok: false, error: ?error }), startedAt: @entity.callStartedAt, endedAt: (time/now) }))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit RUN_NEXT {})
+      TOOL_RESULT -> running when (= ?callId @entity.current.id)
+        (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: @entity.binding.label, kind: input, success: true, content: ?result, startedAt: @entity.callStartedAt, endedAt: (time/now) }))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit RUN_NEXT {})
+      TOOL_FAILED -> running when (= ?callId @entity.current.id)
+        (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: @entity.binding.label, kind: input, success: false, detail: ?error, content: (json/stringify { ok: false, error: ?error }), startedAt: @entity.callStartedAt, endedAt: (time/now) }))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit RUN_NEXT {})
     }
@@ -395,6 +442,20 @@ orbital AgentToolLoopOrbital {
       }
         @description "Ask std-llm to abort the model call of a cancelled run."
         @tier "internal"
+      TOOL_PENDING -> external {
+        callId : string!
+        tool : string!
+      }
+        @description "The loop dispatched a tool that waits for its outcome: this is the call id the tool answers with TOOL_RESULT or TOOL_FAILED."
+        @tier "domain"
+      AWAIT_DISPATCHED {
+        result : AgentDispatchAnswer!
+        text : string!
+      }
+      AWAIT_DISPATCH_FAILED {
+        error : string!
+        errors : [AgentPortIssue]
+      }
       INPUTS_KNOWN {
         result : AgentReflection!
         text : string!
@@ -423,6 +484,18 @@ orbital AgentToolLoopOrbital {
     }
 
     listens {
+      TOOL_RESULT {
+        callId : string!
+        result : string!
+      }
+        @description "A dispatched tool's outcome: `result` goes back to the model as the tool message for `callId` before its next turn."
+        @synonyms "tool output, tool answer"
+      TOOL_FAILED {
+        callId : string!
+        error : string!
+      }
+        @description "A dispatched tool failed: `error` goes back to the model as the failed tool message for `callId`."
+        @synonyms "tool error"
       CANCEL {
       }
         @description "Abort the request in flight; nothing is replied and no failure is reported."
@@ -443,7 +516,7 @@ orbital AgentToolLoopOrbital {
       LoopLlm.LLM_CANCELLED -> ToolsCancelled
       ToolsRequested {
         session : string!
-        calls : [LlmToolCall]!
+        calls : [ToolCall]!
       }
       ToolsStep {
         activity : AgentActivity!

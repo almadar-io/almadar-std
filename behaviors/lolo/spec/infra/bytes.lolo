@@ -1,0 +1,29 @@
+app bytes-spec [
+  version: "1.0.0",
+  description: "Design contract for reading and writing the bytes of a standard padded base64 string and for strict integer text. BYTE_AT { data, i } answers the byte at index i as 0-255, no value when i is outside the data (negative included); a non-whole i refuses invalid. INDEX_OF { data, needle, from? } answers the byte offset of the first needle at or after from (default 0; null is 0; a negative from counts from the end, an out-of-range from clamps, a fraction truncates toward zero), -1 when absent, and from when the needle is empty. READ_UINT { data, offset, width, endian } answers the unsigned integer in width bytes (1, 2, 4 or 8) at offset, big-endian (be) or little-endian (le), no value when those bytes run past the data; a width-8 value above 2^53 - 1 refuses invalid rather than round. WRITE_UINT { value, width, endian } answers the standard padded base64 text of a whole number as width unsigned bytes; a value that is negative, not whole, above 2^53 - 1 or too large for the width refuses invalid. TO_INT { s } answers the integer in s: an optional + or -, then one or more ASCII digits 0-9 and nothing else (no space, point, exponent, hex or other digit scripts), no value for any other text and for a magnitude above 2^53 - 1. Any data or needle that is not canonical padded base64, any width outside 1/2/4/8 and any endian outside be/le refuse invalid. Values it replaces (the bytes/at, bytes/index-of, bytes/read-uint, bytes/write-uint and str/to-int operators): AAEC/w== index 3 is 255, index 4 and -1 have no value; aGVsbG8= finds bA== at 2 and bA== from 3 at 3; EjQ= read at 0 width 2 be is 4660; 4660 as width 2 be is EjQ=; -42 text is -42, +5 is 5, 1e3 and an empty text have no value."
+]
+
+orbital BytesSpec {
+  expects entity BytesRun [runtime] {
+    id : string!
+    result : number
+  }
+  expects trait BytesCodec {
+    state idle {
+      BYTE_AT -> idle
+      INDEX_OF -> idle
+      READ_UINT -> idle
+      WRITE_UINT -> idle
+      TO_INT -> idle
+    }
+    emits {
+      BYTE_AT_ANSWERED { value : number }
+      INDEX_OF_ANSWERED { value : number! }
+      READ_UINT_ANSWERED { value : number }
+      WRITE_UINT_ANSWERED { value : string! }
+      TO_INT_ANSWERED { value : number }
+      BYTES_REFUSED { operation : string!  reason : string! }
+    }
+  }
+  expects page "/bytes" -> BytesCodec
+}

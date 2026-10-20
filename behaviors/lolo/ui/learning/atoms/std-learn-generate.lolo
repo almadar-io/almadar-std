@@ -27,6 +27,7 @@ type AgentToolField = {
 type AgentToolInput = {
   event : EventAddress!
   payload : [AgentToolField]
+  fireAndForget : boolean
 }
 type ProgramEvent = {
   key : string
@@ -50,7 +51,6 @@ type LearnInstrument = {
   fields : [AgentToolField]!
 }
 
-type LlmToolCall = { id : string!, name : string!, arguments : string! }
 type AgentToolKind = "input" | "read" | "invalid"
 type AgentToolCallActivity = {
   type : "tool_call"!
@@ -101,6 +101,9 @@ type AgentUsage = {
 uses ToolLoop from "std/behaviors/std-agent-tool-loop"
 uses Llm from "std/behaviors/std-llm"
 
+type JsonValue = string | number | boolean | [JsonValue] | Map string JsonValue
+type ToolArguments = Map string JsonValue
+type ToolCall = { id : string!, name : string!, arguments : ToolArguments }
 orbital LearnGenerateOrbital {
 
   entity LearnGeneration [runtime] {
@@ -171,6 +174,7 @@ orbital LearnGenerateOrbital {
           messages: [{ role: "user", content: (str/concat "Subject: " ?subject (if (= (object/get @payload context "") "") "" (str/concat "\nContext: " (object/get @payload context "")))) }]
           instructions: (str/concat "You pick the one interactive learning instrument that best lets a learner explore the subject. The installed instruments:\n" (str/join (array/map @entity.instruments (fn i (str/concat "- " (object/get @i behavior) ": " (object/get @i description "")))) "\n") "\nCall the CHOOSE tool once with exactly one of them, then reply with one sentence.")
           tools: [{
+            fireAndForget: true
             event: @config.chooseEvent
             payload: [{ name: "choice", type: "string", required: true, values: (array/map @entity.instruments (fn i (object/get @i behavior))) }]
           }]
@@ -237,6 +241,7 @@ orbital LearnGenerateOrbital {
           messages: [{ role: "user", content: (str/concat "Subject: " @entity.subject (if (= @entity.context "") "" (str/concat "\nContext: " @entity.context))) }]
           instructions: (str/concat "You pick the one interactive learning instrument that best lets a learner explore the subject. The installed instruments:\n" (str/join (array/map @entity.instruments (fn i (str/concat "- " (object/get @i behavior) ": " (object/get @i description "")))) "\n") "\nCall the CHOOSE tool once with exactly one of them, then reply with one sentence.")
           tools: [{
+            fireAndForget: true
             event: @config.chooseEvent
             payload: [{ name: "choice", type: "string", required: true, values: (array/map @entity.instruments (fn i (object/get @i behavior))) }]
           }]
@@ -256,6 +261,7 @@ orbital LearnGenerateOrbital {
           messages: [{ role: "user", content: (str/concat "Subject: " @entity.subject (if (= @entity.context "") "" (str/concat "\nContext: " @entity.context))) }]
           instructions: (str/concat "You write the content roster for the learning instrument " @entity.chosen ": " (object/get (array/find @entity.instruments (fn i (= (object/get @i behavior) @entity.chosen))) description "") "\nCall the FILL tool once with a roster of realistic, accurate, pedagogically useful content about the subject. If the tool reports issues, call it again with them fixed. Then reply with one sentence.")
           tools: [{
+            fireAndForget: true
             event: @config.fillEvent
             payload: [{ name: "roster", type: "object", required: true, properties: (object/get (array/find @entity.instruments (fn i (= (object/get @i behavior) @entity.chosen))) fields []) }]
           }]
@@ -403,7 +409,7 @@ orbital LearnGenerateOrbital {
       LearnGenerateLlm.LLM_CANCELLED -> ToolsCancelled
       ToolsRequested {
         session : string!
-        calls : [LlmToolCall]!
+        calls : [ToolCall]!
       }
       ToolsStep {
         activity : AgentActivity!

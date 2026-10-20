@@ -6,9 +6,11 @@ app std-agent-assistant [
 
 type AgentToolScope = {
   scope : "declared"!
+  fireAndForget : boolean
 }
 type AgentToolInput = {
   event : EventAddress!
+  fireAndForget : boolean
 }
 type AgentToolRead = {
   read : string!
@@ -20,7 +22,6 @@ type AgentLink = {
 }
 type NavItem = { label : string!, href : string!, icon : string, badge : string, children : [NavItem], roles : [string] }
 
-type LlmToolCall = { id : string!, name : string!, arguments : string! }
 type AgentToolKind = "input" | "read" | "invalid"
 type AgentToolCallActivity = {
   type : "tool_call"!
@@ -68,6 +69,9 @@ type AgentUsage = {
   modelCalls : number!
 }
 
+type JsonValue = string | number | boolean | [JsonValue] | Map string JsonValue
+type ToolArguments = Map string JsonValue
+type ToolCall = { id : string!, name : string!, arguments : ToolArguments }
 orbital AgentAssistantOrbital {
   uses Session from "std/behaviors/std-agent-session"
   uses Context from "std/behaviors/std-agent-context"
@@ -78,7 +82,7 @@ orbital AgentAssistantOrbital {
   uses Shell from "std/behaviors/std-app-layout"
 
   config {
-    tools : [AgentTool] = [{ scope: declared }]
+    tools : [AgentTool] = [{ scope: declared, fireAndForget: true }]
       @label "What may the assistant do?"
       @description "As the signed-in user: `{ scope: declared }` (the default) gives it every external input the program declares and a read over every persisted entity, so each building block's declared inputs become its abilities; or list them — `{ event: Orbital.Trait.EVENT }` for one input, `{ read: Entity }` for one entity."
       @synonyms "allowlist, abilities, actions, permissions"
@@ -226,7 +230,7 @@ orbital AgentAssistantOrbital {
       AssistantLlm.LLM_CANCELLED -> ToolsCancelled
       ToolsRequested {
         session : string!
-        calls : [LlmToolCall]!
+        calls : [ToolCall]!
       }
       ToolsStep {
         activity : AgentActivity!

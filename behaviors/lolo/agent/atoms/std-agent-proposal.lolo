@@ -7,9 +7,11 @@ app std-agent-proposal [
 
 type AgentToolScope = {
   scope : "declared"!
+  fireAndForget : boolean
 }
 type AgentToolInput = {
   event : EventAddress!
+  fireAndForget : boolean
 }
 type AgentToolRead = {
   read : string!
@@ -29,7 +31,6 @@ type ProposalPayload = {
   items : [Map string string]
 }
 
-type LlmToolCall = { id : string!, name : string!, arguments : string! }
 type AgentToolKind = "input" | "read" | "invalid"
 type AgentToolCallActivity = {
   type : "tool_call"!
@@ -77,6 +78,9 @@ type AgentUsage = {
   modelCalls : number!
 }
 
+type JsonValue = string | number | boolean | [JsonValue] | Map string JsonValue
+type ToolArguments = Map string JsonValue
+type ToolCall = { id : string!, name : string!, arguments : ToolArguments }
 orbital AgentProposalOrbital {
   uses Loop from "std/behaviors/std-agent-tool-loop"
   uses Llm from "std/behaviors/std-llm"
@@ -92,7 +96,7 @@ orbital AgentProposalOrbital {
       @description "The request that precedes the person's input in every run."
       @synonyms "task, goal, brief, question"
       @tier "domain"
-    tools : [AgentTool] = [{ event: AgentProposalWorkflow.PROPOSE }]
+    tools : [AgentTool] = [{ event: AgentProposalWorkflow.PROPOSE, fireAndForget: true }]
       @label "What may the agent do?"
       @description "The declared inputs it may fire and the entities it may read, as the signed-in person. An importing app restates the list with PROPOSE addressed by its local orbital name, which the agent can never propose without."
       @synonyms "allowlist, abilities, permissions"
@@ -699,7 +703,7 @@ orbital AgentProposalOrbital {
       AgentProposalLlm.LLM_CANCELLED -> ToolsCancelled
       ToolsRequested {
         session : string!
-        calls : [LlmToolCall]!
+        calls : [ToolCall]!
       }
       ToolsStep {
         activity : AgentActivity!

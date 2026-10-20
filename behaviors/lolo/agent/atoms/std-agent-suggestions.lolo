@@ -7,9 +7,11 @@ app std-agent-suggestions [
 
 type AgentToolScope = {
   scope : "declared"!
+  fireAndForget : boolean
 }
 type AgentToolInput = {
   event : EventAddress!
+  fireAndForget : boolean
 }
 type AgentToolRead = {
   read : string!
@@ -51,7 +53,6 @@ type RunRow = {
   ranAt : number
 }
 
-type LlmToolCall = { id : string!, name : string!, arguments : string! }
 type AgentToolKind = "input" | "read" | "invalid"
 type AgentToolCallActivity = {
   type : "tool_call"!
@@ -99,6 +100,9 @@ type AgentUsage = {
   modelCalls : number!
 }
 
+type JsonValue = string | number | boolean | [JsonValue] | Map string JsonValue
+type ToolArguments = Map string JsonValue
+type ToolCall = { id : string!, name : string!, arguments : ToolArguments }
 orbital AgentSuggestionsOrbital {
   uses Loop from "std/behaviors/std-agent-tool-loop"
   uses Llm from "std/behaviors/std-llm"
@@ -143,7 +147,7 @@ orbital AgentSuggestionsOrbital {
       @label "How should the agent behave?"
       @description "Standing instructions sent with every proactive run."
       @tier "domain"
-    tools : [AgentTool] = [{ event: AgentSuggestionProposer.PROPOSE_SUGGESTION }]
+    tools : [AgentTool] = [{ event: AgentSuggestionProposer.PROPOSE_SUGGESTION, fireAndForget: true }]
       @label "What may the agent do?"
       @description "The declared inputs it may fire and the entities it may read, as the signed-in person. An importing app restates the list with the proposal input addressed by its local orbital name (`{ event: Suggestions.AgentSuggestionProposer.PROPOSE_SUGGESTION }`), which the agent can never propose without."
       @tier "domain"
@@ -834,7 +838,7 @@ orbital AgentSuggestionsOrbital {
       AgentSuggestionLlm.LLM_CANCELLED -> ToolsCancelled
       ToolsRequested {
         session : string!
-        calls : [LlmToolCall]!
+        calls : [ToolCall]!
       }
       ToolsStep {
         activity : AgentActivity!

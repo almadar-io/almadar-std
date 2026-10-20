@@ -1,0 +1,105 @@
+app std-file-upload [
+  version: "1.0.0",
+  description: "std-file-upload — uploads one chosen file through object storage. The ready state renders its form slot (formTrait); UPLOAD carries the chosen files and emits STORAGE_UPLOAD with the first file, the configured bucket, access level and size limit, then shows the uploading slot (uploadingTrait); the storage answer (FILE_STORED, FILE_STORE_FAILED) is reported as a toast and the form returns. Rebind linkedEntity and restate the storage client's STORAGE_UPLOADED and STORAGE_FAILED routes."
+]
+;; @capabilities "upload a file to object storage, choose file and upload, upload with uploading view, stored or failed toast"
+uses Spec from "almadar-std/file-upload"
+
+orbital FileUploadOrbital {
+  entity UploadTarget [runtime, shared] {
+    id : string!
+  }
+
+  trait FileUpload -> @rebindable UploadTarget [interaction, instance] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+        (render-ui main <Stack direction={vertical} gap={md}>
+          {@config.formTrait}
+        </Stack>)
+      UPLOAD -> uploading
+        (emit STORAGE_UPLOAD { bucket: @config.bucket, acl: @config.acl, file: (array/nth ?files 0), maxSize: @config.maxSize })
+        (render-ui main <Stack direction={vertical} gap={md}>
+          {@config.uploadingTrait}
+        </Stack>)
+    }
+
+    state uploading {
+      INIT -> ready
+        (render-ui main <Stack direction={vertical} gap={md}>
+          {@config.formTrait}
+        </Stack>)
+      FILE_STORED -> ready
+        (notify success @config.storedMessage)
+      FILE_STORE_FAILED -> ready
+        (notify error @config.failedMessage)
+    }
+
+    emits {
+      STORAGE_UPLOAD -> external {
+        acl : string
+        bucket : string
+        file : file
+        maxSize : number
+      }
+        @description "Ask the storage atom to store the chosen file."
+        @tier "secondary"
+    }
+
+    listens {
+      UPLOAD {
+        files : [file]!
+      }
+        @description "A file has been chosen for upload."
+        @synonyms "imported, added, received"
+        @tier "presentation"
+      FILE_STORED {
+        key : string!
+      }
+        @description "The file has been stored."
+        @synonyms "uploaded, added, attached"
+        @tier "presentation"
+      FILE_STORE_FAILED {
+        code : string
+        message : string!
+      }
+        @description "The file could not be stored."
+        @synonyms "error, failure, upload problem"
+        @tier "internal"
+    }
+
+    config {
+      formTrait : trait
+        @label "Form trait"
+        @description "Trait rendered as the upload form"
+        @tier "presentation"
+      uploadingTrait : trait
+        @label "Uploading trait"
+        @description "Trait rendered while the file is being stored"
+        @tier "presentation"
+      bucket : string
+        @label "Bucket"
+        @description "Target bucket for the file."
+        @tier "domain"
+      acl : string = private
+        @label "Access"
+        @description "Access level the stored file gets."
+        @tier "domain"
+      maxSize : number = 10485760
+        @label "Max size"
+        @description "Largest file accepted, in bytes."
+        @tier "domain"
+      storedMessage : string = "File uploaded"
+        @label "Stored message"
+        @description "Toast shown when the file is stored."
+        @tier "presentation"
+      failedMessage : string = "Upload failed"
+        @label "Failed message"
+        @description "Toast shown when the file could not be stored."
+        @tier "presentation"
+    }
+  }
+
+  page "/file-upload" as FileUploadPage -> FileUpload
+}

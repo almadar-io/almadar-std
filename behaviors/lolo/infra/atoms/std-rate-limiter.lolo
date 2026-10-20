@@ -262,15 +262,21 @@ orbital RateBucketOrbital {
       WINDOW_ELAPSED -> open
         (set @entity.count 0)
         (set @entity.resetIn @entity.window)
-      CONFIGURE -> open when (> ?limit 0)
+      CONFIGURE -> open when (> ?limit @entity.count)
         (set @entity.limit ?limit)
+      CONFIGURE -> throttled when (and (> ?limit 0) (<= ?limit @entity.count))
+        (set @entity.limit ?limit)
+        (set @entity.limiterStatus throttled)
     }
 
     state throttled {
       REQUEST -> throttled
         (emit THROTTLED { requestId: @payload.requestId, resetIn: @entity.resetIn, limit: @entity.limit, window: @entity.window })
-      CONFIGURE -> throttled when (> ?limit 0)
+      CONFIGURE -> throttled when (and (> ?limit 0) (<= ?limit @entity.count))
         (set @entity.limit ?limit)
+      CONFIGURE -> open when (> ?limit @entity.count)
+        (set @entity.limit ?limit)
+        (set @entity.limiterStatus open)
       WINDOW_ELAPSED -> open
         (set @entity.limiterStatus open)
         (set @entity.count 0)

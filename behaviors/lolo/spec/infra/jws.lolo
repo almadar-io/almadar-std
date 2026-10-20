@@ -1,0 +1,26 @@
+app jws-spec [
+  version: "1.0.0",
+  description: "Design contract for verifying a compact JWS signed with RS256 (RFC 7515, RFC 7518 section 3.3). JWS_VERIFY { token, jwk { kty, n, e, alg?, kid? } } answers JWS_VERIFIED { header { alg, typ?, kid? }, payload } or JWS_REFUSED { reason }. The token is exactly three non-empty dot-separated base64url segments (no padding, no length-1-mod-4 segment), else malformed; header and payload must decode to JSON objects, else malformed. The header alg must be exactly RS256: none, HS256 and every other value (or an absent alg) refuse alg-not-allowed. jwk.kty must be RSA (key-type); a jwk.alg that is set must equal the header alg (alg-mismatch); when both header and jwk carry a kid they must be equal (kid-mismatch). n, e and the signature are converted from base64url to padded standard base64 and std-rsa verifies the signature over the ASCII text header.payload exactly as received; a false verdict answers signature and a std-rsa refusal keeps its own reason. The payload is returned as a typed record (iss, sub, aud as a string or list, exp, nbf, iat, auth_time, email, name, firebase.tenant; extra holds every claim of the token, nested objects included, so the typed fields are projections of it; an absent claim stays absent) and the claim policy (time, issuer, audience) stays in std-bearer-verify. Golden vectors (openssl 2048-bit, e 65537): the valid token verifies; one changed payload byte, another key's modulus and a flipped signature bit refuse signature; alg none and alg HS256 refuse alg-not-allowed; two segments refuse malformed; header kid k1 against jwk kid k2 refuses kid-mismatch."
+]
+
+type JwsHeader = { alg : string, typ : string, kid : string }
+type JwsFirebase = { tenant : string }
+type JsonValue = string | number | boolean | [JsonValue] | Map string JsonValue
+type JwsExtra = Map string JsonValue
+type JwsClaims = { iss : string, sub : string, aud : (string | [string]), exp : number, nbf : number, iat : number, auth_time : number, email : string, name : string, firebase : JwsFirebase, extra : JwsExtra }
+
+orbital JwsSpec {
+  expects entity JwsRun [runtime] {
+    id : string!
+  }
+  expects trait JwsVerifier {
+    state idle {
+      JWS_VERIFY -> idle
+    }
+    emits {
+      JWS_VERIFIED { header : JwsHeader!  payload : JwsClaims! }
+      JWS_REFUSED { reason : string! }
+    }
+  }
+  expects page "/jws" -> JwsVerifier
+}

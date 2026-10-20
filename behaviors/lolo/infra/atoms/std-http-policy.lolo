@@ -1,6 +1,7 @@
 app std-http-policy [
   version: "1.0.0",
-  description: "std-http-policy — the HTTP policy a served app answers with, as one pure decision. HTTP_DECIDE { requestId, method, path, headers, contentLength, responseSize, responseType } answers HTTP_DECIDED { requestId (echoed), verdict, status, responseHeaders, compress }. Any OPTIONS request is a preflight: status 200 at once, CORS grant plus allow-methods and the mirrored request headers, nothing else applied. Otherwise a body over bodyLimitBytes is refused 413 (payload-too-large); else ok 200. An origin on corsOrigins (the knob, replaced at runtime by CONFIGURE { corsOrigins }) is echoed in access-control-allow-origin with allow-credentials true, an unlisted or absent one gets no grant. A path starting with apiPrefix also carries the securityHeaders set (the helmet 8 defaults); a page gets none. compress is br when accepted, else gzip, else none; none for a preflight, an event stream, or a response under minCompressBytes."
+  env: ["CORS_ORIGIN"],
+  description: "std-http-policy — the HTTP policy a served app answers with, as one pure decision. HTTP_DECIDE { requestId, method, path, headers, contentLength, responseSize, responseType } answers HTTP_DECIDED { requestId (echoed), verdict, status, responseHeaders, compress }. Any OPTIONS request is a preflight: status 200 at once, CORS grant plus allow-methods and the mirrored request headers, nothing else applied. Otherwise a body over bodyLimitBytes is refused 413 (payload-too-large); else ok 200. An origin on corsOrigins (the knob, replaced at runtime by CONFIGURE { corsOrigins }, or, with the originsFromEnv knob on (the default), read at INIT from the CORS_ORIGIN environment variable as a comma list, trimmed, blanks dropped, the knob when it is blank, answering CORS_CONFIGURED { corsOrigins } or CORS_FAILED { error, kind }) is echoed in access-control-allow-origin with allow-credentials true, an unlisted or absent one gets no grant. A path starting with apiPrefix also carries the securityHeaders set (the helmet 8 defaults); a page gets none. compress is br when accepted, else gzip, else none; none for a preflight, an event stream, or a response under minCompressBytes."
 ]
 uses Spec from "almadar-std/http-policy"
 type HttpHeader = { name : string!, value : string! }
@@ -20,11 +21,22 @@ orbital HttpPolicyOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle
+      INIT -> idle when (not @config.originsFromEnv)
         (set @entity.corsOrigins @config.corsOrigins)
+      INIT -> idle when @config.originsFromEnv
+        (set @entity.corsOrigins @config.corsOrigins)
+        (os/getenv "CORS_ORIGIN" { emit: { success: ORIGINS_READ failure: ORIGINS_UNREAD } })
 
       CONFIGURE -> idle
         (set @entity.corsOrigins @payload.corsOrigins)
+
+      ORIGINS_READ -> idle
+        (set @entity.corsOrigins (if (and (!= @payload.value null) (!= (str/trim @payload.value) ""))
+          (array/filter (array/map (str/split @payload.value ",") (fn o (str/trim @o))) (fn o (!= @o "")))
+          @config.corsOrigins))
+        (emit CORS_CONFIGURED { corsOrigins: @entity.corsOrigins })
+      ORIGINS_UNREAD -> idle
+        (emit CORS_FAILED { error: @payload.error, kind: @payload.kind })
 
       HTTP_DECIDE -> idle
         (set @entity.method @payload.method)
@@ -69,6 +81,28 @@ orbital HttpPolicyOrbital {
         @description "The policy's answer for one request: its verdict, the status, the headers to add and the compression to apply."
         @synonyms "cors answer, security headers, body limit verdict, compression decision"
         @tier "primary"
+      CORS_CONFIGURED -> external {
+        corsOrigins : [string]!
+      }
+        @description "The CORS origins were read from the CORS_ORIGIN environment variable and now apply."
+        @tier "primary"
+      CORS_FAILED -> external {
+        error : string!
+        kind : string!
+      }
+        @description "The CORS_ORIGIN environment variable could not be read."
+        @tier "primary"
+      ORIGINS_READ {
+        value : string
+      }
+        @description "Internal: the os/getenv answer for CORS_ORIGIN."
+        @tier "internal"
+      ORIGINS_UNREAD {
+        error : string
+        kind : string
+      }
+        @description "Internal: the os/getenv for CORS_ORIGIN failed."
+        @tier "internal"
     }
 
     listens {
@@ -95,6 +129,11 @@ orbital HttpPolicyOrbital {
         @label "CORS origins"
         @description "Origins granted CORS with credentials; each is echoed back exactly. An origin not listed gets no grant."
         @synonyms "allowed origins, cors origin"
+        @tier "infra"
+      originsFromEnv : boolean = true
+        @label "Origins from environment"
+        @description "Read the CORS origins from the CORS_ORIGIN environment variable at INIT: a comma list, trimmed, blanks dropped, the corsOrigins knob when it is blank."
+        @synonyms "cors from env, env origins"
         @tier "infra"
       allowMethods : string = "GET,HEAD,PUT,PATCH,POST,DELETE"
         @label "Allowed methods"

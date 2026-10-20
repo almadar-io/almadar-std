@@ -1,0 +1,23 @@
+app gzip-spec [
+  version: "1.0.0",
+  description: "Design contract for unpacking a gzip member (RFC 1952) whose payload is DEFLATE (RFC 1951). GUNZIP { data } answers GUNZIP_ANSWERED { data, size, crc } when the member parses and its CRC32 and ISIZE trailer match the unpacked bytes, and GZIP_REFUSED { reason } otherwise, never a partial result. Members are concatenated (RFC 1952 2.2); FEXTRA is skipped by XLEN, FNAME and FCOMMENT to their NUL, FHCRC is verified (low 16 bits of the CRC32 of the header). Reasons are explicit and closed: magic (not 1f 8b), method (CM not 8), flags (a reserved FLG bit, FLG & 0xE0), header-crc (FHCRC mismatch), truncated, block (reserved block type, bad stored LEN/NLEN, bad Huffman code or distance), crc, size, trailing (bytes after a member that do not start another). Golden vectors from system gzip -n: hello, newline as a stored-block member H4sIAAAAAAAA/wEGAPn/aGVsbG8KIDA6NgYAAAA= unpacks to aGVsbG8K with size 6 and crc 0x363a3020 (909783072); the same text as a fixed-Huffman member H4sIAAAAAAAAA8tIzcnJ5wIAIDA6NgYAAAA= unpacks to the same bytes; the same stored member with the last byte changed to AAAB refuses size, with the CRC word changed refuses crc, with 1f 8b replaced refuses magic. A 2048-byte text gzipped with gzip -n (one dynamic-Huffman block), the same text with Z_FULL_FLUSH between 700-byte chunks (three dynamic blocks) and with level 0 (stored blocks) all unpack byte-equal; one flipped CRC bit refuses crc. Probed against the kernel (orb execute --cascade): gzip without -n (FNAME), FEXTRA, FCOMMENT, FHCRC, all four flags, and a hello member followed by a named member all unpack byte-equal; FLG 0x20 refuses flags, one flipped header byte under FHCRC refuses header-crc, a flipped CRC or ISIZE refuses crc or size, 24 junk bytes after a member refuse trailing, a cut stream refuses truncated, PK bytes refuse magic. Values it replaces: the gunzip step of every package install."
+]
+
+orbital GzipSpec {
+  expects entity GzipRun [runtime] {
+    id : string!
+    size : number
+    crc : number
+    @invariant (>= @entity.size 0)
+  }
+  expects trait Gunzip {
+    state idle {
+      GUNZIP -> idle
+    }
+    emits {
+      GUNZIP_ANSWERED { data : bytes!  size : number!  crc : number! }
+      GZIP_REFUSED { reason : string! }
+    }
+  }
+  expects page "/gzip" -> Gunzip
+}

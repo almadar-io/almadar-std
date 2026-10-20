@@ -1,0 +1,51 @@
+app std-collection-fetch [
+  version: "1.0.0",
+  description: "std-collection-fetch — headless collection fetcher. On INIT it fetches every row of the linked entity and emits CollectionItemLoaded for a sibling (stats, list) to consume; a failure emits CollectionItemLoadFailed and notifies with config.failureMessage followed by the error. Renders nothing."
+]
+uses Spec from "almadar-std/collection-fetch"
+
+orbital CollectionItemOrbital {
+  entity CollectionItem [runtime] {
+    id : string!
+  }
+
+  trait CollectionItemFetcher -> @rebindable CollectionItem [lifecycle, collection] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch CollectionItem {
+          emit: { failure: CollectionItemLoadFailed, success: CollectionItemLoaded }
+        })
+      CollectionItemLoadFailed -> idle
+        (notify error (str/concat @config.failureMessage ?error))
+    }
+
+    emits {
+      CollectionItemLoaded -> external
+        @description "Signals the fetched rows are ready."
+        @tier "internal"
+      CollectionItemLoadFailed -> external
+        @description "Indicates the rows failed to load."
+        @tier "internal"
+    }
+
+    listens {
+      CollectionItemLoadFailed {
+        error : string
+        code : string
+      }
+        @description "Indicates the rows failed to load."
+        @tier "internal"
+    }
+
+    config {
+      failureMessage : string = "Couldn't load the collection — "
+        @label "Failure message"
+        @description "Shown in the error toast when the fetch fails; the error text follows it."
+        @tier "presentation"
+    }
+  }
+
+  page "/collectionitems" as CollectionItemPage -> CollectionItemFetcher
+}

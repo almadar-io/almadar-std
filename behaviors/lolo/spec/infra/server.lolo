@@ -1,67 +1,45 @@
 app server-spec [
   version: "1.0.0",
-  description: "Design contract for the HTTP server program that replaces orbital-server: one http/listen stream, every request routed by method and path under /api (the host never routes), each answered once by http/respond. Routes: GET /api/health; GET /api/orbitals, /api/orbitals/:name, /api/orbitals/:name/state, /api/stats, /api/trace, /api/orbitals/inputs, /api/push/vapid-public-key, /api/events (SSE, needs a ticket); POST /api/orbitals/:orbital/events, /api/orbitals/:orbital/traits/:trait/entities/:id/events, /api/orbitals/:orbital/inputs, /api/orbitals/resolve-rows, /api/events/ticket, /api/hooks/:name, /api/tick. Every dispatch route except the ticket needs a verified bearer when the program has sign-in (401 UNAUTHORIZED); the ticket route admits the anonymous viewer; hooks, tick, push and health are outside the bearer guard. Any other path is a static file from the program assets then the client directory, else app-shell.html or index.html, never under /api or /__. Errors answer {error, code}."
+  description: "Design contract for the HTTP server program that replaces orbital-server, written as the contract of the organism that composes it: the organism owns no states, it wires atoms. std-http1 delivers each request once as REQUEST_RECEIVED and writes each RESPOND; std-http-policy answers HTTP_DECIDE with HTTP_DECIDED and reads CORS_ORIGIN at boot, answering CORS_CONFIGURED, which starts the listener; std-rate-limiter answers RATE_REQUEST with ADMITTED or THROTTLED; std-http-router drives one request through them and answers it with RESPOND, reporting REQUEST_ANSWERED. The host never routes: every request is routed by method and path under /api and answered once. This slice routes GET /api/health (200 { status, version }) and answers every other path 404 { error, code }. The target routes, each a later atom composed into the organism, are GET /api/orbitals, /api/orbitals/:name, /api/orbitals/:name/state, /api/stats, /api/trace, /api/orbitals/inputs, /api/push/vapid-public-key, /api/events (SSE, needs a ticket); POST /api/orbitals/:orbital/events, /api/orbitals/:orbital/traits/:trait/entities/:id/events, /api/orbitals/:orbital/inputs, /api/orbitals/resolve-rows, /api/events/ticket, /api/hooks/:name, /api/tick. Every dispatch route except the ticket needs a verified bearer when the program has sign-in (401 UNAUTHORIZED); the ticket route admits the anonymous viewer; hooks, tick, push and health are outside the bearer guard. Any other path is a static file from the program assets then the client directory, else app-shell.html or index.html, never under /api or /__. Errors answer { error, code }. The organism mounts one page, /server, over its composed traits."
 ]
 
 type ServerHeader = { name : string!, value : string! }
 type ServerErrorBody = { error : string!, code : string! }
 
 orbital ServerSpec {
-  expects entity ServerRequest [runtime] {
-    requestId : number!
-    method : string!
-    path : string!
-    query : string
-    body : string
-    peer : string
-    authorization : string
-    accept : string
-    status : number
-    @invariant (>= @entity.status 0)
+  expects entity HttpServerProgram [runtime] {
+    id : string!
   }
-  expects trait HttpServer {
-    state booting {
-      LISTENING -> serving
-      LISTEN_FAILED -> booting
-    }
-    state serving {
-      REQUEST_RECEIVED -> routing
-      LISTEN_CLOSED -> booting
-    }
-    state routing {
-      ROUTE_HEALTH -> serving
-      ROUTE_ORBITALS_LIST -> serving
-      ROUTE_ORBITAL_DETAIL -> serving
-      ROUTE_ORBITAL_STATE -> serving
-      ROUTE_STATS -> serving
-      ROUTE_TRACE -> serving
-      ROUTE_INPUTS_LIST -> serving
-      ROUTE_VAPID_KEY -> serving
-      ROUTE_EVENT -> serving
-      ROUTE_ENTITY_EVENT -> serving
-      ROUTE_INPUT -> serving
-      ROUTE_RESOLVE_ROWS -> serving
-      ROUTE_TICKET -> serving
-      ROUTE_STREAM -> serving
-      ROUTE_HOOK -> serving
-      ROUTE_TICK -> serving
-      ROUTE_STATIC -> serving
-      ROUTE_REFUSED -> serving
-    }
+  expects trait Http1 {
     emits {
-      SERVER_LISTENING { host : string!  port : number! }
-      REQUEST_UNAUTHORIZED { requestId : number!  error : ServerErrorBody! }
-      REQUEST_RATE_LIMITED { requestId : number!  peer : string!  resetSeconds : number! }
-      REQUEST_ANSWERED { requestId : number!  status : number!  headers : [ServerHeader]  body : string! }
-      DISPATCH_REQUESTED { requestId : number!  orbital : string!  traitName : string  entityId : string  event : string!  payload : string  clientId : string  locale : string  stream : boolean!  viewer : Viewer }
-      INPUT_REQUESTED { requestId : number!  orbital : string!  traitName : string!  entityId : string  event : string!  payload : string  stream : boolean!  viewer : Viewer }
-      RESOLVE_ROWS_REQUESTED { requestId : number!  reference : string!  viewer : Viewer }
-      HOOK_DELIVERED { requestId : number!  name : string!  headers : [ServerHeader]  body : string! }
-      TICK_REQUESTED { requestId : number!  authorization : string }
-      TICKET_MINT_REQUESTED { requestId : number!  viewer : Viewer }
-      STREAM_OPEN_REQUESTED { requestId : number!  ticket : string!  clientId : string }
-      STATIC_FILE_REQUESTED { requestId : number!  path : string! }
+      HTTP1_LISTENING { host : string!  port : number! }
+      REQUEST_RECEIVED { requestId : number!  method : string!  path : string!  query : string!  headers : Map string string  body : bytes!  peer : string! }
+      RESPONDED { requestId : number!  bytes : number! }
+      RESPOND_REFUSED { requestId : number!  kind : string!  error : string! }
     }
   }
-  expects page "/server" -> HttpServer
+  expects trait ServerPolicy {
+    emits {
+      HTTP_DECIDED { requestId : number!  verdict : string!  status : number!  responseHeaders : [ServerHeader]!  compress : string! }
+      CORS_CONFIGURED { corsOrigins : [string]! }
+    }
+  }
+  expects trait ServerRateLimiter {
+    emits {
+      ADMITTED { requestId : number!  remaining : number!  resetIn : number!  limit : number!  window : number! }
+      THROTTLED { requestId : number!  resetIn : number!  limit : number!  window : number! }
+    }
+  }
+  expects trait ServerRouter {
+    emits {
+      HTTP_DECIDE { requestId : number!  method : string!  path : string!  headers : [ServerHeader]!  contentLength : number }
+      RATE_REQUEST { requestId : number! }
+      RESPOND { requestId : number!  status : number!  headers : [ServerHeader]!  body : bytes! }
+      REQUEST_ANSWERED { requestId : number!  status : number!  headers : [ServerHeader]  body : string! }
+      REQUEST_RATE_LIMITED { requestId : number!  resetSeconds : number! }
+      ROUTE_HEALTH { requestId : number! }
+      ROUTE_REFUSED { requestId : number! }
+    }
+  }
+  expects page "/server" -> Http1, ServerPolicy, ServerRateLimiter, ServerRouter
 }

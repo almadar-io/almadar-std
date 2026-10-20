@@ -1,0 +1,33 @@
+app ml-similarity-spec [
+  version: "1.0.0",
+  description: "Design contract for the retrieval rung: a comparison embeds the query and its candidates and ends resolved with either a confident match (an index and its score) or an abstain that states why and echoes the originating request untouched. An empty candidate list, an incomplete embedding and an embedding failure all abstain; none leaves the comparison embedding."
+]
+
+orbital MlSimilaritySpec {
+  expects entity SimilarityComparison [runtime] {
+    query : string
+    candidates : [string]
+    matchIndex : int
+    matchScore : float
+    matchMargin : float
+    reason : string
+    status : "idle" | "embedding" | "resolved"
+  }
+  expects trait SimilarityRun {
+    state idle {
+      COMPARE -> embedding
+    }
+    state embedding {
+      EMBEDDED -> resolved
+      EMBED_FAILED -> resolved
+    }
+    state resolved {
+      RESET -> idle
+    }
+    emits {
+      SIMILARITY_MATCHED { index : int!  score : float! }
+      SIMILARITY_ABSTAINED { reason : string!  request : { candidate : string!, key : string!, accepted : [string]!, categories : [string]! } }
+    }
+  }
+  expects page "/ml-similarity" -> SimilarityRun
+}

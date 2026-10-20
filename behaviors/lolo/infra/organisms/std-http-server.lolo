@@ -2,275 +2,35 @@ app std-http-server [
   version: "1.0.0",
   env: ["CORS_ORIGIN"],
   net: { "127.0.0.1:3000": [listen] },
-  description: "std-http-server — the HTTP server program that replaces orbital-server, first slice. Boot reads CORS_ORIGIN (a comma list, trimmed, blanks dropped), hands it to std-http-policy with CONFIGURE and opens one http/listen stream. Requests are correlated by requestId, so any number are in flight at once. Each request is decided by std-http-policy (a preflight and a 413 are answered at once with http/respond), then counted by std-rate-limiter (an /api request; the limiter answers ADMITTED or THROTTLED, a throttled one is 429 with the plain-text body Too many requests, please try again later. and ratelimit-* headers built from the verdict), then routed by method and path: GET /api/health answers 200 { status, version }, every other path answers 404 { error, code }. Bound to spec/infra/server.lolo; the other routes, the bearer guard, hooks, SSE and static files are not in this slice."
+  description: "std-http-server — the HTTP server program that replaces orbital-server, first slice, composed from atoms and owning no topology of its own. std-http-policy reads CORS_ORIGIN at boot (a comma list, trimmed, blanks dropped) and answers CORS_CONFIGURED, which tells std-http1 to bind the host and port knobs. std-http1 reads each connection and delivers one typed request; std-http-router asks std-http-policy to decide it (a preflight and a 413 are answered at once), counts an /api request in std-rate-limiter (ADMITTED or THROTTLED, a throttled one is 429 with ratelimit-* headers), routes it by method and path (GET /api/health answers 200 { status, version }, every other path 404 { error, code }) and hands the answer back to std-http1 as RESPOND. Requests are correlated by requestId, so any number are in flight at once. Bound to spec/infra/server.lolo. The other routes, the bearer guard, hooks, SSE and static files are not in this slice."
 ]
+uses Spec from "almadar-std/server"
+uses H1 from "std/behaviors/std-http1"
 uses Policy from "std/behaviors/std-http-policy"
 uses Rate from "std/behaviors/std-rate-limiter"
-type ServerHeader = { name : string!, value : string! }
-type PendingRequest = { requestId : number!, method : string!, path : string!, responseHeaders : [ServerHeader]! }
+uses Router from "std/behaviors/std-http-router"
 orbital HttpServerOrbital {
-  entity ServerRequest [runtime] {
-    requestId : number!
-    method : string = ""
-    path : string = ""
-    query : string = ""
-    body : string = ""
-    peer : string = ""
-    authorization : string = ""
-    accept : string = ""
-    status : number = 0
-    host : string = ""
-    port : number = 0
-    corsOrigins : [string] = []
-    pending : [PendingRequest] = []
-    @invariant (>= @entity.status 0)
+  entity HttpServerProgram [runtime] {
+    id : string!
   }
 
-  trait HttpServer -> ServerRequest [integration, instance] {
-    initial: booting
-
-    state booting {
-      INIT -> booting
-        (os/getenv "CORS_ORIGIN" { key: "cors" emit: { success: SERVER_ENV_CORS failure: LISTEN_FAILED } })
-      SERVER_ENV_CORS -> booting
-        (set @entity.corsOrigins (if (and (!= @payload.value null) (!= (str/trim @payload.value) ""))
-          (array/filter (array/map (str/split @payload.value ",") (fn o (str/trim @o))) (fn o (!= @o "")))
-          @config.defaultCorsOrigins))
-        (emit POLICY_CONFIGURE { corsOrigins: @entity.corsOrigins })
-        (http/listen @config.host @config.port { key: "http" emit: { success: LISTENING failure: LISTEN_FAILED onMessage: REQUEST_RECEIVED } })
-      LISTENING -> serving
-        (set @entity.host @payload.address)
-        (set @entity.port @payload.port)
-        (emit SERVER_LISTENING { host: @payload.address, port: @payload.port })
-      LISTEN_FAILED -> booting
-    }
-
-    state serving {
-      INIT -> serving
-      REQUEST_RECEIVED -> serving
-        (set @entity.pending (array/concat @entity.pending [{ requestId: @payload.requestId, method: @payload.method, path: @payload.path, responseHeaders: [] }]))
-        (emit HTTP_DECIDE {
-          requestId: @payload.requestId,
-          method: @payload.method,
-          path: @payload.path,
-          headers: (array/map (object/keys @payload.headers) (fn k { name: @k, value: (object/get @payload.headers @k) })),
-          contentLength: (str/to-number (or (object/get @payload.headers "content-length") "0"))
-        })
-      HTTP_DECIDED -> serving when (= @payload.verdict "preflight")
-        (set @entity.status @payload.status)
-        (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
-        (http/respond @payload.requestId @payload.status (array/reduce @payload.responseHeaders {} (fn acc h (object/set @acc @h.name @h.value))) "")
-        (emit REQUEST_ANSWERED { requestId: @payload.requestId, status: @payload.status, headers: @payload.responseHeaders, body: "" })
-      HTTP_DECIDED -> serving when (= @payload.verdict "payload-too-large")
-        (set @entity.status 413)
-        (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
-        (http/respond @payload.requestId 413 (object/set (array/reduce @payload.responseHeaders {} (fn acc h (object/set @acc @h.name @h.value))) "content-type" "application/json") (json/stringify { error: "Payload too large", code: "PAYLOAD_TOO_LARGE" }))
-        (emit REQUEST_ANSWERED { requestId: @payload.requestId, status: 413, headers: @payload.responseHeaders, body: (json/stringify { error: "Payload too large", code: "PAYLOAD_TOO_LARGE" }) })
-      HTTP_DECIDED -> serving when (and (= @payload.verdict "ok") (str/startsWith (or (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "path") "") "/api"))
-        (set @entity.pending (array/map @entity.pending (fn p (if (= @p.requestId @payload.requestId) { requestId: @p.requestId, method: @p.method, path: @p.path, responseHeaders: @payload.responseHeaders } @p))))
-        (emit RATE_REQUEST { requestId: @payload.requestId })
-      HTTP_DECIDED -> serving when (and (= @payload.verdict "ok") (not (str/startsWith (or (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "path") "") "/api")))
-        (set @entity.pending (array/map @entity.pending (fn p (if (= @p.requestId @payload.requestId) { requestId: @p.requestId, method: @p.method, path: @p.path, responseHeaders: @payload.responseHeaders } @p))))
-        (emit ROUTE_REQUEST { requestId: @payload.requestId, rateHeaders: [] })
-      ADMITTED -> serving
-        (emit ROUTE_REQUEST {
-          requestId: @payload.requestId,
-          rateHeaders: [
-            { name: "ratelimit-policy", value: (str/concat "" @payload.limit ";w=" @payload.window) },
-            { name: "ratelimit-limit", value: (str/concat "" @payload.limit) },
-            { name: "ratelimit-remaining", value: (str/concat "" @payload.remaining) },
-            { name: "ratelimit-reset", value: (str/concat "" @payload.resetIn) }
-          ]
-        })
-      THROTTLED -> serving
-        (set @entity.status 429)
-        (http/respond @payload.requestId 429
-          (object/set
-            (array/reduce
-              (array/concat
-                (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders")
-                [
-                    { name: "ratelimit-policy", value: (str/concat "" @payload.limit ";w=" @payload.window) },
-                    { name: "ratelimit-limit", value: (str/concat "" @payload.limit) },
-                    { name: "ratelimit-remaining", value: "0" },
-                    { name: "ratelimit-reset", value: (str/concat "" @payload.resetIn) }
-                  ])
-              {}
-              (fn acc h (object/set @acc @h.name @h.value)))
-            "content-type" "text/plain; charset=utf-8")
-          "Too many requests, please try again later.")
-        (emit REQUEST_RATE_LIMITED { requestId: @payload.requestId, resetSeconds: @payload.resetIn })
-        (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
-      ROUTE_REQUEST -> serving when (let ((req (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (and (= (str/upper (object/get @req "method")) "GET") (= (object/get @req "path") "/api/health")))
-        (set @entity.status 200)
-        (http/respond @payload.requestId 200
-          (object/set
-            (array/reduce
-              (array/concat (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") @payload.rateHeaders)
-              {}
-              (fn acc h (object/set @acc @h.name @h.value)))
-            "content-type" "application/json")
-          (json/stringify { status: "healthy", version: @config.version }))
-        (emit ROUTE_HEALTH { requestId: @payload.requestId })
-        (emit REQUEST_ANSWERED { requestId: @payload.requestId, status: 200, body: (json/stringify { status: "healthy", version: @config.version }) })
-        (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
-      ROUTE_REQUEST -> serving when (let ((req (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (not (and (= (str/upper (object/get @req "method")) "GET") (= (object/get @req "path") "/api/health"))))
-        (set @entity.status 404)
-        (http/respond @payload.requestId 404
-          (object/set
-            (array/reduce
-              (array/concat (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") @payload.rateHeaders)
-              {}
-              (fn acc h (object/set @acc @h.name @h.value)))
-            "content-type" "application/json")
-          (json/stringify { error: "Not found", code: "NOT_FOUND" }))
-        (emit ROUTE_REFUSED { requestId: @payload.requestId })
-        (emit REQUEST_ANSWERED { requestId: @payload.requestId, status: 404, body: (json/stringify { error: "Not found", code: "NOT_FOUND" }) })
-        (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
-      LISTEN_CLOSED -> booting
-    }
-
-    emits {
-      SERVER_LISTENING -> external {
-        host : string!
-        port : number!
-      }
-        @description "The server is bound and accepting requests on host and port."
-        @tier "primary"
-      REQUEST_ANSWERED -> external {
-        requestId : number!
-        status : number!
-        headers : [ServerHeader]
-        body : string!
-      }
-        @description "One request was answered with this status."
-        @tier "primary"
-      REQUEST_RATE_LIMITED -> external {
-        requestId : number!
-        resetSeconds : number!
-      }
-        @description "One request was throttled and answered 429."
-        @tier "primary"
-      ROUTE_HEALTH -> external {
-        requestId : number!
-      }
-        @description "GET /api/health was answered."
-        @tier "secondary"
-      ROUTE_REFUSED -> external {
-        requestId : number!
-      }
-        @description "A path no route owns was answered 404."
-        @tier "secondary"
-      HTTP_DECIDE -> external {
-        requestId : number!
-        method : string!
-        path : string!
-        headers : [ServerHeader]!
-        contentLength : number
-      }
-        @description "Internal: ask std-http-policy about this request."
-        @tier "secondary"
-      POLICY_CONFIGURE -> external {
-        corsOrigins : [string]!
-      }
-        @description "Internal: hand std-http-policy the CORS origins read at boot."
-        @tier "secondary"
-      RATE_REQUEST -> external {
-        requestId : number!
-      }
-        @description "Internal: count this request in std-rate-limiter."
-        @tier "secondary"
-      ROUTE_REQUEST -> internal {
-        requestId : number!
-        rateHeaders : [ServerHeader]!
-      }
-        @description "Internal: this request passed the policy and the rate window and is ready to route."
-        @tier "secondary"
-      SERVER_ENV_CORS {
-        value : string
-        key : string
-      }
-        @description "Internal: the os/getenv answer for CORS_ORIGIN."
-        @tier "secondary"
-      LISTENING {
-        sock : number
-        address : string
-        port : number
-        key : string
-      }
-        @description "Internal: the http/listen bind answer."
-        @tier "secondary"
-      LISTEN_FAILED {
-        error : string
-        kind : string
-      }
-        @description "Internal: the environment read or the bind failed."
-        @tier "secondary"
-      REQUEST_RECEIVED {
-        requestId : number!
-        method : string!
-        path : string!
-        query : string
-        headers : Map string string
-        body : string
-        peer : string
-      }
-        @description "Internal: one parsed request from the http/listen stream."
-        @tier "secondary"
-    }
-
+  trait Http1 = H1.traits.Http1 {
     listens {
-      ServerPolicy.HTTP_DECIDED -> HTTP_DECIDED
-      HTTP_DECIDED {
-        requestId : number!
-        verdict : ("ok" | "preflight" | "payload-too-large")!
-        status : number!
-        responseHeaders : [ServerHeader]!
-        compress : ("br" | "gzip" | "none")!
-      }
-      ServerRateLimiter.ADMITTED -> ADMITTED
-      ADMITTED {
-        requestId : number!
-        remaining : number!
-        resetIn : number!
-        limit : number!
-        window : number!
-      }
-      ServerRateLimiter.THROTTLED -> THROTTLED
-      THROTTLED {
-        requestId : number!
-        resetIn : number!
-        limit : number!
-        window : number!
-      }
-      LISTEN_CLOSED {
-      }
+      ServerPolicy.CORS_CONFIGURED -> LISTEN
+      ServerRouter.RESPOND -> RESPOND
+      Http1HeadSearch.INDEX_OF_ANSWERED -> HEAD_SEARCHED
     }
+  }
 
-    config {
-      port : number = 3000
-        @label "Port"
-        @description "The port http/listen binds; a literal knob because the grant is checked against it."
-        @tier "infra"
-      host : string = "127.0.0.1"
-        @label "Host"
-        @description "The address http/listen binds; a literal knob because the grant is checked against it."
-        @tier "infra"
-      defaultCorsOrigins : [string] = ["http://localhost:5173"]
-        @label "Default CORS origins"
-        @description "The origins used when CORS_ORIGIN is unset or blank."
-        @tier "infra"
-      version : string = "0.0.0"
-        @label "Version"
-        @description "The version GET /api/health reports."
-        @tier "infra"
+  trait Http1HeadSearch = H1.traits.Http1HeadSearch {
+    listens {
+      Http1.HEAD_SEARCH -> INDEX_OF
     }
   }
 
   trait ServerPolicy = Policy.traits.HttpPolicy {
     listens {
-      HttpServer.HTTP_DECIDE -> HTTP_DECIDE
-      HttpServer.POLICY_CONFIGURE -> CONFIGURE
+      ServerRouter.HTTP_DECIDE -> HTTP_DECIDE
     }
   }
 
@@ -281,9 +41,18 @@ orbital HttpServerOrbital {
       windowSeconds: 900
     }
     listens {
-      HttpServer.RATE_REQUEST -> REQUEST
+      ServerRouter.RATE_REQUEST -> REQUEST
     }
   }
 
-  page "/server" as HttpServerPage -> HttpServer, ServerPolicy, ServerRateLimiter
+  trait ServerRouter = Router.traits.HttpRouter {
+    listens {
+      Http1.REQUEST_RECEIVED -> REQUEST_RECEIVED
+      ServerPolicy.HTTP_DECIDED -> HTTP_DECIDED
+      ServerRateLimiter.ADMITTED -> ADMITTED
+      ServerRateLimiter.THROTTLED -> THROTTLED
+    }
+  }
+
+  page "/server" as HttpServerPage -> Http1, Http1HeadSearch, ServerPolicy, ServerRateLimiter, ServerRouter
 }

@@ -1,0 +1,21 @@
+app machine-spec [
+  version: "1.0.0",
+  description: "Design contract for std-machine: a program's state machine read as data. One MACHINE_READ with a resolved program (.orb IR) answers MACHINE_ANSWERED with one row per transition of every inline trait, orbital by orbital: its orbital, trait, from state, event, to state, whether the transition carries a guard of its own, and the payload slots its event declares. Sibling unguarded transitions sharing (from, event) are one group with one row per distinct target; a group with any guard has one row per arm; a trait with no transitions has no rows. These are the rows the retired program/machine operator answered."
+]
+
+type MachineSlot = { name : string!, type : string!, required : boolean!, values : [string], entity : string }
+type MachineRow = { orbital : string!, trait : string!, from : string!, event : string!, to : string!, guarded : boolean!, payload : [MachineSlot]! }
+
+orbital MachineSpec {
+  expects entity MachineRun [runtime] {
+    id : string!
+    rows : [MachineRow]!
+  }
+  expects trait Machine {
+    state ready
+    emits {
+      MACHINE_ANSWERED { rows : [MachineRow]! }
+    }
+  }
+  expects page "/machine" -> Machine
+}

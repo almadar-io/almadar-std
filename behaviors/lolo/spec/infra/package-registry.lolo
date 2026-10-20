@@ -1,0 +1,38 @@
+app package-registry-spec [
+  version: "1.0.0",
+  description: "Design contract for the package registry server, a generic minimally-viable package manager any deployer can run (owner ruling 2026-10-20). A package is a gzip tarball identified by name and one exact version (flat: no ranges, no non-orb dependencies); the registry stores its sha256 integrity and serves it by URL. Routes under apiPrefix: PUT /packages/:name/:version publishes (bearer token compared to the publishToken knob, else 401 UNAUTHORIZED; body is the tarball, content-type application/gzip; integrity is computed server side as sha256 over the body, hex; a name+version already stored answers 409 VERSION_EXISTS and never overwrites; an empty body answers 400 EMPTY_TARBALL; answer 201 { name, version, url, integrity }). GET /packages/:name/:version answers 200 { name, version, url, integrity, yanked } (404 NOT_FOUND when absent; a yanked version still resolves so a lockfile keeps verifying). GET /packages/:name/:version/tarball streams the bytes (content-type application/gzip, 404 NOT_FOUND when absent, 410 YANKED when yanked). GET /packages/:name lists versions, newest publish first, as 200 { name, versions : [{ version, integrity, yanked, publishedAt }] } (404 NOT_FOUND for an unknown name). POST /packages/:name/:version/yank (bearer token) marks the version yanked without deleting it and answers 200 { name, version, yanked : true }; yanking twice is idempotent; an absent version answers 404. Errors answer { error, code }. Rows live in the row store (spec/infra/row-store.lolo): PackageVersion is [persistent], written by one persist create per publish (the duplicate check is the create refusing a duplicate id name@version) and updated by yank. Not in this slice: search, dist-tags, deprecation, owners, scoped tokens (the one token authorises publish and yank)."
+]
+
+orbital PackageRegistrySpec {
+  expects config { publishToken : string = ""  apiPrefix : string = "/api"  baseUrl : string = "" }
+  expects entity PackageVersion [persistent] {
+    id : string! @key
+    name : string!
+    version : string!
+    integrity : string!
+    tarball : bytes!
+    yanked : boolean
+    publishedAt : number!
+    @read none "served only through the registry routes"
+    @invariant (>= @entity.publishedAt 0)
+  }
+  expects trait PackageRegistry {
+    state serving {
+      PACKAGE_PUBLISH -> serving @ensures (= @entity.yanked false)
+      PACKAGE_FETCH -> serving
+      PACKAGE_TARBALL -> serving
+      PACKAGE_VERSIONS -> serving
+      PACKAGE_YANK -> serving @ensures (= @entity.yanked true)
+    }
+    emits {
+      PACKAGE_PUBLISH { requestId : number!  name : string!  version : string!  token : string  tarball : bytes! }
+      PACKAGE_FETCH { requestId : number!  name : string!  version : string! }
+      PACKAGE_TARBALL { requestId : number!  name : string!  version : string! }
+      PACKAGE_VERSIONS { requestId : number!  name : string! }
+      PACKAGE_YANK { requestId : number!  name : string!  version : string!  token : string }
+      PACKAGE_PUBLISHED { requestId : number!  name : string!  version : string!  url : string!  integrity : string! }
+      PACKAGE_REFUSED { requestId : number!  status : number!  code : string!  error : string! }
+    }
+  }
+  expects page "/packages" -> PackageRegistry
+}

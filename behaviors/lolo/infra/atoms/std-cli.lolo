@@ -4,6 +4,9 @@ app std-cli [
   description: "std-cli — runs one command-line program as a child process through os/spawn, os/read and os/wait. CLI_RUN carries the arguments and a stage name the caller uses to tell its runs apart; the atom pipes stdout and stderr, reads both to the end, waits for the exit and answers CLI_DONE with the stage, the exit code (-1 when a signal ended it), the signal and both streams as text. What a non-zero exit means is the caller's to decide. CLI_FAILED answers a run that could not be made: the child did not start (cli_spawn_failed), a read, close or wait failed (cli_host_failed), or another run is in flight (cli_busy); a cancel with nothing running answers cli_idle. CLI_CANCEL sends TERM to the running child; a cancel that arrives before the child has started is applied as soon as it starts. The command knob names the executable, matched exactly against the exec grant the composing program declares; the child runs with exactly the environment the run's env or else the env knob names, with the passEnv knob's host variables added (read with os/getenv; the explicit env wins on a clash), in the cwd knob's directory (the host's working directory when it is empty). A run may feed the child stdin bytes, which are written whole and closed before the output is read. With the binaryOutput knob on, stdout is answered as bytes only. With the stdio knob set to inherit the child runs on this process's terminal instead: nothing is piped or read, the atom waits for the exit and CLI_DONE carries the exit code with empty streams."
 ]
 uses Spec from "almadar-std/cli"
+type AnchoredEnv = { anchor : { env : string! }! }
+type AnchoredPath = { anchor : string!, path : string! }
+type CliCommand = string | AnchoredEnv | AnchoredPath
 orbital CliOrbital {
   entity CliCall [runtime] {
     id : string!
@@ -23,6 +26,7 @@ orbital CliOrbital {
     argv : [string] @description "The arguments of the run in flight." = []
     baseEnv : Map string string @description "The run's env, or the env knob, for the run in flight." = {}
     passed : Map string string @description "The passEnv variables read from the host for the run in flight." = {}
+    cmdCursor : number @description "Index of the candidate command being tried." = 0
     envCursor : number @description "Index of the next passEnv variable to read." = 0
   }
 
@@ -48,6 +52,7 @@ orbital CliOrbital {
         (set @entity.baseEnv (or @payload.env @config.env))
         (set @entity.passed (object/fromEntries (array/take [["", ""]] 0)))
         (set @entity.envCursor 0)
+        (set @entity.cmdCursor 0)
         (emit CLI_ENV_NEXT { })
     }
 
@@ -65,17 +70,17 @@ orbital CliOrbital {
         (set @entity.envCursor (+ @entity.envCursor 1))
         (emit CLI_ENV_NEXT { })
       CLI_ENV_NEXT -> running when (and (>= @entity.envCursor (array/len @config.passEnv)) (= @config.cwd "") (= @config.stdio "pipe") (not @entity.hasStdin))
-        (os/spawn @config.command @entity.argv { cwd: null env: (object/merge @entity.passed @entity.baseEnv) stdin: "null" stdout: "pipe" stderr: "pipe" detached: false } { key: "spawn" emit: { success: CLI_SPAWNED failure: CLI_SPAWN_FAILED } })
+        (os/spawn (array/nth @config.commands @entity.cmdCursor) @entity.argv { cwd: null env: (object/merge @entity.passed @entity.baseEnv) stdin: "null" stdout: "pipe" stderr: "pipe" detached: false } { key: "spawn" emit: { success: CLI_SPAWNED failure: CLI_SPAWN_FAILED } })
       CLI_ENV_NEXT -> running when (and (>= @entity.envCursor (array/len @config.passEnv)) (= @config.cwd "") (= @config.stdio "pipe") @entity.hasStdin)
-        (os/spawn @config.command @entity.argv { cwd: null env: (object/merge @entity.passed @entity.baseEnv) stdin: "pipe" stdout: "pipe" stderr: "pipe" detached: false } { key: "spawn" emit: { success: CLI_SPAWNED failure: CLI_SPAWN_FAILED } })
+        (os/spawn (array/nth @config.commands @entity.cmdCursor) @entity.argv { cwd: null env: (object/merge @entity.passed @entity.baseEnv) stdin: "pipe" stdout: "pipe" stderr: "pipe" detached: false } { key: "spawn" emit: { success: CLI_SPAWNED failure: CLI_SPAWN_FAILED } })
       CLI_ENV_NEXT -> running when (and (>= @entity.envCursor (array/len @config.passEnv)) (!= @config.cwd "") (= @config.stdio "pipe") (not @entity.hasStdin))
-        (os/spawn @config.command @entity.argv { cwd: @config.cwd env: (object/merge @entity.passed @entity.baseEnv) stdin: "null" stdout: "pipe" stderr: "pipe" detached: false } { key: "spawn" emit: { success: CLI_SPAWNED failure: CLI_SPAWN_FAILED } })
+        (os/spawn (array/nth @config.commands @entity.cmdCursor) @entity.argv { cwd: @config.cwd env: (object/merge @entity.passed @entity.baseEnv) stdin: "null" stdout: "pipe" stderr: "pipe" detached: false } { key: "spawn" emit: { success: CLI_SPAWNED failure: CLI_SPAWN_FAILED } })
       CLI_ENV_NEXT -> running when (and (>= @entity.envCursor (array/len @config.passEnv)) (!= @config.cwd "") (= @config.stdio "pipe") @entity.hasStdin)
-        (os/spawn @config.command @entity.argv { cwd: @config.cwd env: (object/merge @entity.passed @entity.baseEnv) stdin: "pipe" stdout: "pipe" stderr: "pipe" detached: false } { key: "spawn" emit: { success: CLI_SPAWNED failure: CLI_SPAWN_FAILED } })
+        (os/spawn (array/nth @config.commands @entity.cmdCursor) @entity.argv { cwd: @config.cwd env: (object/merge @entity.passed @entity.baseEnv) stdin: "pipe" stdout: "pipe" stderr: "pipe" detached: false } { key: "spawn" emit: { success: CLI_SPAWNED failure: CLI_SPAWN_FAILED } })
       CLI_ENV_NEXT -> running when (and (>= @entity.envCursor (array/len @config.passEnv)) (= @config.cwd "") (= @config.stdio "inherit"))
-        (os/spawn @config.command @entity.argv { cwd: null env: (object/merge @entity.passed @entity.baseEnv) stdin: "inherit" stdout: "inherit" stderr: "inherit" detached: false } { key: "spawn" emit: { success: CLI_SPAWNED failure: CLI_SPAWN_FAILED } })
+        (os/spawn (array/nth @config.commands @entity.cmdCursor) @entity.argv { cwd: null env: (object/merge @entity.passed @entity.baseEnv) stdin: "inherit" stdout: "inherit" stderr: "inherit" detached: false } { key: "spawn" emit: { success: CLI_SPAWNED failure: CLI_SPAWN_FAILED } })
       CLI_ENV_NEXT -> running when (and (>= @entity.envCursor (array/len @config.passEnv)) (!= @config.cwd "") (= @config.stdio "inherit"))
-        (os/spawn @config.command @entity.argv { cwd: @config.cwd env: (object/merge @entity.passed @entity.baseEnv) stdin: "inherit" stdout: "inherit" stderr: "inherit" detached: false } { key: "spawn" emit: { success: CLI_SPAWNED failure: CLI_SPAWN_FAILED } })
+        (os/spawn (array/nth @config.commands @entity.cmdCursor) @entity.argv { cwd: @config.cwd env: (object/merge @entity.passed @entity.baseEnv) stdin: "inherit" stdout: "inherit" stderr: "inherit" detached: false } { key: "spawn" emit: { success: CLI_SPAWNED failure: CLI_SPAWN_FAILED } })
       CLI_CANCEL -> running when (> @entity.pid 0)
         (os/kill @entity.pid "TERM" { key: "kill" emit: { failure: CLI_HOST_FAILED } })
       CLI_CANCEL -> running when (= @entity.pid 0)
@@ -118,7 +123,10 @@ orbital CliOrbital {
       CLI_STDIN_CLOSED -> running
         (os/read @entity.outFd 65536 { key: "out" emit: { success: CLI_OUT_CHUNK failure: CLI_HOST_FAILED } })
         (os/read @entity.errFd 65536 { key: "err" emit: { success: CLI_ERR_CHUNK failure: CLI_HOST_FAILED } })
-      CLI_SPAWN_FAILED -> idle
+      CLI_SPAWN_FAILED -> running when (and (= @payload.kind "not-found") (< (+ @entity.cmdCursor 1) (array/len @config.commands)))
+        (set @entity.cmdCursor (+ @entity.cmdCursor 1))
+        (emit CLI_ENV_NEXT { })
+      CLI_SPAWN_FAILED -> idle when (or (!= @payload.kind "not-found") (>= (+ @entity.cmdCursor 1) (array/len @config.commands)))
         (emit CLI_FAILED { stage: @entity.stage error: (or @payload.error "") code: "cli_spawn_failed" })
         (set @entity.stage "")
       CLI_OUT_CHUNK -> running when (not @payload.eof)
@@ -205,6 +213,7 @@ orbital CliOrbital {
         @tier "internal"
       CLI_SPAWN_FAILED -> internal {
         error : string
+        kind : string
       }
         @description "Internal: os/spawn could not start the child."
         @tier "internal"
@@ -234,10 +243,10 @@ orbital CliOrbital {
     }
 
     config {
-      command : string = "echo"
-        @label "Command"
-        @description "The executable to run, matched exactly against the exec grant of the program that composes this atom, e.g. gh, gcloud or pnpm. The default, echo, is what the atom grants on its own."
-        @synonyms "program, executable, binary"
+      commands : [CliCommand] = ["echo"]
+        @label "Commands"
+        @description "The executables to try, in order, each matched exactly against the exec grant of the program that composes this atom, e.g. [\"gh\"], [\"gcloud\"] or [{ anchor: { env: \"ORB_BUN_PATH\" } }, { anchor: \"exe-dir\", path: \"bun\" }, \"bun\"]. A candidate that is absent (not found, or an unset env anchor) is skipped for the next; any other start failure, or the end of the list, fails the run with cli_spawn_failed. The default, echo, is what the atom grants on its own."
+        @synonyms "program, executable, binary, command candidates"
         @tier "domain"
       cwd : string = ""
         @label "Working directory"

@@ -1,0 +1,75 @@
+app std-progress-storage [
+  version: "1.0.0",
+  description: "std-progress-storage — saves a progress object through object storage. Renders its form slot (formTrait); UPLOAD emits STORAGE_UPLOAD with the configured bucket, access level and size limit, and the storage answer (PROGRESS_STORED, PROGRESS_STORE_FAILED) is reported as a toast. Rebind linkedEntity and restate the storage client's STORAGE_UPLOADED and STORAGE_FAILED routes."
+]
+;; @capabilities "save progress to object storage, upload progress object, progress backup, storage upload toast"
+uses Spec from "almadar-std/progress-storage"
+
+orbital ProgressStorageOrbital {
+  entity ProgressTarget [runtime, shared] {
+    id : string!
+  }
+
+  trait ProgressStorage -> @rebindable ProgressTarget [interaction, instance] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+        (render-ui main <Stack direction={vertical} gap={md}>
+          {@config.formTrait}
+        </Stack>)
+      UPLOAD -> ready
+        (notify info "Running Object Storage operation...")
+        (emit STORAGE_UPLOAD { bucket: @config.bucket, acl: @config.acl, maxSize: @config.maxSize })
+      PROGRESS_STORED -> ready
+        (notify success "Object Storage operation complete")
+      PROGRESS_STORE_FAILED -> ready
+        (notify error (str/concat "Object Storage error — " ?message))
+    }
+
+    emits {
+      STORAGE_UPLOAD -> external {
+        bucket : string
+        acl : string
+        maxSize : number
+      }
+        @description "Store the progress object."
+        @tier "secondary"
+    }
+
+    listens {
+      PROGRESS_STORED {
+        key : string!
+      }
+      PROGRESS_STORE_FAILED {
+        code : string
+        message : string!
+      }
+      UPLOAD {
+        source : string
+        file : string
+      }
+    }
+
+    config {
+      formTrait : trait
+        @label "Form trait"
+        @description "Trait rendered as the upload form"
+        @tier "presentation"
+      bucket : string
+        @label "Bucket"
+        @description "Target bucket for the progress object."
+        @tier "domain"
+      acl : string = private
+        @label "Access"
+        @description "Access level the stored object gets."
+        @tier "domain"
+      maxSize : number = 102400
+        @label "Max size"
+        @description "Largest object accepted, in bytes."
+        @tier "domain"
+    }
+  }
+
+  page "/progress-storage" as ProgressStoragePage -> ProgressStorage
+}

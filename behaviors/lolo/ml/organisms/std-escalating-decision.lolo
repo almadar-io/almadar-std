@@ -6,6 +6,7 @@ app std-escalating-decision [
 
 ;; @exposure both
 orbital EscalatingDecisionOrbital {
+  uses Ladder from "std/behaviors/std-ml-ladder"
   uses Rung0 from "std/behaviors/std-ml-exact-check"
   uses Rung1 from "std/behaviors/std-ml-lookup"
   uses Rung3 from "std/behaviors/std-ml-similarity"
@@ -29,13 +30,6 @@ orbital EscalatingDecisionOrbital {
   type ContractRangeViolation = { type : "range_violation", dim : int, min : number, max : number, actualMin : number, actualMax : number }
   type ContractNotATensor = { type : "not_a_tensor", actualType : string }
   type ContractViolation = ContractShapeMismatch | ContractRangeViolation | ContractNotATensor
-
-  ;; matched varies by which rung answered: an exact key, a table entry or a
-  ;; category label (text), a match index, or R4's raw tensor output.
-  type MatchedText = { type : "text", text : string! }
-  type MatchedIndex = { type : "index", index : int! }
-  type MatchedTensor = { type : "tensor", output : [float]! }
-  type Matched = MatchedText | MatchedIndex | MatchedTensor
 
   ;; The entry holds no request data: the whole DECIDE payload travels down
   ;; the chain as `request`, so there is nothing for this trait to remember.
@@ -100,48 +94,10 @@ orbital EscalatingDecisionOrbital {
     status       : "idle" | "classifying" | "done" = idle
   }
 
-  ;; The ladder's entry. Holds nothing the rungs need — the whole DECIDE
-  ;; payload travels down the chain as `request`, and each rung projects its
-  ;; own inputs out of it. This trait listens to no rung, which is what keeps
-  ;; the graph acyclic.
-  trait LadderEntry -> LadderRequest [lifecycle, instance] {
-    initial: idle
-
-    state idle {
-      INIT -> idle
-        (set @entity.status idle)
-
-      DECIDE -> dispatched
-        (set @entity.status dispatched)
-        (emit RUN_EXACT { candidate: ?candidate, key: ?key, candidateNumber: ?candidateNumber, keyNumber: ?keyNumber, request: ? })
-    }
-
-    state dispatched {
-      INIT -> dispatched
-        (set @entity.status dispatched)
-      RESET -> idle
-        (set @entity.status idle)
-        (emit RUNGS_RESET {})
-    }
-
-    emits {
-      RUNGS_RESET {
-      }
-        @description "The ladder was reset; every rung returns to idle so the next DECIDE runs the whole chain again."
-        @tier "secondary"
-      RUN_EXACT {
-        candidate : string!
-        key : string!
-        candidateNumber : number
-        keyNumber : number
-        request : DecisionRequest!
-      }
-        @description "Starts the ladder at the exact-check rung (R0). request is the whole DECIDE payload, carried down the chain so each rung can project its own inputs."
-        @tier "secondary"
-    }
-
+  trait LadderEntry :: r DecisionRequest = Ladder.traits.LadderEntry -> LadderRequest {
     listens {
-      DECIDE {
+      RESET {}
+      DECIDE -> external {
         candidate  : string!
         key        : string!
         candidateNumber : number
@@ -239,105 +195,15 @@ orbital EscalatingDecisionOrbital {
   ;; The sink. Listens to every rung's success plus the generative floor's
   ;; failure, and emits the one public verdict. Nothing listens to it, so it
   ;; closes the DAG.
-  trait LadderVerdictSink -> LadderVerdict [lifecycle, instance] {
-    initial: idle
-
-    state idle {
-      INIT -> idle
-        (set @entity.rung "")
-        (set @entity.confidence 0)
-        (set @entity.reasoning "")
-        (set @entity.failReason "")
-        (set @entity.status idle)
-
-      FROM_EXACT -> decided
-        (set @entity.rung "R0")
-        (set @entity.confidence 1)
-        (set @entity.reasoning "")
-        (set @entity.status decided)
-        (emit DECIDED { rung: "R0", confidence: 1, matched: { type: "text", text: ?key }, reasoning: "" })
-
-      FROM_LOOKUP -> decided
-        (set @entity.rung "R1")
-        (set @entity.confidence 1)
-        (set @entity.reasoning "")
-        (set @entity.status decided)
-        (emit DECIDED { rung: "R1", confidence: 1, matched: { type: "text", text: ?entry }, reasoning: "" })
-
-      FROM_SIMILARITY -> decided
-        (set @entity.rung "R3")
-        (set @entity.confidence ?score)
-        (set @entity.reasoning "")
-        (set @entity.status decided)
-        (emit DECIDED { rung: "R3", confidence: ?score, matched: { type: "index", index: ?index }, reasoning: "" })
-
-      FROM_INFER -> decided
-        (set @entity.rung "R4")
-        (set @entity.confidence ?confidence)
-        (set @entity.reasoning "")
-        (set @entity.status decided)
-        (emit DECIDED { rung: "R4", confidence: ?confidence, matched: { type: "tensor", output: ?output }, reasoning: "" })
-
-      FROM_CLASSIFY -> decided
-        (set @entity.rung "R5")
-        (set @entity.confidence ?confidence)
-        (set @entity.reasoning ?reasoning)
-        (set @entity.status decided)
-        (emit DECIDED { rung: "R5", confidence: ?confidence, matched: { type: "text", text: ?category }, reasoning: ?reasoning })
-
-      FROM_CLASSIFY_FAILURE -> failed
-        (set @entity.failReason ?error)
-        (set @entity.status failed)
-        (emit DECISION_FAILED { reason: ?error })
-    }
-
-    state decided {
-      INIT -> decided
-        (set @entity.status decided)
-      RESET -> idle
-        (set @entity.rung "")
-        (set @entity.confidence 0)
-        (set @entity.reasoning "")
-        (set @entity.failReason "")
-        (set @entity.status idle)
-    }
-
-    state failed {
-      INIT -> failed
-        (set @entity.status failed)
-      RESET -> idle
-        (set @entity.rung "")
-        (set @entity.confidence 0)
-        (set @entity.reasoning "")
-        (set @entity.failReason "")
-        (set @entity.status idle)
-    }
-
-    emits {
-      DECIDED -> external {
-        rung : string!
-        confidence : number!
-        matched : Matched!
-        reasoning : string!
-      }
-        @description "The ladder proved an answer. rung names which one served it: R0 exact, R1 table, R3 retrieved, R4 learned, R5 generative."
-        @tier "primary"
-
-      DECISION_FAILED -> external {
-        reason : string!
-      }
-        @description "Even the generative floor (R5) could not answer — the classify service call itself failed."
-        @tier "primary"
-    }
-
+  trait LadderVerdictSink = Ladder.traits.LadderVerdictSink -> LadderVerdict {
     listens {
+      RESET {}
       FROM_EXACT { key : string! }
       FROM_LOOKUP { entry : string! }
       FROM_SIMILARITY { index : int!  score : number! }
       FROM_INFER { output : [float]!  confidence : number! }
       FROM_CLASSIFY { category : string!  confidence : number!  reasoning : string! }
       FROM_CLASSIFY_FAILURE { error : string! }
-
       ExactRung.EXACT_MATCHED -> FROM_EXACT
         with { key: ?key }
       LookupRung.KEY_HIT -> FROM_LOOKUP

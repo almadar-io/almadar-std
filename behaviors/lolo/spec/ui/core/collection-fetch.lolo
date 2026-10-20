@@ -1,0 +1,17 @@
+app collection-fetch-spec [
+  version: "1.0.0",
+  description: "Design contract for a headless collection fetcher: on INIT it fetches the linked entity's rows and emits them (or the failure) for a sibling to consume."
+]
+
+orbital CollectionFetchSpec {
+  expects trait CollectionItemFetcher {
+    emits {
+      CollectionItemLoaded
+      CollectionItemLoadFailed
+    }
+    state idle {
+      INIT -> idle
+      CollectionItemLoadFailed -> idle
+    }
+  }
+}

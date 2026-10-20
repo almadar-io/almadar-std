@@ -1,6 +1,6 @@
 app llm-provider-spec [
   version: "1.0.0",
-  description: "Design contract for a language-model provider client: generate, classify and embed each answer a result event or LLM_FAILED, never neither. A generate answers the text and its token usage; a failure carries a code and a message; a reply the provider reported with no usage counts as zero."
+  description: "Design contract for a language-model provider client: generate, classify and embed each answer a result event or LLM_FAILED, never neither. A generate answers the text and its token usage; a failure carries a code and a message; a reply the provider reported with no usage counts as zero. A tool run asks for its tool calls as typed records: each call carries its id, its tool name and its arguments as a value tree of strings, numbers, booleans, lists and maps, never as JSON text."
 ]
 
 orbital LlmProviderSpec {
@@ -9,10 +9,13 @@ orbital LlmProviderSpec {
       LLM_GENERATE -> idle
       LLM_CLASSIFY -> idle
       LLM_EMBED -> idle
+      LLM_CALL_TOOLS -> idle
+      LLM_TOOLS_ANSWERED -> idle
     }
     emits {
       LLM_GENERATE_RESULT { content : string! }
       LLM_FAILED { code : string  message : string! }
+      LLM_TOOLS_REQUESTED { session : string!  calls : [{ id : string!, name : string! }]! }
     }
   }
   expects page "/llm" -> LlmClient

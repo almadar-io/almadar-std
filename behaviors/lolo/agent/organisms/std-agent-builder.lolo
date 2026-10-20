@@ -66,6 +66,7 @@ type FieldWordLimit = {
 type AgentToolInput = {
   event : EventAddress!
   payload : [AgentToolField]
+  fireAndForget : boolean
 }
 type KnobField = {
   name : string!
@@ -96,7 +97,6 @@ type FilledTrait = {
   config : Map string SExpr
 }
 
-type LlmToolCall = { id : string!, name : string!, arguments : string! }
 type AgentToolKind = "input" | "read" | "invalid"
 type AgentToolCallActivity = {
   type : "tool_call"!
@@ -148,6 +148,9 @@ uses ToolLoop from "std/behaviors/std-agent-tool-loop"
 
 uses Llm from "std/behaviors/std-llm"
 
+type JsonValue = string | number | boolean | [JsonValue] | Map string JsonValue
+type ToolArguments = Map string JsonValue
+type ToolCall = { id : string!, name : string!, arguments : ToolArguments }
 orbital AgentBuilderOrbital {
 
   entity BuilderProcess [runtime] {
@@ -328,7 +331,7 @@ orbital AgentBuilderOrbital {
         (emit CONVERSE {
           messages: [{ role: "user", content: (if (= @entity.context "") @entity.request (str/concat @entity.request "\n\n" @entity.context)) }]
           instructions: (str/concat @config.pickInstructions "\nThe building blocks:\n" (str/join (array/map (array/take @entity.ranked (object/get (array/nth @config.ladder @entity.step) take 1)) (fn r (str/concat "- " @r.behavior ": " (object/get @r description "")))) "\n"))
-          tools: [{ event: @config.pickEvent, payload: [{ name: "behavior", type: "string", required: true, values: (array/map (array/take @entity.ranked (object/get (array/nth @config.ladder @entity.step) take 1)) (fn r @r.behavior)), description: "The building block that fits the request." }, { name: "fields", type: "object", required: (> (array/len @config.pickFields) 0), properties: @config.pickFields }] }]
+          tools: [{ fireAndForget: true, event: @config.pickEvent, payload: [{ name: "behavior", type: "string", required: true, values: (array/map (array/take @entity.ranked (object/get (array/nth @config.ladder @entity.step) take 1)) (fn r @r.behavior)), description: "The building block that fits the request." }, { name: "fields", type: "object", required: (> (array/len @config.pickFields) 0), properties: @config.pickFields }] }]
           ephemeral: true
         })
       BUILD_FAILED -> failed
@@ -408,7 +411,7 @@ orbital AgentBuilderOrbital {
             (emit CONVERSE {
               messages: [{ role: "user", content: (if (= @entity.context "") @entity.request (str/concat @entity.request "\n\n" @entity.context)) }]
               instructions: (str/concat @config.fillInstructions "\nThe building block: " @entity.chosen " — " @entity.chosenDescription)
-              tools: [{ event: @config.fillEvent, payload: @entity.tool }]
+              tools: [{ fireAndForget: true, event: @config.fillEvent, payload: @entity.tool }]
               ephemeral: true
             })))
       DESCRIBED -> failed when (= (array/len (object/get ?result orbitals [])) 0)
@@ -437,7 +440,7 @@ orbital AgentBuilderOrbital {
         (emit CONVERSE {
           messages: [{ role: "user", content: @entity.request }, { role: "user", content: (str/concat "Some fields are too long. The most words each field may hold: " (str/join (array/map @config.fieldWordLimits (fn l (str/concat @l.name " " (str/concat @l.words) " words"))) ", ") ". What you wrote: " (json/stringify @entity.filledFields) ". Call FILL again with the same knobs and shorter fields.") }]
           instructions: (str/concat @config.fillInstructions "\nThe building block: " @entity.chosen " — " @entity.chosenDescription)
-          tools: [{ event: @config.fillEvent, payload: @entity.tool }]
+          tools: [{ fireAndForget: true, event: @config.fillEvent, payload: @entity.tool }]
           ephemeral: true
         })
       ASSISTANT_REPLIED -> building when (or (array/every @config.fieldWordLimits (fn l (<= (array/len (str/split (str/trim (object/get @entity.filledFields @l.name "")) " ")) @l.words))) (>= @entity.repairs @config.maxRepairs))
@@ -468,7 +471,7 @@ orbital AgentBuilderOrbital {
         (emit CONVERSE {
           messages: [{ role: "user", content: @entity.request }, { role: "user", content: (str/concat "The result did not validate. The validator's issues: " (json/stringify (if (== ?errors null) [] ?errors)) " (" ?error "). Call FILL again with corrected values.") }]
           instructions: @config.fillInstructions
-          tools: [{ event: @config.fillEvent, payload: @entity.tool }]
+          tools: [{ fireAndForget: true, event: @config.fillEvent, payload: @entity.tool }]
           ephemeral: true
         })
       BUILD_FAILED -> failed when (or (!= (object/get (array/nth @config.ladder @entity.step) action) "fill") (>= @entity.repairs @config.maxRepairs))
@@ -658,7 +661,7 @@ orbital AgentBuilderOrbital {
       BuilderLlm.LLM_CANCELLED -> ToolsCancelled
       ToolsRequested {
         session : string!
-        calls : [LlmToolCall]!
+        calls : [ToolCall]!
       }
       ToolsStep {
         activity : AgentActivity!
