@@ -27,7 +27,7 @@ orbital ReminderSchedulerOrbital {
 
     state idle {
       INIT -> idle
-      ScanRecordsLoaded -> scanning when (and @config.enabled [">", (array/len ?data), 0])
+      ScanRecordsLoaded -> scanning when (and @config.enabled (> (array/len ?data) 0))
         (set @entity.headId (object/get (array/first ?data) id))
         (emit ReminderDue {
           entityId: @entity.headId
@@ -37,10 +37,10 @@ orbital ReminderSchedulerOrbital {
         (persist update @config.targetEntity { id: @entity.headId, remindedAt: @now } {
           emit: { failure: ScanFailed, success: ReminderStepped }
         })
-      ScanRecordsLoaded -> idle when ["=", (array/len ?data), 0]
+      ScanRecordsLoaded -> idle when (= (array/len ?data) 0)
       ;; A disabled scan acknowledges the batch without marking anything —
       ;; the dedup write fires only for a record that actually matched.
-      ScanRecordsLoaded -> idle when ["=", @config.enabled, false]
+      ScanRecordsLoaded -> idle when (= @config.enabled false)
       ScanFailed -> idle
         (notify error (str/concat "Couldn't scan for reminders — " ?error))
     }
@@ -50,9 +50,9 @@ orbital ReminderSchedulerOrbital {
       ReminderStepped -> scanning
         (fetch @config.targetEntity {
           emit: { failure: ScanFailed, success: ScanRecordsLoaded }
-          filter: (and ["=", (object/get @entity remindedAt), 0] (or (and ["=", @config.direction, "future"] [">", (time/parse (object/get @entity @config.dateField)), @now] ["<", ["-", (time/parse (object/get @entity @config.dateField)), @now], ["*", @config.offsetHours, 3600000]]) (and ["=", @config.direction, "past"] [">", ["-", @now, (time/parse (object/get @entity @config.dateField))], ["*", @config.offsetHours, 3600000]])))
+          filter: (and (= (object/get @entity remindedAt) 0) (or (and (= @config.direction "future") (> (time/parse (object/get @entity @config.dateField)) @now) (< (- (time/parse (object/get @entity @config.dateField)) @now) (* @config.offsetHours 3600000))) (and (= @config.direction "past") (> (- @now (time/parse (object/get @entity @config.dateField))) (* @config.offsetHours 3600000)))))
         })
-      ScanRecordsLoaded -> scanning when [">", (array/len ?data), 0]
+      ScanRecordsLoaded -> scanning when (> (array/len ?data) 0)
         (set @entity.headId (object/get (array/first ?data) id))
         (emit ReminderDue {
           entityId: @entity.headId
@@ -62,7 +62,7 @@ orbital ReminderSchedulerOrbital {
         (persist update @config.targetEntity { id: @entity.headId, remindedAt: @now } {
           emit: { failure: ScanFailed, success: ReminderStepped }
         })
-      ScanRecordsLoaded -> idle when ["=", (array/len ?data), 0]
+      ScanRecordsLoaded -> idle when (= (array/len ?data) 0)
       ScanFailed -> idle
         (notify error (str/concat "Couldn't scan for reminders — " ?error))
     }
@@ -102,7 +102,7 @@ orbital ReminderSchedulerOrbital {
       scanCycle every "*/15 * * * *" [background]
         (fetch @config.targetEntity {
           emit: { failure: ScanFailed, success: ScanRecordsLoaded }
-          filter: (and ["=", (object/get @entity remindedAt), 0] (or (and ["=", @config.direction, "future"] [">", (time/parse (object/get @entity @config.dateField)), @now] ["<", ["-", (time/parse (object/get @entity @config.dateField)), @now], ["*", @config.offsetHours, 3600000]]) (and ["=", @config.direction, "past"] [">", ["-", @now, (time/parse (object/get @entity @config.dateField))], ["*", @config.offsetHours, 3600000]])))
+          filter: (and (= (object/get @entity remindedAt) 0) (or (and (= @config.direction "future") (> (time/parse (object/get @entity @config.dateField)) @now) (< (- (time/parse (object/get @entity @config.dateField)) @now) (* @config.offsetHours 3600000))) (and (= @config.direction "past") (> (- @now (time/parse (object/get @entity @config.dateField))) (* @config.offsetHours 3600000)))))
         })
       
     }

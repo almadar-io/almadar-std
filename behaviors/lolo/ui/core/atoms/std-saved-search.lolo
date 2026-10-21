@@ -121,7 +121,7 @@ orbital SavedSearchOrbital {
       ;; One filter change at a time (std-filter's FILTER shape); an empty
       ;; value clears that filter, matching std-browse's REFETCH_FILTER.
       TRACK_FILTERS -> browsing
-        (set @entity.filters (if ["=", ?value, ""] (object/omit @entity.filters [?field]) (object/set @entity.filters ?field ?value)))
+        (set @entity.filters (if (= ?value "") (object/omit @entity.filters [?field]) (object/set @entity.filters ?field ?value)))
       SAVE_CURRENT -> browsing
         (persist create SavedSearch {
           name: (if (validate/required @entity.query) @entity.query @config.defaultSearchName)

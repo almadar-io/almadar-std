@@ -127,7 +127,7 @@ orbital ApprovalGateOrbital {
     state idle {
       INIT -> idle
         (fetch ApprovalRequest {
-          filter: ["=", (object/get @entity status), "pending"]
+          filter: (= (object/get @entity status) "pending")
           emit: { failure: ApprovalRequestLoadFailed, success: ApprovalRequestLoaded }
         })
       ApprovalRequestLoaded -> idle
@@ -147,7 +147,7 @@ orbital ApprovalGateOrbital {
         (notify error (str/concat "Couldn't reopen the approval request — " ?error))
       OPEN -> loading when @config.enabled
         (fetch ApprovalRequest {
-          filter: ["=", (object/get @entity status), "pending"]
+          filter: (= (object/get @entity status) "pending")
           emit: { failure: ApprovalRequestLoadFailed, success: ApprovalRequestLoaded }
         })
         (render-ui @config.reviewSlot {
@@ -164,7 +164,7 @@ orbital ApprovalGateOrbital {
       INIT -> idle
         (render-ui @config.reviewSlot null)
         (fetch ApprovalRequest {
-          filter: ["=", (object/get @entity status), "pending"]
+          filter: (= (object/get @entity status) "pending")
           emit: { failure: ApprovalRequestLoadFailed, success: ApprovalRequestLoaded }
         })
       ApprovalRequestLoaded -> reviewing
@@ -226,7 +226,7 @@ orbital ApprovalGateOrbital {
       INIT -> idle
         (render-ui @config.reviewSlot null)
         (fetch ApprovalRequest {
-          filter: ["=", (object/get @entity status), "pending"]
+          filter: (= (object/get @entity status) "pending")
           emit: { failure: ApprovalRequestLoadFailed, success: ApprovalRequestLoaded }
         })
       ;; The role guard IS the enforcement (both execution paths honor
@@ -234,7 +234,7 @@ orbital ApprovalGateOrbital {
       ;; alike): empty approverRoles = ungated, otherwise the viewer's role
       ;; must be listed or the decision does not fire. blockSelfApproval
       ;; additionally blocks APPROVE when ?row.requestedBy is the viewer.
-      APPROVE -> reviewing when (and (or ["=", (array/len @config.approverRoles), 0] (array/includes @config.approverRoles @user.role)) (or ["=", @config.blockSelfApproval, false] ["!=", (object/get ?row requestedBy), @user.id]))
+      APPROVE -> reviewing when (and (or (= (array/len @config.approverRoles) 0) (array/includes @config.approverRoles @user.role)) (or (= @config.blockSelfApproval false) (!= (object/get ?row requestedBy) @user.id)))
         (set @entity.id ?id)
         (set @entity.status approved)
         (set @entity.reviewer @user.id)
@@ -244,7 +244,7 @@ orbital ApprovalGateOrbital {
         })
         (emit ApprovalGranted { payload: (json/parse ?row.payload p), requestId: ?id })
       ;; Deny is a two-step: capture the written reason first, commit second.
-      DENY -> denying when (or ["=", (array/len @config.approverRoles), 0] (array/includes @config.approverRoles @user.role))
+      DENY -> denying when (or (= (array/len @config.approverRoles) 0) (array/includes @config.approverRoles @user.role))
         (set @entity.id ?id)
         (set @entity.subjectLabel (str/default (object/get ?row subjectLabel) ""))
         (render-ui @config.reviewSlot {
@@ -270,7 +270,7 @@ orbital ApprovalGateOrbital {
       OPEN_SUBJECT -> reviewing
       ApprovalRequestReviewed -> loading
         (fetch ApprovalRequest {
-          filter: ["=", (object/get @entity status), "pending"]
+          filter: (= (object/get @entity status) "pending")
           emit: { failure: ApprovalRequestLoadFailed, success: ApprovalRequestLoaded }
         })
       ApprovalRequestReviewFailed -> reviewing
@@ -298,7 +298,7 @@ orbital ApprovalGateOrbital {
       INIT -> idle
         (render-ui @config.reviewSlot null)
         (fetch ApprovalRequest {
-          filter: ["=", (object/get @entity status), "pending"]
+          filter: (= (object/get @entity status) "pending")
           emit: { failure: ApprovalRequestLoadFailed, success: ApprovalRequestLoaded }
         })
       CONFIRM_DENY -> reviewing
@@ -313,12 +313,12 @@ orbital ApprovalGateOrbital {
         (emit ApprovalDenied { requestId: (object/get ?data id), reason: (str/default (object/get ?data notes) "") })
       CANCEL_DENY -> loading
         (fetch ApprovalRequest {
-          filter: ["=", (object/get @entity status), "pending"]
+          filter: (= (object/get @entity status) "pending")
           emit: { failure: ApprovalRequestLoadFailed, success: ApprovalRequestLoaded }
         })
       ApprovalRequestReviewed -> loading
         (fetch ApprovalRequest {
-          filter: ["=", (object/get @entity status), "pending"]
+          filter: (= (object/get @entity status) "pending")
           emit: { failure: ApprovalRequestLoadFailed, success: ApprovalRequestLoaded }
         })
       ApprovalRequestReviewFailed -> denying
@@ -334,12 +334,12 @@ orbital ApprovalGateOrbital {
       INIT -> idle
         (render-ui @config.reviewSlot null)
         (fetch ApprovalRequest {
-          filter: ["=", (object/get @entity status), "pending"]
+          filter: (= (object/get @entity status) "pending")
           emit: { failure: ApprovalRequestLoadFailed, success: ApprovalRequestLoaded }
         })
       OPEN -> loading
         (fetch ApprovalRequest {
-          filter: ["=", (object/get @entity status), "pending"]
+          filter: (= (object/get @entity status) "pending")
           emit: { failure: ApprovalRequestLoadFailed, success: ApprovalRequestLoaded }
         })
         (render-ui @config.reviewSlot {

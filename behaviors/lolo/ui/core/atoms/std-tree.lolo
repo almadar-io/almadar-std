@@ -27,7 +27,7 @@ orbital TreeNodeOrbital {
         })
       INIT -> loading
         (fetch TreeNode {
-          filter: (or ["=", @config.initialFilterField, ""] ["=", (object/get @entity @config.initialFilterField), @config.initialFilterValue])
+          filter: (or (= @config.initialFilterField "") (= (object/get @entity @config.initialFilterField) @config.initialFilterValue))
           emit: { failure: TreeNodeLoadFailed, success: TreeNodeLoaded }
         })
         (render-ui main {
@@ -38,7 +38,7 @@ orbital TreeNodeOrbital {
         })
       TreeNodeLoaded -> browsing
         (render-ui main {
-          children: [(if ["=", @config.look, "rail"] {
+          children: [(if (= @config.look "rail") {
             className: "px-2 pb-1 uppercase tracking-wide"
             color: muted
             content: @config.title
@@ -59,7 +59,7 @@ orbital TreeNodeOrbital {
             direction: horizontal
             gap: sm
             type: stack
-          }), (if ["=", @config.look, "rail"] {
+          }), (if (= @config.look "rail") {
             children: []
             gap: none
             type: stack
@@ -78,7 +78,7 @@ orbital TreeNodeOrbital {
             children: []
             gap: none
             type: stack
-          }), (if [">", (array/len @config.filters), 0] {
+          }), (if (> (array/len @config.filters) 0) {
             children: [{
               entity: TreeNode
               event: REFETCH_FILTER
@@ -100,7 +100,7 @@ orbital TreeNodeOrbital {
               label: (str/default (object/get @row @config.labelField) "")
               parentId: (str/default (object/get @row @config.parentField) "")
             }))
-            look: (if ["=", @config.look, "rail"] nav files)
+            look: (if (= @config.look "rail") nav files)
             nodeActionIcon: plus
             nodeActionLabel: @config.childActionLabel
             onNodeAction: (if @config.childAction ADD_CHILD null)
@@ -109,7 +109,7 @@ orbital TreeNodeOrbital {
             type: file-tree
           }]
           direction: vertical
-          gap: (if ["=", @config.look, "rail"] none md)
+          gap: (if (= @config.look "rail") none md)
           type: stack
         })
       TreeNodeLoadFailed -> error
@@ -145,7 +145,7 @@ orbital TreeNodeOrbital {
     state browsing {
       INIT -> loading
         (fetch TreeNode {
-          filter: (or ["=", @config.initialFilterField, ""] ["=", (object/get @entity @config.initialFilterField), @config.initialFilterValue])
+          filter: (or (= @config.initialFilterField "") (= (object/get @entity @config.initialFilterField) @config.initialFilterValue))
           emit: { failure: TreeNodeLoadFailed, success: TreeNodeLoaded }
         })
         (render-ui main {
@@ -163,12 +163,12 @@ orbital TreeNodeOrbital {
       REFETCH_QUERY -> browsing
         (fetch TreeNode {
           emit: { failure: TreeNodeLoadFailed, success: TreeNodeLoaded }
-          filter: (or ["=", ?searchTerm, ""] (str/includes (str/default (object/get @entity @config.labelField) "") ?searchTerm))
+          filter: (or (= ?searchTerm "") (str/includes (str/default (object/get @entity @config.labelField) "") ?searchTerm))
         })
       REFETCH_FILTER -> browsing
         (fetch TreeNode {
           emit: { failure: TreeNodeLoadFailed, success: TreeNodeLoaded }
-          filter: (or ["=", ?value, ""] ["=", (object/get @entity ?field), ?value])
+          filter: (or (= ?value "") (= (object/get @entity ?field) ?value))
         })
       OPEN_NODE -> browsing
         (set @entity.id ?id)
@@ -184,7 +184,7 @@ orbital TreeNodeOrbital {
         (emit CHILD_REQUESTED { parentId: ?id })
       TreeNodeLoaded -> browsing
         (render-ui main {
-          children: [(if ["=", @config.look, "rail"] {
+          children: [(if (= @config.look "rail") {
             className: "px-2 pb-1 uppercase tracking-wide"
             color: muted
             content: @config.title
@@ -205,7 +205,7 @@ orbital TreeNodeOrbital {
             direction: horizontal
             gap: sm
             type: stack
-          }), (if ["=", @config.look, "rail"] {
+          }), (if (= @config.look "rail") {
             children: []
             gap: none
             type: stack
@@ -224,7 +224,7 @@ orbital TreeNodeOrbital {
             children: []
             gap: none
             type: stack
-          }), (if [">", (array/len @config.filters), 0] {
+          }), (if (> (array/len @config.filters) 0) {
             children: [{
               entity: TreeNode
               event: REFETCH_FILTER
@@ -246,7 +246,7 @@ orbital TreeNodeOrbital {
               label: (str/default (object/get @row @config.labelField) "")
               parentId: (str/default (object/get @row @config.parentField) "")
             }))
-            look: (if ["=", @config.look, "rail"] nav files)
+            look: (if (= @config.look "rail") nav files)
             nodeActionIcon: plus
             nodeActionLabel: @config.childActionLabel
             onNodeAction: (if @config.childAction ADD_CHILD null)
@@ -255,7 +255,7 @@ orbital TreeNodeOrbital {
             type: file-tree
           }]
           direction: vertical
-          gap: (if ["=", @config.look, "rail"] none md)
+          gap: (if (= @config.look "rail") none md)
           type: stack
         })
       TreeNodeLoadFailed -> error
@@ -291,7 +291,7 @@ orbital TreeNodeOrbital {
     state error {
       INIT -> loading
         (fetch TreeNode {
-          filter: (or ["=", @config.initialFilterField, ""] ["=", (object/get @entity @config.initialFilterField), @config.initialFilterValue])
+          filter: (or (= @config.initialFilterField "") (= (object/get @entity @config.initialFilterField) @config.initialFilterValue))
           emit: { failure: TreeNodeLoadFailed, success: TreeNodeLoaded }
         })
         (render-ui main {
@@ -304,7 +304,7 @@ orbital TreeNodeOrbital {
       ;; delivers it, so the affordance must target a first-class user event
       RETRY -> loading
         (fetch TreeNode {
-          filter: (or ["=", @config.initialFilterField, ""] ["=", (object/get @entity @config.initialFilterField), @config.initialFilterValue])
+          filter: (or (= @config.initialFilterField "") (= (object/get @entity @config.initialFilterField) @config.initialFilterValue))
           emit: { failure: TreeNodeLoadFailed, success: TreeNodeLoaded }
         })
         (render-ui main {

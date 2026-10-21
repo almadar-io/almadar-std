@@ -343,7 +343,7 @@ orbital RatingReviewOrbital {
           gap: md
           type: stack
         })
-      CHANGE_SORT -> viewing when ["=", ?tabId, highest]
+      CHANGE_SORT -> viewing when (= ?tabId highest)
         (set @entity.currentSort highest)
         (set @entity.reviews (array/sort @entity.reviewsSource rating desc))
         (render-ui main {
@@ -528,7 +528,7 @@ orbital RatingReviewOrbital {
           gap: lg
           type: stack
         })
-      CHANGE_SORT -> viewing when ["=", ?tabId, lowest]
+      CHANGE_SORT -> viewing when (= ?tabId lowest)
         (set @entity.currentSort lowest)
         (set @entity.reviews (array/sort @entity.reviewsSource rating asc))
         (render-ui main {
@@ -713,7 +713,7 @@ orbital RatingReviewOrbital {
           gap: lg
           type: stack
         })
-      CHANGE_SORT -> viewing when ["=", ?tabId, recent]
+      CHANGE_SORT -> viewing when (= ?tabId recent)
         (set @entity.currentSort recent)
         (set @entity.reviews (array/sort @entity.reviewsSource createdAt desc))
         (render-ui main {
@@ -899,8 +899,8 @@ orbital RatingReviewOrbital {
           type: stack
         })
       MARK_HELPFUL -> viewing
-        (set @entity.reviews (array/map @entity.reviews (fn row (if ["=", (object/get @row id ""), ?id] (object/merge @row { helpful: ["+", (object/get @row helpful 0), 1] }) @row))))
-        (set @entity.reviewsSource (array/map @entity.reviewsSource (fn row (if ["=", (object/get @row id ""), ?id] (object/merge @row { helpful: ["+", (object/get @row helpful 0), 1] }) @row))))
+        (set @entity.reviews (array/map @entity.reviews (fn row (if (= (object/get @row id "") ?id) (object/merge @row { helpful: (+ (object/get @row helpful 0) 1) }) @row))))
+        (set @entity.reviewsSource (array/map @entity.reviewsSource (fn row (if (= (object/get @row id "") ?id) (object/merge @row { helpful: (+ (object/get @row helpful 0) 1) }) @row))))
         (render-ui main {
           children: [{
             align: center

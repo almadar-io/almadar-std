@@ -26,6 +26,7 @@ A spec sits under the same folder path as the behavior it specs: the spec for `i
 | `ui/core/collection-fetch.lolo` | `std-collection-fetch` (bound; dropping the failure event or its `idle` edge fails it) |
 | `infra/audit-entry.lolo` | any program with the audit row (`std-audit-capture`, `std-document-mgmt`) |
 | `infra/throttle.lolo` | `std-throttle` (bound; proves `open ⇒ suppressed = 0`) |
+| `infra/verify-judge.lolo` | `std-verify-judge` (bound; `effects_fired` ported; `proposition_held`, `entity_data_bound` listed in `unported`) |
 | `infra/machine.lolo` | `std-machine` (bound; a program's transitions as rows over bounded array maps; groups of sibling unguarded transitions give one row per target, guarded groups one row per arm) |
 | `infra/cooldown.lolo` | `std-cooldown` (bound; proves the remaining time is never negative) |
 | `infra/circuit-breaker.lolo` | `std-circuit-breaker` (bound; `std-api-gateway` owes it under its own trait name) |

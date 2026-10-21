@@ -77,7 +77,7 @@ orbital GlobalSearchOrbital {
             scopeJson: @entity.scopeJson
             typeFilter: @entity.typeFilter
           } { emit: { failure: QUERY_SAVE_FAILED, success: QUERY_SAVED } }))
-        (when [">", (array/len @entity.pendingModules), 0]
+        (when (> (array/len @entity.pendingModules) 0)
           (emit FAN_OUT_STEP { remaining: (array/len @entity.pendingModules) }))
         (render-ui main {
           children: [{
@@ -132,23 +132,23 @@ orbital GlobalSearchOrbital {
             scopeJson: @entity.scopeJson
             typeFilter: @entity.typeFilter
           } { emit: { failure: QUERY_SAVE_FAILED, success: QUERY_SAVED } }))
-        (when [">", (array/len @entity.pendingModules), 0]
+        (when (> (array/len @entity.pendingModules) 0)
           (emit FAN_OUT_STEP { remaining: (array/len @entity.pendingModules) }))
-      FAN_OUT_STEP -> searching when [">", ?remaining, 0]
+      FAN_OUT_STEP -> searching when (> ?remaining 0)
         (emit MODULE_SEARCH_REQUESTED {
           moduleKey: (array/first @entity.pendingModules)
           queryText: @entity.queryText
           scopeJson: @entity.scopeJson
           typeFilter: @entity.typeFilter
         })
-        (set @entity.requestedCount ["+", @entity.requestedCount, 1])
+        (set @entity.requestedCount (+ @entity.requestedCount 1))
         (set @entity.pendingModules (array/drop @entity.pendingModules 1))
-        (when ["=", (array/len @entity.pendingModules), 0]
+        (when (= (array/len @entity.pendingModules) 0)
           (set @entity.fanOutDone true))
-        (when [">", (array/len @entity.pendingModules), 0]
+        (when (> (array/len @entity.pendingModules) 0)
           (emit FAN_OUT_STEP { remaining: (array/len @entity.pendingModules) }))
       SEARCH_RESULTS -> searching when (not (array/some @entity.results (fn g (= @g.moduleKey (str/default ?moduleKey (str/default @event.source.orbital ""))))))
-        (set @entity.respondedCount ["+", @entity.respondedCount, 1])
+        (set @entity.respondedCount (+ @entity.respondedCount 1))
         (set @entity.results (array/append @entity.results {
           moduleKey: (str/default ?moduleKey (str/default @event.source.orbital ""))
           receivedAt: @now
@@ -193,7 +193,7 @@ orbital GlobalSearchOrbital {
           gap: md
           type: stack
         })
-        (when (and @entity.fanOutDone [">=", @entity.respondedCount, @entity.requestedCount])
+        (when (and @entity.fanOutDone (>= @entity.respondedCount @entity.requestedCount))
           (do
             (set @entity.searching false)
             (emit GLOBAL_SEARCH_COMPLETED {

@@ -1,7 +1,7 @@
 app std-orb-behaviors [
   version: "1.0.0",
-  inbound: ["cli-behaviors"],
-  description: "std-orb-behaviors — the `orb behaviors` command over the behavior reflection operators. `catalog <scope…> [--exposure <e>]… [--json] [--no-vectors]` lists the installed behaviors under the scopes (`behavior/catalog`) as one table row each, or as JSON with --json; `describe <behavior>.traits.<Trait>` prints the trait's knobs and events as JSON (`behavior/describe`); `source <behavior>` prints the behavior's program as JSON (`behavior/source`). Each answers status 200 (exit 0). No subcommand, an unknown one or a missing operand answers the usage (status 400, exit 2); a failed reflection answers its error (status 500, exit 1)."
+  inbound: ["cli-behaviors-catalog", "cli-behaviors-describe", "cli-behaviors-source"],
+  description: "std-orb-behaviors — the `orb behaviors catalog|describe|source` commands over the behavior reflection operators. `catalog <scope…> [--exposure <e>]… [--json] [--no-vectors]` lists the installed behaviors under the scopes (`behavior/catalog`) as one table row each, or as JSON with --json; `describe <behavior>.traits.<Trait>` prints the trait's knobs and events as JSON (`behavior/describe`); `source <behavior>` prints the behavior's program as JSON (`behavior/source`). Each answers status 200 (exit 0). Each subcommand is its own cli hook, so the other `orb behaviors` subcommands stay with the Rust command. A missing operand answers the usage (status 400, exit 2); a failed reflection answers its error (status 500, exit 1)."
 ]
 uses Spec from "almadar-std/orb-behaviors"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -57,28 +57,34 @@ orbital OrbBehaviorsOrbital {
 
     state ready {
       INIT -> ready
-      BEHAVIORS_CALLED -> ready
+      CATALOG_CALLED -> ready
         (set @entity.argv (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv"))
-        (set @entity.sub (str/default (array/first @entity.argv) ""))
+        (set @entity.sub "catalog")
         (emit BEHAVIORS_ROUTE { })
-      BEHAVIORS_ROUTE -> ready when (and (!= @entity.sub "catalog") (!= @entity.sub "describe") (!= @entity.sub "source"))
-        (emit BEHAVIORS_ANSWERED { status: 400, body: "usage: orb behaviors <catalog|describe|source> …" })
-      BEHAVIORS_ROUTE -> ready when (and (= @entity.sub "catalog") (= (array/len (array/drop @entity.argv 1)) 0))
+      DESCRIBE_CALLED -> ready
+        (set @entity.argv (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv"))
+        (set @entity.sub "describe")
+        (emit BEHAVIORS_ROUTE { })
+      SOURCE_CALLED -> ready
+        (set @entity.argv (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv"))
+        (set @entity.sub "source")
+        (emit BEHAVIORS_ROUTE { })
+      BEHAVIORS_ROUTE -> ready when (and (= @entity.sub "catalog") (= (array/len @entity.argv) 0))
         (emit BEHAVIORS_ANSWERED { status: 400, body: "usage: orb behaviors catalog <scope…> [--exposure <e>]… [--json] [--no-vectors]" })
-      BEHAVIORS_ROUTE -> ready when (and (= @entity.sub "describe") (!= (array/len @entity.argv) 2))
+      BEHAVIORS_ROUTE -> ready when (and (= @entity.sub "describe") (!= (array/len @entity.argv) 1))
         (emit BEHAVIORS_ANSWERED { status: 400, body: "usage: orb behaviors describe <behavior>.traits.<Trait>" })
-      BEHAVIORS_ROUTE -> ready when (and (= @entity.sub "source") (!= (array/len @entity.argv) 2))
+      BEHAVIORS_ROUTE -> ready when (and (= @entity.sub "source") (!= (array/len @entity.argv) 1))
         (emit BEHAVIORS_ANSWERED { status: 400, body: "usage: orb behaviors source <behavior>" })
-      BEHAVIORS_ROUTE -> working when (and (= @entity.sub "catalog") (> (array/len (array/drop @entity.argv 1)) 0))
+      BEHAVIORS_ROUTE -> working when (and (= @entity.sub "catalog") (> (array/len @entity.argv) 0))
         (set @entity.json (array/includes @entity.argv "--json"))
         (set @entity.exposure (array/map (array/filter (array/range 1 (array/len @entity.argv)) (fn i (= (array/nth @entity.argv (- @i 1)) "--exposure"))) (fn i (array/nth @entity.argv @i))))
-        (set @entity.paths (array/reject (array/drop @entity.argv 1) (fn a (or (str/startsWith @a "--") (array/includes @entity.exposure @a)))))
+        (set @entity.paths (array/reject @entity.argv (fn a (or (str/startsWith @a "--") (array/includes @entity.exposure @a)))))
         (emit BEHAVIORS_CATALOG { })
-      BEHAVIORS_ROUTE -> working when (and (= @entity.sub "describe") (= (array/len @entity.argv) 2))
-        (set @entity.spec (array/nth @entity.argv 1))
+      BEHAVIORS_ROUTE -> working when (and (= @entity.sub "describe") (= (array/len @entity.argv) 1))
+        (set @entity.spec (array/nth @entity.argv 0))
         (emit BEHAVIORS_DESCRIBE { })
-      BEHAVIORS_ROUTE -> working when (and (= @entity.sub "source") (= (array/len @entity.argv) 2))
-        (set @entity.spec (array/nth @entity.argv 1))
+      BEHAVIORS_ROUTE -> working when (and (= @entity.sub "source") (= (array/len @entity.argv) 1))
+        (set @entity.spec (array/nth @entity.argv 0))
         (emit BEHAVIORS_SOURCE { })
     }
 
@@ -136,12 +142,24 @@ orbital OrbBehaviorsOrbital {
     }
 
     listens {
-      BEHAVIORS_CALLED -> inbound "cli-behaviors" answers BEHAVIORS_ANSWERED {
+      CATALOG_CALLED -> inbound "cli-behaviors-catalog" answers BEHAVIORS_ANSWERED {
         headers : Map string string
         rawBody : string
       }
-        @description "Run `orb behaviors <subcommand>` with its arguments."
-        @synonyms "orb behaviors, list behaviors, describe behavior, behavior source"
+        @description "Run `orb behaviors catalog` with its arguments."
+        @synonyms "orb behaviors catalog, list behaviors"
+      DESCRIBE_CALLED -> inbound "cli-behaviors-describe" answers BEHAVIORS_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb behaviors describe` with its operand."
+        @synonyms "orb behaviors describe, describe behavior"
+      SOURCE_CALLED -> inbound "cli-behaviors-source" answers BEHAVIORS_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb behaviors source` with its operand."
+        @synonyms "orb behaviors source, behavior source"
       BEHAVIORS_ROUTE { }
         @description "Self: route the parsed subcommand."
       BEHAVIORS_CATALOG { }

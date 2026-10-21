@@ -464,7 +464,7 @@ orbital SignatureSessionOrbital {
           recipientEmail: (object/get ?row recipientEmail)
           recipientName: (object/get ?row recipientName)
         })
-      CHECK_ENVELOPE_STATUS -> polling when ["!=", (object/get ?row envelopeId), ""]
+      CHECK_ENVELOPE_STATUS -> polling when (!= (object/get ?row envelopeId) "")
         (set @entity.id ?id)
         (emit ESIGN_GET_ENVELOPE_STATUS {
           envelopeId: (object/get ?row envelopeId)
@@ -492,7 +492,7 @@ orbital SignatureSessionOrbital {
     }
 
     state polling {
-      ENVELOPE_STATUS_LOADED -> idle when ["=", ?status, "completed"]
+      ENVELOPE_STATUS_LOADED -> idle when (= ?status "completed")
         (persist update SignatureSession {
           id: @entity.id
           signedAt: @now
@@ -500,14 +500,14 @@ orbital SignatureSessionOrbital {
         } {
           emit: { failure: ENVELOPE_STAMP_FAILED, success: ENVELOPE_STAMPED }
         })
-      ENVELOPE_STATUS_LOADED -> idle when ["=", ?status, "delivered"]
+      ENVELOPE_STATUS_LOADED -> idle when (= ?status "delivered")
         (persist update SignatureSession {
           id: @entity.id
           status: viewed
         } {
           emit: { failure: ENVELOPE_STAMP_FAILED, success: ENVELOPE_STAMPED }
         })
-      ENVELOPE_STATUS_LOADED -> idle when ["=", ?status, "declined"]
+      ENVELOPE_STATUS_LOADED -> idle when (= ?status "declined")
         (persist update SignatureSession {
           id: @entity.id
           status: declined

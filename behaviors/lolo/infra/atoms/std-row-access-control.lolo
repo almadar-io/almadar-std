@@ -23,8 +23,8 @@ orbital RowAccessControlOrbital {
     state idle {
       RowsLoaded -> idle when @config.enabled
         (set @entity.inputCount (array/len ?data))
-        (set @entity.accessDenied (and (not ["=", (array/len @config.visibleRoles), 0]) (not (array/includes @config.visibleRoles @user.role))))
-        (set @entity.filteredData (if @entity.accessDenied [] (if (not ["=", @config.ownerField, ""]) (array/filter ?data (fn row ["=", (object/get @row @config.ownerField), @user.id])) ?data)))
+        (set @entity.accessDenied (and (not (= (array/len @config.visibleRoles) 0)) (not (array/includes @config.visibleRoles @user.role))))
+        (set @entity.filteredData (if @entity.accessDenied [] (if (not (= @config.ownerField "")) (array/filter ?data (fn row (= (object/get @row @config.ownerField) @user.id))) ?data)))
         (set @entity.outputCount (array/len @entity.filteredData))
         (emit RowsFiltered { data: @entity.filteredData, filteredCount: @entity.outputCount })
     }

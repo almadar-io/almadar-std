@@ -1,10 +1,10 @@
 app std-jws [
   version: "1.0.0",
-  description: "std-jws — verify a compact JWS signed with RS256 (RFC 7515, RFC 7518 section 3.3) over std-rsa. JWS_VERIFY { token, jwk { kty, n, e, alg?, kid? } } answers JWS_VERIFIED { header, payload } or JWS_REFUSED { reason }. The token is three non-empty base64url segments (malformed otherwise, also when header or payload are not JSON objects). The header alg must be exactly RS256 (alg-not-allowed: none, HS256, anything else or absent); jwk.kty must be RSA (key-type); a set jwk.alg must be RS256 (alg-mismatch); a kid present on both sides must match (kid-mismatch). n, e and the signature are converted from base64url to padded standard base64 and std-rsa verifies the signature over the ASCII header.payload exactly as received; a false verdict answers signature and a std-rsa refusal keeps its own reason (invalid, key-size, signature-length, signature-range, bigint). The payload comes back as a typed claims record whose extra map holds every claim of the token (nested objects included); claim policy (exp, nbf, iss, aud, sub) stays in std-bearer-verify."
+  description: "std-jws — verify a compact JWS signed with RS256 (RFC 7515, RFC 7518 section 3.3) over std-rsa or with ES256 (RFC 7518 section 3.4) over std-ecdsa. ES256: header alg ES256 with jwk { kty EC, crv P-256, x, y } (base64url, 32 bytes each) verifies the raw r||s base64url signature over the ASCII header.payload; kty other than EC is key-type, crv other than P-256 is curve, a missing x or y is key-missing, and std-ecdsa refusals (invalid, length, range, point, bigint) keep their reason. JWS_VERIFY { token, jwk { kty, n, e, alg?, kid? } } answers JWS_VERIFIED { header, payload } or JWS_REFUSED { reason }. The token is three non-empty base64url segments (malformed otherwise, also when header or payload are not JSON objects). The header alg must be exactly RS256 or ES256 (alg-not-allowed: none, HS256, anything else or absent); jwk.kty must be RSA for RS256 (key-type); a set jwk.alg must equal the header alg (alg-mismatch); a kid present on both sides must match (kid-mismatch). n, e and the signature are converted from base64url to padded standard base64 and std-rsa verifies the signature over the ASCII header.payload exactly as received; a false verdict answers signature and a std-rsa refusal keeps its own reason (invalid, key-size, signature-length, signature-range, bigint). The payload comes back as a typed claims record whose extra map holds every claim of the token (nested objects included); claim policy (exp, nbf, iss, aud, sub) stays in std-bearer-verify."
 ]
 uses Spec from "almadar-std/jws"
 
-type JwsKey = { kty : string!, n : string!, e : string!, alg : string, kid : string }
+type JwsKey = { kty : string!, n : string, e : string, crv : string, x : string, y : string, alg : string, kid : string }
 type JwsHeader = { alg : string, typ : string, kid : string }
 type JwsFirebase = { tenant : string }
 type JsonValue = string | number | boolean | [JsonValue] | Map string JsonValue
@@ -14,6 +14,7 @@ type JwsClaims = { iss : string, sub : string, aud : (string | [string]), exp : 
 orbital JwsOrbital {
   uses Rsa from "std/behaviors/std-rsa"
   uses Big from "std/behaviors/std-bigint"
+  uses Ecdsa from "std/behaviors/std-ecdsa"
 
   entity JwsRun [runtime] {
     id : string!
@@ -40,6 +41,28 @@ orbital JwsOrbital {
     }
   }
 
+  trait JwsEcBig = Big.traits.BigIntCodec {
+    listens {
+      JwsEc.EC_FROM_BYTES -> FROM_BYTES
+      JwsEc.EC_COMPARE -> COMPARE
+      JwsEc.EC_MODINV -> MODINV
+      JwsEc.EC_MUL -> MUL
+      JwsEc.EC_MOD -> MOD
+    }
+  }
+
+  trait JwsEc = Ecdsa.traits.EcdsaVerifier {
+    listens {
+      JwsVerifier.JWS_EC_VERIFY -> ECDSA_VERIFY
+      JwsEcBig.FROM_BYTES_ANSWERED -> BIG_DECODED
+      JwsEcBig.COMPARE_ANSWERED -> BIG_COMPARED
+      JwsEcBig.MODINV_ANSWERED -> BIG_INVERTED
+      JwsEcBig.MUL_ANSWERED -> BIG_MULTIPLIED
+      JwsEcBig.MOD_ANSWERED -> BIG_REMAINDER
+      JwsEcBig.BIGINT_REFUSED -> BIG_REFUSED
+    }
+  }
+
   trait JwsVerifier -> JwsRun [integration, instance] {
     initial: idle
 
@@ -53,11 +76,14 @@ orbital JwsOrbital {
 
     state idle {
       INIT -> idle
-      JWS_VERIFY -> idle when (!= (let ((parts (str/split @payload.token "."))) (let ((std (array/map @parts (fn s (let ((x (str/replaceAll (str/replaceAll @s "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4)))))))) (if (!= (array/len @parts) 3) "malformed" (if (> (array/len (array/filter @parts (fn s (or (== (str/len @s) 0) (not (validate/pattern @s @config.segmentPattern)))))) 0) "malformed" (if (not (and (base64/valid (array/nth @std 0)) (base64/valid (array/nth @std 1)))) "malformed" (if (not (and (and (json/valid (base64/decode (array/nth @std 0))) (json/valid (base64/decode (array/nth @std 1)))) (and (str/startsWith (str/trim (base64/decode (array/nth @std 0))) "{") (str/startsWith (str/trim (base64/decode (array/nth @std 1))) "{")))) "malformed" (let ((hdr (json/parse (base64/decode (array/nth @std 0)) JwsHeader))) (if (!= (object/get @hdr alg "") "RS256") "alg-not-allowed" (if (!= @payload.jwk.kty "RSA") "key-type" (if (and (!= (object/get @payload.jwk alg "") "") (!= (object/get @payload.jwk alg "") "RS256")) "alg-mismatch" (if (and (and (!= (object/get @hdr kid "") "") (!= (object/get @payload.jwk kid "") "")) (!= (object/get @hdr kid "") (object/get @payload.jwk kid ""))) "kid-mismatch" ""))))))))))) "")
-        (emit JWS_REFUSED { reason: (let ((parts (str/split @payload.token "."))) (let ((std (array/map @parts (fn s (let ((x (str/replaceAll (str/replaceAll @s "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4)))))))) (if (!= (array/len @parts) 3) "malformed" (if (> (array/len (array/filter @parts (fn s (or (== (str/len @s) 0) (not (validate/pattern @s @config.segmentPattern)))))) 0) "malformed" (if (not (and (base64/valid (array/nth @std 0)) (base64/valid (array/nth @std 1)))) "malformed" (if (not (and (and (json/valid (base64/decode (array/nth @std 0))) (json/valid (base64/decode (array/nth @std 1)))) (and (str/startsWith (str/trim (base64/decode (array/nth @std 0))) "{") (str/startsWith (str/trim (base64/decode (array/nth @std 1))) "{")))) "malformed" (let ((hdr (json/parse (base64/decode (array/nth @std 0)) JwsHeader))) (if (!= (object/get @hdr alg "") "RS256") "alg-not-allowed" (if (!= @payload.jwk.kty "RSA") "key-type" (if (and (!= (object/get @payload.jwk alg "") "") (!= (object/get @payload.jwk alg "") "RS256")) "alg-mismatch" (if (and (and (!= (object/get @hdr kid "") "") (!= (object/get @payload.jwk kid "") "")) (!= (object/get @hdr kid "") (object/get @payload.jwk kid ""))) "kid-mismatch" ""))))))))))) })
-      JWS_VERIFY -> verifying when (== (let ((parts (str/split @payload.token "."))) (let ((std (array/map @parts (fn s (let ((x (str/replaceAll (str/replaceAll @s "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4)))))))) (if (!= (array/len @parts) 3) "malformed" (if (> (array/len (array/filter @parts (fn s (or (== (str/len @s) 0) (not (validate/pattern @s @config.segmentPattern)))))) 0) "malformed" (if (not (and (base64/valid (array/nth @std 0)) (base64/valid (array/nth @std 1)))) "malformed" (if (not (and (and (json/valid (base64/decode (array/nth @std 0))) (json/valid (base64/decode (array/nth @std 1)))) (and (str/startsWith (str/trim (base64/decode (array/nth @std 0))) "{") (str/startsWith (str/trim (base64/decode (array/nth @std 1))) "{")))) "malformed" (let ((hdr (json/parse (base64/decode (array/nth @std 0)) JwsHeader))) (if (!= (object/get @hdr alg "") "RS256") "alg-not-allowed" (if (!= @payload.jwk.kty "RSA") "key-type" (if (and (!= (object/get @payload.jwk alg "") "") (!= (object/get @payload.jwk alg "") "RS256")) "alg-mismatch" (if (and (and (!= (object/get @hdr kid "") "") (!= (object/get @payload.jwk kid "") "")) (!= (object/get @hdr kid "") (object/get @payload.jwk kid ""))) "kid-mismatch" ""))))))))))) "")
+      JWS_VERIFY -> idle when (!= (let ((parts (str/split @payload.token "."))) (let ((std (array/map @parts (fn s (let ((x (str/replaceAll (str/replaceAll @s "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4)))))))) (if (!= (array/len @parts) 3) "malformed" (if (> (array/len (array/filter @parts (fn s (or (== (str/len @s) 0) (not (validate/pattern @s @config.segmentPattern)))))) 0) "malformed" (if (not (and (base64/valid (array/nth @std 0)) (base64/valid (array/nth @std 1)))) "malformed" (if (not (and (and (json/valid (base64/decode (array/nth @std 0))) (json/valid (base64/decode (array/nth @std 1)))) (and (str/startsWith (str/trim (base64/decode (array/nth @std 0))) "{") (str/startsWith (str/trim (base64/decode (array/nth @std 1))) "{")))) "malformed" (let ((hdr (json/parse (base64/decode (array/nth @std 0)) JwsHeader))) (if (not (or (== (object/get @hdr alg "") "RS256") (== (object/get @hdr alg "") "ES256"))) "alg-not-allowed" (if (!= @payload.jwk.kty (if (== (object/get @hdr alg "") "RS256") "RSA" "EC")) "key-type" (if (and (== (object/get @hdr alg "") "ES256") (!= (object/get @payload.jwk crv "") "P-256")) "curve" (if (and (== (object/get @hdr alg "") "ES256") (or (== (object/get @payload.jwk x "") "") (== (object/get @payload.jwk y "") ""))) "key-missing" (if (and (!= (object/get @payload.jwk alg "") "") (!= (object/get @payload.jwk alg "") (object/get @hdr alg ""))) "alg-mismatch" (if (and (and (!= (object/get @hdr kid "") "") (!= (object/get @payload.jwk kid "") "")) (!= (object/get @hdr kid "") (object/get @payload.jwk kid ""))) "kid-mismatch" ""))))))))))))) "")
+        (emit JWS_REFUSED { reason: (let ((parts (str/split @payload.token "."))) (let ((std (array/map @parts (fn s (let ((x (str/replaceAll (str/replaceAll @s "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4)))))))) (if (!= (array/len @parts) 3) "malformed" (if (> (array/len (array/filter @parts (fn s (or (== (str/len @s) 0) (not (validate/pattern @s @config.segmentPattern)))))) 0) "malformed" (if (not (and (base64/valid (array/nth @std 0)) (base64/valid (array/nth @std 1)))) "malformed" (if (not (and (and (json/valid (base64/decode (array/nth @std 0))) (json/valid (base64/decode (array/nth @std 1)))) (and (str/startsWith (str/trim (base64/decode (array/nth @std 0))) "{") (str/startsWith (str/trim (base64/decode (array/nth @std 1))) "{")))) "malformed" (let ((hdr (json/parse (base64/decode (array/nth @std 0)) JwsHeader))) (if (not (or (== (object/get @hdr alg "") "RS256") (== (object/get @hdr alg "") "ES256"))) "alg-not-allowed" (if (!= @payload.jwk.kty (if (== (object/get @hdr alg "") "RS256") "RSA" "EC")) "key-type" (if (and (== (object/get @hdr alg "") "ES256") (!= (object/get @payload.jwk crv "") "P-256")) "curve" (if (and (== (object/get @hdr alg "") "ES256") (or (== (object/get @payload.jwk x "") "") (== (object/get @payload.jwk y "") ""))) "key-missing" (if (and (!= (object/get @payload.jwk alg "") "") (!= (object/get @payload.jwk alg "") (object/get @hdr alg ""))) "alg-mismatch" (if (and (and (!= (object/get @hdr kid "") "") (!= (object/get @payload.jwk kid "") "")) (!= (object/get @hdr kid "") (object/get @payload.jwk kid ""))) "kid-mismatch" ""))))))))))))) })
+      JWS_VERIFY -> verifying when (and (== (let ((parts (str/split @payload.token "."))) (let ((std (array/map @parts (fn s (let ((x (str/replaceAll (str/replaceAll @s "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4)))))))) (if (!= (array/len @parts) 3) "malformed" (if (> (array/len (array/filter @parts (fn s (or (== (str/len @s) 0) (not (validate/pattern @s @config.segmentPattern)))))) 0) "malformed" (if (not (and (base64/valid (array/nth @std 0)) (base64/valid (array/nth @std 1)))) "malformed" (if (not (and (and (json/valid (base64/decode (array/nth @std 0))) (json/valid (base64/decode (array/nth @std 1)))) (and (str/startsWith (str/trim (base64/decode (array/nth @std 0))) "{") (str/startsWith (str/trim (base64/decode (array/nth @std 1))) "{")))) "malformed" (let ((hdr (json/parse (base64/decode (array/nth @std 0)) JwsHeader))) (if (not (or (== (object/get @hdr alg "") "RS256") (== (object/get @hdr alg "") "ES256"))) "alg-not-allowed" (if (!= @payload.jwk.kty (if (== (object/get @hdr alg "") "RS256") "RSA" "EC")) "key-type" (if (and (== (object/get @hdr alg "") "ES256") (!= (object/get @payload.jwk crv "") "P-256")) "curve" (if (and (== (object/get @hdr alg "") "ES256") (or (== (object/get @payload.jwk x "") "") (== (object/get @payload.jwk y "") ""))) "key-missing" (if (and (!= (object/get @payload.jwk alg "") "") (!= (object/get @payload.jwk alg "") (object/get @hdr alg ""))) "alg-mismatch" (if (and (and (!= (object/get @hdr kid "") "") (!= (object/get @payload.jwk kid "") "")) (!= (object/get @hdr kid "") (object/get @payload.jwk kid ""))) "kid-mismatch" ""))))))))))))) "") (== (object/get (json/parse (base64/decode (let ((x (str/replaceAll (str/replaceAll (array/nth (str/split @payload.token ".") 0) "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))) JwsHeader) alg "") "RS256"))
         (set @entity.token @payload.token)
         (emit JWS_RSA_VERIFY { n: (let ((x (str/replaceAll (str/replaceAll @payload.jwk.n "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4)))), e: (let ((x (str/replaceAll (str/replaceAll @payload.jwk.e "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4)))), message: (let ((parts (str/split @payload.token "."))) (str/concat (str/concat (array/nth @parts 0) ".") (array/nth @parts 1))), signature: (let ((parts (str/split @payload.token "."))) (array/nth (array/map @parts (fn s (let ((x (str/replaceAll (str/replaceAll @s "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4)))))) 2)) })
+      JWS_VERIFY -> verifying when (and (== (let ((parts (str/split @payload.token "."))) (let ((std (array/map @parts (fn s (let ((x (str/replaceAll (str/replaceAll @s "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4)))))))) (if (!= (array/len @parts) 3) "malformed" (if (> (array/len (array/filter @parts (fn s (or (== (str/len @s) 0) (not (validate/pattern @s @config.segmentPattern)))))) 0) "malformed" (if (not (and (base64/valid (array/nth @std 0)) (base64/valid (array/nth @std 1)))) "malformed" (if (not (and (and (json/valid (base64/decode (array/nth @std 0))) (json/valid (base64/decode (array/nth @std 1)))) (and (str/startsWith (str/trim (base64/decode (array/nth @std 0))) "{") (str/startsWith (str/trim (base64/decode (array/nth @std 1))) "{")))) "malformed" (let ((hdr (json/parse (base64/decode (array/nth @std 0)) JwsHeader))) (if (not (or (== (object/get @hdr alg "") "RS256") (== (object/get @hdr alg "") "ES256"))) "alg-not-allowed" (if (!= @payload.jwk.kty (if (== (object/get @hdr alg "") "RS256") "RSA" "EC")) "key-type" (if (and (== (object/get @hdr alg "") "ES256") (!= (object/get @payload.jwk crv "") "P-256")) "curve" (if (and (== (object/get @hdr alg "") "ES256") (or (== (object/get @payload.jwk x "") "") (== (object/get @payload.jwk y "") ""))) "key-missing" (if (and (!= (object/get @payload.jwk alg "") "") (!= (object/get @payload.jwk alg "") (object/get @hdr alg ""))) "alg-mismatch" (if (and (and (!= (object/get @hdr kid "") "") (!= (object/get @payload.jwk kid "") "")) (!= (object/get @hdr kid "") (object/get @payload.jwk kid ""))) "kid-mismatch" ""))))))))))))) "") (== (object/get (json/parse (base64/decode (let ((x (str/replaceAll (str/replaceAll (array/nth (str/split @payload.token ".") 0) "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))) JwsHeader) alg "") "ES256"))
+        (set @entity.token @payload.token)
+        (emit JWS_EC_VERIFY { x: (let ((x (str/replaceAll (str/replaceAll @payload.jwk.x "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4)))), y: (let ((x (str/replaceAll (str/replaceAll @payload.jwk.y "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4)))), message: (let ((parts (str/split @payload.token "."))) (str/concat (str/concat (array/nth @parts 0) ".") (array/nth @parts 1))), signature: (let ((parts (str/split @payload.token "."))) (array/nth (array/map @parts (fn s (let ((x (str/replaceAll (str/replaceAll @s "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4)))))) 2)) })
     }
 
     state verifying {
@@ -67,6 +93,12 @@ orbital JwsOrbital {
       RSA_OK -> idle when (== @payload.valid false)
         (emit JWS_REFUSED { reason: "signature" })
       RSA_NO -> idle
+        (emit JWS_REFUSED { reason: @payload.reason })
+      EC_OK -> idle when (== @payload.valid true)
+        (emit JWS_VERIFIED { header: (let ((parts (str/split @entity.token "."))) (json/parse (base64/decode (let ((x (str/replaceAll (str/replaceAll (array/nth @parts 0) "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))) JwsHeader)), payload: (let ((parts (str/split @entity.token "."))) (let ((pj (base64/decode (let ((x (str/replaceAll (str/replaceAll (array/nth @parts 1) "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))))) (object/set (json/parse @pj JwsClaims) extra (json/parse @pj JwsExtra)))) })
+      EC_OK -> idle when (== @payload.valid false)
+        (emit JWS_REFUSED { reason: "signature" })
+      EC_NO -> idle
         (emit JWS_REFUSED { reason: @payload.reason })
     }
 
@@ -84,6 +116,14 @@ orbital JwsOrbital {
         @description "The token was refused: malformed, alg-not-allowed, key-type, alg-mismatch, kid-mismatch, signature, or a std-rsa refusal reason."
         @synonyms "token refused, jws invalid"
         @tier "primary"
+      JWS_EC_VERIFY -> external {
+        x : string!
+        y : string!
+        message : string!
+        signature : string!
+      }
+        @description "Internal: ask std-ecdsa to verify the signature."
+        @tier "internal"
       JWS_RSA_VERIFY -> external {
         n : string!
         e : string!
@@ -107,8 +147,14 @@ orbital JwsOrbital {
       RSA_NO { reason : string! }
         @description "Internal: std-rsa refused."
       JwsRsa.RSA_REFUSED -> RSA_NO
+      EC_OK { valid : boolean! }
+        @description "Internal: std-ecdsa answered."
+      JwsEc.ECDSA_VERIFIED -> EC_OK
+      EC_NO { reason : string! }
+        @description "Internal: std-ecdsa refused."
+      JwsEc.ECDSA_REFUSED -> EC_NO
     }
   }
 
-  page "/jws" as JwsPage -> JwsVerifier, JwsRsa, JwsBig
+  page "/jws" as JwsPage -> JwsVerifier, JwsRsa, JwsBig, JwsEc, JwsEcBig
 }

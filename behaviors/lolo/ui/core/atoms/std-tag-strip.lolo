@@ -59,7 +59,7 @@ orbital TagStripOrbital {
         })
       TagStripOptions -> ready
         (render-ui main {
-          children: [(if (or @config.readOnly ["=", @config.title, ""]) null {
+          children: [(if (or @config.readOnly (= @config.title "")) null {
             color: muted
             content: @config.title
             type: typography
@@ -72,7 +72,7 @@ orbital TagStripOrbital {
             type: tag-input
             value: (array/map (array/filter ?data (fn t (array/includes @entity.docTagIds (object/get @t id)))) (fn t (object/get @t name)))
             variant: secondary
-          }), (if (or @config.readOnly ["=", (array/len (array/filter ?data (fn t (if (array/includes @entity.docTagIds (object/get @t id)) false true)))), 0]) null {
+          }), (if (or @config.readOnly (= (array/len (array/filter ?data (fn t (if (array/includes @entity.docTagIds (object/get @t id)) false true)))) 0)) null {
             children: (array/map (array/filter ?data (fn t (if (array/includes @entity.docTagIds (object/get @t id)) false true))) (fn t {
               action: ADD_TAG
               actionPayload: { tag: @t.name }
@@ -152,7 +152,7 @@ orbital TagStripOrbital {
       TagStripAddOptions -> ready when (array/includes (array/map ?data (fn t (object/get @t name))) @entity.pendingTagName)
         (emit TAGS_CHANGED {
           id: @entity.docId
-          tagIds: (array/append @entity.docTagIds (object/get (array/first (array/filter ?data (fn t ["=", (object/get @t name), @entity.pendingTagName]))) id))
+          tagIds: (array/append @entity.docTagIds (object/get (array/first (array/filter ?data (fn t (= (object/get @t name) @entity.pendingTagName)))) id))
         })
       ;; Unknown name — create it in the shared taxonomy, then attach.
       TagStripAddOptions -> creating
@@ -178,7 +178,7 @@ orbital TagStripOrbital {
         (fetch StripTag {
           emit: { failure: TagStripLoadFailed, success: TagStripOptions }
         })
-      TagStripTagCreated -> ready when ["!=", (str/default ?id ""), ""]
+      TagStripTagCreated -> ready when (!= (str/default ?id "") "")
         (emit TAGS_CHANGED {
           id: @entity.docId
           tagIds: (array/append @entity.docTagIds ?id)

@@ -61,7 +61,7 @@ orbital ThreadPostOrbital {
       INIT -> loading
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
-          filter: (and (or ["=", (str/default @entity.replyRootId @config.threadRootId), ""] ["=", (object/get @entity threadRootId), (str/default @entity.replyRootId @config.threadRootId)]) ["=", (str/default (object/get @entity parentId) ""), ""])
+          filter: (and (or (= (str/default @entity.replyRootId @config.threadRootId) "") (= (object/get @entity threadRootId) (str/default @entity.replyRootId @config.threadRootId))) (= (str/default (object/get @entity parentId) "") ""))
           include: (replies)
         })
         (render-ui main { type: skeleton, variant: list, rows: 6 })
@@ -77,7 +77,7 @@ orbital ThreadPostOrbital {
         (set @entity.replyRootId ?rootId)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
-          filter: (and (or ["=", ?rootId, ""] ["=", (object/get @entity threadRootId), ?rootId]) ["=", (str/default (object/get @entity parentId) ""), ""])
+          filter: (and (or (= ?rootId "") (= (object/get @entity threadRootId) ?rootId)) (= (str/default (object/get @entity parentId) "") ""))
           include: (replies)
         })
         (render-ui main { type: skeleton, variant: list, rows: 6 })
@@ -87,7 +87,7 @@ orbital ThreadPostOrbital {
       INIT -> loading
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
-          filter: (and (or ["=", (str/default @entity.replyRootId @config.threadRootId), ""] ["=", (object/get @entity threadRootId), (str/default @entity.replyRootId @config.threadRootId)]) ["=", (str/default (object/get @entity parentId) ""), ""])
+          filter: (and (or (= (str/default @entity.replyRootId @config.threadRootId) "") (= (object/get @entity threadRootId) (str/default @entity.replyRootId @config.threadRootId))) (= (str/default (object/get @entity parentId) "") ""))
           include: (replies)
         })
         (render-ui main { type: skeleton, variant: list, rows: 6 })
@@ -96,7 +96,7 @@ orbital ThreadPostOrbital {
       ;; Inline reply: when the event already carries the composed text (e.g.
       ;; reply-tree's inline composer), persist directly and stay in `browsing`
       ;; so the box stays inline instead of swapping to a full composer view.
-      REPLY -> browsing when (not ["=", (str/default ?content ""), ""])
+      REPLY -> browsing when (not (= (str/default ?content "") ""))
         (persist create ThreadPost {
           authorId: @user.id
           authorName: @user.name
@@ -108,7 +108,7 @@ orbital ThreadPostOrbital {
           emit: { failure: ThreadPostCreateFailed, success: ThreadPostCreated }
         })
       ;; Reply with no text yet (e.g. an email "Reply" button) opens the composer.
-      REPLY -> replying when ["=", (str/default ?content ""), ""]
+      REPLY -> replying when (= (str/default ?content "") "")
         (set @entity.replyParentId (str/default ?parentNodeId ?parentId))
         (render-ui main {
           children: [{
@@ -149,7 +149,7 @@ orbital ThreadPostOrbital {
       ;; row's own scope, per the create effect's fallback chain) — NOT
       ;; ?row.threadRootId; ThreadPostCreated's payload is the created row
       ;; itself (see the type alias above), no `row` wrapper exists.
-      ThreadPostCreated -> browsing when (not ["=", (str/default ?parentId ""), ""])
+      ThreadPostCreated -> browsing when (not (= (str/default ?parentId "") ""))
         (set @entity.replyDraft "")
         (set @entity.replyParentId "")
         (set @entity.lastReplyId ?id)
@@ -157,12 +157,12 @@ orbital ThreadPostOrbital {
           id: ?parentId
           emit: { failure: ReplyParentLoadFailed, success: ReplyParentLoaded }
         })
-      ThreadPostCreated -> browsing when ["=", (str/default ?parentId ""), ""]
+      ThreadPostCreated -> browsing when (= (str/default ?parentId "") "")
         (set @entity.replyDraft "")
         (set @entity.replyParentId "")
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
-          filter: (and (or ["=", ?threadRootId, ""] ["=", (object/get @entity threadRootId), ?threadRootId]) ["=", (str/default (object/get @entity parentId) ""), ""])
+          filter: (and (or (= ?threadRootId "") (= (object/get @entity threadRootId) ?threadRootId)) (= (str/default (object/get @entity parentId) "") ""))
           include: (replies)
         })
       ReplyParentLoaded -> browsing
@@ -177,13 +177,13 @@ orbital ThreadPostOrbital {
         (notify error (str/concat "Couldn't attach the reply to its post — " ?error))
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
-          filter: (and (or ["=", (str/default @entity.replyRootId @config.threadRootId), ""] ["=", (object/get @entity threadRootId), (str/default @entity.replyRootId @config.threadRootId)]) ["=", (str/default (object/get @entity parentId) ""), ""])
+          filter: (and (or (= (str/default @entity.replyRootId @config.threadRootId) "") (= (object/get @entity threadRootId) (str/default @entity.replyRootId @config.threadRootId))) (= (str/default (object/get @entity parentId) "") ""))
           include: (replies)
         })
       ReplyParentUpdated -> browsing
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
-          filter: (and (or ["=", ?threadRootId, ""] ["=", (object/get @entity threadRootId), ?threadRootId]) ["=", (str/default (object/get @entity parentId) ""), ""])
+          filter: (and (or (= ?threadRootId "") (= (object/get @entity threadRootId) ?threadRootId)) (= (str/default (object/get @entity parentId) "") ""))
           include: (replies)
         })
       ;; SELECT's payload IS { id, row } (caller-constructed, unlike the
@@ -193,7 +193,7 @@ orbital ThreadPostOrbital {
         (set @entity.focusedRow ?row)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
-          filter: (and (or ["=", ?row.threadRootId, ""] ["=", (object/get @entity threadRootId), ?row.threadRootId]) ["=", (str/default (object/get @entity parentId) ""), ""])
+          filter: (and (or (= ?row.threadRootId "") (= (object/get @entity threadRootId) ?row.threadRootId)) (= (str/default (object/get @entity parentId) "") ""))
           include: (replies)
         })
       ;; Inline composers (bodyContent overrides with their own textarea +
@@ -201,7 +201,7 @@ orbital ThreadPostOrbital {
       ;; browsing — without these arms every such click is swallowed.
       EDIT_REPLY -> browsing
         (set @entity.replyDraft ?value)
-      SUBMIT_REPLY -> browsing when (not ["=", (str/default @entity.replyDraft ""), ""])
+      SUBMIT_REPLY -> browsing when (not (= (str/default @entity.replyDraft "") ""))
         (persist create ThreadPost {
           authorId: @user.id
           authorName: @user.name
@@ -235,7 +235,7 @@ orbital ThreadPostOrbital {
         (set @entity.replyRootId ?rootId)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
-          filter: (and (or ["=", ?rootId, ""] ["=", (object/get @entity threadRootId), ?rootId]) ["=", (str/default (object/get @entity parentId) ""), ""])
+          filter: (and (or (= ?rootId "") (= (object/get @entity threadRootId) ?rootId)) (= (str/default (object/get @entity parentId) "") ""))
           include: (replies)
         })
         (render-ui main { type: skeleton, variant: list, rows: 6 })
@@ -245,13 +245,13 @@ orbital ThreadPostOrbital {
       INIT -> loading
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
-          filter: (and (or ["=", (str/default @entity.replyRootId @config.threadRootId), ""] ["=", (object/get @entity threadRootId), (str/default @entity.replyRootId @config.threadRootId)]) ["=", (str/default (object/get @entity parentId) ""), ""])
+          filter: (and (or (= (str/default @entity.replyRootId @config.threadRootId) "") (= (object/get @entity threadRootId) (str/default @entity.replyRootId @config.threadRootId))) (= (str/default (object/get @entity parentId) "") ""))
           include: (replies)
         })
         (render-ui main { type: skeleton, variant: list, rows: 6 })
       EDIT_REPLY -> replying
         (set @entity.replyDraft ?value)
-      SUBMIT_REPLY -> browsing when (not ["=", (str/default @entity.replyDraft ""), ""])
+      SUBMIT_REPLY -> browsing when (not (= (str/default @entity.replyDraft "") ""))
         (persist create ThreadPost {
           authorId: @user.id
           authorName: @user.name
@@ -267,7 +267,7 @@ orbital ThreadPostOrbital {
         (set @entity.replyParentId "")
       ;; Scoped to the row just created (?threadRootId, flat) — see the twin
       ;; arm in `browsing` for why.
-      ThreadPostCreated -> browsing when (not ["=", (str/default ?parentId ""), ""])
+      ThreadPostCreated -> browsing when (not (= (str/default ?parentId "") ""))
         (set @entity.replyDraft "")
         (set @entity.replyParentId "")
         (set @entity.lastReplyId ?id)
@@ -275,12 +275,12 @@ orbital ThreadPostOrbital {
           id: ?parentId
           emit: { failure: ReplyParentLoadFailed, success: ReplyParentLoaded }
         })
-      ThreadPostCreated -> browsing when ["=", (str/default ?parentId ""), ""]
+      ThreadPostCreated -> browsing when (= (str/default ?parentId "") "")
         (set @entity.replyDraft "")
         (set @entity.replyParentId "")
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
-          filter: (and (or ["=", ?threadRootId, ""] ["=", (object/get @entity threadRootId), ?threadRootId]) ["=", (str/default (object/get @entity parentId) ""), ""])
+          filter: (and (or (= ?threadRootId "") (= (object/get @entity threadRootId) ?threadRootId)) (= (str/default (object/get @entity parentId) "") ""))
           include: (replies)
         })
       ThreadPostCreateFailed -> replying
@@ -293,7 +293,7 @@ orbital ThreadPostOrbital {
         (set @entity.replyRootId ?rootId)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
-          filter: (and (or ["=", ?rootId, ""] ["=", (object/get @entity threadRootId), ?rootId]) ["=", (str/default (object/get @entity parentId) ""), ""])
+          filter: (and (or (= ?rootId "") (= (object/get @entity threadRootId) ?rootId)) (= (str/default (object/get @entity parentId) "") ""))
           include: (replies)
         })
         (render-ui main { type: skeleton, variant: list, rows: 6 })
@@ -303,7 +303,7 @@ orbital ThreadPostOrbital {
       INIT -> loading
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
-          filter: (and (or ["=", (str/default @entity.replyRootId @config.threadRootId), ""] ["=", (object/get @entity threadRootId), (str/default @entity.replyRootId @config.threadRootId)]) ["=", (str/default (object/get @entity parentId) ""), ""])
+          filter: (and (or (= (str/default @entity.replyRootId @config.threadRootId) "") (= (object/get @entity threadRootId) (str/default @entity.replyRootId @config.threadRootId))) (= (str/default (object/get @entity parentId) "") ""))
           include: (replies)
         })
         (render-ui main { type: skeleton, variant: list, rows: 6 })
@@ -311,7 +311,7 @@ orbital ThreadPostOrbital {
         (set @entity.replyRootId ?rootId)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
-          filter: (and (or ["=", ?rootId, ""] ["=", (object/get @entity threadRootId), ?rootId]) ["=", (str/default (object/get @entity parentId) ""), ""])
+          filter: (and (or (= ?rootId "") (= (object/get @entity threadRootId) ?rootId)) (= (str/default (object/get @entity parentId) "") ""))
           include: (replies)
         })
         (render-ui main { type: skeleton, variant: list, rows: 6 })
@@ -476,7 +476,7 @@ orbital ThreadPostOrbital {
         @synonyms "reply label, comment button, add comment"
         @tier "presentation"
       bodyContent : render-ui = {
-        children: [(if ["!=", @config.sectionTitle, ""] {
+        children: [(if (!= @config.sectionTitle "") {
           content: @config.sectionTitle
           type: typography
           variant: h4
@@ -504,7 +504,7 @@ orbital ThreadPostOrbital {
           look: @config.tableLook
           type: data-list
           variant: card
-        }, (if ["!=", @config.sectionTitle, ""] <trait.ThreadReplyGate /> {
+        }, (if (!= @config.sectionTitle "") <trait.ThreadReplyGate /> {
           children: []
           gap: none
           type: stack

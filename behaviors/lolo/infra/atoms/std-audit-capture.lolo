@@ -27,7 +27,7 @@ orbital AuditCaptureOrbital {
 
     state idle {
       EntityMutated -> idle when @config.enabled
-        (when (or ["=", (array/len @config.captureEventTypes), 0] (array/includes @config.captureEventTypes (object/get ?data kind @event.event))) (do (set @entity.actor @user.id) (set @entity.action (object/get ?data kind @event.event)) (set @entity.entityType @config.captureEntity) (set @entity.entityId (object/get ?data id "")) (set @entity.before (if @config.captureBeforeAfter (json/stringify (object/omit (object/get ?data before {}) @config.excludeFields)) "")) (set @entity.after (if @config.captureBeforeAfter (json/stringify (object/omit (object/get ?data after {}) @config.excludeFields)) "")) (set @entity.recordedAt 0) (persist create AuditEntry {
+        (when (or (= (array/len @config.captureEventTypes) 0) (array/includes @config.captureEventTypes (object/get ?data kind @event.event))) (do (set @entity.actor @user.id) (set @entity.action (object/get ?data kind @event.event)) (set @entity.entityType @config.captureEntity) (set @entity.entityId (object/get ?data id "")) (set @entity.before (if @config.captureBeforeAfter (json/stringify (object/omit (object/get ?data before {}) @config.excludeFields)) "")) (set @entity.after (if @config.captureBeforeAfter (json/stringify (object/omit (object/get ?data after {}) @config.excludeFields)) "")) (set @entity.recordedAt 0) (persist create AuditEntry {
           action: @entity.action
           actor: @user.id
           after: @entity.after

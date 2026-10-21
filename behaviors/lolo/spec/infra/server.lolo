@@ -1,6 +1,6 @@
 app server-spec [
   version: "1.0.0",
-  description: "Design contract for the HTTP server program that replaces orbital-server, written as the contract of the organism that composes it: the organism owns no states, it wires atoms. std-http1 delivers each request once as REQUEST_RECEIVED and writes each RESPOND; std-http-policy answers HTTP_DECIDE with HTTP_DECIDED and reads CORS_ORIGIN at boot, answering CORS_CONFIGURED, which starts the listener; std-rate-limiter answers RATE_REQUEST with ADMITTED or THROTTLED; std-http-router drives one request through them and answers it with RESPOND, reporting REQUEST_ANSWERED. The host never routes: every request is routed by method and path under /api and answered once. This slice routes GET /api/health (200 { status, version }) and answers every other path 404 { error, code }. The target routes, each a later atom composed into the organism, are GET /api/orbitals, /api/orbitals/:name, /api/orbitals/:name/state, /api/stats, /api/trace, /api/orbitals/inputs, /api/push/vapid-public-key, /api/events (SSE, needs a ticket); POST /api/orbitals/:orbital/events, /api/orbitals/:orbital/traits/:trait/entities/:id/events, /api/orbitals/:orbital/inputs, /api/orbitals/resolve-rows, /api/events/ticket, /api/hooks/:name, /api/tick. Every dispatch route except the ticket needs a verified bearer when the program has sign-in (401 UNAUTHORIZED); the ticket route admits the anonymous viewer; hooks, tick, push and health are outside the bearer guard. Any other path is a static file from the program assets then the client directory, else app-shell.html or index.html, never under /api or /__. Errors answer { error, code }. The organism mounts one page, /server, over its composed traits."
+  description: "Design contract for the HTTP server program that replaces orbital-server, written as the contract of the organism that composes it: the organism owns no states, it wires atoms. std-http1 delivers each request once as REQUEST_RECEIVED and writes each RESPOND; std-http-policy answers HTTP_DECIDE with HTTP_DECIDED and reads CORS_ORIGIN at boot, answering CORS_CONFIGURED, which starts the listener; std-rate-limiter answers RATE_REQUEST with ADMITTED or THROTTLED; std-http-router drives one request through them and answers it with RESPOND, reporting REQUEST_ANSWERED. The host never routes: every request is routed by method and path under /api and answered once. This slice routes GET /api/health (200 { status, version }) and answers every other path 404 { error, code }. The target routes, each a later atom composed into the organism, are GET /api/orbitals, /api/orbitals/:name, /api/orbitals/:name/state, /api/stats, /api/trace, /api/orbitals/inputs, /api/push/vapid-public-key, /api/events (SSE, needs a ticket); POST /api/orbitals/:orbital/events, /api/orbitals/:orbital/traits/:trait/entities/:id/events, /api/orbitals/:orbital/inputs, /api/orbitals/resolve-rows, /api/events/ticket, /api/hooks/:name, /api/tick. Every dispatch route except the ticket needs a verified bearer when the program has sign-in (401 UNAUTHORIZED); the ticket route admits the anonymous viewer; hooks, tick, push and health are outside the bearer guard. Any other path is a static file from the program assets then the client directory, else app-shell.html or index.html, never under /api or /__. Errors answer { error, code }. GET /api/events is the live stream: it takes ?ticket=<t>[&clientId=<c>] (an EventSource sends no Authorization header, so the ticket is read from the query only and never logged). The router answers STREAM_OPEN_REQUESTED { requestId, ticket, clientId }; std-stream-ticket spends the ticket (TAKE_TICKET, then TICKET_TAKEN { ticket, viewer } or TICKET_REFUSED { code, message, ticket }); on TICKET_TAKEN the router emits SSE_OPEN { requestId } and STREAM_AUTHORIZED { requestId, viewer, clientId } for the later event fan-out, and std-sse opens the stream through std-http1 (RESPOND_HEAD, RESPOND_CHUNK, RESPOND_END, STREAM_IDLE heartbeats, STREAM_CLOSED when the client leaves, SSE_CLOSED { requestId, reason }). POST /api/events/ticket admits the anonymous viewer { id: anonymous, role: anonymous, permissions: [], claims: [] } when the request has no Authorization header (a bearer is verified by std-bearer-verify over std-jws, std-rsa, std-ecdsa and std-bigint, composed by the organism; a refused one answers 401 UNAUTHORIZED, and a verified one mints for its own viewer): the router emits MINT_REQUESTED { requestId, viewer }, std-stream-ticket mints (MINT_TICKET) and answers TICKET_MINTED { ticket, expiresAt, requestId }, answered 200 { ticket }; a failed mint (TICKET_REFUSED with requestId and no ticket) is answered 503 { error, code: TICKET_UNAVAILABLE }. STREAM_CLOSED for a request still pending drops its waiting entry. A missing, forged, expired or spent ticket is answered 401 { error, code: UNAUTHORIZED } as application/json and no stream is opened. std-http1 listens for the streaming routes too (RESPOND_HEAD, RESPOND_CHUNK, RESPOND_END) because a restated listens list replaces the atom set. This slice opens, holds and closes the stream and writes only the retry frame and heartbeats; pushing the kernel broadcast feed onto it (SSE_SEND from a fan-out keyed by STREAM_AUTHORIZED) is a later item. The organism mounts one page, /server, over its composed traits."
 ]
 
 type ServerHeader = { name : string!, value : string! }
@@ -16,6 +16,10 @@ orbital ServerSpec {
       REQUEST_RECEIVED { requestId : number!  method : string!  path : string!  query : string!  headers : Map string string  body : bytes!  peer : string! }
       RESPONDED { requestId : number!  bytes : number! }
       RESPOND_REFUSED { requestId : number!  kind : string!  error : string! }
+      STREAM_OPENED { requestId : number! }
+      CHUNK_SENT { requestId : number!  bytes : number! }
+      STREAM_CLOSED { requestId : number!  reason : string! }
+      STREAM_IDLE { requestId : number!  idle : number! }
     }
   }
   expects trait ServerPolicy {
@@ -39,7 +43,27 @@ orbital ServerSpec {
       REQUEST_RATE_LIMITED { requestId : number!  resetSeconds : number! }
       ROUTE_HEALTH { requestId : number! }
       ROUTE_REFUSED { requestId : number! }
+      STREAM_OPEN_REQUESTED { requestId : number!  ticket : string!  clientId : string! }
+      SSE_OPEN { requestId : number! }
+      MINT_REQUESTED { requestId : number!  viewer : Viewer! }
+      STREAM_AUTHORIZED { requestId : number!  viewer : Viewer!  clientId : string! }
     }
   }
-  expects page "/server" -> Http1, ServerPolicy, ServerRateLimiter, ServerRouter
+  expects trait StreamTicketer {
+    emits {
+      TICKET_MINTED { ticket : string!  expiresAt : number!  requestId : number }
+      TICKET_TAKEN { ticket : string!  viewer : Viewer! }
+      TICKET_REFUSED { code : string  message : string!  ticket : string  requestId : number }
+    }
+  }
+  expects trait ServerSse {
+    emits {
+      RESPOND_HEAD { requestId : number!  status : number!  headers : [ServerHeader]! }
+      RESPOND_CHUNK { requestId : number!  body : bytes! }
+      RESPOND_END { requestId : number! }
+      SSE_CLOSED { requestId : number!  reason : string! }
+      SSE_REFUSED { requestId : number!  kind : string!  error : string! }
+    }
+  }
+  expects page "/server" -> Http1, ServerPolicy, ServerRateLimiter, ServerRouter, StreamTicketer, ServerSse
 }

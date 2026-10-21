@@ -324,7 +324,7 @@ orbital MultiPartyFlowOrbital {
           gap: lg
           children: [{ type: skeleton, variant: header }, { type: skeleton, variant: card }]
         })
-      PARTY_CONFIRM -> awaiting when (not ["=", ["+", @entity.currentPartyIndex, 1], @entity.totalParties])
+      PARTY_CONFIRM -> awaiting when (not (= (+ @entity.currentPartyIndex 1) @entity.totalParties))
         (set @entity.audit (array/append @entity.audit {
           description: (str/concat @entity.currentPartyActor " completed: " @entity.currentActionLabel)
           id: (str/concat confirm- (object/get ? partyKey ""))
@@ -332,7 +332,7 @@ orbital MultiPartyFlowOrbital {
           timestamp: (time/now)
           title: (str/concat @entity.currentPartyTitle " confirmed")
         }))
-        (set @entity.currentPartyIndex ["+", @entity.currentPartyIndex, 1])
+        (set @entity.currentPartyIndex (+ @entity.currentPartyIndex 1))
         (set @entity.currentPartyId (object/get (array/nth @config.parties @entity.currentPartyIndex) id ""))
         (set @entity.currentPartyTitle (object/get (array/nth @config.parties @entity.currentPartyIndex) title ""))
         (set @entity.currentPartyActor (object/get (array/nth @config.parties @entity.currentPartyIndex) actor ""))
@@ -555,7 +555,7 @@ orbital MultiPartyFlowOrbital {
           gap: lg
           type: stack
         })
-      PARTY_CONFIRM -> funded when ["=", ["+", @entity.currentPartyIndex, 1], @entity.totalParties]
+      PARTY_CONFIRM -> funded when (= (+ @entity.currentPartyIndex 1) @entity.totalParties)
         (set @entity.audit (array/append @entity.audit {
           description: (str/concat @entity.currentPartyActor " completed: " @entity.currentActionLabel)
           id: (str/concat confirm- (object/get ? partyKey ""))

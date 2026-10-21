@@ -1,0 +1,131 @@
+app std-sse [
+  version: "1.0.0",
+  description: "std-sse — server-sent events over std-http1's streamed replies. SSE_OPEN { requestId } opens the stream (RESPOND_HEAD 200 text/event-stream, cache-control no-cache, x-accel-buffering no) and writes retry: sseRetryMs; SSE_SEND { requestId, data, event?, id? } writes one frame (id: and event: lines when given, one data: line per line of data, a blank line); STREAM_IDLE from std-http1 writes the : hb comment every heartbeatEvery timeouts; SSE_CLOSE ends the stream; STREAM_CLOSED from std-http1 forgets it. SSE_CLOSED { requestId, reason } tells the fan-out to unsubscribe. SSE_REFUSED { requestId, kind, error } refuses a send: invalid for CR or LF in event or id, NUL in id, CR in data; closed for an id with no open stream."
+]
+uses Spec from "almadar-std/sse"
+type Http1Header = { name : string!, value : string! }
+
+orbital SseOrbital {
+  entity SseStreams [runtime] {
+    id : string!
+    open : [number] @description "Request ids of the streams opened and not yet closed." = []
+  }
+
+  trait Sse -> SseStreams [integration, instance] {
+    initial: serving
+
+    config {
+      sseRetryMs : number = 3000
+        @label "Client retry"
+        @description "The reconnect delay written as the first frame of every stream."
+        @tier "infra"
+      heartbeatEvery : number = 3
+        @label "Heartbeat cadence"
+        @description "A heartbeat comment is written every this many read timeouts of the stream."
+        @tier "infra"
+      linePattern : string = "^[^\\r\\n]*$"
+        @label "Single line"
+        @description "What an event name must match: no CR or LF."
+        @tier "domain"
+      idPattern : string = "^[^\\r\\n\\x00]*$"
+        @label "Event id"
+        @description "What an id must match: no CR, LF or NUL."
+        @tier "domain"
+      dataPattern : string = "^[^\\r]*$"
+        @label "Data"
+        @description "What data must match: no CR (lines split on LF)."
+        @tier "domain"
+    }
+
+    state serving {
+      INIT -> serving
+
+      SSE_OPEN -> serving
+        (set @entity.open (array/append @entity.open @payload.requestId))
+        (emit RESPOND_HEAD { requestId: @payload.requestId, status: 200, headers: [{ name: "content-type", value: "text/event-stream" }, { name: "cache-control", value: "no-cache" }, { name: "x-accel-buffering", value: "no" }] })
+        (emit RESPOND_CHUNK { requestId: @payload.requestId, body: (bytes/from-string (str/concat "retry: " @config.sseRetryMs "\n\n")) })
+
+      SSE_SEND -> serving when (not (array/includes @entity.open @payload.requestId))
+        (emit SSE_REFUSED { requestId: @payload.requestId, kind: "closed", error: "no open stream has this id" })
+      SSE_SEND -> serving when (and (array/includes @entity.open @payload.requestId) (not (and (validate/pattern (or @payload.event "") @config.linePattern) (validate/pattern (or @payload.id "") @config.idPattern) (validate/pattern @payload.data @config.dataPattern))))
+        (emit SSE_REFUSED { requestId: @payload.requestId, kind: "invalid", error: "event and id take no CR or LF, id no NUL, data no CR" })
+      SSE_SEND -> serving when (and (array/includes @entity.open @payload.requestId) (validate/pattern (or @payload.event "") @config.linePattern) (validate/pattern (or @payload.id "") @config.idPattern) (validate/pattern @payload.data @config.dataPattern))
+        (emit RESPOND_CHUNK { requestId: @payload.requestId, body: (bytes/from-string (str/concat
+          (if (> (str/len (or @payload.id "")) 0) (str/concat "id: " @payload.id "\n") "")
+          (if (> (str/len (or @payload.event "")) 0) (str/concat "event: " @payload.event "\n") "")
+          (str/join (array/map (str/split @payload.data "\n") (fn l (str/concat "data: " @l "\n"))) "")
+          "\n")) })
+
+      STREAM_IDLE -> serving when (and (array/includes @entity.open @payload.requestId) (= (math/mod @payload.idle @config.heartbeatEvery) 0))
+        (emit RESPOND_CHUNK { requestId: @payload.requestId, body: (bytes/from-string ": hb\n\n") })
+
+      SSE_CLOSE -> serving when (array/includes @entity.open @payload.requestId)
+        (set @entity.open (array/filter @entity.open (fn r (!= @r @payload.requestId))))
+        (emit RESPOND_END { requestId: @payload.requestId })
+        (emit SSE_CLOSED { requestId: @payload.requestId, reason: "server" })
+
+      STREAM_CLOSED -> serving when (array/includes @entity.open @payload.requestId)
+        (set @entity.open (array/filter @entity.open (fn r (!= @r @payload.requestId))))
+        (emit SSE_CLOSED { requestId: @payload.requestId, reason: @payload.reason })
+    }
+
+    emits {
+      RESPOND_HEAD -> external {
+        requestId : number!
+        status : number!
+        headers : [Http1Header]!
+      }
+        @description "Open the streamed reply on std-http1."
+        @tier "secondary"
+      RESPOND_CHUNK -> external {
+        requestId : number!
+        body : bytes!
+      }
+        @description "One frame of the stream, written by std-http1."
+        @tier "secondary"
+      RESPOND_END -> external {
+        requestId : number!
+      }
+        @description "End the stream on std-http1."
+        @tier "secondary"
+      SSE_CLOSED -> external {
+        requestId : number!
+        reason : string!
+      }
+        @description "The stream ended (server or client); unsubscribe it."
+        @tier "primary"
+      SSE_REFUSED -> external {
+        requestId : number!
+        kind : string!
+        error : string!
+      }
+        @description "A send was refused and nothing was written."
+        @tier "primary"
+    }
+
+    listens {
+      SSE_OPEN {
+        requestId : number!
+      }
+      SSE_SEND {
+        requestId : number!
+        data : string!
+        event : string
+        id : string
+      }
+      SSE_CLOSE {
+        requestId : number!
+      }
+      STREAM_IDLE {
+        requestId : number!
+        idle : number!
+      }
+      STREAM_CLOSED {
+        requestId : number!
+        reason : string!
+      }
+    }
+  }
+
+  page "/sse" as SsePage -> Sse
+}

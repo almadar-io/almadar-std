@@ -4,12 +4,16 @@ app std-http-router [
 ]
 uses Spec from "almadar-std/http-router"
 type RouterHeader = { name : string!, value : string! }
-type RouterPending = { requestId : number!, method : string!, path : string!, responseHeaders : [RouterHeader]! }
+type RouterPending = { requestId : number!, method : string!, path : string!, query : string!, authorization : string!, responseHeaders : [RouterHeader]! }
+type RouterStream = { requestId : number!, ticket : string! }
 orbital HttpRouterOrbital {
   entity RouteRequest [runtime] {
     id : string!
     status : number @description "The status of the request last answered." = 0
     pending : [RouterPending] @description "Requests received and not yet answered, each with the policy headers to carry onto its answer." = []
+    guards : [number] @description "Request ids waiting for a bearer verdict on a route that needs a verified viewer." = []
+    mints : [number] @description "Request ids of ticket mints waiting for std-stream-ticket." = []
+    streams : [RouterStream] @description "Stream requests waiting for their ticket to be spent." = []
     @invariant (>= @entity.status 0)
   }
 
@@ -17,9 +21,25 @@ orbital HttpRouterOrbital {
     initial: routing
 
     config {
+      requireSignIn : boolean = false
+        @label "Require sign-in"
+        @description "When on, a request under dispatchPrefix needs a verified bearer (401 UNAUTHORIZED otherwise); the ticket route always admits the anonymous viewer, and hooks, tick, push and health are outside the guard."
+        @tier "infra"
+      dispatchPrefix : string = "/api/orbitals"
+        @label "Dispatch prefix"
+        @description "A path starting with this is a dispatch route guarded by requireSignIn."
+        @tier "infra"
       apiPrefix : string = "/api"
         @label "API prefix"
         @description "A path starting with this is counted by the rate limiter before it is routed."
+        @tier "infra"
+      ticketPath : string = "/api/events/ticket"
+        @label "Ticket path"
+        @description "The path a POST mints a stream ticket on for the anonymous viewer."
+        @tier "infra"
+      streamPath : string = "/api/events"
+        @label "Stream path"
+        @description "The path a GET opens the live stream on, with ?ticket=<t> in the query."
         @tier "infra"
       healthPath : string = "/api/health"
         @label "Health path"
@@ -34,7 +54,7 @@ orbital HttpRouterOrbital {
     state routing {
       INIT -> routing
       REQUEST_RECEIVED -> routing
-        (set @entity.pending (array/append @entity.pending { requestId: @payload.requestId, method: @payload.method, path: @payload.path, responseHeaders: [] }))
+        (set @entity.pending (array/append @entity.pending { requestId: @payload.requestId, method: @payload.method, path: @payload.path, query: (or @payload.query ""), authorization: (or (object/get @payload.headers "authorization") ""), responseHeaders: [] }))
         (emit HTTP_DECIDE {
           requestId: @payload.requestId,
           method: @payload.method,
@@ -53,10 +73,10 @@ orbital HttpRouterOrbital {
         (emit RESPOND { requestId: @payload.requestId, status: 413, headers: (array/append @payload.responseHeaders { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: "Payload too large", code: "PAYLOAD_TOO_LARGE" })) })
         (emit REQUEST_ANSWERED { requestId: @payload.requestId, status: 413, headers: (array/append @payload.responseHeaders { name: "content-type", value: "application/json" }), body: (json/stringify { error: "Payload too large", code: "PAYLOAD_TOO_LARGE" }) })
       HTTP_DECIDED -> routing when (and (= @payload.verdict "ok") (str/startsWith (or (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "path") "") @config.apiPrefix))
-        (set @entity.pending (array/map @entity.pending (fn p (if (= @p.requestId @payload.requestId) { requestId: @p.requestId, method: @p.method, path: @p.path, responseHeaders: @payload.responseHeaders } @p))))
+        (set @entity.pending (array/map @entity.pending (fn p (if (= @p.requestId @payload.requestId) { requestId: @p.requestId, method: @p.method, path: @p.path, query: @p.query, authorization: @p.authorization, responseHeaders: @payload.responseHeaders } @p))))
         (emit RATE_REQUEST { requestId: @payload.requestId })
       HTTP_DECIDED -> routing when (and (= @payload.verdict "ok") (not (str/startsWith (or (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "path") "") @config.apiPrefix)))
-        (set @entity.pending (array/map @entity.pending (fn p (if (= @p.requestId @payload.requestId) { requestId: @p.requestId, method: @p.method, path: @p.path, responseHeaders: @payload.responseHeaders } @p))))
+        (set @entity.pending (array/map @entity.pending (fn p (if (= @p.requestId @payload.requestId) { requestId: @p.requestId, method: @p.method, path: @p.path, query: @p.query, authorization: @p.authorization, responseHeaders: @payload.responseHeaders } @p))))
         (emit ROUTE_REQUEST { requestId: @payload.requestId, rateHeaders: [] })
       ADMITTED -> routing
         (emit ROUTE_REQUEST {
@@ -84,13 +104,80 @@ orbital HttpRouterOrbital {
             { name: "ratelimit-reset", value: (str/concat "" @payload.resetIn) }
           ]) { name: "content-type", value: "text/plain; charset=utf-8" }), body: "Too many requests, please try again later." })
         (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
+      ROUTE_REQUEST -> routing when (let ((req (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (and (= (str/upper (object/get @req "method")) "POST") (= (object/get @req "path") @config.ticketPath)))
+        (set @entity.mints (array/append @entity.mints @payload.requestId))
+        (emit BEARER_VERIFY { requestId: @payload.requestId, authorization: (or (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "authorization") "") })
+      BEARER_VERIFIED -> routing when (array/includes @entity.mints (or @payload.requestId 0))
+        (emit MINT_REQUESTED { requestId: @payload.requestId, viewer: @payload.viewer })
+      BEARER_ANONYMOUS -> routing when (array/includes @entity.mints (or @payload.requestId 0))
+        (emit MINT_REQUESTED { requestId: @payload.requestId, viewer: { id: "anonymous", role: "anonymous", permissions: [], claims: [] } })
+      BEARER_REFUSED -> routing when (array/includes @entity.mints (or @payload.requestId 0))
+        (set @entity.status 401)
+        (emit RESPOND { requestId: @payload.requestId, status: 401, headers: (array/append (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: "Unauthorized", code: "UNAUTHORIZED" })) })
+        (emit REQUEST_ANSWERED { requestId: @payload.requestId, status: 401, headers: (array/append (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") { name: "content-type", value: "application/json" }), body: (json/stringify { error: "Unauthorized", code: "UNAUTHORIZED" }) })
+        (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
+        (set @entity.mints (array/filter @entity.mints (fn m (!= @m @payload.requestId))))
+      ROUTE_REQUEST -> routing when (let ((req (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (and @config.requireSignIn (str/startsWith (object/get @req "path") @config.dispatchPrefix)))
+        (set @entity.guards (array/append @entity.guards @payload.requestId))
+        (emit BEARER_VERIFY { requestId: @payload.requestId, authorization: (or (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "authorization") "") })
+      BEARER_VERIFIED -> routing when (array/includes @entity.guards (or @payload.requestId 0))
+        (set @entity.status 404)
+        (emit RESPOND { requestId: @payload.requestId, status: 404, headers: (array/append (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: "Not found", code: "NOT_FOUND" })) })
+        (emit ROUTE_REFUSED { requestId: @payload.requestId })
+        (emit REQUEST_ANSWERED { requestId: @payload.requestId, status: 404, headers: (array/append (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") { name: "content-type", value: "application/json" }), body: (json/stringify { error: "Not found", code: "NOT_FOUND" }) })
+        (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
+        (set @entity.guards (array/filter @entity.guards (fn m (!= @m @payload.requestId))))
+      BEARER_ANONYMOUS -> routing when (array/includes @entity.guards (or @payload.requestId 0))
+        (set @entity.status 401)
+        (emit RESPOND { requestId: @payload.requestId, status: 401, headers: (array/append (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: "Unauthorized", code: "UNAUTHORIZED" })) })
+        (emit REQUEST_ANSWERED { requestId: @payload.requestId, status: 401, headers: (array/append (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") { name: "content-type", value: "application/json" }), body: (json/stringify { error: "Unauthorized", code: "UNAUTHORIZED" }) })
+        (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
+        (set @entity.guards (array/filter @entity.guards (fn m (!= @m @payload.requestId))))
+      BEARER_REFUSED -> routing when (array/includes @entity.guards (or @payload.requestId 0))
+        (set @entity.status 401)
+        (emit RESPOND { requestId: @payload.requestId, status: 401, headers: (array/append (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: "Unauthorized", code: "UNAUTHORIZED" })) })
+        (emit REQUEST_ANSWERED { requestId: @payload.requestId, status: 401, headers: (array/append (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") { name: "content-type", value: "application/json" }), body: (json/stringify { error: "Unauthorized", code: "UNAUTHORIZED" }) })
+        (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
+        (set @entity.guards (array/filter @entity.guards (fn m (!= @m @payload.requestId))))
+      TICKET_MINTED -> routing when (array/includes @entity.mints (or @payload.requestId 0))
+        (set @entity.status 200)
+        (emit RESPOND { requestId: @payload.requestId, status: 200, headers: (array/append (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { ticket: @payload.ticket })) })
+        (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
+        (set @entity.mints (array/filter @entity.mints (fn m (!= @m @payload.requestId))))
+      TICKET_REFUSED -> routing when (and (= (or @payload.ticket "") "") (array/includes @entity.mints (or @payload.requestId 0)))
+        (set @entity.status 503)
+        (emit RESPOND { requestId: @payload.requestId, status: 503, headers: (array/append (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: "Stream ticket unavailable", code: "TICKET_UNAVAILABLE" })) })
+        (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
+        (set @entity.mints (array/filter @entity.mints (fn m (!= @m @payload.requestId))))
+      STREAM_CLOSED -> routing
+        (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
+        (set @entity.streams (array/filter @entity.streams (fn s (!= @s.requestId @payload.requestId))))
+        (set @entity.mints (array/filter @entity.mints (fn m (!= @m @payload.requestId))))
+      ROUTE_REQUEST -> routing when (let ((req (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (and (and (= (str/upper (object/get @req "method")) "GET") (= (object/get @req "path") @config.streamPath)) (= (str/replace (or (array/find (str/split (or (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "query") "") "&") (fn s (str/startsWith @s "ticket="))) "") "ticket=" "") "")))
+        (set @entity.status 401)
+        (emit RESPOND { requestId: @payload.requestId, status: 401, headers: (array/append (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: "Unauthorized", code: "UNAUTHORIZED" })) })
+        (emit REQUEST_ANSWERED { requestId: @payload.requestId, status: 401, headers: (array/append (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") { name: "content-type", value: "application/json" }), body: (json/stringify { error: "Unauthorized", code: "UNAUTHORIZED" }) })
+        (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
+      ROUTE_REQUEST -> routing when (let ((req (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (and (and (= (str/upper (object/get @req "method")) "GET") (= (object/get @req "path") @config.streamPath)) (!= (str/replace (or (array/find (str/split (or (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "query") "") "&") (fn s (str/startsWith @s "ticket="))) "") "ticket=" "") "")))
+        (set @entity.streams (array/append @entity.streams { requestId: @payload.requestId, ticket: (str/replace (or (array/find (str/split (or (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "query") "") "&") (fn s (str/startsWith @s "ticket="))) "") "ticket=" "") }))
+        (emit STREAM_OPEN_REQUESTED { requestId: @payload.requestId, ticket: (str/replace (or (array/find (str/split (or (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "query") "") "&") (fn s (str/startsWith @s "ticket="))) "") "ticket=" ""), clientId: (str/replace (or (array/find (str/split (or (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "query") "") "&") (fn s (str/startsWith @s "clientId="))) "") "clientId=" "") })
+      TICKET_TAKEN -> routing when (!= (array/find @entity.streams (fn s (= @s.ticket @payload.ticket))) null)
+        (emit SSE_OPEN { requestId: (object/get (array/find @entity.streams (fn s (= @s.ticket @payload.ticket))) "requestId") })
+        (emit STREAM_AUTHORIZED { requestId: (object/get (array/find @entity.streams (fn s (= @s.ticket @payload.ticket))) "requestId"), viewer: @payload.viewer, clientId: (str/replace (or (array/find (str/split (object/get (array/find @entity.pending (fn p (= @p.requestId (object/get (array/find @entity.streams (fn s (= @s.ticket @payload.ticket))) "requestId")))) "query") "&") (fn s (str/startsWith @s "clientId="))) "") "clientId=" "") })
+        (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId (object/get (array/find @entity.streams (fn s (= @s.ticket @payload.ticket))) "requestId")))))
+        (set @entity.streams (array/filter @entity.streams (fn s (!= @s.ticket @payload.ticket))))
+      TICKET_REFUSED -> routing when (!= (array/find @entity.streams (fn s (= @s.ticket (or @payload.ticket "")))) null)
+        (set @entity.status 401)
+        (emit RESPOND { requestId: (object/get (array/find @entity.streams (fn s (= @s.ticket @payload.ticket))) "requestId"), status: 401, headers: (array/append (object/get (array/find @entity.pending (fn p (= @p.requestId (object/get (array/find @entity.streams (fn s (= @s.ticket @payload.ticket))) "requestId")))) "responseHeaders") { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: "Unauthorized", code: "UNAUTHORIZED" })) })
+        (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId (object/get (array/find @entity.streams (fn s (= @s.ticket @payload.ticket))) "requestId")))))
+        (set @entity.streams (array/filter @entity.streams (fn s (!= @s.ticket @payload.ticket))))
       ROUTE_REQUEST -> routing when (let ((req (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (and (= (str/upper (object/get @req "method")) "GET") (= (object/get @req "path") @config.healthPath)))
         (set @entity.status 200)
         (emit RESPOND { requestId: @payload.requestId, status: 200, headers: (array/append (array/concat (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") @payload.rateHeaders) { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { status: "healthy", version: @config.version })) })
         (emit ROUTE_HEALTH { requestId: @payload.requestId })
         (emit REQUEST_ANSWERED { requestId: @payload.requestId, status: 200, headers: (array/append (array/concat (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") @payload.rateHeaders) { name: "content-type", value: "application/json" }), body: (json/stringify { status: "healthy", version: @config.version }) })
         (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
-      ROUTE_REQUEST -> routing when (let ((req (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (not (and (= (str/upper (object/get @req "method")) "GET") (= (object/get @req "path") @config.healthPath))))
+      ROUTE_REQUEST -> routing when (let ((req (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (and (not (and @config.requireSignIn (str/startsWith (object/get @req "path") @config.dispatchPrefix))) (not (or (and (= (str/upper (object/get @req "method")) "GET") (= (object/get @req "path") @config.healthPath)) (and (= (str/upper (object/get @req "method")) "GET") (= (object/get @req "path") @config.streamPath)) (and (= (str/upper (object/get @req "method")) "POST") (= (object/get @req "path") @config.ticketPath))))))
         (set @entity.status 404)
         (emit RESPOND { requestId: @payload.requestId, status: 404, headers: (array/append (array/concat (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") @payload.rateHeaders) { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: "Not found", code: "NOT_FOUND" })) })
         (emit ROUTE_REFUSED { requestId: @payload.requestId })
@@ -145,6 +232,37 @@ orbital HttpRouterOrbital {
       }
         @description "Count this request in std-rate-limiter."
         @tier "secondary"
+      STREAM_OPEN_REQUESTED -> external {
+        requestId : number!
+        ticket : string!
+        clientId : string!
+      }
+        @description "A GET on streamPath carries this ticket; std-stream-ticket is asked to spend it."
+        @tier "secondary"
+      BEARER_VERIFY -> external {
+        requestId : number!
+        authorization : string
+      }
+        @description "Ask std-bearer-verify to turn this request's Authorization header into a verdict."
+        @tier "secondary"
+      MINT_REQUESTED -> external {
+        requestId : number!
+        viewer : Viewer!
+      }
+        @description "A POST on ticketPath asks std-stream-ticket to mint a ticket for the viewer its bearer verdict gave: the verified viewer, or the anonymous one when it carried no Authorization header."
+        @tier "secondary"
+      SSE_OPEN -> external {
+        requestId : number!
+      }
+        @description "The ticket was spent; open the stream for this request."
+        @tier "secondary"
+      STREAM_AUTHORIZED -> external {
+        requestId : number!
+        viewer : Viewer!
+        clientId : string!
+      }
+        @description "A stream was opened for this viewer and client; the event fan-out subscribes it."
+        @tier "primary"
       ROUTE_REQUEST -> internal {
         requestId : number!
         rateHeaders : [RouterHeader]!
@@ -182,6 +300,36 @@ orbital HttpRouterOrbital {
         resetIn : number!
         limit : number!
         window : number!
+      }
+      BEARER_VERIFIED {
+        requestId : number
+        viewer : Viewer!
+      }
+      BEARER_ANONYMOUS {
+        requestId : number
+      }
+      BEARER_REFUSED {
+        requestId : number
+        reason : string!
+      }
+      TICKET_MINTED {
+        ticket : string!
+        expiresAt : number!
+        requestId : number
+      }
+      STREAM_CLOSED {
+        requestId : number!
+        reason : string!
+      }
+      TICKET_TAKEN {
+        ticket : string!
+        viewer : Viewer!
+      }
+      TICKET_REFUSED {
+        code : string
+        message : string!
+        ticket : string
+        requestId : number
       }
     }
   }

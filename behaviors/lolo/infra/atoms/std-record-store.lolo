@@ -18,7 +18,7 @@ orbital RecordStoreOrbital {
     state ready {
       INIT -> ready
       DO_CREATE -> saving
-        (persist create StoredRecord (if ["=", @config.ownerField, ""] ?data (object/set ?data @config.ownerField @user.id)) {
+        (persist create StoredRecord (if (= @config.ownerField "") ?data (object/set ?data @config.ownerField @user.id)) {
           emit: { failure: RecordSaveFailed, success: RECORD_CREATED }
         })
       DO_UPDATE -> saving

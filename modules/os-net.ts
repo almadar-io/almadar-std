@@ -9,13 +9,13 @@ export const OS_NET_OPERATORS: Record<string, StdOperatorMeta> = {
     example: '["os/tcp-connect", "db.internal", 5432, { "emit": { "success": "SOCK_OPENED", "failure": "NET_FAILED" } }]',
   }),
   'os/tcp-listen': osEffect({
-    description: 'Listen for TCP connections (grant net: listen). The first answer is { sock }; each connection arrives on the onMessage route as { sock, peer }.',
+    description: 'Listen for TCP connections (grant net: listen). The first answer is { sock }; each connection arrives on the onMessage route as { sock, peer }. An accepted sock takes any number of os/send and os/recv until os/close (keep-alive, streamed replies); a keyed os/recv armed on it reports a client abort as { eof: true } or a closed failure, and os/close with that read pending ends the connection at once.',
     params: [arg('host', OS_HOST, 'Address to bind'), arg('port', OS_PORT, 'Port')],
     stream: true,
     example: '["os/tcp-listen", "0.0.0.0", 8080, { "key": "listener", "emit": { "success": "LISTENING", "failure": "NET_FAILED", "onMessage": "SOCK_ACCEPTED" } }]',
   }),
   'os/send': osEffect({
-    description: 'Send on a connected socket (grant net). Success payload: { bytes }.',
+    description: 'Send on a connected socket (grant net). Success payload: { bytes }. Sends on one socket are written in call order and never interleave. A keyed send under a declared route writes in the background and answers its route when the write ends (success { bytes }, or a failure such as timeout after the 5 s socket bound or closed), so a peer that stops reading does not hold the dispatch; an unkeyed send answers in place.',
     params: [arg('sock', OS_HANDLE, 'Socket handle'), arg('data', OS_DATA, 'Content to send')],
     example: '["os/send", "@payload.sock", "cGluZw==", { "emit": { "success": "SOCK_SENT", "failure": "NET_FAILED" } }]',
   }),

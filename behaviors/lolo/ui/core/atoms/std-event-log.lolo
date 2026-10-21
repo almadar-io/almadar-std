@@ -66,7 +66,7 @@ orbital EventLogOrbital {
           description: (object/get @row description "")
           id: (object/get @row id "")
           kind: (object/get @row kind "")
-          status: (object/get (or (array/find @config.kindOptions (fn k ["=", (object/get @k key), (object/get @row kind "")])) {}) status pending)
+          status: (object/get (or (array/find @config.kindOptions (fn k (= (object/get @k key) (object/get @row kind "")))) {}) status pending)
           title: (object/get @row title "")
         })) date desc))
         (set @entity.entries (array/sort (array/map ?data (fn row {
@@ -74,7 +74,7 @@ orbital EventLogOrbital {
           description: (object/get @row description "")
           id: (object/get @row id "")
           kind: (object/get @row kind "")
-          status: (object/get (or (array/find @config.kindOptions (fn k ["=", (object/get @k key), (object/get @row kind "")])) {}) status pending)
+          status: (object/get (or (array/find @config.kindOptions (fn k (= (object/get @k key) (object/get @row kind "")))) {}) status pending)
           title: (object/get @row title "")
         })) date desc))
         (render-ui main {
@@ -109,7 +109,7 @@ orbital EventLogOrbital {
             children: []
             gap: none
             type: stack
-          }), (if [">", (array/len @config.filters), 0] {
+          }), (if (> (array/len @config.filters) 0) {
             children: [{
               entity: EventLogView
               event: REFETCH_FILTER
@@ -178,7 +178,7 @@ orbital EventLogOrbital {
         })
       APPLY_FILTER -> viewing
         (set @entity.filterKind ?tabId)
-        (set @entity.entries (array/filter @entity.allEntries (fn e (or ["=", ?tabId, ""] ["=", (object/get @e kind), ?tabId]))))
+        (set @entity.entries (array/filter @entity.allEntries (fn e (or (= ?tabId "") (= (object/get @e kind) ?tabId)))))
         (render-ui main {
           children: [{
             align: center
@@ -211,7 +211,7 @@ orbital EventLogOrbital {
             children: []
             gap: none
             type: stack
-          }), (if [">", (array/len @config.filters), 0] {
+          }), (if (> (array/len @config.filters) 0) {
             children: [{
               entity: EventLogView
               event: REFETCH_FILTER
@@ -255,12 +255,12 @@ orbital EventLogOrbital {
       REFETCH_QUERY -> viewing
         (fetch EventLogView {
           emit: { failure: EventLogLoadFailed, success: EventLogLoaded }
-          filter: (and (or ["=", @entity.filterKind, ""] ["=", (object/get @entity @config.kindField), @entity.filterKind]) (or ["=", ?searchTerm, ""] (str/includes (object/get @entity @config.searchField) ?searchTerm)))
+          filter: (and (or (= @entity.filterKind "") (= (object/get @entity @config.kindField) @entity.filterKind)) (or (= ?searchTerm "") (str/includes (object/get @entity @config.searchField) ?searchTerm)))
         })
       REFETCH_FILTER -> viewing
         (fetch EventLogView {
           emit: { failure: EventLogLoadFailed, success: EventLogLoaded }
-          filter: (and (or ["=", @entity.filterKind, ""] ["=", (object/get @entity @config.kindField), @entity.filterKind]) (or ["=", ?value, ""] ["=", (object/get @entity ?field), ?value]))
+          filter: (and (or (= @entity.filterKind "") (= (object/get @entity @config.kindField) @entity.filterKind)) (or (= ?value "") (= (object/get @entity ?field) ?value)))
         })
       ;; No filter carried over on REFETCH_PAGE, mirroring std-browse exactly —
       ;; the reference page arm does not preserve query/filter either.
@@ -268,7 +268,7 @@ orbital EventLogOrbital {
         (fetch EventLogView {
           emit: { failure: EventLogLoadFailed, success: EventLogLoaded }
           limit: @config.pageSize
-          offset: ["*", ["-", ?page, 1], @config.pageSize]
+          offset: (* (- ?page 1) @config.pageSize)
         })
       EventLogLoadFailed -> viewing
         (notify error (str/concat "Couldn't refresh the event log — " ?error))
@@ -287,7 +287,7 @@ orbital EventLogOrbital {
           description: (object/get @row description "")
           id: (object/get @row id "")
           kind: (object/get @row kind "")
-          status: (object/get (or (array/find @config.kindOptions (fn k ["=", (object/get @k key), (object/get @row kind "")])) {}) status pending)
+          status: (object/get (or (array/find @config.kindOptions (fn k (= (object/get @k key) (object/get @row kind "")))) {}) status pending)
           title: (object/get @row title "")
         })) date desc))
         (set @entity.entries (array/sort (array/map ?data (fn row {
@@ -295,7 +295,7 @@ orbital EventLogOrbital {
           description: (object/get @row description "")
           id: (object/get @row id "")
           kind: (object/get @row kind "")
-          status: (object/get (or (array/find @config.kindOptions (fn k ["=", (object/get @k key), (object/get @row kind "")])) {}) status pending)
+          status: (object/get (or (array/find @config.kindOptions (fn k (= (object/get @k key) (object/get @row kind "")))) {}) status pending)
           title: (object/get @row title "")
         })) date desc))
         (render-ui main {
@@ -330,7 +330,7 @@ orbital EventLogOrbital {
             children: []
             gap: none
             type: stack
-          }), (if [">", (array/len @config.filters), 0] {
+          }), (if (> (array/len @config.filters) 0) {
             children: [{
               entity: EventLogView
               event: REFETCH_FILTER
@@ -452,7 +452,7 @@ orbital EventLogOrbital {
             children: []
             gap: none
             type: stack
-          }), (if [">", (array/len @config.filters), 0] {
+          }), (if (> (array/len @config.filters) 0) {
             children: [{
               entity: EventLogView
               event: REFETCH_FILTER

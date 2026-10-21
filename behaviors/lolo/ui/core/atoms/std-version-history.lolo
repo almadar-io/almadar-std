@@ -32,7 +32,7 @@ orbital RevisionOrbital {
       INIT -> loading
         (set @entity.scopeKey (str/default ?id ""))
         (fetch Revision {
-          filter: (or ["=", @config.scopeField, ""] ["=", (str/default ?id ""), ""] ["=", (object/get @entity @config.scopeField), ?id])
+          filter: (or (= @config.scopeField "") (= (str/default ?id "") "") (= (object/get @entity @config.scopeField) ?id))
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
         })
         (render-ui main {
@@ -94,7 +94,7 @@ orbital RevisionOrbital {
       SHOW_HISTORY -> loading
         (set @entity.scopeKey ?key)
         (fetch Revision {
-          filter: ["=", (object/get @entity @config.scopeField), ?key]
+          filter: (= (object/get @entity @config.scopeField) ?key)
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
         })
         (render-ui main {
@@ -109,7 +109,7 @@ orbital RevisionOrbital {
       INIT -> loading
         (set @entity.scopeKey (str/default ?id ""))
         (fetch Revision {
-          filter: (or ["=", @config.scopeField, ""] ["=", (str/default ?id ""), ""] ["=", (object/get @entity @config.scopeField), ?id])
+          filter: (or (= @config.scopeField "") (= (str/default ?id "") "") (= (object/get @entity @config.scopeField) ?id))
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
         })
         (render-ui main {
@@ -119,7 +119,7 @@ orbital RevisionOrbital {
           children: [{ type: skeleton, variant: header }, { type: skeleton, variant: grid, rows: 6 }]
         })
       OPEN_REVISION -> viewing_single
-        (let ((rev (or ?row (array/find @entity.revisions (fn x ["=", (object/get @x id), ?id])))))
+        (let ((rev (or ?row (array/find @entity.revisions (fn x (= (object/get @x id) ?id))))))
           (do
             (set @entity.id (object/get @rev id))
             (set @entity.documentId (object/get @rev documentId))
@@ -248,7 +248,7 @@ orbital RevisionOrbital {
         (emit RevisionRolledBack { row: ?row })
         (set @entity.scopeKey (object/get ?row @config.scopeField ""))
         (fetch Revision {
-          filter: (or ["=", @config.scopeField, ""] ["=", (object/get ?row @config.scopeField ""), ""] ["=", (object/get @entity @config.scopeField), (object/get ?row @config.scopeField "")])
+          filter: (or (= @config.scopeField "") (= (object/get ?row @config.scopeField "") "") (= (object/get @entity @config.scopeField) (object/get ?row @config.scopeField "")))
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
         })
         (render-ui main {
@@ -267,7 +267,7 @@ orbital RevisionOrbital {
       SHOW_HISTORY -> loading
         (set @entity.scopeKey ?key)
         (fetch Revision {
-          filter: ["=", (object/get @entity @config.scopeField), ?key]
+          filter: (= (object/get @entity @config.scopeField) ?key)
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
         })
         (render-ui main {
@@ -282,7 +282,7 @@ orbital RevisionOrbital {
       INIT -> loading
         (set @entity.scopeKey (str/default ?id ""))
         (fetch Revision {
-          filter: (or ["=", @config.scopeField, ""] ["=", (str/default ?id ""), ""] ["=", (object/get @entity @config.scopeField), ?id])
+          filter: (or (= @config.scopeField "") (= (str/default ?id "") "") (= (object/get @entity @config.scopeField) ?id))
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
         })
         (render-ui main {
@@ -293,7 +293,7 @@ orbital RevisionOrbital {
         })
       CLOSE_VIEW -> loading
         (fetch Revision {
-          filter: (or ["=", @config.scopeField, ""] ["=", @entity.scopeKey, ""] ["=", (object/get @entity @config.scopeField), @entity.scopeKey])
+          filter: (or (= @config.scopeField "") (= @entity.scopeKey "") (= (object/get @entity @config.scopeField) @entity.scopeKey))
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
         })
         (render-ui main {
@@ -347,7 +347,7 @@ orbital RevisionOrbital {
         (emit RevisionRolledBack { row: ?row })
         (set @entity.scopeKey (object/get ?row @config.scopeField ""))
         (fetch Revision {
-          filter: (or ["=", @config.scopeField, ""] ["=", (object/get ?row @config.scopeField ""), ""] ["=", (object/get @entity @config.scopeField), (object/get ?row @config.scopeField "")])
+          filter: (or (= @config.scopeField "") (= (object/get ?row @config.scopeField "") "") (= (object/get @entity @config.scopeField) (object/get ?row @config.scopeField "")))
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
         })
         (render-ui main {
@@ -366,7 +366,7 @@ orbital RevisionOrbital {
       SHOW_HISTORY -> loading
         (set @entity.scopeKey ?key)
         (fetch Revision {
-          filter: ["=", (object/get @entity @config.scopeField), ?key]
+          filter: (= (object/get @entity @config.scopeField) ?key)
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
         })
         (render-ui main {
@@ -381,7 +381,7 @@ orbital RevisionOrbital {
       INIT -> loading
         (set @entity.scopeKey (str/default ?id ""))
         (fetch Revision {
-          filter: (or ["=", @config.scopeField, ""] ["=", (str/default ?id ""), ""] ["=", (object/get @entity @config.scopeField), ?id])
+          filter: (or (= @config.scopeField "") (= (str/default ?id "") "") (= (object/get @entity @config.scopeField) ?id))
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
         })
         (render-ui main {
@@ -392,7 +392,7 @@ orbital RevisionOrbital {
         })
       CLOSE_VIEW -> loading
         (fetch Revision {
-          filter: (or ["=", @config.scopeField, ""] ["=", @entity.scopeKey, ""] ["=", (object/get @entity @config.scopeField), @entity.scopeKey])
+          filter: (or (= @config.scopeField "") (= @entity.scopeKey "") (= (object/get @entity @config.scopeField) @entity.scopeKey))
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
         })
         (render-ui main {
@@ -405,7 +405,7 @@ orbital RevisionOrbital {
         (emit RevisionRolledBack { row: ?row })
         (set @entity.scopeKey (object/get ?row @config.scopeField ""))
         (fetch Revision {
-          filter: (or ["=", @config.scopeField, ""] ["=", (object/get ?row @config.scopeField ""), ""] ["=", (object/get @entity @config.scopeField), (object/get ?row @config.scopeField "")])
+          filter: (or (= @config.scopeField "") (= (object/get ?row @config.scopeField "") "") (= (object/get @entity @config.scopeField) (object/get ?row @config.scopeField "")))
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
         })
         (render-ui main {
@@ -424,7 +424,7 @@ orbital RevisionOrbital {
       SHOW_HISTORY -> loading
         (set @entity.scopeKey ?key)
         (fetch Revision {
-          filter: ["=", (object/get @entity @config.scopeField), ?key]
+          filter: (= (object/get @entity @config.scopeField) ?key)
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
         })
         (render-ui main {
@@ -439,7 +439,7 @@ orbital RevisionOrbital {
       INIT -> loading
         (set @entity.scopeKey (str/default ?id ""))
         (fetch Revision {
-          filter: (or ["=", @config.scopeField, ""] ["=", (str/default ?id ""), ""] ["=", (object/get @entity @config.scopeField), ?id])
+          filter: (or (= @config.scopeField "") (= (str/default ?id "") "") (= (object/get @entity @config.scopeField) ?id))
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
         })
         (render-ui main {
@@ -451,7 +451,7 @@ orbital RevisionOrbital {
       SHOW_HISTORY -> loading
         (set @entity.scopeKey ?key)
         (fetch Revision {
-          filter: ["=", (object/get @entity @config.scopeField), ?key]
+          filter: (= (object/get @entity @config.scopeField) ?key)
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
         })
         (render-ui main {

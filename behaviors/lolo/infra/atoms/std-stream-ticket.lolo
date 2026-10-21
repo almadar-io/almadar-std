@@ -3,8 +3,9 @@ app std-stream-ticket [
   description: "std-stream-ticket — single-use tickets for a live-event stream, whose client (an EventSource) sends no Authorization header. MINT_TICKET { viewer } draws 32 bytes from the host CSPRNG, keeps the base64url draw as the ticket (the row id) with the viewer text and an expiry ttlMs from now (60000 by default), and answers TICKET_MINTED { ticket, expiresAt }. TAKE_TICKET { ticket } spends it: the row is read, deleted, and the viewer answered once in TICKET_TAKEN { ticket, viewer }. A forged, expired or already spent ticket answers TICKET_REFUSED (unknown, expired or used); a failed draw or write answers seed or store. The viewer is a typed Viewer record: the @user fields id, email, name, role and permissions."
 ]
 uses Spec from "almadar-std/stream-ticket"
+type StreamTicketJob = { kind : "mint" | "take", requestId : number, ticket : string, viewer : Viewer, clientId : string }
 orbital StreamTicketOrbital {
-  type MINT_TICKET = Event { viewer : Viewer! } "Mint one ticket for a viewer."
+  type MINT_TICKET = Event { viewer : Viewer!, requestId : number } "Mint one ticket for a viewer."
   type TAKE_TICKET = Event { ticket : string! } "Spend one ticket."
 
   entity StreamTicket [persistent: stream_tickets] {
@@ -17,9 +18,11 @@ orbital StreamTicketOrbital {
     id : string!
     viewer : Viewer @description "The viewer a mint in flight is for."
     ticket : string @description "The ticket being minted or spent." = ""
+    mintRequest : number @description "The caller's request id of the mint in flight, echoed on its answer; 0 when none." = 0
     expiresAt : number @description "The expiry of the ticket being minted." = 0
     expired : boolean @description "Whether the ticket being spent had already expired." = false
     holder : Viewer @description "The viewer read off the ticket being spent."
+    queue : [StreamTicketJob] @description "Requests that arrived while one was in flight, oldest first; each is started when the one before it is answered." = []
   }
 
   trait StreamTicketer -> StreamTicketRun [integration, instance] {
@@ -27,18 +30,38 @@ orbital StreamTicketOrbital {
 
     state idle {
       INIT -> idle
-
-      MINT_TICKET -> drawing
-        (set @entity.viewer @payload.viewer)
+      TICKET_PUMP -> idle when (= (array/len @entity.queue) 0)
+      TICKET_PUMP -> drawing when (and (> (array/len @entity.queue) 0) (= (object/get (array/first @entity.queue) "kind") "mint"))
+        (set @entity.viewer (object/get (array/first @entity.queue) "viewer"))
+        (set @entity.mintRequest (object/get (array/first @entity.queue) "requestId"))
+        (set @entity.queue (array/slice @entity.queue 1))
         (random-bytes 32 { emit: { success: SEED_DRAWN, failure: SEED_FAILED } })
-
-      TAKE_TICKET -> taking
-        (set @entity.ticket @payload.ticket)
-        (fetch StreamTicket { id: @payload.ticket, emit: { success: TICKET_LOADED, failure: TICKET_ABSENT } })
+      TICKET_PUMP -> taking when (and (> (array/len @entity.queue) 0) (= (object/get (array/first @entity.queue) "kind") "take"))
+        (set @entity.ticket (object/get (array/first @entity.queue) "ticket"))
+        (fetch StreamTicket { id: (object/get (array/first @entity.queue) "ticket"), emit: { success: TICKET_LOADED, failure: TICKET_ABSENT } })
+        (set @entity.queue (array/slice @entity.queue 1))
+      MINT_TICKET -> idle when (< (array/len @entity.queue) @config.maxQueue)
+        (set @entity.queue (array/append @entity.queue { kind: "mint", requestId: (or @payload.requestId 0), ticket: "", viewer: @payload.viewer, clientId: "" }))
+        (emit TICKET_PUMP {})
+      MINT_TICKET -> idle when (>= (array/len @entity.queue) @config.maxQueue)
+        (emit TICKET_REFUSED { code: "busy", message: "the stream ticket queue is full", requestId: (or @payload.requestId 0) })
+      TAKE_TICKET -> idle when (< (array/len @entity.queue) @config.maxQueue)
+        (set @entity.queue (array/append @entity.queue { kind: "take", requestId: 0, ticket: @payload.ticket, viewer: @entity.viewer, clientId: "" }))
+        (emit TICKET_PUMP {})
+      TAKE_TICKET -> idle when (>= (array/len @entity.queue) @config.maxQueue)
+        (emit TICKET_REFUSED { code: "busy", message: "the stream ticket queue is full", ticket: @payload.ticket })
     }
 
     state drawing {
       INIT -> idle
+      MINT_TICKET -> drawing when (< (array/len @entity.queue) @config.maxQueue)
+        (set @entity.queue (array/append @entity.queue { kind: "mint", requestId: (or @payload.requestId 0), ticket: "", viewer: @payload.viewer, clientId: "" }))
+      MINT_TICKET -> drawing when (>= (array/len @entity.queue) @config.maxQueue)
+        (emit TICKET_REFUSED { code: "busy", message: "the stream ticket queue is full", requestId: (or @payload.requestId 0) })
+      TAKE_TICKET -> drawing when (< (array/len @entity.queue) @config.maxQueue)
+        (set @entity.queue (array/append @entity.queue { kind: "take", requestId: 0, ticket: @payload.ticket, viewer: @entity.viewer, clientId: "" }))
+      TAKE_TICKET -> drawing when (>= (array/len @entity.queue) @config.maxQueue)
+        (emit TICKET_REFUSED { code: "busy", message: "the stream ticket queue is full", ticket: @payload.ticket })
 
       SEED_DRAWN -> saving
         (set @entity.ticket @payload.value)
@@ -47,29 +70,50 @@ orbital StreamTicketOrbital {
           emit: { success: TICKET_SAVED, failure: TICKET_NOT_SAVED }
         })
       SEED_FAILED -> idle
-        (emit TICKET_REFUSED { code: "seed", message: @payload.error })
+        (emit TICKET_REFUSED { code: "seed", message: @payload.error, requestId: @entity.mintRequest })
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Stream ticket refused" })
+        (emit TICKET_PUMP {})
     }
 
     state saving {
       INIT -> idle
+      MINT_TICKET -> saving when (< (array/len @entity.queue) @config.maxQueue)
+        (set @entity.queue (array/append @entity.queue { kind: "mint", requestId: (or @payload.requestId 0), ticket: "", viewer: @payload.viewer, clientId: "" }))
+      MINT_TICKET -> saving when (>= (array/len @entity.queue) @config.maxQueue)
+        (emit TICKET_REFUSED { code: "busy", message: "the stream ticket queue is full", requestId: (or @payload.requestId 0) })
+      TAKE_TICKET -> saving when (< (array/len @entity.queue) @config.maxQueue)
+        (set @entity.queue (array/append @entity.queue { kind: "take", requestId: 0, ticket: @payload.ticket, viewer: @entity.viewer, clientId: "" }))
+      TAKE_TICKET -> saving when (>= (array/len @entity.queue) @config.maxQueue)
+        (emit TICKET_REFUSED { code: "busy", message: "the stream ticket queue is full", ticket: @payload.ticket })
 
       TICKET_SAVED -> idle
-        (emit TICKET_MINTED { ticket: @entity.ticket, expiresAt: @entity.expiresAt })
+        (emit TICKET_MINTED { ticket: @entity.ticket, expiresAt: @entity.expiresAt, requestId: @entity.mintRequest })
+        (emit TICKET_PUMP {})
       TICKET_NOT_SAVED -> idle
-        (emit TICKET_REFUSED { code: "store", message: @payload.error })
+        (emit TICKET_REFUSED { code: "store", message: @payload.error, requestId: @entity.mintRequest })
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Stream ticket refused" })
+        (emit TICKET_PUMP {})
     }
 
     state taking {
       INIT -> idle
+      MINT_TICKET -> taking when (< (array/len @entity.queue) @config.maxQueue)
+        (set @entity.queue (array/append @entity.queue { kind: "mint", requestId: (or @payload.requestId 0), ticket: "", viewer: @payload.viewer, clientId: "" }))
+      MINT_TICKET -> taking when (>= (array/len @entity.queue) @config.maxQueue)
+        (emit TICKET_REFUSED { code: "busy", message: "the stream ticket queue is full", requestId: (or @payload.requestId 0) })
+      TAKE_TICKET -> taking when (< (array/len @entity.queue) @config.maxQueue)
+        (set @entity.queue (array/append @entity.queue { kind: "take", requestId: 0, ticket: @payload.ticket, viewer: @entity.viewer, clientId: "" }))
+      TAKE_TICKET -> taking when (>= (array/len @entity.queue) @config.maxQueue)
+        (emit TICKET_REFUSED { code: "busy", message: "the stream ticket queue is full", ticket: @payload.ticket })
 
       TICKET_ABSENT -> idle when (= @payload.code "not-found")
-        (emit TICKET_REFUSED { code: "unknown", message: "no such stream ticket" })
+        (emit TICKET_REFUSED { code: "unknown", message: "no such stream ticket", ticket: @entity.ticket })
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Stream ticket refused" })
+        (emit TICKET_PUMP {})
       TICKET_ABSENT -> idle when (!= @payload.code "not-found")
-        (emit TICKET_REFUSED { code: "store", message: @payload.error })
+        (emit TICKET_REFUSED { code: "store", message: @payload.error, ticket: @entity.ticket })
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Stream ticket refused" })
+        (emit TICKET_PUMP {})
       TICKET_LOADED -> spending
         (set @entity.holder @payload.data.viewer)
         (set @entity.expired (<= @payload.data.expiresAt @now))
@@ -80,21 +124,33 @@ orbital StreamTicketOrbital {
 
     state spending {
       INIT -> idle
+      MINT_TICKET -> spending when (< (array/len @entity.queue) @config.maxQueue)
+        (set @entity.queue (array/append @entity.queue { kind: "mint", requestId: (or @payload.requestId 0), ticket: "", viewer: @payload.viewer, clientId: "" }))
+      MINT_TICKET -> spending when (>= (array/len @entity.queue) @config.maxQueue)
+        (emit TICKET_REFUSED { code: "busy", message: "the stream ticket queue is full", requestId: (or @payload.requestId 0) })
+      TAKE_TICKET -> spending when (< (array/len @entity.queue) @config.maxQueue)
+        (set @entity.queue (array/append @entity.queue { kind: "take", requestId: 0, ticket: @payload.ticket, viewer: @entity.viewer, clientId: "" }))
+      TAKE_TICKET -> spending when (>= (array/len @entity.queue) @config.maxQueue)
+        (emit TICKET_REFUSED { code: "busy", message: "the stream ticket queue is full", ticket: @payload.ticket })
 
       TICKET_SPENT -> idle when @entity.expired
-        (emit TICKET_REFUSED { code: "expired", message: "the stream ticket has expired" })
+        (emit TICKET_REFUSED { code: "expired", message: "the stream ticket has expired", ticket: @entity.ticket })
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Stream ticket refused" })
+        (emit TICKET_PUMP {})
       TICKET_SPENT -> idle when (not @entity.expired)
         (emit TICKET_TAKEN { ticket: @entity.ticket, viewer: @entity.holder })
+        (emit TICKET_PUMP {})
       TICKET_NOT_SPENT -> idle
-        (emit TICKET_REFUSED { code: "used", message: "the stream ticket was already spent" })
+        (emit TICKET_REFUSED { code: "used", message: "the stream ticket was already spent", ticket: @entity.ticket })
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Stream ticket refused" })
+        (emit TICKET_PUMP {})
     }
 
     emits {
       TICKET_MINTED -> external {
         ticket : string!
         expiresAt : number!
+        requestId : number
       }
         @description "A ticket was minted and stored; hand it to the stream client once."
         @synonyms "stream ticket minted, ticket created"
@@ -107,10 +163,12 @@ orbital StreamTicketOrbital {
         @synonyms "stream ticket spent, ticket redeemed"
         @tier "primary"
       TICKET_REFUSED -> external {
-        code : "seed" | "store" | "unknown" | "expired" | "used"
+        code : "seed" | "store" | "unknown" | "expired" | "used" | "busy"
         message : string!
+        ticket : string
+        requestId : number
       }
-        @description "No ticket was minted, or the one presented names nobody: forged or never minted (unknown), past its expiry (expired), already spent (used), or the draw or store failed."
+        @description "No ticket was minted, or the one presented names nobody: forged or never minted (unknown), past its expiry (expired), already spent (used), or the draw or store failed. A refused spend carries the presented ticket, so the caller can tell which presentation was refused."
         @synonyms "stream ticket refused, ticket rejected"
         @tier "primary"
       SEED_DRAWN {
@@ -127,6 +185,9 @@ orbital StreamTicketOrbital {
         id : string!
       }
         @description "Internal: the ticket row is stored."
+        @tier "secondary"
+      TICKET_PUMP {}
+        @description "Internal: start the oldest queued request."
         @tier "secondary"
       TICKET_NOT_SAVED {
         error : string!
@@ -161,6 +222,7 @@ orbital StreamTicketOrbital {
     listens {
       MINT_TICKET {
         viewer : Viewer!
+        requestId : number
       }
         @description "Mint one stream ticket for a viewer."
         @synonyms "mint ticket, create stream ticket"
@@ -177,6 +239,11 @@ orbital StreamTicketOrbital {
         @description "Where the atom reports a refused ticket; a page running it in the background keeps it in `system`."
         @synonyms "status area, slot"
         @tier "presentation"
+      maxQueue : number = 256
+        @label "Queue bound"
+        @description "How many requests may wait behind the one in flight; one beyond it is refused with `busy`."
+        @synonyms "queue limit, backlog"
+        @tier "domain"
       ttlMs : number = 60000
         @label "Ticket lifetime"
         @description "How long a minted ticket stays valid, in milliseconds."

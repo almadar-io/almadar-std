@@ -51,13 +51,13 @@ orbital VoteOrbital {
           emit: { failure: VoteLoadFailed, success: VoteLoaded }
         })
         (render-ui main { type: skeleton, variant: card })
-      VOTE -> voting when (not ["=", ?next, @entity.direction])
+      VOTE -> voting when (not (= ?next @entity.direction))
         (set @entity.direction ?next)
         (set @entity.targetId ?targetId)
         (persist update Vote (object/set ?data targetId ?targetId) {
           emit: { failure: VoteCastFailed, success: VoteCasted }
         })
-      VOTE -> voting when ["=", ?next, @entity.direction]
+      VOTE -> voting when (= ?next @entity.direction)
         (set @entity.direction none)
         (set @entity.targetId ?targetId)
         (persist update Vote (object/set ?data targetId ?targetId) {
@@ -83,7 +83,7 @@ orbital VoteOrbital {
         (set @entity.targetId ?targetId)
         (fetch Vote {
           emit: { failure: VoteLoadFailed, success: VoteLoaded }
-          filter: ["=", @entity.targetId, ?targetId]
+          filter: (= @entity.targetId ?targetId)
         })
       VoteLoaded -> idle
         (render-ui main {

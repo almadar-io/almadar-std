@@ -223,12 +223,12 @@ orbital NotificationCenterOrbital {
     initial: idle
 
     state idle {
-      DIGEST_ROWS_LOADED -> draining when (and @config.digestEnabled [">", (array/len ?data), 0])
+      DIGEST_ROWS_LOADED -> draining when (and @config.digestEnabled (> (array/len ?data) 0))
         (set @entity.headId (object/get (array/first ?data) id))
         (set @entity.headRecipient (object/get (array/first ?data) recipient))
         (set @entity.headMessage (object/get (array/first ?data) message))
         (emit EMAIL_SEND { body: @entity.headMessage, subject: @config.digestSubject, to: @entity.headRecipient })
-      DIGEST_ROWS_LOADED -> idle when ["=", (array/len ?data), 0]
+      DIGEST_ROWS_LOADED -> idle when (= (array/len ?data) 0)
       DIGEST_FAILED -> idle
         (set @entity.lastError ?error)
         (notify error (str/concat "Couldn't send the notification digest — " ?error))
@@ -236,21 +236,21 @@ orbital NotificationCenterOrbital {
 
     state draining {
       DIGEST_ITEM_SENT -> draining
-        (set @entity.drainedCount ["+", @entity.drainedCount, 1])
+        (set @entity.drainedCount (+ @entity.drainedCount 1))
         (persist update NotificationRecord { id: @entity.headId, dispatched: true } {
           emit: { failure: DIGEST_FAILED, success: DIGEST_STEPPED }
         })
       DIGEST_STEPPED -> draining
         (fetch NotificationRecord {
           emit: { failure: DIGEST_FAILED, success: DIGEST_ROWS_LOADED }
-          filter: (and ["=", (object/get @entity dispatched), false] (or ["=", (object/get @entity error), "digest-deferred"] ["=", (object/get @entity error), "quiet-hours"]) ["<", (object/get @entity recordedAt), ["-", @now, ["*", @config.minAgeHours, 3600000]]])
+          filter: (and (= (object/get @entity dispatched) false) (or (= (object/get @entity error) "digest-deferred") (= (object/get @entity error) "quiet-hours")) (< (object/get @entity recordedAt) (- @now (* @config.minAgeHours 3600000))))
         })
-      DIGEST_ROWS_LOADED -> draining when [">", (array/len ?data), 0]
+      DIGEST_ROWS_LOADED -> draining when (> (array/len ?data) 0)
         (set @entity.headId (object/get (array/first ?data) id))
         (set @entity.headRecipient (object/get (array/first ?data) recipient))
         (set @entity.headMessage (object/get (array/first ?data) message))
         (emit EMAIL_SEND { body: @entity.headMessage, subject: @config.digestSubject, to: @entity.headRecipient })
-      DIGEST_ROWS_LOADED -> idle when ["=", (array/len ?data), 0]
+      DIGEST_ROWS_LOADED -> idle when (= (array/len ?data) 0)
       DIGEST_FAILED -> idle
         (set @entity.lastError ?error)
         (notify error (str/concat "Couldn't send the notification digest — " ?error))
@@ -309,7 +309,7 @@ orbital NotificationCenterOrbital {
       digestCycle every "0 * * * *" [background]
         (fetch NotificationRecord {
           emit: { failure: DIGEST_FAILED, success: DIGEST_ROWS_LOADED }
-          filter: (and ["=", (object/get @entity dispatched), false] (or ["=", (object/get @entity error), "digest-deferred"] ["=", (object/get @entity error), "quiet-hours"]) ["<", (object/get @entity recordedAt), ["-", @now, ["*", @config.minAgeHours, 3600000]]])
+          filter: (and (= (object/get @entity dispatched) false) (or (= (object/get @entity error) "digest-deferred") (= (object/get @entity error) "quiet-hours")) (< (object/get @entity recordedAt) (- @now (* @config.minAgeHours 3600000))))
         })
 
     }

@@ -64,36 +64,36 @@ orbital CalendarSyncOrbital {
       SYNC_NOW -> idle when @config.enabled
         (fetch @config.targetEntity {
           emit: { failure: CAL_SYNC_FAILED, success: PUSH_ROWS_LOADED }
-          filter: ["=", (object/get @entity externalEventId), ""]
+          filter: (= (object/get @entity externalEventId) "")
         })
       CAL_REMOTE_CHANGED -> idle when @config.enabled
         (emit CALENDAR_LIST_EVENTS {
           calendarId: @config.calendarId
           syncToken: @entity.syncToken
         })
-      PUSH_ROWS_LOADED -> pushing when (and @config.enabled [">", (array/len ?data), 0])
+      PUSH_ROWS_LOADED -> pushing when (and @config.enabled (> (array/len ?data) 0))
         (set @entity.headId (object/get (array/first ?data) id))
         (emit CALENDAR_CREATE_EVENT {
           calendarId: @config.calendarId
           summary: (object/get (array/first ?data) @config.titleField)
-          description: (if ["=", @config.descriptionField, ""] "" (object/get (array/first ?data) @config.descriptionField))
-          location: (if ["=", @config.locationField, ""] "" (object/get (array/first ?data) @config.locationField))
+          description: (if (= @config.descriptionField "") "" (object/get (array/first ?data) @config.descriptionField))
+          location: (if (= @config.locationField "") "" (object/get (array/first ?data) @config.locationField))
           start: (object/get (array/first ?data) @config.startField)
-          end: (if ["=", @config.endField, ""] "" (object/get (array/first ?data) @config.endField))
-          durationMinutes: (if ["=", @config.durationField, ""] @config.durationMinutes (object/get (array/first ?data) @config.durationField))
+          end: (if (= @config.endField "") "" (object/get (array/first ?data) @config.endField))
+          durationMinutes: (if (= @config.durationField "") @config.durationMinutes (object/get (array/first ?data) @config.durationField))
         })
-      PUSH_ROWS_LOADED -> idle when ["=", (array/len ?data), 0]
+      PUSH_ROWS_LOADED -> idle when (= (array/len ?data) 0)
         (emit CALENDAR_LIST_EVENTS {
           calendarId: @config.calendarId
           syncToken: @entity.syncToken
         })
-      CAL_REMOTE_LISTED -> pulling when [">", (array/len ?events), 0]
+      CAL_REMOTE_LISTED -> pulling when (> (array/len ?events) 0)
         (set @entity.pending ?events)
         (set @entity.syncToken (str/default ?nextSyncToken ""))
         (fetch CalendarEvent {
           emit: { failure: CAL_SYNC_FAILED, success: PULL_TARGET_LOADED }
         })
-      CAL_REMOTE_LISTED -> idle when ["=", (array/len ?events), 0]
+      CAL_REMOTE_LISTED -> idle when (= (array/len ?events) 0)
         (set @entity.syncToken (str/default ?nextSyncToken ""))
         (set @entity.lastSyncedAt @now)
         (emit CAL_SYNCED { syncedAt: @entity.lastSyncedAt })
@@ -113,20 +113,20 @@ orbital CalendarSyncOrbital {
       PUSH_STEPPED -> pushing
         (fetch @config.targetEntity {
           emit: { failure: CAL_SYNC_FAILED, success: PUSH_ROWS_LOADED }
-          filter: ["=", (object/get @entity externalEventId), ""]
+          filter: (= (object/get @entity externalEventId) "")
         })
-      PUSH_ROWS_LOADED -> pushing when [">", (array/len ?data), 0]
+      PUSH_ROWS_LOADED -> pushing when (> (array/len ?data) 0)
         (set @entity.headId (object/get (array/first ?data) id))
         (emit CALENDAR_CREATE_EVENT {
           calendarId: @config.calendarId
           summary: (object/get (array/first ?data) @config.titleField)
-          description: (if ["=", @config.descriptionField, ""] "" (object/get (array/first ?data) @config.descriptionField))
-          location: (if ["=", @config.locationField, ""] "" (object/get (array/first ?data) @config.locationField))
+          description: (if (= @config.descriptionField "") "" (object/get (array/first ?data) @config.descriptionField))
+          location: (if (= @config.locationField "") "" (object/get (array/first ?data) @config.locationField))
           start: (object/get (array/first ?data) @config.startField)
-          end: (if ["=", @config.endField, ""] "" (object/get (array/first ?data) @config.endField))
-          durationMinutes: (if ["=", @config.durationField, ""] @config.durationMinutes (object/get (array/first ?data) @config.durationField))
+          end: (if (= @config.endField "") "" (object/get (array/first ?data) @config.endField))
+          durationMinutes: (if (= @config.durationField "") @config.durationMinutes (object/get (array/first ?data) @config.durationField))
         })
-      PUSH_ROWS_LOADED -> idle when ["=", (array/len ?data), 0]
+      PUSH_ROWS_LOADED -> idle when (= (array/len ?data) 0)
         (emit CALENDAR_LIST_EVENTS {
           calendarId: @config.calendarId
           syncToken: @entity.syncToken
@@ -143,7 +143,7 @@ orbital CalendarSyncOrbital {
       INIT -> idle
       PULL_TARGET_LOADED -> pulling
         (set @entity.headId (object/get (array/first @entity.pending) id))
-        (if ["=", (array/len (array/filter ?data (fn r ["=", (object/get @r externalEventId), @entity.headId]))), 0] (persist create CalendarEvent {
+        (if (= (array/len (array/filter ?data (fn r (= (object/get @r externalEventId) @entity.headId)))) 0) (persist create CalendarEvent {
           title: (object/get (array/first @entity.pending) summary)
           startsAt: (object/get (array/first @entity.pending) start)
           endsAt: (object/get (array/first @entity.pending) end)
@@ -153,7 +153,7 @@ orbital CalendarSyncOrbital {
           externalEventId: @entity.headId
           syncedAt: @now
         } { emit: { failure: CAL_SYNC_FAILED, success: PULL_STEPPED } }) (persist update CalendarEvent {
-          id: (object/get (array/first (array/filter ?data (fn r ["=", (object/get @r externalEventId), @entity.headId]))) id)
+          id: (object/get (array/first (array/filter ?data (fn r (= (object/get @r externalEventId) @entity.headId)))) id)
           title: (object/get (array/first @entity.pending) summary)
           startsAt: (object/get (array/first @entity.pending) start)
           endsAt: (object/get (array/first @entity.pending) end)
@@ -167,11 +167,11 @@ orbital CalendarSyncOrbital {
         (emit PULL_NEXT {
           remaining: (array/len @entity.pending)
         })
-      PULL_NEXT -> pulling when [">", ?remaining, 0]
+      PULL_NEXT -> pulling when (> ?remaining 0)
         (fetch CalendarEvent {
           emit: { failure: CAL_SYNC_FAILED, success: PULL_TARGET_LOADED }
         })
-      PULL_NEXT -> idle when ["=", ?remaining, 0]
+      PULL_NEXT -> idle when (= ?remaining 0)
         (set @entity.lastSyncedAt @now)
         (emit CAL_SYNCED { syncedAt: @entity.lastSyncedAt })
       CAL_SYNC_FAILED -> idle
@@ -283,7 +283,7 @@ orbital CalendarSyncOrbital {
       syncCycle every "*/15 * * * *" [background]
         (fetch @config.targetEntity {
           emit: { failure: CAL_SYNC_FAILED, success: PUSH_ROWS_LOADED }
-          filter: ["=", (object/get @entity externalEventId), ""]
+          filter: (= (object/get @entity externalEventId) "")
         })
 
     }

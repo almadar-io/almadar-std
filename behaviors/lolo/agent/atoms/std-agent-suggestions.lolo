@@ -238,7 +238,7 @@ orbital AgentSuggestionsOrbital {
           payload: (if (== ?payload null) {} ?payload)
         })
         (fetch AgentSuggestion {
-          filter: ["=", (object/get @entity ownerId), @user.id]
+          filter: (= (object/get @entity ownerId) @user.id)
           emit: { failure: SuggestionCheckFailed, success: SuggestionsForPropose }
         })
       SuggestionsForPropose -> ready when (array/some ?data (fn item (= @item.signature @entity.pendingProposal.signature)))
@@ -403,14 +403,14 @@ orbital AgentSuggestionsOrbital {
     state closed {
       INIT -> open when @config.showOnMount
         (fetch AgentSuggestion {
-          filter: ["=", (object/get @entity ownerId), @user.id]
+          filter: (= (object/get @entity ownerId) @user.id)
           emit: { failure: SuggestionsLoadFailed, success: SuggestionsLoaded }
         })
       INIT -> closed when (not @config.showOnMount)
         (render-ui @config.inboxSlot null)
       OPEN -> open
         (fetch AgentSuggestion {
-          filter: ["=", (object/get @entity ownerId), @user.id]
+          filter: (= (object/get @entity ownerId) @user.id)
           emit: { failure: SuggestionsLoadFailed, success: SuggestionsLoaded }
         })
     }
@@ -419,7 +419,7 @@ orbital AgentSuggestionsOrbital {
       INIT -> open when @config.showOnMount
         (render-ui @config.inboxSlot null)
         (fetch AgentSuggestion {
-          filter: ["=", (object/get @entity ownerId), @user.id]
+          filter: (= (object/get @entity ownerId) @user.id)
           emit: { failure: SuggestionsLoadFailed, success: SuggestionsLoaded }
         })
       INIT -> closed when (not @config.showOnMount)
@@ -507,12 +507,12 @@ orbital AgentSuggestionsOrbital {
         })
       REFRESH -> open
         (fetch AgentSuggestion {
-          filter: ["=", (object/get @entity ownerId), @user.id]
+          filter: (= (object/get @entity ownerId) @user.id)
           emit: { failure: SuggestionsLoadFailed, success: SuggestionsLoaded }
         })
       OPEN -> open
         (fetch AgentSuggestion {
-          filter: ["=", (object/get @entity ownerId), @user.id]
+          filter: (= (object/get @entity ownerId) @user.id)
           emit: { failure: SuggestionsLoadFailed, success: SuggestionsLoaded }
         })
       ANALYZE -> open
@@ -520,7 +520,7 @@ orbital AgentSuggestionsOrbital {
       ACCEPT -> open
         (fetch AgentSuggestion {
           emit: { failure: SuggestionResolveFailed, success: SuggestionForAccept }
-          filter: ["=", (object/get @entity id), ?id]
+          filter: (= (object/get @entity id) ?id)
         })
       SuggestionForAccept -> open when (and (> (array/len ?data) 0) (= (object/get (array/first ?data) status) "pending"))
         (persist update AgentSuggestion {
@@ -543,20 +543,20 @@ orbital AgentSuggestionsOrbital {
       SuggestionAccepted -> open when (= (str/default ?href "") "")
         (emit SUGGESTION_ACCEPTED { id: ?id, kind: ?kind, action: ?action, href: ?href, subject: ?subject, payload: ?payload })
         (fetch AgentSuggestion {
-          filter: ["=", (object/get @entity ownerId), @user.id]
+          filter: (= (object/get @entity ownerId) @user.id)
           emit: { failure: SuggestionsLoadFailed, success: SuggestionsLoaded }
         })
       SuggestionAccepted -> open when (not (= (str/default ?href "") ""))
         (emit SUGGESTION_ACCEPTED { id: ?id, kind: ?kind, action: ?action, href: ?href, subject: ?subject, payload: ?payload })
         (fetch AgentSuggestion {
-          filter: ["=", (object/get @entity ownerId), @user.id]
+          filter: (= (object/get @entity ownerId) @user.id)
           emit: { failure: SuggestionsLoadFailed, success: SuggestionsLoaded }
         })
         (navigate ?href)
       DISMISS -> open
         (fetch AgentSuggestion {
           emit: { failure: SuggestionResolveFailed, success: SuggestionForDismiss }
-          filter: ["=", (object/get @entity id), ?id]
+          filter: (= (object/get @entity id) ?id)
         })
       SuggestionForDismiss -> open when (and (> (array/len ?data) 0) (= (object/get (array/first ?data) status) "pending"))
         (persist update AgentSuggestion {
@@ -579,7 +579,7 @@ orbital AgentSuggestionsOrbital {
       SuggestionDismissed -> open
         (emit SUGGESTION_DISMISSED { id: ?id, kind: ?kind, action: ?action, subject: ?subject })
         (fetch AgentSuggestion {
-          filter: ["=", (object/get @entity ownerId), @user.id]
+          filter: (= (object/get @entity ownerId) @user.id)
           emit: { failure: SuggestionsLoadFailed, success: SuggestionsLoaded }
         })
       CLOSE -> closed
@@ -689,7 +689,7 @@ orbital AgentSuggestionsOrbital {
       INIT -> ready
       TRIGGERED -> ready
         (fetch AgentSuggestionRun {
-          filter: ["=", (object/get @entity ownerId), @user.id]
+          filter: (= (object/get @entity ownerId) @user.id)
           emit: { failure: RunsLoadFailed, success: RunsForTrigger }
         })
       RunsForTrigger -> ready when (>= (- @now (if (= (array/len ?data) 0) 0 (array/max ?data ranAt))) (* @config.gapMinutes 60000))
@@ -907,7 +907,7 @@ orbital AgentSuggestionRecordsOrbital {
     state browsing {
       INIT -> browsing
         (fetch AgentSuggestion {
-          filter: ["=", (object/get @entity ownerId), @user.id]
+          filter: (= (object/get @entity ownerId) @user.id)
           emit: { failure: SuggestionsLoadFailed, success: SuggestionsLoaded }
         })
         (render-ui main { type: skeleton, variant: list, rows: 6 })

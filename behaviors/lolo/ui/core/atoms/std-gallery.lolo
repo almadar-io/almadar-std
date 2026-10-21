@@ -121,7 +121,7 @@ orbital GalleryItemOrbital {
             children: []
             gap: none
             type: stack
-          }), (if [">", (array/len @config.filters), 0] {
+          }), (if (> (array/len @config.filters) 0) {
             children: [{
               entity: GalleryItem
               event: REFETCH_FILTER
@@ -162,14 +162,14 @@ orbital GalleryItemOrbital {
       REFETCH_QUERY -> browsing
         (fetch GalleryItem {
           emit: { failure: GalleryItemLoadFailed, success: GalleryItemLoaded }
-          filter: (or ["=", ?searchTerm, ""] (str/includes (object/get @entity @config.searchField) ?searchTerm))
+          filter: (or (= ?searchTerm "") (str/includes (object/get @entity @config.searchField) ?searchTerm))
           limit: @config.pageSize
           offset: 0
         })
       REFETCH_FILTER -> browsing
         (fetch GalleryItem {
           emit: { failure: GalleryItemLoadFailed, success: GalleryItemLoaded }
-          filter: (or ["=", ?value, ""] ["=", (object/get @entity ?field), ?value])
+          filter: (or (= ?value "") (= (object/get @entity ?field) ?value))
           limit: @config.pageSize
           offset: 0
         })
@@ -177,7 +177,7 @@ orbital GalleryItemOrbital {
         (fetch GalleryItem {
           emit: { failure: GalleryItemLoadFailed, success: GalleryItemLoaded }
           limit: @config.pageSize
-          offset: ["*", ["-", ?page, 1], @config.pageSize]
+          offset: (* (- ?page 1) @config.pageSize)
         })
       GalleryItemLoadFailed -> browsing
         (notify error (str/concat "Couldn't refresh the gallery — " ?error))
@@ -208,7 +208,7 @@ orbital GalleryItemOrbital {
             children: []
             gap: none
             type: stack
-          }), (if [">", (array/len @config.filters), 0] {
+          }), (if (> (array/len @config.filters) 0) {
             children: [{
               entity: GalleryItem
               event: REFETCH_FILTER

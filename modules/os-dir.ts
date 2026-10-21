@@ -19,8 +19,8 @@ export const OS_DIR_OPERATORS: Record<string, StdOperatorMeta> = {
     example: '["os/list-dir", "/data", { "emit": { "success": "DIR_LISTED", "failure": "DIR_FAILED" } }]',
   }),
   'os/glob': osEffect({
-    description: 'Expand a glob pattern (grant fs: read). Success payload: { paths }.',
-    params: [arg('pattern', STRING, 'Glob pattern')],
+    description: 'Expand a glob pattern (grant fs: read). The pattern may be anchored ({ anchor, path }); a computed anchored pattern passes under a narrow anchored grant, and the host drops every match the grants do not cover. Success payload: { paths }: absolute for a plain pattern, relative to the anchor for an anchored one.',
+    params: [arg('pattern', OS_PATH, 'Glob pattern')],
     example: '["os/glob", "/data/**/*.json", { "emit": { "success": "GLOBBED", "failure": "DIR_FAILED" } }]',
   }),
   'os/mktemp': osEffect({

@@ -113,7 +113,7 @@ orbital DataErasureOrbital {
           gap: md
           type: stack
         })
-      ExecScanLoaded -> execScanning when (and @config.enabled [">", (array/len ?data), 0])
+      ExecScanLoaded -> execScanning when (and @config.enabled (> (array/len ?data) 0))
         (set @entity.id (object/get (array/first ?data) id))
         (set @entity.targetEntity (str/default (object/get (array/first ?data) targetEntity) @config.targetEntity))
         (set @entity.subjectId (object/get (array/first ?data) subjectId))
@@ -129,7 +129,7 @@ orbital DataErasureOrbital {
         } {
           emit: { failure: ExecScanFailed, success: ExecStepped }
         })
-      ExecScanLoaded -> idle when ["=", (array/len ?data), 0]
+      ExecScanLoaded -> idle when (= (array/len ?data) 0)
       ExecScanFailed -> idle
         (notify error (str/concat "Couldn't scan for erasures to execute — " ?error))
     }
@@ -138,9 +138,9 @@ orbital DataErasureOrbital {
       ExecStepped -> execScanning
         (fetch ErasureRequest {
           emit: { failure: ExecScanFailed, success: ExecScanLoaded }
-          filter: (and ["=", (object/get @entity status), grace] ["<", (object/get @entity executesAt), @now])
+          filter: (and (= (object/get @entity status) grace) (< (object/get @entity executesAt) @now))
         })
-      ExecScanLoaded -> execScanning when [">", (array/len ?data), 0]
+      ExecScanLoaded -> execScanning when (> (array/len ?data) 0)
         (set @entity.id (object/get (array/first ?data) id))
         (set @entity.targetEntity (str/default (object/get (array/first ?data) targetEntity) @config.targetEntity))
         (set @entity.subjectId (object/get (array/first ?data) subjectId))
@@ -156,7 +156,7 @@ orbital DataErasureOrbital {
         } {
           emit: { failure: ExecScanFailed, success: ExecStepped }
         })
-      ExecScanLoaded -> idle when ["=", (array/len ?data), 0]
+      ExecScanLoaded -> idle when (= (array/len ?data) 0)
       ExecScanFailed -> idle
         (notify error (str/concat "Couldn't scan for erasures to execute — " ?error))
     }
@@ -378,7 +378,7 @@ orbital DataErasureOrbital {
       executionScan every "0 * * * *" [background]
         (fetch ErasureRequest {
           emit: { failure: ExecScanFailed, success: ExecScanLoaded }
-          filter: (and ["=", (object/get @entity status), grace] ["<", (object/get @entity executesAt), @now])
+          filter: (and (= (object/get @entity status) grace) (< (object/get @entity executesAt) @now))
         })
       
     }

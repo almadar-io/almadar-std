@@ -1,0 +1,22 @@
+app verify-plan-spec [
+  version: "1.0.0",
+  description: "Design contract for std-verify-plan: the kernel's verify planner (orbital-core planner.rs plan_trait) as data. One PLAN_REQUEST with a resolved program (.orb IR) and the std-machine rows to plan answers PLAN_ANSWERED with one PlannedStep per row, in row order. A step mirrors the Rust Step: trait, linkedEntity, from, event, to, toStates, variant, payload, guarded, arm, solved, payloadCase, guardCase, plus unplanned (the reason code when the planner cannot build a payload that satisfies the row, absent when planned). The payload carries a value for every slot the event declares: a row-key slot (the event's set of @entity.id from a payload field) and an id slot get the seed row id (linkedEntity + '-verify-seed-1'); a values slot its first declared value; an entity slot a row of that entity carrying the seed id; number, boolean, email, url, image, phone, uuid and array slots their planner placeholders; every other string slot 'verify'. Unplanned reason codes mirror the Rust planner: guard-unsolved (a guarded arm; the symbolic guard solver is not ported), object-slot-unplanned (an object or [object] slot whose properties the row does not carry), json-parse-unplanned (payload read through json/parse)."
+]
+
+type JsonValue = string | number | boolean | [JsonValue] | Map string JsonValue
+type PlanPayload = Map string JsonValue
+type PlannedStep = { trait : string!, linkedEntity : string, from : string!, event : string!, to : string!, toStates : [string]!, variant : string!, payload : PlanPayload!, guarded : boolean!, arm : number, solved : boolean!, payloadCase : string!, guardCase : string, unplanned : string }
+
+orbital VerifyPlanSpec {
+  expects entity PlanRun [runtime] {
+    id : string!
+    steps : [PlannedStep]!
+  }
+  expects trait Plan {
+    state ready
+    emits {
+      PLAN_ANSWERED { steps : [PlannedStep]! }
+    }
+  }
+  expects page "/verify-plan" -> Plan
+}

@@ -65,9 +65,9 @@ orbital WizardOrbital {
         (set @entity.currentStepIcon (object/get (array/nth @config.steps 0) icon circle))
         (set @entity.currentFields (object/get (array/nth @config.steps 0) fields []))
         (set @entity.isFirstStep true)
-        (set @entity.isLastStep ["=", (array/len @config.steps), 1])
-        (set @entity.primaryActionLabel (if ["=", (array/len @config.steps), 1] Submit Next))
-        (set @entity.primaryActionIcon (if ["=", (array/len @config.steps), 1] check-circle chevron-right))
+        (set @entity.isLastStep (= (array/len @config.steps) 1))
+        (set @entity.primaryActionLabel (if (= (array/len @config.steps) 1) Submit Next))
+        (set @entity.primaryActionIcon (if (= (array/len @config.steps) 1) check-circle chevron-right))
         (render-ui main {
           children: [{
             align: center
@@ -144,7 +144,7 @@ orbital WizardOrbital {
             }, {
               action: ADVANCE
               icon: @entity.primaryActionIcon
-              label: (if ["=", @entity.currentStepIndex, ["-", @entity.totalSteps, 1]] @config.submitLabel @config.nextLabel)
+              label: (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) @config.submitLabel @config.nextLabel)
               type: button
               variant: primary
             }]
@@ -194,15 +194,15 @@ orbital WizardOrbital {
           children: [{ type: skeleton, variant: header }, { type: skeleton, variant: form, fields: 3 }]
         })
       ADVANCE -> running when (not @entity.isLastStep)
-        (set @entity.currentStepIndex ["+", @entity.currentStepIndex, 1])
+        (set @entity.currentStepIndex (+ @entity.currentStepIndex 1))
         (set @entity.currentStepLabel (object/get (array/nth @config.steps @entity.currentStepIndex) label))
         (set @entity.currentStepDescription (object/get (array/nth @config.steps @entity.currentStepIndex) description ""))
         (set @entity.currentStepIcon (object/get (array/nth @config.steps @entity.currentStepIndex) icon circle))
         (set @entity.currentFields (object/get (array/nth @config.steps @entity.currentStepIndex) fields []))
-        (set @entity.isFirstStep ["=", @entity.currentStepIndex, 0])
-        (set @entity.isLastStep ["=", @entity.currentStepIndex, ["-", @entity.totalSteps, 1]])
-        (set @entity.primaryActionLabel (if ["=", @entity.currentStepIndex, ["-", @entity.totalSteps, 1]] Submit Next))
-        (set @entity.primaryActionIcon (if ["=", @entity.currentStepIndex, ["-", @entity.totalSteps, 1]] check-circle chevron-right))
+        (set @entity.isFirstStep (= @entity.currentStepIndex 0))
+        (set @entity.isLastStep (= @entity.currentStepIndex (- @entity.totalSteps 1)))
+        (set @entity.primaryActionLabel (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) Submit Next))
+        (set @entity.primaryActionIcon (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) check-circle chevron-right))
         (render-ui main {
           children: [{
             align: center
@@ -279,7 +279,7 @@ orbital WizardOrbital {
             }, {
               action: ADVANCE
               icon: @entity.primaryActionIcon
-              label: (if ["=", @entity.currentStepIndex, ["-", @entity.totalSteps, 1]] @config.submitLabel @config.nextLabel)
+              label: (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) @config.submitLabel @config.nextLabel)
               type: button
               variant: primary
             }]
@@ -330,15 +330,15 @@ orbital WizardOrbital {
           type: stack
         })
       RETREAT -> running
-        (set @entity.currentStepIndex ["-", @entity.currentStepIndex, 1])
+        (set @entity.currentStepIndex (- @entity.currentStepIndex 1))
         (set @entity.currentStepLabel (object/get (array/nth @config.steps @entity.currentStepIndex) label))
         (set @entity.currentStepDescription (object/get (array/nth @config.steps @entity.currentStepIndex) description ""))
         (set @entity.currentStepIcon (object/get (array/nth @config.steps @entity.currentStepIndex) icon circle))
         (set @entity.currentFields (object/get (array/nth @config.steps @entity.currentStepIndex) fields []))
-        (set @entity.isFirstStep ["=", @entity.currentStepIndex, 0])
-        (set @entity.isLastStep ["=", @entity.currentStepIndex, ["-", @entity.totalSteps, 1]])
-        (set @entity.primaryActionLabel (if ["=", @entity.currentStepIndex, ["-", @entity.totalSteps, 1]] Submit Next))
-        (set @entity.primaryActionIcon (if ["=", @entity.currentStepIndex, ["-", @entity.totalSteps, 1]] check-circle chevron-right))
+        (set @entity.isFirstStep (= @entity.currentStepIndex 0))
+        (set @entity.isLastStep (= @entity.currentStepIndex (- @entity.totalSteps 1)))
+        (set @entity.primaryActionLabel (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) Submit Next))
+        (set @entity.primaryActionIcon (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) check-circle chevron-right))
         (render-ui main {
           children: [{
             align: center
@@ -415,7 +415,7 @@ orbital WizardOrbital {
             }, {
               action: ADVANCE
               icon: @entity.primaryActionIcon
-              label: (if ["=", @entity.currentStepIndex, ["-", @entity.totalSteps, 1]] @config.submitLabel @config.nextLabel)
+              label: (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) @config.submitLabel @config.nextLabel)
               type: button
               variant: primary
             }]

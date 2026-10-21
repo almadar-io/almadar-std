@@ -1,0 +1,30 @@
+app sse-spec [
+  version: "1.0.0",
+  description: "Design contract for server-sent events over std-http1's streamed replies. SSE_OPEN { requestId } opens the stream: RESPOND_HEAD status 200 with content-type text/event-stream, cache-control no-cache and x-accel-buffering no, then a first chunk retry: 3000 and a blank line. SSE_SEND { requestId, data, event?, id? } writes one RESPOND_CHUNK frame: an id: line when id is given, an event: line when event is given, then data split on newlines with every line written as data: line, then a blank line. SSE_SEND { event: tick, id: 7, data: a newline b } frames as id: 7, event: tick, data: a, data: b and a blank line. A STREAM_IDLE { requestId, idle } whose idle is a multiple of heartbeatEvery (3) on an open stream writes the comment frame : hb and a blank line. SSE_CLOSE { requestId } ends the stream with RESPOND_END and emits SSE_CLOSED { requestId, reason: server }; STREAM_CLOSED { requestId, reason } from the connection forgets the stream and emits SSE_CLOSED with that reason, writing nothing. SSE_REFUSED { requestId, kind, error } refuses a send and writes nothing: invalid for an event or id holding CR or LF, an id holding NUL, or data holding CR; closed when no open stream has the id."
+]
+
+type Http1Header = { name : string!, value : string! }
+
+orbital SseSpec {
+  expects entity SseStreams [runtime] {
+    id : string!
+    open : [number]
+  }
+  expects trait Sse {
+    state serving {
+      SSE_OPEN -> serving
+      SSE_SEND -> serving
+      SSE_CLOSE -> serving
+      STREAM_IDLE -> serving
+      STREAM_CLOSED -> serving
+    }
+    emits {
+      RESPOND_HEAD { requestId : number!  status : number!  headers : [Http1Header]! }
+      RESPOND_CHUNK { requestId : number!  body : bytes! }
+      RESPOND_END { requestId : number! }
+      SSE_CLOSED { requestId : number!  reason : string! }
+      SSE_REFUSED { requestId : number!  kind : string!  error : string! }
+    }
+  }
+  expects page "/sse" -> Sse
+}

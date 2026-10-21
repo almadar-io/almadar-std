@@ -5,7 +5,7 @@
  * parses `.lolo` text into one, `program/print` formats one back to `.lolo`, and
  * `program/validate` reports whether one passes the same 0-error / 0-warning gate as
  * `orb validate` without writing, `program/eval` validates one and writes it into the workspace, returning its traits as
- * values or the validator's errors as data, `program/machine` reads one's state machine as transition rows.
+ * values or the validator's errors as data.
  * `program/compose` assembles several
  * programs into one app (core `composeAppFromFiles`: pages, layout, wiring, nav).
  * A program is `.orb` IR; an orbital value at `orbitals[i]` stands for its import
@@ -92,17 +92,6 @@ export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
       EMIT_OPTIONS,
     ],
     example: '["program/step", "@entity.program", [{ "orbital": "Editor", "trait": "Modes", "from": "NORMAL", "event": "KEY", "payload": { "key": "i" } }], { "emit": { "success": "STEPPED", "failure": "STEP_FAILED" } }]',
-  },
-  'program/machine': {
-    module: 'program', category: 'std-program',
-    minArity: 1, maxArity: 2,
-    description: 'Read a program\'s state machine as data: one row per transition of every trait — its orbital, trait, `from` state, event, `to` state, whether the transition carries a guard of its own, and the payload slots the event declares (`name`, `type`, `required`, optional `values` and `entity`). The rows are the kernel planner\'s own transition groups, the ones the walkers drive; a trait with no transitions has none.',
-    hasSideEffects: true,
-    runsOn: 'server',
-    host: 'program',
-    returnType: list('MachineRow'),
-    params: [{ name: 'program', type: { kind: 'sexpr' }, description: 'A quoted program' }, EMIT_OPTIONS],
-    example: '["program/machine", "@entity.program", { "emit": { "success": "MACHINE_READ", "failure": "MACHINE_FAILED" } }]',
   },
   'program/inputs': {
     module: 'program', category: 'std-program',

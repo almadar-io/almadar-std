@@ -63,7 +63,7 @@ orbital MasteryOrbital {
         (set @entity.reqReflection (if (= ?reflection null) "" ?reflection))
         (set @entity.reqBloomLevel (if (= ?bloomLevel null) "" ?bloomLevel))
         (set @entity.reqCorrect (= ?correct true))
-        (fetch LearnerProgress { filter: ["=", (object/get @entity id), (str/concat ?learnerId ":" ?groupId ":" ?itemId)], emit: { success: MasteryLoaded, failure: MasteryFailed } })
+        (fetch LearnerProgress { filter: (= (object/get @entity id) (str/concat ?learnerId ":" ?groupId ":" ?itemId)), emit: { success: MasteryLoaded, failure: MasteryFailed } })
 
       MASTERY_MARK_LEARNED -> loading
         (set @entity.reqOp "learned")
@@ -71,7 +71,7 @@ orbital MasteryOrbital {
         (set @entity.reqGroup ?groupId)
         (set @entity.reqItem ?itemId)
         (set @entity.reqLearned ?learned)
-        (fetch LearnerProgress { filter: ["=", (object/get @entity id), (str/concat ?learnerId ":" ?groupId ":" ?itemId)], emit: { success: MasteryLoaded, failure: MasteryFailed } })
+        (fetch LearnerProgress { filter: (= (object/get @entity id) (str/concat ?learnerId ":" ?groupId ":" ?itemId)), emit: { success: MasteryLoaded, failure: MasteryFailed } })
     }
 
     state loading {
@@ -215,7 +215,7 @@ orbital MasteryOrbital {
 
       PREFS_GET -> loading
         (set @entity.reqLearner ?learnerId)
-        (fetch LearnerPreferences { filter: ["=", (object/get @entity id), ?learnerId], emit: { success: PrefsRead, failure: PrefsFailed } })
+        (fetch LearnerPreferences { filter: (= (object/get @entity id) ?learnerId), emit: { success: PrefsRead, failure: PrefsFailed } })
 
       PREFS_SET -> idle when (and (= ?expandModel null) (= ?explainModel null))
         (emit PREFS_REJECTED { reason: "model-required" })
@@ -227,7 +227,7 @@ orbital MasteryOrbital {
         (set @entity.reqLearner ?learnerId)
         (set @entity.reqExpandModel (if (= ?expandModel null) "" ?expandModel))
         (set @entity.reqExplainModel (if (= ?explainModel null) "" ?explainModel))
-        (fetch LearnerPreferences { filter: ["=", (object/get @entity id), ?learnerId], emit: { success: PrefsMerge, failure: PrefsFailed } })
+        (fetch LearnerPreferences { filter: (= (object/get @entity id) ?learnerId), emit: { success: PrefsMerge, failure: PrefsFailed } })
     }
 
     state loading {

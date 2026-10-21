@@ -1,13 +1,13 @@
 app std-http1 [
   version: "1.0.0",
   net: { "127.0.0.1:3000": [listen] },
-  description: "std-http1 — HTTP/1.1 over a raw TCP listener, in .lolo over os/tcp-listen, os/recv, os/send, os/close, std-bytes and str/*. LISTEN binds the host and port knobs as one keyed stream; each accepted connection is read until its head ends in CRLF CRLF (the end found by std-bytes INDEX_OF), then until content-length body bytes have arrived, and is delivered once as REQUEST_RECEIVED { requestId (the connection's socket id), method, path, query, headers (names lower-cased, repeats joined with a comma and a space), body (bytes, delivered intact), peer }. The atom never routes. It answers a connection it cannot deliver: 400 for a head with any byte of 0x80 or above (checked on the bytes, never decoded) and for a head that is not an HTTP/1.0 or 1.1 request line followed by name: value lines and for a content-length that is not a number or repeats with another value, 411 for any transfer-encoding header, 431 for a head with no end after maxHead bytes or more than maxHeaders headers, 413 for a content-length over maxBody. RESPOND { requestId, status, headers, body (bytes) } answers a delivered request once: the status line with the standard reason phrase, the given headers, content-length (not for 204 and 304) and connection: close, then the body; the connection closes and RESPONDED { requestId, bytes } follows. RESPOND_REFUSED { requestId, kind, error } refuses it and leaves the request pending: invalid for a status outside 200-599, a header name that is not a token, a value with a control character, a content-length, transfer-encoding or connection header (the atom writes the framing), or a body on 204 and 304; closed when no pending request has the id. Same rules as the os_host/http.rs reader and writer it replaces.."
+  description: "std-http1 — HTTP/1.1 over a raw TCP listener, in .lolo over os/tcp-listen, os/recv, os/send, os/close, std-bytes and str/*. LISTEN binds the host and port knobs as one keyed stream; each accepted connection is read until its head ends in CRLF CRLF (the end found by std-bytes INDEX_OF), then until content-length body bytes have arrived (a transfer-encoding: chunked body is decoded per RFC 7230 section 4.1: hex size lines, chunk extensions ignored, CRLF framing, the 0 last chunk, trailer fields read and discarded), and is delivered once as REQUEST_RECEIVED { requestId (the connection's socket id), method, path, query, headers (names lower-cased, repeats joined with a comma and a space), body (bytes, delivered intact), peer }. The atom never routes. It answers a connection it cannot deliver: 400 for a head with any byte of 0x80 or above (checked on the bytes, never decoded) and for a head that is not an HTTP/1.0 or 1.1 request line followed by name: value lines and for a content-length that is not a number or repeats with another value, 400 for a request with both content-length and transfer-encoding and for malformed chunk framing, 501 for a transfer-encoding other than chunked, 431 for a head with no end after maxHead bytes or more than maxHeaders headers, 413 for a content-length or a decoded chunked body over maxBody. RESPOND { requestId, status, headers, body (bytes) } answers a delivered request once: the status line with the standard reason phrase, the given headers, content-length (not for 204 and 304) and connection: close, then the body; the connection closes and RESPONDED { requestId, bytes } follows. RESPOND_REFUSED { requestId, kind, error } refuses it and leaves the request pending: invalid for a status outside 200-599, a header name that is not a token, a value with a control character, a content-length, transfer-encoding or connection header (the atom writes the framing), or a body on 204 and 304; closed when no pending request has the id. Same rules as the os_host/http.rs reader and writer it replaces.."
 ]
 uses Spec from "almadar-std/http1"
 uses Bytes from "std/behaviors/std-bytes"
 type Http1Header = { name : string!, value : string! }
 type Http1Reason = { status : number!, text : string! }
-type Http1Conn = { sock : number!, key : string!, peer : string!, buf : string!, headLen : number!, need : number!, refuse : number!, method : string!, path : string!, query : string!, headers : [Http1Header]! }
+type Http1Conn = { sock : number!, key : string!, peer : string!, buf : string!, headLen : number!, need : number!, refuse : number!, method : string!, path : string!, query : string!, headers : [Http1Header]!, te : boolean!, dec : string!, dstate : string!, phase : string!, keepAlive : boolean!, http10 : boolean!, chunked : boolean!, served : number!, idle : number!, sends : number! }
 
 orbital Http1Orbital {
   entity Http1Server [runtime] {
@@ -45,8 +45,24 @@ orbital Http1Orbital {
         @tier "infra"
       maxBody : number = 67108864
         @label "Largest body"
-        @description "A content-length over this is answered 413."
+        @description "A content-length, or a decoded chunked body, over this is answered 413."
         @tier "infra"
+      maxChunks : number = 4096
+        @label "Most chunk steps"
+        @description "A chunked body needing more size-line and trailer steps than this is answered 400."
+        @tier "infra"
+      maxChunkLine : number = 128
+        @label "Longest chunk line"
+        @description "A chunk size line (size and extensions) longer than this is answered 400."
+        @tier "infra"
+      lineEnd : string = "DQo="
+        @label "Line end"
+        @description "CRLF as bytes (standard padded base64), the needle that ends a chunk size or trailer line."
+        @tier "domain"
+      chunkSizePattern : string = "^[0-9a-f]{1,8}$"
+        @label "Chunk size"
+        @description "What a lower-cased chunk size must match: one to eight hex digits."
+        @tier "domain"
       headEnd : string = "DQoNCg=="
         @label "Head end"
         @description "CRLF CRLF as bytes (standard padded base64), the needle that ends a head."
@@ -83,6 +99,18 @@ orbital Http1Orbital {
         @label "Reason phrases"
         @description "The standard reason phrase per status; a status not listed has an empty one."
         @tier "domain"
+      maxRequestsPerConn : number = 100
+        @label "Most requests per connection"
+        @description "After this many answered requests on one connection the reply says connection: close."
+        @tier "infra"
+      hexDigits : string = "0123456789abcdef"
+        @label "Hex digits"
+        @description "The digits a chunk size line is written in."
+        @tier "domain"
+      hexPowers : [number] = [1, 16, 256, 4096, 65536, 1048576, 16777216, 268435456]
+        @label "Hex place values"
+        @description "Powers of 16, least significant first; a chunk is at most 4294967295 bytes."
+        @tier "domain"
     }
 
     state booting {
@@ -102,19 +130,35 @@ orbital Http1Orbital {
       LISTEN -> serving
 
       CONN_ACCEPTED -> serving
-        (set @entity.conns (array/append @entity.conns { sock: @payload.sock, key: (str/concat "conn-" @payload.sock), peer: @payload.peer, buf: "", headLen: 0, need: 0, refuse: 0, method: "", path: "", query: "", headers: [] }))
+        (set @entity.conns (array/append @entity.conns { sock: @payload.sock, key: (str/concat "conn-" @payload.sock), peer: @payload.peer, buf: "", headLen: 0, need: 0, refuse: 0, method: "", path: "", query: "", headers: [], te: false, dec: "", dstate: "", phase: "reading", keepAlive: false, http10: false, chunked: false, served: 0, idle: 0, sends: 0 }))
         (os/recv @payload.sock @config.recvBytes { key: (str/concat "conn-" @payload.sock) emit: { success: CHUNK_READ failure: CONN_FAILED } })
 
-      CHUNK_READ -> serving when (and (!= (array/find @entity.conns (fn c (= @c.key @payload.key))) null) @payload.eof)
+      CHUNK_READ -> serving when (and (!= (array/find @entity.conns (fn c (= @c.key @payload.key))) null) (!= (object/get (array/find @entity.conns (fn c (= @c.key @payload.key))) "phase") "streaming") @payload.eof)
         (os/close (object/get (array/find @entity.conns (fn c (= @c.key @payload.key))) "sock"))
-        (set @entity.conns (array/filter @entity.conns (fn c (!= @c.key @payload.key))))
-      CHUNK_READ -> serving when (and (!= (array/find @entity.conns (fn c (= @c.key @payload.key))) null) (not @payload.eof))
+        (set @entity.conns (array/filter @entity.conns (fn c (not (= @c.key @payload.key)))))
+      CHUNK_READ -> serving when (and (!= (array/find @entity.conns (fn c (= @c.key @payload.key))) null) (!= (object/get (array/find @entity.conns (fn c (= @c.key @payload.key))) "phase") "streaming") (not @payload.eof))
         (set @entity.conns (array/map @entity.conns (fn c (if (= @c.key @payload.key) (object/merge @c { buf: (bytes/concat [@c.buf, @payload.data]) }) @c))))
         (emit CONN_ADVANCE { sock: (object/get (array/find @entity.conns (fn c (= @c.key @payload.key))) "sock") })
 
-      CONN_FAILED -> serving when (!= (array/find @entity.conns (fn c (= @c.key @payload.key))) null)
+      CHUNK_READ -> serving when (and (!= (array/find @entity.conns (fn c (= @c.key @payload.key))) null) (= (object/get (array/find @entity.conns (fn c (= @c.key @payload.key))) "phase") "streaming") @payload.eof)
+        (emit STREAM_CLOSED { requestId: (object/get (array/find @entity.conns (fn c (= @c.key @payload.key))) "sock"), reason: "client" })
         (os/close (object/get (array/find @entity.conns (fn c (= @c.key @payload.key))) "sock"))
-        (set @entity.conns (array/filter @entity.conns (fn c (!= @c.key @payload.key))))
+        (set @entity.conns (array/filter @entity.conns (fn c (not (= @c.key @payload.key)))))
+      CHUNK_READ -> serving when (and (!= (array/find @entity.conns (fn c (= @c.key @payload.key))) null) (= (object/get (array/find @entity.conns (fn c (= @c.key @payload.key))) "phase") "streaming") (not @payload.eof))
+        (os/recv (object/get (array/find @entity.conns (fn c (= @c.key @payload.key))) "sock") @config.recvBytes { key: @payload.key emit: { success: CHUNK_READ failure: CONN_FAILED } })
+
+      CONN_FAILED -> serving when (and (!= (array/find @entity.conns (fn c (= @c.key @payload.key))) null) (= (object/get (array/find @entity.conns (fn c (= @c.key @payload.key))) "phase") "streaming") (= @payload.kind "timeout"))
+        (set @entity.conns (array/map @entity.conns (fn c (if (= @c.key @payload.key) (object/merge @c { idle: (+ @c.idle 1) }) @c))))
+        (emit STREAM_IDLE { requestId: (object/get (array/find @entity.conns (fn c (= @c.key @payload.key))) "sock"), idle: (+ (object/get (array/find @entity.conns (fn c (= @c.key @payload.key))) "idle") 1) })
+        (os/recv (object/get (array/find @entity.conns (fn c (= @c.key @payload.key))) "sock") @config.recvBytes { key: @payload.key emit: { success: CHUNK_READ failure: CONN_FAILED } })
+      CONN_FAILED -> serving when (and (!= (array/find @entity.conns (fn c (= @c.key @payload.key))) null) (= (object/get (array/find @entity.conns (fn c (= @c.key @payload.key))) "phase") "streaming") (!= @payload.kind "timeout"))
+        (emit STREAM_CLOSED { requestId: (object/get (array/find @entity.conns (fn c (= @c.key @payload.key))) "sock"), reason: "client" })
+        (os/close (object/get (array/find @entity.conns (fn c (= @c.key @payload.key))) "sock"))
+        (set @entity.conns (array/filter @entity.conns (fn c (not (= @c.key @payload.key)))))
+
+      CONN_FAILED -> serving when (and (!= (array/find @entity.conns (fn c (= @c.key @payload.key))) null) (!= (object/get (array/find @entity.conns (fn c (= @c.key @payload.key))) "phase") "streaming"))
+        (os/close (object/get (array/find @entity.conns (fn c (= @c.key @payload.key))) "sock"))
+        (set @entity.conns (array/filter @entity.conns (fn c (not (= @c.key @payload.key)))))
 
       CONN_ADVANCE -> serving when (let ((conn (array/find @entity.conns (fn c (= @c.sock @payload.sock))))) (and (!= @conn null) (= (object/get @conn "headLen") 0) (>= (bytes/length (object/get @conn "buf")) 4)))
         (set @entity.asking @payload.sock)
@@ -125,6 +169,7 @@ orbital Http1Orbital {
         (emit BODY_CHECK { sock: @payload.sock })
 
       HEAD_SEARCHED -> serving when (and (= @payload.value -1) (> (bytes/length (object/get (array/find @entity.conns (fn c (= @c.sock @entity.asking))) "buf")) @config.maxHead))
+        (set @entity.conns (array/map @entity.conns (fn c (if (= @c.sock @entity.asking) (object/merge @c { phase: "pending" }) @c))))
         (emit RESPOND { requestId: @entity.asking, status: 431, headers: [], body: (bytes/from-string "") })
       HEAD_SEARCHED -> serving when (and (= @payload.value -1) (<= (bytes/length (object/get (array/find @entity.conns (fn c (= @c.sock @entity.asking))) "buf")) @config.maxHead))
         (emit WANT_MORE { sock: @entity.asking })
@@ -135,8 +180,14 @@ orbital Http1Orbital {
                 (parts (str/split (array/first @lines) " "))
                 (rows (array/drop @lines 1))
                 (fields (array/map @rows (fn l { name: (str/lower (array/first (str/split @l ":"))), value: (str/trim (str/join (array/drop (str/split @l ":") 1) ":")) })))
-                (lengths (array/map (array/filter @fields (fn h (= @h.name "content-length"))) (fn h @h.value))))
+                (lengths (array/map (array/filter @fields (fn h (= @h.name "content-length"))) (fn h @h.value)))
+                (tokens (array/flatten (array/map (array/filter @fields (fn h (= @h.name "connection"))) (fn h (array/map (str/split (str/lower @h.value) ",") (fn t (str/trim @t)))))))
+                (codings (array/flatten (array/map (array/filter @fields (fn h (= @h.name "transfer-encoding"))) (fn h (array/map (str/split (str/lower @h.value) ",") (fn t (str/trim @t)))))))
+                (v10 (str/endsWith (array/first @lines) "HTTP/1.0")))
             (object/merge @c {
+              keepAlive: (and (not (array/includes @tokens "close")) (or (not @v10) (array/includes @tokens "keep-alive")) (< (+ @c.served 1) @config.maxRequestsPerConn)),
+              http10: @v10,
+              te: (array/some @fields (fn h (= @h.name "transfer-encoding"))),
               headLen: (+ @payload.value 4),
               method: (array/first @parts),
               path: (array/first (str/split (array/nth @parts 1) "?")),
@@ -144,7 +195,10 @@ orbital Http1Orbital {
               headers: @fields,
               refuse: (if (not @ascii) 400 (if (> (array/len @rows) @config.maxHeaders) 431
                 (if (not (and (validate/pattern (array/first @lines) @config.requestLinePattern) (array/every @rows (fn l (validate/pattern @l @config.headerLinePattern))))) 400
-                  (if (array/some @fields (fn h (= @h.name "transfer-encoding"))) 411
+                  (if (array/some @fields (fn h (= @h.name "transfer-encoding")))
+                    (if (or (> (array/len @lengths) 0) @v10) 400
+                      (if (array/some @codings (fn t (!= @t "chunked"))) 501
+                        (if (> (array/len @codings) 1) 400 0)))
                     (if (not (and (array/every @lengths (fn v (validate/pattern @v @config.lengthPattern))) (array/every @lengths (fn v (= @v (array/first @lengths)))))) 400
                       (if (and (> (array/len @lengths) 0) (> (str/to-number (str/replace (array/first @lengths) "+" "")) @config.maxBody)) 413 0))))))
               need: (if (and (> (array/len @lengths) 0) (validate/pattern (array/first @lengths) @config.lengthPattern)) (str/to-number (str/replace (array/first @lengths) "+" "")) 0)
@@ -153,55 +207,142 @@ orbital Http1Orbital {
         (emit HEAD_PARSED { sock: @entity.asking })
 
       HEAD_PARSED -> serving when (> (object/get (array/find @entity.conns (fn c (= @c.sock @payload.sock))) "refuse") 0)
+        (set @entity.conns (array/map @entity.conns (fn c (if (= @c.sock @payload.sock) (object/merge @c { phase: "pending", keepAlive: false }) @c))))
         (emit RESPOND { requestId: @payload.sock, status: (object/get (array/find @entity.conns (fn c (= @c.sock @payload.sock))) "refuse"), headers: [], body: (bytes/from-string "") })
       HEAD_PARSED -> serving when (= (object/get (array/find @entity.conns (fn c (= @c.sock @payload.sock))) "refuse") 0)
         (emit BODY_CHECK { sock: @payload.sock })
 
-      BODY_CHECK -> serving when (let ((conn (array/find @entity.conns (fn c (= @c.sock @payload.sock))))) (>= (- (bytes/length (object/get @conn "buf")) (object/get @conn "headLen")) (object/get @conn "need")))
+      BODY_CHECK -> serving when (let ((conn (array/find @entity.conns (fn c (= @c.sock @payload.sock))))) (and (not (object/get @conn "te")) (>= (- (bytes/length (object/get @conn "buf")) (object/get @conn "headLen")) (object/get @conn "need"))))
         (emit DELIVER { sock: @payload.sock })
-      BODY_CHECK -> serving when (let ((conn (array/find @entity.conns (fn c (= @c.sock @payload.sock))))) (< (- (bytes/length (object/get @conn "buf")) (object/get @conn "headLen")) (object/get @conn "need")))
+      BODY_CHECK -> serving when (let ((conn (array/find @entity.conns (fn c (= @c.sock @payload.sock))))) (and (not (object/get @conn "te")) (< (- (bytes/length (object/get @conn "buf")) (object/get @conn "headLen")) (object/get @conn "need"))))
         (emit WANT_MORE { sock: @payload.sock })
+
+      BODY_CHECK -> serving when (object/get (array/find @entity.conns (fn c (= @c.sock @payload.sock))) "te")
+        (emit BODY_DECODE { sock: @payload.sock })
+
+      BODY_DECODE -> serving
+        (set @entity.conns (array/map @entity.conns (fn c (if (= @c.sock @payload.sock)
+          (let ((rest (bytes/slice @c.buf @c.headLen (bytes/length @c.buf)))
+                (len (bytes/length @rest))
+                (r (array/reduce (array/range @config.maxChunks) { pos: 0, mode: "size", total: 0, parts: [], st: "run" }
+                  (fn (acc i)
+                    (if (!= @acc.st "run") @acc
+                      (let ((idx (bytes/index-of @rest @config.lineEnd @acc.pos)))
+                        (if (= @idx -1)
+                          (object/merge @acc { st: (if (> (- @len @acc.pos) (if (= @acc.mode "size") @config.maxChunkLine @config.maxHead)) (if (= @acc.mode "size") "400" "431") "more") })
+                          (if (= @acc.mode "size")
+                            (let ((hex (str/lower (array/first (str/split (bytes/to-string (bytes/slice @rest @acc.pos @idx)) ";"))))
+                                  (n (array/reduce (str/split @hex "") 0 (fn (v ch) (+ (* @v 16) (array/indexOf (str/split @config.hexDigits "") @ch))))))
+                              (if (or (> (- @idx @acc.pos) @config.maxChunkLine) (not (validate/pattern @hex @config.chunkSizePattern))) (object/merge @acc { st: "400" })
+                                (if (= @n 0) (object/merge @acc { mode: "trailer", pos: (+ @idx 2) })
+                                  (if (> (+ @acc.total @n) @config.maxBody) (object/merge @acc { st: "413" })
+                                    (if (< @len (+ @idx 4 @n)) (object/merge @acc { st: "more" })
+                                      (if (not (bytes/equals (bytes/slice @rest (+ @idx 2 @n) (+ @idx 4 @n)) @config.lineEnd)) (object/merge @acc { st: "400" })
+                                        (object/merge @acc { pos: (+ @idx 4 @n), total: (+ @acc.total @n), parts: (array/append @acc.parts (bytes/slice @rest (+ @idx 2) (+ @idx 2 @n))) })))))))
+                            (if (= @idx @acc.pos) (object/merge @acc { st: "done", pos: (+ @idx 2) })
+                              (if (validate/pattern (bytes/to-string (bytes/slice @rest @acc.pos @idx)) @config.headerLinePattern) (object/merge @acc { pos: (+ @idx 2) }) (object/merge @acc { st: "400" })))))))))))
+            (object/merge @c { dec: (bytes/concat (array/prepend @r.parts (bytes/from-string ""))), need: @r.pos, dstate: (if (= @r.st "run") "400" @r.st) }))
+          @c))))
+        (emit BODY_DECODED { sock: @payload.sock })
+
+      BODY_DECODED -> serving when (= (object/get (array/find @entity.conns (fn c (= @c.sock @payload.sock))) "dstate") "more")
+        (emit WANT_MORE { sock: @payload.sock })
+      BODY_DECODED -> serving when (= (object/get (array/find @entity.conns (fn c (= @c.sock @payload.sock))) "dstate") "done")
+        (emit DELIVER { sock: @payload.sock })
+      BODY_DECODED -> serving when (not (array/includes ["more", "done"] (object/get (array/find @entity.conns (fn c (= @c.sock @payload.sock))) "dstate")))
+        (set @entity.conns (array/map @entity.conns (fn c (if (= @c.sock @payload.sock) (object/merge @c { phase: "pending", keepAlive: false }) @c))))
+        (emit RESPOND { requestId: @payload.sock, status: (str/to-number (object/get (array/find @entity.conns (fn c (= @c.sock @payload.sock))) "dstate")), headers: [], body: (bytes/from-string "") })
 
       WANT_MORE -> serving when (!= (array/find @entity.conns (fn c (= @c.sock @payload.sock))) null)
         (os/recv @payload.sock @config.recvBytes { key: (str/concat "conn-" @payload.sock) emit: { success: CHUNK_READ failure: CONN_FAILED } })
 
       DELIVER -> serving
+        (set @entity.conns (array/map @entity.conns (fn c (if (= @c.sock @payload.sock) (object/merge @c { phase: "pending" }) @c))))
         (emit REQUEST_RECEIVED {
           requestId: @payload.sock,
           method: (object/get (array/find @entity.conns (fn k (= @k.sock @payload.sock))) "method"),
           path: (object/get (array/find @entity.conns (fn k (= @k.sock @payload.sock))) "path"),
           query: (object/get (array/find @entity.conns (fn k (= @k.sock @payload.sock))) "query"),
           headers: (object/fromEntries (array/map (object/get (array/find @entity.conns (fn k (= @k.sock @payload.sock))) "headers") (fn h [@h.name, (str/join (array/map (array/filter (object/get (array/find @entity.conns (fn k (= @k.sock @payload.sock))) "headers") (fn g (= @g.name @h.name))) (fn g @g.value)) ", ")]))),
-          body: (bytes/slice (object/get (array/find @entity.conns (fn k (= @k.sock @payload.sock))) "buf") (object/get (array/find @entity.conns (fn k (= @k.sock @payload.sock))) "headLen") (+ (object/get (array/find @entity.conns (fn k (= @k.sock @payload.sock))) "headLen") (object/get (array/find @entity.conns (fn k (= @k.sock @payload.sock))) "need"))),
+          body: (if (object/get (array/find @entity.conns (fn k (= @k.sock @payload.sock))) "te") (object/get (array/find @entity.conns (fn k (= @k.sock @payload.sock))) "dec") (bytes/slice (object/get (array/find @entity.conns (fn k (= @k.sock @payload.sock))) "buf") (object/get (array/find @entity.conns (fn k (= @k.sock @payload.sock))) "headLen") (+ (object/get (array/find @entity.conns (fn k (= @k.sock @payload.sock))) "headLen") (object/get (array/find @entity.conns (fn k (= @k.sock @payload.sock))) "need")))),
           peer: (object/get (array/find @entity.conns (fn k (= @k.sock @payload.sock))) "peer")
         })
 
-      RESPOND -> serving when (= (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) null)
+      RESPOND -> serving when (!= (object/get (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) "phase") "pending")
         (emit RESPOND_REFUSED { requestId: @payload.requestId, kind: "closed", error: "no pending request has this id" })
-      RESPOND -> serving when (and (!= (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) null) (not (and (>= @payload.status 200) (<= @payload.status 599))))
+      RESPOND -> serving when (and (= (object/get (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) "phase") "pending") (not (and (>= @payload.status 200) (<= @payload.status 599))))
         (emit RESPOND_REFUSED { requestId: @payload.requestId, kind: "invalid", error: "the status must be 200 to 599" })
-      RESPOND -> serving when (and (!= (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) null) (>= @payload.status 200) (<= @payload.status 599) (not (array/every @payload.headers (fn h (and (validate/pattern @h.name @config.tokenPattern) (validate/pattern @h.value @config.valuePattern) (not (array/includes @config.framingHeaders (str/lower @h.name))))))))
+      RESPOND -> serving when (and (= (object/get (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) "phase") "pending") (>= @payload.status 200) (<= @payload.status 599) (not (array/every @payload.headers (fn h (and (validate/pattern @h.name @config.tokenPattern) (validate/pattern @h.value @config.valuePattern) (not (array/includes @config.framingHeaders (str/lower @h.name))))))))
         (emit RESPOND_REFUSED { requestId: @payload.requestId, kind: "invalid", error: "a header name or value is not allowed, or names framing the atom writes" })
-      RESPOND -> serving when (and (!= (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) null) (array/includes [204, 304] @payload.status) (> (bytes/length @payload.body) 0))
+      RESPOND -> serving when (and (= (object/get (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) "phase") "pending") (array/includes [204, 304] @payload.status) (> (bytes/length @payload.body) 0))
         (emit RESPOND_REFUSED { requestId: @payload.requestId, kind: "invalid", error: "a 204 or 304 reply has no body" })
-      RESPOND -> serving when (and (!= (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) null) (>= @payload.status 200) (<= @payload.status 599) (array/every @payload.headers (fn h (and (validate/pattern @h.name @config.tokenPattern) (validate/pattern @h.value @config.valuePattern) (not (array/includes @config.framingHeaders (str/lower @h.name)))))) (or (not (array/includes [204, 304] @payload.status)) (= (bytes/length @payload.body) 0)))
+      RESPOND -> serving when (and (= (object/get (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) "phase") "pending") (>= @payload.status 200) (<= @payload.status 599) (array/every @payload.headers (fn h (and (validate/pattern @h.name @config.tokenPattern) (validate/pattern @h.value @config.valuePattern) (not (array/includes @config.framingHeaders (str/lower @h.name)))))) (or (not (array/includes [204, 304] @payload.status)) (= (bytes/length @payload.body) 0)))
         (os/send @payload.requestId
           (bytes/concat [
             (bytes/from-string (str/concat "HTTP/1.1 " @payload.status " " (or (object/get (array/find @config.reasons (fn r (= @r.status @payload.status))) "text") "") "\r\n"
               (str/join (array/map @payload.headers (fn h (str/concat (str/lower @h.name) ": " @h.value "\r\n"))) "")
               (if (array/includes [204, 304] @payload.status) "" (str/concat "content-length: " (bytes/length @payload.body) "\r\n"))
-              "connection: close\r\n\r\n")),
+              (if (object/get (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) "keepAlive") "connection: keep-alive\r\n\r\n" "connection: close\r\n\r\n"))),
             @payload.body
           ])
-          { key: (str/concat "conn-" @payload.requestId) emit: { success: RESPONSE_SENT failure: RESPONSE_FAILED } })
+          { key: (str/concat "send-" @payload.requestId "-" (object/get (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) "sends")) emit: { success: RESPONSE_SENT failure: RESPONSE_FAILED } })
+        (set @entity.conns (array/map @entity.conns (fn c (if (= @c.sock @payload.requestId) (object/merge @c { sends: (+ @c.sends 1) }) @c))))
 
-      RESPONSE_SENT -> serving when (!= (array/find @entity.conns (fn c (= @c.key @payload.key))) null)
-        (os/close (object/get (array/find @entity.conns (fn c (= @c.key @payload.key))) "sock"))
-        (emit RESPONDED { requestId: (object/get (array/find @entity.conns (fn c (= @c.key @payload.key))) "sock"), bytes: @payload.bytes })
-        (set @entity.conns (array/filter @entity.conns (fn c (!= @c.key @payload.key))))
-      RESPONSE_FAILED -> serving when (!= (array/find @entity.conns (fn c (= @c.key @payload.key))) null)
-        (os/close (object/get (array/find @entity.conns (fn c (= @c.key @payload.key))) "sock"))
-        (set @entity.conns (array/filter @entity.conns (fn c (!= @c.key @payload.key))))
+      RESPONSE_SENT -> serving when (and (!= (array/find @entity.conns (fn c (str/startsWith @payload.key (str/concat "send-" @c.sock "-")))) null) (not (object/get (array/find @entity.conns (fn c (str/startsWith @payload.key (str/concat "send-" @c.sock "-")))) "keepAlive")))
+        (os/close (object/get (array/find @entity.conns (fn c (str/startsWith @payload.key (str/concat "send-" @c.sock "-")))) "sock"))
+        (emit RESPONDED { requestId: (object/get (array/find @entity.conns (fn c (str/startsWith @payload.key (str/concat "send-" @c.sock "-")))) "sock"), bytes: @payload.bytes })
+        (set @entity.conns (array/filter @entity.conns (fn c (not (str/startsWith @payload.key (str/concat "send-" @c.sock "-"))))))
+      RESPONSE_SENT -> serving when (and (!= (array/find @entity.conns (fn c (str/startsWith @payload.key (str/concat "send-" @c.sock "-")))) null) (object/get (array/find @entity.conns (fn c (str/startsWith @payload.key (str/concat "send-" @c.sock "-")))) "keepAlive"))
+        (emit RESPONDED { requestId: (object/get (array/find @entity.conns (fn c (str/startsWith @payload.key (str/concat "send-" @c.sock "-")))) "sock"), bytes: @payload.bytes })
+        (set @entity.conns (array/map @entity.conns (fn c (if (str/startsWith @payload.key (str/concat "send-" @c.sock "-")) (object/merge @c { buf: (bytes/slice @c.buf (+ @c.headLen @c.need) (bytes/length @c.buf)), headLen: 0, need: 0, refuse: 0, method: "", path: "", query: "", headers: [], te: false, dec: "", dstate: "", phase: "reading", keepAlive: false, http10: false, chunked: false, served: (+ @c.served 1), idle: 0 }) @c))))
+        (emit CONN_ADVANCE { sock: (object/get (array/find @entity.conns (fn c (str/startsWith @payload.key (str/concat "send-" @c.sock "-")))) "sock") })
+      RESPONSE_FAILED -> serving when (!= (array/find @entity.conns (fn c (str/startsWith @payload.key (str/concat "send-" @c.sock "-")))) null)
+        (os/close (object/get (array/find @entity.conns (fn c (str/startsWith @payload.key (str/concat "send-" @c.sock "-")))) "sock"))
+        (set @entity.conns (array/filter @entity.conns (fn c (not (str/startsWith @payload.key (str/concat "send-" @c.sock "-"))))))
+      RESPOND_HEAD -> serving when (not (= (object/get (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) "phase") "pending"))
+        (emit RESPOND_REFUSED { requestId: @payload.requestId, kind: "closed", error: "no pending request has this id" })
+      RESPOND_HEAD -> serving when (and (= (object/get (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) "phase") "pending") (not (and (>= @payload.status 200) (<= @payload.status 599) (array/every @payload.headers (fn h (and (validate/pattern @h.name @config.tokenPattern) (validate/pattern @h.value @config.valuePattern) (not (array/includes @config.framingHeaders (str/lower @h.name)))))))))
+        (emit RESPOND_REFUSED { requestId: @payload.requestId, kind: "invalid", error: "the status must be 200 to 599 and every header a token name with a clean value that is not framing" })
+      RESPOND_HEAD -> serving when (and (= (object/get (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) "phase") "pending") (and (>= @payload.status 200) (<= @payload.status 599) (array/every @payload.headers (fn h (and (validate/pattern @h.name @config.tokenPattern) (validate/pattern @h.value @config.valuePattern) (not (array/includes @config.framingHeaders (str/lower @h.name))))))))
+        (set @entity.conns (array/map @entity.conns (fn c (if (= @c.sock @payload.requestId) (object/merge @c { phase: "streaming", keepAlive: false, idle: 0, chunked: (and (not @c.http10) (not (str/startsWith (str/lower (or (object/get (array/find @payload.headers (fn h (= (str/lower @h.name) "content-type"))) "value") "")) "text/event-stream"))) }) @c))))
+        (os/send @payload.requestId
+          (bytes/from-string (str/concat (if (object/get (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) "http10") "HTTP/1.0 " "HTTP/1.1 ") @payload.status " " (or (object/get (array/find @config.reasons (fn r (= @r.status @payload.status))) "text") "") "\r\n"
+            (str/join (array/map @payload.headers (fn h (str/concat (str/lower @h.name) ": " @h.value "\r\n"))) "")
+            (if (or (object/get (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) "http10") (str/startsWith (str/lower (or (object/get (array/find @payload.headers (fn h (= (str/lower @h.name) "content-type"))) "value") "")) "text/event-stream")) "" "transfer-encoding: chunked\r\n")
+            "connection: close\r\n\r\n"))
+          { key: (str/concat "send-" @payload.requestId "-" (object/get (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) "sends")) emit: { success: HEAD_SENT failure: SEND_FAILED } })
+        (set @entity.conns (array/map @entity.conns (fn c (if (= @c.sock @payload.requestId) (object/merge @c { sends: (+ @c.sends 1) }) @c))))
+        (os/recv @payload.requestId @config.recvBytes { key: (str/concat "conn-" @payload.requestId) emit: { success: CHUNK_READ failure: CONN_FAILED } })
+
+      RESPOND_CHUNK -> serving when (not (= (object/get (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) "phase") "streaming"))
+        (emit RESPOND_REFUSED { requestId: @payload.requestId, kind: "closed", error: "no open stream has this id" })
+      RESPOND_CHUNK -> serving when (and (= (object/get (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) "phase") "streaming") (= (bytes/length @payload.body) 0))
+        (emit RESPOND_REFUSED { requestId: @payload.requestId, kind: "invalid", error: "a chunk has at least one byte" })
+      RESPOND_CHUNK -> serving when (and (= (object/get (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) "phase") "streaming") (> (bytes/length @payload.body) 0))
+        (os/send @payload.requestId
+          (if (object/get (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) "chunked")
+            (bytes/concat [(bytes/from-string (str/concat (let ((n (bytes/length @payload.body))) (str/join (array/map (array/filter (array/map (array/range 8) (fn i (- 7 @i))) (fn p (or (= @p 0) (>= @n (array/nth @config.hexPowers @p))))) (fn p (let ((d (math/mod (math/floor (/ @n (array/nth @config.hexPowers @p))) 16))) (str/slice @config.hexDigits @d (+ @d 1))))) "")) "\r\n")), @payload.body, (bytes/from-string "\r\n")])
+            @payload.body)
+          { key: (str/concat "send-" @payload.requestId "-" (object/get (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) "sends")) emit: { success: SEND_DONE failure: SEND_FAILED } })
+        (set @entity.conns (array/map @entity.conns (fn c (if (= @c.sock @payload.requestId) (object/merge @c { sends: (+ @c.sends 1) }) @c))))
+
+      RESPOND_END -> serving when (not (= (object/get (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) "phase") "streaming"))
+        (emit RESPOND_REFUSED { requestId: @payload.requestId, kind: "closed", error: "no open stream has this id" })
+      RESPOND_END -> serving when (and (= (object/get (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) "phase") "streaming") (object/get (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) "chunked"))
+        (os/send @payload.requestId (bytes/from-string "0\r\n\r\n")
+          { key: (str/concat "send-" @payload.requestId "-" (object/get (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) "sends")) emit: { success: RESPONSE_SENT failure: RESPONSE_FAILED } })
+        (set @entity.conns (array/map @entity.conns (fn c (if (= @c.sock @payload.requestId) (object/merge @c { sends: (+ @c.sends 1) }) @c))))
+      RESPOND_END -> serving when (and (= (object/get (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) "phase") "streaming") (not (object/get (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) "chunked")))
+        (emit RESPONSE_SENT { key: (str/concat "send-" @payload.requestId "-" (object/get (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) "sends")), bytes: 0 })
+
+      HEAD_SENT -> serving when (!= (array/find @entity.conns (fn c (str/startsWith @payload.key (str/concat "send-" @c.sock "-")))) null)
+        (emit STREAM_OPENED { requestId: (object/get (array/find @entity.conns (fn c (str/startsWith @payload.key (str/concat "send-" @c.sock "-")))) "sock") })
+      SEND_DONE -> serving when (!= (array/find @entity.conns (fn c (str/startsWith @payload.key (str/concat "send-" @c.sock "-")))) null)
+        (emit CHUNK_SENT { requestId: (object/get (array/find @entity.conns (fn c (str/startsWith @payload.key (str/concat "send-" @c.sock "-")))) "sock"), bytes: @payload.bytes })
+      SEND_FAILED -> serving when (!= (array/find @entity.conns (fn c (str/startsWith @payload.key (str/concat "send-" @c.sock "-")))) null)
+        (emit STREAM_CLOSED { requestId: (object/get (array/find @entity.conns (fn c (str/startsWith @payload.key (str/concat "send-" @c.sock "-")))) "sock"), reason: "client" })
+        (os/close (object/get (array/find @entity.conns (fn c (str/startsWith @payload.key (str/concat "send-" @c.sock "-")))) "sock"))
+        (set @entity.conns (array/filter @entity.conns (fn c (not (str/startsWith @payload.key (str/concat "send-" @c.sock "-"))))))
       LISTEN_CLOSED -> booting
     }
 
@@ -272,6 +413,16 @@ orbital Http1Orbital {
       }
         @description "Internal: is the body of this connection complete."
         @tier "internal"
+      BODY_DECODE -> internal {
+        sock : number!
+      }
+        @description "Internal: decode the chunked body read so far on this connection."
+        @tier "internal"
+      BODY_DECODED -> internal {
+        sock : number!
+      }
+        @description "Internal: a chunked body was decoded as far as the bytes go; read more, deliver or refuse."
+        @tier "internal"
       WANT_MORE -> internal {
         sock : number!
       }
@@ -281,6 +432,45 @@ orbital Http1Orbital {
         sock : number!
       }
         @description "Internal: the request on this connection is complete; deliver it."
+        @tier "internal"
+      STREAM_OPENED -> external {
+        requestId : number!
+      }
+        @description "The head of a streamed reply was written."
+        @tier "primary"
+      CHUNK_SENT -> external {
+        requestId : number!
+        bytes : number!
+      }
+        @description "One chunk of a streamed reply was written."
+        @tier "primary"
+      STREAM_CLOSED -> external {
+        requestId : number!
+        reason : string!
+      }
+        @description "The client left an open stream or a write to it failed; the connection is closed."
+        @tier "primary"
+      STREAM_IDLE -> external {
+        requestId : number!
+        idle : number!
+      }
+        @description "The open stream's client sent nothing for another read timeout; idle counts them."
+        @tier "secondary"
+      HEAD_SENT {
+        bytes : number!
+      }
+        @description "Internal: the stream head was written."
+        @tier "internal"
+      SEND_DONE {
+        bytes : number!
+      }
+        @description "Internal: a chunk was written."
+        @tier "internal"
+      SEND_FAILED {
+        error : string
+        kind : string
+      }
+        @description "Internal: a stream write failed."
         @tier "internal"
       LISTEN_FAILED {
         error : string
@@ -315,6 +505,7 @@ orbital Http1Orbital {
         @tier "internal"
       RESPONSE_SENT {
         bytes : number!
+        key : string
       }
         @description "Internal: the reply was written."
         @tier "internal"
@@ -340,6 +531,31 @@ orbital Http1Orbital {
         body : bytes!
       }
       LISTEN_CLOSED {
+      }
+      RESPOND_HEAD {
+        requestId : number!
+        status : number!
+        headers : [Http1Header]!
+      }
+      RESPOND_CHUNK {
+        requestId : number!
+        body : bytes!
+      }
+      RESPOND_END {
+        requestId : number!
+      }
+      HEAD_SENT {
+        bytes : number!
+        key : string!
+      }
+      SEND_DONE {
+        bytes : number!
+        key : string!
+      }
+      SEND_FAILED {
+        error : string
+        kind : string
+        key : string!
       }
       CHUNK_READ {
         data : string!

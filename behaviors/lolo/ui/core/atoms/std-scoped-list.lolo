@@ -24,13 +24,13 @@ orbital ScopedListOrbital {
       INIT -> listing
         (fetch ScopedListItem {
           emit: { failure: ScopedListLoadFailed, success: ScopedListLoaded }
-          filter: (or (and ["=", (str/default @entity.scopeValue ""), ""] ["=", @config.whenUnscoped, "everything"]) (and ["!=", (str/default @entity.scopeValue ""), ""] ["=", (object/get @entity @config.scopeField), @entity.scopeValue]))
+          filter: (or (and (= (str/default @entity.scopeValue "") "") (= @config.whenUnscoped "everything")) (and (!= (str/default @entity.scopeValue "") "") (= (object/get @entity @config.scopeField) @entity.scopeValue)))
         })
       SET_SCOPE -> listing
         (set @entity.scopeValue ?value)
         (fetch ScopedListItem {
           emit: { failure: ScopedListLoadFailed, success: ScopedListLoaded }
-          filter: (or (and ["=", ?value, ""] ["=", @config.whenUnscoped, "everything"]) (and ["!=", ?value, ""] ["=", (object/get @entity @config.scopeField), ?value]))
+          filter: (or (and (= ?value "") (= @config.whenUnscoped "everything")) (and (!= ?value "") (= (object/get @entity @config.scopeField) ?value)))
         })
       ScopedListLoaded -> listing
         (render-ui main {

@@ -1,0 +1,583 @@
+app std-ecdsa [
+  version: "1.0.0",
+  description: "std-ecdsa — verify an ECDSA P-256 / SHA-256 signature (FIPS 186-4 6.4.2, what JWS ES256 needs) over std-bigint and the hash/sha256 operator. ECDSA_VERIFY { x, y, message, signature } takes the public key coordinates as 32-byte base64 bytes, the message as text and the signature as 64 raw bytes r||s. std-bigint decodes the numbers, orders r and s below n, inverts s mod n and forms u1 = e*w and u2 = r*w mod n. The curve arithmetic is one bounded array/reduce inside a single event, EC_RUN: a register machine over Montgomery field elements (base 2^24, 11 limbs, R = 2^264; p = -1 mod 2^24 so the REDC digit is the low limb). The machine runs a field-op tape from the progs knob: [op, dst, a, b, gate] with op 0 mul, 1 add, 2 sub, 3 copy, 4 clear the infinity flag, and a gate on the scalar bit and the infinity flag. Program 0 converts the key and r to Montgomery form and evaluates y^2 - (x^3 - 3x + b); program 1 is 256 rounds of Jacobian doubling then a bit-gated mixed addition of G and of Q; program 2 forms r*Z^2. valid is true iff the sum is not infinity and X equals r*Z^2. ECDSA_REFUSED { reason } is invalid, length, range, point or bigint. Verify only. An add whose sum equals the point doubles, one that negates it gives infinity, x or y not below p refuses point, and x = r + n is checked when r + n < p."
+]
+uses Spec from "almadar-std/ecdsa"
+
+type EcMachine = { regs : [[number]], inf : boolean, mode : number }
+
+orbital EcdsaOrbital {
+  uses Big from "std/behaviors/std-bigint"
+
+  entity EcdsaRun [runtime] {
+    id : string!
+    msg : string @description "The message being verified." = ""
+    sig : string @description "The signature bytes." = ""
+    xB : string @description "Key x bytes." = ""
+    yB : string @description "Key y bytes." = ""
+    rL : [number] @description "r limbs." = []
+    sL : [number] @description "s limbs." = []
+    xL : [number] @description "Key x limbs." = []
+    yL : [number] @description "Key y limbs." = []
+    wL : [number] @description "s inverse mod n limbs." = []
+    eL : [number] @description "Message hash limbs." = []
+    u1L : [number] @description "u1 limbs." = []
+    b1 : [number] @description "u1 bits, most significant first." = []
+    b2 : [number] @description "u2 bits, most significant first." = []
+    rnOk : boolean @description "Whether r + n is below p, so x may equal r + n." = false
+    ms : EcMachine @description "The register file and the infinity flag." = { regs: [], inf: true, mode: 0 }
+  }
+
+  trait EcBigInt = Big.traits.BigIntCodec {
+    listens {
+      EcdsaVerifier.EC_FROM_BYTES -> FROM_BYTES
+      EcdsaVerifier.EC_COMPARE -> COMPARE
+      EcdsaVerifier.EC_MODINV -> MODINV
+      EcdsaVerifier.EC_MUL -> MUL
+      EcdsaVerifier.EC_MOD -> MOD
+    }
+  }
+
+  trait EcdsaVerifier -> EcdsaRun [integration, instance] {
+    initial: idle
+
+    config {
+      base : number = 16777216
+        @label "Limb base"
+        @description "2^24."
+        @tier "domain"
+      base64Pattern : string = "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/][AQgw]==|[A-Za-z0-9+/]{2}[AEIMQUYcgkosw048]=)?$"
+        @label "Canonical padded base64"
+        @description "The pattern every bytes input must match."
+        @tier "domain"
+      pl : [number] = [16777215, 16777215, 16777215, 16777215, 0, 0, 0, 0, 1, 16776960, 65535]
+        @label "Field prime p"
+        @description "SEC 2 secp256r1 prime 2^256 - 2^224 + 2^192 + 2^96 - 1, 11 limbs."
+        @tier "domain"
+      nl : [number] = [6497617, 13288188, 8713145, 10950558, 15137453, 16777148, 16777215, 16777215, 0, 16776960, 65535]
+        @label "Group order n"
+        @description "SEC 2 secp256r1 order, 11 limbs."
+        @tier "domain"
+      gx : [number] = [1326104, 13899945, 7989040, 15578625, 9829447, 1078714, 7823909, 16479019, 5621345, 7781687, 36959]
+        @label "G.x in Montgomery form"
+        @description "Base point x times R mod p."
+        @tier "domain"
+      gy : [number] = [5638789, 5754517, 14545491, 1696860, 12117045, 2460490, 14492147, 15238792, 6128973, 1616520, 29183]
+        @label "G.y in Montgomery form"
+        @description "Base point y times R mod p."
+        @tier "domain"
+      one : [number] = [256, 0, 0, 0, 16776960, 16777215, 16777215, 16777215, 16776959, 65535, 0]
+        @label "One in Montgomery form"
+        @description "R mod p."
+        @tier "domain"
+      r2 : [number] = [196608, 0, 0, 16776960, 16515071, 16777215, 16777214, 16777215, 16646143, 16777215, 4]
+        @label "R squared mod p"
+        @description "Multiplying a plain value by this in Montgomery form converts it."
+        @tier "domain"
+      bm : [number] = [12443612, 6433220, 14195935, 8663184, 380060, 14068976, 16195886, 10625195, 4731913, 1958023, 12294]
+        @label "Curve b in Montgomery form"
+        @description "b of y^2 = x^3 - 3x + b, times R mod p."
+        @tier "domain"
+      progs : [[[number]]] = [[
+        [0, 5, 5, 19, 0],
+        [0, 6, 6, 19, 0],
+        [0, 18, 18, 19, 0],
+        [0, 21, 21, 19, 0],
+        [0, 8, 6, 6, 0],
+        [0, 9, 5, 5, 0],
+        [0, 9, 9, 5, 0],
+        [1, 10, 5, 5, 0],
+        [1, 10, 10, 5, 0],
+        [2, 9, 9, 10, 0],
+        [1, 9, 9, 20, 0],
+        [2, 11, 8, 9, 0]
+      ],
+[
+        [0, 8, 2, 2, 5],
+        [0, 9, 1, 1, 5],
+        [0, 10, 0, 9, 5],
+        [2, 12, 0, 8, 5],
+        [1, 13, 0, 8, 5],
+        [0, 11, 12, 13, 5],
+        [1, 12, 11, 11, 5],
+        [1, 11, 12, 11, 5],
+        [0, 12, 11, 11, 5],
+        [1, 13, 10, 10, 5],
+        [1, 13, 13, 13, 5],
+        [1, 14, 13, 13, 5],
+        [2, 12, 12, 14, 5],
+        [1, 14, 1, 2, 5],
+        [0, 14, 14, 14, 5],
+        [2, 14, 14, 9, 5],
+        [2, 14, 14, 8, 5],
+        [2, 13, 13, 12, 5],
+        [0, 13, 11, 13, 5],
+        [0, 15, 9, 9, 5],
+        [1, 15, 15, 15, 5],
+        [1, 15, 15, 15, 5],
+        [1, 15, 15, 15, 5],
+        [2, 13, 13, 15, 5],
+        [3, 0, 12, 0, 5],
+        [3, 1, 13, 0, 5],
+        [3, 2, 14, 0, 5],
+        [5, 0, 1, 0, 0],
+        [0, 8, 2, 2, 10],
+        [0, 9, 3, 8, 10],
+        [0, 10, 2, 8, 10],
+        [0, 10, 4, 10, 10],
+        [2, 11, 9, 0, 10],
+        [0, 12, 11, 11, 10],
+        [1, 13, 12, 12, 10],
+        [1, 13, 13, 13, 10],
+        [0, 14, 11, 13, 10],
+        [2, 15, 10, 1, 10],
+        [1, 15, 15, 15, 10],
+        [6, 0, 0, 0, 11],
+        [0, 16, 0, 13, 10],
+        [0, 17, 15, 15, 10],
+        [2, 17, 17, 14, 10],
+        [2, 17, 17, 16, 10],
+        [2, 17, 17, 16, 10],
+        [2, 9, 16, 17, 10],
+        [0, 9, 15, 9, 10],
+        [0, 10, 1, 14, 10],
+        [1, 10, 10, 10, 10],
+        [2, 9, 9, 10, 10],
+        [1, 10, 2, 11, 10],
+        [0, 10, 10, 10, 10],
+        [2, 10, 10, 8, 10],
+        [2, 10, 10, 12, 10],
+        [3, 0, 17, 0, 11],
+        [3, 1, 9, 0, 11],
+        [3, 2, 10, 0, 11],
+        [0, 8, 2, 2, 13],
+        [0, 9, 1, 1, 13],
+        [0, 10, 0, 9, 13],
+        [2, 12, 0, 8, 13],
+        [1, 13, 0, 8, 13],
+        [0, 11, 12, 13, 13],
+        [1, 12, 11, 11, 13],
+        [1, 11, 12, 11, 13],
+        [0, 12, 11, 11, 13],
+        [1, 13, 10, 10, 13],
+        [1, 13, 13, 13, 13],
+        [1, 14, 13, 13, 13],
+        [2, 12, 12, 14, 13],
+        [1, 14, 1, 2, 13],
+        [0, 14, 14, 14, 13],
+        [2, 14, 14, 9, 13],
+        [2, 14, 14, 8, 13],
+        [2, 13, 13, 12, 13],
+        [0, 13, 11, 13, 13],
+        [0, 15, 9, 9, 13],
+        [1, 15, 15, 15, 13],
+        [1, 15, 15, 15, 13],
+        [1, 15, 15, 15, 13],
+        [2, 13, 13, 15, 13],
+        [3, 0, 12, 0, 13],
+        [3, 1, 13, 0, 13],
+        [3, 2, 14, 0, 13],
+        [7, 0, 0, 0, 14],
+        [3, 0, 3, 0, 12],
+        [3, 1, 4, 0, 12],
+        [3, 2, 7, 0, 12],
+        [4, 0, 0, 0, 12],
+        [8, 0, 0, 0, 0],
+        [5, 0, 2, 0, 0],
+        [0, 8, 2, 2, 10],
+        [0, 9, 5, 8, 10],
+        [0, 10, 2, 8, 10],
+        [0, 10, 6, 10, 10],
+        [2, 11, 9, 0, 10],
+        [0, 12, 11, 11, 10],
+        [1, 13, 12, 12, 10],
+        [1, 13, 13, 13, 10],
+        [0, 14, 11, 13, 10],
+        [2, 15, 10, 1, 10],
+        [1, 15, 15, 15, 10],
+        [6, 0, 0, 0, 11],
+        [0, 16, 0, 13, 10],
+        [0, 17, 15, 15, 10],
+        [2, 17, 17, 14, 10],
+        [2, 17, 17, 16, 10],
+        [2, 17, 17, 16, 10],
+        [2, 9, 16, 17, 10],
+        [0, 9, 15, 9, 10],
+        [0, 10, 1, 14, 10],
+        [1, 10, 10, 10, 10],
+        [2, 9, 9, 10, 10],
+        [1, 10, 2, 11, 10],
+        [0, 10, 10, 10, 10],
+        [2, 10, 10, 8, 10],
+        [2, 10, 10, 12, 10],
+        [3, 0, 17, 0, 11],
+        [3, 1, 9, 0, 11],
+        [3, 2, 10, 0, 11],
+        [0, 8, 2, 2, 13],
+        [0, 9, 1, 1, 13],
+        [0, 10, 0, 9, 13],
+        [2, 12, 0, 8, 13],
+        [1, 13, 0, 8, 13],
+        [0, 11, 12, 13, 13],
+        [1, 12, 11, 11, 13],
+        [1, 11, 12, 11, 13],
+        [0, 12, 11, 11, 13],
+        [1, 13, 10, 10, 13],
+        [1, 13, 13, 13, 13],
+        [1, 14, 13, 13, 13],
+        [2, 12, 12, 14, 13],
+        [1, 14, 1, 2, 13],
+        [0, 14, 14, 14, 13],
+        [2, 14, 14, 9, 13],
+        [2, 14, 14, 8, 13],
+        [2, 13, 13, 12, 13],
+        [0, 13, 11, 13, 13],
+        [0, 15, 9, 9, 13],
+        [1, 15, 15, 15, 13],
+        [1, 15, 15, 15, 13],
+        [1, 15, 15, 15, 13],
+        [2, 13, 13, 15, 13],
+        [3, 0, 12, 0, 13],
+        [3, 1, 13, 0, 13],
+        [3, 2, 14, 0, 13],
+        [7, 0, 0, 0, 14],
+        [3, 0, 5, 0, 12],
+        [3, 1, 6, 0, 12],
+        [3, 2, 7, 0, 12],
+        [4, 0, 0, 0, 12],
+        [8, 0, 0, 0, 0]
+      ],
+[
+        [0, 12, 2, 2, 0],
+        [0, 13, 18, 12, 0],
+        [0, 14, 21, 12, 0]
+      ]]
+        @label "Field-op programs"
+        @description "0 prepare and curve check (regs: 5 Qx, 6 Qy, 18 r plain, 19 R2, 20 b; result reg 11 is zero on the curve), 1 the 256-round double and add loop (regs 0-2 the sum, 3-4 G, 5-6 Q, 7 one), 2 reg 13 = r*Z^2 and reg 14 = (r+n)*Z^2. Instruction [op, dst, a, b, gate]: op 0 mul, 1 add, 2 sub, 3 copy, 4 clear infinity, 5 latch the add mode from bit a (1 u1, 2 u2): 0 skip, 1 add, 2 copy the point into an infinite sum; 6 classify an add whose H (reg 11) is zero: 3 the point equals the sum (double), 4 it negates it (infinity); 7 set infinity; 8 reset mode. Gate 0 always, 5 sum finite, 10 mode 1, 3 or 4 (arithmetic), 11 to 14 mode 1 to 4."
+        @tier "domain"
+    }
+
+    state idle {
+      INIT -> idle
+      ECDSA_VERIFY -> idle when (not (and (and (validate/pattern @payload.x @config.base64Pattern) (validate/pattern @payload.y @config.base64Pattern)) (validate/pattern @payload.signature @config.base64Pattern)))
+        (emit ECDSA_REFUSED { reason: "invalid" })
+      ECDSA_VERIFY -> idle when (and (and (and (validate/pattern @payload.x @config.base64Pattern) (validate/pattern @payload.y @config.base64Pattern)) (validate/pattern @payload.signature @config.base64Pattern)) (or (or (!= (bytes/length @payload.x) 32) (!= (bytes/length @payload.y) 32)) (!= (bytes/length @payload.signature) 64)))
+        (emit ECDSA_REFUSED { reason: "length" })
+      ECDSA_VERIFY -> decR when (and (and (and (validate/pattern @payload.x @config.base64Pattern) (validate/pattern @payload.y @config.base64Pattern)) (validate/pattern @payload.signature @config.base64Pattern)) (not (or (or (!= (bytes/length @payload.x) 32) (!= (bytes/length @payload.y) 32)) (!= (bytes/length @payload.signature) 64))))
+        (set @entity.msg @payload.message)
+        (set @entity.sig @payload.signature)
+        (set @entity.xB @payload.x)
+        (set @entity.yB @payload.y)
+        (emit EC_FROM_BYTES { data: (bytes/slice @payload.signature 0 32) })
+    }
+
+    state decR {
+      INIT -> idle
+      BIG_DECODED -> decS when (> (array/len @payload.value) 0)
+        (set @entity.rL @payload.value)
+        (emit EC_FROM_BYTES { data: (bytes/slice @entity.sig 32 64) })
+      BIG_DECODED -> idle when (== (array/len @payload.value) 0)
+        (emit ECDSA_REFUSED { reason: "range" })
+      BIG_REFUSED -> idle
+        (emit ECDSA_REFUSED { reason: "bigint" })
+    }
+
+    state decS {
+      INIT -> idle
+      BIG_DECODED -> decX when (> (array/len @payload.value) 0)
+        (set @entity.sL @payload.value)
+        (emit EC_FROM_BYTES { data: (bytes/slice @entity.xB 0 32) })
+      BIG_DECODED -> idle when (== (array/len @payload.value) 0)
+        (emit ECDSA_REFUSED { reason: "range" })
+      BIG_REFUSED -> idle
+        (emit ECDSA_REFUSED { reason: "bigint" })
+    }
+
+    state decX {
+      INIT -> idle
+      BIG_DECODED -> decY
+        (set @entity.xL @payload.value)
+        (emit EC_FROM_BYTES { data: (bytes/slice @entity.yB 0 32) })
+      BIG_REFUSED -> idle
+        (emit ECDSA_REFUSED { reason: "bigint" })
+    }
+
+    state decY {
+      INIT -> idle
+      BIG_DECODED -> idle when (or (array/reduce (array/range 0 11) true (fn acc i (let ((a (if (< @i (array/len @entity.xL)) (array/nth @entity.xL @i) 0))) (if (!= @a (array/nth @config.pl @i)) (> @a (array/nth @config.pl @i)) @acc)))) (array/reduce (array/range 0 11) true (fn acc i (let ((a (if (< @i (array/len @payload.value)) (array/nth @payload.value @i) 0))) (if (!= @a (array/nth @config.pl @i)) (> @a (array/nth @config.pl @i)) @acc)))))
+        (emit ECDSA_REFUSED { reason: "point" })
+      BIG_DECODED -> cmpR when (not (or (array/reduce (array/range 0 11) true (fn acc i (let ((a (if (< @i (array/len @entity.xL)) (array/nth @entity.xL @i) 0))) (if (!= @a (array/nth @config.pl @i)) (> @a (array/nth @config.pl @i)) @acc)))) (array/reduce (array/range 0 11) true (fn acc i (let ((a (if (< @i (array/len @payload.value)) (array/nth @payload.value @i) 0))) (if (!= @a (array/nth @config.pl @i)) (> @a (array/nth @config.pl @i)) @acc))))))
+        (set @entity.yL @payload.value)
+        (emit EC_COMPARE { a: @entity.rL, b: @config.nl })
+      BIG_REFUSED -> idle
+        (emit ECDSA_REFUSED { reason: "bigint" })
+    }
+
+    state cmpR {
+      INIT -> idle
+      BIG_COMPARED -> cmpS when (== @payload.value -1)
+        (emit EC_COMPARE { a: @entity.sL, b: @config.nl })
+      BIG_COMPARED -> idle when (!= @payload.value -1)
+        (emit ECDSA_REFUSED { reason: "range" })
+      BIG_REFUSED -> idle
+        (emit ECDSA_REFUSED { reason: "bigint" })
+    }
+
+    state cmpS {
+      INIT -> idle
+      BIG_COMPARED -> inv when (== @payload.value -1)
+        (emit EC_MODINV { a: @entity.sL, m: @config.nl })
+      BIG_COMPARED -> idle when (!= @payload.value -1)
+        (emit ECDSA_REFUSED { reason: "range" })
+      BIG_REFUSED -> idle
+        (emit ECDSA_REFUSED { reason: "bigint" })
+    }
+
+    state inv {
+      INIT -> idle
+      BIG_INVERTED -> decE
+        (set @entity.wL @payload.value)
+        (emit EC_FROM_BYTES { data: (bytes/slice (hash/sha256 @entity.msg "base64") 0 32) })
+      BIG_REFUSED -> idle
+        (emit ECDSA_REFUSED { reason: "bigint" })
+    }
+
+    state decE {
+      INIT -> idle
+      BIG_DECODED -> mul1
+        (set @entity.eL @payload.value)
+        (emit EC_MUL { a: @payload.value, b: @entity.wL })
+      BIG_REFUSED -> idle
+        (emit ECDSA_REFUSED { reason: "bigint" })
+    }
+
+    state mul1 {
+      INIT -> idle
+      BIG_MULTIPLIED -> mod1
+        (emit EC_MOD { a: @payload.value, b: @config.nl })
+      BIG_REFUSED -> idle
+        (emit ECDSA_REFUSED { reason: "bigint" })
+    }
+
+    state mod1 {
+      INIT -> idle
+      BIG_REMAINDER -> mul2
+        (set @entity.u1L @payload.value)
+        (emit EC_MUL { a: @entity.rL, b: @entity.wL })
+      BIG_REFUSED -> idle
+        (emit ECDSA_REFUSED { reason: "bigint" })
+    }
+
+    state mul2 {
+      INIT -> idle
+      BIG_MULTIPLIED -> mod2
+        (emit EC_MOD { a: @payload.value, b: @config.nl })
+      BIG_REFUSED -> idle
+        (emit ECDSA_REFUSED { reason: "bigint" })
+    }
+
+    state mod2 {
+      INIT -> run
+      BIG_REMAINDER -> run
+        (set @entity.b1 (array/map (array/range 0 256) (fn i (let ((pos (- 255 @i))) (let ((li (math/floor (/ @pos 24)))) (math/mod (math/floor (/ (if (< @li (array/len @entity.u1L)) (array/nth @entity.u1L @li) 0) (math/pow 2 (math/mod @pos 24)))) 2))))))
+        (set @entity.b2 (array/map (array/range 0 256) (fn i (let ((pos (- 255 @i))) (let ((li (math/floor (/ @pos 24)))) (math/mod (math/floor (/ (if (< @li (array/len @payload.value)) (array/nth @payload.value @li) 0) (math/pow 2 (math/mod @pos 24)))) 2))))))
+        (set @entity.rnOk (let ((rn (object/get (array/reduce (array/range 0 12) { out: (array/range 0 0) c: 0 } (fn acc i (let ((v (+ (if (< @i 11) (+ (if (< @i (array/len @entity.rL)) (array/nth @entity.rL @i) 0) (array/nth @config.nl @i)) 0) @acc.c))) { out: (array/append @acc.out (math/mod @v @config.base)), c: (math/floor (/ @v @config.base)) }))) "out"))) (and (== (array/nth @rn 11) 0) (array/reduce (array/range 0 11) false (fn acc i (if (!= (array/nth @rn @i) (array/nth @config.pl @i)) (< (array/nth @rn @i) (array/nth @config.pl @i)) @acc))))))
+        (set @entity.ms { regs: [[0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0], @config.gx, @config.gy, (array/map (array/range 0 11) (fn i (if (< @i (array/len @entity.xL)) (array/nth @entity.xL @i) 0))), (array/map (array/range 0 11) (fn i (if (< @i (array/len @entity.yL)) (array/nth @entity.yL @i) 0))), @config.one, [0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0], (array/map (array/range 0 11) (fn i (if (< @i (array/len @entity.rL)) (array/nth @entity.rL @i) 0))), @config.r2, @config.bm, (array/slice (object/get (array/reduce (array/range 0 12) { out: (array/range 0 0) c: 0 } (fn acc i (let ((v (+ (if (< @i 11) (+ (if (< @i (array/len @entity.rL)) (array/nth @entity.rL @i) 0) (array/nth @config.nl @i)) 0) @acc.c))) { out: (array/append @acc.out (math/mod @v @config.base)), c: (math/floor (/ @v @config.base)) }))) "out") 0 11)], inf: true, mode: 0 })
+        (emit EC_RUN { prog: 0 })
+      BIG_REFUSED -> idle
+        (emit ECDSA_REFUSED { reason: "bigint" })
+    }
+
+    state run {
+      INIT -> idle
+      EC_RUN -> run
+        (set @entity.ms
+          (let ((tape (array/nth @config.progs @payload.prog)))
+            (let ((len (array/len @tape)))
+              (array/reduce
+                (array/range 0 (* (if (== @payload.prog 1) 256 1) @len))
+                @entity.ms
+                (fn st k
+                  (let ((ins (array/nth @tape (math/mod @k @len)))
+                        (t (math/floor (/ @k @len))))
+                    (let ((op (array/nth @ins 0))
+                          (d (array/nth @ins 1))
+                          (a (array/nth @ins 2))
+                          (b (array/nth @ins 3))
+                          (g (array/nth @ins 4)))
+                      (if
+                        (if (== @g 0)
+                          true
+                          (if (== @g 5)
+                            (not @st.inf)
+                            (if (== @g 10)
+                              (and (> @st.mode 0) (!= @st.mode 2))
+                              (== @st.mode (- @g 10)))))
+                        (if (>= @op 4)
+                          (if (== @op 4)
+                            { regs: @st.regs, inf: false, mode: @st.mode }
+                            (if (== @op 5)
+                              { regs: @st.regs, inf: @st.inf, mode: (if (== (array/nth (if (== @a 1) @entity.b1 @entity.b2) @t) 1) (if @st.inf 2 1) 0) }
+                              (if (== @op 6)
+                                { regs: @st.regs, inf: @st.inf, mode: (if (array/every (array/nth @st.regs 11) (fn l (== @l 0))) (if (array/every (array/nth @st.regs 15) (fn l (== @l 0))) 3 4) @st.mode) }
+                                (if (== @op 7)
+                                  { regs: @st.regs, inf: true, mode: @st.mode }
+                                  { regs: @st.regs, inf: @st.inf, mode: 0 }))))
+                          (let ((ra (array/nth @st.regs @a))
+                                (rb (array/nth @st.regs @b)))
+                            (let ((val (if (== @op 3)
+                                         @ra
+                                         (let ((tv (if (== @op 0)
+                                                     (let ((cols (array/map
+                                                                   (array/range 0 22)
+                                                                   (fn kk
+                                                                     (array/reduce
+                                                                       (array/range 0 11)
+                                                                       { lo: 0 hi: 0 }
+                                                                       (fn s i
+                                                                         (let ((j (- @kk @i)))
+                                                                           (if (and (>= @j 0) (< @j 11))
+                                                                             (let ((pp (* (array/nth @ra @i) (array/nth @rb @j))))
+                                                                               { lo: (+ @s.lo (math/mod @pp @config.base)), hi: (+ @s.hi (math/floor (/ @pp @config.base))) })
+                                                                             @s))))))))
+                                                       (let ((tt (object/get
+                                                                   (array/reduce
+                                                                     (array/range 0 23)
+                                                                     { out: (array/range 0 0) c: 0 }
+                                                                     (fn acc i
+                                                                       (let ((v (+ (+ (if (< @i 22) (object/get (array/nth @cols @i) "lo") 0) (if (> @i 0) (object/get (array/nth @cols (- @i 1)) "hi") 0)) @acc.c)))
+                                                                         { out: (array/append @acc.out (math/mod @v @config.base)), c: (math/floor (/ @v @config.base)) })))
+                                                                   "out")))
+                                                         (array/reduce
+                                                           (array/range 0 11)
+                                                           @tt
+                                                           (fn t0 ii
+                                                             (let ((m (array/nth @t0 0)))
+                                                               (array/append
+                                                                 (array/slice
+                                                                   (object/get
+                                                                     (array/reduce
+                                                                       (array/range 0 23)
+                                                                       { out: (array/range 0 0) c: 0 }
+                                                                       (fn acc j
+                                                                         (let ((v (+ (+ (array/nth @t0 @j) (if (< @j 11) (* @m (array/nth @config.pl @j)) 0)) @acc.c)))
+                                                                           { out: (array/append @acc.out (math/mod @v @config.base)), c: (math/floor (/ @v @config.base)) })))
+                                                                     "out")
+                                                                   1
+                                                                   23)
+                                                                 0))))))
+                                                     (let ((bb (if (== @op 2)
+                                                                 (object/get
+                                                                   (array/reduce
+                                                                     (array/range 0 11)
+                                                                     { out: (array/range 0 0) br: 0 }
+                                                                     (fn acc j
+                                                                       (let ((v (- (- (array/nth @config.pl @j) (array/nth @rb @j)) @acc.br)))
+                                                                         { out: (array/append @acc.out (if (< @v 0) (+ @v @config.base) @v)), br: (if (< @v 0) 1 0) })))
+                                                                   "out")
+                                                                 @rb)))
+                                                       (object/get
+                                                         (array/reduce
+                                                           (array/range 0 12)
+                                                           { out: (array/range 0 0) c: 0 }
+                                                           (fn acc j
+                                                             (let ((v (+ (if (< @j 11) (+ (array/nth @ra @j) (array/nth @bb @j)) 0) @acc.c)))
+                                                               { out: (array/append @acc.out (math/mod @v @config.base)), c: (math/floor (/ @v @config.base)) })))
+                                                         "out")))))
+                                           (let ((dd (array/reduce
+                                                       (array/range 0 12)
+                                                       { out: (array/range 0 0) br: 0 }
+                                                       (fn acc j
+                                                         (let ((v (- (- (array/nth @tv @j) (if (< @j 11) (array/nth @config.pl @j) 0)) @acc.br)))
+                                                           { out: (array/append @acc.out (if (< @v 0) (+ @v @config.base) @v)), br: (if (< @v 0) 1 0) }))))) 
+                                             (array/slice (if (== @dd.br 0) @dd.out @tv) 0 11))))))
+                              { regs: (array/map (array/range 0 22) (fn i (if (== @i @d) @val (array/nth @st.regs @i)))), inf: @st.inf, mode: @st.mode })))
+                        @st))))))))
+        (emit EC_DONE { prog: @payload.prog })
+      EC_DONE -> run when (and (== @payload.prog 0) (not (array/every (array/nth @entity.ms.regs 11) (fn l (== @l 0)))))
+        (emit ECDSA_REFUSED { reason: "point" })
+      EC_DONE -> run when (and (== @payload.prog 0) (array/every (array/nth @entity.ms.regs 11) (fn l (== @l 0))))
+        (emit EC_RUN { prog: 1 })
+      EC_DONE -> run when (== @payload.prog 1)
+        (emit EC_RUN { prog: 2 })
+      EC_DONE -> idle when (== @payload.prog 2)
+        (emit ECDSA_VERIFIED { valid: (and (not @entity.ms.inf) (or (== (array/sum (array/map (array/range 0 11) (fn i (math/abs (- (array/nth (array/nth @entity.ms.regs 0) @i) (array/nth (array/nth @entity.ms.regs 13) @i)))))) 0) (and @entity.rnOk (== (array/sum (array/map (array/range 0 11) (fn i (math/abs (- (array/nth (array/nth @entity.ms.regs 0) @i) (array/nth (array/nth @entity.ms.regs 14) @i)))))) 0)))) })
+    }
+
+    emits {
+      ECDSA_VERIFIED -> external {
+        valid : boolean!
+      }
+        @description "The signature verdict."
+        @tier "primary"
+      ECDSA_REFUSED -> external {
+        reason : string!
+      }
+        @description "The verification could not run: invalid, length, range, point or bigint."
+        @tier "primary"
+      EC_FROM_BYTES -> external {
+        data : bytes!
+      }
+        @tier "internal"
+      EC_COMPARE -> external {
+        a : [number]!
+        b : [number]!
+      }
+        @tier "internal"
+      EC_MODINV -> external {
+        a : [number]!
+        m : [number]!
+      }
+        @tier "internal"
+      EC_MUL -> external {
+        a : [number]!
+        b : [number]!
+      }
+        @tier "internal"
+      EC_MOD -> external {
+        a : [number]!
+        b : [number]!
+      }
+        @tier "internal"
+      EC_RUN -> internal {
+        prog : number!
+      }
+        @description "Internal: run a field-op program."
+        @tier "internal"
+      EC_DONE -> internal {
+        prog : number!
+      }
+        @description "Internal: a field-op program finished."
+        @tier "internal"
+    }
+
+    listens {
+      ECDSA_VERIFY {
+        x : string!
+        y : string!
+        message : string!
+        signature : string!
+      }
+        @description "Verify an ES256 signature: key coordinates and signature as base64 bytes, message as text."
+        @synonyms "verify ecdsa, check es256"
+      BIG_DECODED { value : [number]! }
+        @description "Internal: std-bigint answered."
+      EcBigInt.FROM_BYTES_ANSWERED -> BIG_DECODED
+      BIG_COMPARED { value : number! }
+        @description "Internal: std-bigint answered."
+      EcBigInt.COMPARE_ANSWERED -> BIG_COMPARED
+      BIG_INVERTED { value : [number]! }
+        @description "Internal: std-bigint answered."
+      EcBigInt.MODINV_ANSWERED -> BIG_INVERTED
+      BIG_MULTIPLIED { value : [number]! }
+        @description "Internal: std-bigint answered."
+      EcBigInt.MUL_ANSWERED -> BIG_MULTIPLIED
+      BIG_REMAINDER { value : [number]! }
+        @description "Internal: std-bigint answered."
+      EcBigInt.MOD_ANSWERED -> BIG_REMAINDER
+      EcBigInt.BIGINT_REFUSED -> BIG_REFUSED
+    }
+  }
+
+  page "/ecdsa" as EcdsaPage -> EcdsaVerifier, EcBigInt
+}

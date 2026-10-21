@@ -42,11 +42,11 @@ orbital StatsItemOrbital {
           value: (object/get @metric value 0)
           variant: (object/get @metric variant default)
         })))
-        (if ["=", @config.statsLook, kpi-tiles]
+        (if (= @config.statsLook kpi-tiles)
           (render-ui main @config.kpiTilesBodyContent)
-          (if ["=", @config.statsLook, hero-metric]
+          (if (= @config.statsLook hero-metric)
             (render-ui main @config.heroMetricBodyContent)
-            (if ["=", @config.statsLook, sparkline-row]
+            (if (= @config.statsLook sparkline-row)
               (render-ui main @config.sparklineRowBodyContent)
               (render-ui main @config.bodyContent))))
       ;; Pre-seed cards from @config.metrics so the atom renders a
@@ -66,17 +66,17 @@ orbital StatsItemOrbital {
           sparklineData: (object/get @metric sparklineData [])
           suffix: (object/get @metric suffix "")
           target: (object/get @metric target 0)
-          trend: (if ["=", (object/get @metric aggregation count), variance] ["-", (array/sum (array/filter ?data (object/get @metric filter true)) (object/get @metric field "")), (array/sum (array/filter ?data (object/get @metric baselineFilter true)) (object/get @metric field ""))] (object/get @metric trend))
+          trend: (if (= (object/get @metric aggregation count) variance) (- (array/sum (array/filter ?data (object/get @metric filter true)) (object/get @metric field "")) (array/sum (array/filter ?data (object/get @metric baselineFilter true)) (object/get @metric field ""))) (object/get @metric trend))
           trendFormat: (object/get @metric trendFormat absolute)
           trendPolarity: (object/get @metric trendPolarity higher-is-better)
-          value: (if ["=", (object/get @metric aggregation count), sum] (array/sum (array/filter ?data (object/get @metric filter true)) (object/get @metric field "")) (if ["=", (object/get @metric aggregation count), avg] (array/avg (array/filter ?data (object/get @metric filter true)) (object/get @metric field "")) (if ["=", (object/get @metric aggregation count), min] (array/min (array/filter ?data (object/get @metric filter true)) (object/get @metric field "")) (if ["=", (object/get @metric aggregation count), max] (array/max (array/filter ?data (object/get @metric filter true)) (object/get @metric field "")) (if ["=", (object/get @metric aggregation count), variance] (array/sum (array/filter ?data (object/get @metric filter true)) (object/get @metric field "")) (array/len (array/filter ?data (object/get @metric filter true))))))))
+          value: (if (= (object/get @metric aggregation count) sum) (array/sum (array/filter ?data (object/get @metric filter true)) (object/get @metric field "")) (if (= (object/get @metric aggregation count) avg) (array/avg (array/filter ?data (object/get @metric filter true)) (object/get @metric field "")) (if (= (object/get @metric aggregation count) min) (array/min (array/filter ?data (object/get @metric filter true)) (object/get @metric field "")) (if (= (object/get @metric aggregation count) max) (array/max (array/filter ?data (object/get @metric filter true)) (object/get @metric field "")) (if (= (object/get @metric aggregation count) variance) (array/sum (array/filter ?data (object/get @metric filter true)) (object/get @metric field "")) (array/len (array/filter ?data (object/get @metric filter true))))))))
           variant: (object/get @metric variant default)
         })))
-        (if ["=", @config.statsLook, kpi-tiles]
+        (if (= @config.statsLook kpi-tiles)
           (render-ui main @config.kpiTilesBodyContent)
-          (if ["=", @config.statsLook, hero-metric]
+          (if (= @config.statsLook hero-metric)
             (render-ui main @config.heroMetricBodyContent)
-            (if ["=", @config.statsLook, sparkline-row]
+            (if (= @config.statsLook sparkline-row)
               (render-ui main @config.sparklineRowBodyContent)
               (render-ui main @config.bodyContent))))
     }
@@ -145,7 +145,7 @@ orbital StatsItemOrbital {
         @label "Stats look"
         @description "Layer 3 body layout: default per-metric stat-card grid ('cards'), Stripe-dashboard KPI tile row ('kpi-tiles'), single oversize hero number ('hero-metric'), or chart-first sparkline tile grid ('sparkline-row')."
         @tier "presentation"
-      bodyContent : render-ui = { data-theme: @config.theme, type: box, children: [(if ["!=", @config.title, ""] { content: @config.title, type: typography, variant: h3 } { children: [], gap: none, type: stack }), {
+      bodyContent : render-ui = { data-theme: @config.theme, type: box, children: [(if (!= @config.title "") { content: @config.title, type: typography, variant: h3 } { children: [], gap: none, type: stack }), {
         entity: @entity.cards
         fields: []
         renderItem: (fn card {
@@ -171,7 +171,7 @@ orbital StatsItemOrbital {
         @label "Body content tree"
         @description "Render-ui SExpr rendered after metrics aggregate for statsLook='cards' — the canonical data-grid call mapping @entity.cards through stat-display. Other statsLook values render kpiTilesBodyContent / heroMetricBodyContent / sparklineRowBodyContent instead; all four share this trait's state machine, aggregation pipeline, and listens."
         @tier "internal"
-      kpiTilesBodyContent : render-ui = { data-theme: @config.theme, type: box, children: [(if ["!=", @config.title, ""] { content: @config.title, type: typography, variant: h3 } { children: [], gap: none, type: stack }), {
+      kpiTilesBodyContent : render-ui = { data-theme: @config.theme, type: box, children: [(if (!= @config.title "") { content: @config.title, type: typography, variant: h3 } { children: [], gap: none, type: stack }), {
         className: w-full
         entity: @entity.cards
         fields: []
@@ -247,7 +247,7 @@ orbital StatsItemOrbital {
         @label "KPI tiles body content tree"
         @description "Render-ui SExpr for statsLook='kpi-tiles' — Stripe-dashboard style tile grid: huge typography number, label, trend indicator, sparkline hint."
         @tier "internal"
-      heroMetricBodyContent : render-ui = { data-theme: @config.theme, type: box, children: [(if ["!=", @config.title, ""] { content: @config.title, type: typography, variant: h3 } { children: [], gap: none, type: stack }), {
+      heroMetricBodyContent : render-ui = { data-theme: @config.theme, type: box, children: [(if (!= @config.title "") { content: @config.title, type: typography, variant: h3 } { children: [], gap: none, type: stack }), {
         entity: @entity.cards
         fields: []
         gap: none
@@ -332,7 +332,7 @@ orbital StatsItemOrbital {
         @label "Hero metric body content tree"
         @description "Render-ui SExpr for statsLook='hero-metric' — one elevated card, one oversize number, background sparkline."
         @tier "internal"
-      sparklineRowBodyContent : render-ui = { data-theme: @config.theme, type: box, children: [(if ["!=", @config.title, ""] { content: @config.title, type: typography, variant: h3 } { children: [], gap: none, type: stack }), {
+      sparklineRowBodyContent : render-ui = { data-theme: @config.theme, type: box, children: [(if (!= @config.title "") { content: @config.title, type: typography, variant: h3 } { children: [], gap: none, type: stack }), {
         className: w-full
         entity: @entity.cards
         fields: []

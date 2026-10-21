@@ -29,9 +29,9 @@ orbital LifecycleOrbital {
 
     state idle {
       INIT -> idle
-      ScanRecordsLoaded -> idle when (and @config.enabled @config.dryRun [">", (array/len ?data), 0])
+      ScanRecordsLoaded -> idle when (and @config.enabled @config.dryRun (> (array/len ?data) 0))
         (notify info (str/concat "Dry run — " (array/len ?data) " record(s) would transition, nothing was written."))
-      ScanRecordsLoaded -> scanning when (and @config.enabled (not @config.dryRun) [">", (array/len ?data), 0])
+      ScanRecordsLoaded -> scanning when (and @config.enabled (not @config.dryRun) (> (array/len ?data) 0))
         @ensures (= @entity.headStatus @config.toStatus)
         (set @entity.headId (object/get (array/first ?data) id))
         (set @entity.headStatus @config.toStatus)
@@ -39,7 +39,7 @@ orbital LifecycleOrbital {
         (persist update @config.targetEntity { id: @entity.headId, status: @entity.headStatus } {
           emit: { failure: ScanFailed, success: LifecycleStepped }
         })
-      ScanRecordsLoaded -> idle when ["=", (array/len ?data), 0]
+      ScanRecordsLoaded -> idle when (= (array/len ?data) 0)
       ScanFailed -> idle
         (notify error (str/concat "Couldn't scan for lifecycle transitions — " ?error))
     }
@@ -48,9 +48,9 @@ orbital LifecycleOrbital {
       LifecycleStepped -> scanning
         (fetch @config.targetEntity {
           emit: { failure: ScanFailed, success: ScanRecordsLoaded }
-          filter: (and ["=", (object/get @entity status), @config.fromStatus] ["<", (object/get @entity @config.dateField), ["-", @now, ["*", @config.ageDays, 86400000]]])
+          filter: (and (= (object/get @entity status) @config.fromStatus) (< (object/get @entity @config.dateField) (- @now (* @config.ageDays 86400000))))
         })
-      ScanRecordsLoaded -> scanning when [">", (array/len ?data), 0]
+      ScanRecordsLoaded -> scanning when (> (array/len ?data) 0)
         @ensures (= @entity.headStatus @config.toStatus)
         (set @entity.headId (object/get (array/first ?data) id))
         (set @entity.headStatus @config.toStatus)
@@ -58,7 +58,7 @@ orbital LifecycleOrbital {
         (persist update @config.targetEntity { id: @entity.headId, status: @entity.headStatus } {
           emit: { failure: ScanFailed, success: LifecycleStepped }
         })
-      ScanRecordsLoaded -> idle when ["=", (array/len ?data), 0]
+      ScanRecordsLoaded -> idle when (= (array/len ?data) 0)
       ScanFailed -> idle
         (notify error (str/concat "Couldn't scan for lifecycle transitions — " ?error))
     }
@@ -97,7 +97,7 @@ orbital LifecycleOrbital {
       scanCycle every "0 * * * *" [background]
         (fetch @config.targetEntity {
           emit: { failure: ScanFailed, success: ScanRecordsLoaded }
-          filter: (and ["=", (object/get @entity status), @config.fromStatus] ["<", (object/get @entity @config.dateField), ["-", @now, ["*", @config.ageDays, 86400000]]])
+          filter: (and (= (object/get @entity status) @config.fromStatus) (< (object/get @entity @config.dateField) (- @now (* @config.ageDays 86400000))))
         })
       
     }

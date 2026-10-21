@@ -44,7 +44,7 @@ orbital RecordItemOrbital {
     initial: idle
 
     state idle {
-      INIT -> loading when (and ["=", @config.openOn, "init"] ["!=", (str/default ?id ""), ""])
+      INIT -> loading when (and (= @config.openOn "init") (!= (str/default ?id "") ""))
         (set @entity.id ?id)
         (set @entity.openDraft (str/default ?draft ""))
         (fetch RecordItem {
@@ -56,11 +56,11 @@ orbital RecordItemOrbital {
       ;; Slug-routed open (/things/:slug): no id on the payload, so fetch by
       ;; the slug field instead. Filtered rather than by-id, so the success
       ;; payload is a collection — its own event keeps the two shapes honest.
-      INIT -> loading when (and ["=", @config.openOn, "init"] ["=", (str/default ?id ""), ""] ["!=", (str/default ?slug ""), ""])
+      INIT -> loading when (and (= @config.openOn "init") (= (str/default ?id "") "") (!= (str/default ?slug "") ""))
         (set @entity.slug ?slug)
         (set @entity.openDraft (str/default ?draft ""))
         (fetch RecordItem {
-          filter: ["=", (object/get @entity slug), ?slug]
+          filter: (= (object/get @entity slug) ?slug)
           emit: { failure: RecordItemLoadFailed, success: RecordItemSlugLoaded }
           include: @config.include
         })
@@ -69,7 +69,7 @@ orbital RecordItemOrbital {
       ;; fetch by the (missing) id so the failure surfaces as the error
       ;; state's alert + Retry instead of a silent blank page. This is the
       ;; pre-slug atom's exact behavior, kept as the explicit last arm.
-      INIT -> loading when (and ["=", @config.openOn, "init"] ["=", (str/default ?id ""), ""] ["=", (str/default ?slug ""), ""])
+      INIT -> loading when (and (= @config.openOn "init") (= (str/default ?id "") "") (= (str/default ?slug "") ""))
         (set @entity.openDraft (str/default ?draft ""))
         (fetch RecordItem {
           emit: { failure: RecordItemLoadFailed, success: RecordItemLoaded }
@@ -81,7 +81,7 @@ orbital RecordItemOrbital {
       ;; but renders the blank EXPLICITLY — an embedded @trait.X reference to
       ;; a trait with no indexed content is flagged by the compiled client's
       ;; render probe (trait_bindings_resolved).
-      INIT -> idle when ["=", @config.openOn, "event"]
+      INIT -> idle when (= @config.openOn "event")
         (render-ui main null)
       ;; self-loops on the external emits so the validator sees in-atom
       ;; listeners — the real consumers are the composing organism's
@@ -112,7 +112,7 @@ orbital RecordItemOrbital {
     }
 
     state loading {
-      INIT -> loading when ["!=", (str/default ?id ""), ""]
+      INIT -> loading when (!= (str/default ?id "") "")
         (set @entity.id ?id)
         (set @entity.openDraft (str/default ?draft ""))
         (fetch RecordItem {
@@ -123,11 +123,11 @@ orbital RecordItemOrbital {
         ;; Skeleton, not a blank frame: the hand-authored detail traits this
         ;; atom replaces rendered nothing until the record arrived.
         (render-ui main @config.loadingContent)
-      INIT -> loading when (and ["=", (str/default ?id ""), ""] ["!=", (str/default ?slug ""), ""])
+      INIT -> loading when (and (= (str/default ?id "") "") (!= (str/default ?slug "") ""))
         (set @entity.slug ?slug)
         (set @entity.openDraft (str/default ?draft ""))
         (fetch RecordItem {
-          filter: ["=", (object/get @entity slug), ?slug]
+          filter: (= (object/get @entity slug) ?slug)
           emit: { failure: RecordItemLoadFailed, success: RecordItemSlugLoaded }
           include: @config.include
         })
@@ -136,57 +136,57 @@ orbital RecordItemOrbital {
       ;; draft=1 and lands straight in the editor — a distinct target state,
       ;; not a flag on the render, so the machine stays honest about being
       ;; in an editing session.
-      RecordItemLoaded -> editing when (and ["=", @config.detailLook, document] ["=", (str/default (object/get @entity openDraft) ""), "1"])
+      RecordItemLoaded -> editing when (and (= @config.detailLook document) (= (str/default (object/get @entity openDraft) "") "1"))
         ;; (object/merge … {}) is a type adapter only: type_compat lacks "declared object accepts a named row type" (ledgered)
         (set @entity.loadedRow (object/merge ?data {}))
         (set @entity.id (object/get ?data id))
-        (set @entity.name (if [">", (array/len @config.titleFields), 0] (str/join (array/map @config.titleFields (fn f (str/default (object/get ?data @f) ""))) " ") (object/get ?data @config.titleField)))
+        (set @entity.name (if (> (array/len @config.titleFields) 0) (str/join (array/map @config.titleFields (fn f (str/default (object/get ?data @f) ""))) " ") (object/get ?data @config.titleField)))
         (set @entity.description (str/default (object/get ?data @config.subtitleField) ""))
         (set @entity.content (object/get ?data @config.contentField))
         (set @entity.coverUrl (str/default (object/get ?data @config.coverField) ""))
         (set @entity.iconName (str/default (object/get ?data @config.iconField) ""))
         (render-ui main @config.documentEditingContent)
-      RecordItemLoaded -> viewing when (or ["!=", @config.detailLook, document] ["!=", (str/default (object/get @entity openDraft) ""), "1"])
+      RecordItemLoaded -> viewing when (or (!= @config.detailLook document) (!= (str/default (object/get @entity openDraft) "") "1"))
         ;; (object/merge … {}) is a type adapter only: type_compat lacks "declared object accepts a named row type" (ledgered)
         (set @entity.loadedRow (object/merge ?data {}))
         (set @entity.id (object/get ?data id))
-        (set @entity.name (if [">", (array/len @config.titleFields), 0] (str/join (array/map @config.titleFields (fn f (str/default (object/get ?data @f) ""))) " ") (object/get ?data @config.titleField)))
+        (set @entity.name (if (> (array/len @config.titleFields) 0) (str/join (array/map @config.titleFields (fn f (str/default (object/get ?data @f) ""))) " ") (object/get ?data @config.titleField)))
         (set @entity.description (str/default (object/get ?data @config.subtitleField) ""))
         (set @entity.content (object/get ?data @config.contentField))
         (set @entity.coverUrl (str/default (object/get ?data @config.coverField) ""))
         (set @entity.iconName (str/default (object/get ?data @config.iconField) ""))
-        (if ["=", @config.detailLook, document]
+        (if (= @config.detailLook document)
           (render-ui main @config.documentBodyContent)
-          (if ["=", @config.detailLook, slide-over]
+          (if (= @config.detailLook slide-over)
             (render-ui main @config.slideOverBodyContent)
-            (if ["=", @config.detailLook, page]
+            (if (= @config.detailLook page)
               (render-ui main @config.pageBodyContent)
               (render-ui main @config.bodyContent))))
-      RecordItemSlugLoaded -> editing when (and [">", (array/len ?data), 0] ["=", @config.detailLook, document] ["=", (str/default (object/get @entity openDraft) ""), "1"])
+      RecordItemSlugLoaded -> editing when (and (> (array/len ?data) 0) (= @config.detailLook document) (= (str/default (object/get @entity openDraft) "") "1"))
         (set @entity.loadedRow (array/first ?data))
         (set @entity.id (object/get (array/first ?data) id))
-        (set @entity.name (if [">", (array/len @config.titleFields), 0] (str/join (array/map @config.titleFields (fn f (str/default (object/get (array/first ?data) @f) ""))) " ") (object/get (array/first ?data) @config.titleField)))
+        (set @entity.name (if (> (array/len @config.titleFields) 0) (str/join (array/map @config.titleFields (fn f (str/default (object/get (array/first ?data) @f) ""))) " ") (object/get (array/first ?data) @config.titleField)))
         (set @entity.description (str/default (object/get (array/first ?data) @config.subtitleField) ""))
         (set @entity.content (object/get (array/first ?data) @config.contentField))
         (set @entity.coverUrl (str/default (object/get (array/first ?data) @config.coverField) ""))
         (set @entity.iconName (str/default (object/get (array/first ?data) @config.iconField) ""))
         (render-ui main @config.documentEditingContent)
-      RecordItemSlugLoaded -> viewing when (and [">", (array/len ?data), 0] (or ["!=", @config.detailLook, document] ["!=", (str/default (object/get @entity openDraft) ""), "1"]))
+      RecordItemSlugLoaded -> viewing when (and (> (array/len ?data) 0) (or (!= @config.detailLook document) (!= (str/default (object/get @entity openDraft) "") "1")))
         (set @entity.loadedRow (array/first ?data))
         (set @entity.id (object/get (array/first ?data) id))
-        (set @entity.name (if [">", (array/len @config.titleFields), 0] (str/join (array/map @config.titleFields (fn f (str/default (object/get (array/first ?data) @f) ""))) " ") (object/get (array/first ?data) @config.titleField)))
+        (set @entity.name (if (> (array/len @config.titleFields) 0) (str/join (array/map @config.titleFields (fn f (str/default (object/get (array/first ?data) @f) ""))) " ") (object/get (array/first ?data) @config.titleField)))
         (set @entity.description (str/default (object/get (array/first ?data) @config.subtitleField) ""))
         (set @entity.content (object/get (array/first ?data) @config.contentField))
         (set @entity.coverUrl (str/default (object/get (array/first ?data) @config.coverField) ""))
         (set @entity.iconName (str/default (object/get (array/first ?data) @config.iconField) ""))
-        (if ["=", @config.detailLook, document]
+        (if (= @config.detailLook document)
           (render-ui main @config.documentBodyContent)
-          (if ["=", @config.detailLook, slide-over]
+          (if (= @config.detailLook slide-over)
             (render-ui main @config.slideOverBodyContent)
-            (if ["=", @config.detailLook, page]
+            (if (= @config.detailLook page)
               (render-ui main @config.pageBodyContent)
               (render-ui main @config.bodyContent))))
-      RecordItemSlugLoaded -> error when ["=", (array/len ?data), 0]
+      RecordItemSlugLoaded -> error when (= (array/len ?data) 0)
         (render-ui main { description: "No record matches this address.", icon: search-x, title: "Not found", type: empty-state })
       RecordItemLoadFailed -> error
         (render-ui main { message: ?error, title: "Couldn't load this record", type: alert, variant: error })
@@ -203,7 +203,7 @@ orbital RecordItemOrbital {
     ;; unhandled on purpose: a repaint would unmount the editor under the
     ;; author mid-keystroke. Work is already autosaved when we leave.
     state editing {
-      INIT -> loading when (and ["!=", (str/default ?id ""), ""] ["!=", ?id, @entity.id])
+      INIT -> loading when (and (!= (str/default ?id "") "") (!= ?id @entity.id))
         (set @entity.id ?id)
         (set @entity.openDraft (str/default ?draft ""))
         (fetch RecordItem {
@@ -212,11 +212,11 @@ orbital RecordItemOrbital {
           include: @config.include
         })
         (render-ui main @config.loadingContent)
-      INIT -> loading when (and ["=", (str/default ?id ""), ""] ["!=", (str/default ?slug ""), ""] ["!=", ?slug, @entity.slug])
+      INIT -> loading when (and (= (str/default ?id "") "") (!= (str/default ?slug "") "") (!= ?slug @entity.slug))
         (set @entity.slug ?slug)
         (set @entity.openDraft (str/default ?draft ""))
         (fetch RecordItem {
-          filter: ["=", (object/get @entity slug), ?slug]
+          filter: (= (object/get @entity slug) ?slug)
           emit: { failure: RecordItemLoadFailed, success: RecordItemSlugLoaded }
           include: @config.include
         })
@@ -245,7 +245,7 @@ orbital RecordItemOrbital {
       ;; No skeleton on re-entry: from a populated panel a skeleton unmounts the
       ;; record and flickers. First mount is unaffected — `initial: loading` and
       ;; `state loading`'s own INIT still paint it.
-      INIT -> loading when ["!=", (str/default ?id ""), ""]
+      INIT -> loading when (!= (str/default ?id "") "")
         (set @entity.id ?id)
         (set @entity.openDraft (str/default ?draft ""))
         (fetch RecordItem {
@@ -253,11 +253,11 @@ orbital RecordItemOrbital {
           id: ?id
           include: @config.include
         })
-      INIT -> loading when (and ["=", (str/default ?id ""), ""] ["!=", (str/default ?slug ""), ""])
+      INIT -> loading when (and (= (str/default ?id "") "") (!= (str/default ?slug "") ""))
         (set @entity.slug ?slug)
         (set @entity.openDraft (str/default ?draft ""))
         (fetch RecordItem {
-          filter: ["=", (object/get @entity slug), ?slug]
+          filter: (= (object/get @entity slug) ?slug)
           emit: { failure: RecordItemLoadFailed, success: RecordItemSlugLoaded }
           include: @config.include
         })
@@ -265,38 +265,38 @@ orbital RecordItemOrbital {
         ;; (object/merge … {}) is a type adapter only: type_compat lacks "declared object accepts a named row type" (ledgered)
         (set @entity.loadedRow (object/merge ?data {}))
         (set @entity.id (object/get ?data id))
-        (set @entity.name (if [">", (array/len @config.titleFields), 0] (str/join (array/map @config.titleFields (fn f (str/default (object/get ?data @f) ""))) " ") (object/get ?data @config.titleField)))
+        (set @entity.name (if (> (array/len @config.titleFields) 0) (str/join (array/map @config.titleFields (fn f (str/default (object/get ?data @f) ""))) " ") (object/get ?data @config.titleField)))
         (set @entity.description (str/default (object/get ?data @config.subtitleField) ""))
         (set @entity.content (object/get ?data @config.contentField))
         (set @entity.coverUrl (str/default (object/get ?data @config.coverField) ""))
         (set @entity.iconName (str/default (object/get ?data @config.iconField) ""))
-        (if ["=", @config.detailLook, document]
+        (if (= @config.detailLook document)
           (render-ui main @config.documentBodyContent)
-          (if ["=", @config.detailLook, slide-over]
+          (if (= @config.detailLook slide-over)
             (render-ui main @config.slideOverBodyContent)
-            (if ["=", @config.detailLook, page]
+            (if (= @config.detailLook page)
               (render-ui main @config.pageBodyContent)
               (render-ui main @config.bodyContent))))
-      RecordItemSlugLoaded -> viewing when [">", (array/len ?data), 0]
+      RecordItemSlugLoaded -> viewing when (> (array/len ?data) 0)
         (set @entity.loadedRow (array/first ?data))
         (set @entity.id (object/get (array/first ?data) id))
-        (set @entity.name (if [">", (array/len @config.titleFields), 0] (str/join (array/map @config.titleFields (fn f (str/default (object/get (array/first ?data) @f) ""))) " ") (object/get (array/first ?data) @config.titleField)))
+        (set @entity.name (if (> (array/len @config.titleFields) 0) (str/join (array/map @config.titleFields (fn f (str/default (object/get (array/first ?data) @f) ""))) " ") (object/get (array/first ?data) @config.titleField)))
         (set @entity.description (str/default (object/get (array/first ?data) @config.subtitleField) ""))
         (set @entity.content (object/get (array/first ?data) @config.contentField))
         (set @entity.coverUrl (str/default (object/get (array/first ?data) @config.coverField) ""))
         (set @entity.iconName (str/default (object/get (array/first ?data) @config.iconField) ""))
-        (if ["=", @config.detailLook, document]
+        (if (= @config.detailLook document)
           (render-ui main @config.documentBodyContent)
-          (if ["=", @config.detailLook, slide-over]
+          (if (= @config.detailLook slide-over)
             (render-ui main @config.slideOverBodyContent)
-            (if ["=", @config.detailLook, page]
+            (if (= @config.detailLook page)
               (render-ui main @config.pageBodyContent)
               (render-ui main @config.bodyContent))))
-      RecordItemSlugLoaded -> error when ["=", (array/len ?data), 0]
+      RecordItemSlugLoaded -> error when (= (array/len ?data) 0)
         (render-ui main { description: "No record matches this address.", icon: search-x, title: "Not found", type: empty-state })
       ;; The document body is its own edit affordance: clicking it (or its
       ;; Edit button) starts the editing session with a cursor in the text.
-      EDIT_CONTENT -> editing when ["=", @config.detailLook, document]
+      EDIT_CONTENT -> editing when (= @config.detailLook document)
         (render-ui main @config.documentEditingContent)
       ;; The title renames from the read view too, without an editing session.
       TITLE_COMMITTED -> viewing
@@ -309,7 +309,7 @@ orbital RecordItemOrbital {
     }
 
     state error {
-      INIT -> loading when ["!=", (str/default ?id ""), ""]
+      INIT -> loading when (!= (str/default ?id "") "")
         (set @entity.id ?id)
         (set @entity.openDraft (str/default ?draft ""))
         (fetch RecordItem {
@@ -318,11 +318,11 @@ orbital RecordItemOrbital {
           include: @config.include
         })
         (render-ui main @config.loadingContent)
-      INIT -> loading when (and ["=", (str/default ?id ""), ""] ["!=", (str/default ?slug ""), ""])
+      INIT -> loading when (and (= (str/default ?id "") "") (!= (str/default ?slug "") ""))
         (set @entity.slug ?slug)
         (set @entity.openDraft (str/default ?draft ""))
         (fetch RecordItem {
-          filter: ["=", (object/get @entity slug), ?slug]
+          filter: (= (object/get @entity slug) ?slug)
           emit: { failure: RecordItemLoadFailed, success: RecordItemSlugLoaded }
           include: @config.include
         })

@@ -174,7 +174,7 @@ orbital LlmSpendBoardOrbital {
         (emit LS_PRICES { })
 
       LS_SNAPSHOT_SAVED -> reading
-        (fetch LlmBalanceSnapshot { filter: ["=", (object/get @entity provider), @entity.pendingSpendFor], emit: { success: LS_SNAPSHOTS_LOADED, failure: LS_SNAPSHOTS_UNREADABLE } })
+        (fetch LlmBalanceSnapshot { filter: (= (object/get @entity provider) @entity.pendingSpendFor), emit: { success: LS_SNAPSHOTS_LOADED, failure: LS_SNAPSHOTS_UNREADABLE } })
       LS_SNAPSHOT_NOT_SAVED -> reading
         (notify error (str/concat "A balance snapshot could not be kept: " @payload.error))
         (emit LS_SPEND_DONE { })

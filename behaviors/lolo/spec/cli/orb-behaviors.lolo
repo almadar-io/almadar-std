@@ -1,12 +1,15 @@
 app orb-behaviors-spec [
   version: "1.0.0",
-  description: "Design contract for `orb behaviors <subcommand>`: the reflection commands over the installed behavior packages. `catalog <scope…> [--exposure <e>]… [--json] [--no-vectors]` lists the behaviors under the scopes (a table row per behavior, or the entries as JSON); `describe <behavior>.traits.<Trait>` prints the trait's description as JSON; `source <behavior>` prints the behavior's program as JSON. Each answers status 200 (exit 0) with its output; a missing or unknown subcommand or a missing operand answers the usage (status 400, exit 2); a behavior that cannot be read answers its error (status 500, exit 1)."
+  inbound: ["cli-behaviors-catalog", "cli-behaviors-describe", "cli-behaviors-source"],
+  description: "Design contract for `orb behaviors <subcommand>`: the reflection commands over the installed behavior packages. `catalog <scope…> [--exposure <e>]… [--json] [--no-vectors]` lists the behaviors under the scopes (a table row per behavior, or the entries as JSON); `describe <behavior>.traits.<Trait>` prints the trait's description as JSON; `source <behavior>` prints the behavior's program as JSON. Each answers status 200 (exit 0) with its output; a missing operand answers the usage (status 400, exit 2); a behavior that cannot be read answers its error (status 500, exit 1)."
 ]
 
 orbital OrbBehaviorsSpec {
   expects trait OrbBehaviors {
     state ready {
-      BEHAVIORS_CALLED -> ready
+      CATALOG_CALLED -> ready
+      DESCRIBE_CALLED -> ready
+      SOURCE_CALLED -> ready
     }
     state working
     emits {

@@ -127,14 +127,14 @@ orbital AgentSessionOrbital {
 
     state ready {
       INIT -> ready
-      OPEN_CHAT -> ready when ["=", (str/default ?chatId ""), ""]
+      OPEN_CHAT -> ready when (= (str/default ?chatId "") "")
         (emit AgentMessagesLoaded { data: [] })
-      OPEN_CHAT -> ready when (not ["=", (str/default ?chatId ""), ""])
+      OPEN_CHAT -> ready when (not (= (str/default ?chatId "") ""))
         (fetch AgentMessage {
           emit: { failure: AgentMessagesLoadFailed, success: AgentMessagesLoaded }
-          filter: ["=", (object/get @entity chatId), ?chatId]
+          filter: (= (object/get @entity chatId) ?chatId)
         })
-      SEND_IN_CHAT -> ready when (not ["=", (str/default ?message ""), ""])
+      SEND_IN_CHAT -> ready when (not (= (str/default ?message "") ""))
         (persist create AgentMessage {
           ownerId: @user.id
           chatId: ?chatId
@@ -147,7 +147,7 @@ orbital AgentSessionOrbital {
       AgentMessageSaved -> ready
         (fetch AgentMessage {
           emit: { failure: AgentMessagesLoadFailed, success: AgentConversationLoaded }
-          filter: ["=", (object/get @entity chatId), ?chatId]
+          filter: (= (object/get @entity chatId) ?chatId)
         })
       AgentConversationLoaded -> ready
         (emit CONVERSE {
@@ -286,7 +286,7 @@ orbital AgentSessionOrbital {
       INIT -> idle when (not @config.ephemeral)
         (emit ASSISTANT_HISTORY_REQUESTED {})
         (render-ui main {
-          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if ["=", @entity.chatAvatar, ""] hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
+          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
             children: [{
               action: NEW_CHAT_CLICKED
               aria-label: @config.newChatLabel
@@ -355,7 +355,7 @@ orbital AgentSessionOrbital {
         })
       INIT -> idle when @config.ephemeral
         (render-ui main {
-          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if ["=", @entity.chatAvatar, ""] hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
+          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
             children: [{
               action: NEW_CHAT_CLICKED
               aria-label: @config.newChatLabel
@@ -425,7 +425,7 @@ orbital AgentSessionOrbital {
       THREAD_LOADED -> idle when (not @config.ephemeral)
         (set @entity.entries (array/map (array/sort ?data createdAt asc) (fn item { type: message, role: @item.role, content: @item.content, timestamp: @item.createdAt })))
         (render-ui main {
-          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if ["=", @entity.chatAvatar, ""] hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
+          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
             children: [{
               action: NEW_CHAT_CLICKED
               aria-label: @config.newChatLabel
@@ -492,12 +492,12 @@ orbital AgentSessionOrbital {
           gap: sm
           type: stack
         })
-      ASK -> idle when (and (not @config.ephemeral) (not @entity.working) (not ["=", (str/default ?message ""), ""]))
+      ASK -> idle when (and (not @config.ephemeral) (not @entity.working) (not (= (str/default ?message "") "")))
         (set @entity.entries (array/append @entity.entries { type: message, role: user, content: ?message, timestamp: @now }))
         (set @entity.working true)
         (emit ASSISTANT_SEND { message: ?message })
         (render-ui main {
-          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if ["=", @entity.chatAvatar, ""] hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
+          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
             children: [{
               action: NEW_CHAT_CLICKED
               aria-label: @config.newChatLabel
@@ -564,17 +564,17 @@ orbital AgentSessionOrbital {
           gap: sm
           type: stack
         })
-      ASK -> idle when (and @config.ephemeral (not @entity.working) (not ["=", (str/default ?message ""), ""]))
+      ASK -> idle when (and @config.ephemeral (not @entity.working) (not (= (str/default ?message "") "")))
         (set @entity.entries (array/append @entity.entries { type: message, role: user, content: ?message, timestamp: @now }))
         (set @entity.working true)
         (emit ASSISTANT_EPHEMERAL_SEND {
-          messages: (array/map (array/filter @entity.entries (fn item ["=", @item.type, "message"])) (fn item { role: @item.role, content: @item.content }))
+          messages: (array/map (array/filter @entity.entries (fn item (= @item.type "message"))) (fn item { role: @item.role, content: @item.content }))
           instructions: @entity.chatInstructions
           tools: @entity.chatTools
           ephemeral: true
         })
         (render-ui main {
-          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if ["=", @entity.chatAvatar, ""] hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
+          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
             children: [{
               action: NEW_CHAT_CLICKED
               aria-label: @config.newChatLabel
@@ -642,14 +642,14 @@ orbital AgentSessionOrbital {
           type: stack
         })
       START_CHAT -> idle when (and @config.ephemeral (not @entity.working))
-        (set @entity.entries (if ["=", (str/default ?greeting ""), ""] [] [{ type: message, role: assistant, content: ?greeting, timestamp: @now }]))
+        (set @entity.entries (if (= (str/default ?greeting "") "") [] [{ type: message, role: assistant, content: ?greeting, timestamp: @now }]))
         (set @entity.chatInstructions (str/default ?instructions ""))
         (set @entity.chatTools (object/get ? tools []))
         (set @entity.chatTitle (str/default ?title ""))
         (set @entity.chatSubtitle (str/default ?subtitle ""))
         (set @entity.chatAvatar (str/default ?avatar ""))
         (render-ui main {
-          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if ["=", @entity.chatAvatar, ""] hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
+          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
             children: [{
               action: NEW_CHAT_CLICKED
               aria-label: @config.newChatLabel
@@ -719,7 +719,7 @@ orbital AgentSessionOrbital {
       STEP -> idle when (not @config.ephemeral)
         (set @entity.entries (array/append @entity.entries ?activity))
         (render-ui main {
-          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if ["=", @entity.chatAvatar, ""] hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
+          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
             children: [{
               action: NEW_CHAT_CLICKED
               aria-label: @config.newChatLabel
@@ -786,11 +786,11 @@ orbital AgentSessionOrbital {
           gap: sm
           type: stack
         })
-      REPLIED -> idle when ["=", (if ?ephemeral true false), @config.ephemeral]
+      REPLIED -> idle when (= (if ?ephemeral true false) @config.ephemeral)
         (set @entity.entries (array/append @entity.entries { type: message, role: assistant, content: ?reply, timestamp: @now }))
         (set @entity.working false)
         (render-ui main {
-          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if ["=", @entity.chatAvatar, ""] hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
+          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
             children: [{
               action: NEW_CHAT_CLICKED
               aria-label: @config.newChatLabel
@@ -861,7 +861,7 @@ orbital AgentSessionOrbital {
         (set @entity.entries [])
         (emit ASSISTANT_NEW_CHAT {})
         (render-ui main {
-          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if ["=", @entity.chatAvatar, ""] hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
+          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
             children: [{
               action: NEW_CHAT_CLICKED
               aria-label: @config.newChatLabel
@@ -960,7 +960,7 @@ orbital AgentSessionOrbital {
             renderItem: (fn item {
               children: [{
                 className: truncate
-                content: (if ["=", (str/default @item.title ""), ""] @config.untitledLabel @item.title)
+                content: (if (= (str/default @item.title "") "") @config.untitledLabel @item.title)
                 type: typography
                 variant: body
               }, {
@@ -985,7 +985,7 @@ orbital AgentSessionOrbital {
       CHAT_PICKED -> idle when (not @entity.working)
         (emit ASSISTANT_CHAT_SELECTED { chatId: ?id })
         (render-ui main {
-          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if ["=", @entity.chatAvatar, ""] hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
+          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
             children: [{
               action: NEW_CHAT_CLICKED
               aria-label: @config.newChatLabel
@@ -1105,7 +1105,7 @@ orbital AgentSessionOrbital {
         })
       BACK_TO_CHAT -> idle
         (render-ui main {
-          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if ["=", @entity.chatAvatar, ""] hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
+          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
             children: [{
               action: NEW_CHAT_CLICKED
               aria-label: @config.newChatLabel
@@ -1172,11 +1172,11 @@ orbital AgentSessionOrbital {
           gap: sm
           type: stack
         })
-      REPLY_FAILED -> idle when ["=", (if ?ephemeral true false), @config.ephemeral]
+      REPLY_FAILED -> idle when (= (if ?ephemeral true false) @config.ephemeral)
         (set @entity.entries (array/append @entity.entries { type: error, message: ?error, timestamp: @now }))
         (set @entity.working false)
         (render-ui main {
-          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if ["=", @entity.chatAvatar, ""] hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
+          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
             children: [{
               action: NEW_CHAT_CLICKED
               aria-label: @config.newChatLabel
@@ -1400,13 +1400,13 @@ orbital AgentChatsOrbital {
           emit: { failure: AgentChatsLoadFailed, success: ChatsForHistory }
         })
       ChatsForHistory -> ready
-        (emit ASSISTANT_CHAT_OPENED { chatId: (if [">", (array/len ?data), 0] (object/get (array/first (array/sort ?data lastActiveAt desc)) id) "") })
-      SEND -> ready when (not ["=", (str/default ?message ""), ""])
+        (emit ASSISTANT_CHAT_OPENED { chatId: (if (> (array/len ?data) 0) (object/get (array/first (array/sort ?data lastActiveAt desc)) id) "") })
+      SEND -> ready when (not (= (str/default ?message "") ""))
         (set @entity.pendingMessage ?message)
         (fetch AgentChat {
           emit: { failure: AgentChatsLoadFailed, success: ChatsForSend }
         })
-      ChatsForSend -> ready when ["=", (array/len ?data), 0]
+      ChatsForSend -> ready when (= (array/len ?data) 0)
         (persist create AgentChat {
           ownerId: @user.id
           title: @entity.pendingMessage
@@ -1415,11 +1415,11 @@ orbital AgentChatsOrbital {
         } {
           emit: { failure: AgentChatsLoadFailed, success: ChatReadyForSend }
         })
-      ChatsForSend -> ready when [">", (array/len ?data), 0]
+      ChatsForSend -> ready when (> (array/len ?data) 0)
         (persist update AgentChat {
           id: (object/get (array/first (array/sort ?data lastActiveAt desc)) id)
           ownerId: (object/get (array/first (array/sort ?data lastActiveAt desc)) ownerId)
-          title: (if ["=", (str/default (object/get (array/first (array/sort ?data lastActiveAt desc)) title) ""), ""] @entity.pendingMessage (object/get (array/first (array/sort ?data lastActiveAt desc)) title))
+          title: (if (= (str/default (object/get (array/first (array/sort ?data lastActiveAt desc)) title) "") "") @entity.pendingMessage (object/get (array/first (array/sort ?data lastActiveAt desc)) title))
           startedAt: (object/get (array/first (array/sort ?data lastActiveAt desc)) startedAt)
           lastActiveAt: @now
         } {
@@ -1434,7 +1434,7 @@ orbital AgentChatsOrbital {
           emit: { failure: AgentChatsLoadFailed, success: ChatsForReply }
         })
       ChatsForReply -> ready
-        (emit ASSISTANT_REPLY_IN_CHAT { chatId: (if [">", (array/len ?data), 0] (object/get (array/first (array/sort ?data lastActiveAt desc)) id) ""), reply: @entity.pendingReply })
+        (emit ASSISTANT_REPLY_IN_CHAT { chatId: (if (> (array/len ?data) 0) (object/get (array/first (array/sort ?data lastActiveAt desc)) id) ""), reply: @entity.pendingReply })
       NEW_CHAT -> ready
         (persist create AgentChat {
           ownerId: @user.id
@@ -1450,9 +1450,9 @@ orbital AgentChatsOrbital {
       SELECT_CHAT -> ready
         (fetch AgentChat {
           emit: { failure: AgentChatsLoadFailed, success: ChatsForSelect }
-          filter: ["=", (object/get @entity id), ?chatId]
+          filter: (= (object/get @entity id) ?chatId)
         })
-      ChatsForSelect -> ready when [">", (array/len ?data), 0]
+      ChatsForSelect -> ready when (> (array/len ?data) 0)
         (persist update AgentChat {
           id: (object/get (array/first ?data) id)
           ownerId: (object/get (array/first ?data) ownerId)
@@ -1618,7 +1618,7 @@ orbital AgentChatsOrbital {
             renderItem: (fn item {
               children: [{
                 className: truncate
-                content: (if ["=", (str/default @item.title ""), ""] @config.untitledLabel @item.title)
+                content: (if (= (str/default @item.title "") "") @config.untitledLabel @item.title)
                 type: typography
                 variant: body
               }]
@@ -1667,7 +1667,7 @@ orbital AgentChatsOrbital {
             renderItem: (fn item {
               children: [{
                 className: truncate
-                content: (if ["=", (str/default @item.title ""), ""] @config.untitledLabel @item.title)
+                content: (if (= (str/default @item.title "") "") @config.untitledLabel @item.title)
                 type: typography
                 variant: body
               }]

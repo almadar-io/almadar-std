@@ -339,7 +339,7 @@ orbital AgentPoolOrbital {
       INIT -> ready
       SEARCH -> searching
         (fetch PoolEntry {
-          filter: ["and", ["=", (object/get @entity pool), @config.poolName], ["=", (object/get @entity retired), false]]
+          filter: (and (= (object/get @entity pool) @config.poolName) (= (object/get @entity retired) false))
           emit: { failure: SEARCH_FAILED, success: ENTRIES_LOADED }
         })
         (set @entity.queryVector ?vector)

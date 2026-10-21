@@ -159,7 +159,7 @@ orbital DeploymentRegistryOrbital {
 
       HISTORY -> idle
         (set @entity.artifact @payload.artifact)
-        (fetch Deployment { filter: ["=", (object/get @entity artifact), @payload.artifact], emit: { success: HISTORY_LOADED, failure: HISTORY_UNREADABLE } })
+        (fetch Deployment { filter: (= (object/get @entity artifact) @payload.artifact), emit: { success: HISTORY_LOADED, failure: HISTORY_UNREADABLE } })
       HISTORY_LOADED -> idle
         (emit HISTORY_ANSWERED { artifact: @entity.artifact, deployments: (array/sort @payload.data "version") })
       HISTORY_UNREADABLE -> idle

@@ -118,7 +118,7 @@ orbital DataImportOrbital {
           variant: info
         })
         (emit STAGE_ROWS { rows: (array/map (csv/parse @entity.pendingCsv) (fn r (json/stringify @r))) })
-      STAGE_ROWS -> staged when [">", (array/len ?rows), 0]
+      STAGE_ROWS -> staged when (> (array/len ?rows) 0)
         (set @entity.rowCount (array/len ?rows))
         (set @entity.errorCount (or ?errorCount 0))
         (set @entity.status staged)
@@ -166,7 +166,7 @@ orbital DataImportOrbital {
         })
       ;; Empty staging is a failed run, not a silent no-op. `< 1` (not
       ;; `= 0`) so guard-payload synthesis can steer both arms.
-      STAGE_ROWS -> failed when ["<", (array/len ?rows), 1]
+      STAGE_ROWS -> failed when (< (array/len ?rows) 1)
         (set @entity.status failed)
         (persist update ImportBatch { id: @entity.id, status: failed })
         (emit IMPORT_FAILED { batchId: @entity.id, error: "The file parsed to zero rows — nothing to stage." })
@@ -295,11 +295,11 @@ orbital DataImportOrbital {
         (emit IMPORT_ROWS_PARSED {
           batchId: @entity.id
           failed: (array/len (array/filter ?data (fn row (and
-            ["=", (object/get @row "batchId"), @entity.id]
+            (= (object/get @row "batchId") @entity.id)
             (not (validate/object (json/parse (object/get @row "rowJson") ImportCells)))))))
           rows: (array/map
             (array/filter ?data (fn row (and
-              ["=", (object/get @row "batchId"), @entity.id]
+              (= (object/get @row "batchId") @entity.id)
               (validate/object (json/parse (object/get @row "rowJson") ImportCells)))))
             (fn row (object/mapKeys
               (json/parse (object/get @row "rowJson") ImportCells)

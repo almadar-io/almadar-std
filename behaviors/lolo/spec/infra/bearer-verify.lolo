@@ -1,46 +1,29 @@
 app bearer-verify-spec [
-  version: "1.0.0",
-  description: "Design contract for verifying a sign-in bearer (Firebase ID token or generic OIDC) into a Viewer. Header: three base64url parts; alg must be RS256 or ES256 (none and HS256 refuse algorithm) and must fit the selected key's type; kid selects the key (no kid tries every key) and no match refuses unknown-key, after exactly one key-document refetch if the cached copy is older than 30000 ms. The JWS signature over header.payload (RS256 PKCS1v15-SHA256, ES256 P-256 r||s) must verify, else signature. Claims, against now in epoch seconds with no clock skew allowance and no iat check: exp required (absent is malformed) and exp <= now refuses expired (strict); nbf > now refuses not-yet-valid; iss must equal the issuer exactly (issuer); aud is a string equal to, or an array containing, the audience (audience); sub must be a non-empty string (subject). Firebase: issuer https://securetoken.google.com/<projectId>, audience <projectId>, keys are the {kid: x509 PEM} map at the certs URL (https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com); auth_time is required and must be <= now (auth-time); the token's firebase.tenant must equal the route tenant, a tenant token on a project route and a project token on a tenant route both refusing tenant. OIDC: the discovery document at <issuer>/.well-known/openid-configuration must repeat the issuer and name jwks_uri (keys-unavailable otherwise), keys come from the JWKS (RSA n/e, EC P-256 x/y, use other than sig skipped), and a tenant refuses tenant. Fetches only touch origins the provider config names (origin-not-allowed otherwise, userinfo in a URL is no origin); a fetched document is kept for its Cache-Control max-age (600 s when absent); a failing fetch refuses keys-unavailable. Emulator mode: an unsigned alg none token is admitted only with an emulator host, after the same claim checks, and only when the emulator's accounts:lookup knows the uid (user-not-found) and has not disabled it (user-disabled); without an emulator it refuses algorithm; a signed token is verified as ever. A verified token becomes a Viewer: id the sub, email and name when text, claims the remaining payload as a typed list. Values it replaces (Rust shared fixture, clock real, tokens signed 2020-01-01 iat 1577836800): valid tokens exp 4102444800 verify as auth0|ada (issuer https://issuer.test, audience app-client, kid k-rsa, email ada@example.com, claim role teacher) and uid-1 (project test-project, kid fb-key-1); exp 1577837800 refuses expired; aud someone-else / other-project refuses audience; iss https://evil.test / securetoken.google.com/other-project refuses issuer; auth_time 4102444800 refuses auth-time; sub empty or absent refuses subject; kid k-unknown / fb-key-unknown refuses unknown-key."
+  version: "2.0.0",
+  description: "Design contract for verifying a sign-in bearer (Firebase ID token or generic OIDC) into a Viewer, over std-jws. BEARER_VERIFY { requestId?, authorization? } carries the raw Authorization header. No header (absent or blank) answers BEARER_ANONYMOUS, never an implicit viewer. A header that is not 'Bearer <token>' (scheme compared case-insensitively) or whose token is not three dot-separated segments refuses malformed. Keys come from the jwksOrigin and jwksPath knobs (OIDC jwks_uri; Firebase https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com), fetched with an http GET to a declared egress origin, kept in the entity until now + the response's Cache-Control max-age (no max-age keeps nothing); a stale cache refetches, and a kid absent from a fresh cache refetches once; a failing or non-200 fetch refuses keys-unavailable. The header kid selects the key; with no kid every key of use sig (or no use) is tried in order, one JWS_VERIFY per key, never the same question twice in one dispatch; a kid with no matching key after the refetch refuses unknown-key. A std-jws refusal other than signature, key-type, alg-mismatch, curve or key-missing ends the dispatch with its reason (alg-not-allowed reported as algorithm); those five move to the next key when there is one. Claim policy on JWS_VERIFIED against now in epoch seconds with knobs issuer, audience, clockSkewSeconds, requireAuthTime, allowedTenants: exp absent refuses malformed, exp <= now - skew expired, nbf > now + skew not-yet-valid, iat > now + skew issued-in-future, iss != issuer issuer, aud (string equal or list containing) != audience audience, empty sub subject, requireAuthTime with auth_time absent or > now auth-time, allowedTenants set and firebase.tenant not in it tenant. Every answer carries the requestId it was asked with (one bearer is in flight at a time). Overlapping requests queue first-in first-out in the entity (queue accepted in every state, one in flight, BEARER_PUMP starts the oldest on every completion); one beyond maxQueue is refused busy; each is answered exactly once, in order. A role claim must be a string and a permissions claim a list of strings (else refused claims); they become the viewer's role and permissions and every other claim stays in claims. Success is BEARER_VERIFIED { viewer }: id the sub, email, name, role and permissions when present, claims every remaining payload entry as { name, value } with the claim JSON as is."
 ]
 
 orbital BearerVerifySpec {
-  expects entity BearerRequest [runtime] {
+  expects entity BearerCheck [runtime] {
     id : string!
-    provider : string
-    token : string
-    projectId : string
-    issuer : string
-    audience : string
-    certsUrl : string
-    tenant : string
-    emulatorHost : string
-  }
-  expects entity KeyDocument [persistent] {
-    id : string!
-    body : string
-    fetchedAt : number
-    expiresAt : number
-    @invariant (>= @entity.expiresAt 0)
   }
   expects trait BearerVerifier {
     state idle {
-      VERIFY_BEARER -> fetching
+      BEARER_VERIFY -> idle
+      BEARER_PUMP -> verifying
     }
     state fetching {
-      KEYS_READY -> checking
-      KEYS_UNAVAILABLE -> idle
+      BEARER_VERIFY -> fetching
+      JWKS_REPLIED -> idle
     }
-    state checking {
-      KEY_UNKNOWN -> refreshing
-      TOKEN_CHECKED -> idle
-    }
-    state refreshing {
-      KEYS_READY -> checking
-      KEYS_UNAVAILABLE -> idle
+    state verifying {
+      BEARER_VERIFY -> verifying
+      JWS_VERIFIED -> idle
     }
     emits {
-      BEARER_VERIFIED { viewer : Viewer!  provider : string!  tenant : string }
-      BEARER_REFUSED { reason : string!  message : string! }
+      BEARER_VERIFIED { requestId : number  viewer : Viewer! }
+      BEARER_ANONYMOUS { requestId : number }
+      BEARER_REFUSED { requestId : number  reason : string! }
     }
   }
   expects page "/bearer-verify" -> BearerVerifier

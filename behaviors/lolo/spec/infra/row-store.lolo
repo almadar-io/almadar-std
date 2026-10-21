@@ -1,6 +1,6 @@
 app row-store-spec [
   version: "1.0.0",
-  description: "Design contract for a row-store driver: the kernel parks a row ask by key and sends the driver one typed verb (read one row, list an entity, run a pushed-down query, apply a write batch); the driver answers the same key with the matching reply, STORE_UNSUPPORTED when the store cannot carry the ask, or STORE_FAILED. The record types mirror the kernel's row_set and row_query wire shapes field for field."
+  description: "Design contract for a row-store driver: the kernel parks a row ask by key and sends the driver one typed verb (EXEC-STORE-4): ROW_READ carries a RowReadVerb, ROW_LIST a RowListVerb, ROWS_QUERY a RowsQueryVerb (project rows or ids) and ROWS_WRITE a RowsWriteVerb (a single persist delete or update is one conditional op in a one-op batch); the kernel is the only sender and the only listener of the replies; the driver answers the same key with the matching reply, STORE_UNSUPPORTED when the store cannot carry the ask, or STORE_FAILED. The record types mirror the kernel's row_set and row_query wire shapes field for field."
 ]
 
 orbital RowStoreSpec {
@@ -22,6 +22,18 @@ orbital RowStoreSpec {
   type RowNearest = { field : string!, vector : [number]!, k : number! }
   type RowQuery = { policy : RowPredicate?, filter : RowPredicate?, order : RowOrder?, offset : number?, limit : number?, total : "exact" | "none"?, nearest : RowNearest? }
 
+  type RowLeafKind = "compare" | "member" | "hasElement" | "contains" | "isNull"
+  type RowCombinator = "all" | "any" | "not"
+  type RowOperator = "==" | "!=" | "<" | "<=" | ">" | ">=" | "member" | "hasElement" | "contains"
+  type RowValueKind = "string" | "number" | "boolean" | "date" | "null"
+  type OperatorValueKinds = { operator : RowOperator!, valueKinds : [RowValueKind]! }
+  type EveryFieldOrderable = { kind : "every-field" }
+  type ListedOrderable = { kind : "listed", fields : [string]! }
+  type RowOrderableFields = EveryFieldOrderable | ListedOrderable
+  type QueryCapabilities = { leaves : [RowLeafKind]!, combinators : [RowCombinator]!, compareOps : [string]!, operatorValueKinds : [OperatorValueKinds]?, orderableFields : RowOrderableFields!, window : boolean!, exactTotal : boolean!, idsOnly : boolean?, nearest : boolean? }
+  type GuardCapabilities = { leaves : [RowLeafKind]!, combinators : [RowCombinator]!, compareOps : [string]! }
+  type WriteCapabilities = { guards : GuardCapabilities!, conditional : boolean!, returnsRow : boolean!, stopRuns : boolean!, atomicBatch : boolean! }
+
   type CreateOp = { kind : "create", entityType : string!, data : Row! }
   type UpsertOp = { kind : "upsert", entityType : string!, data : Row! }
   type UpdateOp = { kind : "update", entityType : string!, id : string!, data : Row!, guard : RowPredicate? }
@@ -38,6 +50,11 @@ orbital RowStoreSpec {
   type FailedOutcome = { kind : "failed", message : string! }
   type RolledBackOutcome = { kind : "rolled-back" }
   type RowWriteOutcome = CreatedOutcome | UpdatedOutcome | DeletedOutcome | NotFoundOutcome | DuplicateIdOutcome | RefusedOutcome | FailedOutcome | RolledBackOutcome
+
+  type RowReadVerb = { key : string!, entityType : string!, id : string! }
+  type RowListVerb = { key : string!, entityType : string! }
+  type RowsQueryVerb = { key : string!, entityType : string!, query : RowQuery!, project : "rows" | "ids" }
+  type RowsWriteVerb = { key : string!, batch : RowWriteBatch! }
 
   expects trait RowStoreDriver {
     state ready {

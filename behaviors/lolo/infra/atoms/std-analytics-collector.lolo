@@ -199,7 +199,7 @@ orbital AnalyticsCollectorOrbital {
         (emit ANALYTICS_STATS { })
       ANALYTICS_STATS -> ready
         (set @entity.statsLimit (if (== @payload.limit null) 100 @payload.limit))
-        (fetch AnalyticsEvent { filter: ["and", (or (== @payload.domain null) (= @payload.domain "") ["=", (object/get @entity domain), @payload.domain]), (or (== @payload.from null) [">=", (object/get @entity ts), @payload.from]), (or (== @payload.to null) ["<=", (object/get @entity ts), @payload.to])], emit: { success: STATS_LOADED, failure: STATS_UNREADABLE } })
+        (fetch AnalyticsEvent { filter: (and (or (== @payload.domain null) (= @payload.domain "") (= (object/get @entity domain) @payload.domain)) (or (== @payload.from null) (>= (object/get @entity ts) @payload.from)) (or (== @payload.to null) (<= (object/get @entity ts) @payload.to))), emit: { success: STATS_LOADED, failure: STATS_UNREADABLE } })
       STATS_LOADED -> ready
         (let ((views (array/filter @payload.data (fn e (= @e.name "pageview"))))
               (pageKeys (array/map (array/filter @payload.data (fn e (= @e.name "pageview"))) (fn e (str/concat @e.path " (" @e.domain ")"))))

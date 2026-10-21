@@ -367,15 +367,15 @@ orbital PermissionMatrixOrbital {
 
     state idle {
       INIT -> idle
-      DO_CREATE -> idle when (or ["=", (array/len @config.adminRoles), 0] (array/includes @config.adminRoles @user.role))
+      DO_CREATE -> idle when (or (= (array/len @config.adminRoles) 0) (array/includes @config.adminRoles @user.role))
         (persist create PermissionGrant ?data {
           emit: { failure: PermissionGrantSaveFailed, success: PermissionGrantSaved }
         })
-      DO_UPDATE -> idle when (or ["=", (array/len @config.adminRoles), 0] (array/includes @config.adminRoles @user.role))
+      DO_UPDATE -> idle when (or (= (array/len @config.adminRoles) 0) (array/includes @config.adminRoles @user.role))
         (persist update PermissionGrant ?data {
           emit: { failure: PermissionGrantSaveFailed, success: PermissionGrantSaved }
         })
-      DO_DELETE -> idle when (or ["=", (array/len @config.adminRoles), 0] (array/includes @config.adminRoles @user.role))
+      DO_DELETE -> idle when (or (= (array/len @config.adminRoles) 0) (array/includes @config.adminRoles @user.role))
         (persist delete PermissionGrant ?id {
           emit: { failure: PermissionGrantDeleteFailed, success: PermissionGrantDeleted }
         })
@@ -459,7 +459,7 @@ orbital PermissionMatrixOrbital {
         (set @entity.role ?role)
         (set @entity.module ?module)
         (fetch PermissionGrant {
-          filter: (and ["=", (object/get @entity role), ?role] ["=", (object/get @entity module), ?module])
+          filter: (and (= (object/get @entity role) ?role) (= (object/get @entity module) ?module))
           emit: { failure: GrantCheckFailed, success: GrantCheckLoaded }
         })
       ;; found: false = no matching row — whether that denies or permits is
@@ -469,10 +469,10 @@ orbital PermissionMatrixOrbital {
         (emit GRANT_RESOLVED {
           role: @entity.role
           module: @entity.module
-          canReadFinance: (if [">", (array/len ?data), 0] (object/get (array/first ?data) canReadFinance false) false)
-          canSeeOthersHours: (if [">", (array/len ?data), 0] (object/get (array/first ?data) canSeeOthersHours false) false)
-          canSeeMargins: (if [">", (array/len ?data), 0] (object/get (array/first ?data) canSeeMargins false) false)
-          found: [">", (array/len ?data), 0]
+          canReadFinance: (if (> (array/len ?data) 0) (object/get (array/first ?data) canReadFinance false) false)
+          canSeeOthersHours: (if (> (array/len ?data) 0) (object/get (array/first ?data) canSeeOthersHours false) false)
+          canSeeMargins: (if (> (array/len ?data) 0) (object/get (array/first ?data) canSeeMargins false) false)
+          found: (> (array/len ?data) 0)
         })
       GrantCheckFailed -> idle
         (notify error (str/concat "Couldn't resolve the permission grant — " ?error))

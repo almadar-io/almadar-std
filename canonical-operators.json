@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-10-20T16:40:30.781Z",
+  "generated": "2026-10-20T23:15:48.389Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -13495,7 +13495,7 @@
       "minArity": 1,
       "maxArity": 2,
       "returnType": "void",
-      "description": "Expand a glob pattern (grant fs: read). Success payload: { paths }.",
+      "description": "Expand a glob pattern (grant fs: read). The pattern may be anchored ({ anchor, path }); a computed anchored pattern passes under a narrow anchored grant, and the host drops every match the grants do not cover. Success payload: { paths }: absolute for a plain pattern, relative to the anchor for an anchored one.",
       "module": "os",
       "hasSideEffects": true,
       "runsOn": "server",
@@ -13503,7 +13503,37 @@
       "params": [
         {
           "name": "pattern",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              {
+                "kind": "object",
+                "fields": {
+                  "anchor": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "cwd"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "exe-dir"
+                      },
+                      {
+                        "kind": "object",
+                        "fields": {
+                          "env": "string"
+                        }
+                      }
+                    ]
+                  },
+                  "path": "string"
+                }
+              }
+            ]
+          },
           "description": "Glob pattern"
         },
         {
@@ -15898,7 +15928,7 @@
       "minArity": 2,
       "maxArity": 3,
       "returnType": "void",
-      "description": "Send on a connected socket (grant net). Success payload: { bytes }.",
+      "description": "Send on a connected socket (grant net). Success payload: { bytes }. Sends on one socket are written in call order and never interleave. A keyed send under a declared route writes in the background and answers its route when the write ends (success { bytes }, or a failure such as timeout after the 5 s socket bound or closed), so a peer that stops reading does not hold the dispatch; an unkeyed send answers in place.",
       "module": "os",
       "hasSideEffects": true,
       "runsOn": "server",
@@ -16887,7 +16917,7 @@
       "minArity": 2,
       "maxArity": 3,
       "returnType": "void",
-      "description": "Listen for TCP connections (grant net: listen). The first answer is { sock }; each connection arrives on the onMessage route as { sock, peer }. Stream: events are routed to the call site as they arrive, then one final answer; cancel with cancel-call on the key.",
+      "description": "Listen for TCP connections (grant net: listen). The first answer is { sock }; each connection arrives on the onMessage route as { sock, peer }. An accepted sock takes any number of os/send and os/recv until os/close (keep-alive, streamed replies); a keyed os/recv armed on it reports a client abort as { eof: true } or a closed failure, and os/close with that read pending ends the connection at once. Stream: events are routed to the call site as they arrive, then one final answer; cancel with cancel-call on the key.",
       "module": "os",
       "hasSideEffects": true,
       "runsOn": "server",
@@ -19768,60 +19798,6 @@
       ],
       "examples": [
         "(program/inputs {\"emit\":{\"success\":\"INPUTS_KNOWN\",\"failure\":\"INPUTS_FAILED\"}})"
-      ],
-      "docsSource": "generated"
-    },
-    "program/machine": {
-      "category": "std-program",
-      "minArity": 1,
-      "maxArity": 2,
-      "returnType": {
-        "kind": "array",
-        "of": "MachineRow"
-      },
-      "description": "Read a program's state machine as data: one row per transition of every trait — its orbital, trait, `from` state, event, `to` state, whether the transition carries a guard of its own, and the payload slots the event declares (`name`, `type`, `required`, optional `values` and `entity`). The rows are the kernel planner's own transition groups, the ones the walkers drive; a trait with no transitions has none.",
-      "module": "program",
-      "hasSideEffects": true,
-      "runsOn": "server",
-      "host": "program",
-      "params": [
-        {
-          "name": "program",
-          "type": {
-            "kind": "sexpr"
-          },
-          "description": "A quoted program"
-        },
-        {
-          "name": "options",
-          "type": {
-            "kind": "object",
-            "fields": {
-              "key": "string",
-              "emit": {
-                "kind": "object",
-                "fields": {
-                  "success": {
-                    "kind": "eventKey"
-                  },
-                  "failure": {
-                    "kind": "eventKey"
-                  },
-                  "cancelled": {
-                    "kind": "eventKey"
-                  }
-                },
-                "open": true
-              }
-            },
-            "open": true
-          },
-          "description": "Emit configuration ({ emit: { success, failure } })",
-          "optional": true
-        }
-      ],
-      "examples": [
-        "(program/machine @entity.program {\"emit\":{\"success\":\"MACHINE_READ\",\"failure\":\"MACHINE_FAILED\"}})"
       ],
       "docsSource": "generated"
     },

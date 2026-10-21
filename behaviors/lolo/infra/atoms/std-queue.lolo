@@ -126,14 +126,14 @@ orbital QueueOrbital {
         (set @entity.wantQueue ?queue)
         (set @entity.wantPriority (math/default ?priority 0))
         (set @entity.wantEnqueuedAt @now)
-        (persist create @config.jobEntity (object/merge ?job { queue: ?queue, priority: (math/default ?priority 0), status: "pending", enqueuedAt: @now, availableAt: ["+", @now, (math/default ?delay 0)], attempts: 0, leaseExpiresAt: 0 }) {
+        (persist create @config.jobEntity (object/merge ?job { queue: ?queue, priority: (math/default ?priority 0), status: "pending", enqueuedAt: @now, availableAt: (+ @now (math/default ?delay 0)), attempts: 0, leaseExpiresAt: 0 }) {
           emit: { failure: EnqFailed, success: EnqCreated }
         })
       EnqCreated -> idle
         (set @entity.wantId ?id)
         (fetch @config.jobEntity {
           emit: { failure: EnqFailed, success: EnqAheadLoaded }
-          filter: (and ["=", (object/get @entity queue), @entity.wantQueue] ["=", (object/get @entity status), "pending"] (or [">", (object/get @entity priority), @entity.wantPriority] (and ["=", (object/get @entity priority), @entity.wantPriority] ["<", (object/get @entity enqueuedAt), @entity.wantEnqueuedAt])))
+          filter: (and (= (object/get @entity queue) @entity.wantQueue) (= (object/get @entity status) "pending") (or (> (object/get @entity priority) @entity.wantPriority) (and (= (object/get @entity priority) @entity.wantPriority) (< (object/get @entity enqueuedAt) @entity.wantEnqueuedAt))))
         })
       EnqAheadLoaded -> idle
         (emit JOB_ENQUEUED { jobId: @entity.wantId, position: (array/len ?data) })
@@ -144,13 +144,13 @@ orbital QueueOrbital {
         (set @entity.wantId ?jobId)
         (fetch @config.jobEntity {
           emit: { failure: CancelFailed, success: CancelJobLoaded }
-          filter: ["=", (object/get @entity id), @entity.wantId]
+          filter: (= (object/get @entity id) @entity.wantId)
         })
-      CancelJobLoaded -> idle when ["=", (array/len ?data), 0]
+      CancelJobLoaded -> idle when (= (array/len ?data) 0)
         (emit JOB_CANCELLED { jobId: @entity.wantId, cancelled: false })
-      CancelJobLoaded -> idle when (and [">", (array/len ?data), 0] ["!=", (object/get (array/first ?data) status), "pending"])
+      CancelJobLoaded -> idle when (and (> (array/len ?data) 0) (!= (object/get (array/first ?data) status) "pending"))
         (emit JOB_CANCELLED { jobId: @entity.wantId, cancelled: false })
-      CancelJobLoaded -> idle when (and [">", (array/len ?data), 0] ["=", (object/get (array/first ?data) status), "pending"])
+      CancelJobLoaded -> idle when (and (> (array/len ?data) 0) (= (object/get (array/first ?data) status) "pending"))
         (persist create QueueClaim { id: (str/concat @entity.wantId ":1"), jobId: @entity.wantId, attempt: 1, kind: "cancel", claimedAt: @now } {
           emit: { failure: CancelFailed, success: CancelClaimed }
         })
@@ -160,9 +160,9 @@ orbital QueueOrbital {
         })
       CancelDeleted -> idle
         (emit JOB_CANCELLED { jobId: @entity.wantId, cancelled: true })
-      CancelFailed -> idle when ["=", ?code, "duplicate-id"]
+      CancelFailed -> idle when (= ?code "duplicate-id")
         (emit JOB_CANCELLED { jobId: @entity.wantId, cancelled: false })
-      CancelFailed -> idle when ["!=", ?code, "duplicate-id"]
+      CancelFailed -> idle when (!= ?code "duplicate-id")
         (emit QUEUE_FAILED { op: "cancel", error: ?error, code: ?code })
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Queue unavailable: " ?error) })
     }
@@ -277,70 +277,70 @@ orbital QueueOrbital {
         (set @entity.skipIds [])
         (fetch @config.jobEntity {
           emit: { failure: DeqFailed, success: DeqTopLoaded }
-          filter: (and ["=", (object/get @entity queue), @entity.wantQueue] (or ["=", (object/get @entity status), "pending"] (and ["=", (object/get @entity status), "processing"] ["<=", (object/get @entity leaseExpiresAt), @now])) ["<=", (object/get @entity availableAt), @now] (not (array/includes @entity.skipIds (object/get @entity id))))
+          filter: (and (= (object/get @entity queue) @entity.wantQueue) (or (= (object/get @entity status) "pending") (and (= (object/get @entity status) "processing") (<= (object/get @entity leaseExpiresAt) @now))) (<= (object/get @entity availableAt) @now) (not (array/includes @entity.skipIds (object/get @entity id))))
           orderBy: "priority:desc"
           limit: 1
         })
-      DeqTopLoaded -> idle when ["=", (array/len ?data), 0]
+      DeqTopLoaded -> idle when (= (array/len ?data) 0)
         (emit QUEUE_EMPTY { queue: @entity.wantQueue })
-      DeqTopLoaded -> idle when [">", (array/len ?data), 0]
+      DeqTopLoaded -> idle when (> (array/len ?data) 0)
         (set @entity.wantPriority (object/get (array/first ?data) priority))
         (fetch @config.jobEntity {
           emit: { failure: DeqFailed, success: DeqCandLoaded }
-          filter: (and ["=", (object/get @entity queue), @entity.wantQueue] (or ["=", (object/get @entity status), "pending"] (and ["=", (object/get @entity status), "processing"] ["<=", (object/get @entity leaseExpiresAt), @now])) ["<=", (object/get @entity availableAt), @now] ["=", (object/get @entity priority), @entity.wantPriority] (not (array/includes @entity.skipIds (object/get @entity id))))
+          filter: (and (= (object/get @entity queue) @entity.wantQueue) (or (= (object/get @entity status) "pending") (and (= (object/get @entity status) "processing") (<= (object/get @entity leaseExpiresAt) @now))) (<= (object/get @entity availableAt) @now) (= (object/get @entity priority) @entity.wantPriority) (not (array/includes @entity.skipIds (object/get @entity id))))
           orderBy: "enqueuedAt:asc"
           limit: 1
         })
-      DeqCandLoaded -> idle when ["=", (array/len ?data), 0]
+      DeqCandLoaded -> idle when (= (array/len ?data) 0)
         (fetch @config.jobEntity {
           emit: { failure: DeqFailed, success: DeqTopLoaded }
-          filter: (and ["=", (object/get @entity queue), @entity.wantQueue] (or ["=", (object/get @entity status), "pending"] (and ["=", (object/get @entity status), "processing"] ["<=", (object/get @entity leaseExpiresAt), @now])) ["<=", (object/get @entity availableAt), @now] (not (array/includes @entity.skipIds (object/get @entity id))))
+          filter: (and (= (object/get @entity queue) @entity.wantQueue) (or (= (object/get @entity status) "pending") (and (= (object/get @entity status) "processing") (<= (object/get @entity leaseExpiresAt) @now))) (<= (object/get @entity availableAt) @now) (not (array/includes @entity.skipIds (object/get @entity id))))
           orderBy: "priority:desc"
           limit: 1
         })
-      DeqCandLoaded -> idle when [">", (array/len ?data), 0]
+      DeqCandLoaded -> idle when (> (array/len ?data) 0)
         (set @entity.wantId (object/get (array/first ?data) id))
-        (set @entity.wantAttempt ["+", (object/get (array/first ?data) attempts), 1])
-        (persist create QueueClaim { id: (str/concat @entity.wantId ":" @entity.wantAttempt), jobId: @entity.wantId, attempt: @entity.wantAttempt, kind: "worker", claimedAt: @now, leaseExpiresAt: ["+", @now, @config.leaseMs] } {
+        (set @entity.wantAttempt (+ (object/get (array/first ?data) attempts) 1))
+        (persist create QueueClaim { id: (str/concat @entity.wantId ":" @entity.wantAttempt), jobId: @entity.wantId, attempt: @entity.wantAttempt, kind: "worker", claimedAt: @now, leaseExpiresAt: (+ @now @config.leaseMs) } {
           emit: { failure: DeqFailed, success: DeqClaimed }
         })
       DeqClaimed -> idle
-        (persist update @config.jobEntity { id: @entity.wantId, status: "processing", attempts: @entity.wantAttempt, leaseExpiresAt: ["+", @now, @config.leaseMs] } {
+        (persist update @config.jobEntity { id: @entity.wantId, status: "processing", attempts: @entity.wantAttempt, leaseExpiresAt: (+ @now @config.leaseMs) } {
           emit: { failure: DeqFailed, success: DeqMarked }
         })
       DeqMarked -> idle
         (emit JOB_DEQUEUED { job: @payload, attempt: ?attempts, leaseExpiresAt: ?leaseExpiresAt })
-      DeqFailed -> idle when ["=", ?code, "duplicate-id"]
+      DeqFailed -> idle when (= ?code "duplicate-id")
         (fetch QueueClaim {
           emit: { failure: DeqFailed, success: DeqSlotLoaded }
-          filter: ["=", (object/get @entity id), (str/concat @entity.wantId ":" @entity.wantAttempt)]
+          filter: (= (object/get @entity id) (str/concat @entity.wantId ":" @entity.wantAttempt))
         })
-      DeqSlotLoaded -> idle when ["=", (array/len ?data), 0]
+      DeqSlotLoaded -> idle when (= (array/len ?data) 0)
         (set @entity.skipIds (array/append @entity.skipIds @entity.wantId))
         (fetch @config.jobEntity {
           emit: { failure: DeqFailed, success: DeqTopLoaded }
-          filter: (and ["=", (object/get @entity queue), @entity.wantQueue] (or ["=", (object/get @entity status), "pending"] (and ["=", (object/get @entity status), "processing"] ["<=", (object/get @entity leaseExpiresAt), @now])) ["<=", (object/get @entity availableAt), @now] (not (array/includes @entity.skipIds (object/get @entity id))))
+          filter: (and (= (object/get @entity queue) @entity.wantQueue) (or (= (object/get @entity status) "pending") (and (= (object/get @entity status) "processing") (<= (object/get @entity leaseExpiresAt) @now))) (<= (object/get @entity availableAt) @now) (not (array/includes @entity.skipIds (object/get @entity id))))
           orderBy: "priority:desc"
           limit: 1
         })
-      DeqSlotLoaded -> idle when (and [">", (array/len ?data), 0] (or ["=", (object/get (array/first ?data) kind), "cancel"] (and ["=", (object/get (array/first ?data) kind), "worker"] [">", (object/get (array/first ?data) leaseExpiresAt), @now])))
+      DeqSlotLoaded -> idle when (and (> (array/len ?data) 0) (or (= (object/get (array/first ?data) kind) "cancel") (and (= (object/get (array/first ?data) kind) "worker") (> (object/get (array/first ?data) leaseExpiresAt) @now))))
         (set @entity.skipIds (array/append @entity.skipIds @entity.wantId))
         (fetch @config.jobEntity {
           emit: { failure: DeqFailed, success: DeqTopLoaded }
-          filter: (and ["=", (object/get @entity queue), @entity.wantQueue] (or ["=", (object/get @entity status), "pending"] (and ["=", (object/get @entity status), "processing"] ["<=", (object/get @entity leaseExpiresAt), @now])) ["<=", (object/get @entity availableAt), @now] (not (array/includes @entity.skipIds (object/get @entity id))))
+          filter: (and (= (object/get @entity queue) @entity.wantQueue) (or (= (object/get @entity status) "pending") (and (= (object/get @entity status) "processing") (<= (object/get @entity leaseExpiresAt) @now))) (<= (object/get @entity availableAt) @now) (not (array/includes @entity.skipIds (object/get @entity id))))
           orderBy: "priority:desc"
           limit: 1
         })
-      DeqSlotLoaded -> idle when (and [">", (array/len ?data), 0] ["=", (object/get (array/first ?data) kind), "worker"] ["<=", (object/get (array/first ?data) leaseExpiresAt), @now])
-        (set @entity.wantAttempt ["+", @entity.wantAttempt, 1])
-        (persist create QueueClaim { id: (str/concat @entity.wantId ":" @entity.wantAttempt), jobId: @entity.wantId, attempt: @entity.wantAttempt, kind: "worker", claimedAt: @now, leaseExpiresAt: ["+", @now, @config.leaseMs] } {
+      DeqSlotLoaded -> idle when (and (> (array/len ?data) 0) (= (object/get (array/first ?data) kind) "worker") (<= (object/get (array/first ?data) leaseExpiresAt) @now))
+        (set @entity.wantAttempt (+ @entity.wantAttempt 1))
+        (persist create QueueClaim { id: (str/concat @entity.wantId ":" @entity.wantAttempt), jobId: @entity.wantId, attempt: @entity.wantAttempt, kind: "worker", claimedAt: @now, leaseExpiresAt: (+ @now @config.leaseMs) } {
           emit: { failure: DeqFailed, success: DeqClaimed }
         })
-      DeqSlotLoaded -> idle when (and [">", (array/len ?data), 0] ["=", (object/get (array/first ?data) kind), "completed"])
+      DeqSlotLoaded -> idle when (and (> (array/len ?data) 0) (= (object/get (array/first ?data) kind) "completed"))
         (persist update @config.jobEntity { id: @entity.wantId, status: "completed", result: (object/get (array/first ?data) text) } {
           emit: { failure: DeqFailed, success: DeqHealed }
         })
-      DeqSlotLoaded -> idle when (and [">", (array/len ?data), 0] ["=", (object/get (array/first ?data) kind), "failed"])
+      DeqSlotLoaded -> idle when (and (> (array/len ?data) 0) (= (object/get (array/first ?data) kind) "failed"))
         (persist update @config.jobEntity { id: @entity.wantId, status: "failed", error: (object/get (array/first ?data) text) } {
           emit: { failure: DeqFailed, success: DeqHealed }
         })
@@ -348,11 +348,11 @@ orbital QueueOrbital {
         (set @entity.skipIds (array/append @entity.skipIds @entity.wantId))
         (fetch @config.jobEntity {
           emit: { failure: DeqFailed, success: DeqTopLoaded }
-          filter: (and ["=", (object/get @entity queue), @entity.wantQueue] (or ["=", (object/get @entity status), "pending"] (and ["=", (object/get @entity status), "processing"] ["<=", (object/get @entity leaseExpiresAt), @now])) ["<=", (object/get @entity availableAt), @now] (not (array/includes @entity.skipIds (object/get @entity id))))
+          filter: (and (= (object/get @entity queue) @entity.wantQueue) (or (= (object/get @entity status) "pending") (and (= (object/get @entity status) "processing") (<= (object/get @entity leaseExpiresAt) @now))) (<= (object/get @entity availableAt) @now) (not (array/includes @entity.skipIds (object/get @entity id))))
           orderBy: "priority:desc"
           limit: 1
         })
-      DeqFailed -> idle when ["!=", ?code, "duplicate-id"]
+      DeqFailed -> idle when (!= ?code "duplicate-id")
         (emit QUEUE_FAILED { op: "dequeue", error: ?error, code: ?code })
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Queue unavailable: " ?error) })
     }
@@ -466,7 +466,7 @@ orbital QueueOrbital {
         (set @entity.wantText (str/default ?result ""))
         (fetch @config.jobEntity {
           emit: { failure: FinFailed, success: FinJobLoaded }
-          filter: ["=", (object/get @entity id), @entity.wantId]
+          filter: (= (object/get @entity id) @entity.wantId)
         })
       FAIL -> idle
         (set @entity.wantId ?jobId)
@@ -475,37 +475,37 @@ orbital QueueOrbital {
         (set @entity.wantText (str/default ?error ""))
         (fetch @config.jobEntity {
           emit: { failure: FinFailed, success: FinJobLoaded }
-          filter: ["=", (object/get @entity id), @entity.wantId]
+          filter: (= (object/get @entity id) @entity.wantId)
         })
-      FinJobLoaded -> idle when (and (or ["=", (array/len ?data), 0] ["!=", (object/get (array/first ?data) status), "processing"]) ["=", @entity.wantOutcome, "completed"])
+      FinJobLoaded -> idle when (and (or (= (array/len ?data) 0) (!= (object/get (array/first ?data) status) "processing")) (= @entity.wantOutcome "completed"))
         (emit JOB_COMPLETED { jobId: @entity.wantId, completed: false })
-      FinJobLoaded -> idle when (and (or ["=", (array/len ?data), 0] ["!=", (object/get (array/first ?data) status), "processing"]) ["=", @entity.wantOutcome, "failed"])
+      FinJobLoaded -> idle when (and (or (= (array/len ?data) 0) (!= (object/get (array/first ?data) status) "processing")) (= @entity.wantOutcome "failed"))
         (emit JOB_FAILED { jobId: @entity.wantId, failed: false })
-      FinJobLoaded -> idle when (and [">", (array/len ?data), 0] ["=", (object/get (array/first ?data) status), "processing"] (or ["!=", (object/get (array/first ?data) attempts), @entity.wantAttempt] ["<=", (object/get (array/first ?data) leaseExpiresAt), @now]) ["=", @entity.wantOutcome, "completed"])
+      FinJobLoaded -> idle when (and (> (array/len ?data) 0) (= (object/get (array/first ?data) status) "processing") (or (!= (object/get (array/first ?data) attempts) @entity.wantAttempt) (<= (object/get (array/first ?data) leaseExpiresAt) @now)) (= @entity.wantOutcome "completed"))
         (emit LEASE_LOST { jobId: @entity.wantId, attempt: @entity.wantAttempt, op: "complete" })
-      FinJobLoaded -> idle when (and [">", (array/len ?data), 0] ["=", (object/get (array/first ?data) status), "processing"] (or ["!=", (object/get (array/first ?data) attempts), @entity.wantAttempt] ["<=", (object/get (array/first ?data) leaseExpiresAt), @now]) ["=", @entity.wantOutcome, "failed"])
+      FinJobLoaded -> idle when (and (> (array/len ?data) 0) (= (object/get (array/first ?data) status) "processing") (or (!= (object/get (array/first ?data) attempts) @entity.wantAttempt) (<= (object/get (array/first ?data) leaseExpiresAt) @now)) (= @entity.wantOutcome "failed"))
         (emit LEASE_LOST { jobId: @entity.wantId, attempt: @entity.wantAttempt, op: "fail" })
-      FinJobLoaded -> idle when (and [">", (array/len ?data), 0] ["=", (object/get (array/first ?data) status), "processing"] ["=", (object/get (array/first ?data) attempts), @entity.wantAttempt] [">", (object/get (array/first ?data) leaseExpiresAt), @now])
-        (persist create QueueClaim { id: (str/concat @entity.wantId ":" ["+", @entity.wantAttempt, 1]), jobId: @entity.wantId, attempt: ["+", @entity.wantAttempt, 1], kind: @entity.wantOutcome, claimedAt: @now, text: @entity.wantText } {
+      FinJobLoaded -> idle when (and (> (array/len ?data) 0) (= (object/get (array/first ?data) status) "processing") (= (object/get (array/first ?data) attempts) @entity.wantAttempt) (> (object/get (array/first ?data) leaseExpiresAt) @now))
+        (persist create QueueClaim { id: (str/concat @entity.wantId ":" (+ @entity.wantAttempt 1)), jobId: @entity.wantId, attempt: (+ @entity.wantAttempt 1), kind: @entity.wantOutcome, claimedAt: @now, text: @entity.wantText } {
           emit: { failure: FinFailed, success: FinWon }
         })
-      FinWon -> idle when ["=", @entity.wantOutcome, "completed"]
+      FinWon -> idle when (= @entity.wantOutcome "completed")
         (persist update @config.jobEntity { id: @entity.wantId, status: "completed", result: @entity.wantText } {
           emit: { failure: FinFailed, success: FinMarked }
         })
-      FinWon -> idle when ["=", @entity.wantOutcome, "failed"]
+      FinWon -> idle when (= @entity.wantOutcome "failed")
         (persist update @config.jobEntity { id: @entity.wantId, status: "failed", error: @entity.wantText } {
           emit: { failure: FinFailed, success: FinMarked }
         })
-      FinMarked -> idle when ["=", @entity.wantOutcome, "completed"]
+      FinMarked -> idle when (= @entity.wantOutcome "completed")
         (emit JOB_COMPLETED { jobId: @entity.wantId, completed: true })
-      FinMarked -> idle when ["=", @entity.wantOutcome, "failed"]
+      FinMarked -> idle when (= @entity.wantOutcome "failed")
         (emit JOB_FAILED { jobId: @entity.wantId, failed: true })
-      FinFailed -> idle when (and ["=", ?code, "duplicate-id"] ["=", @entity.wantOutcome, "completed"])
+      FinFailed -> idle when (and (= ?code "duplicate-id") (= @entity.wantOutcome "completed"))
         (emit LEASE_LOST { jobId: @entity.wantId, attempt: @entity.wantAttempt, op: "complete" })
-      FinFailed -> idle when (and ["=", ?code, "duplicate-id"] ["=", @entity.wantOutcome, "failed"])
+      FinFailed -> idle when (and (= ?code "duplicate-id") (= @entity.wantOutcome "failed"))
         (emit LEASE_LOST { jobId: @entity.wantId, attempt: @entity.wantAttempt, op: "fail" })
-      FinFailed -> idle when ["!=", ?code, "duplicate-id"]
+      FinFailed -> idle when (!= ?code "duplicate-id")
         (emit QUEUE_FAILED { op: "settle", error: ?error, code: ?code })
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Queue unavailable: " ?error) })
     }
@@ -605,17 +605,17 @@ orbital QueueOrbital {
         (set @entity.wantId ?jobId)
         (fetch @config.jobEntity {
           emit: { failure: InspectFailed, success: StatJobLoaded }
-          filter: ["=", (object/get @entity id), @entity.wantId]
+          filter: (= (object/get @entity id) @entity.wantId)
         })
       QUEUE_SIZE -> idle
         (set @entity.wantQueue ?queue)
         (fetch @config.jobEntity {
           emit: { failure: InspectFailed, success: SizeLoaded }
-          filter: (and ["=", (object/get @entity queue), @entity.wantQueue] (or ["=", (object/get @entity status), "pending"] ["=", (object/get @entity status), "processing"]))
+          filter: (and (= (object/get @entity queue) @entity.wantQueue) (or (= (object/get @entity status) "pending") (= (object/get @entity status) "processing")))
         })
-      StatJobLoaded -> idle when ["=", (array/len ?data), 0]
+      StatJobLoaded -> idle when (= (array/len ?data) 0)
         (emit JOB_NOT_FOUND { jobId: @entity.wantId })
-      StatJobLoaded -> idle when [">", (array/len ?data), 0]
+      StatJobLoaded -> idle when (> (array/len ?data) 0)
         (emit JOB_STATUS_REPORTED {
           jobId: @entity.wantId
           status: (object/get (array/first ?data) status)
@@ -627,8 +627,8 @@ orbital QueueOrbital {
         (emit QUEUE_SIZED {
           queue: @entity.wantQueue
           size: (array/len ?data)
-          pending: (array/count ?data (fn row ["=", (object/get @row status), "pending"]))
-          processing: (array/count ?data (fn row ["=", (object/get @row status), "processing"]))
+          pending: (array/count ?data (fn row (= (object/get @row status) "pending")))
+          processing: (array/count ?data (fn row (= (object/get @row status) "processing")))
         })
       InspectFailed -> idle
         (emit QUEUE_FAILED { op: "inspect", error: ?error, code: ?code })

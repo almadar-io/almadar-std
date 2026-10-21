@@ -58,7 +58,7 @@ orbital SelectableItemOrbital {
             children: []
             gap: none
             type: stack
-          }), (if [">", (array/len @config.filters), 0] {
+          }), (if (> (array/len @config.filters) 0) {
             children: [{
               entity: SelectableItem
               event: REFETCH_FILTER
@@ -149,12 +149,12 @@ orbital SelectableItemOrbital {
       REFETCH_QUERY -> idle
         (fetch SelectableItem {
           emit: { failure: SelectableItemLoadFailed, success: SelectableItemLoaded }
-          filter: (or ["=", ?searchTerm, ""] (str/includes (object/get @entity @config.searchField) ?searchTerm))
+          filter: (or (= ?searchTerm "") (str/includes (object/get @entity @config.searchField) ?searchTerm))
         })
       REFETCH_FILTER -> idle
         (fetch SelectableItem {
           emit: { failure: SelectableItemLoadFailed, success: SelectableItemLoaded }
-          filter: (or ["=", ?value, ""] ["=", (object/get @entity ?field), ?value])
+          filter: (or (= ?value "") (= (object/get @entity ?field) ?value))
         })
       ;; No filter carried over on REFETCH_PAGE, mirroring std-browse exactly.
       ;; Paging is safe here: this atom's selection is a single transient id
@@ -168,7 +168,7 @@ orbital SelectableItemOrbital {
         (fetch SelectableItem {
           emit: { failure: SelectableItemLoadFailed, success: SelectableItemLoaded }
           limit: @config.pageSize
-          offset: ["*", ["-", ?page, 1], @config.pageSize]
+          offset: (* (- ?page 1) @config.pageSize)
         })
       SelectableItemLoadFailed -> idle
         (notify error (str/concat "Couldn't refresh the list — " ?error))
@@ -199,7 +199,7 @@ orbital SelectableItemOrbital {
             children: []
             gap: none
             type: stack
-          }), (if [">", (array/len @config.filters), 0] {
+          }), (if (> (array/len @config.filters) 0) {
             children: [{
               entity: SelectableItem
               event: REFETCH_FILTER

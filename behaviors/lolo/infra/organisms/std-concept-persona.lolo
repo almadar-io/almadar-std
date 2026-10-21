@@ -54,7 +54,7 @@ orbital ConceptPersonaOrbital {
         (set @entity.context (if (= ?context null) "" (str/trim ?context)))
         (set @entity.key (str/concat "c:" (str/encode-uri-component (str/lower @entity.label)) (if (= @entity.context "") "" (str/concat "|" (str/encode-uri-component (str/lower @entity.context))))))
         (fetch ConceptPersonaCache {
-          filter: ["=", (object/get @entity id), @entity.key],
+          filter: (= (object/get @entity id) @entity.key),
           emit: { success: CONCEPT_PERSONA_CACHE_LOADED, failure: CONCEPT_PERSONA_CACHE_FAILED }
         })
     }

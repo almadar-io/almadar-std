@@ -30,7 +30,7 @@ describe('runsOn', () => {
     expect(getOperatorsRunningOn('server')).toEqual([
       'atomic', 'behavior/catalog', 'behavior/dependencies', 'behavior/describe', 'behavior/resolve', 'behavior/source', 'call-service', 'cancel-call', 'credential-forget', 'credential-list', 'credential-mode', 'credential-remove', 'credential-rotate', 'credential-set', 'credential-status', 'credential-test', 'fetch', 'fetch-stream', 'http',
       'oauth-authorize', 'oauth-connection-forget', 'oauth-connection-status', ...OS_EFFECTS,
-      'persist', 'persist/read-named', 'postgres', 'program/compose', 'program/dispatch', 'program/eval', 'program/inputs', 'program/machine', 'program/print', 'program/read', 'program/step', 'program/validate', 'random-bytes', 'redis', 'swap',
+      'persist', 'persist/read-named', 'postgres', 'program/compose', 'program/dispatch', 'program/eval', 'program/inputs', 'program/print', 'program/read', 'program/step', 'program/validate', 'random-bytes', 'redis', 'swap',
     ].sort());
   });
 

@@ -1,0 +1,97 @@
+app std-verify-plan [
+  version: "1.0.0",
+  description: "std-verify-plan — the kernel's verify planner (orbital-core planner.rs plan_trait) as data. PLAN_REQUEST carries a resolved program (.orb IR) and std-machine rows; PLAN_ANSWERED returns one PlannedStep per row in row order. Planned: the payload of every unguarded row from its declared slots (row-key slot and id slot = the seed row id, values slot = first declared value, entity slot = a row carrying the seed id, number 1, boolean true, email, url, image, phone, uuid, array [], other string 'verify', capitalised non-entity named type null). Unplanned with the Rust reason code: guard-unsolved (guarded row, the symbolic guard solver is not ported) and object-slot-unplanned (object or [object] slot, its properties are not on the row). The walk is bounded array maps in one event, no cascade."
+]
+;; @capabilities "verify planner, payload synthesis, seed row id, plan a transition, guard payload"
+uses Spec from "almadar-std/verify-plan"
+
+type PlanSlot = { name : string!, type : string!, required : boolean!, values : [string], entity : string }
+type PlanRow = { orbital : string!, trait : string!, from : string!, event : string!, to : string!, guarded : boolean!, payload : [PlanSlot]! }
+type PlanText = { v : string }
+type PlanFroms = { v : [string] }
+type PlanForm = [SExpr]
+type PlanArm = { event : string!, from : (string | [string]), to : string!, guard : SExpr, effects : [SExpr] }
+type PlanTick = { effects : [SExpr] }
+type PlanGraph = { transitions : [PlanArm] }
+type PlanTrait = { name : string!, orbital : string, linkedEntity : string, stateMachine : PlanGraph, ticks : [PlanTick] }
+type PlanOrbital = { name : string!, traits : [PlanTrait] }
+type PlanProgram = { orbitals : [PlanOrbital] }
+type PlanPrecondition = { kind : string!, trait : string, event : string, fields : [string], proof : string!, reason : string }
+type JsonValue = string | number | boolean | [JsonValue] | Map string JsonValue
+type PlanPayload = Map string JsonValue
+type PlannedStep = { trait : string!, linkedEntity : string, from : string!, event : string!, to : string!, toStates : [string]!, variant : string!, payload : PlanPayload!, guarded : boolean!, arm : number, solved : boolean!, payloadCase : string!, guardCase : string, unplanned : string, precondition : PlanPrecondition }
+
+orbital VerifyPlanOrbital {
+  entity PlanRun [runtime] {
+    id : string!
+    steps : [PlannedStep]! = []
+  }
+
+  trait Plan -> PlanRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      PLAN_REQUEST -> ready
+        (let ((progTraits (array/flatten (array/map (object/get (json/parse (json/stringify @payload.program) PlanProgram) "orbitals") (fn o (array/map (object/get @o "traits" []) (fn t (object/set @t "orbital" (object/get @o "name")))))))))
+          (do (set @entity.steps (array/map @payload.rows (fn r
+            (let ((tr (array/find @progTraits (fn t (and (= (object/get @t "name") (object/get @r "trait")) (= (object/get @t "orbital") (object/get @r "orbital")))))))
+              (let ((ent (object/get @tr "linkedEntity" "")))
+                (let ((seed (if (= @ent "") "" (str/concat @ent "-verify-seed-1")))
+                      (keys (array/map (array/filter (array/map (array/filter (array/reduce (array/filter (object/get (object/get @tr "stateMachine") "transitions" []) (fn a (= (object/get @a "event") (object/get @r "event")))) [] (fn (acc a) (array/concat @acc (array/reduce (object/get @a "effects" []) [] (fn (acc2 e) (array/concat @acc2 (json/nodes @e))))))) (fn n (str/startsWith (json/stringify @n) "["))) (fn n (json/parse (json/stringify @n) PlanForm)))
+                                         (fn f (and (> (array/len @f) 2) (= (json/stringify (array/take @f 2)) (json/stringify (quote ["set", "@entity.id"]))) (str/startsWith (json/stringify (array/nth @f 2)) (str/concat "\"" (quote "@payload."))))))
+                                       (fn f (str/slice (object/get (json/parse (str/concat "{\"v\":" (json/stringify (array/nth @f 2)) "}") PlanText) "v") 9)))))
+                  (let ((planned (array/reduce (object/get @r "payload") {}
+                                   (fn (acc s)
+                                     (object/set @acc (object/get @s "name") (json/parse
+                                       (if (and (!= @seed "") (or (array/includes @keys (object/get @s "name")) (= (object/get @s "name") "id"))) (json/stringify @seed)
+                                       (if (object/has @s "values") (json/stringify (array/nth (object/get @s "values") 0))
+                                       (if (object/has @s "entity") (json/stringify { id: @seed })
+                                       (if (array/includes ["number" "int" "integer" "float"] (object/get @s "type")) "1"
+                                       (if (array/includes ["boolean" "bool"] (object/get @s "type")) "true"
+                                       (if (= (object/get @s "type") "email") "\"verify@example.com\""
+                                       (if (array/includes ["url" "image"] (object/get @s "type")) "\"https://example.com/verify\""
+                                       (if (= (object/get @s "type") "phone") "\"+1-555-0100\""
+                                       (if (= (object/get @s "type") "uuid") "\"00000000-0000-4000-8000-000000000001\""
+                                       (if (str/startsWith (object/get @s "type") "[") "[]" "\"verify\"")))))))))) JsonValue)))))
+                        (objectSlot (array/some (object/get @r "payload") (fn s (array/includes ["object" "[object]"] (object/get @s "type"))))))
+                    (let ((arms (object/get (object/get @tr "stateMachine") "transitions" []))
+                          (guarded (object/get @r "guarded")))
+                      (let ((arm (array/find @arms (fn a (and (= (object/get @a "event") (object/get @r "event")) (= (object/get @a "to") (object/get @r "to")) (= (object/has @a "guard") @guarded) (array/includes (object/get (json/parse (str/concat "{\"v\":" (if (str/startsWith (json/stringify (object/get @a "from")) "[") (json/stringify (object/get @a "from")) (str/concat "[" (json/stringify (object/get @a "from")) "]")) "}") PlanFroms) "v") (object/get @r "from")))))))
+                        (let ((bindTexts (if @guarded (array/map (array/filter (json/nodes (object/get @arm "guard")) (fn n (str/startsWith (json/stringify @n) "\"@"))) (fn n (object/get (json/parse (str/concat "{\"v\":" (json/stringify @n) "}") PlanText) "v"))) [])))
+                          (let ((payloadBinds (array/filter @bindTexts (fn b (str/startsWith (str/slice @b 1) "payload."))))
+                                (entityFields (array/unique (array/map (array/filter @bindTexts (fn b (and (str/startsWith (str/slice @b 1) "entity.") (!= (str/slice @b 1) "entity.id")))) (fn b (str/slice @b 8)))))
+                                (gform (if @guarded (if (str/startsWith (json/stringify (object/get @arm "guard")) "[") (json/parse (json/stringify (object/get @arm "guard")) PlanForm) []) [])))
+                            (let ((head (if (> (array/len @gform) 0) (if (str/startsWith (json/stringify (array/nth @gform 0)) "\"") (object/get (json/parse (str/concat "{\"v\":" (json/stringify (array/nth @gform 0)) "}") PlanText) "v") "") ""))
+                                  (guardExpr (if @guarded (object/get @arm "guard") "")))
+                              (let ((conjs (if (= @head "and") (array/drop @gform 1) [@guardExpr])))
+                                (let ((ok (or (not @guarded) (= (array/len @payloadBinds) 0) (and (= (array/len @bindTexts) (array/len @payloadBinds)) (array/every @conjs (fn c (let ((f (if (str/startsWith (json/stringify @c) "[") (json/parse (json/stringify @c) PlanForm) []))) (and (= (array/len @f) 3) (str/startsWith (json/stringify (array/nth @f 0)) "\"") (array/includes ["=", "==", ">", ">=", "<", "<="] (object/get (json/parse (str/concat "{\"v\":" (json/stringify (array/nth @f 0)) "}") PlanText) "v")) (str/startsWith (json/stringify (array/nth @f 1)) (str/concat "\"" (quote "@payload."))) (not (array/includes ["\"", "[", "{", "t", "f"] (str/slice (json/stringify (array/nth @f 2)) 0 1)))))))))))
+                                  (let ((solvedPayload (if (and @guarded (> (array/len @payloadBinds) 0) @ok) (array/reduce @conjs @planned (fn (acc c) (let ((f (if (str/startsWith (json/stringify @c) "[") (json/parse (json/stringify @c) PlanForm) []))) (if (let ((f (if (str/startsWith (json/stringify @c) "[") (json/parse (json/stringify @c) PlanForm) []))) (and (= (array/len @f) 3) (str/startsWith (json/stringify (array/nth @f 0)) "\"") (array/includes ["=", "==", ">", ">=", "<", "<="] (object/get (json/parse (str/concat "{\"v\":" (json/stringify (array/nth @f 0)) "}") PlanText) "v")) (str/startsWith (json/stringify (array/nth @f 1)) (str/concat "\"" (quote "@payload."))) (not (array/includes ["\"", "[", "{", "t", "f"] (str/slice (json/stringify (array/nth @f 2)) 0 1))))) (object/set @acc (str/slice (object/get (json/parse (str/concat "{\"v\":" (json/stringify (array/nth @f 1)) "}") PlanText) "v") 9) (json/parse (if (array/includes ["=", "==", ">=", "<="] (object/get (json/parse (str/concat "{\"v\":" (json/stringify (array/nth @f 0)) "}") PlanText) "v")) (json/stringify (array/nth @f 2)) (if (= (object/get (json/parse (str/concat "{\"v\":" (json/stringify (array/nth @f 0)) "}") PlanText) "v") ">") (json/stringify (+ (str/to-number (json/stringify (array/nth @f 2))) 1)) (json/stringify (- (str/to-number (json/stringify (array/nth @f 2))) 1)))) JsonValue)) @acc)))) @planned))
+                                        (sameHit (array/some (array/filter @arms (fn a (!= (object/get @a "event") "INIT"))) (fn a (array/some (array/map (array/filter (array/reduce (object/get @a "effects" []) [] (fn (acc2 e) (array/concat @acc2 (json/nodes @e)))) (fn n (str/startsWith (json/stringify @n) "["))) (fn n (json/parse (json/stringify @n) PlanForm))) (fn f (array/some @entityFields (fn fld (= (json/stringify (array/take @f 2)) (json/stringify ["set", (str/concat (quote "@entity.") @fld)])))))))))
+                                        (tickHit (array/some @entityFields (fn fld (array/some (array/map (array/filter (array/reduce (object/get @tr "ticks" []) [] (fn (acc3 tk) (array/concat @acc3 (array/reduce (object/get @tk "effects" []) [] (fn (acc2 e) (array/concat @acc2 (json/nodes @e))))))) (fn n (str/startsWith (json/stringify @n) "["))) (fn n (json/parse (json/stringify @n) PlanForm))) (fn f (= (json/stringify (array/take @f 2)) (json/stringify ["set", (str/concat (quote "@entity.") @fld)])))))))
+                                        (cands (array/reduce @progTraits [] (fn (acc t) (if (and (!= (object/get @t "name") (object/get @r "trait")) (!= @ent "") (= (object/get @t "linkedEntity" "") @ent)) (array/concat @acc (array/map (array/filter (object/get (object/get @t "stateMachine") "transitions" []) (fn a (and (!= (object/get @a "event") "INIT") (array/some (array/map (array/filter (array/reduce (object/get @a "effects" []) [] (fn (acc2 e) (array/concat @acc2 (json/nodes @e)))) (fn n (str/startsWith (json/stringify @n) "["))) (fn n (json/parse (json/stringify @n) PlanForm))) (fn f (array/some @entityFields (fn fld (= (json/stringify (array/take @f 2)) (json/stringify ["set", (str/concat (quote "@entity.") @fld)]))))))))) (fn a { trait: (object/get @t "name"), event: (object/get @a "event") }))) @acc)))))
+                                    (let ((why (if (not @ok) "guard-unsolved" (if @objectSlot "object-slot-unplanned" ""))))
+                                      (let ((pre (if (and @guarded (> (array/len @entityFields) 0)) (if (> (array/len @cands) 0) { kind: "established", trait: (object/get (array/nth @cands 0) "trait"), event: (object/get (array/nth @cands 0) "event"), fields: @entityFields, proof: "unproven", reason: "setter-value-unresolved" } (if (or @sameHit @tickHit) { kind: "same-trait-setter", trait: "", event: "", fields: @entityFields, proof: "unproven", reason: "setter-not-on-replay-path" } { kind: "unreachable", trait: "", event: "", fields: @entityFields, proof: "unproven", reason: "unreachable" })) { kind: "none", trait: "", event: "", fields: [], proof: "proven", reason: "" })))
+                                        (let ((step { trait: (object/get @r "trait"), from: (object/get @r "from"), event: (object/get @r "event"), to: (object/get @r "to"), toStates: [(object/get @r "to")], variant: "success", payload: @solvedPayload, guarded: @guarded, solved: (= @why ""), payloadCase: "success" }))
+                                          (let ((withEntity (if (= @ent "") @step (object/set @step "linkedEntity" @ent))))
+                                            (let ((withGuard (if @guarded (object/set @withEntity "guardCase" "pass") @withEntity)))
+                                              (let ((withPre (if (= (object/get @pre "kind") "none") @withGuard (object/set @withGuard "precondition" @pre))))
+                                                (if (= @why "") @withPre (object/set @withPre "unplanned" @why)))))))))))))))))))))))
+        (emit PLAN_ANSWERED { steps: @entity.steps })))
+    }
+
+    emits {
+      PLAN_ANSWERED -> external { steps : [PlannedStep]! }
+        @description "One planned step per row, in row order."
+        @tier "domain"
+    }
+
+    listens {
+      PLAN_REQUEST -> external { program : SExpr!, rows : [PlanRow]! }
+        @description "Plan a payload for each machine row of a resolved program."
+        @synonyms "verify plan, plan transitions, synthesize payloads, seed row id"
+    }
+  }
+
+  page "/verify-plan" as VerifyPlanPage -> Plan
+}

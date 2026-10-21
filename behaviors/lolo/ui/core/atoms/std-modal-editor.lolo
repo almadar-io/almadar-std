@@ -22,18 +22,18 @@ orbital ModalEditorOrbital {
       INIT -> NORMAL
         (set @entity.count 0)
 
-      KEY -> INSERT when ["=", ?key, @config.insertKey]
+      KEY -> INSERT when (= ?key @config.insertKey)
         (set @entity.editorId ?editorId)
         (set @entity.count 0)
         (emit SET_MODE { editorId: ?editorId, mode: "INSERT", caret: "bar", keys: (object/get @config.keymap INSERT []) })
 
-      KEY -> INSERT when ["=", ?key, @config.appendKey]
+      KEY -> INSERT when (= ?key @config.appendKey)
         (set @entity.editorId ?editorId)
         (set @entity.count 0)
         (emit MOTION { editorId: ?editorId, motion: "right", count: 1 })
         (emit SET_MODE { editorId: ?editorId, mode: "INSERT", caret: "bar", keys: (object/get @config.keymap INSERT []) })
 
-      KEY -> INSERT when ["=", ?key, @config.openLineKey]
+      KEY -> INSERT when (= ?key @config.openLineKey)
         (set @entity.editorId ?editorId)
         (set @entity.count 0)
         (emit MOTION { editorId: ?editorId, motion: "line-end", count: 1 })
@@ -41,7 +41,7 @@ orbital ModalEditorOrbital {
         (emit INSERT_TEXT { editorId: ?editorId, text: "\n" })
         (emit SET_MODE { editorId: ?editorId, mode: "INSERT", caret: "bar", keys: (object/get @config.keymap INSERT []) })
 
-      KEY -> INSERT when ["=", ?key, @config.openLineAboveKey]
+      KEY -> INSERT when (= ?key @config.openLineAboveKey)
         (set @entity.editorId ?editorId)
         (set @entity.count 0)
         (emit MOTION { editorId: ?editorId, motion: "line-start", count: 1 })
@@ -49,24 +49,24 @@ orbital ModalEditorOrbital {
         (emit MOTION { editorId: ?editorId, motion: "up", count: 1 })
         (emit SET_MODE { editorId: ?editorId, mode: "INSERT", caret: "bar", keys: (object/get @config.keymap INSERT []) })
 
-      KEY -> INSERT when ["=", ?key, @config.appendLineKey]
+      KEY -> INSERT when (= ?key @config.appendLineKey)
         (set @entity.editorId ?editorId)
         (set @entity.count 0)
         (emit MOTION { editorId: ?editorId, motion: "line-end", count: 1 })
         (emit MOTION { editorId: ?editorId, motion: "right", count: 1 })
         (emit SET_MODE { editorId: ?editorId, mode: "INSERT", caret: "bar", keys: (object/get @config.keymap INSERT []) })
 
-      KEY -> INSERT when ["=", ?key, @config.insertLineKey]
+      KEY -> INSERT when (= ?key @config.insertLineKey)
         (set @entity.editorId ?editorId)
         (set @entity.count 0)
         (emit MOTION { editorId: ?editorId, motion: "first-nonblank", count: 1 })
         (emit SET_MODE { editorId: ?editorId, mode: "INSERT", caret: "bar", keys: (object/get @config.keymap INSERT []) })
 
-      KEY -> VISUAL when ["=", ?key, @config.visualKey]
+      KEY -> VISUAL when (= ?key @config.visualKey)
         (set @entity.editorId ?editorId)
         (emit SET_MODE { editorId: ?editorId, mode: "VISUAL", caret: "block", keys: (object/get @config.keymap VISUAL []) })
 
-      KEY -> COMMAND when ["=", ?key, @config.commandKey]
+      KEY -> COMMAND when (= ?key @config.commandKey)
         (set @entity.editorId ?editorId)
         (set @entity.cmdline "")
         (emit SET_MODE { editorId: ?editorId, mode: "COMMAND", caret: "block", keys: (object/get @config.keymap COMMAND []) })
@@ -76,69 +76,69 @@ orbital ModalEditorOrbital {
         (set @entity.operator (object/get @config.operators ?key))
         (set @entity.operatorKey ?key)
 
-      KEY -> OPERATOR_PENDING when ["=", ?key, @config.gotoPrefixKey]
+      KEY -> OPERATOR_PENDING when (= ?key @config.gotoPrefixKey)
         (set @entity.editorId ?editorId)
         (set @entity.operator "goto")
         (set @entity.operatorKey ?key)
 
-      KEY -> OPERATOR_PENDING when (and ["=", ?key, @config.replaceKey] (not ?ctrl))
+      KEY -> OPERATOR_PENDING when (and (= ?key @config.replaceKey) (not ?ctrl))
         (set @entity.editorId ?editorId)
         (set @entity.operator "replace")
         (set @entity.operatorKey ?key)
 
-      KEY -> NORMAL when (and ["=", ?key, @config.redoKey] ?ctrl)
+      KEY -> NORMAL when (and (= ?key @config.redoKey) ?ctrl)
         (set @entity.editorId ?editorId)
-        (emit OPERATE { editorId: ?editorId, operator: "redo", motion: "right", count: (if [">", @entity.count, 0] @entity.count 1) })
+        (emit OPERATE { editorId: ?editorId, operator: "redo", motion: "right", count: (if (> @entity.count 0) @entity.count 1) })
         (set @entity.count 0)
 
-      KEY -> NORMAL when ["=", ?key, @config.undoKey]
+      KEY -> NORMAL when (= ?key @config.undoKey)
         (set @entity.editorId ?editorId)
-        (emit OPERATE { editorId: ?editorId, operator: "undo", motion: "right", count: (if [">", @entity.count, 0] @entity.count 1) })
+        (emit OPERATE { editorId: ?editorId, operator: "undo", motion: "right", count: (if (> @entity.count 0) @entity.count 1) })
         (set @entity.count 0)
 
-      KEY -> NORMAL when ["=", ?key, @config.deleteCharKey]
+      KEY -> NORMAL when (= ?key @config.deleteCharKey)
         (set @entity.editorId ?editorId)
-        (emit OPERATE { editorId: ?editorId, operator: "delete", motion: "right", count: (if [">", @entity.count, 0] @entity.count 1) })
+        (emit OPERATE { editorId: ?editorId, operator: "delete", motion: "right", count: (if (> @entity.count 0) @entity.count 1) })
         (set @entity.count 0)
 
-      KEY -> NORMAL when ["=", ?key, @config.deleteCharBackKey]
+      KEY -> NORMAL when (= ?key @config.deleteCharBackKey)
         (set @entity.editorId ?editorId)
-        (emit OPERATE { editorId: ?editorId, operator: "delete", motion: "left", count: (if [">", @entity.count, 0] @entity.count 1) })
+        (emit OPERATE { editorId: ?editorId, operator: "delete", motion: "left", count: (if (> @entity.count 0) @entity.count 1) })
         (set @entity.count 0)
 
-      KEY -> NORMAL when ["=", ?key, @config.putKey]
+      KEY -> NORMAL when (= ?key @config.putKey)
         (set @entity.editorId ?editorId)
-        (emit OPERATE { editorId: ?editorId, operator: "put", motion: "right", count: (if [">", @entity.count, 0] @entity.count 1) })
+        (emit OPERATE { editorId: ?editorId, operator: "put", motion: "right", count: (if (> @entity.count 0) @entity.count 1) })
         (set @entity.count 0)
 
-      KEY -> NORMAL when ["=", ?key, @config.putBeforeKey]
+      KEY -> NORMAL when (= ?key @config.putBeforeKey)
         (set @entity.editorId ?editorId)
-        (emit OPERATE { editorId: ?editorId, operator: "put-before", motion: "right", count: (if [">", @entity.count, 0] @entity.count 1) })
+        (emit OPERATE { editorId: ?editorId, operator: "put-before", motion: "right", count: (if (> @entity.count 0) @entity.count 1) })
         (set @entity.count 0)
 
-      KEY -> NORMAL when ["=", ?key, @config.toggleCaseKey]
+      KEY -> NORMAL when (= ?key @config.toggleCaseKey)
         (set @entity.editorId ?editorId)
-        (emit OPERATE { editorId: ?editorId, operator: "toggle-case", motion: "right", count: (if [">", @entity.count, 0] @entity.count 1) })
+        (emit OPERATE { editorId: ?editorId, operator: "toggle-case", motion: "right", count: (if (> @entity.count 0) @entity.count 1) })
         (set @entity.count 0)
 
-      KEY -> NORMAL when ["=", ?key, @config.joinKey]
+      KEY -> NORMAL when (= ?key @config.joinKey)
         (set @entity.editorId ?editorId)
-        (emit OPERATE { editorId: ?editorId, operator: "join", motion: "line", count: (if [">", @entity.count, 1] @entity.count 2) })
+        (emit OPERATE { editorId: ?editorId, operator: "join", motion: "line", count: (if (> @entity.count 1) @entity.count 2) })
         (set @entity.count 0)
 
-      KEY -> NORMAL when (and ["=", ?key, @config.repeatKey] ["!=", @entity.lastOperator, ""])
+      KEY -> NORMAL when (and (= ?key @config.repeatKey) (!= @entity.lastOperator ""))
         (emit OPERATE { editorId: ?editorId, operator: @entity.lastOperator, motion: @entity.lastMotion, count: @entity.lastCount })
         (set @entity.count 0)
 
-      KEY -> NORMAL when (and (object/has @config.digits ?key) (or ["!=", ?key, "0"] [">", @entity.count, 0]))
+      KEY -> NORMAL when (and (object/has @config.digits ?key) (or (!= ?key "0") (> @entity.count 0)))
         (set @entity.count (+ (* @entity.count 10) (object/get @config.digits ?key)))
 
       KEY -> NORMAL when (object/has @config.motions ?key)
         (set @entity.editorId ?editorId)
-        (emit MOTION { editorId: ?editorId, motion: (object/get @config.motions ?key), count: (if [">", @entity.count, 0] @entity.count 1) })
+        (emit MOTION { editorId: ?editorId, motion: (object/get @config.motions ?key), count: (if (> @entity.count 0) @entity.count 1) })
         (set @entity.count 0)
 
-      KEY -> NORMAL when ["=", ?key, "Escape"]
+      KEY -> NORMAL when (= ?key "Escape")
         (set @entity.count 0)
         (set @entity.operator "")
         (set @entity.operatorKey "")
@@ -151,7 +151,7 @@ orbital ModalEditorOrbital {
     state INSERT {
       INIT -> NORMAL
         (set @entity.count 0)
-      KEY -> NORMAL when ["=", ?key, "Escape"]
+      KEY -> NORMAL when (= ?key "Escape")
         (emit MOTION { editorId: ?editorId, motion: "left", count: 1 })
         (emit SET_MODE { editorId: ?editorId, mode: "NORMAL", caret: "block", keys: (object/get @config.keymap NORMAL []) })
 
@@ -163,11 +163,11 @@ orbital ModalEditorOrbital {
     state VISUAL {
       INIT -> NORMAL
         (set @entity.count 0)
-      KEY -> NORMAL when ["=", ?key, "Escape"]
+      KEY -> NORMAL when (= ?key "Escape")
         (set @entity.count 0)
         (emit SET_MODE { editorId: ?editorId, mode: "NORMAL", caret: "block", keys: (object/get @config.keymap NORMAL []) })
 
-      KEY -> INSERT when (and (object/has @config.operators ?key) ["=", (object/get @config.operators ?key), "change"])
+      KEY -> INSERT when (and (object/has @config.operators ?key) (= (object/get @config.operators ?key) "change"))
         (set @entity.count 0)
         (emit OPERATE { editorId: ?editorId, operator: (object/get @config.operators ?key), motion: "selection", count: 1 })
         (set @entity.lastOperator (object/get @config.operators ?key))
@@ -175,7 +175,7 @@ orbital ModalEditorOrbital {
         (set @entity.lastCount 1)
         (emit SET_MODE { editorId: ?editorId, mode: "INSERT", caret: "bar", keys: (object/get @config.keymap INSERT []) })
 
-      KEY -> NORMAL when (and (object/has @config.operators ?key) ["!=", (object/get @config.operators ?key), "change"])
+      KEY -> NORMAL when (and (object/has @config.operators ?key) (!= (object/get @config.operators ?key) "change"))
         (set @entity.count 0)
         (emit OPERATE { editorId: ?editorId, operator: (object/get @config.operators ?key), motion: "selection", count: 1 })
         (set @entity.lastOperator (object/get @config.operators ?key))
@@ -183,7 +183,7 @@ orbital ModalEditorOrbital {
         (set @entity.lastCount 1)
         (emit SET_MODE { editorId: ?editorId, mode: "NORMAL", caret: "block", keys: (object/get @config.keymap NORMAL []) })
 
-      KEY -> NORMAL when ["=", ?key, @config.toggleCaseKey]
+      KEY -> NORMAL when (= ?key @config.toggleCaseKey)
         (set @entity.count 0)
         (emit OPERATE { editorId: ?editorId, operator: "toggle-case", motion: "selection", count: 1 })
         (set @entity.lastOperator "toggle-case")
@@ -191,7 +191,7 @@ orbital ModalEditorOrbital {
         (set @entity.lastCount 1)
         (emit SET_MODE { editorId: ?editorId, mode: "NORMAL", caret: "block", keys: (object/get @config.keymap NORMAL []) })
 
-      KEY -> NORMAL when ["=", ?key, @config.joinKey]
+      KEY -> NORMAL when (= ?key @config.joinKey)
         (set @entity.count 0)
         (emit OPERATE { editorId: ?editorId, operator: "join", motion: "selection", count: 1 })
         (set @entity.lastOperator "join")
@@ -200,7 +200,7 @@ orbital ModalEditorOrbital {
         (emit SET_MODE { editorId: ?editorId, mode: "NORMAL", caret: "block", keys: (object/get @config.keymap NORMAL []) })
 
       KEY -> VISUAL when (object/has @config.motions ?key)
-        (emit MOTION { editorId: ?editorId, motion: (object/get @config.motions ?key), count: (if [">", @entity.count, 0] @entity.count 1) })
+        (emit MOTION { editorId: ?editorId, motion: (object/get @config.motions ?key), count: (if (> @entity.count 0) @entity.count 1) })
         (set @entity.count 0)
 
       EDITOR_FOCUS -> VISUAL
@@ -211,54 +211,54 @@ orbital ModalEditorOrbital {
     state OPERATOR_PENDING {
       INIT -> NORMAL
         (set @entity.count 0)
-      KEY -> NORMAL when (and ["=", ?key, @entity.operatorKey] ["=", @entity.operator, "goto"])
+      KEY -> NORMAL when (and (= ?key @entity.operatorKey) (= @entity.operator "goto"))
         (emit MOTION { editorId: ?editorId, motion: "doc-start", count: 1 })
         (set @entity.operator "")
         (set @entity.operatorKey "")
         (set @entity.count 0)
 
-      KEY -> INSERT when (and ["=", ?key, @entity.operatorKey] ["=", @entity.operator, "change"])
-        (emit OPERATE { editorId: ?editorId, operator: @entity.operator, motion: "line", count: (if [">", @entity.count, 0] @entity.count 1) })
+      KEY -> INSERT when (and (= ?key @entity.operatorKey) (= @entity.operator "change"))
+        (emit OPERATE { editorId: ?editorId, operator: @entity.operator, motion: "line", count: (if (> @entity.count 0) @entity.count 1) })
         (set @entity.lastOperator @entity.operator)
         (set @entity.lastMotion "line")
-        (set @entity.lastCount (if [">", @entity.count, 0] @entity.count 1))
+        (set @entity.lastCount (if (> @entity.count 0) @entity.count 1))
         (set @entity.operator "")
         (set @entity.operatorKey "")
         (set @entity.count 0)
         (emit SET_MODE { editorId: ?editorId, mode: "INSERT", caret: "bar", keys: (object/get @config.keymap INSERT []) })
 
-      KEY -> NORMAL when (and ["=", ?key, @entity.operatorKey] ["!=", @entity.operator, "change"] ["!=", @entity.operator, "goto"] ["!=", @entity.operator, "replace"])
-        (emit OPERATE { editorId: ?editorId, operator: @entity.operator, motion: "line", count: (if [">", @entity.count, 0] @entity.count 1) })
+      KEY -> NORMAL when (and (= ?key @entity.operatorKey) (!= @entity.operator "change") (!= @entity.operator "goto") (!= @entity.operator "replace"))
+        (emit OPERATE { editorId: ?editorId, operator: @entity.operator, motion: "line", count: (if (> @entity.count 0) @entity.count 1) })
         (set @entity.lastOperator @entity.operator)
         (set @entity.lastMotion "line")
-        (set @entity.lastCount (if [">", @entity.count, 0] @entity.count 1))
+        (set @entity.lastCount (if (> @entity.count 0) @entity.count 1))
         (set @entity.operator "")
         (set @entity.operatorKey "")
         (set @entity.count 0)
 
-      KEY -> INSERT when (and (object/has @config.motions ?key) ["=", @entity.operator, "change"])
-        (emit OPERATE { editorId: ?editorId, operator: @entity.operator, motion: (object/get @config.motions ?key), count: (if [">", @entity.count, 0] @entity.count 1) })
+      KEY -> INSERT when (and (object/has @config.motions ?key) (= @entity.operator "change"))
+        (emit OPERATE { editorId: ?editorId, operator: @entity.operator, motion: (object/get @config.motions ?key), count: (if (> @entity.count 0) @entity.count 1) })
         (set @entity.lastOperator @entity.operator)
         (set @entity.lastMotion (object/get @config.motions ?key))
-        (set @entity.lastCount (if [">", @entity.count, 0] @entity.count 1))
+        (set @entity.lastCount (if (> @entity.count 0) @entity.count 1))
         (set @entity.operator "")
         (set @entity.operatorKey "")
         (set @entity.count 0)
         (emit SET_MODE { editorId: ?editorId, mode: "INSERT", caret: "bar", keys: (object/get @config.keymap INSERT []) })
 
-      KEY -> NORMAL when (and (object/has @config.motions ?key) ["!=", @entity.operator, "change"] ["!=", @entity.operator, "goto"] ["!=", @entity.operator, "replace"])
-        (emit OPERATE { editorId: ?editorId, operator: @entity.operator, motion: (object/get @config.motions ?key), count: (if [">", @entity.count, 0] @entity.count 1) })
+      KEY -> NORMAL when (and (object/has @config.motions ?key) (!= @entity.operator "change") (!= @entity.operator "goto") (!= @entity.operator "replace"))
+        (emit OPERATE { editorId: ?editorId, operator: @entity.operator, motion: (object/get @config.motions ?key), count: (if (> @entity.count 0) @entity.count 1) })
         (set @entity.lastOperator @entity.operator)
         (set @entity.lastMotion (object/get @config.motions ?key))
-        (set @entity.lastCount (if [">", @entity.count, 0] @entity.count 1))
+        (set @entity.lastCount (if (> @entity.count 0) @entity.count 1))
         (set @entity.operator "")
         (set @entity.operatorKey "")
         (set @entity.count 0)
 
-      KEY -> OPERATOR_PENDING when (and (object/has @config.digits ?key) (or ["!=", ?key, "0"] [">", @entity.count, 0]) ["!=", @entity.operator, "goto"] ["!=", @entity.operator, "replace"])
+      KEY -> OPERATOR_PENDING when (and (object/has @config.digits ?key) (or (!= ?key "0") (> @entity.count 0)) (!= @entity.operator "goto") (!= @entity.operator "replace"))
         (set @entity.count (+ (* @entity.count 10) (object/get @config.digits ?key)))
 
-      KEY -> NORMAL when (and ["=", @entity.operator, "replace"] ["!=", ?key, "Escape"])
+      KEY -> NORMAL when (and (= @entity.operator "replace") (!= ?key "Escape"))
         (emit OPERATE { editorId: ?editorId, operator: "delete", motion: "right", count: 1 })
         (emit INSERT_TEXT { editorId: ?editorId, text: ?key })
         (emit MOTION { editorId: ?editorId, motion: "left", count: 1 })
@@ -269,12 +269,12 @@ orbital ModalEditorOrbital {
         (set @entity.operatorKey "")
         (set @entity.count 0)
 
-      KEY -> NORMAL when ["=", ?key, "Escape"]
+      KEY -> NORMAL when (= ?key "Escape")
         (set @entity.operator "")
         (set @entity.operatorKey "")
         (set @entity.count 0)
 
-      KEY -> NORMAL when (and ["=", @entity.operator, "goto"] ["!=", ?key, "Escape"] ["!=", ?key, @entity.operatorKey])
+      KEY -> NORMAL when (and (= @entity.operator "goto") (!= ?key "Escape") (!= ?key @entity.operatorKey))
         (set @entity.operator "")
         (set @entity.operatorKey "")
         (set @entity.count 0)
@@ -287,23 +287,23 @@ orbital ModalEditorOrbital {
     state COMMAND {
       INIT -> NORMAL
         (set @entity.count 0)
-      KEY -> COMMAND when ["=", ?key, "Backspace"]
+      KEY -> COMMAND when (= ?key "Backspace")
         (set @entity.cmdline (str/slice @entity.cmdline 0 (- (str/len @entity.cmdline) 1)))
 
-      KEY -> NORMAL when (and ["=", ?key, "Enter"] (object/has @config.exCommands @entity.cmdline))
+      KEY -> NORMAL when (and (= ?key "Enter") (object/has @config.exCommands @entity.cmdline))
         (emit EX_COMMAND { editorId: ?editorId, name: (object/get @config.exCommands @entity.cmdline) })
         (set @entity.cmdline "")
         (emit SET_MODE { editorId: ?editorId, mode: "NORMAL", caret: "block", keys: (object/get @config.keymap NORMAL []) })
 
-      KEY -> NORMAL when (and ["=", ?key, "Enter"] (not (object/has @config.exCommands @entity.cmdline)))
+      KEY -> NORMAL when (and (= ?key "Enter") (not (object/has @config.exCommands @entity.cmdline)))
         (set @entity.cmdline "")
         (emit SET_MODE { editorId: ?editorId, mode: "NORMAL", caret: "block", keys: (object/get @config.keymap NORMAL []) })
 
-      KEY -> NORMAL when ["=", ?key, "Escape"]
+      KEY -> NORMAL when (= ?key "Escape")
         (set @entity.cmdline "")
         (emit SET_MODE { editorId: ?editorId, mode: "NORMAL", caret: "block", keys: (object/get @config.keymap NORMAL []) })
 
-      KEY -> COMMAND when (and (array/includes (object/get @config.keymap "COMMAND") ?key) ["!=", ?key, "Enter"] ["!=", ?key, "Escape"] ["!=", ?key, "Backspace"])
+      KEY -> COMMAND when (and (array/includes (object/get @config.keymap "COMMAND") ?key) (!= ?key "Enter") (!= ?key "Escape") (!= ?key "Backspace"))
         (set @entity.cmdline (str/concat @entity.cmdline ?key))
 
       EDITOR_FOCUS -> COMMAND

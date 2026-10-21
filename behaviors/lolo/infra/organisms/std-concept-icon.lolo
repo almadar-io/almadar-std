@@ -38,7 +38,7 @@ orbital ConceptIconOrbital {
         (set @entity.slug (object/get { "c++": "cpp", "cpp": "cpp", "c#": "csharp", "csharp": "csharp", "nodejs": "nodejs", "node": "nodejs", "dotnet": "dotnet", ".net": "dotnet", "golang": "go", "typescript": "typescript", "javascript": "javascript", "objective-c": "objectivec" } (str/lower (str/trim ?label)) (str/join (array/filter (array/map (array/range (str/len (str/trim ?label))) (fn n (str/slice (str/lower (str/trim ?label)) @n (+ @n 1)))) (fn c (str/includes "abcdefghijklmnopqrstuvwxyz0123456789" @c))) "")))
         (set @entity.key (str/concat "i:" (str/encode-uri-component (str/lower (str/trim ?label)))))
         (fetch ConceptIconCache {
-          filter: ["=", (object/get @entity id), @entity.key],
+          filter: (= (object/get @entity id) @entity.key),
           emit: { success: CONCEPT_ICON_CACHE_LOADED, failure: CONCEPT_ICON_CACHE_FAILED }
         })
     }

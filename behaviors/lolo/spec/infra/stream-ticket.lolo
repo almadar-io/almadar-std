@@ -1,8 +1,9 @@
 app stream-ticket-spec [
   version: "1.0.0",
-  description: "Design contract for single-use stream tickets: a ticket is 32 CSPRNG bytes in base64url, minted for a viewer on an authenticated request, valid for a bounded time (60 seconds unless a knob names another) and spent by its first take. A forged, expired or already spent ticket names nobody. The Rust values it replaces: a minted ticket names its viewer once; a second take, a forged ticket and a short draw are refused."
+  description: "Design contract for single-use stream tickets: a ticket is 32 CSPRNG bytes in base64url, minted for a viewer on an authenticated request, valid for a bounded time (60 seconds unless a knob names another) and spent by its first take. A request arriving while one is in flight is queued in arrival order and answered exactly once; beyond the queue bound it is refused busy. A forged, expired or already spent ticket names nobody. The Rust values it replaces: a minted ticket names its viewer once; a second take, a forged ticket and a short draw are refused."
 ]
 
+type StreamTicketJob = { kind : "mint" | "take", requestId : number, ticket : string, viewer : Viewer, clientId : string }
 orbital StreamTicketSpec {
   expects entity StreamTicket [persistent] {
     id : string!
@@ -10,22 +11,40 @@ orbital StreamTicketSpec {
     expiresAt : number
     @invariant (>= @entity.expiresAt 0)
   }
+  expects entity StreamTicketRun [runtime] {
+    id : string!
+    queue : [StreamTicketJob] = []
+    @invariant (>= (array/len @entity.queue) 0)
+  }
   expects trait StreamTicketer {
     state idle {
-      MINT_TICKET -> drawing
-      TAKE_TICKET -> taking
+      MINT_TICKET -> idle
+      TAKE_TICKET -> idle
+      TICKET_PUMP -> drawing
     }
     state drawing {
+      MINT_TICKET -> drawing
+      TAKE_TICKET -> drawing
       SEED_DRAWN -> saving @ensures (= @entity.expiresAt (+ @now 60000))
     }
+    state saving {
+      MINT_TICKET -> saving
+      TAKE_TICKET -> saving
+    }
+    state taking {
+      MINT_TICKET -> taking
+      TAKE_TICKET -> taking
+    }
     state spending {
+      MINT_TICKET -> spending
+      TAKE_TICKET -> spending
       TICKET_SPENT -> idle
       TICKET_NOT_SPENT -> idle
     }
     emits {
-      TICKET_MINTED { ticket : string!  expiresAt : number! }
+      TICKET_MINTED { ticket : string!  expiresAt : number!  requestId : number }
       TICKET_TAKEN { ticket : string!  viewer : Viewer! }
-      TICKET_REFUSED { code : string  message : string! }
+      TICKET_REFUSED { code : "seed" | "store" | "unknown" | "expired" | "used" | "busy"  message : string!  ticket : string  requestId : number }
     }
   }
   expects page "/stream-ticket" -> StreamTicketer

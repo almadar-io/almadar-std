@@ -303,7 +303,7 @@ orbital AgentProposalOrbital {
       PROPOSAL_REQUESTED -> working
         (set @entity.input ?input)
         (set @entity.context (str/default ?context ""))
-        (set @entity.request (if ["=", (str/default ?context ""), ""] (str/concat @config.framing "\n\n" ?input) (str/concat @config.framing "\n\n" ?input "\n\nBackground:\n" ?context)))
+        (set @entity.request (if (= (str/default ?context "") "") (str/concat @config.framing "\n\n" ?input) (str/concat @config.framing "\n\n" ?input "\n\nBackground:\n" ?context)))
         (set @entity.feedback "")
         (emit PROPOSAL_RUN_REQUESTED { messages: [{ role: user, content: @entity.request }] })
         (render-ui @config.slot {

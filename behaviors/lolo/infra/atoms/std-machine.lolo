@@ -1,13 +1,13 @@
 app std-machine [
   version: "1.0.0",
-  description: "std-machine — a program's state machine as data. MACHINE_READ carries a resolved program (the .orb IR program/read answers once its imports are inlined) and MACHINE_ANSWERED returns one row per transition of every inline trait, orbital by orbital in declaration order. Transitions sharing a (from, event) are one group: with no guard anywhere in the group there is one row per distinct target and guarded is false; with any guard there is one row per arm and guarded says whether that arm carries its own. A transition whose from is a list of states is not read yet (G-STD-MACHINE-FROM-LIST), and a trait with no transitions has no rows. Each row carries the payload slots its event declares (name, type, required, optional values and entity). The walk is bounded array maps in one event, no cascade."
+  description: "std-machine — a program's state machine as data. MACHINE_READ carries a resolved program (the .orb IR program/read answers once its imports are inlined) and MACHINE_ANSWERED returns one row per transition of every inline trait, orbital by orbital in declaration order. Transitions sharing a (from, event) are one group: with no guard anywhere in the group there is one row per distinct target and guarded is false; with any guard there is one row per arm and guarded says whether that arm carries its own. A transition whose from is a list of states joins the group of each listed state, in the listed order, and a trait with no transitions has no rows. Each row carries the payload slots its event declares (name, type, required, optional values and entity). The walk is bounded array maps in one event, no cascade."
 ]
 ;; @capabilities "state machine as data, transition rows, program machine, guarded transitions, payload slots"
 uses Spec from "almadar-std/machine"
 
 type MachineField = { name : string!, type : string!, required : boolean, values : [string], entity : string }
 type MachineEventDecl = { key : string!, payloadSchema : [MachineField] }
-type MachineArm = { from : string!, event : string!, to : string!, guard : SExpr }
+type MachineArm = { from : (string | [string])!, event : string!, to : string!, guard : SExpr }
 type MachineGraph = { events : [MachineEventDecl], transitions : [MachineArm] }
 type MachineTrait = { name : string!, stateMachine : MachineGraph }
 type MachineOrbital = { name : string!, traits : [MachineTrait] }
@@ -30,7 +30,7 @@ orbital MachineOrbital {
         (set @entity.rows (array/flatten (array/map (object/get (json/parse (json/stringify @payload.program) MachineProgram) "orbitals") (fn o
           (array/flatten (array/map (array/filter (object/get @o "traits") (fn t (object/has @t "stateMachine"))) (fn t
             (let ((arms (array/flatten (array/map (object/get (object/get @t "stateMachine") "transitions") (fn a
-                          (array/map [(object/get @a "from")] (fn f
+                          (array/map (let ((raw (object/get @a "from"))) (if (str/startsWith (json/stringify @raw) "[") @raw [@raw])) (fn f
                             { from: @f, event: (object/get @a "event"), to: (object/get @a "to"), guarded: (object/has @a "guard") }))))))
                   (events (object/get (object/get @t "stateMachine") "events" [])))
               (array/flatten (array/map (array/unique (array/map @arms (fn a (str/concat (object/get @a "from") "\n" (object/get @a "event")))))

@@ -1,7 +1,7 @@
 app std-orb-census [
   version: "1.0.0",
   inbound: ["cli-census"],
-  fs: { "~/kflow.ai.builder/**": [read] },
+  fs: { cwd: "**/package.json": [read], cwd: "**/*.ts": [read], cwd: "**/*.tsx": [read], cwd: "**/*.mts": [read], cwd: "**/*.cts": [read], cwd: "**/*.js": [read], cwd: "**/*.jsx": [read], cwd: "**/*.mjs": [read], cwd: "**/*.cjs": [read] },
   description: "std-orb-census — the `orb census <package-name>` command, the consumer census a package passes before it moves to archive/ (port of tools/almadar-retire). It expands the manifest and source globs under the root knob, drops the skipped directories, and reports every package.json outside the package's own directory that names it as a key (dependencies, devDependencies, peerDependencies, optionalDependencies, overrides) and every TS or JS source outside that directory that imports it (from, import(), require(), any subpath), one line each, then a `<name>: N import file(s), M manifest edge(s)` line. Zero hits answers status 200 (exit 0); any hit, or any file that could not be read, status 500 (exit 1); any other arguments the usage (status 400, exit 2). os/glob cannot prune, so the globs are enumerated by depth instead of walked."
 ]
 uses Spec from "almadar-std/orb-census"
@@ -57,12 +57,12 @@ orbital OrbCensusOrbital {
     state manifests {
       INIT -> manifests
       CENSUS_GLOB -> manifests when (< @entity.cursor (array/len @entity.globs))
-        (os/glob (str/concat @config.root "/" (array/nth @entity.globs @entity.cursor)) { key: "glob" emit: { success: CENSUS_GLOBBED, failure: CENSUS_GLOB_FAILED } })
+        (os/glob { anchor: "cwd" path: (array/nth @entity.globs @entity.cursor) } { key: "glob" emit: { success: CENSUS_GLOBBED, failure: CENSUS_GLOB_FAILED } })
       CENSUS_GLOB -> readingManifests when (>= @entity.cursor (array/len @entity.globs))
         (set @entity.cursor 0)
         (emit CENSUS_READ { })
       CENSUS_GLOBBED -> manifests
-        (set @entity.paths (array/concat @entity.paths (array/filter (array/map @payload.paths (fn p (str/slice @p (+ (str/len @config.root) 1)))) (fn p (= (array/len (array/filter @config.skipDirs (fn s (str/includes (str/concat "/" @p) @s)))) 0)))))
+        (set @entity.paths (array/concat @entity.paths (array/filter @payload.paths (fn p (= (array/len (array/filter @config.skipDirs (fn s (str/includes (str/concat "/" @p) @s)))) 0)))))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit CENSUS_GLOB { })
       CENSUS_GLOB_FAILED -> manifests
@@ -73,7 +73,7 @@ orbital OrbCensusOrbital {
     state readingManifests {
       INIT -> readingManifests
       CENSUS_READ -> readingManifests when (< @entity.cursor (array/len @entity.paths))
-        (os/read-file (str/concat @config.root "/" (array/nth @entity.paths @entity.cursor)) { key: "file" emit: { success: CENSUS_FILE_READ, failure: CENSUS_FILE_UNREAD } })
+        (os/read-file { anchor: "cwd" path: (array/nth @entity.paths @entity.cursor) } { key: "file" emit: { success: CENSUS_FILE_READ, failure: CENSUS_FILE_UNREAD } })
       CENSUS_READ -> sources when (>= @entity.cursor (array/len @entity.paths))
         (set @entity.globs @config.sourceGlobs)
         (set @entity.paths [])
@@ -99,13 +99,13 @@ orbital OrbCensusOrbital {
     state sources {
       INIT -> sources
       CENSUS_GLOB -> sources when (< @entity.cursor (array/len @entity.globs))
-        (os/glob (str/concat @config.root "/" (array/nth @entity.globs @entity.cursor)) { key: "glob" emit: { success: CENSUS_GLOBBED, failure: CENSUS_GLOB_FAILED } })
+        (os/glob { anchor: "cwd" path: (array/nth @entity.globs @entity.cursor) } { key: "glob" emit: { success: CENSUS_GLOBBED, failure: CENSUS_GLOB_FAILED } })
       CENSUS_GLOB -> readingSources when (>= @entity.cursor (array/len @entity.globs))
         (set @entity.paths (array/unique @entity.paths))
         (set @entity.cursor 0)
         (emit CENSUS_READ { })
       CENSUS_GLOBBED -> sources
-        (set @entity.paths (array/concat @entity.paths (array/filter (array/map @payload.paths (fn p (str/slice @p (+ (str/len @config.root) 1)))) (fn p (and (not (str/endsWith @p ".d.ts")) (= (array/len (array/filter @config.skipDirs (fn s (str/includes (str/concat "/" @p) @s)))) 0))))))
+        (set @entity.paths (array/concat @entity.paths (array/filter @payload.paths (fn p (and (not (str/endsWith @p ".d.ts")) (= (array/len (array/filter @config.skipDirs (fn s (str/includes (str/concat "/" @p) @s)))) 0))))))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit CENSUS_GLOB { })
       CENSUS_GLOB_FAILED -> sources
@@ -116,7 +116,7 @@ orbital OrbCensusOrbital {
     state readingSources {
       INIT -> readingSources
       CENSUS_READ -> readingSources when (< @entity.cursor (array/len @entity.paths))
-        (os/read-file (str/concat @config.root "/" (array/nth @entity.paths @entity.cursor)) { key: "file" emit: { success: CENSUS_FILE_READ, failure: CENSUS_FILE_UNREAD } })
+        (os/read-file { anchor: "cwd" path: (array/nth @entity.paths @entity.cursor) } { key: "file" emit: { success: CENSUS_FILE_READ, failure: CENSUS_FILE_UNREAD } })
       CENSUS_READ -> ready when (>= @entity.cursor (array/len @entity.paths))
         (emit CENSUS_REPORT { })
       CENSUS_FILE_READ -> readingSources when (array/some @entity.probes (fn p (str/includes (bytes/to-string @payload.data) @p)))
@@ -166,9 +166,6 @@ orbital OrbCensusOrbital {
     }
 
     config {
-      root : string = "/Users/osamaalghanmi/kflow.ai.builder"
-        @label "Monorepo root"
-        @description "Absolute directory the census scans; the fs grant covers it. os/ targets must start from a literal or this knob, so the invocation cwd cannot be used directly."
       manifestGlobs : [string] = ["package.json", "*/package.json", "*/*/package.json", "*/*/*/package.json", "orbital-rust/crates/*/templates/*/package.json", "orbital-rust/crates/*/templates/*/packages/*/package.json"]
         @label "Manifest globs"
         @description "Depth-enumerated package.json globs, relative to the root."

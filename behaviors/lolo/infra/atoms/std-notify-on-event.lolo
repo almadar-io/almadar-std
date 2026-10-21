@@ -104,14 +104,14 @@ orbital NotifyOnEventOrbital {
     initial: idle
 
     state idle {
-      EventOccurred -> idle when (and (or ["=", @config.coalesce, "none"] (if ["=", @config.coalesce, "perDispatch"] (not (array/includes (array/map @prevEvents (fn e (object/get @e "event"))) @event.event)) (not (array/some @prevEvents (fn e (and ["=", (object/get @e "event"), @event.event] ["=", (object/get (object/get @e "payload" {}) @config.coalesceKey), (object/get @event.payload @config.coalesceKey)])))))) (if ["=", @config.guardOp, "eq"] (or ["=", @config.triggerStatus, ""] ["=", ?status, @config.triggerStatus]) (if ["=", @config.guardOp, "gt"] [">", (object/get ?data @config.guardField 0), @config.guardValue] (if ["=", @config.guardOp, "lt"] ["<", (object/get ?data @config.guardField 0), @config.guardValue] (if ["=", @config.guardOp, "gte"] [">=", (object/get ?data @config.guardField 0), @config.guardValue] ["<=", (object/get ?data @config.guardField 0), @config.guardValue])))))
-        (set @entity.recipient (if ["=", (array/len @config.recipients), 0] (if (not ["=", @config.fallbackRecipient, ""]) @config.fallbackRecipient @user.id) (array/first @config.recipients)))
+      EventOccurred -> idle when (and (or (= @config.coalesce "none") (if (= @config.coalesce "perDispatch") (not (array/includes (array/map @prevEvents (fn e (object/get @e "event"))) @event.event)) (not (array/some @prevEvents (fn e (and (= (object/get @e "event") @event.event) (= (object/get (object/get @e "payload" {}) @config.coalesceKey) (object/get @event.payload @config.coalesceKey)))))))) (if (= @config.guardOp "eq") (or (= @config.triggerStatus "") (= ?status @config.triggerStatus)) (if (= @config.guardOp "gt") (> (object/get ?data @config.guardField 0) @config.guardValue) (if (= @config.guardOp "lt") (< (object/get ?data @config.guardField 0) @config.guardValue) (if (= @config.guardOp "gte") (>= (object/get ?data @config.guardField 0) @config.guardValue) (<= (object/get ?data @config.guardField 0) @config.guardValue))))))
+        (set @entity.recipient (if (= (array/len @config.recipients) 0) (if (not (= @config.fallbackRecipient "")) @config.fallbackRecipient @user.id) (array/first @config.recipients)))
         (set @entity.channel @config.notifyChannel)
         (set @entity.message @config.template)
         (set @entity.severity @config.severity)
         (set @entity.dispatched false)
         (set @entity.recordedAt @now)
-        (when (not (array/includes @config.suppressionList @entity.recipient)) (if (and (not ["=", @config.quietStartHour, @config.quietEndHour]) (if ["<", @config.quietStartHour, @config.quietEndHour] (and [">=", (time/hour @now), @config.quietStartHour] ["<", (time/hour @now), @config.quietEndHour]) (or [">=", (time/hour @now), @config.quietStartHour] ["<", (time/hour @now), @config.quietEndHour]))) (persist create NotificationRecord {
+        (when (not (array/includes @config.suppressionList @entity.recipient)) (if (and (not (= @config.quietStartHour @config.quietEndHour)) (if (< @config.quietStartHour @config.quietEndHour) (and (>= (time/hour @now) @config.quietStartHour) (< (time/hour @now) @config.quietEndHour)) (or (>= (time/hour @now) @config.quietStartHour) (< (time/hour @now) @config.quietEndHour)))) (persist create NotificationRecord {
           channel: @entity.channel
           dispatched: false
           error: "quiet-hours"
@@ -127,11 +127,11 @@ orbital NotifyOnEventOrbital {
           severity: @entity.severity
         })
       NOTIFY_PREFS_LOADED -> idle
-        (set @entity.prefMode (if ["=", (array/len (array/filter ?data (fn p (and ["=", (object/get @p personId), @entity.recipient] (or ["=", (object/get @p eventKey), ""] ["=", (object/get @p eventKey), @config.eventKey]))))), 0] "instant" (object/get (array/first (array/filter ?data (fn p (and ["=", (object/get @p personId), @entity.recipient] (or ["=", (object/get @p eventKey), ""] ["=", (object/get @p eventKey), @config.eventKey]))))) mode)))
-        (set @entity.prefChannel (if ["=", (array/len (array/filter ?data (fn p (and ["=", (object/get @p personId), @entity.recipient] (or ["=", (object/get @p eventKey), ""] ["=", (object/get @p eventKey), @config.eventKey]))))), 0] "" (object/get (array/first (array/filter ?data (fn p (and ["=", (object/get @p personId), @entity.recipient] (or ["=", (object/get @p eventKey), ""] ["=", (object/get @p eventKey), @config.eventKey]))))) channel)))
-        (set @entity.prefQuietHours (if ["=", (array/len (array/filter ?data (fn p (and ["=", (object/get @p personId), @entity.recipient] (or ["=", (object/get @p eventKey), ""] ["=", (object/get @p eventKey), @config.eventKey]))))), 0] "" (object/get (array/first (array/filter ?data (fn p (and ["=", (object/get @p personId), @entity.recipient] (or ["=", (object/get @p eventKey), ""] ["=", (object/get @p eventKey), @config.eventKey]))))) quietHours)))
-        (set @entity.channel (if ["=", @entity.prefChannel, ""] @entity.channel @entity.prefChannel))
-        (if ["=", @entity.prefMode, "off"] (persist create NotificationRecord {
+        (set @entity.prefMode (if (= (array/len (array/filter ?data (fn p (and (= (object/get @p personId) @entity.recipient) (or (= (object/get @p eventKey) "") (= (object/get @p eventKey) @config.eventKey)))))) 0) "instant" (object/get (array/first (array/filter ?data (fn p (and (= (object/get @p personId) @entity.recipient) (or (= (object/get @p eventKey) "") (= (object/get @p eventKey) @config.eventKey)))))) mode)))
+        (set @entity.prefChannel (if (= (array/len (array/filter ?data (fn p (and (= (object/get @p personId) @entity.recipient) (or (= (object/get @p eventKey) "") (= (object/get @p eventKey) @config.eventKey)))))) 0) "" (object/get (array/first (array/filter ?data (fn p (and (= (object/get @p personId) @entity.recipient) (or (= (object/get @p eventKey) "") (= (object/get @p eventKey) @config.eventKey)))))) channel)))
+        (set @entity.prefQuietHours (if (= (array/len (array/filter ?data (fn p (and (= (object/get @p personId) @entity.recipient) (or (= (object/get @p eventKey) "") (= (object/get @p eventKey) @config.eventKey)))))) 0) "" (object/get (array/first (array/filter ?data (fn p (and (= (object/get @p personId) @entity.recipient) (or (= (object/get @p eventKey) "") (= (object/get @p eventKey) @config.eventKey)))))) quietHours)))
+        (set @entity.channel (if (= @entity.prefChannel "") @entity.channel @entity.prefChannel))
+        (if (= @entity.prefMode "off") (persist create NotificationRecord {
           channel: @entity.channel
           dispatched: false
           error: "muted-by-preference"
@@ -139,7 +139,7 @@ orbital NotifyOnEventOrbital {
           recipient: @entity.recipient
           recordedAt: @now
           severity: @entity.severity
-        }) (if ["=", @entity.prefMode, "digest"] (persist create NotificationRecord {
+        }) (if (= @entity.prefMode "digest") (persist create NotificationRecord {
           channel: @entity.channel
           dispatched: false
           error: "digest-deferred"
@@ -147,7 +147,7 @@ orbital NotifyOnEventOrbital {
           recipient: @entity.recipient
           recordedAt: @now
           severity: @entity.severity
-        }) (if (and (str/includes @entity.prefQuietHours "-") ["!=", (str/slice (array/first (str/split @entity.prefQuietHours "-")) 0 2), (str/slice (array/nth (str/split @entity.prefQuietHours "-") 1) 0 2)] (if ["<", (str/slice (array/first (str/split @entity.prefQuietHours "-")) 0 2), (str/slice (array/nth (str/split @entity.prefQuietHours "-") 1) 0 2)] (and [">=", (str/padStart (str/concat "" (time/hour @now)) 2 "0"), (str/slice (array/first (str/split @entity.prefQuietHours "-")) 0 2)] ["<", (str/padStart (str/concat "" (time/hour @now)) 2 "0"), (str/slice (array/nth (str/split @entity.prefQuietHours "-") 1) 0 2)]) (or [">=", (str/padStart (str/concat "" (time/hour @now)) 2 "0"), (str/slice (array/first (str/split @entity.prefQuietHours "-")) 0 2)] ["<", (str/padStart (str/concat "" (time/hour @now)) 2 "0"), (str/slice (array/nth (str/split @entity.prefQuietHours "-") 1) 0 2)]))) (persist create NotificationRecord {
+        }) (if (and (str/includes @entity.prefQuietHours "-") (!= (str/slice (array/first (str/split @entity.prefQuietHours "-")) 0 2) (str/slice (array/nth (str/split @entity.prefQuietHours "-") 1) 0 2)) (if (< (str/slice (array/first (str/split @entity.prefQuietHours "-")) 0 2) (str/slice (array/nth (str/split @entity.prefQuietHours "-") 1) 0 2)) (and (>= (str/padStart (str/concat "" (time/hour @now)) 2 "0") (str/slice (array/first (str/split @entity.prefQuietHours "-")) 0 2)) (< (str/padStart (str/concat "" (time/hour @now)) 2 "0") (str/slice (array/nth (str/split @entity.prefQuietHours "-") 1) 0 2))) (or (>= (str/padStart (str/concat "" (time/hour @now)) 2 "0") (str/slice (array/first (str/split @entity.prefQuietHours "-")) 0 2)) (< (str/padStart (str/concat "" (time/hour @now)) 2 "0") (str/slice (array/nth (str/split @entity.prefQuietHours "-") 1) 0 2))))) (persist create NotificationRecord {
           channel: @entity.channel
           dispatched: false
           error: "quiet-hours"
@@ -155,12 +155,12 @@ orbital NotifyOnEventOrbital {
           recipient: @entity.recipient
           recordedAt: @now
           severity: @entity.severity
-        }) (if (or ["=", @entity.channel, in-app] ["=", @entity.channel, in_app]) (do (set @entity.dispatched true) (notify @config.severity @config.template)) (fetch NotificationRecord {
+        }) (if (or (= @entity.channel in-app) (= @entity.channel in_app)) (do (set @entity.dispatched true) (notify @config.severity @config.template)) (fetch NotificationRecord {
           emit: { failure: NOTIFY_LOOKUP_FAILED, success: NOTIFY_CAP_LOADED }
-          filter: [">", (object/get @entity recordedAt), ["-", @now, 604800000]]
+          filter: (> (object/get @entity recordedAt) (- @now 604800000))
         })))))
       NOTIFY_CAP_LOADED -> idle
-        (if (and [">", @config.frequencyCapPerWeek, 0] [">=", (array/len (array/filter ?data (fn r (and ["=", (object/get @r recipient), @entity.recipient] ["=", (object/get @r channel), @entity.channel] ["=", (object/get @r dispatched), true])))), @config.frequencyCapPerWeek]) (persist create NotificationRecord {
+        (if (and (> @config.frequencyCapPerWeek 0) (>= (array/len (array/filter ?data (fn r (and (= (object/get @r recipient) @entity.recipient) (= (object/get @r channel) @entity.channel) (= (object/get @r dispatched) true))))) @config.frequencyCapPerWeek)) (persist create NotificationRecord {
           channel: @entity.channel
           dispatched: false
           error: "frequency-cap"
@@ -168,24 +168,24 @@ orbital NotifyOnEventOrbital {
           recipient: @entity.recipient
           recordedAt: @now
           severity: @entity.severity
-        }) (if ["=", @entity.channel, email] (emit EMAIL_SEND {
+        }) (if (= @entity.channel email) (emit EMAIL_SEND {
           body: @entity.message
-          subject: (if ["=", @config.emailSubject, ""] @entity.message @config.emailSubject)
+          subject: (if (= @config.emailSubject "") @entity.message @config.emailSubject)
           to: @entity.recipient
-        }) (if ["=", @entity.channel, sms] (emit TWILIO_SEND_SMS {
+        }) (if (= @entity.channel sms) (emit TWILIO_SEND_SMS {
           body: @entity.message
           to: @entity.recipient
-        }) (if ["=", @entity.channel, push] (fetch PushSubscription { emit: { failure: NOTIFY_LOOKUP_FAILED, success: NOTIFY_PUSH_SUBS } }) (emit WEBHOOK_SEND {
+        }) (if (= @entity.channel push) (fetch PushSubscription { emit: { failure: NOTIFY_LOOKUP_FAILED, success: NOTIFY_PUSH_SUBS } }) (emit WEBHOOK_SEND {
           event: @entity.message
           payload: { message: @entity.message, recipient: @entity.recipient, severity: @entity.severity }
           secret: @config.webhookSecret
           url: @config.webhookUrl
         })))))
       NOTIFY_PUSH_SUBS -> idle
-        (set @entity.pushEndpoint (if ["=", (array/len (array/filter ?data (fn s ["=", (object/get @s userId), @entity.recipient]))), 0] "" (object/get (array/first (array/filter ?data (fn s ["=", (object/get @s userId), @entity.recipient]))) endpoint)))
-        (set @entity.pushP256dh (if ["=", (array/len (array/filter ?data (fn s ["=", (object/get @s userId), @entity.recipient]))), 0] "" (object/get (array/first (array/filter ?data (fn s ["=", (object/get @s userId), @entity.recipient]))) p256dh)))
-        (set @entity.pushAuth (if ["=", (array/len (array/filter ?data (fn s ["=", (object/get @s userId), @entity.recipient]))), 0] "" (object/get (array/first (array/filter ?data (fn s ["=", (object/get @s userId), @entity.recipient]))) auth)))
-        (if ["=", @entity.pushEndpoint, ""] (persist create NotificationRecord {
+        (set @entity.pushEndpoint (if (= (array/len (array/filter ?data (fn s (= (object/get @s userId) @entity.recipient)))) 0) "" (object/get (array/first (array/filter ?data (fn s (= (object/get @s userId) @entity.recipient)))) endpoint)))
+        (set @entity.pushP256dh (if (= (array/len (array/filter ?data (fn s (= (object/get @s userId) @entity.recipient)))) 0) "" (object/get (array/first (array/filter ?data (fn s (= (object/get @s userId) @entity.recipient)))) p256dh)))
+        (set @entity.pushAuth (if (= (array/len (array/filter ?data (fn s (= (object/get @s userId) @entity.recipient)))) 0) "" (object/get (array/first (array/filter ?data (fn s (= (object/get @s userId) @entity.recipient)))) auth)))
+        (if (= @entity.pushEndpoint "") (persist create NotificationRecord {
           channel: @entity.channel
           dispatched: false
           error: "no-push-subscription"
@@ -195,7 +195,7 @@ orbital NotifyOnEventOrbital {
           severity: @entity.severity
         }) (emit PUSH_SEND {
           subscription: { endpoint: @entity.pushEndpoint, keys: { auth: @entity.pushAuth, p256dh: @entity.pushP256dh } }
-          title: (if ["=", @config.pushTitle, ""] @entity.message @config.pushTitle)
+          title: (if (= @config.pushTitle "") @entity.message @config.pushTitle)
           body: @entity.message
           url: @config.pushDeepLink
           icon: @config.pushIcon
@@ -246,7 +246,7 @@ orbital NotifyOnEventOrbital {
           severity: @entity.severity
         })
         (notify error (str/concat "Couldn't send the text message — " ?message))
-      NOTIFY_WEBHOOK_SENT -> idle when (not ["=", @config.webhookUrl, ""])
+      NOTIFY_WEBHOOK_SENT -> idle when (not (= @config.webhookUrl ""))
         (set @entity.dispatched true)
         (persist create NotificationRecord {
           channel: @entity.channel
@@ -256,7 +256,7 @@ orbital NotifyOnEventOrbital {
           recordedAt: @now
           severity: @entity.severity
         })
-      NOTIFY_WEBHOOK_FAILED -> idle when ["=", @config.webhookUrl, ""]
+      NOTIFY_WEBHOOK_FAILED -> idle when (= @config.webhookUrl "")
         (persist create NotificationRecord {
           channel: @entity.channel
           dispatched: false
@@ -265,7 +265,7 @@ orbital NotifyOnEventOrbital {
           recordedAt: @now
           severity: @entity.severity
         })
-      NOTIFY_WEBHOOK_FAILED -> idle when (not ["=", @config.webhookUrl, ""])
+      NOTIFY_WEBHOOK_FAILED -> idle when (not (= @config.webhookUrl ""))
         (set @entity.dispatched false)
         (set @entity.error ?message)
         (persist create NotificationRecord {

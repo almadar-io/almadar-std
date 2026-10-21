@@ -163,12 +163,12 @@ orbital SemanticIndexOrbital {
         (set @entity.semKey ?key)
         (set @entity.semModel (str/default ?model ""))
         (set @entity.semEmbeddings ?embeddings)
-        (fetch SemanticPending { filter: ["=", (object/get @entity id), ?key], emit: { success: SemanticPendingLoaded, failure: SemanticStoreFailed } })
+        (fetch SemanticPending { filter: (= (object/get @entity id) ?key), emit: { success: SemanticPendingLoaded, failure: SemanticStoreFailed } })
       SemanticEmbedFailed -> loadingPending
         (set @entity.semReply "failed")
         (set @entity.semKey ?key)
         (set @entity.semReplyMessage ?message)
-        (fetch SemanticPending { filter: ["=", (object/get @entity id), ?key], emit: { success: SemanticPendingLoaded, failure: SemanticStoreFailed } })
+        (fetch SemanticPending { filter: (= (object/get @entity id) ?key), emit: { success: SemanticPendingLoaded, failure: SemanticStoreFailed } })
       SemanticStoreFailed -> idle
         (emit SEMANTIC_FAILED { op: @entity.semOp, key: @entity.semKey, message: ?error })
         (render-ui toast { message: ?error, type: alert, variant: error })
@@ -262,7 +262,7 @@ orbital SemanticIndexOrbital {
         (set @entity.semPhase "search")
         (set @entity.semQueryVector (array/first ?embeddings))
         (fetch SemanticRow {
-          filter: ["and", ["or", @entity.semAnyGraph, ["array/includes", @entity.semGraphIds, (object/get @entity graphId)]], ["or", @entity.semAnyType, ["array/includes", @entity.semNodeTypes, (object/get @entity nodeType)]]],
+          filter: (and (or @entity.semAnyGraph (array/includes @entity.semGraphIds (object/get @entity graphId))) (or @entity.semAnyType (array/includes @entity.semNodeTypes (object/get @entity nodeType)))),
           nearest: { field: "embedding", vector: (array/first ?embeddings), k: @entity.semK },
           emit: { success: SemanticFetched, failure: SemanticStoreFailed }
         })
@@ -287,7 +287,7 @@ orbital SemanticIndexOrbital {
         (emit SEMANTIC_CANONICAL_RESOLVED { resolutions: @entity.semResolutions, key: @entity.semKey })
       SEMANTIC_NEXT -> working when (and (= @entity.semPhase "canonical") (< @entity.semCursor (array/len @entity.semItems)) (> (array/len (array/nth @entity.semVectors @entity.semCursor)) 0))
         (fetch SemanticRow {
-          filter: ["and", ["array/includes", @entity.semGraphIds, (object/get @entity graphId)], ["or", @entity.semAnyType, ["array/includes", @entity.semNodeTypes, (object/get @entity nodeType)]]],
+          filter: (and (array/includes @entity.semGraphIds (object/get @entity graphId)) (or @entity.semAnyType (array/includes @entity.semNodeTypes (object/get @entity nodeType)))),
           nearest: { field: "embedding", vector: (array/nth @entity.semVectors @entity.semCursor), k: @config.canonicalK },
           emit: { success: SemanticFetched, failure: SemanticStoreFailed }
         })

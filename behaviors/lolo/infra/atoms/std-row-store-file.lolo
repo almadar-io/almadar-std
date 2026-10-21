@@ -1,0 +1,268 @@
+app std-row-store-file [
+  version: "1.0.0",
+  fs: { cwd: ".orb/rows/**": [read, write], cwd: ".orb/rows/": [create] },
+  description: "std-row-store-file — a row-store driver over one JSON file per entity type (<dir><entityType>.json, an array of rows). ROW_READ answers the row with the id (or none), ROW_LIST every row; ROWS_QUERY is answered only for the plain whole-table query (no policy, filter, order, window or nearest: ROWS_PAGE or ROWS_IDS with the file's row count) and is STORE_UNSUPPORTED otherwise, because the file store pushes no query down (queryCapabilities lists nothing, so the kernel reads ROW_LIST and filters itself). ROWS_WRITE applies the batch's create, upsert, update and delete ops in order against the file's rows with the kernel's reference semantics: create on a taken id is duplicate-id, update or delete of a miss is not-found, a guard that does not hold on the stored row is refused (guards run through row/matches, the kernel's one predicate evaluator, so every guard form is declared), and update and delete report the row as it was only when the op carried a guard. An atomic batch writes nothing when an op fails and reports rolled-back for the earlier ops; a stop batch keeps what was applied and reports only the ops that ran. All ops of a batch must name one entity type. The entity type names the file, so it is letters, digits, _ and - only; anything else is STORE_FAILED. Needs the fs grants on the directory."
+]
+uses Spec from "almadar-std/row-store"
+
+orbital RowStoreFileOrbital {
+  type RowCell = string | number | boolean | [RowCell] | Map string RowCell
+  type Row = Map string RowCell
+  type RowFile = [Row]
+
+  type CompareLeaf = { kind : "compare", field : string!, op : "==" | "!=" | "<" | "<=" | ">" | ">=", value : RowCell }
+  type MemberLeaf = { kind : "member", field : string!, values : [RowCell]! }
+  type HasElementLeaf = { kind : "hasElement", field : string!, value : RowCell }
+  type ContainsLeaf = { kind : "contains", field : string!, text : string!, caseSensitive : boolean! }
+  type IsNullLeaf = { kind : "isNull", field : string!, isNull : boolean! }
+  type AllNode = { kind : "all", of : [RowPredicate]! }
+  type AnyNode = { kind : "any", of : [RowPredicate]! }
+  type NotNode = { kind : "not", of : RowPredicate! }
+  type ConstLeaf = { kind : "const", value : boolean! }
+  type RowPredicate = CompareLeaf | MemberLeaf | HasElementLeaf | ContainsLeaf | IsNullLeaf | AllNode | AnyNode | NotNode | ConstLeaf
+
+  type RowOrder = { field : string!, direction : "asc" | "desc" }
+  type RowNearest = { field : string!, vector : [number]!, k : number! }
+  type RowQuery = { policy : RowPredicate?, filter : RowPredicate?, order : RowOrder?, offset : number?, limit : number?, total : "exact" | "none"?, nearest : RowNearest? }
+
+  type RowLeafKind = "compare" | "member" | "hasElement" | "contains" | "isNull"
+  type RowCombinator = "all" | "any" | "not"
+  type RowOperator = "==" | "!=" | "<" | "<=" | ">" | ">=" | "member" | "hasElement" | "contains"
+  type RowValueKind = "string" | "number" | "boolean" | "date" | "null"
+  type OperatorValueKinds = { operator : RowOperator!, valueKinds : [RowValueKind]! }
+  type EveryFieldOrderable = { kind : "every-field" }
+  type ListedOrderable = { kind : "listed", fields : [string]! }
+  type RowOrderableFields = EveryFieldOrderable | ListedOrderable
+  type QueryCapabilities = { leaves : [RowLeafKind]!, combinators : [RowCombinator]!, compareOps : [string]!, operatorValueKinds : [OperatorValueKinds]?, orderableFields : RowOrderableFields!, window : boolean!, exactTotal : boolean!, idsOnly : boolean?, nearest : boolean? }
+  type GuardCapabilities = { leaves : [RowLeafKind]!, combinators : [RowCombinator]!, compareOps : [string]! }
+  type WriteCapabilities = { guards : GuardCapabilities!, conditional : boolean!, returnsRow : boolean!, stopRuns : boolean!, atomicBatch : boolean! }
+
+  type CreateOp = { kind : "create", entityType : string!, data : Row! }
+  type UpsertOp = { kind : "upsert", entityType : string!, data : Row! }
+  type UpdateOp = { kind : "update", entityType : string!, id : string!, data : Row!, guard : RowPredicate? }
+  type DeleteOp = { kind : "delete", entityType : string!, id : string!, guard : RowPredicate? }
+  type RowWriteOp = CreateOp | UpsertOp | UpdateOp | DeleteOp
+  type RowWriteBatch = { ops : [RowWriteOp]!, onFailure : "atomic" | "stop" }
+
+  type CreatedOutcome = { kind : "created", row : Row! }
+  type UpdatedOutcome = { kind : "updated", row : Row!, before : Row? }
+  type DeletedOutcome = { kind : "deleted", before : Row? }
+  type NotFoundOutcome = { kind : "not-found" }
+  type DuplicateIdOutcome = { kind : "duplicate-id" }
+  type RefusedOutcome = { kind : "refused" }
+  type FailedOutcome = { kind : "failed", message : string! }
+  type RolledBackOutcome = { kind : "rolled-back" }
+  type RowWriteOutcome = CreatedOutcome | UpdatedOutcome | DeletedOutcome | NotFoundOutcome | DuplicateIdOutcome | RefusedOutcome | FailedOutcome | RolledBackOutcome
+
+  type WriteRun = { rows : [Row]!, outcomes : [RowWriteOutcome]!, halted : boolean! }
+
+  entity RowStoreFlight [runtime] {
+    id : string!
+    key : string @description "The kernel's key for the ask in flight; every reply carries it" = ""
+    entityType : string @description "The entity type whose file the ask reads or writes" = ""
+    op : string @description "The ask in flight: read, list, query or write" = ""
+    project : string @description "What a query answers: rows or ids" = ""
+    rowId : string @description "The id a read asks for" = ""
+    batch : RowWriteBatch @description "The batch a write applies"
+    rows : [Row] @description "The rows of the entity's file"
+    run : WriteRun @description "The result of applying the batch to the rows"
+  }
+
+  trait RowStoreDriver -> RowStoreFlight [integration, instance] {
+    initial: ready
+
+    config {
+      dir : string = ".orb/rows/"
+        @label "Directory"
+        @description "Where the entity files live, relative to the invocation directory; ends with /. The app needs a cwd fs grant on it, { cwd: \"<dir>**\": [read, write] }."
+        @synonyms "folder, data directory"
+        @tier "infra"
+      queryCapabilities : QueryCapabilities = { leaves: [], combinators: [], compareOps: [], orderableFields: { kind: "listed", fields: [] }, window: false, exactTotal: false }
+        @description "What query the store pushes down: nothing, so the kernel lists the rows and filters, orders and windows them itself."
+        @tier "infra"
+      writeCapabilities : WriteCapabilities = { guards: { leaves: ["compare", "member", "hasElement", "contains", "isNull"], combinators: ["all", "any", "not"], compareOps: ["==", "!=", "<", "<=", ">", ">="] }, conditional: true, returnsRow: true, stopRuns: true, atomicBatch: true }
+        @description "What write the store honours: every guard form (row/matches), the row before an update or delete, stop runs and atomic batches."
+        @tier "infra"
+    }
+
+    state ready {
+      INIT -> ready
+
+      ROW_READ -> ready when (not (validate/pattern @payload.entityType "^[A-Za-z0-9_-]+$"))
+        (emit STORE_FAILED { key: @payload.key, message: "the entity type must be letters, digits, _ and -" })
+      ROW_READ -> loading when (validate/pattern @payload.entityType "^[A-Za-z0-9_-]+$")
+        (set @entity.key @payload.key)
+        (set @entity.entityType @payload.entityType)
+        (set @entity.rowId @payload.id)
+        (set @entity.op "read")
+        (os/read-file { anchor: "cwd" path: (str/concat @config.dir @payload.entityType ".json") } { emit: { success: FILE_READ, failure: FILE_READ_FAILED } })
+
+      ROW_LIST -> ready when (not (validate/pattern @payload.entityType "^[A-Za-z0-9_-]+$"))
+        (emit STORE_FAILED { key: @payload.key, message: "the entity type must be letters, digits, _ and -" })
+      ROW_LIST -> loading when (validate/pattern @payload.entityType "^[A-Za-z0-9_-]+$")
+        (set @entity.key @payload.key)
+        (set @entity.entityType @payload.entityType)
+        (set @entity.op "list")
+        (os/read-file { anchor: "cwd" path: (str/concat @config.dir @payload.entityType ".json") } { emit: { success: FILE_READ, failure: FILE_READ_FAILED } })
+
+      ROWS_QUERY -> ready when (not (= (array/len (array/filter (object/keys @payload.query) (fn k (!= @k "total")))) 0))
+        (emit STORE_UNSUPPORTED { key: @payload.key, reason: (str/concat "the file store pushes no query down; declared " (json/stringify @config.queryCapabilities)) })
+      ROWS_QUERY -> ready when (and (= (array/len (array/filter (object/keys @payload.query) (fn k (!= @k "total")))) 0) (not (validate/pattern @payload.entityType "^[A-Za-z0-9_-]+$")))
+        (emit STORE_FAILED { key: @payload.key, message: "the entity type must be letters, digits, _ and -" })
+      ROWS_QUERY -> loading when (and (= (array/len (array/filter (object/keys @payload.query) (fn k (!= @k "total")))) 0) (validate/pattern @payload.entityType "^[A-Za-z0-9_-]+$"))
+        (set @entity.key @payload.key)
+        (set @entity.entityType @payload.entityType)
+        (set @entity.project @payload.project)
+        (set @entity.op "query")
+        (os/read-file { anchor: "cwd" path: (str/concat @config.dir @payload.entityType ".json") } { emit: { success: FILE_READ, failure: FILE_READ_FAILED } })
+
+      ROWS_WRITE -> ready when (and (= @payload.batch.onFailure "atomic") (not @config.writeCapabilities.atomicBatch))
+        (emit STORE_UNSUPPORTED { key: @payload.key, reason: "this store declares no atomic batches" })
+      ROWS_WRITE -> ready when (and (= @payload.batch.onFailure "stop") (not @config.writeCapabilities.stopRuns))
+        (emit STORE_UNSUPPORTED { key: @payload.key, reason: "this store declares no stop runs" })
+      ROWS_WRITE -> ready when (= (array/len @payload.batch.ops) 0)
+        (emit ROWS_WRITTEN { key: @payload.key, outcomes: [] })
+      ROWS_WRITE -> ready when (and (> (array/len @payload.batch.ops) 0) (> (array/len (array/filter @payload.batch.ops (fn o (!= (object/get @o "entityType" "") (object/get (array/nth @payload.batch.ops 0) "entityType" ""))))) 0))
+        (emit STORE_UNSUPPORTED { key: @payload.key, reason: "a batch must name one entity type" })
+      ROWS_WRITE -> ready when (and (> (array/len @payload.batch.ops) 0) (= (array/len (array/filter @payload.batch.ops (fn o (!= (object/get @o "entityType" "") (object/get (array/nth @payload.batch.ops 0) "entityType" ""))))) 0) (not (validate/pattern (object/get (array/nth @payload.batch.ops 0) "entityType" "") "^[A-Za-z0-9_-]+$")))
+        (emit STORE_FAILED { key: @payload.key, message: "the entity type must be letters, digits, _ and -" })
+      ROWS_WRITE -> loading when (and (> (array/len @payload.batch.ops) 0) (= (array/len (array/filter @payload.batch.ops (fn o (!= (object/get @o "entityType" "") (object/get (array/nth @payload.batch.ops 0) "entityType" ""))))) 0) (validate/pattern (object/get (array/nth @payload.batch.ops 0) "entityType" "") "^[A-Za-z0-9_-]+$"))
+        (set @entity.key @payload.key)
+        (set @entity.entityType (object/get (array/nth @payload.batch.ops 0) "entityType" ""))
+        (set @entity.batch @payload.batch)
+        (set @entity.op "write")
+        (os/read-file { anchor: "cwd" path: (str/concat @config.dir (object/get (array/nth @payload.batch.ops 0) "entityType" "") ".json") } { emit: { success: FILE_READ, failure: FILE_READ_FAILED } })
+    }
+
+    state loading {
+      INIT -> ready
+
+      FILE_READ -> loading
+        (set @entity.rows (json/parse (base64/decode @payload.data) RowFile))
+        (emit ROWS_LOADED { })
+      FILE_READ_FAILED -> loading when (= @payload.kind "not-found")
+        (set @entity.rows [])
+        (emit ROWS_LOADED { })
+      FILE_READ_FAILED -> ready when (!= @payload.kind "not-found")
+        (emit STORE_FAILED { key: @entity.key, message: @payload.error })
+
+      ROWS_LOADED -> ready when (= @entity.op "read")
+        (emit ROW_FOUND { key: @entity.key, row: (array/find @entity.rows (fn r (= (object/get @r "id" "") @entity.rowId))) })
+      ROWS_LOADED -> ready when (= @entity.op "list")
+        (emit ROWS_LISTED { key: @entity.key, rows: @entity.rows })
+      ROWS_LOADED -> ready when (and (= @entity.op "query") (= @entity.project "ids"))
+        (emit ROWS_IDS { key: @entity.key, ids: (array/map @entity.rows (fn r (str/concat @r.id))), total: (array/len @entity.rows) })
+      ROWS_LOADED -> ready when (and (= @entity.op "query") (!= @entity.project "ids"))
+        (emit ROWS_PAGE { key: @entity.key, rows: @entity.rows, total: (array/len @entity.rows) })
+      ROWS_LOADED -> writing when (= @entity.op "write")
+        (set @entity.run (array/reduce @entity.batch.ops { rows: @entity.rows, outcomes: [], halted: false } (fn acc op (if @acc.halted @acc (let ((id (if (!= (object/get @op "id" "") "") (object/get @op "id" "") (object/get (object/get @op "data" {}) "id" "")))) (let ((ex (array/find @acc.rows (fn r (= (object/get @r "id" "") @id))))) (let ((guard (object/get @op "guard" null))) (let ((out (if (and (= (object/get @op "id" "") "") (= @id "") (or (= @op.kind "create") (= @op.kind "upsert"))) { kind: "failed", message: (str/concat "a " @op.kind " needs a string id") } (if (= @op.kind "create") (if (!= @ex null) { kind: "duplicate-id" } { kind: "created", row: (object/set @op.data "id" @id) }) (if (= @op.kind "upsert") (if (!= @ex null) { kind: "updated", row: (if (!= (object/get @ex "createdAt" null) null) (object/set (object/set @op.data "id" @id) "createdAt" (object/get @ex "createdAt" null)) (object/set @op.data "id" @id)) } { kind: "created", row: (object/set @op.data "id" @id) }) (if (= @ex null) { kind: "not-found" } (if (and (!= @guard null) (!= (row/matches @guard @ex) true)) { kind: "refused" } (if (= @op.kind "update") (if (!= @guard null) { kind: "updated", row: (object/set (object/merge @ex @op.data) "id" @id), before: @ex } { kind: "updated", row: (object/set (object/merge @ex @op.data) "id" @id) }) (if (!= @guard null) { kind: "deleted", before: @ex } { kind: "deleted" }))))))))) (let ((ok (or (= @out.kind "created") (= @out.kind "updated") (= @out.kind "deleted")))) { rows: (if (not @ok) @acc.rows (if (= @out.kind "deleted") (array/filter @acc.rows (fn r (!= (object/get @r "id" "") @id))) (if (= @ex null) (array/append @acc.rows @out.row) (array/map @acc.rows (fn r (if (= (object/get @r "id" "") @id) @out.row @r)))))) outcomes: (array/append @acc.outcomes @out), halted: (not @ok) })))))))))
+        (set @entity.run (if (and @entity.run.halted (= @entity.batch.onFailure "atomic")) { rows: @entity.rows, outcomes: (array/append (array/map (array/take @entity.run.outcomes (- (array/len @entity.run.outcomes) 1)) (fn o { kind: "rolled-back" })) (array/last @entity.run.outcomes)), halted: true } @entity.run))
+        (os/mkdir { anchor: "cwd" path: @config.dir } true { emit: { success: DIR_READY, failure: WRITE_FAILED } })
+    }
+
+    state writing {
+      INIT -> ready
+
+      DIR_READY -> writing
+        (os/write-file { anchor: "cwd" path: (str/concat @config.dir @entity.entityType ".json") } (base64/encode (json/stringify @entity.run.rows)) { emit: { success: ROWS_SAVED, failure: WRITE_FAILED } })
+      ROWS_SAVED -> ready
+        (emit ROWS_WRITTEN { key: @entity.key, outcomes: @entity.run.outcomes })
+      WRITE_FAILED -> ready
+        (emit STORE_FAILED { key: @entity.key, message: @payload.error })
+    }
+
+    emits {
+      ROW_FOUND -> external {
+        key : string!
+        row : Row?
+      }
+        @tier "internal"
+      ROWS_LISTED -> external {
+        key : string!
+        rows : [Row]!
+      }
+        @tier "internal"
+      ROWS_PAGE -> external {
+        key : string!
+        rows : [Row]!
+        total : number!
+      }
+        @tier "internal"
+      ROWS_IDS -> external {
+        key : string!
+        ids : [string]!
+        total : number!
+      }
+        @tier "internal"
+      ROWS_WRITTEN -> external {
+        key : string!
+        outcomes : [RowWriteOutcome]!
+      }
+        @tier "internal"
+      STORE_UNSUPPORTED -> external {
+        key : string!
+        reason : string!
+      }
+        @tier "internal"
+      STORE_FAILED -> external {
+        key : string!
+        message : string!
+      }
+        @tier "internal"
+      ROWS_LOADED -> internal { }
+        @tier "internal"
+      DIR_READY -> internal { }
+        @tier "internal"
+      ROWS_SAVED -> internal {
+        bytes : number
+      }
+        @tier "internal"
+      FILE_READ -> internal {
+        data : bytes!
+      }
+        @tier "internal"
+      FILE_READ_FAILED -> internal {
+        error : string!
+        kind : string
+      }
+        @tier "internal"
+      WRITE_FAILED -> internal {
+        error : string!
+        kind : string
+      }
+        @tier "internal"
+    }
+
+    listens {
+      ROW_READ -> external {
+        key : string!
+        entityType : string!
+        id : string!
+      }
+        @description "Read one row of an entity type by id."
+        @tier "internal"
+      ROW_LIST -> external {
+        key : string!
+        entityType : string!
+      }
+        @description "List every row of an entity type."
+        @tier "internal"
+      ROWS_QUERY -> external {
+        key : string!
+        entityType : string!
+        query : RowQuery!
+        project : "rows" | "ids"
+      }
+        @description "A query ask; the file store pushes none down."
+        @tier "internal"
+      ROWS_WRITE -> external {
+        key : string!
+        batch : RowWriteBatch!
+      }
+        @description "Apply a batch of create, upsert, update and delete ops."
+        @tier "internal"
+    }
+  }
+
+  page "/row-store-file" -> RowStoreDriver
+}

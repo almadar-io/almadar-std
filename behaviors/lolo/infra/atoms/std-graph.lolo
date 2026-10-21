@@ -108,7 +108,7 @@ orbital GraphOrbital {
         (set @entity.reqDirection (if (= ?direction null) "directed" ?direction))
         (set @entity.reqStrength (if (= ?strength null) 0 ?strength))
         (set @entity.reqMetadata (if (= ?metadata null) {} ?metadata))
-        (fetch GraphNode { filter: ["=", (object/get @entity graphId), ?graphId], emit: { success: GraphNodesLoaded, failure: GraphFailed } })
+        (fetch GraphNode { filter: (= (object/get @entity graphId) ?graphId), emit: { success: GraphNodesLoaded, failure: GraphFailed } })
 
       GRAPH_REMOVE_EDGE -> loadingNodes
         (set @entity.reqOp "removeEdge")
@@ -116,23 +116,23 @@ orbital GraphOrbital {
         (set @entity.reqSource ?source)
         (set @entity.reqTarget ?target)
         (set @entity.reqEdgeType ?edgeType)
-        (fetch GraphNode { filter: ["=", (object/get @entity graphId), ?graphId], emit: { success: GraphNodesLoaded, failure: GraphFailed } })
+        (fetch GraphNode { filter: (= (object/get @entity graphId) ?graphId), emit: { success: GraphNodesLoaded, failure: GraphFailed } })
 
       GRAPH_REMOVE_NODE -> loadingNodes
         (set @entity.reqOp "removeNode")
         (set @entity.reqGraphId ?graphId)
         (set @entity.reqNodeId ?nodeId)
-        (fetch GraphNode { filter: ["=", (object/get @entity graphId), ?graphId], emit: { success: GraphNodesLoaded, failure: GraphFailed } })
+        (fetch GraphNode { filter: (= (object/get @entity graphId) ?graphId), emit: { success: GraphNodesLoaded, failure: GraphFailed } })
 
       GRAPH_RECOMPUTE -> loadingNodes
         (set @entity.reqOp "recompute")
         (set @entity.reqGraphId ?graphId)
-        (fetch GraphNode { filter: ["=", (object/get @entity graphId), ?graphId], emit: { success: GraphNodesLoaded, failure: GraphFailed } })
+        (fetch GraphNode { filter: (= (object/get @entity graphId) ?graphId), emit: { success: GraphNodesLoaded, failure: GraphFailed } })
 
       GRAPH_ORDER -> loadingNodes
         (set @entity.reqOp "order")
         (set @entity.reqGraphId ?graphId)
-        (fetch GraphNode { filter: ["=", (object/get @entity graphId), ?graphId], emit: { success: GraphNodesLoaded, failure: GraphFailed } })
+        (fetch GraphNode { filter: (= (object/get @entity graphId) ?graphId), emit: { success: GraphNodesLoaded, failure: GraphFailed } })
 
       GRAPH_REACH -> loadingNodes
         (set @entity.reqOp "reach")
@@ -140,14 +140,14 @@ orbital GraphOrbital {
         (set @entity.reqNodeId ?nodeId)
         (set @entity.reqDirection ?direction)
         (set @entity.reqEdgeTypes ?edgeTypes)
-        (fetch GraphNode { filter: ["=", (object/get @entity graphId), ?graphId], emit: { success: GraphNodesLoaded, failure: GraphFailed } })
+        (fetch GraphNode { filter: (= (object/get @entity graphId) ?graphId), emit: { success: GraphNodesLoaded, failure: GraphFailed } })
     }
 
     state loadingNodes {
       INIT -> idle
       GraphNodesLoaded -> loadingEdges
         (set @entity.scratchNodes ?data)
-        (fetch GraphEdge { filter: ["=", (object/get @entity graphId), @entity.reqGraphId], emit: { success: GraphEdgesLoaded, failure: GraphFailed } })
+        (fetch GraphEdge { filter: (= (object/get @entity graphId) @entity.reqGraphId), emit: { success: GraphEdgesLoaded, failure: GraphFailed } })
       GraphFailed -> idle
         (emit GRAPH_FAILED { error: ?error, graphId: @entity.reqGraphId })
         (notify error (str/concat "The graph change failed: " ?error))

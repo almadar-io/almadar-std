@@ -50,14 +50,14 @@ orbital BoardOrbital {
         (render-ui main { type: skeleton, variant: card })
       BoardItemsLoaded -> viewing_board
         (set @entity.boards (array/map @config.columns (fn col {
-          count: (array/len (array/filter ?data (fn item ["=", (object/get @item @config.groupByField), (object/get @col key)])))
+          count: (array/len (array/filter ?data (fn item (= (object/get @item @config.groupByField) (object/get @col key)))))
           icon: (object/get @col icon circle)
-          items: (array/sort (array/filter ?data (fn item ["=", (object/get @item @config.groupByField), (object/get @col key)])) position)
+          items: (array/sort (array/filter ?data (fn item (= (object/get @item @config.groupByField) (object/get @col key)))) position)
           key: (object/get @col key)
           label: (object/get @col label)
           variant: (object/get @col variant default)
         })))
-        (if ["=", @config.boardLook, kanban-classic]
+        (if (= @config.boardLook kanban-classic)
           (render-ui main @config.kanbanClassicBodyContent)
           (render-ui main @config.bodyContent))
       BoardItemsLoadFailed -> error
@@ -237,13 +237,13 @@ orbital BoardOrbital {
         (fetch BoardView {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
           include: @config.include
-          filter: (or ["=", ?searchTerm, ""] (str/includes (object/get @entity @config.searchField) ?searchTerm))
+          filter: (or (= ?searchTerm "") (str/includes (object/get @entity @config.searchField) ?searchTerm))
         })
       REFETCH_FILTER -> viewing_board
         (fetch BoardView {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
           include: @config.include
-          filter: (or ["=", ?value, ""] ["=", (object/get @entity ?field), ?value])
+          filter: (or (= ?value "") (= (object/get @entity ?field) ?value))
         })
       ;; A board's columns are not a paged list — paging the underlying fetch
       ;; would show only one page's worth of items spread across all columns,
@@ -255,13 +255,13 @@ orbital BoardOrbital {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
           include: @config.include
           limit: @config.pageSize
-          offset: ["*", ["-", ?page, 1], @config.pageSize]
+          offset: (* (- ?page 1) @config.pageSize)
         })
       BoardItemsLoaded -> viewing_board
         (set @entity.boards (array/map @config.columns (fn col {
-          count: (array/len (array/filter ?data (fn item ["=", (object/get @item @config.groupByField), (object/get @col key)])))
+          count: (array/len (array/filter ?data (fn item (= (object/get @item @config.groupByField) (object/get @col key)))))
           icon: (object/get @col icon circle)
-          items: (array/sort (array/filter ?data (fn item ["=", (object/get @item @config.groupByField), (object/get @col key)])) position)
+          items: (array/sort (array/filter ?data (fn item (= (object/get @item @config.groupByField) (object/get @col key)))) position)
           key: (object/get @col key)
           label: (object/get @col label)
           variant: (object/get @col variant default)
@@ -678,7 +678,7 @@ orbital BoardOrbital {
         @description "Actions row of the open-card panel. Default is the Delete button only. Override to add consumer-wired actions — e.g. an Edit button with action: EDIT_CARD and actionPayload: { id: @entity.currentId, row: @entity.currentRow }, listened to by the organism's edit modal. Never leave a button here without a listener."
         @tier "presentation"
       bodyContent : render-ui = {
-        children: [(if ["=", @config.addPlacement, "inline"] {
+        children: [(if (= @config.addPlacement "inline") {
           children: [{
             action: ADD_CARD
             icon: plus
@@ -729,7 +729,7 @@ orbital BoardOrbital {
           children: []
           gap: none
           type: stack
-        }), (if [">", (array/len @config.filters), 0] {
+        }), (if (> (array/len @config.filters) 0) {
           children: [{
             entity: BoardView
             event: REFETCH_FILTER
@@ -819,7 +819,7 @@ orbital BoardOrbital {
             type: card
           })
           type: data-grid
-        }, (if ["=", @config.addPlacement, "floating"] {
+        }, (if (= @config.addPlacement "floating") {
           action: ADD_CARD
           icon: plus
           label: "Add item"
@@ -838,7 +838,7 @@ orbital BoardOrbital {
         @description "Render-ui SExpr rendered after the board loads for boardLook='columns' — the canonical column data-grid with nested per-column data-lists. boardLook='kanban-classic' renders kanbanClassicBodyContent instead; both share this trait's state machine, emits, and listens."
         @tier "internal"
       kanbanClassicBodyContent : render-ui = {
-        children: [(if ["=", @config.addPlacement, "inline"] {
+        children: [(if (= @config.addPlacement "inline") {
           children: [{
             action: ADD_CARD
             icon: plus
@@ -891,7 +891,7 @@ orbital BoardOrbital {
           children: []
           gap: none
           type: stack
-        }), (if [">", (array/len @config.filters), 0] {
+        }), (if (> (array/len @config.filters) 0) {
           children: [{
             entity: BoardView
             event: REFETCH_FILTER
@@ -1002,7 +1002,7 @@ orbital BoardOrbital {
           })
           scrollX: true
           type: data-grid
-        }, (if ["=", @config.addPlacement, "floating"] {
+        }, (if (= @config.addPlacement "floating") {
           action: ADD_CARD
           icon: plus
           label: "Add card"

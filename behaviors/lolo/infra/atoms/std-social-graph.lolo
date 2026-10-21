@@ -101,7 +101,7 @@ orbital SocialGraphOrbital {
         (set @entity.reqLearner ?learnerId)
         (set @entity.reqKey ?nodeKey)
         (set @entity.reqStats (if (= ?memberStats null) (json/parse "[]" SocialMemberStats) ?memberStats))
-        (fetch NodePresence { filter: ["and", ["=", (object/get @entity nodeKey), ?nodeKey], [">=", (object/get @entity lastSeenOnNode), (- @now (* @config.peerWindowDays 86400000))]], emit: { success: PresenceLoaded, failure: PeerFailed } })
+        (fetch NodePresence { filter: (and (= (object/get @entity nodeKey) ?nodeKey) (>= (object/get @entity lastSeenOnNode) (- @now (* @config.peerWindowDays 86400000)))), emit: { success: PresenceLoaded, failure: PeerFailed } })
       SOCIAL_PEERS -> idle when (not (array/some @config.nodeKinds (fn k (and (str/startsWith ?nodeKey (str/concat @k ":")) (> (str/len ?nodeKey) (+ (str/len @k) 1))))))
         (emit SOCIAL_REJECTED { reason: "bad-node-key" })
     }
@@ -272,20 +272,20 @@ orbital SocialGraphOrbital {
         (set @entity.reqPeerRef ?peerRef)
         (set @entity.reqOriginKind ?originKind)
         (set @entity.reqOriginId ?originId)
-        (fetch PeerToken { filter: ["=", (object/get @entity id), ?peerRef], emit: { success: TokenLoaded, failure: ConnFailed } })
+        (fetch PeerToken { filter: (= (object/get @entity id) ?peerRef), emit: { success: TokenLoaded, failure: ConnFailed } })
 
       SOCIAL_VIEW -> loadingConn
         (set @entity.reqOp "view")
         (set @entity.reqLearner ?learnerId)
         (set @entity.reqConnection ?connectionId)
-        (fetch SocialConnection { filter: ["=", (object/get @entity id), ?connectionId], emit: { success: ConnLoaded, failure: ConnFailed } })
+        (fetch SocialConnection { filter: (= (object/get @entity id) ?connectionId), emit: { success: ConnLoaded, failure: ConnFailed } })
 
       SOCIAL_SET_BADGE -> loadingConn
         (set @entity.reqOp "badge")
         (set @entity.reqLearner ?learnerId)
         (set @entity.reqConnection ?connectionId)
         (set @entity.reqBadge ?badgeId)
-        (fetch SocialConnection { filter: ["=", (object/get @entity id), ?connectionId], emit: { success: ConnLoaded, failure: ConnFailed } })
+        (fetch SocialConnection { filter: (= (object/get @entity id) ?connectionId), emit: { success: ConnLoaded, failure: ConnFailed } })
 
       SOCIAL_SEND -> loadingConn when (> (str/len (str/trim ?content)) 0)
         (set @entity.reqOp "send")
@@ -293,26 +293,26 @@ orbital SocialGraphOrbital {
         (set @entity.reqConnection ?connectionId)
         (set @entity.reqContent ?content)
         (set @entity.reqBadge (if (= ?badgeId null) "" ?badgeId))
-        (fetch SocialConnection { filter: ["=", (object/get @entity id), ?connectionId], emit: { success: ConnLoaded, failure: ConnFailed } })
+        (fetch SocialConnection { filter: (= (object/get @entity id) ?connectionId), emit: { success: ConnLoaded, failure: ConnFailed } })
       SOCIAL_SEND -> idle when (= (str/len (str/trim ?content)) 0)
         (emit SOCIAL_CONNECTION_REJECTED { reason: "content-required" })
 
       SOCIAL_BADGES_PROVIDED -> loadingPending
         (set @entity.reqOp "badges")
         (set @entity.reqLabels ?labels)
-        (fetch SocialPending { filter: ["=", (object/get @entity id), ?key], emit: { success: PendingLoaded, failure: ConnFailed } })
+        (fetch SocialPending { filter: (= (object/get @entity id) ?key), emit: { success: PendingLoaded, failure: ConnFailed } })
       SOCIAL_BADGES_FAILED -> loadingPending
         (set @entity.reqOp "badges")
         (set @entity.reqLabels (json/parse "[]" SocialStrings))
-        (fetch SocialPending { filter: ["=", (object/get @entity id), ?key], emit: { success: PendingLoaded, failure: ConnFailed } })
+        (fetch SocialPending { filter: (= (object/get @entity id) ?key), emit: { success: PendingLoaded, failure: ConnFailed } })
       SOCIAL_MODERATION_SCORED -> loadingPending
         (set @entity.reqOp "scored")
         (set @entity.reqScore (math/max 0 (math/min 1 ?score)))
         (set @entity.reqReason (if (= ?reason null) "" ?reason))
-        (fetch SocialPending { filter: ["=", (object/get @entity id), ?key], emit: { success: PendingLoaded, failure: ConnFailed } })
+        (fetch SocialPending { filter: (= (object/get @entity id) ?key), emit: { success: PendingLoaded, failure: ConnFailed } })
       SOCIAL_MODERATION_FAILED -> loadingPending
         (set @entity.reqOp "modFailed")
-        (fetch SocialPending { filter: ["=", (object/get @entity id), ?key], emit: { success: PendingLoaded, failure: ConnFailed } })
+        (fetch SocialPending { filter: (= (object/get @entity id) ?key), emit: { success: PendingLoaded, failure: ConnFailed } })
       PendingDeleted -> idle
       TokenDeleted -> idle
       PendingStored -> idle when (= ?kind "badges")
@@ -426,7 +426,7 @@ orbital SocialGraphOrbital {
     state routing {
       INIT -> idle
       ConnReady -> loadingMessages when (= @entity.reqOp "view")
-        (fetch SocialMessage { filter: ["=", (object/get @entity connectionId), @entity.reqConnection], orderBy: "sentAt:asc", emit: { success: MessagesLoaded, failure: ConnFailed } })
+        (fetch SocialMessage { filter: (= (object/get @entity connectionId) @entity.reqConnection), orderBy: "sentAt:asc", emit: { success: MessagesLoaded, failure: ConnFailed } })
       ConnReady -> idle when (and (!= @entity.reqOp "view") (= @entity.scratchStatus "archived"))
         (emit SOCIAL_CONNECTION_REJECTED { reason: "archived" })
       ConnReady -> idle when (and (= @entity.reqOp "badge") (!= @entity.scratchStatus "archived") (not (array/some (object/get (array/first @entity.scratchConn) badges (json/parse "[]" SocialBadges)) (fn b (= (object/get @b id "") @entity.reqBadge)))))

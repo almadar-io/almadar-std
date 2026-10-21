@@ -35,18 +35,18 @@ orbital GraphItemOrbital {
         })
       ITEMS_LOADED -> idle
         (let (
-            (rows (if ["=", @config.filterField, ""] ?data (array/filter ?data (fn row (= (object/get @row @config.filterField) @config.filterValue)))))
+            (rows (if (= @config.filterField "") ?data (array/filter ?data (fn row (= (object/get @row @config.filterField) @config.filterValue)))))
           )
-          (set @entity.chartData (if ["=", @config.chartType, histogram] (array/map @rows (fn p {
+          (set @entity.chartData (if (= @config.chartType histogram) (array/map @rows (fn p {
           label: (object/get @p label)
           value: (object/get @p value)
         })) (array/map (object/entries (if @config.timeAxis (array/groupBy (array/map (array/filter @rows (fn row (validate/required (object/get @row @config.timeField)))) (fn row (object/set @row "periodStart" (time/startOf (time/parse (object/get @row @config.timeField)) @config.period)))) "periodStart") (array/groupBy (array/filter @rows (fn row (validate/required (object/get @row @config.categoryField)))) @config.categoryField))) (fn entry {
           label: (object/get @entry "0")
-          value: (if ["=", @config.aggregation, sum] (array/sum (object/get @entry "1") @config.valueField) (if ["=", @config.aggregation, avg] (array/avg (object/get @entry "1") @config.valueField) (if ["=", @config.aggregation, min] (array/min (object/get @entry "1") @config.valueField) (if ["=", @config.aggregation, max] (array/max (object/get @entry "1") @config.valueField) (array/len (object/get @entry "1"))))))
+          value: (if (= @config.aggregation sum) (array/sum (object/get @entry "1") @config.valueField) (if (= @config.aggregation avg) (array/avg (object/get @entry "1") @config.valueField) (if (= @config.aggregation min) (array/min (object/get @entry "1") @config.valueField) (if (= @config.aggregation max) (array/max (object/get @entry "1") @config.valueField) (array/len (object/get @entry "1"))))))
         })))))
         (set @entity.chartData (if @config.timeAxis (array/sort @entity.chartData label asc) @entity.chartData))
-        (set @entity.chartData (if ["!=", @config.sortField, none] (array/sort @entity.chartData @config.sortField @config.sortDir) @entity.chartData))
-        (set @entity.chartData (if [">", @config.limit, 0] (array/take @entity.chartData @config.limit) @entity.chartData))
+        (set @entity.chartData (if (!= @config.sortField none) (array/sort @entity.chartData @config.sortField @config.sortDir) @entity.chartData))
+        (set @entity.chartData (if (> @config.limit 0) (array/take @entity.chartData @config.limit) @entity.chartData))
         (render-ui main {
           chartType: @config.chartType
           data: (array/map @entity.chartData (fn p { label: (object/get @config.categoryLabels @p.label @p.label), value: @p.value }))

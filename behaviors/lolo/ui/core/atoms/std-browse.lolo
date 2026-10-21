@@ -68,27 +68,27 @@ orbital BrowseItemOrbital {
       INIT -> loading
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
-          filter: (and (or ["=", @config.scopeField, ""] ["=", (object/get @entity @config.scopeField), @user.id]) (or ["=", @config.initialFilterField, ""] ["=", (object/get @entity @config.initialFilterField), @config.initialFilterValue]))
+          filter: (and (or (= @config.scopeField "") (= (object/get @entity @config.scopeField) @user.id)) (or (= @config.initialFilterField "") (= (object/get @entity @config.initialFilterField) @config.initialFilterValue)))
           include: @config.include
           limit: @config.pageSize
           orderBy: @config.orderBy
           offset: 0
         })
-        (if ["=", @config.browseLook, gallery]
+        (if (= @config.browseLook gallery)
           (render-ui main { type: skeleton, variant: grid, rows: 6 })
-          (if (or ["=", @config.browseLook, feed] ["=", @config.browseLook, master-detail] ["=", @config.browseLook, triage])
+          (if (or (= @config.browseLook feed) (= @config.browseLook master-detail) (= @config.browseLook triage))
             (render-ui main { type: skeleton, variant: list, rows: 6 })
             (render-ui main { type: skeleton, variant: table, rows: 6 })))
       BrowseItemLoaded -> browsing
-        (if ["=", @config.browseLook, dense]
+        (if (= @config.browseLook dense)
           (render-ui main @config.denseBodyContent)
-          (if ["=", @config.browseLook, feed]
+          (if (= @config.browseLook feed)
             (render-ui main @config.feedBodyContent)
-            (if ["=", @config.browseLook, gallery]
+            (if (= @config.browseLook gallery)
               (render-ui main @config.galleryBodyContent)
-              (if ["=", @config.browseLook, master-detail]
+              (if (= @config.browseLook master-detail)
                 (render-ui main @config.masterDetailBodyContent)
-                (if ["=", @config.browseLook, triage]
+                (if (= @config.browseLook triage)
                   (render-ui main @config.triageBodyContent)
                   (render-ui main @config.bodyContent))))))
       BrowseItemLoadFailed -> error
@@ -103,7 +103,7 @@ orbital BrowseItemOrbital {
       INIT -> loading
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
-          filter: (and (or ["=", @config.scopeField, ""] ["=", (object/get @entity @config.scopeField), @user.id]) (or ["=", @config.initialFilterField, ""] ["=", (object/get @entity @config.initialFilterField), @config.initialFilterValue]))
+          filter: (and (or (= @config.scopeField "") (= (object/get @entity @config.scopeField) @user.id)) (or (= @config.initialFilterField "") (= (object/get @entity @config.initialFilterField) @config.initialFilterValue)))
           include: @config.include
           limit: @config.pageSize
           orderBy: @config.orderBy
@@ -118,7 +118,7 @@ orbital BrowseItemOrbital {
       REFETCH_QUERY -> browsing
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
-          filter: (and (or ["=", @config.scopeField, ""] ["=", (object/get @entity @config.scopeField), @user.id]) (or ["=", ?searchTerm, ""] (str/includes (object/get @entity @config.searchField) ?searchTerm)))
+          filter: (and (or (= @config.scopeField "") (= (object/get @entity @config.scopeField) @user.id)) (or (= ?searchTerm "") (str/includes (object/get @entity @config.searchField) ?searchTerm)))
           include: @config.include
           limit: @config.pageSize
           orderBy: @config.orderBy
@@ -127,7 +127,7 @@ orbital BrowseItemOrbital {
       REFETCH_FILTER -> browsing
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
-          filter: (and (or ["=", @config.scopeField, ""] ["=", (object/get @entity @config.scopeField), @user.id]) (or ["=", ?value, ""] ["=", (object/get @entity ?field), ?value]))
+          filter: (and (or (= @config.scopeField "") (= (object/get @entity @config.scopeField) @user.id)) (or (= ?value "") (= (object/get @entity ?field) ?value)))
           include: @config.include
           limit: @config.pageSize
           orderBy: @config.orderBy
@@ -136,30 +136,30 @@ orbital BrowseItemOrbital {
       REFETCH_PAGE -> browsing
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
-          filter: (or ["=", @config.scopeField, ""] ["=", (object/get @entity @config.scopeField), @user.id])
+          filter: (or (= @config.scopeField "") (= (object/get @entity @config.scopeField) @user.id))
           include: @config.include
           limit: @config.pageSize
           orderBy: @config.orderBy
-          offset: ["*", ["-", ?page, 1], @config.pageSize]
+          offset: (* (- ?page 1) @config.pageSize)
         })
       ;; master-detail only: opening a row re-renders the split view with the
       ;; clicked row's detail (payload ?row feeds the panel). Guard keeps every
       ;; other look's machine untouched — VIEW still reaches external listeners
       ;; either way, and no effect here re-emits the trigger.
-      VIEW -> browsing when ["=", @config.browseLook, "master-detail"]
+      VIEW -> browsing when (= @config.browseLook "master-detail")
         (render-ui main @config.masterDetailRecordBodyContent)
-      CLOSE -> browsing when ["=", @config.browseLook, "master-detail"]
+      CLOSE -> browsing when (= @config.browseLook "master-detail")
         (render-ui main @config.masterDetailBodyContent)
       BrowseItemLoaded -> browsing
-        (if ["=", @config.browseLook, dense]
+        (if (= @config.browseLook dense)
           (render-ui main @config.denseBodyContent)
-          (if ["=", @config.browseLook, feed]
+          (if (= @config.browseLook feed)
             (render-ui main @config.feedBodyContent)
-            (if ["=", @config.browseLook, gallery]
+            (if (= @config.browseLook gallery)
               (render-ui main @config.galleryBodyContent)
-              (if ["=", @config.browseLook, master-detail]
+              (if (= @config.browseLook master-detail)
                 (render-ui main @config.masterDetailBodyContent)
-                (if ["=", @config.browseLook, triage]
+                (if (= @config.browseLook triage)
                   (render-ui main @config.triageBodyContent)
                   (render-ui main @config.bodyContent))))))
       ;; A refetch keeps the populated body on screen; only the failure
@@ -172,15 +172,15 @@ orbital BrowseItemOrbital {
       INIT -> loading
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
-          filter: (and (or ["=", @config.scopeField, ""] ["=", (object/get @entity @config.scopeField), @user.id]) (or ["=", @config.initialFilterField, ""] ["=", (object/get @entity @config.initialFilterField), @config.initialFilterValue]))
+          filter: (and (or (= @config.scopeField "") (= (object/get @entity @config.scopeField) @user.id)) (or (= @config.initialFilterField "") (= (object/get @entity @config.initialFilterField) @config.initialFilterValue)))
           include: @config.include
           limit: @config.pageSize
           orderBy: @config.orderBy
           offset: 0
         })
-        (if ["=", @config.browseLook, gallery]
+        (if (= @config.browseLook gallery)
           (render-ui main { type: skeleton, variant: grid, rows: 6 })
-          (if (or ["=", @config.browseLook, feed] ["=", @config.browseLook, master-detail] ["=", @config.browseLook, triage])
+          (if (or (= @config.browseLook feed) (= @config.browseLook master-detail) (= @config.browseLook triage))
             (render-ui main { type: skeleton, variant: list, rows: 6 })
             (render-ui main { type: skeleton, variant: table, rows: 6 })))
     }
@@ -467,7 +467,7 @@ orbital BrowseItemOrbital {
           children: []
           gap: none
           type: stack
-        }), (if [">", (array/len @config.filters), 0] {
+        }), (if (> (array/len @config.filters) 0) {
           children: [{
             entity: BrowseItem
             event: REFETCH_FILTER
@@ -522,7 +522,7 @@ orbital BrowseItemOrbital {
           children: []
           gap: none
           type: stack
-        }), (if [">", (array/len @config.filters), 0] {
+        }), (if (> (array/len @config.filters) 0) {
           children: [{
             entity: BrowseItem
             event: REFETCH_FILTER
@@ -559,7 +559,7 @@ orbital BrowseItemOrbital {
           gap: none
           type: stack
         }]
-        className: (if ["=", @config.surface, "auto"] "surface-content overflow-hidden" "")
+        className: (if (= @config.surface "auto") "surface-content overflow-hidden" "")
         direction: vertical
         gap: none
         type: stack
@@ -585,7 +585,7 @@ orbital BrowseItemOrbital {
           children: []
           gap: none
           type: stack
-        }), (if [">", (array/len @config.filters), 0] {
+        }), (if (> (array/len @config.filters) 0) {
           children: [{
             entity: BrowseItem
             event: REFETCH_FILTER
@@ -607,16 +607,16 @@ orbital BrowseItemOrbital {
           gap: none
           itemClickEvent: @config.itemClickEvent
           itemActions: (array/filter @config.itemActions (fn item (or (= (array/len (object/get @item roles [])) 0) (array/includes (object/get @item roles []) @config.viewerRole))))
-          look: (if ["=", @config.feedSurface, "cards"] card-rows borderless)
+          look: (if (= @config.feedSurface "cards") card-rows borderless)
           maxInlineActions: @config.maxInlineActions
           emptyDescription: @config.emptyDescription
           emptyIcon: @config.emptyIcon
           emptyTitle: @config.emptyTitle
           pageSize: @config.displayPageSize
-          surface: (if ["=", @config.feedSurface, "plain"] none @config.surface)
+          surface: (if (= @config.feedSurface "plain") none @config.surface)
           type: data-list
           itemEnter: @config.itemEnter
-          variant: (if ["=", @config.feedSurface, "divided"] card default)
+          variant: (if (= @config.feedSurface "divided") card default)
         }]
         className: w-full
         direction: vertical
@@ -644,7 +644,7 @@ orbital BrowseItemOrbital {
           children: []
           gap: none
           type: stack
-        }), (if [">", (array/len @config.filters), 0] {
+        }), (if (> (array/len @config.filters) 0) {
           children: [{
             entity: BrowseItem
             event: REFETCH_FILTER
@@ -702,7 +702,7 @@ orbital BrowseItemOrbital {
           children: []
           gap: none
           type: stack
-        }), (if [">", (array/len @config.filters), 0] {
+        }), (if (> (array/len @config.filters) 0) {
           children: [{
             entity: BrowseItem
             event: REFETCH_FILTER
@@ -739,7 +739,7 @@ orbital BrowseItemOrbital {
           gap: none
           type: stack
         }]
-        className: (if ["=", @config.surface, "auto"] "surface-content overflow-hidden" "")
+        className: (if (= @config.surface "auto") "surface-content overflow-hidden" "")
         direction: vertical
         gap: none
         type: stack
@@ -764,7 +764,7 @@ orbital BrowseItemOrbital {
           children: []
           gap: none
           type: stack
-        }), (if [">", (array/len @config.filters), 0] {
+        }), (if (> (array/len @config.filters) 0) {
           children: [{
             entity: BrowseItem
             event: REFETCH_FILTER
@@ -802,7 +802,7 @@ orbital BrowseItemOrbital {
           }
           type: master-detail-layout
         }]
-        className: (if ["=", @config.surface, "auto"] "surface-content overflow-hidden" "")
+        className: (if (= @config.surface "auto") "surface-content overflow-hidden" "")
         direction: vertical
         gap: none
         type: stack
@@ -827,7 +827,7 @@ orbital BrowseItemOrbital {
           children: []
           gap: none
           type: stack
-        }), (if [">", (array/len @config.filters), 0] {
+        }), (if (> (array/len @config.filters) 0) {
           children: [{
             entity: BrowseItem
             event: REFETCH_FILTER
@@ -863,7 +863,7 @@ orbital BrowseItemOrbital {
           }
           type: master-detail-layout
         }]
-        className: (if ["=", @config.surface, "auto"] "surface-content overflow-hidden" "")
+        className: (if (= @config.surface "auto") "surface-content overflow-hidden" "")
         direction: vertical
         gap: none
         type: stack

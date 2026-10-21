@@ -1,23 +1,40 @@
 app std-http-server [
   version: "1.0.0",
   env: ["CORS_ORIGIN"],
+  egress: ["https://www.googleapis.com"],
   net: { "127.0.0.1:3000": [listen] },
-  description: "std-http-server — the HTTP server program that replaces orbital-server, first slice, composed from atoms and owning no topology of its own. std-http-policy reads CORS_ORIGIN at boot (a comma list, trimmed, blanks dropped) and answers CORS_CONFIGURED, which tells std-http1 to bind the host and port knobs. std-http1 reads each connection and delivers one typed request; std-http-router asks std-http-policy to decide it (a preflight and a 413 are answered at once), counts an /api request in std-rate-limiter (ADMITTED or THROTTLED, a throttled one is 429 with ratelimit-* headers), routes it by method and path (GET /api/health answers 200 { status, version }, every other path 404 { error, code }) and hands the answer back to std-http1 as RESPOND. Requests are correlated by requestId, so any number are in flight at once. Bound to spec/infra/server.lolo. The other routes, the bearer guard, hooks, SSE and static files are not in this slice."
+  description: "std-http-server — the HTTP server program that replaces orbital-server, first slice, composed from atoms and owning no topology of its own. std-http-policy reads CORS_ORIGIN at boot (a comma list, trimmed, blanks dropped) and answers CORS_CONFIGURED, which tells std-http1 to bind the host and port knobs. std-http1 reads each connection and delivers one typed request; std-http-router asks std-http-policy to decide it (a preflight and a 413 are answered at once), counts an /api request in std-rate-limiter (ADMITTED or THROTTLED, a throttled one is 429 with ratelimit-* headers), routes it by method and path (GET /api/health answers 200 { status, version }, every other path 404 { error, code }) and hands the answer back to std-http1 as RESPOND. Requests are correlated by requestId, so any number are in flight at once. Bound to spec/infra/server.lolo. GET /api/events?ticket=<t> is the live stream: the router asks std-stream-ticket to spend the ticket, TICKET_TAKEN opens the stream through std-sse and std-http1 (RESPOND_HEAD/RESPOND_CHUNK/RESPOND_END, heartbeats, close on client disconnect), a missing or bad ticket is 401 { error, code }. POST /api/events/ticket mints a ticket for the anonymous viewer and answers 200 { ticket } (503 if the mint fails). The stream is opened, held and closed with only the retry frame and heartbeats; pushing the kernel broadcast feed is a later item. The other routes, the bearer guard, hooks and static files are not in this slice."
 ]
 uses Spec from "almadar-std/server"
 uses H1 from "std/behaviors/std-http1"
 uses Policy from "std/behaviors/std-http-policy"
 uses Rate from "std/behaviors/std-rate-limiter"
 uses Router from "std/behaviors/std-http-router"
+uses Sse from "std/behaviors/std-sse"
+uses Ticket from "std/behaviors/std-stream-ticket"
+uses Bearer from "std/behaviors/std-bearer-verify"
+uses Jws from "std/behaviors/std-jws"
+uses Rsa from "std/behaviors/std-rsa"
+uses Big from "std/behaviors/std-bigint"
+uses Ecdsa from "std/behaviors/std-ecdsa"
 orbital HttpServerOrbital {
   entity HttpServerProgram [runtime] {
     id : string!
+  }
+
+  entity StreamTicket [persistent: stream_tickets] {
+    id : string! @description "The ticket: 32 CSPRNG bytes, base64url."
+    viewer : Viewer! @description "The viewer the ticket was minted for."
+    expiresAt : number @description "When the ticket stops working, in epoch milliseconds." = 0
   }
 
   trait Http1 = H1.traits.Http1 {
     listens {
       ServerPolicy.CORS_CONFIGURED -> LISTEN
       ServerRouter.RESPOND -> RESPOND
+      ServerSse.RESPOND_HEAD -> RESPOND_HEAD
+      ServerSse.RESPOND_CHUNK -> RESPOND_CHUNK
+      ServerSse.RESPOND_END -> RESPOND_END
       Http1HeadSearch.INDEX_OF_ANSWERED -> HEAD_SEARCHED
     }
   }
@@ -51,8 +68,90 @@ orbital HttpServerOrbital {
       ServerPolicy.HTTP_DECIDED -> HTTP_DECIDED
       ServerRateLimiter.ADMITTED -> ADMITTED
       ServerRateLimiter.THROTTLED -> THROTTLED
+      StreamTicketer.TICKET_MINTED -> TICKET_MINTED
+      Http1.STREAM_CLOSED -> STREAM_CLOSED
+      StreamTicketer.TICKET_TAKEN -> TICKET_TAKEN
+      StreamTicketer.TICKET_REFUSED -> TICKET_REFUSED
+      ServerBearer.BEARER_VERIFIED -> BEARER_VERIFIED
+      ServerBearer.BEARER_ANONYMOUS -> BEARER_ANONYMOUS
+      ServerBearer.BEARER_REFUSED -> BEARER_REFUSED
     }
   }
 
-  page "/server" as HttpServerPage -> Http1, Http1HeadSearch, ServerPolicy, ServerRateLimiter, ServerRouter
+  trait ServerBearer = Bearer.traits.BearerVerifier {
+    listens {
+      ServerRouter.BEARER_VERIFY -> BEARER_VERIFY
+      BearerJws.JWS_VERIFIED -> JWS_VERIFIED
+      BearerJws.JWS_REFUSED -> JWS_REFUSED
+    }
+  }
+
+  trait BearerBig = Big.traits.BigIntCodec {
+    listens {
+      BearerRsa.RSA_FROM_BYTES -> FROM_BYTES
+      BearerRsa.RSA_COMPARE -> COMPARE
+      BearerRsa.RSA_MODPOW -> MODPOW
+      BearerRsa.RSA_TO_BYTES -> TO_BYTES
+    }
+  }
+
+  trait BearerRsa = Rsa.traits.RsaVerifier {
+    listens {
+      BearerJws.JWS_RSA_VERIFY -> RSA_VERIFY
+      BearerBig.FROM_BYTES_ANSWERED -> BIG_DECODED
+      BearerBig.COMPARE_ANSWERED -> BIG_COMPARED
+      BearerBig.MODPOW_ANSWERED -> BIG_POWERED
+      BearerBig.TO_BYTES_ANSWERED -> BIG_ENCODED
+      BearerBig.BIGINT_REFUSED -> BIG_REFUSED
+    }
+  }
+
+  trait BearerEcBig = Big.traits.BigIntCodec {
+    listens {
+      BearerEc.EC_FROM_BYTES -> FROM_BYTES
+      BearerEc.EC_COMPARE -> COMPARE
+      BearerEc.EC_MODINV -> MODINV
+      BearerEc.EC_MUL -> MUL
+      BearerEc.EC_MOD -> MOD
+    }
+  }
+
+  trait BearerEc = Ecdsa.traits.EcdsaVerifier {
+    listens {
+      BearerJws.JWS_EC_VERIFY -> ECDSA_VERIFY
+      BearerEcBig.FROM_BYTES_ANSWERED -> BIG_DECODED
+      BearerEcBig.COMPARE_ANSWERED -> BIG_COMPARED
+      BearerEcBig.MODINV_ANSWERED -> BIG_INVERTED
+      BearerEcBig.MUL_ANSWERED -> BIG_MULTIPLIED
+      BearerEcBig.MOD_ANSWERED -> BIG_REMAINDER
+      BearerEcBig.BIGINT_REFUSED -> BIG_REFUSED
+    }
+  }
+
+  trait BearerJws = Jws.traits.JwsVerifier {
+    listens {
+      ServerBearer.JWS_VERIFY -> JWS_VERIFY
+      BearerRsa.RSA_VERIFIED -> RSA_OK
+      BearerRsa.RSA_REFUSED -> RSA_NO
+      BearerEc.ECDSA_VERIFIED -> EC_OK
+      BearerEc.ECDSA_REFUSED -> EC_NO
+    }
+  }
+
+  trait StreamTicketer = Ticket.traits.StreamTicketer {
+    listens {
+      ServerRouter.STREAM_OPEN_REQUESTED -> TAKE_TICKET
+      ServerRouter.MINT_REQUESTED -> MINT_TICKET
+    }
+  }
+
+  trait ServerSse = Sse.traits.Sse {
+    listens {
+      ServerRouter.SSE_OPEN -> SSE_OPEN
+      Http1.STREAM_IDLE -> STREAM_IDLE
+      Http1.STREAM_CLOSED -> STREAM_CLOSED
+    }
+  }
+
+  page "/server" as HttpServerPage -> Http1, Http1HeadSearch, ServerPolicy, ServerRateLimiter, ServerRouter, StreamTicketer, ServerSse, ServerBearer, BearerJws, BearerRsa, BearerBig, BearerEc, BearerEcBig
 }
