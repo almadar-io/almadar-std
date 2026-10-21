@@ -1,0 +1,143 @@
+app std-static-files [
+  version: "1.0.0",
+  description: "std-static-files — the client served beside the API of an HTTP server program, mirroring orbital-server static_files.rs. The router hands a request no API route owns as ROUTE_CLIENT { requestId, method, path, responseHeaders }; requests are served one at a time: the jobs list is the queue and its head is the request being served (os/stat and os/read-file answers carry no request key, so asks of several requests cannot be told apart). The path is percent-decoded first; a malformed escape, a NUL or backslash, a path not starting with exactly one slash, or a .. segment is refused with an empty 404. Otherwise the candidates are tried in order across the roots (assetsDir before clientDir) with os/stat, then os/read-file of the first regular file: the file the path names, else the index.html of the directory it names; a path that names no file is answered the last root's app-shell.html when it exists, else its index.html, except under apiPrefix or hostingPrefix, which answer an empty 404. A served file answers 200 with the content type of its extension and no cache header; a miss, or a file that exists but cannot be read, answers an empty 404. Every answer is RESPOND for std-http1 and REQUEST_ANSWERED. The fs grant declared here covers the default clientDir only; a program that changes clientDir or sets assetsDir must declare the matching grant (read on that directory), which validate's grant check enforces. Bound to spec/infra/static-files.lolo.",
+  fs: { cwd: "dist/client/**": [read] }
+]
+uses Spec from "almadar-std/static-files"
+type RouterHeader = { name : string!, value : string! }
+type StaticJob = { requestId : number!, headers : [RouterHeader]!, candidates : [string]!, cursor : number! }
+orbital StaticFilesOrbital {
+  entity StaticServe [runtime] {
+    id : string!
+    jobs : [StaticJob] @description "Requests being served, each with its candidate files and the one being tried." = []
+  }
+
+  trait StaticFiles -> StaticServe [integration, instance] {
+    initial: serving
+
+    config {
+      clientDir : string = "dist/client"
+        @label "Client directory"
+        @description "The built web client, relative to the working directory; also the root whose app-shell.html and index.html answer a client route."
+        @tier "infra"
+      assetsDir : string = ""
+        @label "Assets directory"
+        @description "A program's own assets laid over the client's files, searched first; empty for none."
+        @tier "infra"
+      apiPrefix : string = "/api"
+        @label "API prefix"
+        @description "A path equal to or under this that names no file answers 404, never the app."
+        @tier "infra"
+      hostingPrefix : string = "/__"
+        @label "Hosting prefix"
+        @description "Firebase Hosting's reserved path; handled as apiPrefix."
+        @tier "infra"
+    }
+
+    state serving {
+      INIT -> serving
+      ROUTE_CLIENT -> serving
+        (emit STATIC_PLAN { requestId: @payload.requestId, headers: @payload.responseHeaders, decodedOk: (str/uri-component-valid @payload.path), decoded: (if (str/uri-component-valid @payload.path) (str/decode-uri-component @payload.path) "") })
+      STATIC_PLAN -> serving when (or (not @payload.decodedOk) (str/includes @payload.decoded "\u{0}") (str/includes @payload.decoded "\\") (not (str/startsWith @payload.decoded "/")) (str/startsWith @payload.decoded "//") (array/includes (str/split @payload.decoded "/") ".."))
+        (emit RESPOND { requestId: @payload.requestId, status: 404, headers: @payload.headers, body: (bytes/from-string "") })
+        (emit REQUEST_ANSWERED { requestId: @payload.requestId, status: 404, headers: @payload.headers, body: "" })
+      STATIC_PLAN -> serving when (and (= (array/len @entity.jobs) 0) (not (or (not @payload.decodedOk) (str/includes @payload.decoded "\u{0}") (str/includes @payload.decoded "\\") (not (str/startsWith @payload.decoded "/")) (str/startsWith @payload.decoded "//") (array/includes (str/split @payload.decoded "/") ".."))))
+        (set @entity.jobs (array/append @entity.jobs { requestId: @payload.requestId, headers: @payload.headers, candidates: (let ((segs (array/filter (str/split @payload.decoded "/") (fn s (and (!= @s "") (!= @s "."))))) (roots (array/filter [@config.assetsDir, @config.clientDir] (fn r (!= @r "")))) (ownsPath (or (= @payload.decoded @config.apiPrefix) (str/startsWith @payload.decoded (str/concat @config.apiPrefix "/")) (= @payload.decoded @config.hostingPrefix) (str/startsWith @payload.decoded (str/concat @config.hostingPrefix "/"))))) (array/concat (array/flatten (array/map @roots (fn r (if (= (array/len @segs) 0) [(str/concat @r "/index.html")] [(str/join (array/prepend @segs @r) "/"), (str/concat (str/join (array/prepend @segs @r) "/") "/index.html")])))) (if @ownsPath [] [(str/concat @config.clientDir "/app-shell.html"), (str/concat @config.clientDir "/index.html")]))), cursor: 0 }))
+        (emit STATIC_TRY { })
+      STATIC_PLAN -> serving when (and (> (array/len @entity.jobs) 0) (not (or (not @payload.decodedOk) (str/includes @payload.decoded "\u{0}") (str/includes @payload.decoded "\\") (not (str/startsWith @payload.decoded "/")) (str/startsWith @payload.decoded "//") (array/includes (str/split @payload.decoded "/") ".."))))
+        (set @entity.jobs (array/append @entity.jobs { requestId: @payload.requestId, headers: @payload.headers, candidates: (let ((segs (array/filter (str/split @payload.decoded "/") (fn s (and (!= @s "") (!= @s "."))))) (roots (array/filter [@config.assetsDir, @config.clientDir] (fn r (!= @r "")))) (ownsPath (or (= @payload.decoded @config.apiPrefix) (str/startsWith @payload.decoded (str/concat @config.apiPrefix "/")) (= @payload.decoded @config.hostingPrefix) (str/startsWith @payload.decoded (str/concat @config.hostingPrefix "/"))))) (array/concat (array/flatten (array/map @roots (fn r (if (= (array/len @segs) 0) [(str/concat @r "/index.html")] [(str/join (array/prepend @segs @r) "/"), (str/concat (str/join (array/prepend @segs @r) "/") "/index.html")])))) (if @ownsPath [] [(str/concat @config.clientDir "/app-shell.html"), (str/concat @config.clientDir "/index.html")]))), cursor: 0 }))
+      STATIC_TRY -> serving
+        (os/stat { anchor: "cwd" path: (array/nth (object/get (array/first @entity.jobs) "candidates") (object/get (array/first @entity.jobs) "cursor")) } { emit: { success: STATIC_STAT, failure: STATIC_MISS } })
+      STATIC_STAT -> serving when (= @payload.kind "file")
+        (os/read-file { anchor: "cwd" path: (array/nth (object/get (array/first @entity.jobs) "candidates") (object/get (array/first @entity.jobs) "cursor")) } { emit: { success: STATIC_GOT, failure: STATIC_UNREAD } })
+      STATIC_STAT -> serving when (!= @payload.kind "file")
+        (emit STATIC_ADVANCE { })
+      STATIC_MISS -> serving
+        (emit STATIC_ADVANCE { })
+      STATIC_ADVANCE -> serving when (< (+ (object/get (array/first @entity.jobs) "cursor") 1) (array/len (object/get (array/first @entity.jobs) "candidates")))
+        (set @entity.jobs (array/prepend (array/drop @entity.jobs 1) { requestId: (object/get (array/first @entity.jobs) "requestId"), headers: (object/get (array/first @entity.jobs) "headers"), candidates: (object/get (array/first @entity.jobs) "candidates"), cursor: (+ (object/get (array/first @entity.jobs) "cursor") 1) }))
+        (emit STATIC_TRY { })
+      STATIC_ADVANCE -> serving when (>= (+ (object/get (array/first @entity.jobs) "cursor") 1) (array/len (object/get (array/first @entity.jobs) "candidates")))
+        (emit STATIC_MISSING { })
+      STATIC_UNREAD -> serving
+        (emit STATIC_MISSING { })
+      STATIC_MISSING -> serving
+        (emit RESPOND { requestId: (object/get (array/first @entity.jobs) "requestId"), status: 404, headers: (object/get (array/first @entity.jobs) "headers"), body: (bytes/from-string "") })
+        (emit REQUEST_ANSWERED { requestId: (object/get (array/first @entity.jobs) "requestId"), status: 404, headers: (object/get (array/first @entity.jobs) "headers"), body: "" })
+        (emit STATIC_DONE { })
+      STATIC_DONE -> serving when (> (array/len @entity.jobs) 1)
+        (set @entity.jobs (array/drop @entity.jobs 1))
+        (emit STATIC_TRY { })
+      STATIC_DONE -> serving when (<= (array/len @entity.jobs) 1)
+        (set @entity.jobs [])
+      STATIC_GOT -> serving
+        (emit RESPOND { requestId: (object/get (array/first @entity.jobs) "requestId"), status: 200, headers: (array/append (object/get (array/first @entity.jobs) "headers") { name: "content-type", value: (let ((parts (str/split (array/last (str/split (array/nth (object/get (array/first @entity.jobs) "candidates") (object/get (array/first @entity.jobs) "cursor")) "/")) "."))) (object/get { html: "text/html; charset=utf-8", js: "text/javascript; charset=utf-8", mjs: "text/javascript; charset=utf-8", css: "text/css; charset=utf-8", json: "application/json", map: "application/json", wasm: "application/wasm", svg: "image/svg+xml", png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", webp: "image/webp", gif: "image/gif", ico: "image/x-icon", woff2: "font/woff2", woff: "font/woff", txt: "text/plain; charset=utf-8" } (if (or (< (array/len @parts) 2) (and (= (array/len @parts) 2) (= (array/first @parts) ""))) "" (array/last @parts)) "application/octet-stream")) }), body: @payload.data })
+        (emit REQUEST_ANSWERED { requestId: (object/get (array/first @entity.jobs) "requestId"), status: 200, headers: (object/get (array/first @entity.jobs) "headers"), body: "" })
+        (emit STATIC_DONE { })
+    }
+
+    emits {
+      RESPOND -> external {
+        requestId : number!
+        status : number!
+        headers : [RouterHeader]!
+        body : bytes!
+      }
+        @description "Answer this request: status, headers and body for std-http1 to write."
+        @tier "primary"
+      REQUEST_ANSWERED -> external {
+        requestId : number!
+        status : number!
+        headers : [RouterHeader]
+        body : string!
+      }
+        @description "One request was answered with this status."
+        @tier "primary"
+      STATIC_PLAN -> internal {
+        requestId : number!
+        headers : [RouterHeader]!
+        decodedOk : boolean!
+        decoded : string!
+      }
+        @tier "internal"
+      STATIC_TRY -> internal { }
+        @tier "internal"
+      STATIC_STAT -> internal {
+        kind : string
+        size : number
+      }
+        @tier "internal"
+      STATIC_MISS -> internal {
+        error : string
+        kind : string
+      }
+        @tier "internal"
+      STATIC_GOT -> internal {
+        data : bytes!
+      }
+        @tier "internal"
+      STATIC_UNREAD -> internal {
+        error : string
+        kind : string
+      }
+        @tier "internal"
+      STATIC_ADVANCE -> internal { }
+        @tier "internal"
+      STATIC_DONE -> internal { }
+        @tier "internal"
+      STATIC_MISSING -> internal { }
+        @tier "internal"
+    }
+
+    listens {
+      ROUTE_CLIENT {
+        requestId : number!
+        method : string!
+        path : string!
+        responseHeaders : [RouterHeader]!
+      }
+    }
+  }
+
+  page "/static-files" as StaticFilesPage -> StaticFiles
+}

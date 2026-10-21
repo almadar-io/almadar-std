@@ -17,7 +17,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
-import { BOOLEAN, EMIT_ENVELOPE, NUMBER, STRING, list, openShape, shape } from '../signature.js';
+import { BOOLEAN, EMIT_ENVELOPE, EVENT_KEY, NUMBER, STRING, list, openShape, shape } from '../signature.js';
 
 const EMIT_OPTIONS: NonNullable<StdOperatorMeta['params']>[number] = { name: 'options', type: EMIT_ENVELOPE, description: 'Emit configuration ({ emit: { success, failure } })', optional: true };
 
@@ -81,7 +81,7 @@ export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
   'program/step': {
     module: 'program', category: 'std-program',
     minArity: 2, maxArity: 3,
-    description: 'Play transitions of a program in one run of the kernel, each from the state it names, and return each request played: the request with its `result` circuit step — whether it fired, the arm that fired, every guard tried, each effect of the fired arm (`routed` when its failure went to its declared `emit.failure`), the events it emitted, and each `@ensures` of the arm judged by the kernel (`held`, `broken` with its counterexample bindings, or `inconclusive` with the reason).',
+    description: 'Play transitions of a program in one run of the kernel, each from the state it names, and return each request played: the request with its `result` circuit step — whether it fired, the arm that fired, every guard tried, each effect of the fired arm (`routed` when its failure went to its declared `emit.failure`), the events it emitted, and each `@ensures` of the arm judged by the kernel (`held`, `broken` with its counterexample bindings, or `inconclusive` with the reason). With `options.render`, each result also carries `rendered`: the slots its trait filled, walked by the kernel\'s render probe as typed node facts (pattern, renderer coverage, entity binding, `@trait` references).',
     hasSideEffects: true,
     runsOn: 'server',
     host: 'program',
@@ -89,7 +89,12 @@ export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
     params: [
       { name: 'program', type: { kind: 'sexpr' }, description: 'A quoted program' },
       { name: 'requests', type: { kind: 'array', of: { kind: 'object', fields: { orbital: 'string', trait: 'string', from: 'string', event: 'string' }, open: true } }, description: 'The transitions to play: `{ orbital, trait, from, event, payload }` each' },
-      EMIT_OPTIONS,
+      {
+        name: 'options',
+        type: openShape({ key: STRING, render: BOOLEAN, emit: openShape({ success: EVENT_KEY, failure: EVENT_KEY, cancelled: EVENT_KEY }) }),
+        description: 'Emit configuration ({ emit: { success, failure } }); `render: true` adds each result\'s `rendered` slot facts',
+        optional: true,
+      },
     ],
     example: '["program/step", "@entity.program", [{ "orbital": "Editor", "trait": "Modes", "from": "NORMAL", "event": "KEY", "payload": { "key": "i" } }], { "emit": { "success": "STEPPED", "failure": "STEP_FAILED" } }]',
   },

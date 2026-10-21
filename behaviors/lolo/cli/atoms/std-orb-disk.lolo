@@ -7,6 +7,7 @@ app std-orb-disk [
 ]
 uses Spec from "almadar-std/orb-disk"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
 type DiskSpec = { id : string!, label : string!, category : string!, note : string!, batch : boolean!, clearable : boolean!, danger : boolean!, sizeless : boolean!, paths : [string]!, walk : string!, act : string!, cmd : [string]! }
 type DiskSize = { path : string!, kb : number! }
 type DiskGroup = { id : string!, paths : [string]! }
@@ -17,6 +18,7 @@ type ClearFailure = { id : string!, error : string! }
 
 orbital OrbDiskOrbital {
   uses Cli from "std/behaviors/std-cli"
+  uses Args from "std/behaviors/std-args"
 
   entity OrbDiskRun [runtime] {
     id : string!
@@ -24,7 +26,6 @@ orbital OrbDiskOrbital {
     cwd : string = ""
     uid : string = ""
     scannedAt : string = ""
-    argv : [string] = []
     json : boolean = false
     yes : boolean = false
     safeMode : boolean = false
@@ -58,6 +59,12 @@ orbital OrbDiskOrbital {
     logs : [string] = []
     cleared : [string] = []
     failed : [ClearFailure] = []
+  }
+
+  trait ArgsCli = Args.traits.ArgsParser {
+    listens {
+      OrbDisk.DISK_ARGS_PARSE -> ARGS_PARSE
+    }
   }
 
   trait DiskDf = Cli.traits.CliRunner {
@@ -156,20 +163,19 @@ orbital OrbDiskOrbital {
     state ready {
       INIT -> ready
       DISK_CALLED -> parsing
-        (set @entity.argv (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv"))
         (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
-        (emit DISK_PARSE { })
+        (emit DISK_ARGS_PARSE { stage: "disk" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "json" aliases: [] takesValue: false repeatable: true }, { name: "yes" aliases: [] takesValue: false repeatable: true }, { name: "safe" aliases: [] takesValue: false repeatable: true }, { name: "clear" aliases: [] takesValue: true repeatable: false }] })
     }
 
     state parsing {
       INIT -> parsing
-      DISK_PARSE -> parsing
-        (set @entity.json (array/includes @entity.argv "--json"))
-        (set @entity.yes (array/includes @entity.argv "--yes"))
-        (set @entity.safeMode (array/includes @entity.argv "--safe"))
-        (set @entity.clearMode (or (array/includes @entity.argv "--safe") (array/includes @entity.argv "--clear")))
-        (set @entity.clearId (if (and (array/includes @entity.argv "--clear") (< (+ (array/indexOf @entity.argv "--clear") 1) (array/len @entity.argv))) (array/nth @entity.argv (+ (array/indexOf @entity.argv "--clear") 1)) ""))
-        (set @entity.badArgs (array/len (array/filter (array/range 0 (array/len @entity.argv)) (fn i (and (not (array/includes ["--json", "--yes", "--safe", "--clear"] (array/nth @entity.argv @i))) (!= @i (if (array/includes @entity.argv "--clear") (+ (array/indexOf @entity.argv "--clear") 1) -1)))))))
+      DISK_ARGS_DONE -> parsing
+        (set @entity.json (!= (object/get @payload.flags "json") null))
+        (set @entity.yes (!= (object/get @payload.flags "yes") null))
+        (set @entity.safeMode (!= (object/get @payload.flags "safe") null))
+        (set @entity.clearMode (or (!= (object/get @payload.flags "safe") null) (!= (object/get @payload.flags "clear") null)))
+        (set @entity.clearId (if (> (array/len (or (object/get @payload.flags "clear") [])) 0) (array/first (object/get @payload.flags "clear")) ""))
+        (set @entity.badArgs (+ (array/len (array/filter @payload.errors (fn e (!= @e "missing value for --clear")))) (array/len @payload.positionals)))
         (emit DISK_ROUTE { })
       DISK_ROUTE -> ready when (> @entity.badArgs 0)
         (emit DISK_ANSWERED { status: 400, body: "usage: orb disk [--json] [--safe | --clear <id>] [--yes]" })
@@ -199,25 +205,25 @@ orbital OrbDiskOrbital {
         (emit DISK_FIND_RUN { stage: "walk", argv: [@entity.cwd, "(", "-type", "d", "-name", "node_modules", "-print", "-prune", ")", "-o", "(", "-name", ".git", "-prune", ")", "-o", "(", "-type", "d", "(", "-name", ".turbo", "-o", "-name", ".venv", ")", "-print", "-prune", ")", "-o", "(", "-type", "f", "-name", "Cargo.toml", "-print", ")"] })
       DiskFind_DONE -> measuring when (= @payload.stage "walk")
         (set @entity.walkLines (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))))
-        (emit DISK_FIND_RUN { stage: "tmp", argv: ["/private/tmp", "-maxdepth", "1", "-name", "orbital-verify-*"] })
+        (emit DISK_FIND_RUN { stage: "tmp", argv: (array/prepend ["-maxdepth", "1", "-name", "orbital-verify-*"] @config.tmp) })
       DiskFind_DONE -> measuring when (= @payload.stage "tmp")
         (set @entity.tmpLines (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))))
-        (emit DISK_FIND_RUN { stage: "sessions", argv: [(str/concat "/private/tmp/claude-" @entity.uid), "-mindepth", "2", "-maxdepth", "2", "-type", "d"] })
+        (emit DISK_FIND_RUN { stage: "sessions", argv: [(str/concat @config.tmp "/claude-" @entity.uid), "-mindepth", "2", "-maxdepth", "2", "-type", "d"] })
       DiskFind_DONE -> measuring when (= @payload.stage "sessions")
         (set @entity.sessions (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))))
-        (emit DISK_FIND_RUN { stage: "entries", argv: [(str/concat "/private/tmp/claude-" @entity.uid), "-mindepth", "4", "-maxdepth", "4", "(", "-path", (str/concat (str/concat "/private/tmp/claude-" @entity.uid) "/*/*/scratchpad/*"), "-o", "-path", (str/concat (str/concat "/private/tmp/claude-" @entity.uid) "/*/*/tasks/*"), ")"] })
+        (emit DISK_FIND_RUN { stage: "entries", argv: [(str/concat @config.tmp "/claude-" @entity.uid), "-mindepth", "4", "-maxdepth", "4", "(", "-path", (str/concat (str/concat @config.tmp "/claude-" @entity.uid) "/*/*/scratchpad/*"), "-o", "-path", (str/concat (str/concat @config.tmp "/claude-" @entity.uid) "/*/*/tasks/*"), ")"] })
       DiskFind_DONE -> measuring when (= @payload.stage "entries")
         (set @entity.entries (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))))
-        (emit DISK_FIND_RUN { stage: "fresh", argv: [(str/concat "/private/tmp/claude-" @entity.uid), "-mindepth", "2", "-mmin", "-2880"] })
+        (emit DISK_FIND_RUN { stage: "fresh", argv: [(str/concat @config.tmp "/claude-" @entity.uid), "-mindepth", "2", "-mmin", "-2880"] })
       DiskFind_DONE -> measuring when (= @payload.stage "fresh")
         (set @entity.freshLines (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))))
         (emit DISK_FRESH { })
       DISK_FRESH -> measuring
-        (set @entity.freshSess (array/unique (array/map @entity.freshLines (fn l (str/join (array/slice (str/split @l "/") 0 (+ (array/len (str/split (str/concat "/private/tmp/claude-" @entity.uid) "/")) 2)) "/")))))
-        (set @entity.freshEnt (array/unique (array/map (array/filter @entity.freshLines (fn l (>= (array/len (str/split @l "/")) (+ (array/len (str/split (str/concat "/private/tmp/claude-" @entity.uid) "/")) 4)))) (fn l (str/join (array/slice (str/split @l "/") 0 (+ (array/len (str/split (str/concat "/private/tmp/claude-" @entity.uid) "/")) 4)) "/")))))
+        (set @entity.freshSess (array/unique (array/map @entity.freshLines (fn l (str/join (array/slice (str/split @l "/") 0 (+ (array/len (str/split (str/concat @config.tmp "/claude-" @entity.uid) "/")) 2)) "/")))))
+        (set @entity.freshEnt (array/unique (array/map (array/filter @entity.freshLines (fn l (>= (array/len (str/split @l "/")) (+ (array/len (str/split (str/concat @config.tmp "/claude-" @entity.uid) "/")) 4)))) (fn l (str/join (array/slice (str/split @l "/") 0 (+ (array/len (str/split (str/concat @config.tmp "/claude-" @entity.uid) "/")) 4)) "/")))))
         (emit DISK_GROUPS { })
       DISK_GROUPS -> measuring
-        (set @entity.groups [{ id: "node-modules", paths: (array/filter @entity.walkLines (fn l (str/endsWith @l "/node_modules"))) }, { id: "rust-debug", paths: (array/map (array/map (array/filter @entity.walkLines (fn l (str/endsWith @l "/Cargo.toml"))) (fn l (str/slice @l 0 (- (str/len @l) 11)))) (fn d (str/concat @d "/target/debug"))) }, { id: "rust-release", paths: (array/map (array/map (array/filter @entity.walkLines (fn l (str/endsWith @l "/Cargo.toml"))) (fn l (str/slice @l 0 (- (str/len @l) 11)))) (fn d (str/concat @d "/target/release"))) }, { id: "turbo", paths: (array/filter @entity.walkLines (fn l (str/endsWith @l "/.turbo"))) }, { id: "venv", paths: (array/filter @entity.walkLines (fn l (str/endsWith @l "/.venv"))) }, { id: "verify-temp", paths: @entity.tmpLines }, { id: "claude", paths: (array/concat (array/filter @entity.sessions (fn s (not (array/includes @entity.freshSess @s)))) (array/filter @entity.entries (fn e (and (array/includes @entity.freshSess (str/join (array/slice (str/split @e "/") 0 (+ (array/len (str/split (str/concat "/private/tmp/claude-" @entity.uid) "/")) 2)) "/")) (not (array/includes @entity.freshEnt @e)))))) }])
+        (set @entity.groups (array/filter [{ id: "node-modules", paths: (array/filter @entity.walkLines (fn l (str/endsWith @l "/node_modules"))) }, { id: "rust-debug", paths: (array/map (array/map (array/filter @entity.walkLines (fn l (str/endsWith @l "/Cargo.toml"))) (fn l (str/slice @l 0 (- (str/len @l) 11)))) (fn d (str/concat @d "/target/debug"))) }, { id: "rust-release", paths: (array/map (array/map (array/filter @entity.walkLines (fn l (str/endsWith @l "/Cargo.toml"))) (fn l (str/slice @l 0 (- (str/len @l) 11)))) (fn d (str/concat @d "/target/release"))) }, { id: "turbo", paths: (array/filter @entity.walkLines (fn l (str/endsWith @l "/.turbo"))) }, { id: "venv", paths: (array/filter @entity.walkLines (fn l (str/endsWith @l "/.venv"))) }, { id: "verify-temp", paths: @entity.tmpLines }, { id: "claude", paths: (array/concat (array/filter @entity.sessions (fn s (not (array/includes @entity.freshSess @s)))) (array/filter @entity.entries (fn e (and (array/includes @entity.freshSess (str/join (array/slice (str/split @e "/") 0 (+ (array/len (str/split (str/concat @config.tmp "/claude-" @entity.uid) "/")) 2)) "/")) (not (array/includes @entity.freshEnt @e)))))) }] (fn g (> (array/len (object/get @g "paths")) 0))))
         (emit DISK_DU_RUN { stage: "du", argv: (array/concat ["-sk", "--"] (array/flatten (array/map @entity.specs (fn it (object/get @it "abs"))))) })
       DiskDu_DONE -> measuring when (= @payload.stage "du")
         (set @entity.sizes (array/map (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))) (fn l { path: (array/nth (str/split @l "\t") 1), kb: (str/to-number (array/first (str/split @l "\t"))) })))
@@ -226,10 +232,6 @@ orbital OrbDiskOrbital {
         (emit DISK_GROUP_NEXT { })
       DISK_GROUP_NEXT -> measuring when (and (< @entity.gcursor (array/len @entity.groups)) (> (array/len (object/get (array/nth @entity.groups @entity.gcursor) "paths")) 0))
         (emit DISK_DU_RUN { stage: "grp", argv: (array/concat ["-sk", "--"] (object/get (array/nth @entity.groups @entity.gcursor) "paths")) })
-      DISK_GROUP_NEXT -> measuring when (and (< @entity.gcursor (array/len @entity.groups)) (= (array/len (object/get (array/nth @entity.groups @entity.gcursor) "paths")) 0))
-        (set @entity.groupKb (array/append @entity.groupKb { id: (object/get (array/nth @entity.groups @entity.gcursor) "id"), kb: 0, paths: [] }))
-        (set @entity.gcursor (+ @entity.gcursor 1))
-        (emit DISK_GROUP_NEXT { })
       DiskDu_DONE -> measuring when (= @payload.stage "grp")
         (set @entity.groupKb (array/append @entity.groupKb { id: (object/get (array/nth @entity.groups @entity.gcursor) "id"), kb: (array/sum (array/map (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))) (fn l (str/to-number (array/first (str/split @l "\t")))))), paths: (array/map (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))) (fn l (array/nth (str/split @l "\t") 1))) }))
         (set @entity.gcursor (+ @entity.gcursor 1))
@@ -387,8 +389,12 @@ orbital OrbDiskOrbital {
       DISK_HOST_FAILED { error : string }
         @description "Internal: HOME could not be read."
         @tier "internal"
-      DISK_PARSE { }
-        @description "Internal: the arguments are stored; derive the flags."
+      DISK_ARGS_PARSE {
+        stage : string!
+        argv : [string]!
+        flags : [ArgFlag]!
+      }
+        @description "Internal: parse the call's words against the --json, --yes, --safe and --clear flags."
         @tier "internal"
       DISK_ROUTE { }
         @description "Internal: route to the usage, the unknown-item error or the measuring."
@@ -426,6 +432,9 @@ orbital OrbDiskOrbital {
       volume : string = "/System/Volumes/Data"
         @label "Volume"
         @description "The mount point df reports for the used, free and total line."
+      tmp : string = "/private/tmp"
+        @label "Temp root"
+        @description "The temp directory the verify temp apps and the Claude Code session temp live under."
       command : string = "orb disk"
         @label "Command"
         @description "The command name the report footer tells the reader to run."
@@ -526,8 +535,17 @@ orbital OrbDiskOrbital {
         @description "std-cli's CLI_DONE for xcrun."
       DiskXcrun_FAILED { stage : string!  error : string!  code : string! }
         @description "std-cli's CLI_FAILED for xcrun."
+      DISK_ARGS_DONE {
+        stage : string!
+        flags : Map string [string]!
+        positionals : [string]!
+        errors : [string]!
+        words : [string]!
+      }
+        @description "std-args's ARGS_PARSED: the call's words, parsed."
+      ArgsCli.ARGS_PARSED -> DISK_ARGS_DONE
     }
   }
 
-  page "/orb-disk" as OrbDiskPage -> OrbDisk, DiskDf, DiskDu, DiskFind, DiskId, DiskDate, DiskRm, DiskPnpm, DiskBrew, DiskXcrun
+  page "/orb-disk" as OrbDiskPage -> OrbDisk, ArgsCli, DiskDf, DiskDu, DiskFind, DiskId, DiskDate, DiskRm, DiskPnpm, DiskBrew, DiskXcrun
 }

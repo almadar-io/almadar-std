@@ -120,7 +120,7 @@ export function childrenOf(record: string, result: string): Tagged<'childrenOf'>
 /** A value `str/concat` and the formatters render as text. */
 export const PRIMITIVE_VALUE: OperatorTypeRef = union(STRING, NUMBER, BOOLEAN, 'date', 'datetime');
 
-const EVENT_KEY: OperatorTypeRef = { kind: 'eventKey' };
+export const EVENT_KEY: OperatorTypeRef = { kind: 'eventKey' };
 
 /** The trailing `{ emit: { success, failure } }` options object of an effect (and the call key that names a cancellable call). */
 export const EMIT_ENVELOPE: OperatorTypeRef = openShape({

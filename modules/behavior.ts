@@ -14,7 +14,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
-import { DESCRIPTION, EMIT_ENVELOPE, list, rec, tv, union } from '../signature.js';
+import { BOOLEAN, DESCRIPTION, EMIT_ENVELOPE, EVENT_KEY, list, openShape, rec, STRING, tv, union } from '../signature.js';
 
 export const BEHAVIOR_OPERATORS: Record<string, StdOperatorMeta> = {
   'behavior/apply': {
@@ -44,28 +44,38 @@ export const BEHAVIOR_OPERATORS: Record<string, StdOperatorMeta> = {
   'behavior/catalog': {
     module: 'behavior', category: 'std-behavior',
     minArity: 1, maxArity: 2,
-    description: 'List the installed behaviors under registry folders (`<prefix>/<topic>[/<tier>]`), optionally narrowed by exposure. Each entry carries its traits as values and its shipped embedding vectors.',
+    description: 'List the installed behaviors under registry folders (`<prefix>/<topic>[/<tier>]`), optionally narrowed by exposure. Each entry carries its traits as values and its shipped embedding vectors; with `options.vectors: false` it carries none (`vectors: {}`, `model: ""`) and neither the vector store nor the embedding provider is read.',
     hasSideEffects: true,
     runsOn: 'server',
     host: 'program',
     returnType: list('CatalogEntry'),
     params: [
       { name: 'scope', type: { kind: 'object', fields: { paths: { kind: 'array', of: 'string' }, exposure: { kind: 'array', of: 'string' } } }, description: 'Registry folders and an optional exposure filter' },
-      { name: 'options', type: EMIT_ENVELOPE, description: 'Emit configuration ({ emit: { success, failure } })', optional: true },
+      {
+        name: 'options',
+        type: openShape({ key: STRING, vectors: BOOLEAN, emit: openShape({ success: EVENT_KEY, failure: EVENT_KEY, cancelled: EVENT_KEY }) }),
+        description: 'Emit configuration ({ emit: { success, failure } }); `vectors: false` omits the vectors',
+        optional: true,
+      },
     ],
     example: '["behavior/catalog", { "paths": ["std/ui/core/molecules"] }, { "emit": { "success": "LISTED", "failure": "LIST_FAILED" } }]',
   },
   'behavior/describe': {
     module: 'behavior', category: 'std-behavior',
     minArity: 1, maxArity: 2,
-    description: 'Describe a trait value (its knobs, the events it emits and listens to, its transition events, and the shipped knob embedding vectors), or an orbital value or a whole behavior `{ behavior }` (its app knobs and, per orbital, its knobs, primary entity fields, the entities it borrows from sibling orbitals, its traits and pages).',
+    description: 'Describe a trait value (its knobs, the events it emits and listens to, and its transition events; with `options.knobVectors: true`, each knob also carries its embedding vector, a missing one embedded through the configured provider, as `orb behaviors describe --knob-vectors`), or an orbital value or a whole behavior `{ behavior }` (its app knobs and, per orbital, its knobs, primary entity fields, the entities it borrows from sibling orbitals, its traits and pages).',
     hasSideEffects: true,
     runsOn: 'server',
     host: 'program',
     returnType: DESCRIPTION,
     params: [
       { name: 'value', type: union('trait', 'orbital', 'behavior'), description: 'A trait value, an orbital value, or { behavior }' },
-      { name: 'options', type: EMIT_ENVELOPE, description: 'Emit configuration ({ emit: { success, failure } })', optional: true },
+      {
+        name: 'options',
+        type: openShape({ key: STRING, knobVectors: BOOLEAN, emit: openShape({ success: EVENT_KEY, failure: EVENT_KEY, cancelled: EVENT_KEY }) }),
+        description: 'Emit configuration ({ emit: { success, failure } }); `knobVectors: true` attaches a trait\'s knob vectors',
+        optional: true,
+      },
     ],
     example: '["behavior/describe", "@entity.widget", { "emit": { "success": "DESCRIBED", "failure": "DESCRIBE_FAILED" } }]',
   },

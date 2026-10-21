@@ -1,0 +1,21 @@
+app lint-cross-duplicate-entity-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint cross-duplicate-entity <file>`, the port of the compiler rule ORB_X_DUPLICATE_ENTITY. An inline entity name declared by more than one orbital is reported once as `[ORB_X_DUPLICATE_ENTITY] orbitals: <message>`, status 500 (exit 1). A clean program answers `lint cross-duplicate-entity: clean` (status 200, exit 0). Anything but exactly one file argument is the usage (status 400, exit 2). A file that cannot be read or lowered fails the run (status 500)."
+]
+
+orbital LintCrossDuplicateEntitySpec {
+  expects trait OrbLintCrossDuplicateEntity {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [string]! }
+      LINT_UNREAD { rule : string! }
+    }
+  }
+  expects trait OrbLintCrossDuplicateEntityCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page "/orb-lint-cross-duplicate-entity" -> OrbLintCrossDuplicateEntity, OrbLintCrossDuplicateEntityCli
+}

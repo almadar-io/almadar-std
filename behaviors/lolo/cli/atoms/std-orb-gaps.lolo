@@ -6,6 +6,7 @@ app std-orb-gaps [
 ]
 uses Spec from "almadar-std/orb-gaps"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
 type GapEntry = { code : string!, repo : string!, heading : string!, body : string!, at : number!, endAt : number! }
 type GapMark = { at : number!, text : string! }
 type GapSpan = { lo : number!, hi : number! }
@@ -22,11 +23,10 @@ type GapRow = { code : string!, side : string!, m : string!, l : string!, p : st
 type GapBaseline = { version : number!, entries : [SExpr]! }
 
 orbital OrbGapsOrbital {
+  uses Args from "std/behaviors/std-args"
+
   entity OrbGapsRun [runtime] {
     id : string!
-    argv : [string] = []
-    rest : [string] = []
-    allowed : [string] = []
     cwd : string = ""
     cmd : string = ""
     mode : string = ""
@@ -102,30 +102,38 @@ orbital OrbGapsOrbital {
     uCi : number = 0
   }
 
+  trait ArgsCli = Args.traits.ArgsParser {
+    listens {
+      OrbGaps.GAPS_ARGS_PARSE -> ARGS_PARSE
+    }
+  }
+
   trait OrbGaps -> OrbGapsRun [integration] {
     initial: ready
 
     state ready {
       INIT -> ready
       GAPS_CALLED -> ready
-        (set @entity.argv (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv"))
         (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
-        (set @entity.cmd (str/default (array/first @entity.argv) ""))
-        (set @entity.rest (array/drop @entity.argv 1))
-        (set @entity.allowed (if (= @entity.cmd "sync") ["--from" "--out" "--write" "--check"] (if (= @entity.cmd "rollup") ["--out" "--write" "--check"] (array/take ["--out"] 0))))
-        (set @entity.mode (if (array/includes @entity.rest "--write") "write" (if (array/includes @entity.rest "--check") "check" (if (array/includes @entity.rest "--out") "out" "preview"))))
-        (set @entity.outDir (if (array/includes @entity.rest "--out") (str/default (array/nth @entity.rest (+ (array/indexOf @entity.rest "--out") 1)) "") ""))
-        (set @entity.from (if (array/includes @entity.rest "--from") (str/default (array/nth @entity.rest (+ (array/indexOf @entity.rest "--from") 1)) "") ""))
+        (set @entity.cmd (str/default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) ""))
+        (emit GAPS_ARGS_PARSE { stage: "gaps" argv: (array/drop (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") 1) flags: [{ name: "from" aliases: [] takesValue: true repeatable: false }, { name: "out" aliases: [] takesValue: true repeatable: false }, { name: "write" aliases: [] takesValue: false repeatable: false }, { name: "check" aliases: [] takesValue: false repeatable: false }] })
+      GAPS_ARGS_DONE -> ready
+        (set @entity.mode (if (!= (object/get @payload.flags "write") null) "write" (if (!= (object/get @payload.flags "check") null) "check" (if (!= (object/get @payload.flags "out") null) "out" "preview"))))
+        (set @entity.outDir (if (!= (object/get @payload.flags "out") null) (str/default (array/first (object/get @payload.flags "out")) "") ""))
+        (set @entity.from (if (!= (object/get @payload.flags "from") null) (str/default (array/first (object/get @payload.flags "from")) "") ""))
         (set @entity.fail (if (not (array/includes (str/split "check|sync|status|rollup" "|") @entity.cmd)) "usage"
-          (if (and (= @entity.cmd "check") (> (array/len @entity.rest) 0)) "usage"
+          (if (and (= @entity.cmd "check") (> (array/len @payload.words) 0)) "usage"
             (str/default (array/find (array/concat
-              (array/map (array/range 0 (array/len @entity.rest)) (fn i (if (and (> @i 0) (array/includes ["--out" "--from"] (array/nth @entity.rest (- @i 1))) (not (str/startsWith (array/nth @entity.rest @i) "--"))) ""
-                (if (not (array/includes @entity.allowed (array/nth @entity.rest @i))) (str/concat "unrecognized option: " (array/nth @entity.rest @i))
-                  (if (!= (array/indexOf @entity.rest (array/nth @entity.rest @i)) @i) (str/concat "duplicate option: " (array/nth @entity.rest @i))
-                    (if (and (array/includes ["--out" "--from"] (array/nth @entity.rest @i)) (or (>= (+ @i 1) (array/len @entity.rest)) (str/startsWith (str/default (array/nth @entity.rest (+ @i 1)) "") "--"))) (str/concat (array/nth @entity.rest @i) " needs a value") ""))))))
-              [(if (> (+ (if (array/includes @entity.rest "--write") 1 0) (if (array/includes @entity.rest "--check") 1 0) (if (array/includes @entity.rest "--out") 1 0)) 1) "choose only one of --write, --check, --out" "")
-               (if (and (array/includes @entity.rest "--from") (not (or (= @entity.from "master") (= @entity.from "repos")))) "--from must be master or repos" "")
-               (if (and (array/includes @entity.rest "--out") (or (str/startsWith @entity.outDir "/") (str/includes @entity.outDir ".."))) "--out must name a directory under the outRoot knob, not a path" "")]) (fn m (!= @m ""))) ""))))
+              (array/map @payload.errors (fn e (if (str/startsWith @e "unknown flag: ") (str/concat "unrecognized option: " (str/replace @e "unknown flag: " ""))
+                (if (str/startsWith @e "repeated flag: ") (str/concat "duplicate option: " (str/replace @e "repeated flag: " ""))
+                  (if (str/startsWith @e "missing value for --") (str/concat "--" (str/replace @e "missing value for --" "") " needs a value")
+                    (str/concat "unrecognized option: " (str/replace @e "flag takes no value: " "")))))))
+              (array/map @payload.positionals (fn t (str/concat "unrecognized option: " @t)))
+              (array/map (array/filter ["--from", "--out", "--write", "--check"] (fn f (and (!= (object/get @payload.flags (str/replace @f "--" "")) null) (not (array/includes (if (= @entity.cmd "sync") ["--from", "--out", "--write", "--check"] (if (= @entity.cmd "rollup") ["--out", "--write", "--check"] (array/take ["--out"] 0))) @f))))) (fn f (str/concat "unrecognized option: " @f)))
+              (array/map (array/filter ["--from", "--out"] (fn f (and (> (array/len (or (object/get @payload.flags (str/replace @f "--" "")) [])) 0) (str/startsWith (array/first (object/get @payload.flags (str/replace @f "--" ""))) "--")))) (fn f (str/concat @f " needs a value")))
+              [(if (> (+ (if (!= (object/get @payload.flags "write") null) 1 0) (if (!= (object/get @payload.flags "check") null) 1 0) (if (!= (object/get @payload.flags "out") null) 1 0)) 1) "choose only one of --write, --check, --out" "")
+               (if (and (!= (object/get @payload.flags "from") null) (not (or (= @entity.from "master") (= @entity.from "repos")))) "--from must be master or repos" "")
+               (if (and (!= (object/get @payload.flags "out") null) (or (str/startsWith @entity.outDir "/") (str/includes @entity.outDir ".."))) "--out must name a directory under the outRoot knob, not a path" "")]) (fn m (!= @m ""))) ""))))
         (set @entity.stage "")
         (set @entity.queue [])
         (set @entity.reads [])
@@ -641,6 +649,13 @@ orbital OrbGapsOrbital {
       }
         @description "Internal: the command's answer, which the cli hook prints."
         @tier "internal"
+      GAPS_ARGS_PARSE {
+        stage : string!
+        argv : [string]!
+        flags : [ArgFlag]!
+      }
+        @description "Internal: parse the words after the verb against the --from, --out, --write and --check flags."
+        @tier "internal"
       GAPS_PARSED { }
         @description "Internal: the arguments were read."
         @tier "internal"
@@ -808,8 +823,17 @@ orbital OrbGapsOrbital {
       }
         @description "Run `orb gaps` with its arguments and working directory."
         @synonyms "orb gaps, check gap ledgers, sync gap ledgers"
+      GAPS_ARGS_DONE {
+        stage : string!
+        flags : Map string [string]!
+        positionals : [string]!
+        errors : [string]!
+        words : [string]!
+      }
+        @description "std-args's ARGS_PARSED: the call's words, parsed."
+      ArgsCli.ARGS_PARSED -> GAPS_ARGS_DONE
     }
   }
 
-  page "/orb-gaps" as OrbGapsPage -> OrbGaps
+  page "/orb-gaps" as OrbGapsPage -> OrbGaps, ArgsCli
 }

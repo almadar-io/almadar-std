@@ -25,6 +25,18 @@ orbital MockSeedOrbital {
     int : number @description "Last integer drawn." = 0
     text : string @description "Last text drawn." = ""
     ms : number @description "Last date drawn, epoch milliseconds." = 0
+    hit : boolean @description "Whether the last lookup found a value." = false
+    shape : string @description "How the last field type seeds: scalar, nested, null, omit, empty-array, default-or-omit or a placeholder." = ""
+    omit : boolean @description "Whether the last field is left unset on this row." = false
+    ids : [string] @description "The last list of ids or values answered." = []
+    kind : string @description "How the last declared literal was read: number, boolean or string." = "string"
+    fileName : string @description "The last file value's name." = ""
+    fileUrl : string @description "The last file value's URL." = ""
+    mimeType : string @description "The last file value's media type." = ""
+    sizeBytes : number @description "The last file value's size in bytes." = 0
+    minted : number @description "Ids minted so far for id-less authored instances." = 0
+    createdAt : string @description "The last instance's creation stamp." = ""
+    updatedAt : string @description "The last instance's update stamp." = ""
   }
 
   trait MockStream = Rand.traits.MockRandom -> MockCell {
@@ -51,7 +63,7 @@ orbital MockSeedOrbital {
         (set @entity.index ?index)
         (set @entity.seeded ?seeded)
         (set @entity.value (str/concat (let ((s (str/lower (str/replace-pattern ?fieldName "[^A-Za-z0-9]" "")))) (if (= @s "") "value" @s)) @entity.index (str/slice "x@y" 1 2) "example.com"))
-        (emit MOCK_VALUE { value: @entity.value, num: @entity.num })
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num, ids: @entity.ids, hit: @entity.hit, honored: @entity.honored, shape: @entity.shape, kind: @entity.kind, omit: @entity.omit })
       SAMPLE_VALUE -> ready when (and (not ?seeded) (= ?fieldType "url"))
         (set @entity.fieldType ?fieldType)
         (set @entity.fieldName ?fieldName)
@@ -59,7 +71,7 @@ orbital MockSeedOrbital {
         (set @entity.index ?index)
         (set @entity.seeded ?seeded)
         (set @entity.value (str/concat "https://example.com/" (let ((s (str/lower (str/replace-pattern ?fieldName "[^A-Za-z0-9]" "")))) (if (= @s "") "value" @s)) "/" @entity.index))
-        (emit MOCK_VALUE { value: @entity.value, num: @entity.num })
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num, ids: @entity.ids, hit: @entity.hit, honored: @entity.honored, shape: @entity.shape, kind: @entity.kind, omit: @entity.omit })
       SAMPLE_VALUE -> ready when (and (not ?seeded) (= ?fieldType "phone"))
         (set @entity.fieldType ?fieldType)
         (set @entity.fieldName ?fieldName)
@@ -67,7 +79,7 @@ orbital MockSeedOrbital {
         (set @entity.index ?index)
         (set @entity.seeded ?seeded)
         (set @entity.value (str/concat "+1-555-" (str/padStart (str/concat "" (+ 1000 (math/mod @entity.index 9000))) 4 "0")))
-        (emit MOCK_VALUE { value: @entity.value, num: @entity.num })
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num, ids: @entity.ids, hit: @entity.hit, honored: @entity.honored, shape: @entity.shape, kind: @entity.kind, omit: @entity.omit })
       SAMPLE_VALUE -> ready when (and (not ?seeded) (= ?fieldType "uuid"))
         (set @entity.fieldType ?fieldType)
         (set @entity.fieldName ?fieldName)
@@ -75,7 +87,7 @@ orbital MockSeedOrbital {
         (set @entity.index ?index)
         (set @entity.seeded ?seeded)
         (set @entity.value (str/concat "00000000-0000-4000-8000-" (str/join (array/map (array/reverse (array/range 12)) (fn k (str/slice "0123456789abcdef" (math/mod (math/floor (/ @entity.index (math/pow 16 @k))) 16) (+ (math/mod (math/floor (/ @entity.index (math/pow 16 @k))) 16) 1)))) "")))
-        (emit MOCK_VALUE { value: @entity.value, num: @entity.num })
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num, ids: @entity.ids, hit: @entity.hit, honored: @entity.honored, shape: @entity.shape, kind: @entity.kind, omit: @entity.omit })
       SAMPLE_VALUE -> ready when (and (not ?seeded) (or (= ?fieldType "number") (= ?fieldType "money")))
         (set @entity.fieldType ?fieldType)
         (set @entity.fieldName ?fieldName)
@@ -84,7 +96,7 @@ orbital MockSeedOrbital {
         (set @entity.seeded ?seeded)
         (set @entity.value (str/concat "" (* @entity.index 10)))
         (set @entity.num (* @entity.index 10))
-        (emit MOCK_VALUE { value: @entity.value, num: @entity.num })
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num, ids: @entity.ids, hit: @entity.hit, honored: @entity.honored, shape: @entity.shape, kind: @entity.kind, omit: @entity.omit })
       SAMPLE_VALUE -> ready when (and (not ?seeded) (= ?fieldType "boolean"))
         (set @entity.fieldType ?fieldType)
         (set @entity.fieldName ?fieldName)
@@ -92,7 +104,7 @@ orbital MockSeedOrbital {
         (set @entity.index ?index)
         (set @entity.seeded ?seeded)
         (set @entity.value (if (= (math/mod @entity.index 2) 0) "true" "false"))
-        (emit MOCK_VALUE { value: @entity.value, num: @entity.num })
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num, ids: @entity.ids, hit: @entity.hit, honored: @entity.honored, shape: @entity.shape, kind: @entity.kind, omit: @entity.omit })
       SAMPLE_VALUE -> ready when (and ?seeded (= ?fieldType "email"))
         (set @entity.fieldType ?fieldType)
         (set @entity.fieldName ?fieldName)
@@ -149,7 +161,7 @@ orbital MockSeedOrbital {
         (set @entity.index ?index)
         (set @entity.seeded ?seeded)
         (set @entity.value (if (array/includes ["image", "imageurl", "image_url", "photo", "photourl", "photo_url", "avatar", "avatarurl", "avatar_url", "thumbnail", "thumbnailurl", "thumbnail_url", "picture", "pictureurl", "cover", "coverurl", "banner", "bannerurl"] (str/lower ?fieldName)) (str/concat "https://picsum.photos/seed/" (str/encode-uri-component (str/concat @entity.entityName "-" @entity.fieldName "-" @entity.index)) "/400/400") (str/concat (str/join (array/map (array/filter (str/split (str/replaceAll (str/replaceAll (str/join (array/map (str/split ?fieldName "") (fn c (if (and (!= @c (str/lower @c)) (= @c (str/upper @c))) (str/concat " " @c) @c))) "") "_" " ") "-" " ") " ") (fn w (!= @w ""))) (fn w (str/concat (str/upper (str/slice @w 0 1)) (str/slice @w 1 (str/len @w))))) " ") " " @entity.index)))
-        (emit MOCK_VALUE { value: @entity.value, num: @entity.num })
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num, ids: @entity.ids, hit: @entity.hit, honored: @entity.honored, shape: @entity.shape, kind: @entity.kind, omit: @entity.omit })
       SAMPLE_TEXT -> ready when (and ?seeded (array/includes ["image", "imageurl", "image_url", "photo", "photourl", "photo_url", "avatar", "avatarurl", "avatar_url", "thumbnail", "thumbnailurl", "thumbnail_url", "picture", "pictureurl", "cover", "coverurl", "banner", "bannerurl"] (str/lower ?fieldName)))
         (set @entity.fieldType ?fieldType)
         (set @entity.fieldName ?fieldName)
@@ -171,7 +183,7 @@ orbital MockSeedOrbital {
         (set @entity.index ?index)
         (set @entity.seeded ?seeded)
         (set @entity.value (str/concat "https://picsum.photos/seed/" (str/encode-uri-component (str/concat @entity.entityName "-" @entity.fieldName "-" @entity.index)) "/400/400"))
-        (emit MOCK_VALUE { value: @entity.value, num: @entity.num })
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num, ids: @entity.ids, hit: @entity.hit, honored: @entity.honored, shape: @entity.shape, kind: @entity.kind, omit: @entity.omit })
       SAMPLE_IMAGE_URL -> ready when (and ?seeded true)
         (set @entity.fieldType ?fieldType)
         (set @entity.fieldName ?fieldName)
@@ -186,7 +198,7 @@ orbital MockSeedOrbital {
         (set @entity.index ?index)
         (set @entity.seeded ?seeded)
         (set @entity.value (str/concat "2026-" (str/padStart (str/concat "" (+ (math/mod @entity.index 12) 1)) 2 "0") "-15"))
-        (emit MOCK_VALUE { value: @entity.value, num: @entity.num })
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num, ids: @entity.ids, hit: @entity.hit, honored: @entity.honored, shape: @entity.shape, kind: @entity.kind, omit: @entity.omit })
       SAMPLE_DATE -> ready when (and (not ?seeded) (!= ?fieldType "date"))
         (set @entity.fieldType ?fieldType)
         (set @entity.fieldName ?fieldName)
@@ -194,7 +206,7 @@ orbital MockSeedOrbital {
         (set @entity.index ?index)
         (set @entity.seeded ?seeded)
         (set @entity.value (str/concat (str/concat "2026-" (str/padStart (str/concat "" (+ (math/mod @entity.index 12) 1)) 2 "0") "-15") "T00:00:00.000Z"))
-        (emit MOCK_VALUE { value: @entity.value, num: @entity.num })
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num, ids: @entity.ids, hit: @entity.hit, honored: @entity.honored, shape: @entity.shape, kind: @entity.kind, omit: @entity.omit })
       SAMPLE_DATE -> ready when (and ?seeded true)
         (set @entity.fieldType ?fieldType)
         (set @entity.fieldName ?fieldName)
@@ -205,51 +217,124 @@ orbital MockSeedOrbital {
       CHECK_DEFAULT -> ready
         (set @entity.runtime ?runtime)
         (set @entity.honored (and ?hasDefault (or ?runtime (= ?kind "array") (= ?kind "object") (and (= ?kind "string") (if (= ?default "") (array/includes ?values "") (= (array/len ?values) 0))))))
-        (emit MOCK_VALUE { value: @entity.value, num: @entity.num })
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num, ids: @entity.ids, hit: @entity.hit, honored: @entity.honored, shape: @entity.shape, kind: @entity.kind, omit: @entity.omit })
       PICK_CANDIDATE -> ready
         (set @entity.declared ?declared)
         (set @entity.runtime ?runtime)
         (set @entity.index ?index)
         (set @entity.value (let ((c (array/filter (array/map (str/split ?declared ",") (fn p (str/trim @p))) (fn p (!= @p ""))))) (let ((o (if ?runtime 1 ?index))) (if (> (array/len @c) 1) (array/nth @c (math/mod (- @o 1) (array/len @c))) (str/concat (str/trim ?declared) "-" @o)))))
-        (emit MOCK_VALUE { value: @entity.value, num: @entity.num })
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num, ids: @entity.ids, hit: @entity.hit, honored: @entity.honored, shape: @entity.shape, kind: @entity.kind, omit: @entity.omit })
       RESOLVE_MOCK_DATE -> ready
         (set @entity.declared ?declared)
         (set @entity.fieldType ?fieldType)
         (set @entity.seeded ?seeded)
         (set @entity.value (let ((t (str/trim ?declared))) (let ((sign (str/slice @t 0 1))) (let ((unit (str/slice @t (- (str/len @t) 1) (str/len @t)))) (let ((digits (str/slice @t 1 (- (str/len @t) 1)))) (let ((valid (and (or (= @sign "-") (= @sign "+")) (array/includes ["m" "h" "d" "w"] @unit) (!= @digits "") (= (str/replace-pattern @digits "[0-9]" "") "")))) (if @valid (if (= ?fieldType "date") (time/format (+ (if ?seeded ?nowMs 1781481600000) (* (if (= @sign "-") -1 1) (str/to-number @digits) (if (= @unit "m") 60000 (if (= @unit "h") 3600000 (if (= @unit "d") 86400000 604800000))))) "YYYY-MM-DD") (str/concat (time/format (+ (if ?seeded ?nowMs 1781481600000) (* (if (= @sign "-") -1 1) (str/to-number @digits) (if (= @unit "m") 60000 (if (= @unit "h") 3600000 (if (= @unit "d") 86400000 604800000))))) "YYYY-MM-DD") "T" (time/format (+ (if ?seeded ?nowMs 1781481600000) (* (if (= @sign "-") -1 1) (str/to-number @digits) (if (= @unit "m") 60000 (if (= @unit "h") 3600000 (if (= @unit "d") 86400000 604800000))))) "HH:mm:ss") "." (str/padStart (str/concat "" (math/mod (math/floor (+ (if ?seeded ?nowMs 1781481600000) (* (if (= @sign "-") -1 1) (str/to-number @digits) (if (= @unit "m") 60000 (if (= @unit "h") 3600000 (if (= @unit "d") 86400000 604800000)))))) 1000)) 3 "0") "Z")) ?declared)))))))
-        (emit MOCK_VALUE { value: @entity.value, num: @entity.num })
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num, ids: @entity.ids, hit: @entity.hit, honored: @entity.honored, shape: @entity.shape, kind: @entity.kind, omit: @entity.omit })
       TYPE_MOCK -> ready
         (set @entity.fieldType ?fieldType)
         (set @entity.declared ?declared)
         (set @entity.value ?declared)
-        (set @entity.num (if (and (or (= ?fieldType "number") (= ?fieldType "money")) (!= (str/trim ?declared) "") (= (str/replace-pattern (str/trim ?declared) "^-?[0-9]+([.][0-9]+)?$" "") "")) (str/to-number (str/trim ?declared)) @entity.num))
-        (emit MOCK_VALUE { value: @entity.value, num: @entity.num })
+        (set @entity.kind (if (and (or (= ?fieldType "number") (= ?fieldType "money")) (= (str/replace-pattern (str/trim ?declared) "^[+-]?([0-9]+[.]?[0-9]*|[.][0-9]+)([eE][+-]?[0-9]+)?$" "") "") (!= (str/trim ?declared) "") (= (- (str/to-number (str/trim ?declared)) (str/to-number (str/trim ?declared))) 0)) "number" (if (and (= ?fieldType "boolean") (array/includes ["true" "false"] ?declared)) "boolean" "string")))
+        (set @entity.num (if (and (or (= ?fieldType "number") (= ?fieldType "money")) (= (str/replace-pattern (str/trim ?declared) "^[+-]?([0-9]+[.]?[0-9]*|[.][0-9]+)([eE][+-]?[0-9]+)?$" "") "") (!= (str/trim ?declared) "") (= (- (str/to-number (str/trim ?declared)) (str/to-number (str/trim ?declared))) 0)) (str/to-number (str/trim ?declared)) @entity.num))
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num, ids: @entity.ids, hit: @entity.hit, honored: @entity.honored, shape: @entity.shape, kind: @entity.kind, omit: @entity.omit })
       TITLE_CASE -> ready
         (set @entity.fieldName ?fieldName)
         (set @entity.value (str/join (array/map (array/filter (str/split (str/replaceAll (str/replaceAll (str/join (array/map (str/split ?fieldName "") (fn c (if (and (!= @c (str/lower @c)) (= @c (str/upper @c))) (str/concat " " @c) @c))) "") "_" " ") "-" " ") " ") (fn w (!= @w ""))) (fn w (str/concat (str/upper (str/slice @w 0 1)) (str/slice @w 1 (str/len @w))))) " "))
-        (emit MOCK_VALUE { value: @entity.value, num: @entity.num })
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num, ids: @entity.ids, hit: @entity.hit, honored: @entity.honored, shape: @entity.shape, kind: @entity.kind, omit: @entity.omit })
+      SAMPLE_ROW_COUNT -> ready
+        (set @entity.runtime ?runtime)
+        (set @entity.num (if ?runtime 1 ?requested))
+        (set @entity.value (str/concat "" @entity.num))
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num, ids: @entity.ids, hit: @entity.hit, honored: @entity.honored, shape: @entity.shape, kind: @entity.kind, omit: @entity.omit })
+      MOCK_ROW_ID -> ready
+        (set @entity.value (str/concat (str/upper (str/slice ?label 0 1)) (str/slice ?label 1 (str/len ?label)) " Id " ?n))
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num, ids: @entity.ids, hit: @entity.hit, honored: @entity.honored, shape: @entity.shape, kind: @entity.kind, omit: @entity.omit })
+      SLUG -> ready
+        (set @entity.fieldName ?fieldName)
+        (set @entity.value (let ((s (str/lower (str/replace-pattern ?fieldName "[^A-Za-z0-9]" "")))) (if (= @s "") "value" @s)))
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num, ids: @entity.ids, hit: @entity.hit, honored: @entity.honored, shape: @entity.shape, kind: @entity.kind, omit: @entity.omit })
+      STORE_KEY -> ready
+        (set @entity.value (str/lower (if ?hasCollection ?collection ?name)))
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num, ids: @entity.ids, hit: @entity.hit, honored: @entity.honored, shape: @entity.shape, kind: @entity.kind, omit: @entity.omit })
+      SEEDS_MOCK -> ready
+        (set @entity.honored (if ?primary (and (not ?hasInstances) (or (not ?local) ?seedMock)) (or (not ?local) ?seedMock)))
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num, ids: @entity.ids, hit: @entity.hit, honored: @entity.honored, shape: @entity.shape, kind: @entity.kind, omit: @entity.omit })
+      FIELD_SHAPE -> ready
+        (set @entity.fieldType ?fieldType)
+        (set @entity.shape (if ?intrinsic "default-or-omit" (if ?hasProjection (if (= ?fieldType "array") "placeholder-array" "placeholder-string") (if (= ?fieldType "enum") "null" (if (= ?fieldType "relation") (if (= ?cardinality "one") "placeholder-string" "placeholder-array") (if (= ?fieldType "array") (if ?hasItems "nested" "empty-array") (if (= ?fieldType "object") (if ?hasProperties "nested" "null") (if (array/includes ["trait" "orbital" "behavior"] ?fieldType) "null" (if (or (str/startsWith ?fieldType "$") (array/includes ["slot" "pattern" "node" "SExpr" "event" "EventAddress" "CallKey"] ?fieldType)) "omit" (if (array/includes ["tuple" "union"] ?fieldType) "nested" "scalar"))))))))))
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num, ids: @entity.ids, hit: @entity.hit, honored: @entity.honored, shape: @entity.shape, kind: @entity.kind, omit: @entity.omit })
+      OMIT_ON_EVEN_ROW -> ready
+        (set @entity.index ?index)
+        (set @entity.omit (and ?seeded (not ?identity) (not ?required) (not ?hasDefault) (not ?isRelation) (not ?hasProjection) (= (math/mod ?index 2) 0)))
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num, ids: @entity.ids, hit: @entity.hit, honored: @entity.honored, shape: @entity.shape, kind: @entity.kind, omit: @entity.omit })
+      PICK_VOCAB -> ready
+        (set @entity.runtime ?runtime)
+        (set @entity.index ?index)
+        (set @entity.value (array/nth ?values (math/mod (- (if ?runtime 1 ?index) 1) (array/len ?values))))
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num, ids: @entity.ids, hit: @entity.hit, honored: @entity.honored, shape: @entity.shape, kind: @entity.kind, omit: @entity.omit })
+      PICK_MEMBER -> ready
+        (set @entity.declared ?declared)
+        (set @entity.runtime ?runtime)
+        (set @entity.index ?index)
+        (set @entity.hit (> (array/len (array/filter (array/map (str/split ?declared ",") (fn p (str/trim @p))) (fn p (!= @p "")))) 0))
+        (set @entity.value (let ((c (array/filter (array/map (str/split ?declared ",") (fn p (str/trim @p))) (fn p (!= @p ""))))) (if (> (array/len @c) 0) (array/nth @c (math/mod (- (if ?runtime 1 ?index) 1) (array/len @c))) "")))
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num, ids: @entity.ids, hit: @entity.hit, honored: @entity.honored, shape: @entity.shape, kind: @entity.kind, omit: @entity.omit })
+      CROSS_RELATION -> ready
+        (set @entity.index ?index)
+        (set @entity.hit (> (array/len ?targets) 0))
+        (set @entity.ids (if (= (array/len ?targets) 0) [] (if ?scalar [(array/nth ?targets (math/mod ?index (array/len ?targets)))] (array/unique (array/map (array/range (math/min (array/len ?targets) (+ 2 (math/mod ?index 2)))) (fn o (array/nth ?targets (math/mod (+ ?index @o) (array/len ?targets)))))))))
+        (set @entity.value (if (and ?scalar (> (array/len @entity.ids) 0)) (array/nth @entity.ids 0) ""))
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num, ids: @entity.ids, hit: @entity.hit, honored: @entity.honored, shape: @entity.shape, kind: @entity.kind, omit: @entity.omit })
+      SELF_RELATION -> ready
+        (set @entity.index ?index)
+        (set @entity.ids (if (or ?isOwner ?scalar) [] (array/map (array/filter [(+ (* 2 ?index) 1) (+ (* 2 ?index) 2)] (fn c (< @c (array/len ?ids)))) (fn c (array/nth ?ids @c)))))
+        (set @entity.value (if ?isOwner ?id (if ?scalar (if (= ?index 0) "" (array/nth ?ids (math/floor (/ (- ?index 1) 2)))) "")))
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num, ids: @entity.ids, hit: @entity.hit, honored: @entity.honored, shape: @entity.shape, kind: @entity.kind, omit: @entity.omit })
+      PROJECTION_PICK -> ready
+        (set @entity.index ?index)
+        (set @entity.hit (> (array/len ?values) 0))
+        (set @entity.ids (if (and ?isArray (> (array/len ?values) 0)) [(array/nth ?values (math/mod ?index (array/len ?values)))] []))
+        (set @entity.value (if (and (not ?isArray) (> (array/len ?values) 0)) (array/nth ?values (math/mod ?index (array/len ?values))) ""))
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num, ids: @entity.ids, hit: @entity.hit, honored: @entity.honored, shape: @entity.shape, kind: @entity.kind, omit: @entity.omit })
+      BYTES_VALUE -> ready
+        (set @entity.index ?index)
+        (set @entity.value (base64/encode (str/concat (let ((s (str/lower (str/replace-pattern ?fieldName "[^A-Za-z0-9]" "")))) (if (= @s "") "value" @s)) "-" ?index)))
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num, ids: @entity.ids, hit: @entity.hit, honored: @entity.honored, shape: @entity.shape, kind: @entity.kind, omit: @entity.omit })
+      FILE_VALUE -> ready
+        (set @entity.index ?index)
+        (set @entity.fileName (str/concat (let ((s (str/lower (str/replace-pattern ?fieldName "[^A-Za-z0-9]" "")))) (if (= @s "") "value" @s)) "-" ?index ".pdf"))
+        (set @entity.fileUrl (str/concat "https://example.com/files/" (let ((s (str/lower (str/replace-pattern ?fieldName "[^A-Za-z0-9]" "")))) (if (= @s "") "value" @s)) "/" ?index ".pdf"))
+        (set @entity.mimeType "application/pdf")
+        (set @entity.sizeBytes (* ?index 1024))
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num, ids: @entity.ids, hit: @entity.hit, honored: @entity.honored, shape: @entity.shape, kind: @entity.kind, omit: @entity.omit })
+      INSTANCE_META -> ready
+        (set @entity.minted (if (= ?id "") (+ ?minted 1) ?minted))
+        (set @entity.value (if (= ?id "") (str/concat (str/upper (str/slice ?entityName 0 1)) (str/slice ?entityName 1 (str/len ?entityName)) " Id " @entity.minted) ?id))
+        (set @entity.createdAt (if (= ?createdAt "") ?nowIso ?createdAt))
+        (set @entity.updatedAt (if (= ?updatedAt "") ?nowIso ?updatedAt))
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num, ids: @entity.ids, hit: @entity.hit, honored: @entity.honored, shape: @entity.shape, kind: @entity.kind, omit: @entity.omit })
       MOCK_DRAWN -> ready when (and (= @entity.fieldType "string") (not (array/includes ["image", "imageurl", "image_url", "photo", "photourl", "photo_url", "avatar", "avatarurl", "avatar_url", "thumbnail", "thumbnailurl", "thumbnail_url", "picture", "pictureurl", "cover", "coverurl", "banner", "bannerurl"] (str/lower @entity.fieldName))))
         (set @entity.value (str/titleCase @payload.text))
-        (emit MOCK_VALUE { value: @entity.value, num: @entity.num })
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num, ids: @entity.ids, hit: @entity.hit, honored: @entity.honored, shape: @entity.shape, kind: @entity.kind, omit: @entity.omit })
       MOCK_DRAWN -> ready when (or (= @entity.fieldType "string") (= @entity.fieldType "image"))
         (set @entity.value (str/concat "https://picsum.photos/seed/" (str/encode-uri-component (str/concat @entity.entityName "-" @entity.fieldName "-" @payload.int)) "/400/400"))
-        (emit MOCK_VALUE { value: @entity.value, num: @entity.num })
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num, ids: @entity.ids, hit: @entity.hit, honored: @entity.honored, shape: @entity.shape, kind: @entity.kind, omit: @entity.omit })
       MOCK_DRAWN -> ready when (or (= @entity.fieldType "number") (= @entity.fieldType "money"))
         (set @entity.num @payload.int)
         (set @entity.value (str/concat "" @payload.int))
-        (emit MOCK_VALUE { value: @entity.value, num: @entity.num })
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num, ids: @entity.ids, hit: @entity.hit, honored: @entity.honored, shape: @entity.shape, kind: @entity.kind, omit: @entity.omit })
       MOCK_DRAWN -> ready when (= @entity.fieldType "boolean")
         (set @entity.value (if (= @payload.int 1) "true" "false"))
-        (emit MOCK_VALUE { value: @entity.value, num: @entity.num })
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num, ids: @entity.ids, hit: @entity.hit, honored: @entity.honored, shape: @entity.shape, kind: @entity.kind, omit: @entity.omit })
       MOCK_DRAWN -> ready when (= @entity.fieldType "date")
         (set @entity.value (time/format @payload.ms "YYYY-MM-DD"))
-        (emit MOCK_VALUE { value: @entity.value, num: @entity.num })
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num, ids: @entity.ids, hit: @entity.hit, honored: @entity.honored, shape: @entity.shape, kind: @entity.kind, omit: @entity.omit })
       MOCK_DRAWN -> ready when (or (= @entity.fieldType "datetime") (= @entity.fieldType "timestamp"))
         (set @entity.value (str/concat (time/format @payload.ms "YYYY-MM-DD") "T" (time/format @payload.ms "HH:mm:ss") "." (str/padStart (str/concat "" (math/mod (math/floor @payload.ms) 1000)) 3 "0") "Z"))
-        (emit MOCK_VALUE { value: @entity.value, num: @entity.num })
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num, ids: @entity.ids, hit: @entity.hit, honored: @entity.honored, shape: @entity.shape, kind: @entity.kind, omit: @entity.omit })
       MOCK_DRAWN -> ready
         (set @entity.value @payload.text)
-        (emit MOCK_VALUE { value: @entity.value, num: @entity.num })
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num, ids: @entity.ids, hit: @entity.hit, honored: @entity.honored, shape: @entity.shape, kind: @entity.kind, omit: @entity.omit })
     }
 
     emits {
@@ -285,6 +370,12 @@ orbital MockSeedOrbital {
       MOCK_VALUE -> external {
         value : string
         num : number
+        ids : [string]
+        hit : boolean
+        honored : boolean
+        shape : string
+        kind : string
+        omit : boolean
       }
         @description "A mock value was synthesized."
         @synonyms "sample, seed value"
@@ -319,6 +410,51 @@ orbital MockSeedOrbital {
       TITLE_CASE { fieldName : string! }
         @description "Turn a camelCase or snake_case name into title-cased words."
         @synonyms "readable name"
+      SAMPLE_ROW_COUNT { runtime : boolean!  requested : number! }
+        @description "Rows to seed: one for a runtime singleton, else the requested count."
+        @synonyms "row count"
+      MOCK_ROW_ID { label : string!  n : number! }
+        @description "The mock id family: Person and 3 give Person Id 3."
+        @synonyms "row id"
+      SLUG { fieldName : string! }
+        @description "A lowercase punctuation-free fragment of a name, or value when nothing is left."
+        @synonyms "slug"
+      STORE_KEY { hasCollection : boolean!  collection : string!  name : string! }
+        @description "The lowercase store key of an entity: its collection when declared, else its name."
+        @synonyms "store key"
+      SEEDS_MOCK { primary : boolean!  hasInstances : boolean!  local : boolean!  seedMock : boolean! }
+        @description "Whether an entity takes mock rows: a browser-stored one only when it declares mock, a primary one only without authored instances."
+        @synonyms "seeds mock"
+      FIELD_SHAPE { fieldType : string!  intrinsic : boolean!  hasProjection : boolean!  cardinality : string!  hasItems : boolean!  hasProperties : boolean! }
+        @description "How a field type seeds: scalar, nested, null, omit, empty-array, default-or-omit, or a relation or projection placeholder."
+        @synonyms "field shape"
+      OMIT_ON_EVEN_ROW { seeded : boolean!  identity : boolean!  required : boolean!  hasDefault : boolean!  isRelation : boolean!  hasProjection : boolean!  index : number! }
+        @description "Whether a seeded row leaves an optional, undefaulted field unset (every even row, never on an identity entity)."
+        @synonyms "optional unset"
+      PICK_VOCAB { values : [string]!  index : number!  runtime : boolean! }
+        @description "Rotate a declared vocabulary one-based by row; a runtime singleton takes the first."
+        @synonyms "enum rotation"
+      PICK_MEMBER { declared : string!  index : number!  runtime : boolean! }
+        @description "Rotate declared mock candidates by row, used as written; hit is false when none are declared."
+        @synonyms "mock member"
+      CROSS_RELATION { targets : [string]!  index : number!  scalar : boolean! }
+        @description "Link a cross-entity relation: a scalar takes one target by row, a list takes two or three consecutive distinct targets."
+        @synonyms "relation link"
+      SELF_RELATION { index : number!  id : string!  ids : [string]!  scalar : boolean!  isOwner : boolean! }
+        @description "Link a self-relation into a forest: row i has parent row (i-1)/2 and children 2i+1 and 2i+2; an owner column points at the row itself."
+        @synonyms "forest link"
+      PROJECTION_PICK { index : number!  values : [string]!  isArray : boolean! }
+        @description "Fill a projected field: row i takes the target rows' value i mod n, wrapped in a list for an array field."
+        @synonyms "projection link"
+      BYTES_VALUE { fieldName : string!  index : number! }
+        @description "A bytes field's value: the base64 of its slug, a dash and the row ordinal."
+        @synonyms "mock bytes"
+      FILE_VALUE { fieldName : string!  index : number! }
+        @description "The canonical file value of a row: name, url, media type and size."
+        @synonyms "mock file"
+      INSTANCE_META { id : string!  entityName : string!  minted : number!  createdAt : string!  updatedAt : string!  nowIso : string! }
+        @description "An authored instance's stored id and stamps: an id-less one takes the next mock id, absent stamps are now."
+        @synonyms "instance row"
       MockStream.MOCK_DRAWN -> MOCK_DRAWN
     }
   }

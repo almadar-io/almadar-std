@@ -179,6 +179,7 @@ export const STD_MODULES = [
   'behavior',
   'program',
   'bytes',
+  'bit',
   'base64',
   'hash',
   'hmac',

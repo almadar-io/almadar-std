@@ -6,9 +6,12 @@ app std-program-host [
 ]
 uses Spec from "almadar-std/program-host"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
 type HostGrants = Map string [string]
 
 orbital ProgramHostOrbital {
+  uses Args from "std/behaviors/std-args"
+
   entity GuestProgram [runtime] {
     id : string!
     path : string! = ""
@@ -16,23 +19,33 @@ orbital ProgramHostOrbital {
     grants : HostGrants = {}
   }
 
+  trait ArgsCli = Args.traits.ArgsParser {
+    listens {
+      ProgramHost.HOST_ARGS_PARSE -> ARGS_PARSE
+    }
+  }
+
   trait ProgramHost -> GuestProgram [integration] {
     initial: waiting
 
     state waiting {
       INIT -> waiting
-      HOST_CALLED -> waiting when (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 0)
+      HOST_CALLED -> parsing
+        (emit HOST_ARGS_PARSE { stage: "host" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "grant" aliases: [] takesValue: true repeatable: true }] })
+    }
+
+    state parsing {
+      INIT -> parsing
+      HOST_ARGS_DONE -> waiting when (or (> (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0))
         (emit HOST_REFUSED { reason: "usage: orb host <shell> <program.lolo> [--grant=<kind>]" })
         (emit HOST_COMMAND_ANSWERED { status: 400, body: "usage: orb host <shell> <program.lolo> [--grant=<kind>]" })
-      HOST_CALLED -> waiting when (and (> (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 0) (> (array/len (array/filter (array/map (array/filter (array/drop (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") 1) (fn a (str/startsWith @a "--grant="))) (fn a (str/slice @a 8))) (fn k (not (object/has @config.guestGrants @k))))) 0))
+      HOST_ARGS_DONE -> waiting when (and (= (array/len @payload.errors) 0) (> (array/len @payload.positionals) 0) (> (array/len (array/filter (or (object/get @payload.flags "grant") []) (fn k (not (object/has @config.guestGrants @k))))) 0))
         (emit HOST_REFUSED { reason: "a grant flag names a kind the guestGrants knob does not hold" })
         (emit HOST_COMMAND_ANSWERED { status: 400, body: "host: a grant flag names a kind the guestGrants knob does not hold" })
-      HOST_CALLED -> reading when (and (> (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 0) (= (array/len (array/filter (array/map (array/filter (array/drop (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") 1) (fn a (str/startsWith @a "--grant="))) (fn a (str/slice @a 8))) (fn k (not (object/has @config.guestGrants @k))))) 0))
-        (set @entity.path (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))
-        (set @entity.grants (if (= (array/len (array/filter (array/drop (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") 1) (fn a (str/startsWith @a "--grant=")))) 0)
-          @config.guestGrants
-          (object/pick @config.guestGrants (array/map (array/filter (array/drop (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") 1) (fn a (str/startsWith @a "--grant="))) (fn a (str/slice @a 8))))))
-        (os/read-file { anchor: "cwd" path: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) } { key: "file" emit: { success: HOST_FILE_READ, failure: HOST_LOAD_FAILED } })
+      HOST_ARGS_DONE -> reading when (and (= (array/len @payload.errors) 0) (> (array/len @payload.positionals) 0) (= (array/len (array/filter (or (object/get @payload.flags "grant") []) (fn k (not (object/has @config.guestGrants @k))))) 0))
+        (set @entity.path (array/first @payload.positionals))
+        (set @entity.grants (if (= (array/len (or (object/get @payload.flags "grant") [])) 0) @config.guestGrants (object/pick @config.guestGrants (object/get @payload.flags "grant"))))
+        (os/read-file { anchor: "cwd" path: (array/first @payload.positionals) } { key: "file" emit: { success: HOST_FILE_READ, failure: HOST_LOAD_FAILED } })
     }
 
     state reading {
@@ -59,6 +72,13 @@ orbital ProgramHostOrbital {
     }
 
     emits {
+      HOST_ARGS_PARSE {
+        stage : string!
+        argv : [string]!
+        flags : [ArgFlag]!
+      }
+        @description "Internal: parse the call's words against the --grant flag."
+        @tier "internal"
       HOST_COMMAND_ANSWERED -> internal { status : number!  body : string! }
         @description "Internal: the command's answer, which the cli hook prints."
         @tier "internal"
@@ -94,6 +114,15 @@ orbital ProgramHostOrbital {
         @synonyms "orb host, runtime host, host a program"
       HOST_EVENT { key : string!, orbital : string!, trait : string!, event : string!, payload : string }
         @description "An external event for the guest program."
+      HOST_ARGS_DONE {
+        stage : string!
+        flags : Map string [string]!
+        positionals : [string]!
+        errors : [string]!
+        words : [string]!
+      }
+        @description "std-args's ARGS_PARSED: the call's words, parsed."
+      ArgsCli.ARGS_PARSED -> HOST_ARGS_DONE
     }
 
     config {
@@ -105,5 +134,5 @@ orbital ProgramHostOrbital {
     }
   }
 
-  page "/host" -> ProgramHost
+  page "/host" -> ProgramHost, ArgsCli
 }

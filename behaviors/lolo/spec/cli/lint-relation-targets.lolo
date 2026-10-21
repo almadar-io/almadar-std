@@ -1,0 +1,21 @@
+app lint-relation-targets-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint relation-targets <file>`, the port of the compiler rule ORB_X_UNRESOLVED_RELATION_TARGET. The file is lowered with program/read. Every top-level entity field of type relation must name a declared entity (any orbital's primary or auxiliary entity, or an expects entity or identity); each that does not is reported as `[ORB_X_UNRESOLVED_RELATION_TARGET] <path>: <message>` with the Rust message and suggestion, status 500 (exit 1). A clean program answers `lint relation-targets: clean` (status 200, exit 0). Anything but exactly one file argument is the usage (status 400, exit 2). A file that cannot be read or lowered fails the run (status 500)."
+]
+
+orbital LintRelationTargetsSpec {
+  expects trait OrbLintRelationTargets {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [string]! }
+      LINT_UNREAD { rule : string! }
+    }
+  }
+  expects trait OrbLintRelationTargetsCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page "/orb-lint-relation-targets" -> OrbLintRelationTargets, OrbLintRelationTargetsCli
+}

@@ -1,0 +1,156 @@
+app std-orb-lint-page-modifiers [
+  version: "1.0.0",
+  inbound: ["cli-lint-page-modifiers"],
+  fs: { cwd: "**": [read] },
+  description: "std-orb-lint-page-modifiers — the `orb lint page-modifiers <file>` command, the port of validate_page_modifiers. It lowers the file with program/read and, for every page, reports ORB_P_INDEX_REQUIRES_PUBLIC (an `indexing: index` page lacking `access: public`, `title:` or `description:`), ORB_P_INDEX_PARAM_ROUTE (an indexed page whose route has a `:` segment) and ORB_P_AUTH_NO_SIGN_IN (an `access: authenticated` page when the app declares no `signIn:`), each with its path and suggestion (status 500, exit 1). It also reports ORB_P_TRANSLATION_DUPLICATE_LOCALE (an explicit `translationOf:` group holding more than one page in one locale, the locale being the page path's first segment when declared, else the first declared locale). Clean answers `lint page-modifiers: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-page-modifiers"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+
+orbital OrbLintPageModifiersOrbital {
+  entity OrbLintPageModifiersRun [runtime] {
+    id : string!
+    findings : [string] = []
+  }
+
+  trait OrbLintPageModifiers -> OrbLintPageModifiersRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_RUN -> reading
+        (set @entity.findings [])
+        (os/read-file { anchor: "cwd" path: @payload.file } { key: "file" emit: { success: LINT_FILE_READ, failure: LINT_FILE_UNREAD } })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "page-modifiers", findings: @entity.findings })
+    }
+
+    state reading {
+      INIT -> reading
+      LINT_FILE_READ -> reading
+        (program/read (bytes/to-string @payload.data) { emit: { success: LINT_PROGRAM_READ, failure: LINT_FILE_UNREAD } })
+      LINT_PROGRAM_READ -> ready
+        (set @entity.findings (let ((sgi (if (object/has @payload.result "site") (object/get (object/get @payload.result "site") "signIn" "") "")) (orbitals (object/get @payload.result "orbitals")) (locs (object/get @payload.result "locales" [])))
+          (array/flatten [
+          (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+            (let ((pgs (object/get (array/nth @orbitals @oi) "pages" [])))
+              (array/flatten (array/map (array/range 0 (array/len @pgs)) (fn pj
+                (let ((pg (array/nth @pgs @pj)))
+                  (if (not (object/has @pg "path"))
+                    []
+                    (let ((where (str/concat "orbitals[" @oi "].pages[" @pj "]")) (rt (object/get @pg "path")) (pname (object/get @pg "name" "")) (pacc (object/get @pg "access" "")))
+                      (let ((lacks (array/flatten [
+                          (if (!= @pacc "public") ["`access: public`"] [])
+                          (if (object/has @pg "title") [] ["`title:`"])
+                          (if (object/has @pg "description") [] ["`description:`"])])))
+                        (array/flatten [
+                          (if (and (= (object/get @pg "indexing" "") "index") (> (array/len @lacks) 0))
+                            [(str/concat "[ORB_P_INDEX_REQUIRES_PUBLIC] " @where ": page '" @pname "' (" @rt ") declares `indexing: index` but lacks " (str/join @lacks ", ") "\n  suggestion: an indexed page is public, titled and described; otherwise declare `indexing: noindex`")]
+                            [])
+                          (if (and (= (object/get @pg "indexing" "") "index") (array/some (str/split @rt "/") (fn seg (str/startsWith @seg ":"))))
+                            [(str/concat "[ORB_P_INDEX_PARAM_ROUTE] " @where ": page '" @pname "' (" @rt ") is a parameter route; it cannot be `indexing: index` because its concrete URLs are not declared\n  suggestion: declare `indexing: noindex` on parameter routes")]
+                            [])
+                          (if (and (= @pacc "authenticated") (= @sgi ""))
+                            [(str/concat "[ORB_P_AUTH_NO_SIGN_IN] " @where ": page '" @pname "' (" @rt ") is `access: authenticated` but the app declares no `signIn:` route\n  suggestion: add `signIn: '/<route>'` to the app bracket — the page a non-admitted viewer is sent to")]
+                            [])]))))))))))))
+          (let ((ents (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+                  (let ((pgs (object/get (array/nth @orbitals @oi) "pages" [])))
+                    (array/flatten (array/map (array/range 0 (array/len @pgs)) (fn pj
+                      (let ((pg (array/nth @pgs @pj)))
+                        (if (and (object/has @pg "path") (object/has @pg "translationOf") (> (array/len @locs) 0))
+                          (let ((segs (array/filter (str/split (object/get @pg "path") "/") (fn s (!= @s "")))) (seg (if (> (array/len @segs) 0) (array/first @segs) "")))
+                            [{ g: (object/get @pg "translationOf"), l: (if (array/some @locs (fn lc (= @lc @seg))) @seg (array/first @locs)), p: (object/get @pg "path") }])
+                          [])))))))))))
+            (array/flatten (array/map (array/range 0 (array/len @ents)) (fn ei
+              (let ((en (array/nth @ents @ei)))
+                (let ((same (array/filter (array/range 0 (array/len @ents)) (fn k (and (= (object/get (array/nth @ents @k) "g") (object/get @en "g")) (= (object/get (array/nth @ents @k) "l") (object/get @en "l")))))))
+                  (if (and (> (array/len @same) 1) (= (array/first @same) @ei))
+                    [(str/concat "[ORB_P_TRANSLATION_DUPLICATE_LOCALE] " (object/get (array/nth @ents (array/nth @same 1)) "p") ": translation group '" (object/get @en "g") "' holds " (array/len @same) " pages in locale '" (object/get @en "l") "' (" (str/join (array/map @same (fn k (object/get (array/nth @ents @k) "p"))) ", ") "); each locale may hold one\n  suggestion: give each page its own locale prefix, or a different `translationOf:`")]
+                    []))))))) ])))
+        (emit LINT_FINISH { })
+      LINT_FILE_UNREAD -> ready
+        (emit LINT_UNREAD { rule: "page-modifiers" })
+    }
+
+    emits {
+      LINT_UNREAD -> external { rule : string! }
+        @description "This rule could not read or lower the file."
+        @tier "internal"
+      LINT_RUN -> external { file : string! }
+        @description "The lint request this trait answers, from the cli trait or the umbrella."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  findings : [string]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FILE_READ { data : bytes! }
+        @description "The file read."
+        @tier "internal"
+      LINT_FILE_UNREAD { error : string }
+        @description "The file could not be read or lowered."
+        @tier "internal"
+      LINT_PROGRAM_READ { result : string }
+        @description "The file lowered by program/read."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      OrbLintPageModifiersCli.LINT_RUN -> LINT_RUN
+    }
+  }
+
+  trait OrbLintPageModifiersCli -> OrbLintPageModifiersRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint page-modifiers <file>" })
+      LINT_CALLED -> waiting when (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (emit LINT_RUN { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "page-modifiers") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint page-modifiers: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "page-modifiers") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join @payload.findings "\n") })
+      LINT_UNREAD -> ready when (= @payload.rule "page-modifiers")
+        (emit LINT_ANSWERED { status: 500, body: "lint page-modifiers: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_RUN -> external { file : string! }
+        @description "Ask the rule trait to lint this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  findings : [string]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_UNREAD -> external { rule : string! }
+        @description "The rule trait could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-page-modifiers" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint page-modifiers` with its arguments and working directory."
+        @synonyms "orb lint page-modifiers"
+      OrbLintPageModifiers.LINT_FOUND -> LINT_FOUND
+      OrbLintPageModifiers.LINT_UNREAD -> LINT_UNREAD
+    }
+  }
+
+  page "/orb-lint-page-modifiers" as OrbLintPageModifiersPage -> OrbLintPageModifiers, OrbLintPageModifiersCli
+}

@@ -18,15 +18,11 @@ orbital OrbLintEmitConfigRefOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
-        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint emit-config-ref <file>" })
-      LINT_CALLED -> reading when (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+      LINT_RUN -> reading
         (set @entity.findings [])
-        (os/read-file { anchor: "cwd" path: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) } { key: "file" emit: { success: LINT_FILE_READ, failure: LINT_FILE_UNREAD } })
-      LINT_FINISH -> ready when (= (array/len @entity.findings) 0)
-        (emit LINT_ANSWERED { status: 200, body: "lint emit-config-ref: clean" })
-      LINT_FINISH -> ready when (> (array/len @entity.findings) 0)
-        (emit LINT_ANSWERED { status: 500, body: (str/join @entity.findings "\n") })
+        (os/read-file { anchor: "cwd" path: @payload.file } { key: "file" emit: { success: LINT_FILE_READ, failure: LINT_FILE_UNREAD } })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "emit-config-ref", findings: @entity.findings })
     }
 
     state reading {
@@ -43,7 +39,7 @@ orbital OrbLintEmitConfigRefOrbital {
                     (array/flatten (array/map (object/get @t "emits" []) (fn e
                       (let ((ev (object/get @e "event" "")))
                         (let ((knob (str/slice @ev 8 (str/len @ev))))
-                          (if (or (not (str/startsWith @ev (str/concat "@" "config."))) (= @knob "") (> (array/len (str/split @knob ".")) 1))
+                          (if (or (not (str/startsWith @ev (str/concat (quote "@") "config."))) (= @knob "") (> (array/len (str/split @knob ".")) 1))
                             []
                             (let ((field (object/get (object/get @t "config" {}) @knob null)))
                               (let ((why (if (= @field null)
@@ -60,15 +56,18 @@ orbital OrbLintEmitConfigRefOrbital {
                                   [(str/concat "[ORB_EMIT_CONFIG_REF_INVALID] orbitals[" @oi " (" (object/get @o "name") ")].traits[" @ti " (" (object/get @t "name") ")].emits(" @ev "): " @why "\n  suggestion: Declare `config { " @knob " : string = \"...\" }` on this trait, or reference an existing string-typed knob with a default.")]))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FILE_UNREAD -> ready
-        (emit LINT_ANSWERED { status: 500, body: "lint emit-config-ref: the file could not be read or lowered" })
+        (emit LINT_UNREAD { rule: "emit-config-ref" })
     }
 
     emits {
-      LINT_ANSWERED -> internal {
-        status : number!
-        body : string!
-      }
-        @description "Internal: the command's answer, which the cli hook prints."
+      LINT_UNREAD -> external { rule : string! }
+        @description "This rule could not read or lower the file."
+        @tier "internal"
+      LINT_RUN -> external { file : string! }
+        @description "The lint request this trait answers, from the cli trait or the umbrella."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  findings : [string]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
         @tier "internal"
       LINT_FILE_READ { data : bytes! }
         @description "The file read."
@@ -85,14 +84,60 @@ orbital OrbLintEmitConfigRefOrbital {
     }
 
     listens {
+      OrbLintEmitConfigRefCli.LINT_RUN -> LINT_RUN
+    }
+  }
+
+  trait OrbLintEmitConfigRefCli -> OrbLintEmitConfigRefRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint emit-config-ref <file>" })
+      LINT_CALLED -> waiting when (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (emit LINT_RUN { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "emit-config-ref") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint emit-config-ref: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "emit-config-ref") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join @payload.findings "\n") })
+      LINT_UNREAD -> ready when (= @payload.rule "emit-config-ref")
+        (emit LINT_ANSWERED { status: 500, body: "lint emit-config-ref: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_RUN -> external { file : string! }
+        @description "Ask the rule trait to lint this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  findings : [string]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_UNREAD -> external { rule : string! }
+        @description "The rule trait could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
       LINT_CALLED -> inbound "cli-lint-emit-config-ref" answers LINT_ANSWERED {
         headers : Map string string
         rawBody : string
       }
         @description "Run `orb lint emit-config-ref` with its arguments and working directory."
         @synonyms "orb lint emit-config-ref, duplicate trait ids"
+      OrbLintEmitConfigRef.LINT_FOUND -> LINT_FOUND
+      OrbLintEmitConfigRef.LINT_UNREAD -> LINT_UNREAD
     }
   }
 
-  page "/orb-lint-emit-config-ref" as OrbLintEmitConfigRefPage -> OrbLintEmitConfigRef
+  page "/orb-lint-emit-config-ref" as OrbLintEmitConfigRefPage -> OrbLintEmitConfigRef, OrbLintEmitConfigRefCli
 }

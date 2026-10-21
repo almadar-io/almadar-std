@@ -1,0 +1,81 @@
+app std-rate-limiter-ip [
+  version: "1.0.0",
+  description: "std-rate-limiter-ip — the per-client fixed-window rate limiter of the HTTP server, mirroring orbital-server RateWindows. Each client address ip on REQUEST { requestId, ip } has its own window {count, windowStart}: the first request opens it, the count rises per request, admitted while count <= limit (exactly limit admissions), then THROTTLED until a request arrives at or after windowStart plus windowSeconds, which opens a new window at that request (lazy roll from the clock at request time, no ticks). ADMITTED { remaining = limit - count floored at 0, resetIn = floor((window ms - elapsed ms) / 1000) } ; THROTTLED carries the same resetIn. A request with no ip, or a disabled limiter, is admitted without counting. Entries are never evicted, as in RateWindows. Defaults 300 requests per 900 s. Bound to spec/infra/rate-limit.goldens.json."
+]
+
+type RateKey = { ip : string!, count : number!, windowStart : number! }
+
+orbital RateClientOrbital {
+  entity RateClient [runtime] {
+    id : string
+    buckets : [RateKey] @description "One count and window start per client address, rolled lazily at the first request at or after start plus window." @synonyms "windows, per-ip counts, client buckets" = []
+  }
+
+  trait RateKeyRateLimiter -> RateClient [integration, instance, rate-limit] {
+    initial: counting
+
+    state counting {
+      INIT -> counting
+        (set @entity.buckets [])
+      REQUEST -> counting when (not (and @config.enabled (!= (or @payload.ip "") "")))
+        (emit ADMITTED { requestId: @payload.requestId, remaining: @config.requestsPerMinute, resetIn: @config.windowSeconds, limit: @config.requestsPerMinute, window: @config.windowSeconds })
+      REQUEST -> counting when (and @config.enabled (!= (or @payload.ip "") "") (or (= (array/find @entity.buckets (fn b (= @b.ip @payload.ip))) null) (>= (- (time/now) (object/get (array/find @entity.buckets (fn b (= @b.ip @payload.ip))) "windowStart")) (* @config.windowSeconds 1000))))
+        (set @entity.buckets (array/append (array/filter @entity.buckets (fn b (!= @b.ip @payload.ip))) { ip: @payload.ip, count: 1, windowStart: (time/now) }))
+        (emit ADMITTED { requestId: @payload.requestId, remaining: (- @config.requestsPerMinute 1), resetIn: @config.windowSeconds, limit: @config.requestsPerMinute, window: @config.windowSeconds })
+      REQUEST -> counting when (and @config.enabled (!= (or @payload.ip "") "") (not (or (= (array/find @entity.buckets (fn b (= @b.ip @payload.ip))) null) (>= (- (time/now) (object/get (array/find @entity.buckets (fn b (= @b.ip @payload.ip))) "windowStart")) (* @config.windowSeconds 1000)))) (< (object/get (array/find @entity.buckets (fn b (= @b.ip @payload.ip))) "count") @config.requestsPerMinute))
+        (set @entity.buckets (array/map @entity.buckets (fn b (if (= @b.ip @payload.ip) { ip: @b.ip, count: (+ @b.count 1), windowStart: @b.windowStart } @b))))
+        (emit ADMITTED { requestId: @payload.requestId, remaining: (- @config.requestsPerMinute (+ (object/get (array/find @entity.buckets (fn b (= @b.ip @payload.ip))) "count") 1)), resetIn: (math/floor (/ (- (* @config.windowSeconds 1000) (- (time/now) (object/get (array/find @entity.buckets (fn b (= @b.ip @payload.ip))) "windowStart"))) 1000)), limit: @config.requestsPerMinute, window: @config.windowSeconds })
+      REQUEST -> counting when (and @config.enabled (!= (or @payload.ip "") "") (not (or (= (array/find @entity.buckets (fn b (= @b.ip @payload.ip))) null) (>= (- (time/now) (object/get (array/find @entity.buckets (fn b (= @b.ip @payload.ip))) "windowStart")) (* @config.windowSeconds 1000)))) (>= (object/get (array/find @entity.buckets (fn b (= @b.ip @payload.ip))) "count") @config.requestsPerMinute))
+        (emit THROTTLED { requestId: @payload.requestId, resetIn: (math/floor (/ (- (* @config.windowSeconds 1000) (- (time/now) (object/get (array/find @entity.buckets (fn b (= @b.ip @payload.ip))) "windowStart"))) 1000)), limit: @config.requestsPerMinute, window: @config.windowSeconds })
+    }
+
+    listens {
+      REQUEST {
+        requestId : number!
+        ip : string
+      }
+        @description "Counts one request against the window of its client address ip and answers ADMITTED or THROTTLED, echoing requestId. A request with no ip, or a disabled limiter, is admitted without counting."
+        @synonyms "count request per client, check rate per ip"
+    }
+
+    emits {
+      ADMITTED -> external {
+        requestId : number!
+        remaining : number!
+        resetIn : number!
+        limit : number!
+        window : number!
+      }
+        @description "The request was admitted: requests left in this client's window and seconds until it resets."
+        @tier "primary"
+      THROTTLED -> external {
+        requestId : number!
+        resetIn : number!
+        limit : number!
+        window : number!
+      }
+        @description "The request was throttled: seconds until this client's window resets."
+        @tier "primary"
+    }
+
+    config {
+      enabled : boolean = false
+        @label "Enabled"
+        @description "Whether the per-client limit is enforced; off admits every request without counting."
+        @synonyms "enable, rate limit, throttle per client"
+        @tier "domain"
+      requestsPerMinute : number = 300
+        @label "Requests per window"
+        @description "Requests one client address is admitted per window; the next is throttled until its window rolls."
+        @synonyms "rate limit, request cap, per ip limit"
+        @tier "domain"
+      windowSeconds : number = 900
+        @label "Window seconds"
+        @description "Length of one client window in seconds; it opens at that client's first request and rolls at the first request at or after start plus this."
+        @synonyms "window, period, rate limit window"
+        @tier "domain"
+    }
+  }
+
+  page "/rate-clients/limiter" as RateKeyRateLimiterPage -> RateKeyRateLimiter
+}

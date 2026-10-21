@@ -1,10 +1,11 @@
 app std-http-router [
   version: "1.0.0",
-  description: "std-http-router — the request pipeline of an HTTP server program, between std-http1 and the policy and rate-limiter atoms. REQUEST_RECEIVED { requestId, method, path, query, headers, body, peer } starts one request; requests are told apart by requestId so any number are in flight at once. The router asks HTTP_DECIDE of std-http-policy and hears HTTP_DECIDED: a preflight is answered at once with the policy status and headers and an empty body, payload-too-large is answered 413 { error, code } as application/json, and an ok request whose path starts with apiPrefix is counted first (RATE_REQUEST, answered ADMITTED or THROTTLED by std-rate-limiter) while any other goes straight to routing. A throttled request is answered 429 as text/plain with the plain body Too many requests, please try again later. and ratelimit-* headers built from the verdict; an admitted one carries the same headers onto its answer. Routing is by method and path: GET healthPath answers 200 { status, version } as application/json, every other request answers 404 { error, code }. Every answer is RESPOND { requestId, status, headers, body } for std-http1 to write and REQUEST_ANSWERED for the program; the request then leaves the pending list. Bound to spec/infra/http-router.lolo; the other routes, the bearer guard, hooks, SSE and static files are not in this slice."
+  env: ["VAPID_PUBLIC_KEY", "ORB_TICK_INVOKER"],
+  description: "std-http-router — the request pipeline of an HTTP server program, between std-http1 and the policy and rate-limiter atoms. REQUEST_RECEIVED { requestId, method, path, query, headers, body, peer } starts one request; requests are told apart by requestId so any number are in flight at once. The router asks HTTP_DECIDE of std-http-policy and hears HTTP_DECIDED: a preflight is answered at once with the policy status and headers and an empty body, payload-too-large is answered 413 { error, code } as application/json, and an ok request whose path starts with apiPrefix is counted first (RATE_REQUEST, answered ADMITTED or THROTTLED by std-rate-limiter) while any other goes straight to routing. A throttled request is answered 429 as text/plain with the plain body Too many requests, please try again later. and ratelimit-* headers built from the verdict; an admitted one carries the same headers onto its answer. Routing is by method and path: GET healthPath answers 200 { status, version } as application/json, GET vapidPath answers 200 { publicKey } from env VAPID_PUBLIC_KEY or 404 { error } when unset; POST tickPath answers 404 when ORB_TICK_INVOKER is unset, otherwise verifies the bearer (email equals the invoker and email_verified true, else 401), answers 501 { error, code NOT_IMPLEMENTED } (no host runs the scheduler pass yet, G-ORB-441) for the authorized invoker; every other request answers 404 { error, code }. Every answer is RESPOND { requestId, status, headers, body } for std-http1 to write and REQUEST_ANSWERED for the program; the request then leaves the pending list. Bound to spec/infra/http-router.lolo; the other routes, the bearer guard, hooks, SSE and static files are not in this slice."
 ]
 uses Spec from "almadar-std/http-router"
 type RouterHeader = { name : string!, value : string! }
-type RouterPending = { requestId : number!, method : string!, path : string!, query : string!, authorization : string!, responseHeaders : [RouterHeader]! }
+type RouterPending = { requestId : number!, method : string!, path : string!, query : string!, authorization : string!, ip : string!, responseHeaders : [RouterHeader]! }
 type RouterStream = { requestId : number!, ticket : string! }
 orbital HttpRouterOrbital {
   entity RouteRequest [runtime] {
@@ -14,6 +15,9 @@ orbital HttpRouterOrbital {
     guards : [number] @description "Request ids waiting for a bearer verdict on a route that needs a verified viewer." = []
     mints : [number] @description "Request ids of ticket mints waiting for std-stream-ticket." = []
     streams : [RouterStream] @description "Stream requests waiting for their ticket to be spent." = []
+    vapidKey : string @description "The public VAPID key read from VAPID_PUBLIC_KEY at INIT; empty when unset." = ""
+    tickInvoker : string @description "The invoker identity read from ORB_TICK_INVOKER at INIT; empty when no invoker is named." = ""
+    ticks : [number] @description "Request ids of tick calls waiting for a bearer verdict or a tick pass." = []
     @invariant (>= @entity.status 0)
   }
 
@@ -49,6 +53,18 @@ orbital HttpRouterOrbital {
         @label "Health path"
         @description "The path a GET answers 200 with the status and version."
         @tier "infra"
+      vapidPath : string = "/api/push/vapid-public-key"
+        @label "VAPID key path"
+        @description "The path a GET answers 200 { publicKey } from VAPID_PUBLIC_KEY, or 404 when it is unset."
+        @tier "infra"
+      tickPath : string = "/api/tick"
+        @label "Tick path"
+        @description "The path a POST runs one tick pass on: 404 when ORB_TICK_INVOKER is unset, 401 unless the bearer is that verified invoker (email equal, email_verified true), then 501 until a host runs the scheduler pass."
+        @tier "infra"
+      clientFallback : boolean = false
+        @label "Client fallback"
+        @description "When on, a request no route owns is handed to std-static-files as ROUTE_CLIENT instead of answering 404."
+        @tier "infra"
       version : string = "0.0.0"
         @label "Version"
         @description "The version GET healthPath reports."
@@ -57,8 +73,18 @@ orbital HttpRouterOrbital {
 
     state routing {
       INIT -> routing
+        (os/getenv "VAPID_PUBLIC_KEY" { emit: { success: VAPID_READ failure: VAPID_UNREAD } })
+        (os/getenv "ORB_TICK_INVOKER" { emit: { success: INVOKER_READ failure: INVOKER_UNREAD } })
+      VAPID_READ -> routing
+        (set @entity.vapidKey (or @payload.value ""))
+      VAPID_UNREAD -> routing
+        (set @entity.vapidKey "")
+      INVOKER_READ -> routing
+        (set @entity.tickInvoker (or @payload.value ""))
+      INVOKER_UNREAD -> routing
+        (set @entity.tickInvoker "")
       REQUEST_RECEIVED -> routing
-        (set @entity.pending (array/append @entity.pending { requestId: @payload.requestId, method: @payload.method, path: @payload.path, query: (or @payload.query ""), authorization: (or (object/get @payload.headers "authorization") ""), responseHeaders: [] }))
+        (set @entity.pending (array/append @entity.pending { requestId: @payload.requestId, method: @payload.method, path: @payload.path, query: (or @payload.query ""), authorization: (or (object/get @payload.headers "authorization") ""), ip: (str/join (array/slice (str/split @payload.peer ":") 0 (- (array/len (str/split @payload.peer ":")) 1)) ":"), responseHeaders: [] }))
         (emit HTTP_DECIDE {
           requestId: @payload.requestId,
           method: @payload.method,
@@ -77,10 +103,10 @@ orbital HttpRouterOrbital {
         (emit RESPOND { requestId: @payload.requestId, status: 413, headers: (array/append @payload.responseHeaders { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: "Payload too large", code: "PAYLOAD_TOO_LARGE" })) })
         (emit REQUEST_ANSWERED { requestId: @payload.requestId, status: 413, headers: (array/append @payload.responseHeaders { name: "content-type", value: "application/json" }), body: (json/stringify { error: "Payload too large", code: "PAYLOAD_TOO_LARGE" }) })
       HTTP_DECIDED -> routing when (and (= @payload.verdict "ok") (str/startsWith (or (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "path") "") @config.apiPrefix))
-        (set @entity.pending (array/map @entity.pending (fn p (if (= @p.requestId @payload.requestId) { requestId: @p.requestId, method: @p.method, path: @p.path, query: @p.query, authorization: @p.authorization, responseHeaders: @payload.responseHeaders } @p))))
-        (emit RATE_REQUEST { requestId: @payload.requestId })
+        (set @entity.pending (array/map @entity.pending (fn p (if (= @p.requestId @payload.requestId) { requestId: @p.requestId, method: @p.method, path: @p.path, query: @p.query, authorization: @p.authorization, ip: @p.ip, responseHeaders: @payload.responseHeaders } @p))))
+        (emit RATE_REQUEST { requestId: @payload.requestId, ip: (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "ip") })
       HTTP_DECIDED -> routing when (and (= @payload.verdict "ok") (not (str/startsWith (or (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "path") "") @config.apiPrefix)))
-        (set @entity.pending (array/map @entity.pending (fn p (if (= @p.requestId @payload.requestId) { requestId: @p.requestId, method: @p.method, path: @p.path, query: @p.query, authorization: @p.authorization, responseHeaders: @payload.responseHeaders } @p))))
+        (set @entity.pending (array/map @entity.pending (fn p (if (= @p.requestId @payload.requestId) { requestId: @p.requestId, method: @p.method, path: @p.path, query: @p.query, authorization: @p.authorization, ip: @p.ip, responseHeaders: @payload.responseHeaders } @p))))
         (emit ROUTE_REQUEST { requestId: @payload.requestId, rateHeaders: [] })
       ADMITTED -> routing
         (emit ROUTE_REQUEST {
@@ -183,11 +209,56 @@ orbital HttpRouterOrbital {
         (emit ROUTE_HEALTH { requestId: @payload.requestId })
         (emit REQUEST_ANSWERED { requestId: @payload.requestId, status: 200, headers: (array/append (array/concat (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") @payload.rateHeaders) { name: "content-type", value: "application/json" }), body: (json/stringify { status: "healthy", version: @config.version }) })
         (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
-      ROUTE_REQUEST -> routing when (let ((req (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (and (not (and @config.requireSignIn (str/startsWith (object/get @req "path") @config.dispatchPrefix))) (not (and (!= @config.externalPrefix "") (str/startsWith (object/get @req "path") @config.externalPrefix))) (not (or (and (= (str/upper (object/get @req "method")) "GET") (= (object/get @req "path") @config.healthPath)) (and (= (str/upper (object/get @req "method")) "GET") (= (object/get @req "path") @config.streamPath)) (and (= (str/upper (object/get @req "method")) "POST") (= (object/get @req "path") @config.ticketPath))))))
+      ROUTE_REQUEST -> routing when (let ((req (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (and (= (str/upper (object/get @req "method")) "GET") (= (object/get @req "path") @config.vapidPath) (!= @entity.vapidKey "")))
+        (set @entity.status 200)
+        (emit RESPOND { requestId: @payload.requestId, status: 200, headers: (array/append (array/concat (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") @payload.rateHeaders) { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { publicKey: @entity.vapidKey })) })
+        (emit REQUEST_ANSWERED { requestId: @payload.requestId, status: 200, headers: (array/append (array/concat (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") @payload.rateHeaders) { name: "content-type", value: "application/json" }), body: (json/stringify { publicKey: @entity.vapidKey }) })
+        (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
+      ROUTE_REQUEST -> routing when (let ((req (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (and (= (str/upper (object/get @req "method")) "GET") (= (object/get @req "path") @config.vapidPath) (= @entity.vapidKey "")))
+        (set @entity.status 404)
+        (emit RESPOND { requestId: @payload.requestId, status: 404, headers: (array/append (array/concat (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") @payload.rateHeaders) { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: "Push is not configured (VAPID_PUBLIC_KEY unset)" })) })
+        (emit REQUEST_ANSWERED { requestId: @payload.requestId, status: 404, headers: (array/append (array/concat (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") @payload.rateHeaders) { name: "content-type", value: "application/json" }), body: (json/stringify { error: "Push is not configured (VAPID_PUBLIC_KEY unset)" }) })
+        (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
+      ROUTE_REQUEST -> routing when (let ((req (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (and (= (str/upper (object/get @req "method")) "POST") (= (object/get @req "path") @config.tickPath) (= @entity.tickInvoker "")))
+        (set @entity.status 404)
+        (emit RESPOND { requestId: @payload.requestId, status: 404, headers: (array/append (array/concat (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") @payload.rateHeaders) { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: "no tick invoker is configured (ORB_TICK_INVOKER)", code: "NOT_FOUND" })) })
+        (emit REQUEST_ANSWERED { requestId: @payload.requestId, status: 404, headers: (array/append (array/concat (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") @payload.rateHeaders) { name: "content-type", value: "application/json" }), body: (json/stringify { error: "no tick invoker is configured (ORB_TICK_INVOKER)", code: "NOT_FOUND" }) })
+        (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
+      ROUTE_REQUEST -> routing when (let ((req (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (and (= (str/upper (object/get @req "method")) "POST") (= (object/get @req "path") @config.tickPath) (!= @entity.tickInvoker "")))
+        (set @entity.ticks (array/append @entity.ticks @payload.requestId))
+        (emit BEARER_VERIFY { requestId: @payload.requestId, authorization: (or (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "authorization") "") })
+      BEARER_VERIFIED -> routing when (and (array/includes @entity.ticks (or @payload.requestId 0)) (= (or (object/get @payload.viewer "email") "") @entity.tickInvoker) (= (object/get (or (array/find (or @payload.viewer.claims []) (fn c (= @c.name "email_verified"))) { value: false }) "value") true))
+        (set @entity.status 501)
+        (emit RESPOND { requestId: @payload.requestId, status: 501, headers: (array/append (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: "tick pass unavailable: no host runs the scheduler pass yet", code: "NOT_IMPLEMENTED" })) })
+        (emit REQUEST_ANSWERED { requestId: @payload.requestId, status: 501, headers: (array/append (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") { name: "content-type", value: "application/json" }), body: (json/stringify { error: "tick pass unavailable: no host runs the scheduler pass yet", code: "NOT_IMPLEMENTED" }) })
+        (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
+        (set @entity.ticks (array/filter @entity.ticks (fn m (!= @m @payload.requestId))))
+      BEARER_VERIFIED -> routing when (and (array/includes @entity.ticks (or @payload.requestId 0)) (not (and (= (or (object/get @payload.viewer "email") "") @entity.tickInvoker) (= (object/get (or (array/find (or @payload.viewer.claims []) (fn c (= @c.name "email_verified"))) { value: false }) "value") true))))
+        (set @entity.status 401)
+        (emit RESPOND { requestId: @payload.requestId, status: 401, headers: (array/append (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: "Unauthorized", code: "UNAUTHORIZED" })) })
+        (emit REQUEST_ANSWERED { requestId: @payload.requestId, status: 401, headers: (array/append (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") { name: "content-type", value: "application/json" }), body: (json/stringify { error: "Unauthorized", code: "UNAUTHORIZED" }) })
+        (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
+        (set @entity.ticks (array/filter @entity.ticks (fn m (!= @m @payload.requestId))))
+      BEARER_ANONYMOUS -> routing when (array/includes @entity.ticks (or @payload.requestId 0))
+        (set @entity.status 401)
+        (emit RESPOND { requestId: @payload.requestId, status: 401, headers: (array/append (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: "Unauthorized", code: "UNAUTHORIZED" })) })
+        (emit REQUEST_ANSWERED { requestId: @payload.requestId, status: 401, headers: (array/append (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") { name: "content-type", value: "application/json" }), body: (json/stringify { error: "Unauthorized", code: "UNAUTHORIZED" }) })
+        (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
+        (set @entity.ticks (array/filter @entity.ticks (fn m (!= @m @payload.requestId))))
+      BEARER_REFUSED -> routing when (array/includes @entity.ticks (or @payload.requestId 0))
+        (set @entity.status 401)
+        (emit RESPOND { requestId: @payload.requestId, status: 401, headers: (array/append (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: "Unauthorized", code: "UNAUTHORIZED" })) })
+        (emit REQUEST_ANSWERED { requestId: @payload.requestId, status: 401, headers: (array/append (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") { name: "content-type", value: "application/json" }), body: (json/stringify { error: "Unauthorized", code: "UNAUTHORIZED" }) })
+        (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
+        (set @entity.ticks (array/filter @entity.ticks (fn m (!= @m @payload.requestId))))
+      ROUTE_REQUEST -> routing when (let ((req (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (and (not @config.clientFallback) (not (and @config.requireSignIn (str/startsWith (object/get @req "path") @config.dispatchPrefix))) (not (and (!= @config.externalPrefix "") (str/startsWith (object/get @req "path") @config.externalPrefix))) (not (or (and (= (str/upper (object/get @req "method")) "GET") (= (object/get @req "path") @config.healthPath)) (and (= (str/upper (object/get @req "method")) "GET") (= (object/get @req "path") @config.streamPath)) (and (= (str/upper (object/get @req "method")) "POST") (= (object/get @req "path") @config.ticketPath)) (and (= (str/upper (object/get @req "method")) "GET") (= (object/get @req "path") @config.vapidPath)) (and (= (str/upper (object/get @req "method")) "POST") (= (object/get @req "path") @config.tickPath))))))
         (set @entity.status 404)
         (emit RESPOND { requestId: @payload.requestId, status: 404, headers: (array/append (array/concat (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") @payload.rateHeaders) { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: "Not found", code: "NOT_FOUND" })) })
         (emit ROUTE_REFUSED { requestId: @payload.requestId })
         (emit REQUEST_ANSWERED { requestId: @payload.requestId, status: 404, headers: (array/append (array/concat (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") @payload.rateHeaders) { name: "content-type", value: "application/json" }), body: (json/stringify { error: "Not found", code: "NOT_FOUND" }) })
+        (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
+      ROUTE_REQUEST -> routing when (let ((req (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (and @config.clientFallback (not (and @config.requireSignIn (str/startsWith (object/get @req "path") @config.dispatchPrefix))) (not (and (!= @config.externalPrefix "") (str/startsWith (object/get @req "path") @config.externalPrefix))) (not (or (and (= (str/upper (object/get @req "method")) "GET") (= (object/get @req "path") @config.healthPath)) (and (= (str/upper (object/get @req "method")) "GET") (= (object/get @req "path") @config.streamPath)) (and (= (str/upper (object/get @req "method")) "POST") (= (object/get @req "path") @config.ticketPath)) (and (= (str/upper (object/get @req "method")) "GET") (= (object/get @req "path") @config.vapidPath)) (and (= (str/upper (object/get @req "method")) "POST") (= (object/get @req "path") @config.tickPath))))))
+        (emit ROUTE_CLIENT { requestId: @payload.requestId, method: (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "method"), path: (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "path"), responseHeaders: (array/concat (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") @payload.rateHeaders) })
         (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
     }
 
@@ -214,6 +285,14 @@ orbital HttpRouterOrbital {
       }
         @description "One request was throttled and answered 429."
         @tier "primary"
+      ROUTE_CLIENT -> external {
+        requestId : number!
+        method : string!
+        path : string!
+        responseHeaders : [RouterHeader]!
+      }
+        @description "A request no route owns, handed to std-static-files when clientFallback is on."
+        @tier "secondary"
       ROUTE_HEALTH -> external {
         requestId : number!
       }
@@ -235,6 +314,7 @@ orbital HttpRouterOrbital {
         @tier "secondary"
       RATE_REQUEST -> external {
         requestId : number!
+        ip : string
       }
         @description "Count this request in std-rate-limiter."
         @tier "secondary"
@@ -269,6 +349,28 @@ orbital HttpRouterOrbital {
       }
         @description "A stream was opened for this viewer and client; the event fan-out subscribes it."
         @tier "primary"
+      VAPID_READ {
+        value : string
+      }
+        @description "Internal: the os/getenv answer for VAPID_PUBLIC_KEY."
+        @tier "internal"
+      VAPID_UNREAD {
+        error : string
+        kind : string
+      }
+        @description "Internal: the os/getenv for VAPID_PUBLIC_KEY failed."
+        @tier "internal"
+      INVOKER_READ {
+        value : string
+      }
+        @description "Internal: the os/getenv answer for ORB_TICK_INVOKER."
+        @tier "internal"
+      INVOKER_UNREAD {
+        error : string
+        kind : string
+      }
+        @description "Internal: the os/getenv for ORB_TICK_INVOKER failed."
+        @tier "internal"
       ROUTE_REQUEST -> internal {
         requestId : number!
         rateHeaders : [RouterHeader]!

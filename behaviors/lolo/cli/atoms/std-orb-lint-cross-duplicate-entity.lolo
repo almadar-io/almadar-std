@@ -1,0 +1,127 @@
+app std-orb-lint-cross-duplicate-entity [
+  version: "1.0.0",
+  inbound: ["cli-lint-cross-duplicate-entity"],
+  fs: { cwd: "**": [read] },
+  description: "std-orb-lint-cross-duplicate-entity — the `orb lint cross-duplicate-entity <file>` command, the port of ORB_X_DUPLICATE_ENTITY. It lowers the file with program/read and reports each inline entity name declared by more than one orbital, once, with the orbital names (status 500, exit 1). Clean answers `lint cross-duplicate-entity: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-cross-duplicate-entity"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+
+orbital OrbLintCrossDuplicateEntityOrbital {
+  entity OrbLintCrossDuplicateEntityRun [runtime] {
+    id : string!
+    findings : [string] = []
+  }
+
+  trait OrbLintCrossDuplicateEntity -> OrbLintCrossDuplicateEntityRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_RUN -> reading
+        (set @entity.findings [])
+        (os/read-file { anchor: "cwd" path: @payload.file } { key: "file" emit: { success: LINT_FILE_READ, failure: LINT_FILE_UNREAD } })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "cross-duplicate-entity", findings: @entity.findings })
+    }
+
+    state reading {
+      INIT -> reading
+      LINT_FILE_READ -> reading
+        (program/read (bytes/to-string @payload.data) { emit: { success: LINT_PROGRAM_READ, failure: LINT_FILE_UNREAD } })
+      LINT_PROGRAM_READ -> ready
+        (set @entity.findings (let ((orbitals (object/get @payload.result "orbitals")))
+          (let ((owners (array/map @orbitals (fn o (if (validate/object (object/get @o "entity" {})) (object/get (object/get @o "entity" {}) "name" "") "")))))
+            (array/flatten (array/map (array/range 0 (array/len @owners)) (fn oi
+              (let ((nm (array/nth @owners @oi)))
+                (if (or (= @nm "") (!= (array/first (array/filter (array/range 0 (array/len @owners)) (fn j (= (array/nth @owners @j) @nm)))) @oi) (< (array/len (array/filter @owners (fn x (= @x @nm)))) 2))
+                  []
+                  (let ((places (array/map (array/filter @orbitals (fn o (= (if (validate/object (object/get @o "entity" {})) (object/get (object/get @o "entity" {}) "name" "") "") @nm))) (fn o (str/concat "\"" (object/get @o "name") "\"")))))
+                    [(str/concat "[ORB_X_DUPLICATE_ENTITY] orbitals: Entity '" @nm "' is defined in multiple orbitals: [" (str/join @places ", ") "]\n  suggestion: Each entity name must be unique across all orbitals")])))))))))
+        (emit LINT_FINISH { })
+      LINT_FILE_UNREAD -> ready
+        (emit LINT_UNREAD { rule: "cross-duplicate-entity" })
+    }
+
+    emits {
+      LINT_UNREAD -> external { rule : string! }
+        @description "This rule could not read or lower the file."
+        @tier "internal"
+      LINT_RUN -> external { file : string! }
+        @description "The lint request this trait answers, from the cli trait or the umbrella."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  findings : [string]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FILE_READ { data : bytes! }
+        @description "The file read."
+        @tier "internal"
+      LINT_FILE_UNREAD { error : string }
+        @description "The file could not be read or lowered."
+        @tier "internal"
+      LINT_PROGRAM_READ { result : string }
+        @description "The file lowered by program/read."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      OrbLintCrossDuplicateEntityCli.LINT_RUN -> LINT_RUN
+    }
+  }
+
+  trait OrbLintCrossDuplicateEntityCli -> OrbLintCrossDuplicateEntityRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint cross-duplicate-entity <file>" })
+      LINT_CALLED -> waiting when (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (emit LINT_RUN { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "cross-duplicate-entity") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint cross-duplicate-entity: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "cross-duplicate-entity") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join @payload.findings "\n") })
+      LINT_UNREAD -> ready when (= @payload.rule "cross-duplicate-entity")
+        (emit LINT_ANSWERED { status: 500, body: "lint cross-duplicate-entity: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_RUN -> external { file : string! }
+        @description "Ask the rule trait to lint this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  findings : [string]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_UNREAD -> external { rule : string! }
+        @description "The rule trait could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-cross-duplicate-entity" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint cross-duplicate-entity` with its arguments and working directory."
+        @synonyms "orb lint cross-duplicate-entity, orb lint cross-duplicate-entity, values union default"
+      OrbLintCrossDuplicateEntity.LINT_FOUND -> LINT_FOUND
+      OrbLintCrossDuplicateEntity.LINT_UNREAD -> LINT_UNREAD
+    }
+  }
+
+  page "/orb-lint-cross-duplicate-entity" as OrbLintCrossDuplicateEntityPage -> OrbLintCrossDuplicateEntity, OrbLintCrossDuplicateEntityCli
+}

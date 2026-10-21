@@ -1,10 +1,12 @@
 app std-orb-behaviors [
   version: "1.0.0",
   inbound: ["cli-behaviors-catalog", "cli-behaviors-describe", "cli-behaviors-source"],
-  description: "std-orb-behaviors — the `orb behaviors catalog|describe|source` commands over the behavior reflection operators. `catalog <scope…> [--exposure <e>]… [--json] [--no-vectors]` lists the installed behaviors under the scopes (`behavior/catalog`) as one table row each, or as JSON with --json; `describe <behavior>.traits.<Trait>` prints the trait's knobs and events as JSON (`behavior/describe`); `source <behavior>` prints the behavior's program as JSON (`behavior/source`). Each answers status 200 (exit 0). Each subcommand is its own cli hook, so the other `orb behaviors` subcommands stay with the Rust command. A missing operand answers the usage (status 400, exit 2); a failed reflection answers its error (status 500, exit 1)."
+  fs: { "/dev/fd/0": [read] },
+  description: "std-orb-behaviors — the `orb behaviors catalog|describe|source` commands over the behavior reflection operators. `catalog <scope…> [--exposure <e>]… [--json] [--no-vectors]` lists the installed behaviors under the scopes (`behavior/catalog`) as one table row each, or as JSON with --json; `describe <behavior>.traits.<Trait>|<behavior>|<behavior>.orbitals.<Orbital>|- [--json] [--knob-vectors]` prints the description as JSON (`behavior/describe`; `-` reads a trait or orbital value as JSON from stdin; `--knob-vectors` is answered as unavailable until the host op carries it); `source <behavior> [--json]` prints the behavior's program as JSON (`behavior/source`). Each answers status 200 (exit 0). Each subcommand is its own cli hook, so the other `orb behaviors` subcommands stay with the Rust command. A missing operand answers the usage (status 400, exit 2); a failed reflection answers its error (status 500, exit 1)."
 ]
 uses Spec from "almadar-std/orb-behaviors"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
 type CatalogHit = {
   behavior : string!
   package : string!
@@ -18,6 +20,7 @@ type CatalogHit = {
   vectors : Map string [number]
   model : string
 }
+type DescribeValue = { behavior : string!, trait : string, orbital : string }
 type KnobField = {
   key : string!
   type : string!
@@ -42,14 +45,22 @@ type BehaviorDescription = {
 }
 
 orbital OrbBehaviorsOrbital {
+  uses Args from "std/behaviors/std-args"
+
   entity OrbBehaviorsRun [runtime] {
     id : string!
-    argv : [string] @description "The words after `orb behaviors` for the call in flight." = []
     sub : string = ""
     json : boolean = false
     exposure : [string] = []
     paths : [string] = []
     spec : string = ""
+    noVectors : boolean = false
+  }
+
+  trait ArgsCli = Args.traits.ArgsParser {
+    listens {
+      OrbBehaviors.BEHAVIORS_ARGS_PARSE -> ARGS_PARSE
+    }
   }
 
   trait OrbBehaviors -> OrbBehaviorsRun [integration] {
@@ -57,34 +68,40 @@ orbital OrbBehaviorsOrbital {
 
     state ready {
       INIT -> ready
-      CATALOG_CALLED -> ready
-        (set @entity.argv (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv"))
+      CATALOG_CALLED -> parsing
         (set @entity.sub "catalog")
-        (emit BEHAVIORS_ROUTE { })
-      DESCRIBE_CALLED -> ready
-        (set @entity.argv (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv"))
+        (emit BEHAVIORS_ARGS_PARSE { stage: "behaviors" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "json" aliases: [] takesValue: false repeatable: false }, { name: "no-vectors" aliases: [] takesValue: false repeatable: false }, { name: "exposure" aliases: [] takesValue: true repeatable: true }] })
+      DESCRIBE_CALLED -> parsing
         (set @entity.sub "describe")
-        (emit BEHAVIORS_ROUTE { })
-      SOURCE_CALLED -> ready
-        (set @entity.argv (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv"))
+        (emit BEHAVIORS_ARGS_PARSE { stage: "behaviors" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "json" aliases: [] takesValue: false repeatable: false }, { name: "knob-vectors" aliases: [] takesValue: false repeatable: false }] })
+      SOURCE_CALLED -> parsing
         (set @entity.sub "source")
-        (emit BEHAVIORS_ROUTE { })
-      BEHAVIORS_ROUTE -> ready when (and (= @entity.sub "catalog") (= (array/len @entity.argv) 0))
+        (emit BEHAVIORS_ARGS_PARSE { stage: "behaviors" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "json" aliases: [] takesValue: false repeatable: false }] })
+    }
+
+    state parsing {
+      INIT -> parsing
+      BEHAVIORS_ARGS_DONE -> ready when (and (= @entity.sub "catalog") (or (> (array/len @payload.errors) 0) (= (array/len @payload.words) 0)))
         (emit BEHAVIORS_ANSWERED { status: 400, body: "usage: orb behaviors catalog <scope…> [--exposure <e>]… [--json] [--no-vectors]" })
-      BEHAVIORS_ROUTE -> ready when (and (= @entity.sub "describe") (!= (array/len @entity.argv) 1))
+      BEHAVIORS_ARGS_DONE -> ready when (and (= @entity.sub "describe") (or (> (array/len @payload.errors) 0) (!= (array/len @payload.positionals) 1)))
         (emit BEHAVIORS_ANSWERED { status: 400, body: "usage: orb behaviors describe <behavior>.traits.<Trait>" })
-      BEHAVIORS_ROUTE -> ready when (and (= @entity.sub "source") (!= (array/len @entity.argv) 1))
+      BEHAVIORS_ARGS_DONE -> ready when (and (= @entity.sub "source") (or (> (array/len @payload.errors) 0) (!= (array/len @payload.positionals) 1)))
         (emit BEHAVIORS_ANSWERED { status: 400, body: "usage: orb behaviors source <behavior>" })
-      BEHAVIORS_ROUTE -> working when (and (= @entity.sub "catalog") (> (array/len @entity.argv) 0))
-        (set @entity.json (array/includes @entity.argv "--json"))
-        (set @entity.exposure (array/map (array/filter (array/range 1 (array/len @entity.argv)) (fn i (= (array/nth @entity.argv (- @i 1)) "--exposure"))) (fn i (array/nth @entity.argv @i))))
-        (set @entity.paths (array/reject @entity.argv (fn a (or (str/startsWith @a "--") (array/includes @entity.exposure @a)))))
+      BEHAVIORS_ARGS_DONE -> working when (and (= @entity.sub "catalog") (= (array/len @payload.errors) 0) (> (array/len @payload.words) 0))
+        (set @entity.json (!= (object/get @payload.flags "json") null))
+        (set @entity.noVectors (!= (object/get @payload.flags "no-vectors") null))
+        (set @entity.exposure (or (object/get @payload.flags "exposure") []))
+        (set @entity.paths @payload.positionals)
         (emit BEHAVIORS_CATALOG { })
-      BEHAVIORS_ROUTE -> working when (and (= @entity.sub "describe") (= (array/len @entity.argv) 1))
-        (set @entity.spec (array/nth @entity.argv 0))
+      BEHAVIORS_ARGS_DONE -> ready when (and (= @entity.sub "describe") (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1) (!= (object/get @payload.flags "knob-vectors") null))
+        (emit BEHAVIORS_ANSWERED { status: 501, body: "orb behaviors describe --knob-vectors: not available in the program command; the host's behavior/describe attaches no knob vectors" })
+      BEHAVIORS_ARGS_DONE -> working when (and (= @entity.sub "describe") (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1) (= (object/get @payload.flags "knob-vectors") null) (!= (array/nth @payload.positionals 0) "-"))
+        (set @entity.spec (array/nth @payload.positionals 0))
         (emit BEHAVIORS_DESCRIBE { })
-      BEHAVIORS_ROUTE -> working when (and (= @entity.sub "source") (= (array/len @entity.argv) 1))
-        (set @entity.spec (array/nth @entity.argv 0))
+      BEHAVIORS_ARGS_DONE -> working when (and (= @entity.sub "describe") (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1) (= (object/get @payload.flags "knob-vectors") null) (= (array/nth @payload.positionals 0) "-"))
+        (emit BEHAVIORS_STDIN { })
+      BEHAVIORS_ARGS_DONE -> working when (and (= @entity.sub "source") (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1))
+        (set @entity.spec (array/nth @payload.positionals 0))
         (emit BEHAVIORS_SOURCE { })
     }
 
@@ -102,12 +119,18 @@ orbital OrbBehaviorsOrbital {
         (behavior/describe { behavior: @entity.spec } {
           emit: { success: BEHAVIOR_DESCRIBED, failure: BEHAVIORS_FAILED }
         })
+      BEHAVIORS_STDIN -> working
+        (os/read-file "/dev/fd/0" { emit: { success: STDIN_READ, failure: STDIN_FAILED } })
+      STDIN_READ -> working
+        (behavior/describe (json/parse (bytes/to-string @payload.data) DescribeValue) {
+          emit: { success: TRAIT_DESCRIBED, failure: BEHAVIORS_FAILED }
+        })
       BEHAVIORS_SOURCE -> working
         (behavior/source { behavior: (array/first (str/split @entity.spec ".traits.")) } {
           emit: { success: SOURCED, failure: BEHAVIORS_FAILED }
         })
       CATALOG_LISTED -> ready when @entity.json
-        (emit BEHAVIORS_ANSWERED { status: 200, body: (json/stringify @payload.result) })
+        (emit BEHAVIORS_ANSWERED { status: 200, body: (json/stringify (if @entity.noVectors (array/map @payload.result (fn e (object/merge @e { vectors: {} model: "" }))) @payload.result)) })
       CATALOG_LISTED -> ready when (not @entity.json)
         (emit BEHAVIORS_ANSWERED { status: 200, body: (str/join (array/map @payload.result (fn e (str/concat (str/padEnd (object/get @e behavior "") 48 " ") " " (str/padEnd (object/get @e level "") 9 " ") " " (str/padEnd (object/get @e exposure "-") 10 " ") " " (object/get @e description "")))) "\n") })
       TRAIT_DESCRIBED -> ready
@@ -118,6 +141,8 @@ orbital OrbBehaviorsOrbital {
         (emit BEHAVIORS_ANSWERED { status: 200, body: (json/stringify @payload.result) })
       BEHAVIORS_FAILED -> ready
         (emit BEHAVIORS_ANSWERED { status: 500, body: @payload.error })
+      STDIN_FAILED -> ready
+        (emit BEHAVIORS_ANSWERED { status: 500, body: (str/concat "stdin is not readable: " @payload.error) })
     }
 
     emits {
@@ -127,14 +152,33 @@ orbital OrbBehaviorsOrbital {
       }
         @description "Internal: the command's answer, which the cli hook prints."
         @tier "internal"
-      BEHAVIORS_ROUTE { }
-        @description "Internal: route the parsed subcommand."
+      BEHAVIORS_ARGS_PARSE {
+        stage : string!
+        argv : [string]!
+        flags : [ArgFlag]!
+      }
+        @description "Internal: parse the call's words against the subcommand's flags."
         @tier "internal"
       BEHAVIORS_CATALOG { }
         @description "Internal: list the behaviors under the scopes."
         @tier "internal"
       BEHAVIORS_DESCRIBE { }
         @description "Internal: describe the named trait or behavior."
+        @tier "internal"
+      STDIN_READ {
+        data : bytes!
+        eof : boolean
+      }
+        @description "Internal: os/read's success, the bytes read from stdin."
+        @tier "internal"
+      STDIN_FAILED {
+        error : string!
+        kind : string
+      }
+        @description "Internal: os/read's failure."
+        @tier "internal"
+      BEHAVIORS_STDIN { }
+        @description "Internal: read a trait or orbital value from stdin and describe it."
         @tier "internal"
       BEHAVIORS_SOURCE { }
         @description "Internal: read the named behavior's program."
@@ -160,12 +204,31 @@ orbital OrbBehaviorsOrbital {
       }
         @description "Run `orb behaviors source` with its operand."
         @synonyms "orb behaviors source, behavior source"
-      BEHAVIORS_ROUTE { }
-        @description "Self: route the parsed subcommand."
+      BEHAVIORS_ARGS_DONE {
+        stage : string!
+        flags : Map string [string]!
+        positionals : [string]!
+        errors : [string]!
+        words : [string]!
+      }
+        @description "std-args's ARGS_PARSED: the call's words, parsed."
+      ArgsCli.ARGS_PARSED -> BEHAVIORS_ARGS_DONE
       BEHAVIORS_CATALOG { }
         @description "Self: list the behaviors."
       BEHAVIORS_DESCRIBE { }
         @description "Self: describe the behavior."
+      BEHAVIORS_STDIN { }
+        @description "Self: describe the value on stdin."
+      STDIN_READ {
+        data : bytes!
+        eof : boolean
+      }
+        @description "os/read's success: the bytes read from stdin."
+      STDIN_FAILED {
+        error : string!
+        kind : string
+      }
+        @description "os/read's failure."
       BEHAVIORS_SOURCE { }
         @description "Self: read the program."
       CATALOG_LISTED {
@@ -191,5 +254,5 @@ orbital OrbBehaviorsOrbital {
     }
   }
 
-  page "/orb-behaviors" as OrbBehaviorsPage -> OrbBehaviors
+  page "/orb-behaviors" as OrbBehaviorsPage -> OrbBehaviors, ArgsCli
 }

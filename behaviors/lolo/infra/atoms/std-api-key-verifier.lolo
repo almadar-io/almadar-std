@@ -1,11 +1,12 @@
 app std-api-key-verifier [
   version: "1.0.0",
-  description: "std-api-key-verifier — decides whether a presented bearer is a live API key. VERIFY_KEY { token } refuses a bearer without the key prefix (not-a-key), hashes the rest with scrypt (N 16384, r 8, p 1, 32 bytes, hex) over the salt credential exactly as std-api-keys minted it, and looks the row up by that hash: no row is unknown, a revoked row revoked, a row whose expiresAt is positive and not after now expired. A salt that is missing or not non-empty hex refuses salt. A live key answers API_KEY_VERIFIED { owner, claims }: the row's owner acts, and claims is the row's remaining fields (everything but id, owner, revoked, expiresAt) as name/value pairs. A row that names no owner refuses lookup. The key itself is never stored or emitted."
+  description: "std-api-key-verifier — decides whether a presented bearer is a live API key. VERIFY_KEY { requestId, token } (answers echo requestId; concurrent bearers queue FIFO) refuses a bearer without the key prefix (not-a-key), hashes the rest with scrypt (N 16384, r 8, p 1, 32 bytes, hex) over the salt credential exactly as std-api-keys minted it, and looks the row up by that hash: no row is unknown, a revoked row revoked, a row whose expiresAt is positive and not after now expired. A salt that is missing or not non-empty hex refuses salt. A live key answers API_KEY_VERIFIED { owner, claims }: the row's owner acts, and claims is the row's remaining fields (everything but id, owner, revoked, expiresAt) as name/value pairs. A row that names no owner refuses lookup. The key itself is never stored or emitted. The app binds its own key entity through composition (linkedEntity); there is no ALMADAR_API_KEY_ENTITY env."
 ]
 uses Spec from "almadar-std/api-key-verifier"
 type KeyClaim = { name : string!, value : string! }
+type KeyJob = { requestId : number, token : string }
 orbital ApiKeyVerifierOrbital {
-  type VERIFY_KEY = Event { token : string! } "Verify one presented bearer."
+  type VERIFY_KEY = Event { requestId : number, token : string! } "Verify one presented bearer."
 
   entity ApiKeyRecord [persistent: api_keys] {
     id : string! @description "The key's scrypt hash: what a presented bearer is looked up by."
@@ -19,6 +20,8 @@ orbital ApiKeyVerifierOrbital {
   entity ApiKeyCheck [runtime] {
     id : string!
     keyHash : string @description "The hash of the bearer being verified." = ""
+    queue : [KeyJob] @description "Bearers that arrived while one was in flight, oldest first; each starts when the one before it is answered." = []
+    requestId : number @description "The request whose bearer is being verified; echoed on the answer." = 0
   }
 
   trait ApiKeyVerifier -> ApiKeyCheck [integration, instance] {
@@ -27,45 +30,71 @@ orbital ApiKeyVerifierOrbital {
     state idle {
       INIT -> idle
 
-      VERIFY_KEY -> idle when (!= (str/slice @payload.token 0 (str/len @config.prefix)) @config.prefix)
-        (emit API_KEY_REFUSED { reason: "not-a-key", message: "not an API key" })
+      VERIFY_KEY -> idle when (< (array/len @entity.queue) @config.maxQueue)
+        (set @entity.queue (array/append @entity.queue { requestId: (or @payload.requestId 0), token: @payload.token }))
+        (emit KEY_PUMP {})
+      VERIFY_KEY -> idle when (>= (array/len @entity.queue) @config.maxQueue)
+        (emit API_KEY_REFUSED { requestId: (or @payload.requestId 0), reason: "busy", message: "too many API keys waiting" })
+      KEY_PUMP -> idle when (= (array/len @entity.queue) 0)
+      KEY_PUMP -> idle when (and (> (array/len @entity.queue) 0) (!= (str/slice (object/get (array/first @entity.queue) "token") 0 (str/len @config.prefix)) @config.prefix))
+        (emit API_KEY_REFUSED { requestId: (or (object/get (array/first @entity.queue) "requestId") 0), reason: "not-a-key", message: "not an API key" })
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "API key refused" })
-      VERIFY_KEY -> looking when (= (str/slice @payload.token 0 (str/len @config.prefix)) @config.prefix)
-        (let ((hashed (hash/scrypt @payload.token @config.salt)))
-          (if (= @hashed null)
-            (emit SALT_UNUSABLE {})
-            (do
-              (set @entity.keyHash @hashed)
-              (fetch ApiKeyRecord { id: @hashed, emit: { success: KEY_FOUND, failure: KEY_ABSENT } }))))
+        (set @entity.queue (array/slice @entity.queue 1))
+        (emit KEY_NEXT {})
+      KEY_NEXT -> idle
+        (emit KEY_PUMP {})
+      KEY_PUMP -> looking when (and (> (array/len @entity.queue) 0) (= (str/slice (object/get (array/first @entity.queue) "token") 0 (str/len @config.prefix)) @config.prefix))
+        (let ((tok (object/get (array/first @entity.queue) "token")) (rq (or (object/get (array/first @entity.queue) "requestId") 0)))
+          (do
+            (set @entity.requestId @rq)
+            (set @entity.queue (array/slice @entity.queue 1))
+            (let ((hashed (hash/scrypt @tok @config.salt)))
+              (if (= @hashed null)
+                (emit SALT_UNUSABLE {})
+                (do
+                  (set @entity.keyHash @hashed)
+                  (fetch ApiKeyRecord { id: @hashed, emit: { success: KEY_FOUND, failure: KEY_ABSENT } }))))))
     }
 
     state looking {
       INIT -> idle
 
+      VERIFY_KEY -> looking when (< (array/len @entity.queue) @config.maxQueue)
+        (set @entity.queue (array/append @entity.queue { requestId: (or @payload.requestId 0), token: @payload.token }))
+      VERIFY_KEY -> looking when (>= (array/len @entity.queue) @config.maxQueue)
+        (emit API_KEY_REFUSED { requestId: (or @payload.requestId 0), reason: "busy", message: "too many API keys waiting" })
       SALT_UNUSABLE -> idle
-        (emit API_KEY_REFUSED { reason: "salt", message: "the API key salt must be non-empty hex" })
+        (emit API_KEY_REFUSED { requestId: @entity.requestId, reason: "salt", message: "the API key salt must be non-empty hex" })
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "API key refused" })
+        (emit KEY_PUMP {})
       KEY_ABSENT -> idle when (= @payload.code "not-found")
-        (emit API_KEY_REFUSED { reason: "unknown", message: "unknown API key" })
+        (emit API_KEY_REFUSED { requestId: @entity.requestId, reason: "unknown", message: "unknown API key" })
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "API key refused" })
+        (emit KEY_PUMP {})
       KEY_ABSENT -> idle when (!= @payload.code "not-found")
-        (emit API_KEY_REFUSED { reason: "lookup", message: @payload.error })
+        (emit API_KEY_REFUSED { requestId: @entity.requestId, reason: "lookup", message: @payload.error })
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "API key refused" })
+        (emit KEY_PUMP {})
       KEY_FOUND -> idle when (= (or @payload.data.owner "") "")
-        (emit API_KEY_REFUSED { reason: "lookup", message: (str/concat "the API key row " @entity.keyHash " names no owner") })
+        (emit API_KEY_REFUSED { requestId: @entity.requestId, reason: "lookup", message: (str/concat "the API key row " @entity.keyHash " names no owner") })
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "API key refused" })
+        (emit KEY_PUMP {})
       KEY_FOUND -> idle when (and (!= (or @payload.data.owner "") "") (= @payload.data.revoked true))
-        (emit API_KEY_REFUSED { reason: "revoked", message: "revoked API key" })
+        (emit API_KEY_REFUSED { requestId: @entity.requestId, reason: "revoked", message: "revoked API key" })
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "API key refused" })
+        (emit KEY_PUMP {})
       KEY_FOUND -> idle when (and (!= (or @payload.data.owner "") "") (!= @payload.data.revoked true) (> (or @payload.data.expiresAt 0) 0) (<= (or @payload.data.expiresAt 0) @now))
-        (emit API_KEY_REFUSED { reason: "expired", message: "expired API key" })
+        (emit API_KEY_REFUSED { requestId: @entity.requestId, reason: "expired", message: "expired API key" })
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "API key refused" })
+        (emit KEY_PUMP {})
       KEY_FOUND -> idle when (and (!= (or @payload.data.owner "") "") (!= @payload.data.revoked true) (not (and (> (or @payload.data.expiresAt 0) 0) (<= (or @payload.data.expiresAt 0) @now))))
-        (emit API_KEY_VERIFIED { owner: @payload.data.owner, claims: (array/map (object/entries (object/omit @payload.data ["id", "owner", "revoked", "expiresAt"])) (fn e { name: (array/nth @e 0), value: (str/concat (array/nth @e 1)) })) })
+        (emit API_KEY_VERIFIED { requestId: @entity.requestId, owner: @payload.data.owner, claims: (array/map (object/entries (object/omit @payload.data ["id", "owner", "revoked", "expiresAt"])) (fn e { name: (array/nth @e 0), value: (str/concat (array/nth @e 1)) })) })
+        (emit KEY_PUMP {})
     }
 
     emits {
       API_KEY_VERIFIED -> external {
+        requestId : number
         owner : string!
         claims : [KeyClaim]!
       }
@@ -73,12 +102,19 @@ orbital ApiKeyVerifierOrbital {
         @synonyms "api key verified, key accepted"
         @tier "primary"
       API_KEY_REFUSED -> external {
-        reason : "not-a-key" | "salt" | "lookup" | "unknown" | "revoked" | "expired"
+        requestId : number
+        reason : "not-a-key" | "salt" | "lookup" | "unknown" | "revoked" | "expired" | "busy"
         message : string!
       }
         @description "The bearer was not accepted as an API key, and why."
         @synonyms "api key refused, key rejected"
         @tier "primary"
+      KEY_NEXT {}
+        @description "Internal: a refusal that needed no lookup is done; start the next queued bearer."
+        @tier "secondary"
+      KEY_PUMP {}
+        @description "Internal: start the oldest queued bearer."
+        @tier "secondary"
       SALT_UNUSABLE
         @description "Internal: the salt credential is missing or not hex, so no hash was made."
         @tier "secondary"
@@ -97,6 +133,7 @@ orbital ApiKeyVerifierOrbital {
 
     listens {
       VERIFY_KEY {
+        requestId : number
         token : string!
       }
         @description "Verify one presented bearer."
@@ -114,6 +151,11 @@ orbital ApiKeyVerifierOrbital {
         @description "Name of the credential holding the hex salt keys are hashed with; the same one std-api-keys minted them with."
         @synonyms "api key salt, hashing salt"
         @tier "infra"
+      maxQueue : number = 256
+        @label "Queue bound"
+        @description "How many bearers may wait behind the one in flight; one beyond it is refused with busy."
+        @synonyms "queue limit, backlog"
+        @tier "domain"
       prefix : string = "sk_live_"
         @label "Key prefix"
         @description "What every key starts with; a bearer without it is not a key."

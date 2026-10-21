@@ -13,11 +13,16 @@ orbital ApiKeyVerifierSpec {
   }
   expects trait ApiKeyVerifier {
     state idle {
+      VERIFY_KEY -> idle
+      KEY_PUMP -> looking
+    }
+    state looking {
       VERIFY_KEY -> looking
+      KEY_FOUND -> idle
     }
     emits {
-      API_KEY_VERIFIED { owner : string!  claims : [KeyClaim]! }
-      API_KEY_REFUSED { reason : string  message : string! }
+      API_KEY_VERIFIED { requestId : number  owner : string!  claims : [KeyClaim]! }
+      API_KEY_REFUSED { requestId : number  reason : string  message : string! }
     }
   }
   expects page "/key-verify" -> ApiKeyVerifier

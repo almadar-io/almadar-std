@@ -1,0 +1,21 @@
+app lint-page-path-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint page-path <file>`. It lowers the file with program/read and, for every inline page, reports an empty path, a path that does not start with '/', and a path starting with '/api', each with the Rust path, message and suggestion (status 500, exit 1). The character-set check is not ported: the compiler applies it only to Latin-script programs, a language detection the lint cannot read. Clean answers `lint page-path: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+
+orbital LintPagePathSpec {
+  expects trait OrbLintPagePath {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [string]! }
+      LINT_UNREAD { rule : string! }
+    }
+  }
+  expects trait OrbLintPagePathCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page "/orb-lint-page-path" -> OrbLintPagePath, OrbLintPagePathCli
+}

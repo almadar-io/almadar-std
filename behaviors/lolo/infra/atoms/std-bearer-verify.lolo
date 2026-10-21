@@ -1,9 +1,11 @@
 app std-bearer-verify [
   version: "1.0.0",
-  description: "std-bearer-verify — turns a raw Authorization header into a Viewer over std-jws. BEARER_VERIFY { authorization? }: no header answers BEARER_ANONYMOUS; a header that is not Bearer <three-segment token> refuses malformed. Keys are fetched from the jwksOrigin and jwksPath knobs with an http GET, kept until now plus the response max-age, and refetched on expiry or when the token kid is absent from the cache. The kid picks the key; without a kid each key is tried in order, one JWS_VERIFY per key. The atom emits JWS_VERIFY { token, jwk } and listens for JWS_VERIFIED and JWS_REFUSED from std-jws. Claim policy (knobs issuer, audience, clockSkewSeconds, requireAuthTime, allowedTenants): malformed, expired, not-yet-valid, issued-in-future, issuer, audience, subject, auth-time, tenant. Success is BEARER_VERIFIED { viewer } with role and permissions mapped into the viewer (a non-string role or non-string-list permissions is refused claims) and every other claim as { name, value } carrying the claim JSON as is. Declare the JWKS origin in the app egress list.",
-  egress: ["https://www.googleapis.com"]
+  description: "std-bearer-verify — turns a raw Authorization header (the exact-case Bearer prefix, as Rust) into a Viewer over std-jws. BEARER_VERIFY { authorization? }: no header answers BEARER_ANONYMOUS; a header that is not Bearer <three-segment token> refuses malformed. Keys are fetched from the jwksOrigin and jwksPath knobs with an http GET, kept until now plus the response max-age, and refetched on expiry or when the token kid is absent from the cache. The kid picks the key; without a kid each key is tried in order, one JWS_VERIFY per key. The atom emits JWS_VERIFY { token, jwk } and listens for JWS_VERIFIED and JWS_REFUSED from std-jws. Claim policy (knobs issuer, audience, clockSkewSeconds, requireAuthTime, allowedTenants): malformed, expired, not-yet-valid, issued-in-future, issuer, audience, subject, auth-time, tenant. A bearer starting with the keyPrefix knob goes only to std-api-key-verifier (VERIFY_KEY, answers API_KEY_VERIFIED/API_KEY_REFUSED, correlated by requestId) when ALMADAR_API_KEY_SALT is set (read at boot), else is refused keys-disabled; it never falls back to the JWT path, and a non-key bearer never reaches the key path. A verified key is BEARER_VERIFIED with the owner as viewer id and the key claims. Success is BEARER_VERIFIED { viewer } with role and permissions mapped into the viewer (a non-string role or non-string-list permissions is refused claims) and every other claim as { name, value } carrying the claim JSON as is. Declare the JWKS origin in the app egress list.",
+  egress: ["https://www.googleapis.com"],
+  env: ["ALMADAR_API_KEY_SALT"]
 ]
 uses Spec from "almadar-std/bearer-verify"
+type BearerKeyClaim = { name : string!, value : string! }
 type BearerJob = { requestId : number, authorization : string }
 type BearerHeader = { kid : string, alg : string }
 type BearerJwk = { kty : string!, n : string, e : string, crv : string, x : string, y : string, alg : string, kid : string, use : string }
@@ -25,6 +27,7 @@ orbital BearerVerifyOrbital {
     keys : [BearerJwk] @description "The cached key set." = []
     expiresAt : number @description "When the cached key set stops being fresh, epoch milliseconds." = 0
     candidates : [BearerJwk] @description "The keys to try for the token in hand, in order." = []
+    keysEnabled : boolean @description "Whether ALMADAR_API_KEY_SALT is set, read at boot; keys are accepted only then." = false
     attempt : number @description "Index of the candidate last asked of std-jws." = 0
     @invariant (>= @entity.attempt 0)
   }
@@ -33,24 +36,37 @@ orbital BearerVerifyOrbital {
     initial: idle
 
     state idle {
+      KEY_SALT_READ -> idle
+        (set @entity.keysEnabled (!= (or @payload.value "") ""))
+      KEY_SALT_UNREAD -> idle
+        (set @entity.keysEnabled false)
       INIT -> idle
+        (os/getenv "ALMADAR_API_KEY_SALT" { emit: { success: KEY_SALT_READ failure: KEY_SALT_UNREAD } })
 
-      BEARER_VERIFY -> idle when (< (array/len @entity.queue) @config.maxQueue)
+      BEARER_VERIFY -> idle when (and (and (str/startsWith (or @payload.authorization "") "Bearer ") (str/startsWith (str/slice (or @payload.authorization "") 7 (str/len (or @payload.authorization ""))) @config.keyPrefix)) @entity.keysEnabled)
+        (emit VERIFY_KEY { requestId: (or @payload.requestId 0), token: (str/slice (or @payload.authorization "") 7 (str/len (or @payload.authorization ""))) })
+      BEARER_VERIFY -> idle when (and (and (str/startsWith (or @payload.authorization "") "Bearer ") (str/startsWith (str/slice (or @payload.authorization "") 7 (str/len (or @payload.authorization ""))) @config.keyPrefix)) (not @entity.keysEnabled))
+        (emit BEARER_REFUSED { requestId: (or @payload.requestId 0), reason: "keys-disabled" })
+      API_KEY_VERIFIED -> idle
+        (emit BEARER_VERIFIED { requestId: (or @payload.requestId 0), viewer: { id: @payload.owner, claims: @payload.claims } })
+      API_KEY_REFUSED -> idle
+        (emit BEARER_REFUSED { requestId: (or @payload.requestId 0), reason: (str/concat "api-key-" @payload.reason) })
+      BEARER_VERIFY -> idle when (and (not (and (str/startsWith (or @payload.authorization "") "Bearer ") (str/startsWith (str/slice (or @payload.authorization "") 7 (str/len (or @payload.authorization ""))) @config.keyPrefix))) (< (array/len @entity.queue) @config.maxQueue))
         (set @entity.queue (array/append @entity.queue { requestId: (or @payload.requestId 0), authorization: (or @payload.authorization "") }))
         (emit BEARER_PUMP {})
-      BEARER_VERIFY -> idle when (>= (array/len @entity.queue) @config.maxQueue)
+      BEARER_VERIFY -> idle when (and (not (and (str/startsWith (or @payload.authorization "") "Bearer ") (str/startsWith (str/slice (or @payload.authorization "") 7 (str/len (or @payload.authorization ""))) @config.keyPrefix))) (>= (array/len @entity.queue) @config.maxQueue))
         (emit BEARER_REFUSED { requestId: (or @payload.requestId 0), reason: "busy" })
       BEARER_PUMP -> idle when (= (array/len @entity.queue) 0)
-      BEARER_PUMP -> idle when (and (> (array/len @entity.queue) 0) (= (str/trim (or (object/get (array/first @entity.queue) "authorization") "")) ""))
+      BEARER_PUMP -> idle when (and (> (array/len @entity.queue) 0) (= (or (object/get (array/first @entity.queue) "authorization") "") ""))
         (emit BEARER_ANONYMOUS { requestId: (or (or (object/get (array/first @entity.queue) "requestId") 0) 0) })
         (set @entity.queue (array/slice @entity.queue 1))
         (emit BEARER_NEXT {})
-      BEARER_PUMP -> idle when (and (> (array/len @entity.queue) 0) (and (!= (str/trim (or (object/get (array/first @entity.queue) "authorization") "")) "") (or (not (str/startsWith (str/lower (str/trim (object/get (array/first @entity.queue) "authorization"))) "bearer ")) (!= (array/len (str/split (str/trim (str/slice (str/trim (object/get (array/first @entity.queue) "authorization")) 7 (str/len (str/trim (object/get (array/first @entity.queue) "authorization"))))) ".")) 3))))
+      BEARER_PUMP -> idle when (and (> (array/len @entity.queue) 0) (and (!= (or (object/get (array/first @entity.queue) "authorization") "") "") (or (not (str/startsWith (object/get (array/first @entity.queue) "authorization") "Bearer ")) (!= (array/len (str/split (str/slice (object/get (array/first @entity.queue) "authorization") 7 (str/len (object/get (array/first @entity.queue) "authorization"))) ".")) 3))))
         (emit BEARER_REFUSED { requestId: (or (or (object/get (array/first @entity.queue) "requestId") 0) 0), reason: "malformed" })
         (set @entity.queue (array/slice @entity.queue 1))
         (emit BEARER_NEXT {})
-      BEARER_PUMP -> verifying when (and (> (array/len @entity.queue) 0) (and (!= (str/trim (or (object/get (array/first @entity.queue) "authorization") "")) "") (str/startsWith (str/lower (str/trim (object/get (array/first @entity.queue) "authorization"))) "bearer ") (= (array/len (str/split (str/trim (str/slice (str/trim (object/get (array/first @entity.queue) "authorization")) 7 (str/len (str/trim (object/get (array/first @entity.queue) "authorization"))))) ".")) 3) (> @entity.expiresAt @now) (> (array/len @entity.keys) 0) (let ((kid (object/get (json/parse (base64/decode (let ((x (str/replaceAll (str/replaceAll (array/nth (str/split (str/trim (str/slice (str/trim (object/get (array/first @entity.queue) "authorization")) 7 (str/len (str/trim (object/get (array/first @entity.queue) "authorization"))))) ".") 0) "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))) BearerHeader) "kid" ""))) (or (= @kid "") (array/some @entity.keys (fn k (= (object/get @k "kid" "") @kid)))))))
-        (let ((token (str/trim (str/slice (str/trim (object/get (array/first @entity.queue) "authorization")) 7 (str/len (str/trim (object/get (array/first @entity.queue) "authorization")))))))
+      BEARER_PUMP -> verifying when (and (> (array/len @entity.queue) 0) (and (!= (or (object/get (array/first @entity.queue) "authorization") "") "") (str/startsWith (object/get (array/first @entity.queue) "authorization") "Bearer ") (= (array/len (str/split (str/slice (object/get (array/first @entity.queue) "authorization") 7 (str/len (object/get (array/first @entity.queue) "authorization"))) ".")) 3) (> @entity.expiresAt @now) (> (array/len @entity.keys) 0) (let ((kid (object/get (json/parse (base64/decode (let ((x (str/replaceAll (str/replaceAll (array/nth (str/split (str/slice (object/get (array/first @entity.queue) "authorization") 7 (str/len (object/get (array/first @entity.queue) "authorization"))) ".") 0) "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))) BearerHeader) "kid" ""))) (or (= @kid "") (array/some @entity.keys (fn k (= (object/get @k "kid" "") @kid)))))))
+        (let ((token (str/slice (object/get (array/first @entity.queue) "authorization") 7 (str/len (object/get (array/first @entity.queue) "authorization")))))
           (let ((kid (object/get (json/parse (base64/decode (let ((x (str/replaceAll (str/replaceAll (array/nth (str/split @token ".") 0) "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))) BearerHeader) "kid" "")))
             (let ((cands (array/filter @entity.keys (fn k (and (or (= @kid "") (= (object/get @k "kid" "") @kid)) (or (= (object/get @k "use" "") "") (= (object/get @k "use" "") "sig")))))))
               (do
@@ -61,8 +77,8 @@ orbital BearerVerifyOrbital {
                 (set @entity.attempt 0)
                 (emit JWS_VERIFY { token: @token, jwk: (array/nth @cands 0) })))))
         (set @entity.queue (array/slice @entity.queue 1))
-      BEARER_PUMP -> fetching when (and (> (array/len @entity.queue) 0) (and (!= (str/trim (or (object/get (array/first @entity.queue) "authorization") "")) "") (str/startsWith (str/lower (str/trim (object/get (array/first @entity.queue) "authorization"))) "bearer ") (= (array/len (str/split (str/trim (str/slice (str/trim (object/get (array/first @entity.queue) "authorization")) 7 (str/len (str/trim (object/get (array/first @entity.queue) "authorization"))))) ".")) 3) (not (and (> @entity.expiresAt @now) (> (array/len @entity.keys) 0) (let ((kid (object/get (json/parse (base64/decode (let ((x (str/replaceAll (str/replaceAll (array/nth (str/split (str/trim (str/slice (str/trim (object/get (array/first @entity.queue) "authorization")) 7 (str/len (str/trim (object/get (array/first @entity.queue) "authorization"))))) ".") 0) "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))) BearerHeader) "kid" ""))) (or (= @kid "") (array/some @entity.keys (fn k (= (object/get @k "kid" "") @kid)))))))))
-        (let ((token (str/trim (str/slice (str/trim (object/get (array/first @entity.queue) "authorization")) 7 (str/len (str/trim (object/get (array/first @entity.queue) "authorization")))))))
+      BEARER_PUMP -> fetching when (and (> (array/len @entity.queue) 0) (and (!= (or (object/get (array/first @entity.queue) "authorization") "") "") (str/startsWith (object/get (array/first @entity.queue) "authorization") "Bearer ") (= (array/len (str/split (str/slice (object/get (array/first @entity.queue) "authorization") 7 (str/len (object/get (array/first @entity.queue) "authorization"))) ".")) 3) (not (and (> @entity.expiresAt @now) (> (array/len @entity.keys) 0) (let ((kid (object/get (json/parse (base64/decode (let ((x (str/replaceAll (str/replaceAll (array/nth (str/split (str/slice (object/get (array/first @entity.queue) "authorization") 7 (str/len (object/get (array/first @entity.queue) "authorization"))) ".") 0) "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))) BearerHeader) "kid" ""))) (or (= @kid "") (array/some @entity.keys (fn k (= (object/get @k "kid" "") @kid)))))))))
+        (let ((token (str/slice (object/get (array/first @entity.queue) "authorization") 7 (str/len (object/get (array/first @entity.queue) "authorization")))))
           (do
             (set @entity.token @token)
                 (set @entity.requestId (or (or (object/get (array/first @entity.queue) "requestId") 0) 0))
@@ -77,9 +93,21 @@ orbital BearerVerifyOrbital {
     }
 
     state fetching {
-      BEARER_VERIFY -> fetching when (< (array/len @entity.queue) @config.maxQueue)
+      KEY_SALT_READ -> fetching
+        (set @entity.keysEnabled (!= (or @payload.value "") ""))
+      KEY_SALT_UNREAD -> fetching
+        (set @entity.keysEnabled false)
+      BEARER_VERIFY -> fetching when (and (and (str/startsWith (or @payload.authorization "") "Bearer ") (str/startsWith (str/slice (or @payload.authorization "") 7 (str/len (or @payload.authorization ""))) @config.keyPrefix)) @entity.keysEnabled)
+        (emit VERIFY_KEY { requestId: (or @payload.requestId 0), token: (str/slice (or @payload.authorization "") 7 (str/len (or @payload.authorization ""))) })
+      BEARER_VERIFY -> fetching when (and (and (str/startsWith (or @payload.authorization "") "Bearer ") (str/startsWith (str/slice (or @payload.authorization "") 7 (str/len (or @payload.authorization ""))) @config.keyPrefix)) (not @entity.keysEnabled))
+        (emit BEARER_REFUSED { requestId: (or @payload.requestId 0), reason: "keys-disabled" })
+      API_KEY_VERIFIED -> fetching
+        (emit BEARER_VERIFIED { requestId: (or @payload.requestId 0), viewer: { id: @payload.owner, claims: @payload.claims } })
+      API_KEY_REFUSED -> fetching
+        (emit BEARER_REFUSED { requestId: (or @payload.requestId 0), reason: (str/concat "api-key-" @payload.reason) })
+      BEARER_VERIFY -> fetching when (and (not (and (str/startsWith (or @payload.authorization "") "Bearer ") (str/startsWith (str/slice (or @payload.authorization "") 7 (str/len (or @payload.authorization ""))) @config.keyPrefix))) (< (array/len @entity.queue) @config.maxQueue))
         (set @entity.queue (array/append @entity.queue { requestId: (or @payload.requestId 0), authorization: (or @payload.authorization "") }))
-      BEARER_VERIFY -> fetching when (>= (array/len @entity.queue) @config.maxQueue)
+      BEARER_VERIFY -> fetching when (and (not (and (str/startsWith (or @payload.authorization "") "Bearer ") (str/startsWith (str/slice (or @payload.authorization "") 7 (str/len (or @payload.authorization ""))) @config.keyPrefix))) (>= (array/len @entity.queue) @config.maxQueue))
         (emit BEARER_REFUSED { requestId: (or @payload.requestId 0), reason: "busy" })
       INIT -> idle
       JWKS_REPLIED -> idle when (or (!= @payload.status 200) (not (json/valid @payload.body)))
@@ -108,9 +136,21 @@ orbital BearerVerifyOrbital {
     }
 
     state verifying {
-      BEARER_VERIFY -> verifying when (< (array/len @entity.queue) @config.maxQueue)
+      KEY_SALT_READ -> verifying
+        (set @entity.keysEnabled (!= (or @payload.value "") ""))
+      KEY_SALT_UNREAD -> verifying
+        (set @entity.keysEnabled false)
+      BEARER_VERIFY -> verifying when (and (and (str/startsWith (or @payload.authorization "") "Bearer ") (str/startsWith (str/slice (or @payload.authorization "") 7 (str/len (or @payload.authorization ""))) @config.keyPrefix)) @entity.keysEnabled)
+        (emit VERIFY_KEY { requestId: (or @payload.requestId 0), token: (str/slice (or @payload.authorization "") 7 (str/len (or @payload.authorization ""))) })
+      BEARER_VERIFY -> verifying when (and (and (str/startsWith (or @payload.authorization "") "Bearer ") (str/startsWith (str/slice (or @payload.authorization "") 7 (str/len (or @payload.authorization ""))) @config.keyPrefix)) (not @entity.keysEnabled))
+        (emit BEARER_REFUSED { requestId: (or @payload.requestId 0), reason: "keys-disabled" })
+      API_KEY_VERIFIED -> verifying
+        (emit BEARER_VERIFIED { requestId: (or @payload.requestId 0), viewer: { id: @payload.owner, claims: @payload.claims } })
+      API_KEY_REFUSED -> verifying
+        (emit BEARER_REFUSED { requestId: (or @payload.requestId 0), reason: (str/concat "api-key-" @payload.reason) })
+      BEARER_VERIFY -> verifying when (and (not (and (str/startsWith (or @payload.authorization "") "Bearer ") (str/startsWith (str/slice (or @payload.authorization "") 7 (str/len (or @payload.authorization ""))) @config.keyPrefix))) (< (array/len @entity.queue) @config.maxQueue))
         (set @entity.queue (array/append @entity.queue { requestId: (or @payload.requestId 0), authorization: (or @payload.authorization "") }))
-      BEARER_VERIFY -> verifying when (>= (array/len @entity.queue) @config.maxQueue)
+      BEARER_VERIFY -> verifying when (and (not (and (str/startsWith (or @payload.authorization "") "Bearer ") (str/startsWith (str/slice (or @payload.authorization "") 7 (str/len (or @payload.authorization ""))) @config.keyPrefix))) (>= (array/len @entity.queue) @config.maxQueue))
         (emit BEARER_REFUSED { requestId: (or @payload.requestId 0), reason: "busy" })
       INIT -> idle
       JWS_REFUSED -> verifying when (and (= @entity.kid "") (array/includes ["signature", "key-type", "alg-mismatch", "curve", "key-missing"] @payload.reason) (< (+ @entity.attempt 1) (array/len @entity.candidates)))
@@ -163,6 +203,23 @@ orbital BearerVerifyOrbital {
       }
         @description "Internal: ask std-jws to verify the token against one key."
         @tier "internal"
+      VERIFY_KEY -> external {
+        requestId : number
+        token : string!
+      }
+        @description "Internal: a bearer carrying the API key prefix goes only to std-api-key-verifier."
+        @tier "internal"
+      KEY_SALT_READ {
+        value : string
+      }
+        @description "Internal: the os/getenv answer for ALMADAR_API_KEY_SALT."
+        @tier "internal"
+      KEY_SALT_UNREAD {
+        error : string
+        kind : string
+      }
+        @description "Internal: the os/getenv for ALMADAR_API_KEY_SALT failed."
+        @tier "internal"
       BEARER_NEXT {}
         @description "Internal: an answer that needed no key work is done; start the next queued request."
         @tier "secondary"
@@ -191,6 +248,18 @@ orbital BearerVerifyOrbital {
       }
         @description "Verify the raw Authorization header of one request."
         @synonyms "verify bearer, check authorization header"
+      API_KEY_VERIFIED {
+        requestId : number
+        owner : string!
+        claims : [BearerKeyClaim]!
+      }
+        @description "Internal: std-api-key-verifier accepted the key; its owner is the viewer id and its claims the viewer claims."
+      API_KEY_REFUSED {
+        requestId : number
+        reason : string!
+        message : string!
+      }
+        @description "Internal: std-api-key-verifier refused the key."
       JWS_VERIFIED {
         header : BearerJwsHeader!
         payload : BearerClaims!
@@ -243,6 +312,11 @@ orbital BearerVerifyOrbital {
         @description "When not empty, the token firebase.tenant must be one of these."
         @synonyms "tenant allow list"
         @tier "domain"
+      keyPrefix : string = "sk_live_"
+        @label "API key prefix"
+        @description "A bearer starting with this goes only to the API key path; anything else goes only to the JWT path. Neither falls back to the other."
+        @synonyms "key prefix"
+        @tier "infra"
       maxQueue : number = 256
         @label "Queue bound"
         @description "How many requests may wait behind the one in flight; one beyond it is refused with busy."

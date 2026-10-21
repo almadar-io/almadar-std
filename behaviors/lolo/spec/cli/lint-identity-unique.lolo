@@ -1,0 +1,21 @@
+app lint-identity-unique-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint identity-unique <file>`, the port of the compiler rule ORB_S_IDENTITY_NOT_UNIQUE. The file is lowered with program/read. More than one differently named [identity] entity (primaries shadow imported copies) is reported as `[ORB_S_IDENTITY_NOT_UNIQUE] orbitals: <message>` with the Rust suggestion, status 500 (exit 1). A clean program answers `lint identity-unique: clean` (status 200, exit 0). Anything but exactly one file argument is the usage (status 400, exit 2). A file that cannot be read or lowered fails the run (status 500)."
+]
+
+orbital LintIdentityUniqueSpec {
+  expects trait OrbLintIdentityUnique {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [string]! }
+      LINT_UNREAD { rule : string! }
+    }
+  }
+  expects trait OrbLintIdentityUniqueCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page "/orb-lint-identity-unique" -> OrbLintIdentityUnique, OrbLintIdentityUniqueCli
+}

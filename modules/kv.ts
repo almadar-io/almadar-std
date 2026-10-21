@@ -49,7 +49,7 @@ export const KV_OPERATORS: Record<string, StdOperatorMeta> = {
     example: '["kv/get", "rows", "order/1", { "emit": { "success": "ROW_READ", "failure": "KV_FAILED" } }]',
   }),
   'kv/put': kvEffect({
-    description: 'Write one key, replacing any value (grant kv: write). The value must be JSON. Success payload: { key }.',
+    description: 'Write one key, replacing any value (grant kv: write). The value must be JSON. Success payload: { storedKey }.',
     params: [STORE, KEY, { name: 'value', type: VALUE, description: 'A JSON value' }],
     example: '["kv/put", "rows", "order/1", { "id": "1" }, { "emit": { "success": "ROW_PUT", "failure": "KV_FAILED" } }]',
   }),

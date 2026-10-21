@@ -174,7 +174,7 @@ orbital RateBucketOrbital {
       REQUEST -> throttled when (and @config.enabled (>= (+ @entity.count 1) @entity.limit))
         (set @entity.count (+ @entity.count 1))
         (set @entity.limiterStatus throttled)
-        (emit THROTTLED { requestId: @payload.requestId, resetIn: @entity.resetIn, limit: @entity.limit, window: @entity.window })
+        (emit ADMITTED { requestId: @payload.requestId, remaining: (- @entity.limit @entity.count), resetIn: @entity.resetIn, limit: @entity.limit, window: @entity.window })
         (render-ui main {
           children: [{
             align: center
@@ -376,9 +376,9 @@ orbital RateBucketOrbital {
     }
 
     ticks {
-      windowCountdown every 1s when (> @entity.resetIn 1)
+      windowCountdown every 1s when (and (> @entity.count 0) (> @entity.resetIn 1))
         (set @entity.resetIn (- @entity.resetIn 1))
-      windowElapsed every 1s when (<= @entity.resetIn 1)
+      windowElapsed every 1s when (and (> @entity.count 0) (<= @entity.resetIn 1))
         (emit WINDOW_ELAPSED)
     }
 

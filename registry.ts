@@ -54,6 +54,7 @@ import { TRACE_OPERATORS } from './modules/trace.js';
 import { BEHAVIOR_OPERATORS } from './modules/behavior.js';
 import { PROGRAM_OPERATORS } from './modules/program.js';
 import { BYTES_OPERATORS } from './modules/bytes.js';
+import { BIT_OPERATORS } from './modules/bit.js';
 import { BASE64_OPERATORS, HASH_OPERATORS, HMAC_OPERATORS } from './modules/codec.js';
 
 // ============================================================================
@@ -102,6 +103,7 @@ export const STD_OPERATORS: Record<string, StdOperatorMeta> = withNullRejection(
   ...BEHAVIOR_OPERATORS,
   ...PROGRAM_OPERATORS,
   ...BYTES_OPERATORS,
+  ...BIT_OPERATORS,
   ...BASE64_OPERATORS,
   ...HASH_OPERATORS,
   ...HMAC_OPERATORS,
@@ -155,6 +157,7 @@ export const STD_OPERATORS_BY_MODULE: Record<string, Record<string, StdOperatorM
   behavior: BEHAVIOR_OPERATORS,
   program: PROGRAM_OPERATORS,
   bytes: BYTES_OPERATORS,
+  bit: BIT_OPERATORS,
   base64: BASE64_OPERATORS,
   hash: HASH_OPERATORS,
   hmac: HMAC_OPERATORS,

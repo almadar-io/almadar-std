@@ -7,6 +7,7 @@ app std-orb-packages [
 ]
 uses Spec from "almadar-std/orb-packages"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
 type PackageKind = "language" | "behaviors" | "language pack" | "shell" | "desktop"
 type PackageRow = { package : string!, kinds : [PackageKind]!, version : string!, path : string!, link : boolean!, prefix : string?, behaviors : number?, problem : string? }
 type LockEntry = { name : string!, version : string!, url : string!, integrity : string! }
@@ -23,6 +24,8 @@ type VersionList = { name : string!, versions : [VersionRow]! }
 type Scanned = { name : string!, kind : string! }
 
 orbital OrbPackagesOrbital {
+  uses Args from "std/behaviors/std-args"
+
   entity PackageCall [runtime] {
     id : string!
     status : number = 0
@@ -51,19 +54,31 @@ orbital OrbPackagesOrbital {
     unpacked : boolean = false
   }
 
+  trait ArgsCli = Args.traits.ArgsParser {
+    listens {
+      OrbPackages.PKG_ARGS_PARSE -> ARGS_PARSE
+    }
+  }
+
   trait OrbPackages -> PackageCall [integration] {
     initial: ready
 
     state ready {
       INIT -> ready
-      PACKAGES_CALLED -> ready when (or (= (array/len (array/filter (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") (fn a (not (str/startsWith @a "--"))))) 0) (not (array/includes ["list", "add", "update", "remove"] (array/first (array/filter (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") (fn a (not (str/startsWith @a "--"))))))))
-        (emit PACKAGES_ANSWERED { status: 400, body: "usage: orb list|add|update|remove [--json] [--global] [<package>…]", stderr: "" })
-      PACKAGES_CALLED -> locating when (and (> (array/len (array/filter (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") (fn a (not (str/startsWith @a "--"))))) 0) (array/includes ["list", "add", "update", "remove"] (array/first (array/filter (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") (fn a (not (str/startsWith @a "--")))))))
+      PACKAGES_CALLED -> parsing
         (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
-        (set @entity.cmd (array/first (array/filter (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") (fn a (not (str/startsWith @a "--"))))))
-        (set @entity.args (array/drop (array/filter (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") (fn a (not (str/startsWith @a "--")))) 1))
-        (set @entity.json (array/includes (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") "--json"))
-        (set @entity.global (array/includes (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") "--global"))
+        (emit PKG_ARGS_PARSE { stage: "packages" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "json" aliases: [] takesValue: false repeatable: false }, { name: "global" aliases: [] takesValue: false repeatable: false }] })
+    }
+
+    state parsing {
+      INIT -> parsing
+      PKG_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0) (not (array/includes ["list", "add", "update", "remove"] (array/first @payload.positionals))))
+        (emit PACKAGES_ANSWERED { status: 400, body: "usage: orb list|add|update|remove [--json] [--global] [<package>…]", stderr: "" })
+      PKG_ARGS_DONE -> locating when (and (= (array/len @payload.errors) 0) (> (array/len @payload.positionals) 0) (array/includes ["list", "add", "update", "remove"] (array/first @payload.positionals)))
+        (set @entity.cmd (array/first @payload.positionals))
+        (set @entity.args (array/drop @payload.positionals 1))
+        (set @entity.json (!= (object/get @payload.flags "json") null))
+        (set @entity.global (!= (object/get @payload.flags "global") null))
         (set @entity.lock [])
         (set @entity.pkgs [])
         (set @entity.rows [])
@@ -372,6 +387,13 @@ orbital OrbPackagesOrbital {
         @description "A package passed its integrity check and was installed (not yet reachable: integrity is pending)."
       PACKAGE_REFUSED -> external { name : string!  problem : string! }
         @description "A package was refused; integrity-unavailable until std-sha256 lands."
+      PKG_ARGS_PARSE {
+        stage : string!
+        argv : [string]!
+        flags : [ArgFlag]!
+      }
+        @description "Internal: parse the call's words against the --json and --global flags."
+        @tier "internal"
       PKG_DIR { }
         @description "Internal: start locating the install directory."
         @tier "internal"
@@ -528,8 +550,17 @@ orbital OrbPackagesOrbital {
       }
         @description "Run `orb list|add|update|remove` with its arguments and working directory."
         @synonyms "orb add, orb remove, orb list, orb update, install a package"
+      PKG_ARGS_DONE {
+        stage : string!
+        flags : Map string [string]!
+        positionals : [string]!
+        errors : [string]!
+        words : [string]!
+      }
+        @description "std-args's ARGS_PARSED: the call's words, parsed."
+      ArgsCli.ARGS_PARSED -> PKG_ARGS_DONE
     }
   }
 
-  page "/orb-packages" as OrbPackagesPage -> OrbPackages
+  page "/orb-packages" as OrbPackagesPage -> OrbPackages, ArgsCli
 }

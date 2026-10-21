@@ -1,0 +1,21 @@
+app lint-literal-default-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint literal-default <file>`, the port of the compiler rule ORB_E_LITERAL_UNION_DEFAULT_MISMATCH. The file is lowered with program/read. Every field of an orbital's entity that declares a non-empty values list and a string default must have that default among the values; each field that does not is reported as `[ORB_E_LITERAL_UNION_DEFAULT_MISMATCH] <path>: <message>` with the Rust path, message and suggestion, status 500 (exit 1). Fields without values, with an empty values list, without a default or with a non-string default are skipped. A clean program answers `lint literal-default: clean` (status 200, exit 0). Anything but exactly one file argument is the usage (status 400, exit 2). A file that cannot be read or lowered fails the run (status 500)."
+]
+
+orbital LintLiteralDefaultSpec {
+  expects trait OrbLintLiteralDefault {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [string]! }
+      LINT_UNREAD { rule : string! }
+    }
+  }
+  expects trait OrbLintLiteralDefaultCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page "/orb-lint-literal-default" -> OrbLintLiteralDefault, OrbLintLiteralDefaultCli
+}

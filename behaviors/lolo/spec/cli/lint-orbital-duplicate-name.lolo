@@ -1,0 +1,21 @@
+app lint-orbital-duplicate-name-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint orbital-duplicate-name <file>`, the port of the compiler rule ORB_O_DUPLICATE_NAME. The file is lowered with program/read. Each orbital name declared more than once is reported once as `[ORB_O_DUPLICATE_NAME] orbitals[<second index>]: Orbital '<name>' is declared <n> times (orbitals [<indices>])`, status 500 (exit 1). A clean program answers `lint orbital-duplicate-name: clean` (status 200, exit 0). Anything but exactly one file argument is the usage (status 400, exit 2). A file that cannot be read or lowered fails the run (status 500)."
+]
+
+orbital LintOrbitalDuplicateNameSpec {
+  expects trait OrbLintOrbitalDuplicateName {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [string]! }
+      LINT_UNREAD { rule : string! }
+    }
+  }
+  expects trait OrbLintOrbitalDuplicateNameCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page "/orb-lint-orbital-duplicate-name" -> OrbLintOrbitalDuplicateName, OrbLintOrbitalDuplicateNameCli
+}

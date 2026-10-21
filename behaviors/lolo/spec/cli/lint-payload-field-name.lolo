@@ -1,0 +1,21 @@
+app lint-payload-field-name-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint payload-field-name <file>`, the port of the compiler rule ORB_X_PAYLOAD_FIELD_NAME. The file is lowered with program/read and the top-level payload fields of every trait emit and event are checked (payload field names are valid identifiers); a violation is reported as `[ORB_X_PAYLOAD_FIELD_NAME] <path>: <message>` with the Rust suggestion, status 500 (exit 1). A clean program answers `lint payload-field-name: clean` (status 200, exit 0). Anything but exactly one file argument is the usage (status 400, exit 2). A file that cannot be read or lowered fails the run (status 500)."
+]
+
+orbital LintPayloadFieldNameSpec {
+  expects trait OrbLintPayloadFieldName {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [string]! }
+      LINT_UNREAD { rule : string! }
+    }
+  }
+  expects trait OrbLintPayloadFieldNameCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page "/orb-lint-payload-field-name" -> OrbLintPayloadFieldName, OrbLintPayloadFieldNameCli
+}

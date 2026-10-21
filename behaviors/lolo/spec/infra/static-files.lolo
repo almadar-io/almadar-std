@@ -1,0 +1,33 @@
+app static-files-spec [
+  version: "1.0.0",
+  description: "Design contract for the static client fallback of an HTTP server program, mirroring orbital-server static_files.rs. The router hands a request no API route owns as ROUTE_CLIENT { requestId, method, path, responseHeaders }; requests are served one at a time, the head of the job list being the one served. Each candidate is checked with os/stat and read with os/read-file only when it is a regular file; a file that exists but cannot be read answers 404. The path is percent-decoded first; a malformed escape, a NUL or backslash, a path that does not start with one slash, a second leading slash, or a .. segment is refused with an empty 404. Otherwise the candidates are checked in order across the roots (program assets before the client): the file the path names, else the index.html of the directory it names; a path that names no file is answered the last root's app-shell.html when it exists, else its index.html, except under /api or /__ which answer an empty 404. A served file answers 200 with the content type of its extension (html, js, mjs, css, json, map, wasm, svg, png, jpg, jpeg, webp, gif, ico, woff2, woff, txt; octet-stream otherwise) and no cache header; a miss answers an empty 404. Every answer is RESPOND for std-http1 and REQUEST_ANSWERED."
+]
+
+type RouterHeader = { name : string!, value : string! }
+type StaticJob = { requestId : number!, headers : [RouterHeader]!, candidates : [string]!, cursor : number! }
+
+orbital StaticFilesSpec {
+  expects entity StaticServe [runtime] {
+    id : string!
+    jobs : [StaticJob]
+  }
+  expects trait StaticFiles {
+    state serving {
+      ROUTE_CLIENT -> serving
+      STATIC_PLAN -> serving
+      STATIC_TRY -> serving
+      STATIC_STAT -> serving
+      STATIC_MISS -> serving
+      STATIC_ADVANCE -> serving
+      STATIC_UNREAD -> serving
+      STATIC_MISSING -> serving
+      STATIC_GOT -> serving
+      STATIC_DONE -> serving
+    }
+    emits {
+      RESPOND { requestId : number!  status : number!  headers : [RouterHeader]!  body : bytes! }
+      REQUEST_ANSWERED { requestId : number!  status : number!  headers : [RouterHeader]  body : string! }
+    }
+  }
+  expects page "/static-files" -> StaticFiles
+}

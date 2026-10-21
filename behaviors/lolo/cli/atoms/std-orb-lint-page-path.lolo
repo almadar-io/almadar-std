@@ -1,0 +1,132 @@
+app std-orb-lint-page-path [
+  version: "1.0.0",
+  inbound: ["cli-lint-page-path"],
+  fs: { cwd: "**": [read] },
+  description: "std-orb-lint-page-path — the `orb lint page-path <file>` command, the port. It lowers the file with program/read and, for every inline page, reports an empty path, a path that does not start with '/', and a path starting with '/api', each with the Rust path, message and suggestion (status 500, exit 1). The character-set check is not ported: the compiler applies it only to Latin-script programs, a language detection the lint cannot read. Clean answers `lint page-path: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-page-path"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+
+orbital OrbLintPagePathOrbital {
+  entity OrbLintPagePathRun [runtime] {
+    id : string!
+    findings : [string] = []
+  }
+
+  trait OrbLintPagePath -> OrbLintPagePathRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_RUN -> reading
+        (set @entity.findings [])
+        (os/read-file { anchor: "cwd" path: @payload.file } { key: "file" emit: { success: LINT_FILE_READ, failure: LINT_FILE_UNREAD } })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "page-path", findings: @entity.findings })
+    }
+
+    state reading {
+      INIT -> reading
+      LINT_FILE_READ -> reading
+        (program/read (bytes/to-string @payload.data) { emit: { success: LINT_PROGRAM_READ, failure: LINT_FILE_UNREAD } })
+      LINT_PROGRAM_READ -> ready
+        (set @entity.findings (let ((orbitals (object/get @payload.result "orbitals")))
+          (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+            (let ((pgList (object/get (array/nth @orbitals @oi) "pages" [])))
+              (array/flatten (array/map (array/range 0 (array/len @pgList)) (fn pj
+                (let ((pg (array/nth @pgList @pj)))
+                  (if (not (object/has @pg "path"))
+                    []
+                    (let ((route (object/get @pg "path")))
+                      (let ((where (str/concat "orbitals[" @oi "].pages[" @pj "].path")))
+                        (array/flatten [
+                          (if (= @route "") [(str/concat "[ORB_P_MISSING_PATH] " @where ": Page path is required\n  suggestion: Add a path starting with / (e.g., '/tasks', '/users/:id')")] [])
+                          (if (and (!= @route "") (not (str/startsWith @route "/"))) [(str/concat "[ORB_P_INVALID_PATH] " @where ": Page path must start with '/': '" @route "'\n  suggestion: Prefix the path with / (e.g., '/tasks' instead of 'tasks')")] [])
+                          (if (str/startsWith @route "/api") [(str/concat "[ORB_P_INVALID_PATH] " @where ": Page path '" @route "' starts with '/api' which collides with the API server proxy\n  suggestion: Choose a different path that doesn't start with '/api' (e.g., '/requests' instead of '/apirequests')")] [])]))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FILE_UNREAD -> ready
+        (emit LINT_UNREAD { rule: "page-path" })
+    }
+
+    emits {
+      LINT_UNREAD -> external { rule : string! }
+        @description "This rule could not read or lower the file."
+        @tier "internal"
+      LINT_RUN -> external { file : string! }
+        @description "The lint request this trait answers, from the cli trait or the umbrella."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  findings : [string]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FILE_READ { data : bytes! }
+        @description "The file read."
+        @tier "internal"
+      LINT_FILE_UNREAD { error : string }
+        @description "The file could not be read or lowered."
+        @tier "internal"
+      LINT_PROGRAM_READ { result : string }
+        @description "The file lowered by program/read."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      OrbLintPagePathCli.LINT_RUN -> LINT_RUN
+    }
+  }
+
+  trait OrbLintPagePathCli -> OrbLintPagePathRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint page-path <file>" })
+      LINT_CALLED -> waiting when (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (emit LINT_RUN { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "page-path") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint page-path: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "page-path") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join @payload.findings "\n") })
+      LINT_UNREAD -> ready when (= @payload.rule "page-path")
+        (emit LINT_ANSWERED { status: 500, body: "lint page-path: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_RUN -> external { file : string! }
+        @description "Ask the rule trait to lint this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  findings : [string]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_UNREAD -> external { rule : string! }
+        @description "The rule trait could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-page-path" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint page-path` with its arguments and working directory."
+        @synonyms "orb lint page-path, page route path"
+      OrbLintPagePath.LINT_FOUND -> LINT_FOUND
+      OrbLintPagePath.LINT_UNREAD -> LINT_UNREAD
+    }
+  }
+
+  page "/orb-lint-page-path" as OrbLintPagePathPage -> OrbLintPagePath, OrbLintPagePathCli
+}

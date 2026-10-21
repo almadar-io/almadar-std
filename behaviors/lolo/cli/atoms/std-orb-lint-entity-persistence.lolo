@@ -1,0 +1,125 @@
+app std-orb-lint-entity-persistence [
+  version: "1.0.0",
+  inbound: ["cli-lint-entity-persistence"],
+  fs: { cwd: "**": [read] },
+  description: "std-orb-lint-entity-persistence — the `orb lint entity-persistence <file>` command, the port of ORB_E_MISSING_COLLECTION (entity.rs validate_entity; the shared-without-persistence-mode twin is already refused by the lowerer). It lowers the file with program/read and reports each orbital entity that is persistent and carries no collection name, with its path and suggestion (status 500, exit 1). Clean answers `lint entity-persistence: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-entity-persistence"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+
+orbital OrbLintEntityPersistenceOrbital {
+  entity OrbLintEntityPersistenceRun [runtime] {
+    id : string!
+    findings : [string] = []
+  }
+
+  trait OrbLintEntityPersistence -> OrbLintEntityPersistenceRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_RUN -> reading
+        (set @entity.findings [])
+        (os/read-file { anchor: "cwd" path: @payload.file } { key: "file" emit: { success: LINT_FILE_READ, failure: LINT_FILE_UNREAD } })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "entity-persistence", findings: @entity.findings })
+    }
+
+    state reading {
+      INIT -> reading
+      LINT_FILE_READ -> reading
+        (program/read (bytes/to-string @payload.data) { emit: { success: LINT_PROGRAM_READ, failure: LINT_FILE_UNREAD } })
+      LINT_PROGRAM_READ -> ready
+        (set @entity.findings (let ((orbitals (object/get @payload.result "orbitals")))
+          (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+            (let ((ent (object/get (array/nth @orbitals @oi) "entity" {})))
+              (if (validate/object @ent) (if (and (= (object/get @ent "persistence" "") "persistent") (not (object/has @ent "collection")))
+                [(str/concat "[ORB_E_MISSING_COLLECTION] orbitals[" @oi "].entity.collection: " "Persistent entity requires a collection name" "\n  suggestion: Add a 'collection' property for database storage")]
+                []) [])))))))
+        (emit LINT_FINISH { })
+      LINT_FILE_UNREAD -> ready
+        (emit LINT_UNREAD { rule: "entity-persistence" })
+    }
+
+    emits {
+      LINT_UNREAD -> external { rule : string! }
+        @description "This rule could not read or lower the file."
+        @tier "internal"
+      LINT_RUN -> external { file : string! }
+        @description "The lint request this trait answers, from the cli trait or the umbrella."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  findings : [string]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FILE_READ { data : bytes! }
+        @description "The file read."
+        @tier "internal"
+      LINT_FILE_UNREAD { error : string }
+        @description "The file could not be read or lowered."
+        @tier "internal"
+      LINT_PROGRAM_READ { result : string }
+        @description "The file lowered by program/read."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      OrbLintEntityPersistenceCli.LINT_RUN -> LINT_RUN
+    }
+  }
+
+  trait OrbLintEntityPersistenceCli -> OrbLintEntityPersistenceRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint entity-persistence <file>" })
+      LINT_CALLED -> waiting when (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (emit LINT_RUN { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "entity-persistence") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint entity-persistence: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "entity-persistence") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join @payload.findings "\n") })
+      LINT_UNREAD -> ready when (= @payload.rule "entity-persistence")
+        (emit LINT_ANSWERED { status: 500, body: "lint entity-persistence: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_RUN -> external { file : string! }
+        @description "Ask the rule trait to lint this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  findings : [string]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_UNREAD -> external { rule : string! }
+        @description "The rule trait could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-entity-persistence" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint entity-persistence` with its arguments and working directory."
+        @synonyms "orb lint entity-persistence, duplicate field names"
+      OrbLintEntityPersistence.LINT_FOUND -> LINT_FOUND
+      OrbLintEntityPersistence.LINT_UNREAD -> LINT_UNREAD
+    }
+  }
+
+  page "/orb-lint-entity-persistence" as OrbLintEntityPersistencePage -> OrbLintEntityPersistence, OrbLintEntityPersistenceCli
+}

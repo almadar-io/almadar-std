@@ -4,6 +4,7 @@ app server-spec [
 ]
 
 type ServerHeader = { name : string!, value : string! }
+type KeyClaim = { name : string!, value : string! }
 type ServerErrorBody = { error : string!, code : string! }
 
 orbital ServerSpec {
@@ -37,7 +38,7 @@ orbital ServerSpec {
   expects trait ServerRouter {
     emits {
       HTTP_DECIDE { requestId : number!  method : string!  path : string!  headers : [ServerHeader]!  contentLength : number }
-      RATE_REQUEST { requestId : number! }
+      RATE_REQUEST { requestId : number!  ip : string }
       RESPOND { requestId : number!  status : number!  headers : [ServerHeader]!  body : bytes! }
       REQUEST_ANSWERED { requestId : number!  status : number!  headers : [ServerHeader]  body : string! }
       REQUEST_RATE_LIMITED { requestId : number!  resetSeconds : number! }
@@ -47,6 +48,20 @@ orbital ServerSpec {
       SSE_OPEN { requestId : number! }
       MINT_REQUESTED { requestId : number!  viewer : Viewer! }
       STREAM_AUTHORIZED { requestId : number!  viewer : Viewer!  clientId : string! }
+    }
+  }
+  expects trait ServerBearer {
+    emits {
+      BEARER_VERIFIED { requestId : number  viewer : Viewer! }
+      BEARER_ANONYMOUS { requestId : number }
+      BEARER_REFUSED { requestId : number  reason : string! }
+      VERIFY_KEY { requestId : number  token : string! }
+    }
+  }
+  expects trait ApiKeys {
+    emits {
+      API_KEY_VERIFIED { requestId : number  owner : string!  claims : [KeyClaim]! }
+      API_KEY_REFUSED { requestId : number  reason : string  message : string! }
     }
   }
   expects trait StreamTicketer {
@@ -65,5 +80,5 @@ orbital ServerSpec {
       SSE_REFUSED { requestId : number!  kind : string!  error : string! }
     }
   }
-  expects page "/server" -> Http1, ServerPolicy, ServerRateLimiter, ServerRouter, StreamTicketer, ServerSse
+  expects page "/server" -> Http1, ServerPolicy, ServerRateLimiter, ServerRouter, StreamTicketer, ServerSse, ServerBearer, ApiKeys
 }

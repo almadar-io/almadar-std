@@ -1,0 +1,143 @@
+app std-orb-lint-store-binding [
+  version: "1.0.0",
+  inbound: ["cli-lint-store-binding"],
+  fs: { cwd: "**": [read] },
+  description: "std-orb-lint-store-binding — the `orb lint store-binding <file>` command, the port of store_binding.rs (EXEC-STORE-4) less ORB_STORE_DRIVER_NOT_CONDITIONAL, which walks persist effects and waits on tree/fold. It lowers the file with program/read and checks the program-level store and each entity store (primary and auxiliary): ORB_STORE_ON_NON_PERSISTENT for a store on a runtime or browser-local entity, then, once per driver at its first binding, ORB_STORE_UNKNOWN_ORBITAL for a driver naming no orbital and ORB_STORE_DRIVER_CONTRACT for a driver with no trait handling every row verb (status 500, exit 1). Clean answers `lint store-binding: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-store-binding"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+
+orbital OrbLintStoreBindingOrbital {
+  entity OrbLintStoreBindingRun [runtime] {
+    id : string!
+    findings : [string] = []
+  }
+
+  trait OrbLintStoreBinding -> OrbLintStoreBindingRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_RUN -> reading
+        (set @entity.findings [])
+        (os/read-file { anchor: "cwd" path: @payload.file } { key: "file" emit: { success: LINT_FILE_READ, failure: LINT_FILE_UNREAD } })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "store-binding", findings: @entity.findings })
+    }
+
+    state reading {
+      INIT -> reading
+      LINT_FILE_READ -> reading
+        (program/read (bytes/to-string @payload.data) { emit: { success: LINT_PROGRAM_READ, failure: LINT_FILE_UNREAD } })
+      LINT_PROGRAM_READ -> ready
+        (set @entity.findings (let ((orbitals (object/get @payload.result "orbitals")))
+          (let ((names (array/map @orbitals (fn o (object/get @o "name")))))
+            (let ((bound (array/concat
+                           (if (object/has @payload.result "store") [{ path: "store", driver: (object/get @payload.result "store"), bad: false, label: "" }] [])
+                           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+                             (let ((ents (array/filter (array/concat [(object/get (array/nth @orbitals @oi) "entity" {})] (object/get (array/nth @orbitals @oi) "auxiliaryEntities" [])) (fn xe (validate/object @xe)))))
+                               (array/map (array/filter @ents (fn e (object/has @e "store")))
+                                 (fn e { path: (str/concat "orbitals[" @oi "].entity." (object/get @e "name" "")), driver: (object/get @e "store"), bad: (or (= (object/get @e "persistence" "") "runtime") (= (object/get @e "local" false) true)), label: (object/get @e "name" "") })))))))))
+              (array/flatten (array/map (array/range 0 (array/len @bound)) (fn bi
+                (let ((b (array/nth @bound @bi)))
+                  (let ((d (object/get @b "driver")))
+                    (array/concat
+                      (if (object/get @b "bad")
+                        [(str/concat "[ORB_STORE_ON_NON_PERSISTENT] " (object/get @b "path") ": entity " (object/get @b "label") " binds store " @d " but its rows live in no store (runtime or browser-local)")]
+                        [])
+                      (if (!= (array/first (array/filter (array/range 0 (array/len @bound)) (fn j (= (object/get (array/nth @bound @j) "driver") @d)))) @bi)
+                        []
+                        (if (not (array/includes @names @d))
+                          [(str/concat "[ORB_STORE_UNKNOWN_ORBITAL] " (object/get @b "path") ": store " @d " names no orbital of this program (valid: " (str/join @names ", ") ")")]
+                          (let ((handled (array/flatten (array/map (object/get (array/first (array/filter @orbitals (fn o (= (object/get @o "name") @d)))) "traits" []) (fn t (array/map (object/get (object/get @t "stateMachine" {}) "transitions" []) (fn x (object/get @x "event" ""))))))))
+                            (let ((missing (array/filter ["ROW_READ", "ROW_LIST", "ROWS_QUERY", "ROWS_WRITE"] (fn v (not (array/includes @handled @v))))))
+                              (if (= (array/len @missing) 0)
+                                []
+                                [(str/concat "[ORB_STORE_DRIVER_CONTRACT] " (object/get @b "path") ": store driver " @d " has no trait handling [" (str/join (array/map @missing (fn v (str/concat "\"" @v "\""))) ", ") "] (spec/infra/row-store.lolo RowStoreDriver)")])))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FILE_UNREAD -> ready
+        (emit LINT_UNREAD { rule: "store-binding" })
+    }
+
+    emits {
+      LINT_UNREAD -> external { rule : string! }
+        @description "This rule could not read or lower the file."
+        @tier "internal"
+      LINT_RUN -> external { file : string! }
+        @description "The lint request this trait answers, from the cli trait or the umbrella."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  findings : [string]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FILE_READ { data : bytes! }
+        @description "The file read."
+        @tier "internal"
+      LINT_FILE_UNREAD { error : string }
+        @description "The file could not be read or lowered."
+        @tier "internal"
+      LINT_PROGRAM_READ { result : string }
+        @description "The file lowered by program/read."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      OrbLintStoreBindingCli.LINT_RUN -> LINT_RUN
+    }
+  }
+
+  trait OrbLintStoreBindingCli -> OrbLintStoreBindingRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint store-binding <file>" })
+      LINT_CALLED -> waiting when (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (emit LINT_RUN { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "store-binding") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint store-binding: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "store-binding") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join @payload.findings "\n") })
+      LINT_UNREAD -> ready when (= @payload.rule "store-binding")
+        (emit LINT_ANSWERED { status: 500, body: "lint store-binding: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_RUN -> external { file : string! }
+        @description "Ask the rule trait to lint this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  findings : [string]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_UNREAD -> external { rule : string! }
+        @description "The rule trait could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-store-binding" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint store-binding` with its arguments and working directory."
+        @synonyms "orb lint store-binding, orb lint store-binding, store binding, store driver, store on non persistent"
+      OrbLintStoreBinding.LINT_FOUND -> LINT_FOUND
+      OrbLintStoreBinding.LINT_UNREAD -> LINT_UNREAD
+    }
+  }
+
+  page "/orb-lint-store-binding" as OrbLintStoreBindingPage -> OrbLintStoreBinding, OrbLintStoreBindingCli
+}

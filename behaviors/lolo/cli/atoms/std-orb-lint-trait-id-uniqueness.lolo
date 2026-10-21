@@ -18,15 +18,11 @@ orbital OrbLintTraitIdUniquenessOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
-        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint trait-id-uniqueness <file>" })
-      LINT_CALLED -> reading when (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+      LINT_RUN -> reading
         (set @entity.findings [])
-        (os/read-file { anchor: "cwd" path: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) } { key: "file" emit: { success: LINT_FILE_READ, failure: LINT_FILE_UNREAD } })
-      LINT_FINISH -> ready when (= (array/len @entity.findings) 0)
-        (emit LINT_ANSWERED { status: 200, body: "lint trait-id-uniqueness: clean" })
-      LINT_FINISH -> ready when (> (array/len @entity.findings) 0)
-        (emit LINT_ANSWERED { status: 500, body: (str/join @entity.findings "\n") })
+        (os/read-file { anchor: "cwd" path: @payload.file } { key: "file" emit: { success: LINT_FILE_READ, failure: LINT_FILE_UNREAD } })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "trait-id-uniqueness", findings: @entity.findings })
     }
 
     state reading {
@@ -39,15 +35,18 @@ orbital OrbLintTraitIdUniquenessOrbital {
             (fn r (str/concat "[ORB_X_DUPLICATE_TRAIT_ID] orbitals: trait id " (object/get @r "id") " is carried by " (str/join (array/map (array/filter @entries (fn e (= (object/get @e "id") (object/get @r "id")))) (fn e (object/get @e "name"))) ", ") "; listens match sources by id, so each of these hears the others' emits")))))
         (emit LINT_FINISH { })
       LINT_FILE_UNREAD -> ready
-        (emit LINT_ANSWERED { status: 500, body: "lint trait-id-uniqueness: the file could not be read or lowered" })
+        (emit LINT_UNREAD { rule: "trait-id-uniqueness" })
     }
 
     emits {
-      LINT_ANSWERED -> internal {
-        status : number!
-        body : string!
-      }
-        @description "Internal: the command's answer, which the cli hook prints."
+      LINT_UNREAD -> external { rule : string! }
+        @description "This rule could not read or lower the file."
+        @tier "internal"
+      LINT_RUN -> external { file : string! }
+        @description "The lint request this trait answers, from the cli trait or the umbrella."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  findings : [string]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
         @tier "internal"
       LINT_FILE_READ { data : bytes! }
         @description "The file read."
@@ -64,14 +63,60 @@ orbital OrbLintTraitIdUniquenessOrbital {
     }
 
     listens {
+      OrbLintTraitIdUniquenessCli.LINT_RUN -> LINT_RUN
+    }
+  }
+
+  trait OrbLintTraitIdUniquenessCli -> OrbLintTraitIdUniquenessRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint trait-id-uniqueness <file>" })
+      LINT_CALLED -> waiting when (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (emit LINT_RUN { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "trait-id-uniqueness") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint trait-id-uniqueness: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "trait-id-uniqueness") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join @payload.findings "\n") })
+      LINT_UNREAD -> ready when (= @payload.rule "trait-id-uniqueness")
+        (emit LINT_ANSWERED { status: 500, body: "lint trait-id-uniqueness: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_RUN -> external { file : string! }
+        @description "Ask the rule trait to lint this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  findings : [string]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_UNREAD -> external { rule : string! }
+        @description "The rule trait could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
       LINT_CALLED -> inbound "cli-lint-trait-id-uniqueness" answers LINT_ANSWERED {
         headers : Map string string
         rawBody : string
       }
         @description "Run `orb lint trait-id-uniqueness` with its arguments and working directory."
         @synonyms "orb lint trait-id-uniqueness, duplicate trait ids"
+      OrbLintTraitIdUniqueness.LINT_FOUND -> LINT_FOUND
+      OrbLintTraitIdUniqueness.LINT_UNREAD -> LINT_UNREAD
     }
   }
 
-  page "/orb-lint-trait-id-uniqueness" as OrbLintTraitIdUniquenessPage -> OrbLintTraitIdUniqueness
+  page "/orb-lint-trait-id-uniqueness" as OrbLintTraitIdUniquenessPage -> OrbLintTraitIdUniqueness, OrbLintTraitIdUniquenessCli
 }

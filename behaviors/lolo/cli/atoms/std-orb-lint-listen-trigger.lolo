@@ -1,0 +1,128 @@
+app std-orb-lint-listen-trigger [
+  version: "1.0.0",
+  inbound: ["cli-lint-listen-trigger"],
+  fs: { cwd: "**": [read] },
+  description: "std-orb-lint-listen-trigger — the `orb lint listen-trigger <file>` command, the port of ORB_X_LISTEN_TRIGGER_UNMATCHED. It lowers the file with program/read and, for every inline trait with listens, requires each listen's trigger (its `-> TRIGGER`, else the listened event) to be the event of a transition in the same trait. Each unmatched listen is reported with its path and suggestion (status 500, exit 1). Clean answers `lint listen-trigger: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-listen-trigger"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+
+orbital OrbLintListenTriggerOrbital {
+  entity OrbLintListenTriggerRun [runtime] {
+    id : string!
+    findings : [string] = []
+  }
+
+  trait OrbLintListenTrigger -> OrbLintListenTriggerRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_RUN -> reading
+        (set @entity.findings [])
+        (os/read-file { anchor: "cwd" path: @payload.file } { key: "file" emit: { success: LINT_FILE_READ, failure: LINT_FILE_UNREAD } })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "listen-trigger", findings: @entity.findings })
+    }
+
+    state reading {
+      INIT -> reading
+      LINT_FILE_READ -> reading
+        (program/read (bytes/to-string @payload.data) { emit: { success: LINT_PROGRAM_READ, failure: LINT_FILE_UNREAD } })
+      LINT_PROGRAM_READ -> ready
+        (set @entity.findings (let ((orbitals (object/get @payload.result "orbitals")))
+          (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+            (let ((o (array/nth @orbitals @oi)))
+              (let ((trs (object/get @o "traits" [])))
+                (array/flatten (array/map (array/filter @trs (fn t (and (object/has @t "stateMachine") (object/has @t "listens")))) (fn t
+                  (let ((handled (array/map (object/get (object/get @t "stateMachine") "transitions" []) (fn x (object/get @x "event"))))
+                        (lsn (object/get @t "listens" [])))
+                    (array/map (array/filter @lsn (fn l (not (array/includes @handled (object/get @l "triggers" (object/get @l "event"))))))
+                      (fn l (str/concat "[ORB_X_LISTEN_TRIGGER_UNMATCHED] orbitals." (object/get @o "name") ".traits." (object/get @t "name") ".listens: Listen entry in '" (object/get @o "name") "." (object/get @t "name") "' triggers '" (object/get @l "triggers" (object/get @l "event")) "' but no transition in the same trait reacts to it.\n  suggestion: Add a transition whose event matches the listen trigger, or fix the `-> TRIGGER` to name an event the trait's state machine handles."))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FILE_UNREAD -> ready
+        (emit LINT_UNREAD { rule: "listen-trigger" })
+    }
+
+    emits {
+      LINT_UNREAD -> external { rule : string! }
+        @description "This rule could not read or lower the file."
+        @tier "internal"
+      LINT_RUN -> external { file : string! }
+        @description "The lint request this trait answers, from the cli trait or the umbrella."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  findings : [string]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FILE_READ { data : bytes! }
+        @description "The file read."
+        @tier "internal"
+      LINT_FILE_UNREAD { error : string }
+        @description "The file could not be read or lowered."
+        @tier "internal"
+      LINT_PROGRAM_READ { result : string }
+        @description "The file lowered by program/read."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      OrbLintListenTriggerCli.LINT_RUN -> LINT_RUN
+    }
+  }
+
+  trait OrbLintListenTriggerCli -> OrbLintListenTriggerRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint listen-trigger <file>" })
+      LINT_CALLED -> waiting when (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (emit LINT_RUN { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "listen-trigger") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint listen-trigger: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "listen-trigger") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join @payload.findings "\n") })
+      LINT_UNREAD -> ready when (= @payload.rule "listen-trigger")
+        (emit LINT_ANSWERED { status: 500, body: "lint listen-trigger: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_RUN -> external { file : string! }
+        @description "Ask the rule trait to lint this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  findings : [string]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_UNREAD -> external { rule : string! }
+        @description "The rule trait could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-listen-trigger" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint listen-trigger` with its arguments and working directory."
+        @synonyms "orb lint listen-trigger, orb lint listen-trigger, values union default"
+      OrbLintListenTrigger.LINT_FOUND -> LINT_FOUND
+      OrbLintListenTrigger.LINT_UNREAD -> LINT_UNREAD
+    }
+  }
+
+  page "/orb-lint-listen-trigger" as OrbLintListenTriggerPage -> OrbLintListenTrigger, OrbLintListenTriggerCli
+}
