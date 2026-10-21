@@ -1,0 +1,16 @@
+app push-spec [
+  version: "1.0.0",
+  description: "Design contract for Web Push delivery (twin of orbital-core runtime webpush.rs). PUSH_SEND { subscription { endpoint, keys { p256dh, auth } }, title, body, url?, icon? } encrypts the payload (RFC 8291 aes128gcm: ECDH P-256 with an ephemeral key, HKDF-SHA256 over the auth secret with info 'WebPush: info' NUL receiver key sender key, then key info 'Content-Encoding: aes128gcm' NUL (16 bytes) and nonce info 'Content-Encoding: nonce' NUL (12 bytes); body = salt(16) || record size 4096 u32 BE || idlen(1)=65 || sender key(65) || records of at most 4079 plaintext bytes each followed by 0x01, the last by 0x02, AES-128-GCM with the nonce XORed with the record counter in its last six bytes), signs a VAPID ES256 JWT (RFC 8292: header {\"typ\":\"JWT\",\"alg\":\"ES256\"}, claims {\"aud\",\"exp\",\"sub\"} in that key order, base64url without padding, raw r||s signature) and POSTs to the endpoint. Reply 2xx answers PUSH_SEND_RESULT { statusCode, ok true, expired false }; 4xx or 1xx or 3xx answers ok false with expired true for 404 and 410; 5xx, a timeout, an invalid subscription or an invalid VAPID setting answers PUSH_SEND_FAILED { message }. Refusal messages, in check order: subscription without endpoint 'You must pass in a subscription with at least an endpoint.'; no keys 'To send a message with a payload, the subscription must have 'auth' and 'p256dh' keys.'; p256dh not 65 bytes 'The subscription p256dh value should be 65 bytes long.'; auth under 16 bytes 'The subscription auth key should be at least 16 bytes long'; audience not a URL 'VAPID audience is not a url. <aud>'; empty subject 'No subject set in vapidDetails.subject.'; subject not a URL 'Vapid subject is not a valid URL. <s>'; subject not https or mailto 'Vapid subject is not an https: or mailto: URL. <s>'; empty public key 'No key set vapidDetails.publicKey'; empty private key 'No key set in vapidDetails.privateKey'; non URL-safe key 'Vapid <public|private> key must be a URL safe Base 64 (without \"=\")'; wrong decoded length 'Vapid <public|private> key should be <65|32> bytes long when decoded.'. Byte-level goldens: push.goldens.json."
+]
+
+orbital PushSpec {
+  expects entity PushDelivery [runtime] {
+    id : string!
+  }
+  expects trait PushClient {
+    state idle
+    state idle { PUSH_SEND -> idle  PUSH_SEND_REPLIED -> idle  PUSH_SEND_HTTP_FAILED -> idle }
+    emits { PUSH_SEND_RESULT { statusCode : number!  ok : boolean!  expired : boolean! }  PUSH_SEND_FAILED { message : string! } }
+  }
+  expects page "/push" -> PushClient
+}

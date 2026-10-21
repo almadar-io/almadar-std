@@ -38,6 +38,7 @@ export { PROB_OPERATORS, getProbOperators } from './prob.js';
 
 // OS triggers module
 export { OS_OPERATORS } from './os.js';
+export { KV_OPERATORS } from './kv.js';
 
 // Bytes module (pure binary operators)
 export { BYTES_OPERATORS } from './bytes.js';

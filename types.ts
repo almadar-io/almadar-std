@@ -36,6 +36,7 @@ export const OPERATOR_CATEGORIES = [
   'std-train',
   'std-prob',
   'std-os',
+  'std-kv',
   'std-browser',
   'std-composition',
   'std-vec',
@@ -100,7 +101,7 @@ export type ReturnSemantics =
 export type RunsOn = 'client' | 'server' | 'any';
 
 /** A host outside the runtime that executes an effect. */
-export type EffectHost = 'program' | 'os';
+export type EffectHost = 'program' | 'os' | 'kv';
 
 export interface OperatorMeta {
   /** Operator category */
@@ -156,6 +157,7 @@ export const STD_MODULES = [
   'train',
   'prob',
   'os',
+  'kv',
   'browser',
   'graph',
   'contract',
@@ -205,6 +207,7 @@ export const STD_OPERATOR_CATEGORIES = [
   'std-train',
   'std-prob',
   'std-os',
+  'std-kv',
   'std-browser',
   'std-composition',
   'std-vec',

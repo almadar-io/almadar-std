@@ -81,7 +81,7 @@ export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
   'program/step': {
     module: 'program', category: 'std-program',
     minArity: 2, maxArity: 3,
-    description: 'Play transitions of a program in one run of the kernel, each from the state it names, and return each request played: the request with its `result` circuit step — whether it fired, the arm that fired, every guard tried, each effect of the fired arm and the events it emitted.',
+    description: 'Play transitions of a program in one run of the kernel, each from the state it names, and return each request played: the request with its `result` circuit step — whether it fired, the arm that fired, every guard tried, each effect of the fired arm (`routed` when its failure went to its declared `emit.failure`), the events it emitted, and each `@ensures` of the arm judged by the kernel (`held`, `broken` with its counterexample bindings, or `inconclusive` with the reason).',
     hasSideEffects: true,
     runsOn: 'server',
     host: 'program',

@@ -1,0 +1,198 @@
+app std-orb-mcp-install [
+  version: "1.0.0",
+  inbound: ["cli-mcp-install"],
+  exec: ["orb"],
+  env: ["PATH", "HOME"],
+  fs: { cwd: "**": [read, write, create] },
+  description: "std-orb-mcp-install — the `orb mcp install --client claude|cursor|vscode` command. It registers the `orb` MCP server in the directory the command runs in (claude: .mcp.json, cursor: .cursor/mcp.json, vscode: .vscode/mcp.json): the entry runs `npx -y @almadar/orb mcp` (the vscode entry also carries type stdio) under `mcpServers` (claude, cursor) or `servers` (vscode). Every other entry and key of an existing config is kept; a config that is not a JSON object, or a servers key that is not an object, is left unchanged and answered with its path (status 500, exit 1); the parent directory is created when missing. A missing or unknown --client, or any further word, answers the usage (status 400, exit 2). On success the answer is `Registered `orb mcp` in <path>`; the installed language is then checked through std-cli (`orb list --global`) and a failure adds a warning line naming `npx -y @almadar/orb update --global`. The file is written as compact JSON followed by a newline."
+]
+uses Spec from "almadar-std/orb-mcp-install"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
+type McpConfig = Map string SExpr
+
+orbital OrbMcpInstallOrbital {
+  uses Cli from "std/behaviors/std-cli"
+  uses Args from "std/behaviors/std-args"
+
+  entity OrbMcpInstallRun [runtime] {
+    id : string!
+    cwd : string = ""
+    client : string = ""
+    dir : string = ""
+    path : string = ""
+    serversKey : string = ""
+    config : McpConfig = {}
+  }
+
+  trait ArgsCli = Args.traits.ArgsParser {
+    listens {
+      OrbMcpInstall.MCP_ARGS_PARSE -> ARGS_PARSE
+    }
+  }
+
+  trait SetupCli = Cli.traits.CliRunner {
+    listens {
+      OrbMcpInstall.MCP_SETUP_RUN -> CLI_RUN
+    }
+    config {
+      commands: ["orb"]
+      passEnv: ["PATH", "HOME"]
+    }
+  }
+
+  trait OrbMcpInstall -> OrbMcpInstallRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      MCP_CALLED -> parsing
+        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
+        (emit MCP_ARGS_PARSE { stage: "mcp" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "client" aliases: [] takesValue: true repeatable: false }] })
+    }
+
+    state parsing {
+      INIT -> parsing
+      MCP_ARGS_DONE -> ready when (not (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0) (array/includes ["claude", "cursor", "vscode"] (array/first (or (object/get @payload.flags "client") [])))))
+        (emit MCP_INSTALL_ANSWERED { status: 400, body: "usage: orb mcp install --client <claude|cursor|vscode>" })
+      MCP_ARGS_DONE -> probing when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0) (array/includes ["claude", "cursor", "vscode"] (array/first (or (object/get @payload.flags "client") []))))
+        (set @entity.client (array/first (object/get @payload.flags "client")))
+        (set @entity.dir (if (= @entity.client "cursor") ".cursor" (if (= @entity.client "vscode") ".vscode" "")))
+        (set @entity.path (if (= @entity.dir "") ".mcp.json" (str/concat @entity.dir "/mcp.json")))
+        (set @entity.serversKey (if (= @entity.client "vscode") "servers" "mcpServers"))
+        (os/exists { anchor: "cwd" path: @entity.path } { key: "config" emit: { success: MCP_EXISTS, failure: MCP_HOST_FAILED } })
+    }
+
+    state probing {
+      INIT -> probing
+      MCP_HOST_FAILED -> ready
+        (emit MCP_INSTALL_ANSWERED { status: 500, body: (str/concat @entity.cwd "/" @entity.path ": " @payload.error) })
+      MCP_EXISTS -> reading when @payload.ok
+        (os/read-file { anchor: "cwd" path: @entity.path } { key: "config" emit: { success: MCP_READ, failure: MCP_HOST_FAILED } })
+      MCP_EXISTS -> writing when (not @payload.ok)
+        (set @entity.config (json/parse "{}" McpConfig))
+        (emit MCP_MERGE { })
+    }
+
+    state reading {
+      INIT -> reading
+      MCP_HOST_FAILED -> ready
+        (emit MCP_INSTALL_ANSWERED { status: 500, body: (str/concat @entity.cwd "/" @entity.path ": " @payload.error) })
+      MCP_READ -> ready when (not (and (json/valid (bytes/to-string @payload.data)) (str/startsWith (str/trim (bytes/to-string @payload.data)) "{")))
+        (emit MCP_INSTALL_ANSWERED { status: 500, body: (str/concat @entity.cwd "/" @entity.path) })
+      MCP_READ -> writing when (and (json/valid (bytes/to-string @payload.data)) (str/startsWith (str/trim (bytes/to-string @payload.data)) "{"))
+        (set @entity.config (json/parse (bytes/to-string @payload.data) McpConfig))
+        (emit MCP_MERGE { })
+    }
+
+    state writing {
+      INIT -> writing
+      MCP_HOST_FAILED -> ready
+        (emit MCP_INSTALL_ANSWERED { status: 500, body: (str/concat @entity.cwd "/" @entity.path ": " @payload.error) })
+      MCP_MERGE -> ready when (and (!= (object/get @entity.config @entity.serversKey) null) (not (str/startsWith (json/stringify (object/get @entity.config @entity.serversKey)) "{")))
+        (emit MCP_INSTALL_ANSWERED { status: 500, body: (str/concat @entity.cwd "/" @entity.path) })
+      MCP_MERGE -> writing when (and (= @entity.dir "") (or (= (object/get @entity.config @entity.serversKey) null) (str/startsWith (json/stringify (object/get @entity.config @entity.serversKey)) "{")))
+        (set @entity.config (object/set @entity.config @entity.serversKey (object/set (if (= (object/get @entity.config @entity.serversKey) null) (json/parse "{}" McpConfig) (object/get @entity.config @entity.serversKey)) "orb" (if (= @entity.client "vscode") { type: "stdio", command: "npx", args: ["-y", (str/slice "x@almadar/orb" 1), "mcp"] } { command: "npx", args: ["-y", (str/slice "x@almadar/orb" 1), "mcp"] }))))
+        (emit MCP_DIR_READY { })
+      MCP_MERGE -> writing when (and (!= @entity.dir "") (or (= (object/get @entity.config @entity.serversKey) null) (str/startsWith (json/stringify (object/get @entity.config @entity.serversKey)) "{")))
+        (set @entity.config (object/set @entity.config @entity.serversKey (object/set (if (= (object/get @entity.config @entity.serversKey) null) (json/parse "{}" McpConfig) (object/get @entity.config @entity.serversKey)) "orb" (if (= @entity.client "vscode") { type: "stdio", command: "npx", args: ["-y", (str/slice "x@almadar/orb" 1), "mcp"] } { command: "npx", args: ["-y", (str/slice "x@almadar/orb" 1), "mcp"] }))))
+        (os/mkdir { anchor: "cwd" path: @entity.dir } true { key: "dir" emit: { success: MCP_DIR_READY, failure: MCP_HOST_FAILED } })
+      MCP_DIR_READY -> writing
+        (os/write-file { anchor: "cwd" path: @entity.path } (bytes/from-string (str/concat (json/stringify @entity.config) "\n")) { key: "config" emit: { success: MCP_WRITTEN, failure: MCP_HOST_FAILED } })
+      MCP_WRITTEN -> setup
+        (emit MCP_SETUP_RUN { stage: "setup", argv: ["orb", "list", "--global"] })
+    }
+
+    state setup {
+      INIT -> setup
+      MCP_SETUP_DONE -> ready when (= @payload.exitCode 0)
+        (emit MCP_INSTALL_ANSWERED { status: 200, body: (str/concat "Registered `orb mcp` in " @entity.cwd "/" @entity.path) })
+      MCP_SETUP_DONE -> ready when (!= @payload.exitCode 0)
+        (emit MCP_INSTALL_ANSWERED { status: 200, body: (str/concat "Registered `orb mcp` in " @entity.cwd "/" @entity.path "\norb: the language is not set up yet (" (str/trim @payload.stderr) "); run `npx -y @almadar/orb update --global`, or orb retries on the first tool call") })
+      MCP_SETUP_FAILED -> ready
+        (emit MCP_INSTALL_ANSWERED { status: 200, body: (str/concat "Registered `orb mcp` in " @entity.cwd "/" @entity.path "\norb: the language is not set up yet (" @payload.error "); run `npx -y @almadar/orb update --global`, or orb retries on the first tool call") })
+    }
+
+    emits {
+      MCP_INSTALL_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      MCP_EXISTS {
+        ok : boolean!
+      }
+        @description "os/exists: whether the client's config file is there."
+        @tier "internal"
+      MCP_READ {
+        data : bytes!
+      }
+        @description "os/read-file: the existing config."
+        @tier "internal"
+      MCP_WRITTEN { }
+        @description "os/write-file: the config is saved."
+        @tier "internal"
+      MCP_HOST_FAILED {
+        error : string
+      }
+        @description "An os/exists, os/read-file, os/mkdir or os/write-file failure."
+        @tier "internal"
+      MCP_MERGE { }
+        @description "Internal: merge the orb entry into the config."
+        @tier "internal"
+      MCP_DIR_READY { }
+        @description "Internal: the config's parent directory exists."
+        @tier "internal"
+      MCP_ARGS_PARSE {
+        stage : string!
+        argv : [string]!
+        flags : [ArgFlag]!
+      }
+        @description "Internal: parse the call's words against the --client flag."
+        @tier "internal"
+      MCP_SETUP_RUN {
+        stage : string!
+        argv : [string]!
+      }
+        @description "Internal: run `orb list --global` to check the installed language."
+        @tier "internal"
+    }
+
+    listens {
+      MCP_CALLED -> inbound "cli-mcp-install" answers MCP_INSTALL_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb mcp install` with its --client flag."
+        @synonyms "orb mcp install, register the orb mcp server in a client config"
+      MCP_SETUP_DONE {
+        stage : string!
+        exitCode : number!
+        signal : number!
+        stdout : string!
+        stderr : string!
+      }
+        @description "std-cli's CLI_DONE: the language check exited."
+      MCP_SETUP_FAILED {
+        stage : string!
+        error : string!
+        code : string!
+      }
+        @description "std-cli's CLI_FAILED: orb could not be run."
+      MCP_ARGS_DONE {
+        stage : string!
+        flags : Map string [string]!
+        positionals : [string]!
+        errors : [string]!
+        words : [string]!
+      }
+        @description "std-args's ARGS_PARSED: the call's words, parsed."
+      ArgsCli.ARGS_PARSED -> MCP_ARGS_DONE
+      SetupCli.CLI_DONE -> MCP_SETUP_DONE
+      SetupCli.CLI_FAILED -> MCP_SETUP_FAILED
+    }
+  }
+
+  page "/orb-mcp-install" as OrbMcpInstallPage -> OrbMcpInstall, ArgsCli, SetupCli
+}

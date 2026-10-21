@@ -1,0 +1,130 @@
+{
+  "source": "orbital-rust/crates/orbital-core/crates/runtime/src/webpush.rs (tests)",
+  "spec": "spec/infra/push.lolo",
+  "note": "Byte-level cases the prover cannot state. The ephemeral key, salt and exp are parameters (journaled inputs). All values base64url without padding unless hex. pre-* cases are the atom's pre-checks, run before the host call in Rust order. The private-key checks stay host-side: the atom only holds the credential name. Pre-checks use validate/url, validate/pattern and bytes/length over padded standard base64.",
+  "cases": [
+    {
+      "id": "hkdf-rfc5869-1",
+      "ikmHexByte": "0b x22",
+      "saltHex": "000102030405060708090a0b0c",
+      "infoHex": "f0f1f2f3f4f5f6f7f8f9",
+      "length": 42,
+      "outHex": "3cb25f25faacd57a90434f64d0362f2a2d2d0a90cf1a5a4c5db02d56ecc4c5bf34007208d5b887185865"
+    },
+    {
+      "id": "record-nonce",
+      "base": "01..0c",
+      "counter0": "equals base",
+      "counter1": "byte 11 xor 1, bytes 0..10 unchanged"
+    },
+    {
+      "id": "rfc8291-section5",
+      "userPublicKey": "BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4",
+      "userAuth": "BTBZMqHH6r4Tts7J_aSIgg",
+      "plaintext": "When I grow up, I want to be a watermelon",
+      "ephemeralPrivateKey": "yfWPiYE-n46HLnH0KqZOF1fJJU3MYrct3AELtAQ-oRw",
+      "salt": "DGv6ra1nlYgDCS1FRnbzlw",
+      "body": "DGv6ra1nlYgDCS1FRnbzlwAAEABBBP4z9KsN6nGRTbVYI_c7VJSPQTBtkgcy27mlmlMoZIIgDll6e3vCYLocInmYWAmS6TlzAC8wEqKK6PBru3jl7A_yl95bQpu6cVPTpK4Mqgkf1CXztLVBSt2Ks3oZwbuwXPXLWyouBWLVWGNWQexSgSxsj_Qulcy4a-fN"
+    },
+    {
+      "id": "multi-record-length",
+      "payloadBytes": 8163,
+      "ephemeralPrivateKey": "32 bytes, last 7",
+      "salt": "16 x 0x03",
+      "bodyLength": 8261,
+      "formula": "86 + payload + 3 * 17"
+    },
+    {
+      "id": "refuse-p256dh",
+      "p256dh": "AAAA",
+      "message": "The subscription p256dh value should be 65 bytes long."
+    },
+    {
+      "id": "refuse-auth",
+      "auth": "AAAA",
+      "message": "The subscription auth key should be at least 16 bytes long"
+    },
+    {
+      "id": "refuse-point",
+      "p256dh": "base64url of 65 x 0x04",
+      "message": "Public key is not valid for specified curve"
+    },
+    {
+      "id": "refuse-ephemeral",
+      "key": "32 zero bytes",
+      "message": "Private key is not valid for specified curve."
+    },
+    {
+      "id": "vapid-order",
+      "checks": [
+        "empty subject: No subject set in vapidDetails.subject.",
+        "empty public: No key set vapidDetails.publicKey",
+        "empty private: No key set in vapidDetails.privateKey",
+        "audience 'nope': VAPID audience is not a url. nope",
+        "subject http://x.test: Vapid subject is not an https: or mailto: URL. http://x.test"
+      ]
+    },
+    {
+      "id": "vapid-jwt",
+      "privateKey": "base64url of 31 zero bytes then 0x09",
+      "audience": "https://push.example.test",
+      "subject": "mailto:a@b.c",
+      "exp": 1700000000,
+      "header": "{\"typ\":\"JWT\",\"alg\":\"ES256\"}",
+      "claims": "{\"aud\":\"https://push.example.test\",\"exp\":1700000000,\"sub\":\"mailto:a@b.c\"}",
+      "signature": "64 raw bytes r||s verifying under the matching uncompressed public key; exp 1700000001 gives a different token"
+    },
+    {
+      "id": "pre-p256dh",
+      "p256dh": "AAAA",
+      "message": "The subscription p256dh value should be 65 bytes long."
+    },
+    {
+      "id": "pre-auth",
+      "auth": "AAAA",
+      "message": "The subscription auth key should be at least 16 bytes long"
+    },
+    {
+      "id": "pre-audience",
+      "endpoint": "nope/a/b",
+      "message": "VAPID audience is not a url. nope//b",
+      "note": "audience is the endpoint origin, checked with validate/url"
+    },
+    {
+      "id": "pre-subject-empty",
+      "vapidSubject": "",
+      "message": "No subject set in vapidDetails.subject."
+    },
+    {
+      "id": "pre-subject-not-url",
+      "vapidSubject": "nope",
+      "message": "Vapid subject is not a valid URL. nope"
+    },
+    {
+      "id": "pre-subject-scheme",
+      "vapidSubject": "http://x.test",
+      "message": "Vapid subject is not an https: or mailto: URL. http://x.test"
+    },
+    {
+      "id": "pre-public-empty",
+      "vapidPublicKey": "",
+      "message": "No key set vapidDetails.publicKey"
+    },
+    {
+      "id": "pre-public-charset",
+      "vapidPublicKey": "abc+def=",
+      "message": "Vapid public key must be a URL safe Base 64 (without \"=\")"
+    },
+    {
+      "id": "pre-public-length",
+      "vapidPublicKey": "AAAA",
+      "message": "Vapid public key should be 65 bytes long when decoded."
+    },
+    {
+      "id": "pre-control",
+      "subscription": "{\"endpoint\":\"https://push.example.test/send/1\",\"p256dh\":\"87 url-safe chars (65 bytes)\",\"auth\":\"22 chars (16 bytes)\"}",
+      "vapidSubject": "mailto:a@b.c",
+      "outcome": "no PUSH_SEND_FAILED; the http call to https://push.example.test with auth.scheme vapid is made"
+    }
+  ]
+}

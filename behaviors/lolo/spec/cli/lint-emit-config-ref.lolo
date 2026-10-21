@@ -1,0 +1,14 @@
+app lint-emit-config-ref-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint emit-config-ref <file>`, the port of the compiler rule ORB_EMIT_CONFIG_REF_INVALID. The file is lowered with program/read. Every inline trait emit named `@config.<knob>` must name a declared config field (else `... is not a declared config field on this trait.`), typed string or event, carrying a default that is a string literal; the string-type failures read `... is not string-typed (or its call-site/default value isn't a string literal).` and a missing default reads `... has no declared default.` Each is reported as `[ORB_EMIT_CONFIG_REF_INVALID] <orbital/trait path>.emits(@config.<knob>): <message>` plus a suggestion line, status 500 (exit 1). A clean program answers `lint emit-config-ref: clean` (status 200, exit 0). Anything but exactly one file argument is the usage (status 400, exit 2). A file that cannot be read or lowered fails the run (status 500)."
+]
+
+orbital LintEmitConfigRefSpec {
+  expects trait OrbLintEmitConfigRef {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page "/orb-lint-emit-config-ref" -> OrbLintEmitConfigRef
+}

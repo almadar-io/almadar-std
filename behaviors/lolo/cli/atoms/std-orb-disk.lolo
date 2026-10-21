@@ -1,16 +1,19 @@
 app std-orb-disk [
   version: "1.0.0",
   inbound: ["cli-disk"],
-  exec: ["df", "du"],
+  exec: ["df", "du", "find", "id", "date", "rm", "pnpm", "brew", "xcrun"],
   env: ["HOME", "PATH"],
-  description: "std-orb-disk — the `orb disk` command. It reports what fills the disk on a machine working the monorepo: the volume line from `df -k /System/Volumes/Data`, then one row per item of the items knob (a home or working-directory path set sized by `du -sk`), largest first, each `<size> <tag> <id> <label>` with tag safe, cost, danger or keep, and a closing `safe batch: ~<size>` line (status 200, exit 0). `--json` answers the same as one DiskReport record. Any other argument answers the usage (status 400, exit 2); a df or du that cannot run answers `<code>: <message>` (status 500, exit 1). Read-only: the clear actions of the tool and the items that need a directory walk (target/, node_modules, .turbo, .venv, temp sessions) are not ported yet. The probes are two std-cli runners (df, du); no fs grant is declared because the children, not the program, read the paths."
+  description: "std-orb-disk — the `orb disk` command (port of tools/almadar-disk; spec/cli/orb-disk.lolo). It reports what fills the disk on a machine working the monorepo: the volume line from `df -k /System/Volumes/Data`, then one row per registry item, largest first, each `<size> <tag> <id> <label>` with tag safe, cost, danger or keep, and the closing `safe batch: ~<size>` footer (status 200, exit 0). Items are sized with `du -sk`: fixed home or working-directory paths in one call, and the items that need a directory walk (node_modules, Rust target/debug and target/release, .turbo, .venv, orbital-verify-* temp apps, idle Claude Code session temp) from one `find` walk of the working directory and two of /private/tmp, one `du` per group. Rust targets are found by their Cargo.toml, so a target/ that is a symlink is measured through the link. `--json` answers the report as one JSON document tagged by kind. `--safe` and `--clear <id>` are dry runs that list what would be cleared; adding `--yes` clears it (the safe batch is the batch items; a clear item must be clearable). Clearing removes only paths strictly below HOME (two levels deep) or inside /tmp or /private/tmp, runs the pnpm, brew and xcrun commands of the TS tool, and reports freed bytes from a second df. Any other argument answers the usage (status 400, exit 2); a probe that cannot run answers `<code>: <message>` (status 500, exit 1). Probes and clear actions are std-cli runners (df, du, find, id, date, rm, pnpm, brew, xcrun); no fs grant is declared because the children, not the program, touch the paths."
 ]
 uses Spec from "almadar-std/orb-disk"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
-type DiskSpec = { id : string!, label : string!, tag : string!, paths : [string]! }
+type DiskSpec = { id : string!, label : string!, category : string!, note : string!, batch : boolean!, clearable : boolean!, danger : boolean!, sizeless : boolean!, paths : [string]!, walk : string!, act : string!, cmd : [string]! }
 type DiskSize = { path : string!, kb : number! }
-type DiskItem = { id : string!, label : string!, tag : string!, bytes : number! }
-type DiskReport = { totalBytes : number!, usedBytes : number!, freeBytes : number!, usePct : number!, items : [DiskItem]! }
+type DiskGroup = { id : string!, paths : [string]! }
+type DiskGroupSize = { id : string!, kb : number!, paths : [string]! }
+type DiskItem = { id : string!, label : string!, category : string!, note : string!, batch : boolean!, clearable : boolean!, danger : boolean!, sizeless : boolean!, paths : [string]!, walk : string!, act : string!, cmd : [string]!, abs : [string]!, exist : [string]!, bytes : number! }
+type ClearPlan = { id : string!, act : string!, note : string!, cmd : [string]!, bytes : number!, dir : string!, paths : [string]!, safe : [string]!, unsafe : [string]! }
+type ClearFailure = { id : string!, error : string! }
 
 orbital OrbDiskOrbital {
   uses Cli from "std/behaviors/std-cli"
@@ -19,13 +22,42 @@ orbital OrbDiskOrbital {
     id : string!
     home : string = ""
     cwd : string = ""
+    uid : string = ""
+    scannedAt : string = ""
+    argv : [string] = []
     json : boolean = false
+    yes : boolean = false
+    safeMode : boolean = false
+    clearMode : boolean = false
+    clearId : string = ""
+    badArgs : number = 0
     totalBytes : number = 0
     usedBytes : number = 0
     freeBytes : number = 0
     usePct : number = 0
+    afterTotal : number = 0
+    afterUsed : number = 0
+    afterFree : number = 0
+    afterPct : number = 0
+    specs : [DiskItem] = []
     sizes : [DiskSize] = []
+    walkLines : [string] = []
+    tmpLines : [string] = []
+    sessions : [string] = []
+    entries : [string] = []
+    freshLines : [string] = []
+    freshSess : [string] = []
+    freshEnt : [string] = []
+    groups : [DiskGroup] = []
+    groupKb : [DiskGroupSize] = []
+    gcursor : number = 0
     items : [DiskItem] = []
+    plan : [ClearPlan] = []
+    listing : [string] = []
+    cursor : number = 0
+    logs : [string] = []
+    cleared : [string] = []
+    failed : [ClearFailure] = []
   }
 
   trait DiskDf = Cli.traits.CliRunner {
@@ -34,7 +66,7 @@ orbital OrbDiskOrbital {
     }
     config {
       commands: ["df"]
-      passEnv: ["PATH"]
+      passEnv: ["PATH", "HOME"]
     }
   }
 
@@ -44,7 +76,77 @@ orbital OrbDiskOrbital {
     }
     config {
       commands: ["du"]
-      passEnv: ["PATH"]
+      passEnv: ["PATH", "HOME"]
+    }
+  }
+
+  trait DiskFind = Cli.traits.CliRunner {
+    listens {
+      OrbDisk.DISK_FIND_RUN -> CLI_RUN
+    }
+    config {
+      commands: ["find"]
+      passEnv: ["PATH", "HOME"]
+    }
+  }
+
+  trait DiskId = Cli.traits.CliRunner {
+    listens {
+      OrbDisk.DISK_ID_RUN -> CLI_RUN
+    }
+    config {
+      commands: ["id"]
+      passEnv: ["PATH", "HOME"]
+    }
+  }
+
+  trait DiskDate = Cli.traits.CliRunner {
+    listens {
+      OrbDisk.DISK_DATE_RUN -> CLI_RUN
+    }
+    config {
+      commands: ["date"]
+      passEnv: ["PATH", "HOME"]
+    }
+  }
+
+  trait DiskRm = Cli.traits.CliRunner {
+    listens {
+      OrbDisk.DISK_RM_RUN -> CLI_RUN
+    }
+    config {
+      commands: ["rm"]
+      passEnv: ["PATH", "HOME"]
+    }
+  }
+
+  trait DiskPnpm = Cli.traits.CliRunner {
+    listens {
+      OrbDisk.DISK_PNPM_RUN -> CLI_RUN
+    }
+    config {
+      commands: ["pnpm"]
+      passEnv: ["PATH", "HOME"]
+    }
+  }
+
+  trait DiskBrew = Cli.traits.CliRunner {
+    listens {
+      OrbDisk.DISK_BREW_RUN -> CLI_RUN
+    }
+    config {
+      commands: ["brew"]
+      passEnv: ["PATH", "HOME"]
+    }
+  }
+
+  trait DiskXcrun = Cli.traits.CliRunner {
+    listens {
+      OrbDisk.DISK_XCRUN_RUN -> CLI_RUN
+    }
+    config {
+      commands: ["xcrun"]
+      passEnv: ["PATH", "HOME"]
     }
   }
 
@@ -53,13 +155,27 @@ orbital OrbDiskOrbital {
 
     state ready {
       INIT -> ready
-      DISK_CALLED -> ready when (and (> (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 0) (!= (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "--json"))
-        (emit DISK_ANSWERED { status: 400, body: "usage: orb disk [--json]" })
-      DISK_CALLED -> ready when (> (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
-        (emit DISK_ANSWERED { status: 400, body: "usage: orb disk [--json]" })
-      DISK_CALLED -> measuring when (<= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+      DISK_CALLED -> parsing
+        (set @entity.argv (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv"))
         (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
-        (set @entity.json (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit DISK_PARSE { })
+    }
+
+    state parsing {
+      INIT -> parsing
+      DISK_PARSE -> parsing
+        (set @entity.json (array/includes @entity.argv "--json"))
+        (set @entity.yes (array/includes @entity.argv "--yes"))
+        (set @entity.safeMode (array/includes @entity.argv "--safe"))
+        (set @entity.clearMode (or (array/includes @entity.argv "--safe") (array/includes @entity.argv "--clear")))
+        (set @entity.clearId (if (and (array/includes @entity.argv "--clear") (< (+ (array/indexOf @entity.argv "--clear") 1) (array/len @entity.argv))) (array/nth @entity.argv (+ (array/indexOf @entity.argv "--clear") 1)) ""))
+        (set @entity.badArgs (array/len (array/filter (array/range 0 (array/len @entity.argv)) (fn i (and (not (array/includes ["--json", "--yes", "--safe", "--clear"] (array/nth @entity.argv @i))) (!= @i (if (array/includes @entity.argv "--clear") (+ (array/indexOf @entity.argv "--clear") 1) -1)))))))
+        (emit DISK_ROUTE { })
+      DISK_ROUTE -> ready when (> @entity.badArgs 0)
+        (emit DISK_ANSWERED { status: 400, body: "usage: orb disk [--json] [--safe | --clear <id>] [--yes]" })
+      DISK_ROUTE -> ready when (and (= @entity.badArgs 0) @entity.clearMode (= (array/len (array/filter @config.items (fn it (and (object/get @it "clearable") (if @entity.safeMode (object/get @it "batch") (= (object/get @it "id") @entity.clearId)))))) 0))
+        (emit DISK_ANSWERED { status: 500, body: (if @entity.json (json/stringify { kind: "error", error: (str/concat "unknown or non-clearable item: " @entity.clearId), clearable: (array/map (array/filter @config.items (fn it (object/get @it "clearable"))) (fn it (object/get @it "id"))) }) (str/concat "unknown or non-clearable item: " @entity.clearId "\nclearable: " (str/join (array/map (array/filter @config.items (fn it (object/get @it "clearable"))) (fn it (object/get @it "id"))) ", "))) })
+      DISK_ROUTE -> measuring when (and (= @entity.badArgs 0) (or (not @entity.clearMode) (> (array/len (array/filter @config.items (fn it (and (object/get @it "clearable") (if @entity.safeMode (object/get @it "batch") (= (object/get @it "id") @entity.clearId)))))) 0)))
         (os/getenv "HOME" { key: "home" emit: { success: DISK_HOME failure: DISK_HOST_FAILED } })
     }
 
@@ -69,25 +185,166 @@ orbital OrbDiskOrbital {
         (set @entity.home @payload.value)
         (emit DISK_DF_RUN { stage: "df", argv: ["-k", @config.volume] })
       DiskDf_DONE -> measuring
-        (set @entity.totalBytes (* 1024 (str/to-number (array/nth (str/split (str/replace-pattern (str/trim (array/last (array/filter (str/split @payload.stdout "\n") (fn l (!= @l "")))) ) "\\s+" " ") " ") 1))))
+        (set @entity.totalBytes (* 1024 (str/to-number (array/nth (str/split (str/replace-pattern (str/trim (array/last (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))))) "\\s+" " ") " ") 1))))
         (set @entity.usedBytes (* 1024 (str/to-number (array/nth (str/split (str/replace-pattern (str/trim (array/last (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))))) "\\s+" " ") " ") 2))))
         (set @entity.freeBytes (* 1024 (str/to-number (array/nth (str/split (str/replace-pattern (str/trim (array/last (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))))) "\\s+" " ") " ") 3))))
         (set @entity.usePct (str/to-number (str/replace (array/nth (str/split (str/replace-pattern (str/trim (array/last (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))))) "\\s+" " ") " ") 4) "%" "")))
-        (emit DISK_DU_RUN { stage: "du", argv: (array/concat ["-sk", "--"] (array/flatten (array/map @config.items (fn it (array/map (object/get @it "paths") (fn p (if (str/startsWith @p "~/") (str/concat @entity.home (str/slice @p 1 (str/len @p))) (str/concat @entity.cwd "/" (str/slice @p 2 (str/len @p)))))))))) })
-      DiskDu_DONE -> measuring
+        (set @entity.specs (array/map @config.items (fn it (object/merge @it { abs: (array/map (object/get @it "paths") (fn p (if (str/startsWith @p "~/") (str/concat @entity.home (str/slice @p 1 (str/len @p))) (str/concat @entity.cwd "/" (str/slice @p 2 (str/len @p)))))) }))))
+        (emit DISK_ID_RUN { stage: "id", argv: ["-u"] })
+      DiskId_DONE -> measuring
+        (set @entity.uid (str/trim @payload.stdout))
+        (emit DISK_DATE_RUN { stage: "date", argv: ["-u", "+%Y-%m-%dT%H:%M:%S.000Z"] })
+      DiskDate_DONE -> measuring
+        (set @entity.scannedAt (str/trim @payload.stdout))
+        (emit DISK_FIND_RUN { stage: "walk", argv: [@entity.cwd, "(", "-type", "d", "-name", "node_modules", "-print", "-prune", ")", "-o", "(", "-name", ".git", "-prune", ")", "-o", "(", "-type", "d", "(", "-name", ".turbo", "-o", "-name", ".venv", ")", "-print", "-prune", ")", "-o", "(", "-type", "f", "-name", "Cargo.toml", "-print", ")"] })
+      DiskFind_DONE -> measuring when (= @payload.stage "walk")
+        (set @entity.walkLines (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))))
+        (emit DISK_FIND_RUN { stage: "tmp", argv: ["/private/tmp", "-maxdepth", "1", "-name", "orbital-verify-*"] })
+      DiskFind_DONE -> measuring when (= @payload.stage "tmp")
+        (set @entity.tmpLines (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))))
+        (emit DISK_FIND_RUN { stage: "sessions", argv: [(str/concat "/private/tmp/claude-" @entity.uid), "-mindepth", "2", "-maxdepth", "2", "-type", "d"] })
+      DiskFind_DONE -> measuring when (= @payload.stage "sessions")
+        (set @entity.sessions (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))))
+        (emit DISK_FIND_RUN { stage: "entries", argv: [(str/concat "/private/tmp/claude-" @entity.uid), "-mindepth", "4", "-maxdepth", "4", "(", "-path", (str/concat (str/concat "/private/tmp/claude-" @entity.uid) "/*/*/scratchpad/*"), "-o", "-path", (str/concat (str/concat "/private/tmp/claude-" @entity.uid) "/*/*/tasks/*"), ")"] })
+      DiskFind_DONE -> measuring when (= @payload.stage "entries")
+        (set @entity.entries (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))))
+        (emit DISK_FIND_RUN { stage: "fresh", argv: [(str/concat "/private/tmp/claude-" @entity.uid), "-mindepth", "2", "-mmin", "-2880"] })
+      DiskFind_DONE -> measuring when (= @payload.stage "fresh")
+        (set @entity.freshLines (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))))
+        (emit DISK_FRESH { })
+      DISK_FRESH -> measuring
+        (set @entity.freshSess (array/unique (array/map @entity.freshLines (fn l (str/join (array/slice (str/split @l "/") 0 (+ (array/len (str/split (str/concat "/private/tmp/claude-" @entity.uid) "/")) 2)) "/")))))
+        (set @entity.freshEnt (array/unique (array/map (array/filter @entity.freshLines (fn l (>= (array/len (str/split @l "/")) (+ (array/len (str/split (str/concat "/private/tmp/claude-" @entity.uid) "/")) 4)))) (fn l (str/join (array/slice (str/split @l "/") 0 (+ (array/len (str/split (str/concat "/private/tmp/claude-" @entity.uid) "/")) 4)) "/")))))
+        (emit DISK_GROUPS { })
+      DISK_GROUPS -> measuring
+        (set @entity.groups [{ id: "node-modules", paths: (array/filter @entity.walkLines (fn l (str/endsWith @l "/node_modules"))) }, { id: "rust-debug", paths: (array/map (array/map (array/filter @entity.walkLines (fn l (str/endsWith @l "/Cargo.toml"))) (fn l (str/slice @l 0 (- (str/len @l) 11)))) (fn d (str/concat @d "/target/debug"))) }, { id: "rust-release", paths: (array/map (array/map (array/filter @entity.walkLines (fn l (str/endsWith @l "/Cargo.toml"))) (fn l (str/slice @l 0 (- (str/len @l) 11)))) (fn d (str/concat @d "/target/release"))) }, { id: "turbo", paths: (array/filter @entity.walkLines (fn l (str/endsWith @l "/.turbo"))) }, { id: "venv", paths: (array/filter @entity.walkLines (fn l (str/endsWith @l "/.venv"))) }, { id: "verify-temp", paths: @entity.tmpLines }, { id: "claude", paths: (array/concat (array/filter @entity.sessions (fn s (not (array/includes @entity.freshSess @s)))) (array/filter @entity.entries (fn e (and (array/includes @entity.freshSess (str/join (array/slice (str/split @e "/") 0 (+ (array/len (str/split (str/concat "/private/tmp/claude-" @entity.uid) "/")) 2)) "/")) (not (array/includes @entity.freshEnt @e)))))) }])
+        (emit DISK_DU_RUN { stage: "du", argv: (array/concat ["-sk", "--"] (array/flatten (array/map @entity.specs (fn it (object/get @it "abs"))))) })
+      DiskDu_DONE -> measuring when (= @payload.stage "du")
         (set @entity.sizes (array/map (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))) (fn l { path: (array/nth (str/split @l "\t") 1), kb: (str/to-number (array/first (str/split @l "\t"))) })))
-        (set @entity.items (array/sort (array/map @config.items (fn it { id: (object/get @it "id"), label: (object/get @it "label"), tag: (object/get @it "tag"), bytes: (* 1024 (array/sum (array/map (object/get @it "paths") (fn p (let ((hit (array/find @entity.sizes (fn s (= (object/get @s "path") (if (str/startsWith @p "~/") (str/concat @entity.home (str/slice @p 1 (str/len @p))) (str/concat @entity.cwd "/" (str/slice @p 2 (str/len @p))))))))) (if (!= @hit null) (object/get @hit "kb") 0)))))) })) "bytes" "desc"))
+        (set @entity.gcursor 0)
+        (set @entity.groupKb [])
+        (emit DISK_GROUP_NEXT { })
+      DISK_GROUP_NEXT -> measuring when (and (< @entity.gcursor (array/len @entity.groups)) (> (array/len (object/get (array/nth @entity.groups @entity.gcursor) "paths")) 0))
+        (emit DISK_DU_RUN { stage: "grp", argv: (array/concat ["-sk", "--"] (object/get (array/nth @entity.groups @entity.gcursor) "paths")) })
+      DISK_GROUP_NEXT -> measuring when (and (< @entity.gcursor (array/len @entity.groups)) (= (array/len (object/get (array/nth @entity.groups @entity.gcursor) "paths")) 0))
+        (set @entity.groupKb (array/append @entity.groupKb { id: (object/get (array/nth @entity.groups @entity.gcursor) "id"), kb: 0, paths: [] }))
+        (set @entity.gcursor (+ @entity.gcursor 1))
+        (emit DISK_GROUP_NEXT { })
+      DiskDu_DONE -> measuring when (= @payload.stage "grp")
+        (set @entity.groupKb (array/append @entity.groupKb { id: (object/get (array/nth @entity.groups @entity.gcursor) "id"), kb: (array/sum (array/map (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))) (fn l (str/to-number (array/first (str/split @l "\t")))))), paths: (array/map (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))) (fn l (array/nth (str/split @l "\t") 1))) }))
+        (set @entity.gcursor (+ @entity.gcursor 1))
+        (emit DISK_GROUP_NEXT { })
+      DISK_GROUP_NEXT -> measuring when (>= @entity.gcursor (array/len @entity.groups))
+        (set @entity.items (array/map @entity.specs (fn it (let ((g (array/find @entity.groupKb (fn x (= (object/get @x "id") (object/get @it "walk")))))) (object/merge @it { exist: (if (!= (object/get @it "walk") "") (if (!= @g null) (object/get @g "paths") []) (array/filter (object/get @it "abs") (fn p (array/some @entity.sizes (fn s (= (object/get @s "path") @p)))))), bytes: (if (object/get @it "sizeless") -1 (if (!= (object/get @it "walk") "") (if (!= @g null) (* 1024 (object/get @g "kb")) 0) (* 1024 (array/sum (array/map (object/get @it "abs") (fn p (let ((hit (array/find @entity.sizes (fn s (= (object/get @s "path") @p))))) (if (!= @hit null) (object/get @hit "kb") 0)))))))) })))))
         (emit DISK_BUILT { })
-      DISK_BUILT -> ready when @entity.json
-        (emit DISK_ANSWERED { status: 200, body: (json/stringify { totalBytes: @entity.totalBytes, usedBytes: @entity.usedBytes, freeBytes: @entity.freeBytes, usePct: @entity.usePct, items: @entity.items }) })
-      DISK_BUILT -> ready when (not @entity.json)
-        (emit DISK_ANSWERED { status: 200, body: (let ((t (array/map (array/concat [@entity.usedBytes, @entity.freeBytes, @entity.totalBytes, (array/sum (array/map (array/filter @entity.items (fn r (= (object/get @r "tag") "safe"))) (fn r (object/get @r "bytes"))))] (array/map @entity.items (fn r (object/get @r "bytes")))) (fn b (let ((i (array/len (array/filter [1024, 1048576, 1073741824, 1099511627776] (fn t (>= @b @t)))))) (let ((v (/ @b (math/pow 1024 @i)))) (let ((s (str/concat (if (or (= @i 0) (>= @v 10)) (math/round @v) (/ (math/round (* @v 10)) 10))))) (str/concat @s (if (and (> @i 0) (< @v 10) (not (str/includes @s "."))) ".0" "") (array/nth ["B", "K", "M", "G", "T"] @i))))))))) (str/concat "Disk: " (array/nth @t 0) " used, " (array/nth @t 1) " free of " (array/nth @t 2) " (" @entity.usePct "%)\n\n" (str/join (array/map (array/range 0 (array/len @entity.items)) (fn k (let ((r (array/nth @entity.items @k))) (str/concat (str/padStart (array/nth @t (+ 4 @k)) 7 " ") "  " (str/padEnd (object/get @r "tag") 6 " ") "  " (str/padEnd (object/get @r "id") 28 " ") "  " (object/get @r "label"))))) "\n") "\n\nsafe batch: ~" (array/nth @t 3))) })
+      DISK_BUILT -> ready when (and (not @entity.clearMode) @entity.json)
+        (emit DISK_ANSWERED { status: 200, body: (json/stringify { kind: "report", df: { totalBytes: @entity.totalBytes, usedBytes: @entity.usedBytes, freeBytes: @entity.freeBytes, usePct: @entity.usePct }, items: (array/map (array/sort @entity.items "bytes" "desc") (fn r (object/merge (object/merge { id: (object/get @r "id"), label: (object/get @r "label"), category: (object/get @r "category") } (if (= (object/get @r "note") "") {} { note: (object/get @r "note") })) { batch: (object/get @r "batch"), clearable: (object/get @r "clearable"), danger: (object/get @r "danger"), sizeless: (object/get @r "sizeless"), bytes: (if (< (object/get @r "bytes") 0) null (object/get @r "bytes")) }))), scannedAt: @entity.scannedAt }) })
+      DISK_BUILT -> ready when (and (not @entity.clearMode) (not @entity.json))
+        (emit DISK_ANSWERED { status: 200, body: (let ((t (array/map (array/concat [@entity.usedBytes, @entity.freeBytes, @entity.totalBytes, (array/sum (array/map (array/filter (array/sort @entity.items "bytes" "desc") (fn r (= (if (not (object/get @r "clearable")) "keep" (if (object/get @r "batch") "safe" (if (object/get @r "danger") "danger" "cost"))) "safe"))) (fn r (if (< (object/get @r "bytes") 0) 0 (object/get @r "bytes")))))] (array/map (array/sort @entity.items "bytes" "desc") (fn r (object/get @r "bytes")))) (fn b (if (< @b 0) "—" (let ((i (array/len (array/filter [1024, 1048576, 1073741824, 1099511627776] (fn t (>= @b @t)))))) (let ((v (/ @b (math/pow 1024 @i)))) (let ((s (str/concat (if (or (= @i 0) (>= @v 10)) (math/round @v) (/ (math/round (* @v 10)) 10))))) (str/concat @s (if (and (> @i 0) (< @v 10) (not (str/includes @s "."))) ".0" "") (array/nth ["B", "K", "M", "G", "T"] @i)))))))))) (str/concat "Disk: " (array/nth @t 0) " used, " (array/nth @t 1) " free of " (array/nth @t 2) " (" @entity.usePct "%)\n\n" (str/join (array/map (array/range 0 (array/len (array/sort @entity.items "bytes" "desc"))) (fn k (let ((r (array/nth (array/sort @entity.items "bytes" "desc") @k))) (str/concat (str/padStart (array/nth @t (+ 4 @k)) 7 " ") "  " (str/padEnd (if (not (object/get @r "clearable")) "keep" (if (object/get @r "batch") "safe" (if (object/get @r "danger") "danger" "cost"))) 6 " ") "  " (str/padEnd (object/get @r "id") 28 " ") "  " (object/get @r "label"))))) "\n") "\n\nsafe batch: ~" (array/nth @t 3) "  →  " @config.command " --safe --yes\none item:   " @config.command " --clear <id> [--yes]")) })
+      DISK_BUILT -> measuring when @entity.clearMode
+        (set @entity.plan (array/map (array/filter @entity.items (fn it (and (object/get @it "clearable") (if @entity.safeMode (object/get @it "batch") (= (object/get @it "id") @entity.clearId))))) (fn it (let ((ex (object/get @it "exist"))) { id: (object/get @it "id"), act: (object/get @it "act"), note: (object/get @it "note"), cmd: (object/get @it "cmd"), bytes: (object/get @it "bytes"), dir: (if (> (array/len (object/get @it "abs")) 0) (array/first (object/get @it "abs")) ""), paths: @ex, safe: (array/filter @ex (fn p (and (not (str/includes @p "/../")) (not (str/includes @p "/./")) (or (and (str/startsWith @p (str/concat @entity.home "/")) (>= (array/len (array/filter (str/split (str/slice @p (+ (str/len @entity.home) 1) (str/len @p)) "/") (fn s (!= @s "")))) 2)) (and (str/startsWith @p (str/concat "/tmp" "/")) (>= (array/len (array/filter (str/split (str/slice @p (+ 4 1) (str/len @p)) "/") (fn s (!= @s "")))) 1)) (and (str/startsWith @p (str/concat "/private/tmp" "/")) (>= (array/len (array/filter (str/split (str/slice @p (+ 12 1) (str/len @p)) "/") (fn s (!= @s "")))) 1)))))), unsafe: (array/reject @ex (fn p (and (not (str/includes @p "/../")) (not (str/includes @p "/./")) (or (and (str/startsWith @p (str/concat @entity.home "/")) (>= (array/len (array/filter (str/split (str/slice @p (+ (str/len @entity.home) 1) (str/len @p)) "/") (fn s (!= @s "")))) 2)) (and (str/startsWith @p (str/concat "/tmp" "/")) (>= (array/len (array/filter (str/split (str/slice @p (+ 4 1) (str/len @p)) "/") (fn s (!= @s "")))) 1)) (and (str/startsWith @p (str/concat "/private/tmp" "/")) (>= (array/len (array/filter (str/split (str/slice @p (+ 12 1) (str/len @p)) "/") (fn s (!= @s "")))) 1)))))) }))))
+        (emit DISK_PLANNED { })
+      DISK_PLANNED -> measuring when (or (not @entity.json) (not @entity.yes))
+        (set @entity.listing (let ((t (array/map (array/map @entity.plan (fn r (object/get @r "bytes"))) (fn b (if (< @b 0) "—" (let ((i (array/len (array/filter [1024, 1048576, 1073741824, 1099511627776] (fn t (>= @b @t)))))) (let ((v (/ @b (math/pow 1024 @i)))) (let ((s (str/concat (if (or (= @i 0) (>= @v 10)) (math/round @v) (/ (math/round (* @v 10)) 10))))) (str/concat @s (if (and (> @i 0) (< @v 10) (not (str/includes @s "."))) ".0" "") (array/nth ["B", "K", "M", "G", "T"] @i)))))))))) (array/flatten (array/map (array/range 0 (array/len @entity.plan)) (fn k (let ((r (array/nth @entity.plan @k))) (array/concat [(str/concat (str/padStart (array/nth @t @k) 7 " ") "  " (object/get @r "id") (if (= (object/get @r "note") "") "" (str/concat "  — " (object/get @r "note"))))] (if (= (object/get @r "act") "rm") (array/map (object/get @r "paths") (fn p (str/concat "           " @p))) []))))))))
+        (emit DISK_LISTED { })
+      DISK_PLANNED -> measuring when (and @entity.json @entity.yes)
+        (set @entity.listing [])
+        (emit DISK_LISTED { })
+      DISK_LISTED -> ready when (and (not @entity.yes) @entity.json)
+        (emit DISK_ANSWERED { status: 200, body: (json/stringify { kind: "preview", bytes: (array/sum (array/map @entity.plan (fn r (if (< (object/get @r "bytes") 0) 0 (object/get @r "bytes"))))), targets: (array/map @entity.plan (fn r { id: (object/get @r "id"), bytes: (if (< (object/get @r "bytes") 0) null (object/get @r "bytes")), paths: (if (= (object/get @r "act") "rm") (object/get @r "paths") []) })) }) })
+      DISK_LISTED -> ready when (and (not @entity.yes) (not @entity.json))
+        (emit DISK_ANSWERED { status: 200, body: (str/concat (str/join @entity.listing "\n") "\n\ndry run: ~" (array/first (array/map [(array/sum (array/map @entity.plan (fn r (if (< (object/get @r "bytes") 0) 0 (object/get @r "bytes")))))] (fn b (if (< @b 0) "—" (let ((i (array/len (array/filter [1024, 1048576, 1073741824, 1099511627776] (fn t (>= @b @t)))))) (let ((v (/ @b (math/pow 1024 @i)))) (let ((s (str/concat (if (or (= @i 0) (>= @v 10)) (math/round @v) (/ (math/round (* @v 10)) 10))))) (str/concat @s (if (and (> @i 0) (< @v 10) (not (str/includes @s "."))) ".0" "") (array/nth ["B", "K", "M", "G", "T"] @i))))))))) " would be cleared. Add --yes to clear.") })
+      DISK_LISTED -> clearing when @entity.yes
+        (set @entity.cursor 0)
+        (set @entity.logs [])
+        (set @entity.cleared [])
+        (set @entity.failed [])
+        (emit DISK_CLEAR_NEXT { })
       DiskDf_FAILED -> ready
         (emit DISK_ANSWERED { status: 500, body: (str/concat @payload.code ": " @payload.error) })
       DiskDu_FAILED -> ready
         (emit DISK_ANSWERED { status: 500, body: (str/concat @payload.code ": " @payload.error) })
+      DiskFind_FAILED -> ready
+        (emit DISK_ANSWERED { status: 500, body: (str/concat @payload.code ": " @payload.error) })
+      DiskId_FAILED -> ready
+        (emit DISK_ANSWERED { status: 500, body: (str/concat @payload.code ": " @payload.error) })
+      DiskDate_FAILED -> ready
+        (emit DISK_ANSWERED { status: 500, body: (str/concat @payload.code ": " @payload.error) })
       DISK_HOST_FAILED -> ready
         (emit DISK_ANSWERED { status: 500, body: "disk_host_failed: HOME could not be read" })
+    }
+
+    state clearing {
+      INIT -> clearing
+      DISK_CLEAR_NEXT -> clearing when (>= @entity.cursor (array/len @entity.plan))
+        (emit DISK_DF_RUN { stage: "df2", argv: ["-k", @config.volume] })
+      DISK_CLEAR_NEXT -> clearing when (and (< @entity.cursor (array/len @entity.plan)) (= (object/get (array/nth @entity.plan @entity.cursor) "act") "rm") (> (array/len (object/get (array/nth @entity.plan @entity.cursor) "safe")) 0))
+        (set @entity.logs (array/concat @entity.logs [(str/concat "disk: clearing " (object/get (array/nth @entity.plan @entity.cursor) "id"))] (if (> (array/len (object/get (array/nth @entity.plan @entity.cursor) "unsafe")) 0) [(str/concat "disk: refusing to remove unsafe paths: " (str/join (object/get (array/nth @entity.plan @entity.cursor) "unsafe") ", "))] []) (array/map (object/get (array/nth @entity.plan @entity.cursor) "safe") (fn p (str/concat "disk: rm -rf " @p)))))
+        (emit DISK_RM_RUN { stage: "rm", argv: (array/concat ["-rf", "--"] (object/get (array/nth @entity.plan @entity.cursor) "safe")) })
+      DISK_CLEAR_NEXT -> clearing when (and (< @entity.cursor (array/len @entity.plan)) (= (object/get (array/nth @entity.plan @entity.cursor) "act") "rm") (= (array/len (object/get (array/nth @entity.plan @entity.cursor) "safe")) 0))
+        (set @entity.logs (array/concat @entity.logs [(str/concat "disk: clearing " (object/get (array/nth @entity.plan @entity.cursor) "id"))] (if (> (array/len (object/get (array/nth @entity.plan @entity.cursor) "unsafe")) 0) [(str/concat "disk: refusing to remove unsafe paths: " (str/join (object/get (array/nth @entity.plan @entity.cursor) "unsafe") ", "))] [])))
+        (emit DISK_TARGET_DONE { ok: true, error: "" })
+      DISK_CLEAR_NEXT -> clearing when (and (< @entity.cursor (array/len @entity.plan)) (= (object/get (array/nth @entity.plan @entity.cursor) "act") "contents") (> (array/len (object/get (array/nth @entity.plan @entity.cursor) "safe")) 0))
+        (set @entity.logs (array/append @entity.logs (str/concat "disk: clearing " (object/get (array/nth @entity.plan @entity.cursor) "id"))))
+        (emit DISK_FIND_RUN { stage: "clear", argv: [(array/first (object/get (array/nth @entity.plan @entity.cursor) "safe")), "-mindepth", "1", "-maxdepth", "1", "-exec", "rm", "-rf", "--", "{}", "+"] })
+      DISK_CLEAR_NEXT -> clearing when (and (< @entity.cursor (array/len @entity.plan)) (= (object/get (array/nth @entity.plan @entity.cursor) "act") "contents") (= (array/len (object/get (array/nth @entity.plan @entity.cursor) "safe")) 0))
+        (set @entity.logs (array/append @entity.logs (str/concat "disk: clearing " (object/get (array/nth @entity.plan @entity.cursor) "id"))))
+        (emit DISK_TARGET_DONE { ok: true, error: "" })
+      DISK_CLEAR_NEXT -> clearing when (and (< @entity.cursor (array/len @entity.plan)) (= (object/get (array/nth @entity.plan @entity.cursor) "act") "tree"))
+        (set @entity.logs (array/append @entity.logs (str/concat "disk: clearing " (object/get (array/nth @entity.plan @entity.cursor) "id"))))
+        (emit DISK_FIND_RUN { stage: "clear", argv: [@entity.cwd, "-type", "d", "-name", "node_modules", "-prune", "-exec", "rm", "-rf", "--", "{}", "+"] })
+      DISK_CLEAR_NEXT -> clearing when (and (< @entity.cursor (array/len @entity.plan)) (= (object/get (array/nth @entity.plan @entity.cursor) "act") "cmd") (= (array/first (object/get (array/nth @entity.plan @entity.cursor) "cmd")) "pnpm"))
+        (set @entity.logs (array/append @entity.logs (str/concat "disk: clearing " (object/get (array/nth @entity.plan @entity.cursor) "id"))))
+        (emit DISK_PNPM_RUN { stage: "pnpm", argv: (array/drop (object/get (array/nth @entity.plan @entity.cursor) "cmd") 1) })
+      DISK_CLEAR_NEXT -> clearing when (and (< @entity.cursor (array/len @entity.plan)) (= (object/get (array/nth @entity.plan @entity.cursor) "act") "cmd") (= (array/first (object/get (array/nth @entity.plan @entity.cursor) "cmd")) "brew"))
+        (set @entity.logs (array/append @entity.logs (str/concat "disk: clearing " (object/get (array/nth @entity.plan @entity.cursor) "id"))))
+        (emit DISK_BREW_RUN { stage: "brew", argv: (array/drop (object/get (array/nth @entity.plan @entity.cursor) "cmd") 1) })
+      DISK_CLEAR_NEXT -> clearing when (and (< @entity.cursor (array/len @entity.plan)) (= (object/get (array/nth @entity.plan @entity.cursor) "act") "cmd") (= (array/first (object/get (array/nth @entity.plan @entity.cursor) "cmd")) "xcrun"))
+        (set @entity.logs (array/append @entity.logs (str/concat "disk: clearing " (object/get (array/nth @entity.plan @entity.cursor) "id"))))
+        (emit DISK_XCRUN_RUN { stage: "xcrun", argv: (array/drop (object/get (array/nth @entity.plan @entity.cursor) "cmd") 1) })
+      DiskRm_DONE -> clearing when (= @payload.exitCode 0)
+        (emit DISK_TARGET_DONE { ok: true, error: "" })
+      DiskRm_DONE -> clearing when (!= @payload.exitCode 0)
+        (emit DISK_TARGET_DONE { ok: false, error: (str/trim @payload.stderr) })
+      DiskRm_FAILED -> clearing
+        (emit DISK_TARGET_DONE { ok: false, error: (str/concat @payload.code ": " @payload.error) })
+      DiskFind_DONE -> clearing
+        (emit DISK_TARGET_DONE { ok: true, error: "" })
+      DiskFind_FAILED -> clearing
+        (emit DISK_TARGET_DONE { ok: true, error: "" })
+      DiskPnpm_DONE -> clearing
+        (emit DISK_TARGET_DONE { ok: true, error: "" })
+      DiskPnpm_FAILED -> clearing
+        (emit DISK_TARGET_DONE { ok: true, error: "" })
+      DiskBrew_DONE -> clearing
+        (emit DISK_TARGET_DONE { ok: true, error: "" })
+      DiskBrew_FAILED -> clearing
+        (emit DISK_TARGET_DONE { ok: true, error: "" })
+      DiskXcrun_DONE -> clearing
+        (emit DISK_TARGET_DONE { ok: true, error: "" })
+      DiskXcrun_FAILED -> clearing
+        (emit DISK_TARGET_DONE { ok: true, error: "" })
+      DISK_TARGET_DONE -> clearing when @payload.ok
+        (set @entity.cleared (array/append @entity.cleared (object/get (array/nth @entity.plan @entity.cursor) "id")))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit DISK_CLEAR_NEXT { })
+      DISK_TARGET_DONE -> clearing when (not @payload.ok)
+        (set @entity.failed (array/append @entity.failed { id: (object/get (array/nth @entity.plan @entity.cursor) "id"), error: @payload.error }))
+        (set @entity.logs (array/append @entity.logs (str/concat "disk: clear " (object/get (array/nth @entity.plan @entity.cursor) "id") " failed: " @payload.error)))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit DISK_CLEAR_NEXT { })
+      DiskDf_DONE -> clearing
+        (set @entity.afterTotal (* 1024 (str/to-number (array/nth (str/split (str/replace-pattern (str/trim (array/last (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))))) "\\s+" " ") " ") 1))))
+        (set @entity.afterUsed (* 1024 (str/to-number (array/nth (str/split (str/replace-pattern (str/trim (array/last (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))))) "\\s+" " ") " ") 2))))
+        (set @entity.afterFree (* 1024 (str/to-number (array/nth (str/split (str/replace-pattern (str/trim (array/last (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))))) "\\s+" " ") " ") 3))))
+        (set @entity.afterPct (str/to-number (str/replace (array/nth (str/split (str/replace-pattern (str/trim (array/last (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))))) "\\s+" " ") " ") 4) "%" "")))
+        (emit DISK_FINISH { })
+      DISK_FINISH -> ready when @entity.json
+        (emit DISK_ANSWERED { status: (if (> (array/len @entity.failed) 0) 500 200), body: (json/stringify { kind: "cleared", cleared: @entity.cleared, failed: @entity.failed, freedBytes: (math/max 0 (- @entity.usedBytes @entity.afterUsed)), df: { totalBytes: @entity.afterTotal, usedBytes: @entity.afterUsed, freeBytes: @entity.afterFree, usePct: @entity.afterPct }, log: @entity.logs }) })
+      DISK_FINISH -> ready when (not @entity.json)
+        (emit DISK_ANSWERED { status: (if (> (array/len @entity.failed) 0) 500 200), body: (let ((t (array/map [(math/max 0 (- @entity.usedBytes @entity.afterUsed)), @entity.afterFree] (fn b (if (< @b 0) "—" (let ((i (array/len (array/filter [1024, 1048576, 1073741824, 1099511627776] (fn t (>= @b @t)))))) (let ((v (/ @b (math/pow 1024 @i)))) (let ((s (str/concat (if (or (= @i 0) (>= @v 10)) (math/round @v) (/ (math/round (* @v 10)) 10))))) (str/concat @s (if (and (> @i 0) (< @v 10) (not (str/includes @s "."))) ".0" "") (array/nth ["B", "K", "M", "G", "T"] @i)))))))))) (str/concat (str/join (array/concat @entity.listing @entity.logs) "\n") "\n\nfreed " (array/nth @t 0) "; now " (array/nth @t 1) " free" (str/join (array/map @entity.failed (fn f (str/concat "\nfailed: " (object/get @f "id") ": " (object/get @f "error")))) ""))) })
+      DiskDf_FAILED -> ready
+        (emit DISK_ANSWERED { status: 500, body: (str/concat @payload.code ": " @payload.error) })
     }
 
     emits {
@@ -98,10 +355,31 @@ orbital OrbDiskOrbital {
         @description "Internal: the command's answer, which the cli hook prints."
         @tier "internal"
       DISK_DF_RUN { stage : string!  argv : [string]! }
-        @description "Internal: run df on the volume."
+        @description "Internal: run df."
         @tier "internal"
       DISK_DU_RUN { stage : string!  argv : [string]! }
-        @description "Internal: run du over the item paths."
+        @description "Internal: run du."
+        @tier "internal"
+      DISK_FIND_RUN { stage : string!  argv : [string]! }
+        @description "Internal: run find."
+        @tier "internal"
+      DISK_ID_RUN { stage : string!  argv : [string]! }
+        @description "Internal: run id."
+        @tier "internal"
+      DISK_DATE_RUN { stage : string!  argv : [string]! }
+        @description "Internal: run date."
+        @tier "internal"
+      DISK_RM_RUN { stage : string!  argv : [string]! }
+        @description "Internal: run rm."
+        @tier "internal"
+      DISK_PNPM_RUN { stage : string!  argv : [string]! }
+        @description "Internal: run pnpm."
+        @tier "internal"
+      DISK_BREW_RUN { stage : string!  argv : [string]! }
+        @description "Internal: run brew."
+        @tier "internal"
+      DISK_XCRUN_RUN { stage : string!  argv : [string]! }
+        @description "Internal: run xcrun."
         @tier "internal"
       DISK_HOME { value : string! }
         @description "Internal: the os/getenv answer for HOME."
@@ -109,8 +387,38 @@ orbital OrbDiskOrbital {
       DISK_HOST_FAILED { error : string }
         @description "Internal: HOME could not be read."
         @tier "internal"
+      DISK_PARSE { }
+        @description "Internal: the arguments are stored; derive the flags."
+        @tier "internal"
+      DISK_ROUTE { }
+        @description "Internal: route to the usage, the unknown-item error or the measuring."
+        @tier "internal"
+      DISK_FRESH { }
+        @description "Internal: the fresh Claude temp entries are listed; reduce them to session and entry keys."
+        @tier "internal"
+      DISK_GROUPS { }
+        @description "Internal: build the walk groups the sizing needs."
+        @tier "internal"
+      DISK_GROUP_NEXT { }
+        @description "Internal: size the next walk group."
+        @tier "internal"
       DISK_BUILT { }
-        @description "Internal: the items are sized and sorted."
+        @description "Internal: the items are sized."
+        @tier "internal"
+      DISK_PLANNED { }
+        @description "Internal: the clear targets are planned."
+        @tier "internal"
+      DISK_LISTED { }
+        @description "Internal: the clear listing is built."
+        @tier "internal"
+      DISK_CLEAR_NEXT { }
+        @description "Internal: clear the next target."
+        @tier "internal"
+      DISK_TARGET_DONE { ok : boolean!  error : string }
+        @description "Internal: one target is cleared (ok) or failed (error)."
+        @tier "internal"
+      DISK_FINISH { }
+        @description "Internal: every target ran and df is read again."
         @tier "internal"
     }
 
@@ -118,31 +426,43 @@ orbital OrbDiskOrbital {
       volume : string = "/System/Volumes/Data"
         @label "Volume"
         @description "The mount point df reports for the used, free and total line."
+      command : string = "orb disk"
+        @label "Command"
+        @description "The command name the report footer tells the reader to run."
       items : [DiskSpec] = [
-        { id: "chrome-disk-cache", label: "Chrome disk cache", tag: "safe", paths: ["~/Library/Caches/Google/Chrome"] },
-        { id: "misc-caches", label: "Misc dev caches (ts, node, node-gyp, mesa, thumbnails)", tag: "safe", paths: ["~/Library/Caches/typescript", "~/Library/Caches/node-gyp", "~/.cache/node"] },
-        { id: "npm-cache", label: "npm cache", tag: "safe", paths: ["~/.npm/_cacache"] },
-        { id: "cargo-registry-cache", label: "Cargo registry download cache", tag: "safe", paths: ["~/.cargo/registry/cache"] },
-        { id: "homebrew-cache", label: "Homebrew downloads (brew cleanup)", tag: "safe", paths: ["~/Library/Caches/Homebrew"] },
-        { id: "xcode-derived-data", label: "Xcode DerivedData", tag: "safe", paths: ["~/Library/Developer/Xcode/DerivedData"] },
-        { id: "sccache", label: "sccache compile cache", tag: "cost", paths: ["~/Library/Caches/Mozilla.sccache"] },
-        { id: "playwright", label: "Playwright browsers", tag: "cost", paths: ["~/Library/Caches/ms-playwright"] },
-        { id: "bun-cache", label: "Bun install cache", tag: "cost", paths: ["~/.bun/install/cache"] },
-        { id: "gradle-caches", label: "Gradle caches", tag: "cost", paths: ["~/.gradle/caches"] },
-        { id: "core-simulator-caches", label: "iOS simulator caches", tag: "cost", paths: ["~/Library/Developer/CoreSimulator/Caches"] },
-        { id: "trash", label: "Trash", tag: "cost", paths: ["~/.Trash"] },
-        { id: "overlay-stage", label: "Cascade overlay staging (.overlay/stage)", tag: "cost", paths: ["./.overlay/stage"] },
-        { id: "pnpm-store", label: "pnpm store (shared backing)", tag: "keep", paths: ["~/Library/pnpm/store"] },
-        { id: "huggingface-models", label: "Hugging Face models", tag: "keep", paths: ["~/.cache/huggingface"] },
-        { id: "colima-vm", label: "Colima VM disk (local CI runners)", tag: "keep", paths: ["~/.colima"] },
-        { id: "android-sdk", label: "Android SDK + emulators (~/.android, ~/Library/Android)", tag: "keep", paths: ["~/.android", "~/Library/Android"] },
-        { id: "rust-toolchains", label: "Rust toolchains (~/.rustup)", tag: "keep", paths: ["~/.rustup"] },
-        { id: "git-history", label: "Git histories (.git)", tag: "keep", paths: ["./.git"] },
-        { id: "model-weights", label: "Model weights (masar/weights)", tag: "keep", paths: ["./masar/weights"] },
-        { id: "assets", label: "Game assets (almadar-assets)", tag: "keep", paths: ["./almadar-assets"] }
+        { id: "rust-target-debug", label: "Rust target/debug (build artifacts)", category: "build", note: "Regenerates on next cargo build/test — target/release is kept. A cargo test running right now rebuilds from scratch.", batch: true, clearable: true, danger: false, sizeless: false, paths: [], walk: "rust-debug", act: "rm", cmd: [] },
+        { id: "turbo-cache", label: "Turbo build caches (.turbo)", category: "build", note: "Regenerates on next turbo/pnpm build.", batch: true, clearable: true, danger: false, sizeless: false, paths: [], walk: "turbo", act: "rm", cmd: [] },
+        { id: "verify-temp-apps", label: "Verify temp apps (orbital-verify-*)", category: "build", note: "Rebuilt by the next orb verify / runtime-verify run.", batch: true, clearable: true, danger: false, sizeless: false, paths: [], walk: "verify-temp", act: "rm", cmd: [] },
+        { id: "claude-stale-sessions", label: "Claude Code session temp (idle 2+ days)", category: "cache", note: "Whole sessions idle 2+ days, and inside live sessions each scratchpad / task-output entry idle 2+ days. Anything touched recently is kept.", batch: true, clearable: true, danger: false, sizeless: false, paths: [], walk: "claude", act: "rm", cmd: [] },
+        { id: "chrome-disk-cache", label: "Chrome disk cache", category: "cache", note: "Browser disk cache — not your profile/history.", batch: true, clearable: true, danger: false, sizeless: false, paths: ["~/Library/Caches/Google/Chrome"], walk: "", act: "contents", cmd: [] },
+        { id: "misc-caches", label: "Misc dev caches (ts, node, node-gyp, mesa, thumbnails)", category: "cache", note: "", batch: true, clearable: true, danger: false, sizeless: false, paths: ["~/Library/Caches/typescript", "~/Library/Caches/node-gyp", "~/.cache/node"], walk: "", act: "rm", cmd: [] },
+        { id: "npm-cache", label: "npm cache", category: "cache", note: "", batch: true, clearable: true, danger: false, sizeless: false, paths: ["~/.npm/_cacache"], walk: "", act: "rm", cmd: [] },
+        { id: "cargo-registry-cache", label: "Cargo registry download cache", category: "cache", note: "Crate tarballs — re-downloaded on next cargo build.", batch: true, clearable: true, danger: false, sizeless: false, paths: ["~/.cargo/registry/cache"], walk: "", act: "contents", cmd: [] },
+        { id: "pnpm-store-prune", label: "pnpm store — prune orphaned packages", category: "cache", note: "Removes only packages no project references. Safe.", batch: true, clearable: true, danger: false, sizeless: true, paths: [], walk: "", act: "cmd", cmd: ["pnpm", "store", "prune"] },
+        { id: "homebrew-cache", label: "Homebrew downloads (brew cleanup)", category: "cache", note: "Old bottles and downloads; installed formulae are kept.", batch: true, clearable: true, danger: false, sizeless: false, paths: ["~/Library/Caches/Homebrew"], walk: "", act: "cmd", cmd: ["brew", "cleanup", "--prune=all"] },
+        { id: "xcode-derived-data", label: "Xcode DerivedData", category: "build", note: "iOS shell build products — regenerated on the next Xcode build.", batch: true, clearable: true, danger: false, sizeless: false, paths: ["~/Library/Developer/Xcode/DerivedData"], walk: "", act: "contents", cmd: [] },
+        { id: "ios-simulators-unavailable", label: "iOS simulators for removed runtimes", category: "cache", note: "xcrun simctl delete unavailable — only devices whose runtime is gone.", batch: true, clearable: true, danger: false, sizeless: true, paths: [], walk: "", act: "cmd", cmd: ["xcrun", "simctl", "delete", "unavailable"] },
+        { id: "rust-target-release", label: "Rust target/release", category: "build", note: "The next `make release install` is a full rebuild. Installed ~/bin/orb is unaffected.", batch: false, clearable: true, danger: false, sizeless: false, paths: [], walk: "rust-release", act: "rm", cmd: [] },
+        { id: "sccache", label: "sccache compile cache", category: "cache", note: "Rust builds are slower until it warms up again.", batch: false, clearable: true, danger: false, sizeless: false, paths: ["~/Library/Caches/Mozilla.sccache"], walk: "", act: "contents", cmd: [] },
+        { id: "playwright", label: "Playwright browsers", category: "cache", note: "Re-downloads on next headed verify / e2e.", batch: false, clearable: true, danger: false, sizeless: false, paths: ["~/Library/Caches/ms-playwright"], walk: "", act: "rm", cmd: [] },
+        { id: "bun-cache", label: "Bun install cache", category: "cache", note: "Re-downloaded on next bun install.", batch: false, clearable: true, danger: false, sizeless: false, paths: ["~/.bun/install/cache"], walk: "", act: "rm", cmd: [] },
+        { id: "gradle-caches", label: "Gradle caches", category: "cache", note: "Android shell dependencies — re-downloaded on the next Gradle build.", batch: false, clearable: true, danger: false, sizeless: false, paths: ["~/.gradle/caches"], walk: "", act: "rm", cmd: [] },
+        { id: "core-simulator-caches", label: "iOS simulator caches", category: "cache", note: "Simulator dyld/runtime caches — rebuilt on the next simulator boot (slow first boot).", batch: false, clearable: true, danger: false, sizeless: false, paths: ["~/Library/Developer/CoreSimulator/Caches"], walk: "", act: "contents", cmd: [] },
+        { id: "trash", label: "Trash", category: "cache", note: "Empties ~/.Trash — gone for good.", batch: false, clearable: true, danger: false, sizeless: false, paths: ["~/.Trash"], walk: "", act: "contents", cmd: [] },
+        { id: "overlay-stage", label: "Cascade overlay staging (.overlay/stage)", category: "build", note: "Local-verify staging — clear only if not mid cascade-verify.", batch: false, clearable: true, danger: false, sizeless: false, paths: ["./.overlay/stage"], walk: "", act: "rm", cmd: [] },
+        { id: "node-modules", label: "node_modules (all, grouped)", category: "heavy", note: "Reinstall required (pnpm install). Post-dedupe these are mostly hardlinks to the store, so real reclaim is low; clearing blocks every build until reinstalled.", batch: false, clearable: true, danger: true, sizeless: false, paths: [], walk: "node-modules", act: "tree", cmd: [] },
+        { id: "pnpm-store", label: "pnpm store (shared backing)", category: "store", note: "Backs all deduped node_modules — keep (the batch prunes its orphans).", batch: false, clearable: false, danger: false, sizeless: false, paths: ["~/Library/pnpm/store"], walk: "", act: "", cmd: [] },
+        { id: "huggingface-models", label: "Hugging Face models", category: "data", note: "Downloaded model weights — remove unused ones with `hf cache delete`.", batch: false, clearable: false, danger: false, sizeless: false, paths: ["~/.cache/huggingface"], walk: "", act: "", cmd: [] },
+        { id: "colima-vm", label: "Colima VM disk (local CI runners)", category: "data", note: "The runners' Docker VM. Inside it: `colima ssh -- docker system prune -af`; the image file may not shrink.", batch: false, clearable: false, danger: false, sizeless: false, paths: ["~/.colima"], walk: "", act: "", cmd: [] },
+        { id: "android-sdk", label: "Android SDK + emulators (~/.android, ~/Library/Android)", category: "data", note: "Remove unused AVDs / system images from Android Studio's Device Manager.", batch: false, clearable: false, danger: false, sizeless: false, paths: ["~/.android", "~/Library/Android"], walk: "", act: "", cmd: [] },
+        { id: "rust-toolchains", label: "Rust toolchains (~/.rustup)", category: "data", note: "Remove old ones with `rustup toolchain list` / `rustup toolchain uninstall <x>`.", batch: false, clearable: false, danger: false, sizeless: false, paths: ["~/.rustup"], walk: "", act: "", cmd: [] },
+        { id: "git-history", label: "Git histories (.git)", category: "data", note: "Bloated by committed CLI binaries — `git gc` trims some.", batch: false, clearable: false, danger: false, sizeless: false, paths: ["./.git"], walk: "", act: "", cmd: [] },
+        { id: "model-weights", label: "Model weights (masar/weights)", category: "data", note: "", batch: false, clearable: false, danger: false, sizeless: false, paths: ["./masar/weights"], walk: "", act: "", cmd: [] },
+        { id: "assets", label: "Game assets (almadar-assets)", category: "data", note: "", batch: false, clearable: false, danger: false, sizeless: false, paths: ["./almadar-assets"], walk: "", act: "", cmd: [] },
+        { id: "python-venvs", label: "Python venvs (torch/CUDA)", category: "data", note: "", batch: false, clearable: false, danger: false, sizeless: false, paths: [], walk: "venv", act: "", cmd: [] }
       ]
         @label "Items"
-        @description "The registry: id, label, tag and the paths ('~/' under the home directory, './' under the working directory) du sizes."
+        @description "The registry in the order the clear batch runs: id, label, category, note, flags, the paths ('~/' under the home directory, './' under the working directory) du sizes, the walk group that supplies the paths instead, and the clear action (rm, contents, cmd with its argv, tree)."
     }
 
     listens {
@@ -156,6 +476,20 @@ orbital OrbDiskOrbital {
       DiskDf.CLI_FAILED -> DiskDf_FAILED
       DiskDu.CLI_DONE -> DiskDu_DONE
       DiskDu.CLI_FAILED -> DiskDu_FAILED
+      DiskFind.CLI_DONE -> DiskFind_DONE
+      DiskFind.CLI_FAILED -> DiskFind_FAILED
+      DiskId.CLI_DONE -> DiskId_DONE
+      DiskId.CLI_FAILED -> DiskId_FAILED
+      DiskDate.CLI_DONE -> DiskDate_DONE
+      DiskDate.CLI_FAILED -> DiskDate_FAILED
+      DiskRm.CLI_DONE -> DiskRm_DONE
+      DiskRm.CLI_FAILED -> DiskRm_FAILED
+      DiskPnpm.CLI_DONE -> DiskPnpm_DONE
+      DiskPnpm.CLI_FAILED -> DiskPnpm_FAILED
+      DiskBrew.CLI_DONE -> DiskBrew_DONE
+      DiskBrew.CLI_FAILED -> DiskBrew_FAILED
+      DiskXcrun.CLI_DONE -> DiskXcrun_DONE
+      DiskXcrun.CLI_FAILED -> DiskXcrun_FAILED
       DiskDf_DONE { stage : string!  exitCode : number!  signal : number!  stdout : string!  stdoutBytes : bytes!  stderr : string! }
         @description "std-cli's CLI_DONE for df."
       DiskDf_FAILED { stage : string!  error : string!  code : string! }
@@ -164,8 +498,36 @@ orbital OrbDiskOrbital {
         @description "std-cli's CLI_DONE for du."
       DiskDu_FAILED { stage : string!  error : string!  code : string! }
         @description "std-cli's CLI_FAILED for du."
+      DiskFind_DONE { stage : string!  exitCode : number!  signal : number!  stdout : string!  stdoutBytes : bytes!  stderr : string! }
+        @description "std-cli's CLI_DONE for find."
+      DiskFind_FAILED { stage : string!  error : string!  code : string! }
+        @description "std-cli's CLI_FAILED for find."
+      DiskId_DONE { stage : string!  exitCode : number!  signal : number!  stdout : string!  stdoutBytes : bytes!  stderr : string! }
+        @description "std-cli's CLI_DONE for id."
+      DiskId_FAILED { stage : string!  error : string!  code : string! }
+        @description "std-cli's CLI_FAILED for id."
+      DiskDate_DONE { stage : string!  exitCode : number!  signal : number!  stdout : string!  stdoutBytes : bytes!  stderr : string! }
+        @description "std-cli's CLI_DONE for date."
+      DiskDate_FAILED { stage : string!  error : string!  code : string! }
+        @description "std-cli's CLI_FAILED for date."
+      DiskRm_DONE { stage : string!  exitCode : number!  signal : number!  stdout : string!  stdoutBytes : bytes!  stderr : string! }
+        @description "std-cli's CLI_DONE for rm."
+      DiskRm_FAILED { stage : string!  error : string!  code : string! }
+        @description "std-cli's CLI_FAILED for rm."
+      DiskPnpm_DONE { stage : string!  exitCode : number!  signal : number!  stdout : string!  stdoutBytes : bytes!  stderr : string! }
+        @description "std-cli's CLI_DONE for pnpm."
+      DiskPnpm_FAILED { stage : string!  error : string!  code : string! }
+        @description "std-cli's CLI_FAILED for pnpm."
+      DiskBrew_DONE { stage : string!  exitCode : number!  signal : number!  stdout : string!  stdoutBytes : bytes!  stderr : string! }
+        @description "std-cli's CLI_DONE for brew."
+      DiskBrew_FAILED { stage : string!  error : string!  code : string! }
+        @description "std-cli's CLI_FAILED for brew."
+      DiskXcrun_DONE { stage : string!  exitCode : number!  signal : number!  stdout : string!  stdoutBytes : bytes!  stderr : string! }
+        @description "std-cli's CLI_DONE for xcrun."
+      DiskXcrun_FAILED { stage : string!  error : string!  code : string! }
+        @description "std-cli's CLI_FAILED for xcrun."
     }
   }
 
-  page "/orb-disk" as OrbDiskPage -> OrbDisk, DiskDf, DiskDu
+  page "/orb-disk" as OrbDiskPage -> OrbDisk, DiskDf, DiskDu, DiskFind, DiskId, DiskDate, DiskRm, DiskPnpm, DiskBrew, DiskXcrun
 }

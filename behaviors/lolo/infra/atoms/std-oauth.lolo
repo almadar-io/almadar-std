@@ -3,6 +3,7 @@ app std-oauth [
   description: "std-oauth — OAuth 2 / OpenID Connect authorization-code flow with PKCE for Google, GitHub and Auth0, on the canonical oauth-client auth. OAUTH_AUTHORIZE starts an authorization (authUrl + state), OAUTH_TOKEN and OAUTH_CONNECT complete it once, OAUTH_REFRESH, OAUTH_REVOKE and OAUTH_USERINFO act on a token, OAUTH_CONNECTION and OAUTH_DISCONNECT read and drop the signed-in caller's provider connection. OAUTH_CONNECT keeps the exchanged tokens with the host and answers only the connection row. Without client credentials, or with mode mock, the atom runs the in-memory mock backend. Every failure answers the action's OAUTH_<ACTION>_ERROR ({code, message}); no token, verifier or vendor body reaches a failure.",
   egress: ["https://accounts.google.com", "https://oauth2.googleapis.com", "https://openidconnect.googleapis.com", "https://github.com"]
 ]
+uses Spec from "almadar-std/oauth"
 type OAuthCall = { a : string, b : string, c : string, subject : string, hasSubject : boolean }
 type OAuthAuthCall = { provider : string, redirectUri : string, subject : string, hasSubject : boolean, scopes : [string] }
 orbital OAuthOrbital {
@@ -15,16 +16,14 @@ orbital OAuthOrbital {
 
     state idle {
       INIT -> idle
-      OAUTH_AUTHORIZE -> idle when (not (or (= @payload.provider "google") (= @payload.provider "github") (= @payload.provider "auth0")))
-        (emit OAUTH_AUTHORIZE_ERROR { code: "VALIDATION_ERROR", message: (str/concat "Invalid enum value. Expected 'google' | 'github' | 'auth0', received '" @payload.provider "'") })
-      OAUTH_AUTHORIZE -> idle when (and (or (= @payload.provider "google") (= @payload.provider "github") (= @payload.provider "auth0")) (= @config.mode "mock"))
-        (emit OAUTH_AUTHORIZE_MOCK { provider: @payload.provider, scopes: @payload.scopes, redirectUri: @payload.redirectUri, subject: @payload.subject, hasSubject: (validate/required @payload.subject) })
-      OAUTH_AUTHORIZE -> idle when (and (or (= @payload.provider "google") (= @payload.provider "github") (= @payload.provider "auth0")) (!= @config.mode "mock") (and (= @payload.provider "github") (= @config.issuerUrl "")))
-        (emit OAUTH_AUTHORIZE_STATIC { provider: @payload.provider, scopes: @payload.scopes, redirectUri: @payload.redirectUri, subject: @payload.subject, hasSubject: (validate/required @payload.subject) })
-      OAUTH_AUTHORIZE -> idle when (and (or (= @payload.provider "google") (= @payload.provider "github") (= @payload.provider "auth0")) (!= @config.mode "mock") (= @payload.provider "auth0") (= @config.issuerUrl ""))
+      OAUTH_AUTHORIZE -> idle when (= @config.mode "mock")
+        (emit OAUTH_AUTHORIZE_MOCK { provider: @config.provider, scopes: @payload.scopes, redirectUri: @payload.redirectUri, subject: @payload.subject, hasSubject: (validate/required @payload.subject) })
+      OAUTH_AUTHORIZE -> idle when (and (!= @config.mode "mock") (and (= @config.provider "github") (= @config.issuerUrl "")))
+        (emit OAUTH_AUTHORIZE_STATIC { provider: @config.provider, scopes: @payload.scopes, redirectUri: @payload.redirectUri, subject: @payload.subject, hasSubject: (validate/required @payload.subject) })
+      OAUTH_AUTHORIZE -> idle when (and (!= @config.mode "mock") (= @config.provider "auth0") (= @config.issuerUrl ""))
         (emit OAUTH_AUTHORIZE_ERROR { code: null, message: "Provider \"auth0\" has no OIDC issuer — set OIDC_ISSUER_URL to an OIDC-compliant issuer, or use OAUTH_MODE=mock" })
-      OAUTH_AUTHORIZE -> idle when (and (or (= @payload.provider "google") (= @payload.provider "github") (= @payload.provider "auth0")) (!= @config.mode "mock") (or (= @payload.provider "google") (!= @config.issuerUrl "")))
-        (http GET (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com") "/.well-known/openid-configuration" { auth: { scheme: oauth-client, op: discovery, client: { tag: @payload.provider, mode: real, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: (if (= @config.clientAuth "none") none post) } } } { key: (json/stringify { provider: @payload.provider, redirectUri: @payload.redirectUri, subject: (or @payload.subject ""), hasSubject: (validate/required @payload.subject), scopes: @payload.scopes }), emit: { success: OAUTH_DISCOVERED, failure: OAUTH_DISCOVERY_FAILED } })
+      OAUTH_AUTHORIZE -> idle when (and (!= @config.mode "mock") (or (= @config.provider "google") (!= @config.issuerUrl "")))
+        (http GET (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com") "/.well-known/openid-configuration" { auth: { scheme: oauth-client, op: discovery, client: { tag: @config.provider, mode: real, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: (if (= @config.clientAuth "none") none post) } } } { key: (json/stringify { provider: @config.provider, redirectUri: @payload.redirectUri, subject: (or @payload.subject ""), hasSubject: (validate/required @payload.subject), scopes: @payload.scopes }), emit: { success: OAUTH_DISCOVERED, failure: OAUTH_DISCOVERY_FAILED } })
       OAUTH_DISCOVERED -> idle
         (let ((st (json/parse @payload.key OAuthAuthCall)))
           (emit OAUTH_AUTHORIZE_ISSUER { provider: (object/get @st provider ""), scopes: (object/get @st scopes []), redirectUri: (object/get @st redirectUri ""), subject: (if (object/get @st hasSubject false) (object/get @st subject "") null), hasSubject: (object/get @st hasSubject false) }))
@@ -41,13 +40,13 @@ orbital OAuthOrbital {
         (emit OAUTH_AUTHORIZE_ERROR { code: @payload.code, message: @payload.error })
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Sign-in unavailable: " @payload.error) })
       OAUTH_AUTHORIZE_MOCK -> idle
-        (oauth-authorize { tag: @payload.provider, mode: mock, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: (if (= @config.clientAuth "none") none post) } { redirectUri: @payload.redirectUri, scope: @payload.scopes, subject: (if @payload.hasSubject @payload.subject null) } { key: (json/stringify { provider: @payload.provider, redirectUri: @payload.redirectUri, subject: (or @payload.subject ""), hasSubject: @payload.hasSubject, scopes: @payload.scopes }), emit: { success: OAUTH_AUTHORIZE_REPLIED, failure: OAUTH_AUTHORIZE_FAILED } })
+        (oauth-authorize { tag: @config.provider, mode: mock, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: (if (= @config.clientAuth "none") none post) } { redirectUri: (if (= @payload.redirectUri "") @config.redirectUri @payload.redirectUri), scope: @payload.scopes, subject: (if @payload.hasSubject @payload.subject null) } { key: (json/stringify { provider: @config.provider, redirectUri: @payload.redirectUri, subject: (or @payload.subject ""), hasSubject: @payload.hasSubject, scopes: @payload.scopes }), emit: { success: OAUTH_AUTHORIZE_REPLIED, failure: OAUTH_AUTHORIZE_FAILED } })
       OAUTH_AUTHORIZE_STATIC -> idle
-        (oauth-authorize { tag: github, mode: real, endpoints: { authorization: "https://github.com/login/oauth/authorize", token: "https://github.com/login/oauth/access_token" }, clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: (if (= @config.clientAuth "none") none post) } { redirectUri: (if (= @payload.redirectUri "") @config.redirectUri @payload.redirectUri), scope: @payload.scopes, subject: (if @payload.hasSubject @payload.subject null) } { key: (json/stringify { provider: @payload.provider, redirectUri: @payload.redirectUri, subject: (or @payload.subject ""), hasSubject: @payload.hasSubject, scopes: @payload.scopes }), emit: { success: OAUTH_AUTHORIZE_REPLIED, failure: OAUTH_AUTHORIZE_FAILED } })
-      OAUTH_AUTHORIZE_ISSUER -> idle when (= @payload.provider "google")
-        (oauth-authorize { tag: @payload.provider, mode: real, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: (if (= @config.clientAuth "none") none post) } { redirectUri: (if (= @payload.redirectUri "") @config.redirectUri @payload.redirectUri), scope: @payload.scopes, subject: (if @payload.hasSubject @payload.subject null), params: { access_type: "offline", prompt: "consent" } } { key: (json/stringify { provider: @payload.provider, redirectUri: @payload.redirectUri, subject: (or @payload.subject ""), hasSubject: @payload.hasSubject, scopes: @payload.scopes }), emit: { success: OAUTH_AUTHORIZE_REPLIED, failure: OAUTH_AUTHORIZE_FAILED } })
-      OAUTH_AUTHORIZE_ISSUER -> idle when (!= @payload.provider "google")
-        (oauth-authorize { tag: @payload.provider, mode: real, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: (if (= @config.clientAuth "none") none post) } { redirectUri: (if (= @payload.redirectUri "") @config.redirectUri @payload.redirectUri), scope: @payload.scopes, subject: (if @payload.hasSubject @payload.subject null) } { key: (json/stringify { provider: @payload.provider, redirectUri: @payload.redirectUri, subject: (or @payload.subject ""), hasSubject: @payload.hasSubject, scopes: @payload.scopes }), emit: { success: OAUTH_AUTHORIZE_REPLIED, failure: OAUTH_AUTHORIZE_FAILED } })
+        (oauth-authorize { tag: github, mode: real, endpoints: { authorization: "https://github.com/login/oauth/authorize", token: "https://github.com/login/oauth/access_token" }, clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: (if (= @config.clientAuth "none") none post) } { redirectUri: (if (= @payload.redirectUri "") @config.redirectUri @payload.redirectUri), scope: @payload.scopes, subject: (if @payload.hasSubject @payload.subject null) } { key: (json/stringify { provider: @config.provider, redirectUri: @payload.redirectUri, subject: (or @payload.subject ""), hasSubject: @payload.hasSubject, scopes: @payload.scopes }), emit: { success: OAUTH_AUTHORIZE_REPLIED, failure: OAUTH_AUTHORIZE_FAILED } })
+      OAUTH_AUTHORIZE_ISSUER -> idle when (= @config.provider "google")
+        (oauth-authorize { tag: @config.provider, mode: real, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: (if (= @config.clientAuth "none") none post) } { redirectUri: (if (= @payload.redirectUri "") @config.redirectUri @payload.redirectUri), scope: @payload.scopes, subject: (if @payload.hasSubject @payload.subject null), params: { access_type: "offline", prompt: "consent" } } { key: (json/stringify { provider: @config.provider, redirectUri: @payload.redirectUri, subject: (or @payload.subject ""), hasSubject: @payload.hasSubject, scopes: @payload.scopes }), emit: { success: OAUTH_AUTHORIZE_REPLIED, failure: OAUTH_AUTHORIZE_FAILED } })
+      OAUTH_AUTHORIZE_ISSUER -> idle when (!= @config.provider "google")
+        (oauth-authorize { tag: @config.provider, mode: real, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: (if (= @config.clientAuth "none") none post) } { redirectUri: (if (= @payload.redirectUri "") @config.redirectUri @payload.redirectUri), scope: @payload.scopes, subject: (if @payload.hasSubject @payload.subject null) } { key: (json/stringify { provider: @config.provider, redirectUri: @payload.redirectUri, subject: (or @payload.subject ""), hasSubject: @payload.hasSubject, scopes: @payload.scopes }), emit: { success: OAUTH_AUTHORIZE_REPLIED, failure: OAUTH_AUTHORIZE_FAILED } })
       OAUTH_AUTHORIZE_REPLIED -> idle
         (emit OAUTH_AUTHORIZED { authUrl: @payload.authUrl, state: @payload.state, code: @payload.code })
       OAUTH_TOKEN -> idle when (= @config.mode "mock")
@@ -65,9 +64,9 @@ orbital OAuthOrbital {
       OAUTH_TOKEN_MOCK -> idle when (not @payload.hasSubject)
         (http POST oauth-endpoint token { auth: { scheme: oauth-client, op: code, clients: { google: { tag: google, mode: mock, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: (if (= @config.clientAuth "none") none post) }, github: { tag: github, mode: mock, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: (if (= @config.clientAuth "none") none post) }, auth0: { tag: auth0, mode: mock, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: (if (= @config.clientAuth "none") none post) } }, code: @payload.code, state: @payload.state } } { key: (json/stringify { a: @payload.code, b: @payload.state, c: "", subject: "", hasSubject: false }), emit: { success: OAUTH_TOKEN_REPLIED, failure: OAUTH_TOKEN_FAILED } })
       OAUTH_TOKEN_REPLIED -> idle when (not (validate/required @payload.subject))
-        (emit OAUTH_TOKEN_RESULT { accessToken: @payload.accessToken, refreshToken: (or @payload.refreshToken ""), expiresIn: @payload.expiresIn, tokenType: @payload.tokenType, scope: @payload.scope })
+        (emit OAUTH_TOKEN_RESULT { accessToken: @payload.accessToken, refreshToken: @payload.refreshToken, expiresIn: @payload.expiresIn, tokenType: @payload.tokenType, scope: @payload.scope })
       OAUTH_TOKEN_REPLIED -> idle when (validate/required @payload.subject)
-        (emit OAUTH_TOKEN_RESULT { accessToken: @payload.accessToken, refreshToken: (or @payload.refreshToken ""), expiresIn: @payload.expiresIn, tokenType: @payload.tokenType, scope: @payload.scope, subject: @payload.subject })
+        (emit OAUTH_TOKEN_RESULT { accessToken: @payload.accessToken, refreshToken: @payload.refreshToken, expiresIn: @payload.expiresIn, tokenType: @payload.tokenType, scope: @payload.scope, subject: @payload.subject })
       OAUTH_TOKEN_FAILED -> idle when (= @payload.reason "unconfigured-client")
         (let ((st (json/parse @payload.key OAuthCall)))
           (emit OAUTH_TOKEN_MOCK { code: (object/get @st a ""), state: (object/get @st b ""), subject: (if (object/get @st hasSubject false) (object/get @st subject "") null), hasSubject: (object/get @st hasSubject false) }))
@@ -76,10 +75,14 @@ orbital OAuthOrbital {
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Sign-in unavailable: " @payload.error) })
       OAUTH_REFRESH -> idle when (= @config.mode "mock")
         (emit OAUTH_REFRESH_MOCK { refreshToken: @payload.refreshToken })
-      OAUTH_REFRESH -> idle when (!= @config.mode "mock")
-        (http POST oauth-endpoint token { auth: { scheme: oauth-client, op: refresh, client: { tag: google, mode: real, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: (if (= @config.clientAuth "none") none post) }, refreshToken: @payload.refreshToken } } { key: (json/stringify { a: @payload.refreshToken, b: "", c: "", subject: "", hasSubject: false }), emit: { success: OAUTH_REFRESH_REPLIED, failure: OAUTH_REFRESH_FAILED } })
+      OAUTH_REFRESH -> idle when (and (!= @config.mode "mock") (= @config.provider "auth0") (= @config.issuerUrl ""))
+        (emit OAUTH_REFRESH_ERROR { code: null, message: "Provider \"auth0\" has no OIDC issuer — set OIDC_ISSUER_URL to an OIDC-compliant issuer, or use OAUTH_MODE=mock" })
+      OAUTH_REFRESH -> idle when (and (!= @config.mode "mock") (= @config.provider "github") (= @config.issuerUrl ""))
+        (http POST oauth-endpoint token { auth: { scheme: oauth-client, op: refresh, client: { tag: github, mode: real, endpoints: { authorization: "https://github.com/login/oauth/authorize", token: "https://github.com/login/oauth/access_token" }, clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: (if (= @config.clientAuth "none") none post) }, refreshToken: @payload.refreshToken } } { key: (json/stringify { a: @payload.refreshToken, b: "", c: @config.provider, subject: "", hasSubject: false }), emit: { success: OAUTH_REFRESH_REPLIED, failure: OAUTH_REFRESH_FAILED } })
+      OAUTH_REFRESH -> idle when (and (!= @config.mode "mock") (or (= @config.provider "google") (!= @config.issuerUrl "")))
+        (http POST oauth-endpoint token { auth: { scheme: oauth-client, op: refresh, client: { tag: @config.provider, mode: real, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: (if (= @config.clientAuth "none") none post) }, refreshToken: @payload.refreshToken } } { key: (json/stringify { a: @payload.refreshToken, b: "", c: @config.provider, subject: "", hasSubject: false }), emit: { success: OAUTH_REFRESH_REPLIED, failure: OAUTH_REFRESH_FAILED } })
       OAUTH_REFRESH_MOCK -> idle
-        (http POST oauth-endpoint token { auth: { scheme: oauth-client, op: refresh, client: { tag: google, mode: mock, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: (if (= @config.clientAuth "none") none post) }, refreshToken: @payload.refreshToken } } { key: (json/stringify { a: @payload.refreshToken, b: "", c: "", subject: "", hasSubject: false }), emit: { success: OAUTH_REFRESH_REPLIED, failure: OAUTH_REFRESH_FAILED } })
+        (http POST oauth-endpoint token { auth: { scheme: oauth-client, op: refresh, client: { tag: @config.provider, mode: mock, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: (if (= @config.clientAuth "none") none post) }, refreshToken: @payload.refreshToken } } { key: (json/stringify { a: @payload.refreshToken, b: "", c: @config.provider, subject: "", hasSubject: false }), emit: { success: OAUTH_REFRESH_REPLIED, failure: OAUTH_REFRESH_FAILED } })
       OAUTH_REFRESH_REPLIED -> idle
         (emit OAUTH_REFRESHED { accessToken: @payload.accessToken, expiresIn: @payload.expiresIn })
       OAUTH_REFRESH_FAILED -> idle when (= @payload.reason "unconfigured-client")
@@ -90,10 +93,14 @@ orbital OAuthOrbital {
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Sign-in unavailable: " @payload.error) })
       OAUTH_REVOKE -> idle when (= @config.mode "mock")
         (emit OAUTH_REVOKE_MOCK { token: @payload.token })
-      OAUTH_REVOKE -> idle when (!= @config.mode "mock")
-        (http POST oauth-endpoint revocation { auth: { scheme: oauth-client, op: revoke, client: { tag: google, mode: real, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: (if (= @config.clientAuth "none") none post) }, token: @payload.token } } { key: (json/stringify { a: @payload.token, b: "", c: "", subject: "", hasSubject: false }), emit: { success: OAUTH_REVOKE_REPLIED, failure: OAUTH_REVOKE_FAILED } })
+      OAUTH_REVOKE -> idle when (and (!= @config.mode "mock") (= @config.provider "auth0") (= @config.issuerUrl ""))
+        (emit OAUTH_REVOKE_ERROR { code: null, message: "Provider \"auth0\" has no OIDC issuer — set OIDC_ISSUER_URL to an OIDC-compliant issuer, or use OAUTH_MODE=mock" })
+      OAUTH_REVOKE -> idle when (and (!= @config.mode "mock") (= @config.provider "github") (= @config.issuerUrl ""))
+        (emit OAUTH_REVOKE_ERROR { code: null, message: "Provider \"github\" has no revocation endpoint — set OIDC_ISSUER_URL to an OIDC-compliant issuer, or use OAUTH_MODE=mock" })
+      OAUTH_REVOKE -> idle when (and (!= @config.mode "mock") (or (= @config.provider "google") (!= @config.issuerUrl "")))
+        (http POST oauth-endpoint revocation { auth: { scheme: oauth-client, op: revoke, client: { tag: @config.provider, mode: real, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: (if (= @config.clientAuth "none") none post) }, token: @payload.token } } { key: (json/stringify { a: @payload.token, b: "", c: @config.provider, subject: "", hasSubject: false }), emit: { success: OAUTH_REVOKE_REPLIED, failure: OAUTH_REVOKE_FAILED } })
       OAUTH_REVOKE_MOCK -> idle
-        (http POST oauth-endpoint revocation { auth: { scheme: oauth-client, op: revoke, client: { tag: google, mode: mock, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: (if (= @config.clientAuth "none") none post) }, token: @payload.token } } { key: (json/stringify { a: @payload.token, b: "", c: "", subject: "", hasSubject: false }), emit: { success: OAUTH_REVOKE_REPLIED, failure: OAUTH_REVOKE_FAILED } })
+        (http POST oauth-endpoint revocation { auth: { scheme: oauth-client, op: revoke, client: { tag: @config.provider, mode: mock, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: (if (= @config.clientAuth "none") none post) }, token: @payload.token } } { key: (json/stringify { a: @payload.token, b: "", c: @config.provider, subject: "", hasSubject: false }), emit: { success: OAUTH_REVOKE_REPLIED, failure: OAUTH_REVOKE_FAILED } })
       OAUTH_REVOKE_REPLIED -> idle
         (emit OAUTH_REVOKED { revoked: @payload.revoked })
       OAUTH_REVOKE_FAILED -> idle when (= @payload.reason "unconfigured-client")
@@ -104,10 +111,14 @@ orbital OAuthOrbital {
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Sign-in unavailable: " @payload.error) })
       OAUTH_USERINFO -> idle when (= @config.mode "mock")
         (emit OAUTH_USERINFO_MOCK { accessToken: @payload.accessToken })
-      OAUTH_USERINFO -> idle when (!= @config.mode "mock")
-        (http GET oauth-endpoint userinfo { auth: { scheme: oauth-client, op: userinfo, client: { tag: google, mode: real, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: (if (= @config.clientAuth "none") none post) }, accessToken: @payload.accessToken } } { key: (json/stringify { a: @payload.accessToken, b: "", c: "", subject: "", hasSubject: false }), emit: { success: OAUTH_USERINFO_REPLIED, failure: OAUTH_USERINFO_FAILED } })
+      OAUTH_USERINFO -> idle when (and (!= @config.mode "mock") (= @config.provider "auth0") (= @config.issuerUrl ""))
+        (emit OAUTH_USERINFO_ERROR { code: null, message: "Provider \"auth0\" has no OIDC issuer — set OIDC_ISSUER_URL to an OIDC-compliant issuer, or use OAUTH_MODE=mock" })
+      OAUTH_USERINFO -> idle when (and (!= @config.mode "mock") (= @config.provider "github") (= @config.issuerUrl ""))
+        (emit OAUTH_USERINFO_ERROR { code: null, message: "Provider \"github\" has no userinfo endpoint — set OIDC_ISSUER_URL to an OIDC-compliant issuer, or use OAUTH_MODE=mock" })
+      OAUTH_USERINFO -> idle when (and (!= @config.mode "mock") (or (= @config.provider "google") (!= @config.issuerUrl "")))
+        (http GET oauth-endpoint userinfo { auth: { scheme: oauth-client, op: userinfo, client: { tag: @config.provider, mode: real, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: (if (= @config.clientAuth "none") none post) }, accessToken: @payload.accessToken } } { key: (json/stringify { a: @payload.accessToken, b: "", c: @config.provider, subject: "", hasSubject: false }), emit: { success: OAUTH_USERINFO_REPLIED, failure: OAUTH_USERINFO_FAILED } })
       OAUTH_USERINFO_MOCK -> idle
-        (http GET oauth-endpoint userinfo { auth: { scheme: oauth-client, op: userinfo, client: { tag: google, mode: mock, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: (if (= @config.clientAuth "none") none post) }, accessToken: @payload.accessToken } } { key: (json/stringify { a: @payload.accessToken, b: "", c: "", subject: "", hasSubject: false }), emit: { success: OAUTH_USERINFO_REPLIED, failure: OAUTH_USERINFO_FAILED } })
+        (http GET oauth-endpoint userinfo { auth: { scheme: oauth-client, op: userinfo, client: { tag: @config.provider, mode: mock, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: (if (= @config.clientAuth "none") none post) }, accessToken: @payload.accessToken } } { key: (json/stringify { a: @payload.accessToken, b: "", c: @config.provider, subject: "", hasSubject: false }), emit: { success: OAUTH_USERINFO_REPLIED, failure: OAUTH_USERINFO_FAILED } })
       OAUTH_USERINFO_REPLIED -> idle
         (emit OAUTH_USERINFO_RESULT { sub: @payload.sub, email: @payload.email, name: @payload.name, picture: @payload.picture })
       OAUTH_USERINFO_FAILED -> idle when (= @payload.reason "unconfigured-client")
@@ -116,16 +127,14 @@ orbital OAuthOrbital {
       OAUTH_USERINFO_FAILED -> idle when (!= @payload.reason "unconfigured-client")
         (emit OAUTH_USERINFO_ERROR { code: @payload.code, message: @payload.error })
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Sign-in unavailable: " @payload.error) })
-      OAUTH_CONNECT -> idle when (not (or (= @payload.provider "google") (= @payload.provider "github") (= @payload.provider "auth0")))
-        (emit OAUTH_CONNECT_ERROR { code: "VALIDATION_ERROR", message: (str/concat "Invalid enum value. Expected 'google' | 'github' | 'auth0', received '" @payload.provider "'") })
-      OAUTH_CONNECT -> idle when (and (or (= @payload.provider "google") (= @payload.provider "github") (= @payload.provider "auth0")) (= @config.mode "mock"))
-        (emit OAUTH_CONNECT_MOCK { provider: @payload.provider, code: @payload.code, state: @payload.state })
-      OAUTH_CONNECT -> idle when (and (or (= @payload.provider "google") (= @payload.provider "github") (= @payload.provider "auth0")) (!= @config.mode "mock") (and (= @payload.provider "github") (= @config.issuerUrl "")))
-        (http POST oauth-endpoint token { auth: { scheme: oauth-client, op: connect, client: { tag: github, mode: real, endpoints: { authorization: "https://github.com/login/oauth/authorize", token: "https://github.com/login/oauth/access_token" }, clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: (if (= @config.clientAuth "none") none post) }, provider: @payload.provider, code: @payload.code, state: @payload.state } } { key: (json/stringify { a: @payload.code, b: @payload.state, c: @payload.provider, subject: "", hasSubject: false }), emit: { success: OAUTH_CONNECT_REPLIED, failure: OAUTH_CONNECT_FAILED } })
-      OAUTH_CONNECT -> idle when (and (or (= @payload.provider "google") (= @payload.provider "github") (= @payload.provider "auth0")) (!= @config.mode "mock") (not (and (= @payload.provider "github") (= @config.issuerUrl ""))))
-        (http POST oauth-endpoint token { auth: { scheme: oauth-client, op: connect, client: { tag: @payload.provider, mode: real, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: (if (= @config.clientAuth "none") none post) }, provider: @payload.provider, code: @payload.code, state: @payload.state } } { key: (json/stringify { a: @payload.code, b: @payload.state, c: @payload.provider, subject: "", hasSubject: false }), emit: { success: OAUTH_CONNECT_REPLIED, failure: OAUTH_CONNECT_FAILED } })
+      OAUTH_CONNECT -> idle when (= @config.mode "mock")
+        (emit OAUTH_CONNECT_MOCK { provider: @config.provider, code: @payload.code, state: @payload.state })
+      OAUTH_CONNECT -> idle when (and (!= @config.mode "mock") (and (= @config.provider "github") (= @config.issuerUrl "")))
+        (http POST oauth-endpoint token { auth: { scheme: oauth-client, op: connect, client: { tag: github, mode: real, endpoints: { authorization: "https://github.com/login/oauth/authorize", token: "https://github.com/login/oauth/access_token" }, clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: (if (= @config.clientAuth "none") none post) }, provider: @config.provider, code: @payload.code, state: @payload.state } } { key: (json/stringify { a: @payload.code, b: @payload.state, c: @config.provider, subject: "", hasSubject: false }), emit: { success: OAUTH_CONNECT_REPLIED, failure: OAUTH_CONNECT_FAILED } })
+      OAUTH_CONNECT -> idle when (and (!= @config.mode "mock") (not (and (= @config.provider "github") (= @config.issuerUrl ""))))
+        (http POST oauth-endpoint token { auth: { scheme: oauth-client, op: connect, client: { tag: @config.provider, mode: real, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: (if (= @config.clientAuth "none") none post) }, provider: @config.provider, code: @payload.code, state: @payload.state } } { key: (json/stringify { a: @payload.code, b: @payload.state, c: @config.provider, subject: "", hasSubject: false }), emit: { success: OAUTH_CONNECT_REPLIED, failure: OAUTH_CONNECT_FAILED } })
       OAUTH_CONNECT_MOCK -> idle
-        (http POST oauth-endpoint token { auth: { scheme: oauth-client, op: connect, client: { tag: @payload.provider, mode: mock, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: (if (= @config.clientAuth "none") none post) }, provider: @payload.provider, code: @payload.code, state: @payload.state } } { key: (json/stringify { a: @payload.code, b: @payload.state, c: @payload.provider, subject: "", hasSubject: false }), emit: { success: OAUTH_CONNECT_REPLIED, failure: OAUTH_CONNECT_FAILED } })
+        (http POST oauth-endpoint token { auth: { scheme: oauth-client, op: connect, client: { tag: @config.provider, mode: mock, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: (if (= @config.clientAuth "none") none post) }, provider: @config.provider, code: @payload.code, state: @payload.state } } { key: (json/stringify { a: @payload.code, b: @payload.state, c: @config.provider, subject: "", hasSubject: false }), emit: { success: OAUTH_CONNECT_REPLIED, failure: OAUTH_CONNECT_FAILED } })
       OAUTH_CONNECT_REPLIED -> idle
         (emit OAUTH_CONNECTED { provider: @payload.provider, connected: @payload.connected, account: @payload.account, avatarUrl: @payload.avatarUrl, scope: @payload.scope, connectedAt: @payload.connectedAt })
       OAUTH_CONNECT_FAILED -> idle when (= @payload.reason "unconfigured-client")
@@ -134,16 +143,12 @@ orbital OAuthOrbital {
       OAUTH_CONNECT_FAILED -> idle when (!= @payload.reason "unconfigured-client")
         (emit OAUTH_CONNECT_ERROR { code: @payload.code, message: @payload.error })
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Sign-in unavailable: " @payload.error) })
-      OAUTH_CONNECTION -> idle when (not (or (= @payload.provider "google") (= @payload.provider "github") (= @payload.provider "auth0")))
-        (emit OAUTH_CONNECTION_ERROR { code: "VALIDATION_ERROR", message: (str/concat "Invalid enum value. Expected 'google' | 'github' | 'auth0', received '" @payload.provider "'") })
-      OAUTH_CONNECTION -> idle when (or (= @payload.provider "google") (= @payload.provider "github") (= @payload.provider "auth0"))
-        (oauth-connection-status @payload.provider { emit: { success: OAUTH_CONNECTION_REPLIED, failure: OAUTH_CONNECTION_FAILED } })
+      OAUTH_CONNECTION -> idle
+        (oauth-connection-status @config.provider { emit: { success: OAUTH_CONNECTION_REPLIED, failure: OAUTH_CONNECTION_FAILED } })
       OAUTH_CONNECTION_REPLIED -> idle
         (emit OAUTH_CONNECTION_RESULT { provider: @payload.provider, connected: @payload.connected, account: @payload.account, avatarUrl: @payload.avatarUrl, scope: @payload.scope, connectedAt: @payload.connectedAt })
-      OAUTH_DISCONNECT -> idle when (not (or (= @payload.provider "google") (= @payload.provider "github") (= @payload.provider "auth0")))
-        (emit OAUTH_DISCONNECT_ERROR { code: "VALIDATION_ERROR", message: (str/concat "Invalid enum value. Expected 'google' | 'github' | 'auth0', received '" @payload.provider "'") })
-      OAUTH_DISCONNECT -> idle when (or (= @payload.provider "google") (= @payload.provider "github") (= @payload.provider "auth0"))
-        (oauth-connection-forget @payload.provider { emit: { success: OAUTH_DISCONNECT_REPLIED, failure: OAUTH_DISCONNECT_FAILED } })
+      OAUTH_DISCONNECT -> idle
+        (oauth-connection-forget @config.provider { emit: { success: OAUTH_DISCONNECT_REPLIED, failure: OAUTH_DISCONNECT_FAILED } })
       OAUTH_DISCONNECT_REPLIED -> idle
         (emit OAUTH_DISCONNECTED { provider: @payload.provider, connected: @payload.connected, account: @payload.account, avatarUrl: @payload.avatarUrl, scope: @payload.scope, connectedAt: @payload.connectedAt })
       OAUTH_CONNECTION_FAILED -> idle
@@ -164,13 +169,13 @@ orbital OAuthOrbital {
         @tier "primary"
       OAUTH_TOKEN_RESULT -> external {
         accessToken : string!
-        refreshToken : string!
+        refreshToken : string
         expiresIn : number!
         tokenType : string!
         scope : [string]!
         subject : string
       }
-        @description "The tokens a completed authorization exchanged; subject is present when the authorization was bound to one."
+        @description "The tokens a completed authorization exchanged; refreshToken is absent when the provider issued none; subject is present when the authorization was bound to one."
         @synonyms "oauth tokens, access token, completed sign-in"
         @tier "primary"
       OAUTH_REFRESHED -> external {
@@ -499,12 +504,11 @@ orbital OAuthOrbital {
 
     listens {
       OAUTH_AUTHORIZE -> external {
-        provider : string!
         scopes : [string]!
         redirectUri : string!
         subject : string
       }
-        @description "Start an authorization for google, github or auth0; an empty redirectUri uses the configured default. subject binds the grant to the user who must complete it."
+        @description "Start an authorization for the configured provider; an empty redirectUri uses the configured default. subject binds the grant to the user who must complete it."
         @synonyms "authorize, sign in with provider, start oauth"
       OAUTH_TOKEN -> external {
         code : string!
@@ -529,20 +533,15 @@ orbital OAuthOrbital {
         @description "Read the account behind an access token."
         @synonyms "user info, who am i"
       OAUTH_CONNECT -> external {
-        provider : string!
         code : string!
         state : string!
       }
         @description "Complete an authorization for the signed-in caller and keep the tokens with the host; only the connection row is answered."
         @synonyms "connect account, link provider"
-      OAUTH_CONNECTION -> external {
-        provider : string!
-      }
+      OAUTH_CONNECTION -> external { }
         @description "Read the signed-in caller's connection to a provider."
         @synonyms "connection status, is connected"
-      OAUTH_DISCONNECT -> external {
-        provider : string!
-      }
+      OAUTH_DISCONNECT -> external { }
         @description "Drop the signed-in caller's connection to a provider."
         @synonyms "disconnect account, unlink provider"
       OAUTH_AUTHORIZE_MOCK {
@@ -707,6 +706,11 @@ orbital OAuthOrbital {
     }
 
     config {
+      provider : "google" | "github" | "auth0" = "google"
+        @label "OAuth provider"
+        @description "The one provider this orbital serves: google, github or auth0. Every action runs as this provider's client; auth0 needs an issuerUrl."
+        @synonyms "oauth provider, identity provider, sign-in provider"
+        @tier "infra"
       mode : string = "real"
         @label "Backend mode"
         @description "mock runs every action against the in-memory mock backend; real uses the configured client credentials and falls back to the mock backend when they are not all set."

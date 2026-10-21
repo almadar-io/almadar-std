@@ -1,0 +1,77 @@
+app std-orb-lint-trait-id-uniqueness [
+  version: "1.0.0",
+  inbound: ["cli-lint-trait-id-uniqueness"],
+  fs: { cwd: "**": [read] },
+  description: "std-orb-lint-trait-id-uniqueness — the `orb lint trait-id-uniqueness <file>` command, the port of ORB_X_DUPLICATE_TRAIT_ID. It lowers the file with program/read, groups every inline trait that carries an id by that id across all orbitals, and reports each id carried by more than one trait, in id order, naming Orbital.Trait for every holder (status 500, exit 1). Traits without an id are not compared. Clean answers `lint trait-id-uniqueness: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-trait-id-uniqueness"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+
+orbital OrbLintTraitIdUniquenessOrbital {
+  entity OrbLintTraitIdUniquenessRun [runtime] {
+    id : string!
+    findings : [string] = []
+  }
+
+  trait OrbLintTraitIdUniqueness -> OrbLintTraitIdUniquenessRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint trait-id-uniqueness <file>" })
+      LINT_CALLED -> reading when (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (set @entity.findings [])
+        (os/read-file { anchor: "cwd" path: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) } { key: "file" emit: { success: LINT_FILE_READ, failure: LINT_FILE_UNREAD } })
+      LINT_FINISH -> ready when (= (array/len @entity.findings) 0)
+        (emit LINT_ANSWERED { status: 200, body: "lint trait-id-uniqueness: clean" })
+      LINT_FINISH -> ready when (> (array/len @entity.findings) 0)
+        (emit LINT_ANSWERED { status: 500, body: (str/join @entity.findings "\n") })
+    }
+
+    state reading {
+      INIT -> reading
+      LINT_FILE_READ -> reading
+        (program/read (bytes/to-string @payload.data) { emit: { success: LINT_PROGRAM_READ, failure: LINT_FILE_UNREAD } })
+      LINT_PROGRAM_READ -> ready
+        (set @entity.findings (let ((entries (array/flatten (array/map (object/get @payload.result "orbitals") (fn o (array/map (array/filter (object/get @o "traits" []) (fn t (object/has @t "id"))) (fn t { id: (object/get @t "id"), name: (str/concat (object/get @o "name") "." (object/get @t "name")) })))))))
+          (array/map (array/filter (array/sort (array/map (array/unique (array/map @entries (fn e (object/get @e "id")))) (fn i { id: @i })) "id" "asc") (fn r (> (array/len (array/filter @entries (fn e (= (object/get @e "id") (object/get @r "id"))))) 1)))
+            (fn r (str/concat "[ORB_X_DUPLICATE_TRAIT_ID] orbitals: trait id " (object/get @r "id") " is carried by " (str/join (array/map (array/filter @entries (fn e (= (object/get @e "id") (object/get @r "id")))) (fn e (object/get @e "name"))) ", ") "; listens match sources by id, so each of these hears the others' emits")))))
+        (emit LINT_FINISH { })
+      LINT_FILE_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint trait-id-uniqueness: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_FILE_READ { data : bytes! }
+        @description "The file read."
+        @tier "internal"
+      LINT_FILE_UNREAD { error : string }
+        @description "The file could not be read or lowered."
+        @tier "internal"
+      LINT_PROGRAM_READ { result : string }
+        @description "The file lowered by program/read."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-trait-id-uniqueness" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint trait-id-uniqueness` with its arguments and working directory."
+        @synonyms "orb lint trait-id-uniqueness, duplicate trait ids"
+    }
+  }
+
+  page "/orb-lint-trait-id-uniqueness" as OrbLintTraitIdUniquenessPage -> OrbLintTraitIdUniqueness
+}

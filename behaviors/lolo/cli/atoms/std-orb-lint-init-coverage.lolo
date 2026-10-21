@@ -1,0 +1,98 @@
+app std-orb-lint-init-coverage [
+  version: "1.0.0",
+  inbound: ["cli-lint-init-coverage"],
+  fs: { cwd: "**": [read] },
+  description: "std-orb-lint-init-coverage — the `orb lint init-coverage <file>` command, the port of ORB_CIRCUIT_INIT_UNCOVERED_STATE (G-ORB-186). It lowers the file with program/read and, for every trait a page of its orbital declares whose initial state handles INIT, reports each reachable state with no INIT arm (status 500, exit 1). Reachability follows transitions from their from states or the wildcard and skips a statically false guard (a falsy literal, or a comparison of two literals that cannot hold). Clean answers `lint init-coverage: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-init-coverage"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+
+orbital OrbLintInitCoverageOrbital {
+  entity OrbLintInitCoverageRun [runtime] {
+    id : string!
+    findings : [string] = []
+  }
+
+  trait OrbLintInitCoverage -> OrbLintInitCoverageRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint init-coverage <file>" })
+      LINT_CALLED -> reading when (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (set @entity.findings [])
+        (os/read-file { anchor: "cwd" path: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) } { key: "file" emit: { success: LINT_FILE_READ, failure: LINT_FILE_UNREAD } })
+      LINT_FINISH -> ready when (= (array/len @entity.findings) 0)
+        (emit LINT_ANSWERED { status: 200, body: "lint init-coverage: clean" })
+      LINT_FINISH -> ready when (> (array/len @entity.findings) 0)
+        (emit LINT_ANSWERED { status: 500, body: (str/join @entity.findings "\n") })
+    }
+
+    state reading {
+      INIT -> reading
+      LINT_FILE_READ -> reading
+        (program/read (bytes/to-string @payload.data) { emit: { success: LINT_PROGRAM_READ, failure: LINT_FILE_UNREAD } })
+      LINT_PROGRAM_READ -> ready
+        (set @entity.findings (let ((orbitals (object/get @payload.result "orbitals")))
+          (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+            (let ((o (array/nth @orbitals @oi)))
+              (let ((pageTraits (array/flatten (array/map (object/get @o "pages" []) (fn p (array/map (object/get @p "traits" []) (fn r (object/get @r "ref" "")))))))
+                    (trs (object/get @o "traits" [])))
+                (array/flatten (array/map (array/range 0 (array/len @trs)) (fn ti
+                  (let ((t (array/nth @trs @ti)))
+                    (let ((sm (object/get @t "stateMachine" {})))
+                      (let ((states (object/get @sm "states" []))
+                            (arms (array/map (object/get @sm "transitions" []) (fn a
+                              (let ((raw (object/get @a "from"))
+                                    (g (object/get @a "guard" null)))
+                                (let ((s (json/stringify @g)))
+                                  { froms: (if (str/startsWith (json/stringify @raw) "[") @raw [@raw]), event: (object/get @a "event"), to: (object/get @a "to"), dead: (and (object/has @a "guard") (or (array/includes ["false", "null", "0", "\"\"", "{}", "[]"] @s) (and (or (str/startsWith @s "[\"=\"") (str/startsWith @s "[\"==\"") (str/startsWith @s "[\"!=\"")) (= (array/len @g) 3) (not (or (str/startsWith (json/stringify (array/nth @g 1)) "[") (str/startsWith (json/stringify (array/nth @g 1)) "{") (str/startsWith (json/stringify (array/nth @g 1)) "\"@"))) (not (or (str/startsWith (json/stringify (array/nth @g 2)) "[") (str/startsWith (json/stringify (array/nth @g 2)) "{") (str/startsWith (json/stringify (array/nth @g 2)) "\"@"))) (= (= (array/nth @g 1) (array/nth @g 2)) (str/startsWith @s "[\"!=\""))))) })))))
+                            (initialRow (array/find (object/get @sm "states" []) (fn s (= (object/get @s "isInitial" false) true)))))
+                        (if (or (= @initialRow null) (not (array/includes @pageTraits (object/get @t "name"))))
+                          []
+                          (let ((initial (object/get @initialRow "name")))
+                            (if (not (array/some @arms (fn a (and (= (object/get @a "event") "INIT") (array/some (object/get @a "froms") (fn f (or (= @f @initial) (= @f "*"))))))))
+                              []
+                              (let ((reachable (array/reduce (array/range 0 (array/len @states)) [@initial]
+                                  (fn (cur i) (array/unique (array/concat @cur (array/map (array/filter @arms (fn a (and (not (object/get @a "dead")) (array/some (object/get @a "froms") (fn f (or (= @f "*") (array/includes @cur @f))))))) (fn a (object/get @a "to")))))))))
+                                (array/map (array/filter @states (fn st (and (array/includes @reachable (object/get @st "name")) (not (array/some @arms (fn a (and (= (object/get @a "event") "INIT") (array/some (object/get @a "froms") (fn f (or (= @f (object/get @st "name")) (= @f "*")))))))))))
+                                  (fn st (str/concat "[ORB_CIRCUIT_INIT_UNCOVERED_STATE] orbitals[" @oi " (" (object/get @o "name") ")].traits[" @ti " (" (object/get @t "name") ")].stateMachine.states." (object/get @st "name") ": Page trait '" (object/get @t "name") "' handles INIT in '" @initial "' but not in reachable state '" (object/get @st "name") "': revisiting the page from there does nothing\n  suggestion: Add an `INIT` arm to state '" (object/get @st "name") "' that re-initializes the trait (as '" @initial "' does)"))))))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FILE_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint init-coverage: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_FILE_READ { data : bytes! }
+        @description "The file read."
+        @tier "internal"
+      LINT_FILE_UNREAD { error : string }
+        @description "The file could not be read or lowered."
+        @tier "internal"
+      LINT_PROGRAM_READ { result : string }
+        @description "The file lowered by program/read."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-init-coverage" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint init-coverage` with its arguments and working directory."
+        @synonyms "orb lint init-coverage, page trait INIT coverage"
+    }
+  }
+
+  page "/orb-lint-init-coverage" as OrbLintInitCoveragePage -> OrbLintInitCoverage
+}

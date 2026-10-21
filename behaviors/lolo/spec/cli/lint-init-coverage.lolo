@@ -1,0 +1,14 @@
+app lint-init-coverage-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint init-coverage <file>`, the port of the compiler rule ORB_CIRCUIT_INIT_UNCOVERED_STATE (G-ORB-186). The file is lowered with program/read. For every trait a page of its orbital declares, when the trait has an initial state that handles INIT (an INIT arm whose from names that state or the wildcard), every state reachable from the initial state must also handle INIT. Reachability follows each transition from its from states (or the wildcard) and skips an arm whose guard is statically false. Each uncovered state is reported as `[ORB_CIRCUIT_INIT_UNCOVERED_STATE] <path>: <message>` with the Rust path and message, status 500 (exit 1). A clean program answers `lint init-coverage: clean` (status 200, exit 0). Anything but exactly one file argument is the usage (status 400, exit 2). A file that cannot be read or lowered fails the run (status 500)."
+]
+
+orbital LintInitCoverageSpec {
+  expects trait OrbLintInitCoverage {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page "/orb-lint-init-coverage" -> OrbLintInitCoverage
+}

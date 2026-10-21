@@ -39,6 +39,7 @@ const CATEGORY_META: Record<string, { description: string; target: string[] }> =
     'std-i18n': { description: 'Message catalogs', target: ['ts', 'rust'] },
     'std-prob': { description: 'Probabilistic programming', target: ['ts', 'rust'] },
     'std-os': { description: 'OS-level event watchers for system triggers', target: ['ts'] },
+    'std-kv': { description: 'Key-value row stores; the host picks the medium', target: ['ts'] },
     'std-browser': { description: 'Browser device APIs (file picker, clipboard, geolocation) — client host effects', target: ['ts'] },
       'std-composition': { description: 'Behavior composition (compile-time)', target: ['ts', 'rust'] },
     'std-llm': { description: 'LLM interaction substrate (runtime)', target: ['ts'] },

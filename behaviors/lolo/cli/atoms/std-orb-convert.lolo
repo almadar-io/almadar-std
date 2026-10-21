@@ -7,10 +7,12 @@ app std-orb-convert [
 ]
 uses Spec from "almadar-std/orb-convert"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
 type ConvertEvent = { gate : string, status : string, message : string, success : boolean, output : string, error : string, raw : string }
 
 orbital OrbConvertOrbital {
   uses Cli from "std/behaviors/std-cli"
+  uses Args from "std/behaviors/std-args"
 
   entity OrbConvertRun [runtime] {
     id : string!
@@ -18,6 +20,12 @@ orbital OrbConvertOrbital {
     words : [string] @description "The words handed to almadar-converter for the call in flight." = []
     stderr : string @description "What the converter wrote on stderr." = ""
     events : [ConvertEvent] @description "The converter's stdout lines, each parsed, or carried as raw text when it is not JSON." = []
+  }
+
+  trait ArgsCli = Args.traits.ArgsParser {
+    listens {
+      OrbConvert.CONVERT_ARGS_PARSE -> ARGS_PARSE
+    }
   }
 
   trait ConvertCli = Cli.traits.CliRunner {
@@ -35,12 +43,20 @@ orbital OrbConvertOrbital {
 
     state ready {
       INIT -> ready
-      CONVERT_CALLED -> working
-        (set @entity.verbose (or (array/includes (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") "-v") (array/includes (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") "--verbose")))
+      CONVERT_CALLED -> parsing
+        (emit CONVERT_ARGS_PARSE { stage: "convert" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "output" aliases: ["-o"] takesValue: true repeatable: false }, { name: "crawl" aliases: [] takesValue: true repeatable: false }, { name: "crawl-facts" aliases: [] takesValue: true repeatable: false }, { name: "depth" aliases: [] takesValue: true repeatable: false }, { name: "ai" aliases: [] takesValue: false repeatable: false }, { name: "verify" aliases: [] takesValue: false repeatable: false }, { name: "facts-only" aliases: [] takesValue: false repeatable: false }, { name: "headed" aliases: [] takesValue: false repeatable: false }, { name: "verbose" aliases: ["-v"] takesValue: false repeatable: false }] })
+    }
+
+    state parsing {
+      INIT -> parsing
+      CONVERT_ARGS_DONE -> ready when (> (array/len @payload.errors) 0)
+        (emit CONVERT_ANSWERED { status: 400, body: (str/concat "Error: " (str/join @payload.errors "; ")) })
+      CONVERT_ARGS_DONE -> working when (= (array/len @payload.errors) 0)
+        (set @entity.verbose (!= (object/get @payload.flags "verbose") null))
         (set @entity.words (array/concat
-          (array/filter (array/map (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") (fn w (if (= @w "-v") "--verbose" @w))) (fn w (!= @w "--verbose")))
-          (if (or (array/includes (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") "-o") (array/includes (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") "--output")) [] ["-o", "converted.orb"])
-          (if (array/includes (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") "--depth") [] ["--depth", "3"])
+          (array/filter @payload.words (fn w (and (!= @w "-v") (!= @w "--verbose"))))
+          (if (!= (object/get @payload.flags "output") null) [] ["-o", "converted.orb"])
+          (if (!= (object/get @payload.flags "depth") null) [] ["--depth", "3"])
           ["--json"]
           (if @entity.verbose ["--verbose"] [])))
         (emit CONVERT_EXEC { stage: "convert" argv: (array/prepend @entity.words "almadar-converter") })
@@ -74,6 +90,13 @@ orbital OrbConvertOrbital {
       CONVERT_FINISH { }
         @description "Internal: render the converter's lines into the answer."
         @tier "internal"
+      CONVERT_ARGS_PARSE {
+        stage : string!
+        argv : [string]!
+        flags : [ArgFlag]!
+      }
+        @description "Internal: parse the call's words against the convert flags."
+        @tier "internal"
       CONVERT_EXEC {
         stage : string!
         argv : [string]!
@@ -103,10 +126,19 @@ orbital OrbConvertOrbital {
         code : string!
       }
         @description "std-cli's CLI_FAILED: npx could not be run."
+      CONVERT_ARGS_DONE {
+        stage : string!
+        flags : Map string [string]!
+        positionals : [string]!
+        errors : [string]!
+        words : [string]!
+      }
+        @description "std-args's ARGS_PARSED: the call's words, parsed."
+      ArgsCli.ARGS_PARSED -> CONVERT_ARGS_DONE
       ConvertCli.CLI_DONE -> CONVERT_RAN
       ConvertCli.CLI_FAILED -> CONVERT_CLI_FAILED
     }
   }
 
-  page "/orb-convert" as OrbConvertPage -> OrbConvert, ConvertCli
+  page "/orb-convert" as OrbConvertPage -> OrbConvert, ArgsCli, ConvertCli
 }

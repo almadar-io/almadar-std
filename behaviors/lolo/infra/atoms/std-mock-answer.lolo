@@ -1,0 +1,62 @@
+app std-mock-answer [
+  version: "1.0.0",
+  description: "std-mock-answer — the mock call-service answer for flat response shapes. MOCK_VALUE { key, type } answers one value by type (a type ending in [] gives [], number 42, boolean true, object {}, anything else the string mock_<key>). MOCK_ANSWER { action, shape } answers a whole action: an empty shape gives {success: true, _mock: true, _action}, otherwise one MOCK_VALUE per key. The answer is JSON text. Nested descriptors (items, properties, mapValue), the services-registry lookup and the unknown service/action refusals stay in the Rust host (mock_answer.rs)."
+]
+uses Spec from "almadar-std/mock-answer"
+
+orbital MockAnswerOrbital {
+  entity MockAnswerRun [runtime] {
+    id : string!
+    action : string @description "The action last answered." = ""
+    key : string @description "The field key last answered." = ""
+    descriptorType : string @description "The flat type last answered." = ""
+    answer : string @description "The last answer as JSON text." = ""
+  }
+
+  trait MockAnswerer -> MockAnswerRun [lifecycle, instance] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      MOCK_VALUE -> ready
+        (set @entity.key ?key)
+        (set @entity.descriptorType ?type)
+        (set @entity.answer (json/stringify (if (str/endsWith ?type "[]") [] (if (= ?type "number") 42 (if (= ?type "boolean") true (if (= ?type "object") {} (str/concat "mock_" ?key)))))))
+        (emit MOCK_ANSWERED { answer: @entity.answer })
+      MOCK_ANSWER -> ready when (= (array/len (object/keys ?shape)) 0)
+        (set @entity.action ?action)
+        (set @entity.answer (json/stringify { success: true, _mock: true, _action: ?action }))
+        (emit MOCK_ANSWERED { answer: @entity.answer })
+      MOCK_ANSWER -> ready when (> (array/len (object/keys ?shape)) 0)
+        (set @entity.action ?action)
+        (set @entity.answer (json/stringify (object/fromEntries (array/map (object/entries ?shape) (fn e [(array/nth @e 0) (let ((t (array/nth @e 1)) (k (array/nth @e 0))) (if (str/endsWith @t "[]") [] (if (= @t "number") 42 (if (= @t "boolean") true (if (= @t "object") {} (str/concat "mock_" @k))))))])))))
+        (emit MOCK_ANSWERED { answer: @entity.answer })
+    }
+
+    emits {
+      MOCK_ANSWERED -> external {
+        answer : string!
+      }
+        @description "The mock answer as JSON text."
+        @synonyms "mock response, mock service answer"
+        @tier "primary"
+    }
+
+    listens {
+      MOCK_VALUE -> external {
+        key : string!
+        type : string!
+      }
+        @description "Answer one flat response-shape field by its type."
+        @synonyms "mock field value"
+      MOCK_ANSWER -> external {
+        action : string!
+        shape : Map string string!
+      }
+        @description "Answer one action from its flat responseShape (field key to type)."
+        @synonyms "mock service call, mock call-service"
+    }
+  }
+
+  page "/mock-answer" as MockAnswerPage -> MockAnswerer
+}

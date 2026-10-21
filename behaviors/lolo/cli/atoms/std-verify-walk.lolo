@@ -6,7 +6,13 @@ app std-verify-walk [
 ]
 uses Spec from "almadar-std/verify-walk"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
-type VerifyRow = { trait : string!, from : string!, event : string!, to : string!, verdict : string! }
+type VerifyRow = { trait : string!, from : string!, event : string!, to : string!, verdict : string!, detail : string }
+type WalkJson = string | number | boolean | [WalkJson] | Map string WalkJson
+type WalkPlanPayload = Map string WalkJson
+type WalkPlanStep = { trait : string!, linkedEntity : string, from : string!, event : string!, to : string!, toStates : [string]!, variant : string!, payload : WalkPlanPayload, guarded : boolean!, arm : number, solved : boolean!, payloadCase : string!, guardCase : string, unplanned : string }
+type WalkVerdict = { name : string!, passed : boolean!, detail : string! }
+type WalkUnported = { name : string!, reason : string! }
+type WalkJudged = { verdicts : [WalkVerdict]! }
 type WalkFull = { orbitals : [orbital] }
 type WalkValue = string | number | boolean | [WalkValue] | Map string WalkValue
 type WalkPayload = Map string WalkValue
@@ -14,6 +20,8 @@ type WalkIssue = { code : string!, message : string }
 type WalkValidation = { valid : boolean!, errors : [WalkIssue]!, warnings : [WalkIssue] }
 type WalkPlanned = { orbital : string!, trait : string!, from : string!, event : string!, to : string!, guarded : boolean!, payload : WalkPayload!, unplanned : string! }
 type WalkStep = { payload : WalkPayload, unplanned : string }
+type WalkEffect = { type : string!, args : [WalkJson]!, status : string!, error : string }
+type WalkRun = { trait : string!, event : string!, transitionFired : boolean!, guard : string!, firedArm : number, effects : [WalkEffect]!, emitted : [SExpr]!, guards : [SExpr]!, state : Map string WalkJson }
 type WalkSlot = { name : string!, type : string!, required : boolean!, values : [string], entity : string }
 type WalkPlayed = { trait : string!, from : string!, event : string!, to : string!, guarded : boolean!, targets : [string]!, result : WalkResult! }
 type WalkResult = { transitionFired : boolean!, state : WalkAfter! }
@@ -24,6 +32,7 @@ type WalkMachineRow = { orbital : string!, trait : string!, from : string!, even
 orbital VerifyWalkOrbital {
   uses Machine from "std/behaviors/std-machine"
   uses Plan from "std/behaviors/std-verify-plan"
+  uses Judge from "std/behaviors/std-verify-judge"
 
   entity VerifyReport [runtime] {
     id : string!
@@ -36,6 +45,9 @@ orbital VerifyWalkOrbital {
     program : string = ""
     machineRows : [WalkMachineRow] = []
     planned : [WalkPlanned] = []
+    judgeSteps : [WalkPlanStep] = []
+    played : [WalkPlayed] = []
+    judged : [WalkJudged] = []
   }
 
   trait WalkMachine = Machine.traits.Machine {
@@ -47,6 +59,12 @@ orbital VerifyWalkOrbital {
   trait WalkPlan = Plan.traits.Plan {
     listens {
       VerifyWalk.WALK_PLAN_REQUEST -> PLAN_REQUEST
+    }
+  }
+
+  trait WalkJudge = Judge.traits.Judge {
+    listens {
+      VerifyWalk.WALK_JUDGE_REQUEST -> JUDGE_REQUEST
     }
   }
 
@@ -102,6 +120,7 @@ orbital VerifyWalkOrbital {
           (let ((s (array/nth @payload.steps (array/len @acc))))
             (array/concat @acc [{ orbital: (object/get @r "orbital"), trait: (object/get @r "trait"), from: (object/get @r "from"), event: (object/get @r "event"), to: (object/get @r "to"), guarded: (object/get @r "guarded"),
               payload: (object/get @s "payload" {}), unplanned: (object/get @s "unplanned" "") }])))))
+        (set @entity.judgeSteps (array/filter @payload.steps (fn s (= (object/get @s "unplanned" "") ""))))
         (set @entity.notes (array/map (array/filter @entity.planned (fn r (!= (object/get @r "unplanned") "")))
           (fn r { trait: (object/get @r "trait"), from: (object/get @r "from"), event: (object/get @r "event"), missing: (object/get @r "unplanned") })))
         (emit WALK_PLAY { rows: (array/filter @entity.planned (fn r (= (object/get @r "unplanned") ""))) })
@@ -119,12 +138,29 @@ orbital VerifyWalkOrbital {
             targets: (array/map (array/filter @entity.machineRows (fn g (and (= (object/get @g "trait") (object/get @r "trait")) (= (object/get @g "from") (object/get @r "from")) (= (object/get @g "event") (object/get @r "event"))))) (fn g (object/get @g "to"))),
             payload: (object/get @r "payload")
           })) { key: "steps" emit: { success: WALK_STEPPED, failure: WALK_FAILED } })
-      WALK_STEPPED -> ready
+      WALK_STEPPED -> judging
+        (set @entity.played @payload.result)
+        (set @entity.judged [])
+        (emit WALK_JUDGE_NEXT {})
+      WALK_FAILED -> ready
+        (emit VERIFY_WALK_ANSWERED { status: 500, body: (str/concat "verify-walk: " @payload.error) })
+    }
+
+    state judging {
+      INIT -> judging
+      WALK_JUDGE_NEXT -> judging when (< (array/len @entity.judged) (array/len @entity.played))
+        (emit WALK_JUDGE_REQUEST { step: (array/nth @entity.judgeSteps (array/len @entity.judged)), played: (object/get (array/nth @entity.played (array/len @entity.judged)) "result"), program: (json/parse @entity.program WalkFull) })
+      WALK_JUDGE_ANSWERED -> judging
+        (set @entity.judged (array/concat @entity.judged [{ verdicts: @payload.verdicts }]))
+        (emit WALK_JUDGE_NEXT {})
+      WALK_JUDGE_NEXT -> ready when (= (array/len @entity.judged) (array/len @entity.played))
         (set @entity.rows (array/concat
-          (array/map @payload.result (fn p
-            { trait: (object/get @p "trait"), from: (object/get @p "from"), event: (object/get @p "event"), to: (object/get @p "to"),
-              verdict: (if (and (object/get (object/get @p "result") "transitionFired") (array/includes (object/get @p "targets") (object/get (object/get (object/get @p "result") "state") "after"))) "pass"
-                (if (and (not (object/get (object/get @p "result") "transitionFired")) (object/get @p "guarded")) "guard-blocked" "fail")) }))
+          (array/reduce @entity.played [] (fn acc p
+            (let ((bad (array/filter (object/get (array/nth @entity.judged (array/len @acc)) "verdicts") (fn v (not (object/get @v "passed"))))))
+              (array/concat @acc [{ trait: (object/get @p "trait"), from: (object/get @p "from"), event: (object/get @p "event"), to: (object/get @p "to"),
+                verdict: (if (and (object/get (object/get @p "result") "transitionFired") (array/includes (object/get @p "targets") (object/get (object/get (object/get @p "result") "state") "after")) (= (array/len @bad) 0)) "pass"
+                  (if (and (not (object/get (object/get @p "result") "transitionFired")) (object/get @p "guarded")) "guard-blocked" "fail")),
+                detail: (str/join (array/map @bad (fn v (str/concat (object/get @v "name") ": " (object/get @v "detail")))) "; ") }]))))
           (array/map @entity.notes (fn n { trait: (object/get @n "trait"), from: (object/get @n "from"), event: (object/get @n "event"),
             to: (object/get (array/find @entity.machineRows (fn g (and (= (object/get @g "trait") (object/get @n "trait")) (= (object/get @g "from") (object/get @n "from")) (= (object/get @g "event") (object/get @n "event"))))) "to"),
             verdict: "unplanned" }))))
@@ -134,7 +170,8 @@ orbital VerifyWalkOrbital {
         (set @entity.guardBlocked (array/len (array/filter @entity.rows (fn r (= (object/get @r "verdict") "guard-blocked")))))
         (emit VERIFY_WALK_ANSWERED { status: (if (= @entity.failed 0) 200 500), body: (str/join (array/concat
           (array/map @entity.rows (fn r (str/concat (object/get @r "verdict") "  " (object/get @r "trait") " " (object/get @r "from") " --" (object/get @r "event") "--> " (object/get @r "to")
-            (if (= (object/get @r "verdict") "unplanned") (str/concat "  missing: " (object/get (array/find @entity.notes (fn n (and (= (object/get @n "trait") (object/get @r "trait")) (= (object/get @n "from") (object/get @r "from")) (= (object/get @n "event") (object/get @r "event"))))) "missing")) ""))))
+            (if (= (object/get @r "verdict") "unplanned") (str/concat "  missing: " (object/get (array/find @entity.notes (fn n (and (= (object/get @n "trait") (object/get @r "trait")) (= (object/get @n "from") (object/get @r "from")) (= (object/get @n "event") (object/get @r "event"))))) "missing"))
+              (if (!= (object/get @r "detail" "") "") (str/concat "  " (object/get @r "detail")) "")))))
           [(str/concat @entity.passed " passed, " @entity.failed " failed, " @entity.unplanned " unplanned, " @entity.guardBlocked " guard-blocked")]) "\n") })
       WALK_FAILED -> ready
         (emit VERIFY_WALK_ANSWERED { status: 500, body: (str/concat "verify-walk: " @payload.error) })
@@ -149,6 +186,12 @@ orbital VerifyWalkOrbital {
         @tier "internal"
       WALK_PLAN_REQUEST -> external { program : SExpr!, rows : [WalkMachineRow]! }
         @description "Ask std-verify-plan for one planned step per row."
+        @tier "internal"
+      WALK_JUDGE_REQUEST -> external { step : WalkPlanStep!, played : WalkRun!, program : SExpr! }
+        @description "Ask std-verify-judge for the verdicts of one played step."
+        @tier "internal"
+      WALK_JUDGE_NEXT {}
+        @description "Judge the next played step, or report when all are judged."
         @tier "internal"
       WALK_VALIDATED { result : WalkValidation! }
         @description "The validate stage answered."
@@ -179,6 +222,9 @@ orbital VerifyWalkOrbital {
         @synonyms "orb verify-walk, L1 walk, play every transition"
       WalkMachine.MACHINE_ANSWERED -> WALK_MACHINE_ANSWERED
       WalkPlan.PLAN_ANSWERED -> WALK_PLAN_ANSWERED
+      WalkJudge.JUDGE_ANSWERED -> WALK_JUDGE_ANSWERED
+      WALK_JUDGE_ANSWERED { verdicts : [WalkVerdict]!, unported : [WalkUnported]! }
+        @description "std-verify-judge's JUDGE_ANSWERED."
       WALK_PLAN_ANSWERED { steps : [WalkStep]! }
         @description "std-verify-plan's PLAN_ANSWERED."
       WALK_MACHINE_ANSWERED { rows : [WalkMachineRow]! }
@@ -186,5 +232,5 @@ orbital VerifyWalkOrbital {
     }
   }
 
-  page "/verify-walk" as VerifyWalkPage -> VerifyWalk, WalkMachine, WalkPlan
+  page "/verify-walk" as VerifyWalkPage -> VerifyWalk, WalkMachine, WalkPlan, WalkJudge
 }

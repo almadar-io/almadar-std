@@ -1,0 +1,21 @@
+app args-spec [
+  version: "1.0.0",
+  description: "Design contract for parsing a command's words against a declared flag table. ARGS_PARSE { stage, argv, flags } answers ARGS_PARSED { stage, flags, positionals, errors, words }. A flag declaration is { name, aliases, takesValue, repeatable }: name matches the long form --name, aliases are written whole (-o). The cases: (1) space form, `--output a.orb` gives flags.output = [a.orb]; (2) equals form is exactly equivalent, `--output=a.orb` gives the same record; (3) the value splits on the first equals only, `--query=a=b` gives [a=b]; (4) `--output=` gives one empty value [\"\"]; (5) a short alias resolves to the flag's name, `-o a.orb` gives flags.output; (6) a flag that takes no value is present as [\"true\"], and `--ai=x` is an error; (7) a bare value flag with no value after it (`--output` last) is an error naming the flag, and flags is otherwise unchanged; (8) an undeclared flag is the error `unknown flag: <word>` and its word is not a positional; (9) a repeated flag that is not repeatable is an error, a repeatable one collects every value in order; (10) words that are not flags, and the value after a value flag even when it starts with a dash, are positionals or values in order. Control: argv with no flags answers every word as a positional with flags empty and errors empty. The words answer is argv with every --name=value split into --name and value, so a program that forwards its words to another command forwards the space form."
+]
+
+type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
+
+orbital ArgsSpec {
+  expects entity ArgsRun [runtime] {
+    id : string!
+  }
+  expects trait ArgsParser {
+    state idle {
+      ARGS_PARSE -> idle
+    }
+    emits {
+      ARGS_PARSED { stage : string!  flags : Map string [string]!  positionals : [string]!  errors : [string]!  words : [string]! }
+    }
+  }
+  expects page "/args" -> ArgsParser
+}

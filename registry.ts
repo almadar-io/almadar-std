@@ -33,6 +33,7 @@ import { CONTRACT_OPERATORS } from './modules/contract.js';
 import { DATA_OPERATORS } from './modules/data.js';
 import { PROB_OPERATORS } from './modules/prob.js';
 import { OS_OPERATORS } from './modules/os.js';
+import { KV_OPERATORS } from './modules/kv.js';
 import { BROWSER_OPERATORS } from './modules/browser.js';
 import { COMPOSITION_OPERATORS } from './modules/composition.js';
 import { VEC_OPERATORS } from './modules/vector.js';
@@ -82,6 +83,7 @@ export const STD_OPERATORS: Record<string, StdOperatorMeta> = withNullRejection(
   ...DATA_OPERATORS,
   ...PROB_OPERATORS,
   ...OS_OPERATORS,
+  ...KV_OPERATORS,
   ...BROWSER_OPERATORS,
   ...COMPOSITION_OPERATORS,
   ...VEC_OPERATORS,
@@ -134,6 +136,7 @@ export const STD_OPERATORS_BY_MODULE: Record<string, Record<string, StdOperatorM
   data: DATA_OPERATORS,
   prob: PROB_OPERATORS,
   os: OS_OPERATORS,
+  kv: KV_OPERATORS,
   browser: BROWSER_OPERATORS,
   composition: COMPOSITION_OPERATORS,
   vec: VEC_OPERATORS,
