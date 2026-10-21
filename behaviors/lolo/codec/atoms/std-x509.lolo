@@ -1,0 +1,151 @@
+app std-x509 [
+  version: "1.0.0",
+  description: "std-x509 — the RSA public key of a PEM X.509 certificate. X509_PARSE { pem } strips the armour, decodes the DER and walks it tag by tag: Certificate, tbsCertificate, optional version, five skipped fields, subjectPublicKeyInfo (algorithm must be rsaEncryption), BIT STRING, RSAPublicKey { modulus, exponent }. Answers X509_PARSED { n, e } as big-endian bytes without the sign-padding zero, or X509_REFUSED { reason: pem | invalid | der | key-type }. Lengths are short form or long form of one or two bytes."
+]
+uses Spec from "almadar-std/x509"
+orbital X509Orbital {
+  type X509_PARSE = Event { pem : string! } "Read the RSA key of one PEM certificate."
+
+  entity X509Run [runtime] {
+    id : string!
+    der : string @description "The certificate DER being walked." = ""
+    pos : number @description "Offset of the element the walk is at." = 0
+    phase : string @description "Which element the walk expects next." = ""
+    left : number @description "Fields still to skip in the current phase." = 0
+    tag : number @description "Tag of the element at pos." = 0
+    hl : number @description "Header length of the element at pos." = 0
+    cl : number @description "Content length of the element at pos." = 0
+    n : bytes @description "The modulus once read." = ""
+  }
+
+  trait X509Parse -> X509Run [integration, instance] {
+    initial: ready
+
+    config {
+      base64Pattern : string = "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/][AQgw]==|[A-Za-z0-9+/]{2}[AEIMQUYcgkosw048]=)?$"
+        @label "Canonical padded base64"
+        @description "The pattern the certificate body must match: whole groups of four, correct padding."
+        @synonyms "base64 rule, padded base64"
+        @tier "domain"
+      rsaOid : string = "BgkqhkiG9w0BAQE="
+        @label "rsaEncryption OID"
+        @description "The DER of the rsaEncryption object identifier (06 09 2A 86 48 86 F7 0D 01 01 01): the only key type read."
+        @synonyms "rsa oid, key algorithm"
+        @tier "domain"
+    }
+
+    state ready {
+      INIT -> ready
+
+      X509_PARSE -> ready when (not (str/includes @payload.pem "-----BEGIN CERTIFICATE-----"))
+        (emit X509_REFUSED { reason: "pem" })
+      X509_PARSE -> ready when (and (str/includes @payload.pem "-----BEGIN CERTIFICATE-----") (not (validate/pattern (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll @payload.pem "-----BEGIN CERTIFICATE-----" "") "-----END CERTIFICATE-----" "") "\n" "") "\r" "") " " "") @config.base64Pattern)))
+        (emit X509_REFUSED { reason: "invalid" })
+      X509_PARSE -> ready when (and (str/includes @payload.pem "-----BEGIN CERTIFICATE-----") (validate/pattern (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll @payload.pem "-----BEGIN CERTIFICATE-----" "") "-----END CERTIFICATE-----" "") "\n" "") "\r" "") " " "") @config.base64Pattern))
+        (set @entity.der (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll @payload.pem "-----BEGIN CERTIFICATE-----" "") "-----END CERTIFICATE-----" "") "\n" "") "\r" "") " " ""))
+        (set @entity.pos 0)
+        (set @entity.phase "cert")
+        (set @entity.left 0)
+        (emit X509_STEP { at: 0 })
+
+      X509_STEP -> ready when (or (= (bytes/at @entity.der @entity.pos) null) (= (bytes/at @entity.der (+ @entity.pos 1)) null))
+        (emit X509_REFUSED { reason: "der" })
+      X509_STEP -> ready when (and (!= (bytes/at @entity.der @entity.pos) null) (!= (bytes/at @entity.der (+ @entity.pos 1)) null) (> (bytes/at @entity.der (+ @entity.pos 1)) 131) (< (bytes/at @entity.der (+ @entity.pos 1)) 128))
+        (emit X509_REFUSED { reason: "der" })
+      X509_STEP -> ready when (and (!= (bytes/at @entity.der @entity.pos) null) (!= (bytes/at @entity.der (+ @entity.pos 1)) null) (> (bytes/at @entity.der (+ @entity.pos 1)) 130))
+        (emit X509_REFUSED { reason: "der" })
+      X509_STEP -> ready when (and (!= (bytes/at @entity.der @entity.pos) null) (!= (bytes/at @entity.der (+ @entity.pos 1)) null) (<= (bytes/at @entity.der (+ @entity.pos 1)) 130))
+        (let ((b (bytes/at @entity.der (+ @entity.pos 1))))
+          (do
+            (set @entity.tag (bytes/at @entity.der @entity.pos))
+            (set @entity.hl (if (< @b 128) 2 (+ 2 (- @b 128))))
+            (set @entity.cl (if (< @b 128) @b (if (= @b 129) (or (bytes/at @entity.der (+ @entity.pos 2)) 0) (or (bytes/read-uint @entity.der (+ @entity.pos 2) 2 "be") 0))))
+            (emit X509_ACT { at: @entity.pos })))
+
+      X509_ACT -> ready when (and (= @entity.phase "cert") (= @entity.tag 48))
+        (set @entity.pos (+ @entity.pos @entity.hl))
+        (set @entity.phase "tbs")
+        (emit X509_STEP { at: (+ @entity.pos @entity.hl) })
+      X509_ACT -> ready when (and (= @entity.phase "tbs") (= @entity.tag 48))
+        (set @entity.pos (+ @entity.pos @entity.hl))
+        (set @entity.phase "version")
+        (emit X509_STEP { at: (+ @entity.pos @entity.hl) })
+      X509_ACT -> ready when (and (= @entity.phase "version") (= @entity.tag 160))
+        (set @entity.pos (+ @entity.pos @entity.hl @entity.cl))
+        (set @entity.phase "skip")
+        (set @entity.left 5)
+        (emit X509_STEP { at: (+ @entity.pos @entity.hl @entity.cl) })
+      X509_ACT -> ready when (and (= @entity.phase "version") (!= @entity.tag 160))
+        (set @entity.phase "skip")
+        (set @entity.left 5)
+        (emit X509_STEP { at: @entity.pos })
+      X509_ACT -> ready when (and (= @entity.phase "skip") (> @entity.left 0))
+        (set @entity.pos (+ @entity.pos @entity.hl @entity.cl))
+        (set @entity.left (- @entity.left 1))
+        (emit X509_STEP { at: (+ @entity.pos @entity.hl @entity.cl) })
+      X509_ACT -> ready when (and (= @entity.phase "skip") (= @entity.left 0) (= @entity.tag 48))
+        (set @entity.pos (+ @entity.pos @entity.hl))
+        (set @entity.phase "alg")
+        (emit X509_STEP { at: (+ @entity.pos @entity.hl) })
+      X509_ACT -> ready when (and (= @entity.phase "alg") (= @entity.tag 48) (not (bytes/equals (bytes/slice @entity.der (+ @entity.pos @entity.hl) (+ @entity.pos @entity.hl (bytes/length @config.rsaOid))) @config.rsaOid)))
+        (emit X509_REFUSED { reason: "key-type" })
+      X509_ACT -> ready when (and (= @entity.phase "alg") (= @entity.tag 48) (bytes/equals (bytes/slice @entity.der (+ @entity.pos @entity.hl) (+ @entity.pos @entity.hl (bytes/length @config.rsaOid))) @config.rsaOid))
+        (set @entity.pos (+ @entity.pos @entity.hl @entity.cl))
+        (set @entity.phase "bits")
+        (emit X509_STEP { at: (+ @entity.pos @entity.hl @entity.cl) })
+      X509_ACT -> ready when (and (= @entity.phase "bits") (= @entity.tag 3))
+        (set @entity.pos (+ @entity.pos @entity.hl 1))
+        (set @entity.phase "key")
+        (emit X509_STEP { at: (+ @entity.pos @entity.hl 1) })
+      X509_ACT -> ready when (and (= @entity.phase "key") (= @entity.tag 48))
+        (set @entity.pos (+ @entity.pos @entity.hl))
+        (set @entity.phase "modulus")
+        (emit X509_STEP { at: (+ @entity.pos @entity.hl) })
+      X509_ACT -> ready when (and (= @entity.phase "modulus") (= @entity.tag 2))
+        (set @entity.n (let ((lead (if (= (bytes/at @entity.der (+ @entity.pos @entity.hl)) 0) 1 0))) (bytes/slice @entity.der (+ @entity.pos @entity.hl @lead) (+ @entity.pos @entity.hl @entity.cl))))
+        (set @entity.pos (+ @entity.pos @entity.hl @entity.cl))
+        (set @entity.phase "exponent")
+        (emit X509_STEP { at: (+ @entity.pos @entity.hl @entity.cl) })
+      X509_ACT -> ready when (and (= @entity.phase "exponent") (= @entity.tag 2))
+        (emit X509_PARSED { n: @entity.n, e: (let ((lead (if (= (bytes/at @entity.der (+ @entity.pos @entity.hl)) 0) 1 0))) (bytes/slice @entity.der (+ @entity.pos @entity.hl @lead) (+ @entity.pos @entity.hl @entity.cl))) })
+      X509_ACT -> ready when (not (or (and (= @entity.phase "cert") (= @entity.tag 48)) (and (= @entity.phase "tbs") (= @entity.tag 48)) (= @entity.phase "version") (and (= @entity.phase "skip") (or (> @entity.left 0) (= @entity.tag 48))) (and (= @entity.phase "alg") (= @entity.tag 48)) (and (= @entity.phase "bits") (= @entity.tag 3)) (and (= @entity.phase "key") (= @entity.tag 48)) (and (= @entity.phase "modulus") (= @entity.tag 2)) (and (= @entity.phase "exponent") (= @entity.tag 2))))
+        (emit X509_REFUSED { reason: "der" })
+    }
+
+    emits {
+      X509_PARSED -> external {
+        n : bytes!
+        e : bytes!
+      }
+        @description "The certificate's RSA key: modulus and exponent as big-endian bytes."
+        @synonyms "certificate key, public key"
+        @tier "primary"
+      X509_REFUSED -> external {
+        reason : string!
+      }
+        @description "The certificate could not be read: pem, invalid, der or key-type."
+        @synonyms "certificate refused"
+        @tier "primary"
+      X509_STEP {
+        at : number!
+      }
+        @description "Internal: read the element header at the walk position."
+        @tier "secondary"
+      X509_ACT {
+        at : number!
+      }
+        @description "Internal: act on the element just read for the current phase."
+        @tier "secondary"
+    }
+
+    listens {
+      X509_PARSE {
+        pem : string!
+      }
+        @description "Read the RSA key of one PEM certificate."
+        @synonyms "parse certificate, certificate key"
+    }
+  }
+
+  page "/x509" as X509Page -> X509Parse
+}

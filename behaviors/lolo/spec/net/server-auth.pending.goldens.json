@@ -1,0 +1,120 @@
+{
+ "atom": "net/organisms/std-http-server.lolo",
+ "trait": "ServerBearer",
+ "cases": [
+  {
+   "id": "key-passes",
+   "steps": [
+    {
+     "trait": "ApiKeys",
+     "event": "KEY_FOUND",
+     "payload": {
+      "data": {
+       "id": "h",
+       "owner": "svc-1",
+       "label": "ci",
+       "revoked": false,
+       "expiresAt": 0
+      }
+     },
+     "from": "looking",
+     "expect": {
+      "emits": [
+       {
+        "event": "API_KEY_VERIFIED",
+        "payload": {
+         "owner": "svc-1",
+         "claims": [
+          {
+           "name": "label",
+           "value": "ci"
+          }
+         ]
+        }
+       },
+       {
+        "event": "BEARER_VERIFIED",
+        "payload": {
+         "viewer": {
+          "id": "svc-1",
+          "claims": [
+           {
+            "name": "label",
+            "value": "ci"
+           }
+          ]
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bad-key-401",
+   "steps": [
+    {
+     "trait": "ApiKeys",
+     "event": "KEY_ABSENT",
+     "payload": {
+      "code": "not-found",
+      "error": "nf"
+     },
+     "from": "looking",
+     "expect": {
+      "emits": [
+       {
+        "event": "API_KEY_REFUSED",
+        "payload": {
+         "reason": "unknown"
+        }
+       },
+       {
+        "event": "BEARER_REFUSED",
+        "payload": {
+         "reason": "api-key-unknown"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "lowercase-bearer-not-widened",
+   "steps": [
+    {
+     "trait": "ServerBearer",
+     "event": "KEY_SALT_READ",
+     "payload": {
+      "value": "00112233445566778899aabbccddeeff"
+     }
+    },
+    {
+     "trait": "ServerBearer",
+     "event": "BEARER_VERIFY",
+     "payload": {
+      "requestId": 10,
+      "authorization": "bearer sk_live_abcdef"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "BEARER_REFUSED",
+        "payload": {
+         "requestId": 10,
+         "reason": "malformed"
+        }
+       }
+      ],
+      "neverEmits": [
+       "VERIFY_KEY"
+      ]
+     }
+    }
+   ]
+  }
+ ],
+ "pendingOn": "program/step reporting the cascaded traits' outcomes (execute --steps lists ApiKeys->ServerBearer; program/step answers only the first outcome)"
+}

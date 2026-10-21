@@ -1,0 +1,24 @@
+app git-spec [
+  version: "1.0.0",
+  description: "Design contract for running one git step in a repository directory: GIT_STEP names a request, a directory, an op and its args; the answer is GIT_DONE with the exit code and output, or GIT_FAILED with a code the cascade tells apart (git_behind_remote, git_tag_exists, git_auth, git_locked, git_nothing_to_commit, git_failed, git_spawn_failed, git_unknown_op, git_busy). One step at a time; a step asked for while one is in flight is refused, never queued."
+]
+
+orbital GitSpec {
+  expects entity GitRun [runtime] {
+    id : string!
+    requestId : string
+  }
+  expects trait GitStepRunner {
+    state idle {
+      GIT_STEP -> running
+    }
+    state running {
+      GIT_STEP -> running
+    }
+    emits {
+      GIT_DONE { requestId : string!  op : string!  exitCode : number!  stdout : string!  stderr : string! }
+      GIT_FAILED { requestId : string!  op : string!  code : string!  stderr : string! }
+    }
+  }
+  expects page "/git" -> GitStepRunner
+}

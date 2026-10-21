@@ -1,0 +1,58 @@
+{
+ "atom": "ops/atoms/std-app-hosting-board.lolo",
+ "trait": "AppHostingStatus",
+ "note": "from std-app-hosting-board-program.test.ts; the gcloud token and App Hosting REST replies are host answers",
+ "cases": [
+  {
+   "id": "status-load-queues-and-pumps",
+   "steps": [
+    {
+     "event": "AH_STATUS_LOAD",
+     "payload": {
+      "backendId": "b1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "AH_PUMP",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "refresh-all-with-no-backends-pumps",
+   "steps": [
+    {
+     "event": "AH_REFRESH_ALL",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "AH_PUMP",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-pump-on-empty-queue-stays-idle",
+   "steps": [
+    {
+     "event": "AH_PUMP",
+     "payload": {},
+     "expect": {
+      "state": "idle",
+      "neverEmits": [
+       "AH_START"
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

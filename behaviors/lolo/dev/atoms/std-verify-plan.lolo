@@ -12,8 +12,16 @@ type PlanFroms = { v : [string] }
 type PlanForm = [SExpr]
 type PlanArm = { event : string!, from : (string | [string]), to : string!, guard : SExpr, effects : [SExpr] }
 type PlanTick = { effects : [SExpr] }
-type PlanGraph = { transitions : [PlanArm] }
-type PlanTrait = { name : string!, orbital : string, linkedEntity : string, stateMachine : PlanGraph, ticks : [PlanTick] }
+type PlanEmit = { success : string, cancelled : string, onMessage : string, failure : string }
+type PlanRoute = { emitter : string!, event : string!, kind : string! }
+type PlanRoutes = [PlanRoute]
+type PlanListenSource = { kind : string, trait : string }
+type PlanListen = { event : string!, triggers : string, source : PlanListenSource }
+type PlanOpts = { emit : PlanEmit }
+type PlanSteps = [PlannedStep]
+type PlanState = { name : string!, isInitial : boolean }
+type PlanGraph = { states : [PlanState], transitions : [PlanArm] }
+type PlanTrait = { name : string!, orbital : string, linkedEntity : string, stateMachine : PlanGraph, ticks : [PlanTick], listens : [PlanListen] }
 type PlanEntField = { name : string!, default : SExpr }
 type PlanEntity = { name : string, fields : [PlanEntField] }
 type PlanOrbital = { name : string!, entity : PlanEntity, traits : [PlanTrait] }
@@ -26,7 +34,7 @@ type PlanPlayed = { idx : number!, baseNE : boolean!, result : PlanResult! }
 type PlanPrecondition = { kind : string!, trait : string, event : string, fields : [string], proof : string!, reason : string }
 type JsonValue = string | number | boolean | [JsonValue] | Map string JsonValue
 type PlanPayload = Map string JsonValue
-type PlannedStep = { trait : string!, linkedEntity : string, from : string!, event : string!, to : string!, toStates : [string]!, variant : string!, payload : PlanPayload!, guarded : boolean!, arm : number, solved : boolean!, payloadCase : string!, guardCase : string, unplanned : string, precondition : PlanPrecondition }
+type PlannedStep = { trait : string!, linkedEntity : string, from : string!, event : string!, to : string!, toStates : [string]!, variant : string!, payload : PlanPayload!, guarded : boolean!, arm : number, solved : boolean!, payloadCase : string!, guardCase : string, unplanned : string, precondition : PlanPrecondition, reply : string }
 
 orbital VerifyPlanOrbital {
   entity PlanRun [runtime] {
@@ -110,11 +118,21 @@ orbital VerifyPlanOrbital {
                                         (cands (array/reduce @progTraits [] (fn (acc t) (if (and (!= (object/get @t "name") (object/get @r "trait")) (!= @ent "") (= (object/get @t "linkedEntity" "") @ent)) (array/concat @acc (array/map (array/filter (object/get (object/get @t "stateMachine") "transitions" []) (fn a (and (!= (object/get @a "event") "INIT") (array/some (array/map (array/filter (array/reduce (object/get @a "effects" []) [] (fn (acc2 e) (array/concat @acc2 (json/nodes @e)))) (fn n (str/startsWith (json/stringify @n) "["))) (fn n (json/parse (json/stringify @n) PlanForm))) (fn f (array/some @entityFields (fn fld (= (json/stringify (array/take @f 2)) (json/stringify ["set", (str/concat (quote "@entity.") @fld)]))))))))) (fn a { trait: (object/get @t "name"), event: (object/get @a "event") }))) @acc)))))
                                     (let ((why (if (not @ok) "guard-unsolved" (if @objectSlot "object-slot-unplanned" ""))))
                                       (let ((pre (if (and @guarded (> (array/len @entityFields) 0)) (if (> (array/len @cands) 0) { kind: "established", trait: (object/get (array/nth @cands 0) "trait"), event: (object/get (array/nth @cands 0) "event"), fields: @entityFields, proof: "unproven", reason: "setter-value-unresolved" } (if (or @sameHit @tickHit) { kind: "same-trait-setter", trait: "", event: "", fields: @entityFields, proof: "unproven", reason: "setter-not-on-replay-path" } { kind: "unreachable", trait: "", event: "", fields: @entityFields, proof: "unproven", reason: "unreachable" })) { kind: "none", trait: "", event: "", fields: [], proof: "proven", reason: "" })))
-                                        (let ((step { trait: (object/get @r "trait"), from: (object/get @r "from"), event: (object/get @r "event"), to: (object/get @r "to"), toStates: [(object/get @r "to")], variant: "success", payload: @solvedPayload, guarded: @guarded, solved: (= @why ""), payloadCase: "success" }))
+                                        (let ((step { trait: (object/get @r "trait"), from: (object/get @r "from"), event: (object/get @r "event"), to: (object/get @r "to"), toStates: [(object/get @r "to")], variant: (if (= (object/get @r "from") (object/get (array/find (object/get (object/get @tr "stateMachine") "states" []) (fn st (object/get @st "isInitial" false))) "name" "")) "auto-init" "success"), payload: @solvedPayload, guarded: @guarded, solved: (= @why ""), payloadCase: "success" }))
                                           (let ((withEntity (if (= @ent "") @step (object/set @step "linkedEntity" @ent))))
                                             (let ((withGuard (if @guarded (object/set @withEntity "guardCase" "pass") @withEntity)))
                                               (let ((withPre (if (= (object/get @pre "kind") "none") @withGuard (object/set @withGuard "precondition" @pre))))
                                                 (if (= @why "") @withPre (object/set @withPre "unplanned" @why))))))))))))))))))))))))))))))))))))
+        (set @entity.steps (let ((routes (array/reduce @progTraits (json/parse "[]" PlanRoutes) (fn (ra t)
+            (let ((forms (array/map (array/filter (array/reduce (object/get (object/get @t "stateMachine") "transitions" []) [] (fn (a2 arm) (array/concat @a2 (array/reduce (object/get @arm "effects" []) [] (fn (a3 e) (array/concat @a3 (json/nodes @e))))))) (fn n (or (str/startsWith (json/stringify @n) "[\"http\"") (str/startsWith (json/stringify @n) "[\"redis\"") (str/startsWith (json/stringify @n) "[\"postgres\"")))) (fn n (json/parse (json/stringify @n) PlanForm)))))
+              (let ((emits (array/map (array/filter @forms (fn f (str/startsWith (json/stringify (array/nth @f (- (array/len @f) 1))) "{"))) (fn f (object/get (json/parse (json/stringify (array/nth @f (- (array/len @f) 1))) PlanOpts) "emit" (json/parse "{}" PlanEmit))))))
+                (array/concat @ra (array/reduce @emits (json/parse "[]" PlanRoutes) (fn (rb m) (array/concat (array/concat (array/concat (array/concat @rb (if (!= (object/get @m "success" "") "") [{ emitter: (object/get @t "name"), event: (object/get @m "success"), kind: "other" }] (json/parse "[]" PlanRoutes))) (if (!= (object/get @m "cancelled" "") "") [{ emitter: (object/get @t "name"), event: (object/get @m "cancelled"), kind: "other" }] (json/parse "[]" PlanRoutes))) (if (!= (object/get @m "onMessage" "") "") [{ emitter: (object/get @t "name"), event: (object/get @m "onMessage"), kind: "other" }] (json/parse "[]" PlanRoutes))) (if (!= (object/get @m "failure" "") "") [{ emitter: (object/get @t "name"), event: (object/get @m "failure"), kind: "failure" }] (json/parse "[]" PlanRoutes))))))))))))
+          (array/reduce @entity.steps (json/parse "[]" PlanSteps) (fn (acc st)
+            (let ((row (array/nth @payload.rows (array/len @acc))))
+              (let ((tr (array/find @progTraits (fn t (and (= (object/get @t "name") (object/get @row "trait")) (= (object/get @t "orbital") (object/get @row "orbital")))))))
+                (let ((isOther (array/some @routes (fn r (and (= (object/get @r "kind") "other") (or (and (= (object/get @r "emitter") (object/get @row "trait")) (= (object/get @r "event") (object/get @row "event"))) (array/some (object/get @tr "listens" []) (fn l (and (= (object/get @l "event") (object/get @r "event")) (or (not (object/has @l "source")) (= (object/get (object/get @l "source" (json/parse "{}" PlanListenSource)) "kind" "") "any") (= (object/get (object/get @l "source" (json/parse "{}" PlanListenSource)) "trait" "") (object/get @r "emitter"))) (= (object/get @l "triggers" (object/get @l "event")) (object/get @row "event"))))))))) )
+                      (isFail (array/some @routes (fn r (and (= (object/get @r "kind") "failure") (or (and (= (object/get @r "emitter") (object/get @row "trait")) (= (object/get @r "event") (object/get @row "event"))) (array/some (object/get @tr "listens" []) (fn l (and (= (object/get @l "event") (object/get @r "event")) (or (not (object/has @l "source")) (= (object/get (object/get @l "source" (json/parse "{}" PlanListenSource)) "kind" "") "any") (= (object/get (object/get @l "source" (json/parse "{}" PlanListenSource)) "trait" "") (object/get @r "emitter"))) (= (object/get @l "triggers" (object/get @l "event")) (object/get @row "event"))))))))) ))
+                  (array/concat @acc [(if @isOther (object/set @st "reply" "other") (if @isFail (object/set @st "reply" "failure") @st))]))))))))
         (set @entity.probes (array/filter (array/reduce @payload.rows (json/parse "[]" PlanProbes) (fn (acc r) (array/concat @acc [{ idx: (array/len @acc), r: @r }]))) (fn p (object/has (array/nth @entity.steps (object/get @p "idx")) "precondition"))))
         (emit PLAN_COMPUTED { count: (array/len @entity.steps) })))
       PLAN_COMPUTED -> ready when (= (array/len @entity.probes) 0)

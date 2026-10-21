@@ -1,0 +1,193 @@
+app std-orb-sandbox [
+  version: "1.0.0",
+  inbound: ["cli-sandbox"],
+  exec: ["docker", "sh"],
+  env: ["PATH", "HOME"],
+  description: "std-orb-sandbox — the `orb sandbox smoke [all|build|up|check|down] [--deploy DIR] [--src DIR]` command: the docker path of tools/orbital-sandbox/docker-smoke.sh as a step list run through std-cli (docker and sh), with the script's argv. --deploy (default <invocation directory>/tools/orbital-sandbox, to move with the io-gate deploy files) holds the Dockerfiles, gate-entry.sh, program.json, ask.py and sandbox-data; --src (default <invocation directory>/orbital-rust) is mounted for the cargo build. build creates the volumes, builds io-gate and orb-run in rust:1.93-bookworm, stages them with the deploy files and builds the orbital-sandbox-gate and orbital-sandbox-run images; up starts the gate container and waits up to 30 seconds for its socket; check runs the run container with no network and answers its six PASS/FAIL lines (status 200, exit 0 when it exits 0, otherwise 500, exit 1); down removes the gate container and the socket volume; all is down, build, up, check, down. A failed step answers its output (status 500, exit 1) after the cleanup the script does (the staging directory, and for all the down steps). Any other word answers the usage (status 400, exit 2)."
+]
+uses Spec from "almadar-std/orb-sandbox"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
+type SandboxStep = { tool : string!, stage : string!, mode : string!, argv : [string]! }
+
+orbital OrbSandboxOrbital {
+  uses Cli from "std/behaviors/std-cli"
+  uses Args from "std/behaviors/std-args"
+
+  entity OrbSandboxRun [runtime] {
+    id : string!
+    verb : string = ""
+    deploy : string = ""
+    src : string = ""
+    stageDir : string = ""
+    steps : [SandboxStep] = []
+    cursor : number = 0
+    rc : number = 0
+    out : string = ""
+    aborted : boolean = false
+  }
+
+  trait ArgsCli = Args.traits.ArgsParser {
+    listens {
+      OrbSandbox.SB_ARGS_PARSE -> ARGS_PARSE
+    }
+  }
+
+  trait DockerCli = Cli.traits.CliRunner {
+    listens {
+      OrbSandbox.SB_DOCKER_RUN -> CLI_RUN
+    }
+    config {
+      commands: ["docker"]
+      passEnv: ["PATH", "HOME"]
+    }
+  }
+
+  trait ShCli = Cli.traits.CliRunner {
+    listens {
+      OrbSandbox.SB_SH_RUN -> CLI_RUN
+    }
+    config {
+      commands: ["sh"]
+      passEnv: ["PATH", "HOME"]
+    }
+  }
+
+  trait OrbSandbox -> OrbSandboxRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      SB_CALLED -> parsing
+        (set @entity.deploy (str/concat (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd") "/tools/orbital-sandbox"))
+        (set @entity.src (str/concat (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd") "/orbital-rust"))
+        (emit SB_ARGS_PARSE { stage: "sandbox" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "deploy" aliases: [] takesValue: true repeatable: false }, { name: "src" aliases: [] takesValue: true repeatable: false }] })
+    }
+
+    state parsing {
+      INIT -> parsing
+      SB_ARGS_DONE -> ready when (not (and (= (array/len @payload.errors) 0) (>= (array/len @payload.positionals) 1) (<= (array/len @payload.positionals) 2) (= (array/first @payload.positionals) "smoke") (array/includes ["all", "build", "up", "check", "down"] (or (array/nth @payload.positionals 1) "all"))))
+        (emit SANDBOX_ANSWERED { status: 400, body: "usage: orb sandbox smoke [all|build|up|check|down] [--deploy DIR] [--src DIR]" })
+      SB_ARGS_DONE -> running when (and (= (array/len @payload.errors) 0) (>= (array/len @payload.positionals) 1) (<= (array/len @payload.positionals) 2) (= (array/first @payload.positionals) "smoke") (array/includes ["all", "build", "up", "check", "down"] (or (array/nth @payload.positionals 1) "all")))
+        (set @entity.verb (or (array/nth @payload.positionals 1) "all"))
+        (set @entity.deploy (if (> (array/len (or (object/get @payload.flags "deploy") [])) 0) (array/first (object/get @payload.flags "deploy")) @entity.deploy))
+        (set @entity.src (if (> (array/len (or (object/get @payload.flags "src") [])) 0) (array/first (object/get @payload.flags "src")) @entity.src))
+        (set @entity.steps (if (= @entity.verb "build") [{ tool: "docker", stage: "vol-target", mode: "need", argv: (str/split "volume\ncreate\norbital-sandbox-target" "\n") }, { tool: "docker", stage: "vol-cargo", mode: "need", argv: (str/split "volume\ncreate\norbital-sandbox-cargo" "\n") }, { tool: "docker", stage: "cargo", mode: "need", argv: (str/split "run\n--rm\n-v\n%SRC%:/src:ro\n-v\norbital-sandbox-target:/target\n-v\norbital-sandbox-cargo:/usr/local/cargo/registry\n-e\nCARGO_TARGET_DIR=/target\n-w\n/src\nrust:1.93-bookworm\nsh\n-c\nRUSTUP_TOOLCHAIN=$(rustup toolchain list | head -1 | cut -d' ' -f1) cargo build --locked -p io-gate --bin io-gate --bin orb-run" "\n") }, { tool: "sh", stage: "mkstage", mode: "need", argv: (str/split "-c\nmktemp -d \"$1\"/.stage.XXXXXX\nsh\n%DEPLOY%" "\n") }, { tool: "docker", stage: "extract", mode: "need", argv: (str/split "run\n--rm\n-v\norbital-sandbox-target:/t:ro\n-v\n%STAGE%:/out\ndebian:bookworm-slim\ncp\n/t/debug/io-gate\n/t/debug/orb-run\n/out/" "\n") }, { tool: "sh", stage: "deploy-files", mode: "need", argv: (str/split "-c\ncd \"$1\" && cp gate-entry.sh gate.Dockerfile run.Dockerfile ask.py program.json \"$2\"/\nsh\n%DEPLOY%\n%STAGE%" "\n") }, { tool: "docker", stage: "image-gate", mode: "need", argv: (str/split "build\n-q\n-f\n%STAGE%/gate.Dockerfile\n-t\norbital-sandbox-gate\n%STAGE%" "\n") }, { tool: "docker", stage: "image-run", mode: "need", argv: (str/split "build\n-q\n-f\n%STAGE%/run.Dockerfile\n-t\norbital-sandbox-run\n%STAGE%" "\n") }, { tool: "sh", stage: "rmstage", mode: "soft", argv: (str/split "-c\nrm -rf \"$1\"\nsh\n%STAGE%" "\n") }] (if (= @entity.verb "up") [{ tool: "docker", stage: "vol-sock", mode: "need", argv: (str/split "volume\ncreate\norbital-sandbox-sock" "\n") }, { tool: "docker", stage: "gate", mode: "need", argv: (str/split "run\n-d\n--name\norbital-sandbox-gate\n--user\n10001\n--read-only\n--tmpfs\n/etc/gate:uid=10001,mode=0700\n--cap-drop\nALL\n--security-opt\nno-new-privileges:true\n-e\nGATE_GRANT_DIR=/data/granted\n-e\nGATE_EGRESS=\n-v\norbital-sandbox-sock:/run/gate\n-v\n%DEPLOY%/sandbox-data:/data:ro\norbital-sandbox-gate" "\n") }, { tool: "sh", stage: "gate-wait", mode: "need", argv: (str/split "-c\ni=0; while [ $i -lt 60 ]; do docker exec orbital-sandbox-gate test -S /run/gate/io-gate.sock 2>/dev/null && exit 0; sleep 0.5; i=$((i+1)); done; echo 'the gate did not come up:' >&2; docker logs orbital-sandbox-gate >&2; exit 1" "\n") }] (if (= @entity.verb "check") [{ tool: "docker", stage: "check", mode: "check", argv: (str/split "run\n--rm\n--network\nnone\n--user\n10001\n--read-only\n--cap-drop\nALL\n--security-opt\nno-new-privileges:true\n-v\norbital-sandbox-sock:/run/gate\norbital-sandbox-run" "\n") }] (if (= @entity.verb "down") [{ tool: "docker", stage: "rm-gate", mode: "soft", argv: (str/split "rm\n-f\norbital-sandbox-gate" "\n") }, { tool: "docker", stage: "rm-sock", mode: "soft", argv: (str/split "volume\nrm\norbital-sandbox-sock" "\n") }] (array/concat (array/concat (array/concat [{ tool: "docker", stage: "rm-gate", mode: "soft", argv: (str/split "rm\n-f\norbital-sandbox-gate" "\n") }, { tool: "docker", stage: "rm-sock", mode: "soft", argv: (str/split "volume\nrm\norbital-sandbox-sock" "\n") }] [{ tool: "docker", stage: "vol-target", mode: "need", argv: (str/split "volume\ncreate\norbital-sandbox-target" "\n") }, { tool: "docker", stage: "vol-cargo", mode: "need", argv: (str/split "volume\ncreate\norbital-sandbox-cargo" "\n") }, { tool: "docker", stage: "cargo", mode: "need", argv: (str/split "run\n--rm\n-v\n%SRC%:/src:ro\n-v\norbital-sandbox-target:/target\n-v\norbital-sandbox-cargo:/usr/local/cargo/registry\n-e\nCARGO_TARGET_DIR=/target\n-w\n/src\nrust:1.93-bookworm\nsh\n-c\nRUSTUP_TOOLCHAIN=$(rustup toolchain list | head -1 | cut -d' ' -f1) cargo build --locked -p io-gate --bin io-gate --bin orb-run" "\n") }, { tool: "sh", stage: "mkstage", mode: "need", argv: (str/split "-c\nmktemp -d \"$1\"/.stage.XXXXXX\nsh\n%DEPLOY%" "\n") }, { tool: "docker", stage: "extract", mode: "need", argv: (str/split "run\n--rm\n-v\norbital-sandbox-target:/t:ro\n-v\n%STAGE%:/out\ndebian:bookworm-slim\ncp\n/t/debug/io-gate\n/t/debug/orb-run\n/out/" "\n") }, { tool: "sh", stage: "deploy-files", mode: "need", argv: (str/split "-c\ncd \"$1\" && cp gate-entry.sh gate.Dockerfile run.Dockerfile ask.py program.json \"$2\"/\nsh\n%DEPLOY%\n%STAGE%" "\n") }, { tool: "docker", stage: "image-gate", mode: "need", argv: (str/split "build\n-q\n-f\n%STAGE%/gate.Dockerfile\n-t\norbital-sandbox-gate\n%STAGE%" "\n") }, { tool: "docker", stage: "image-run", mode: "need", argv: (str/split "build\n-q\n-f\n%STAGE%/run.Dockerfile\n-t\norbital-sandbox-run\n%STAGE%" "\n") }, { tool: "sh", stage: "rmstage", mode: "soft", argv: (str/split "-c\nrm -rf \"$1\"\nsh\n%STAGE%" "\n") }]) [{ tool: "docker", stage: "vol-sock", mode: "need", argv: (str/split "volume\ncreate\norbital-sandbox-sock" "\n") }, { tool: "docker", stage: "gate", mode: "need", argv: (str/split "run\n-d\n--name\norbital-sandbox-gate\n--user\n10001\n--read-only\n--tmpfs\n/etc/gate:uid=10001,mode=0700\n--cap-drop\nALL\n--security-opt\nno-new-privileges:true\n-e\nGATE_GRANT_DIR=/data/granted\n-e\nGATE_EGRESS=\n-v\norbital-sandbox-sock:/run/gate\n-v\n%DEPLOY%/sandbox-data:/data:ro\norbital-sandbox-gate" "\n") }, { tool: "sh", stage: "gate-wait", mode: "need", argv: (str/split "-c\ni=0; while [ $i -lt 60 ]; do docker exec orbital-sandbox-gate test -S /run/gate/io-gate.sock 2>/dev/null && exit 0; sleep 0.5; i=$((i+1)); done; echo 'the gate did not come up:' >&2; docker logs orbital-sandbox-gate >&2; exit 1" "\n") }]) (array/concat [{ tool: "docker", stage: "check", mode: "check", argv: (str/split "run\n--rm\n--network\nnone\n--user\n10001\n--read-only\n--cap-drop\nALL\n--security-opt\nno-new-privileges:true\n-v\norbital-sandbox-sock:/run/gate\norbital-sandbox-run" "\n") }] [{ tool: "docker", stage: "rm-gate", mode: "soft", argv: (str/split "rm\n-f\norbital-sandbox-gate" "\n") }, { tool: "docker", stage: "rm-sock", mode: "soft", argv: (str/split "volume\nrm\norbital-sandbox-sock" "\n") }])))))))
+        (set @entity.cursor 0)
+        (set @entity.rc 0)
+        (set @entity.out "")
+        (set @entity.stageDir "")
+        (set @entity.aborted false)
+        (emit SB_NEXT { })
+    }
+
+    state running {
+      INIT -> running
+      SB_NEXT -> running when (and (< @entity.cursor (array/len @entity.steps)) (= (object/get (array/nth @entity.steps @entity.cursor) "tool") "docker"))
+        (emit SB_DOCKER_RUN { stage: (object/get (array/nth @entity.steps @entity.cursor) "stage") argv: (array/map (object/get (array/nth @entity.steps @entity.cursor) "argv") (fn a (str/replaceAll (str/replaceAll (str/replaceAll @a "%DEPLOY%" @entity.deploy) "%SRC%" @entity.src) "%STAGE%" @entity.stageDir))) })
+      SB_NEXT -> running when (and (< @entity.cursor (array/len @entity.steps)) (= (object/get (array/nth @entity.steps @entity.cursor) "tool") "sh"))
+        (emit SB_SH_RUN { stage: (object/get (array/nth @entity.steps @entity.cursor) "stage") argv: (array/map (object/get (array/nth @entity.steps @entity.cursor) "argv") (fn a (str/replaceAll (str/replaceAll (str/replaceAll @a "%DEPLOY%" @entity.deploy) "%SRC%" @entity.src) "%STAGE%" @entity.stageDir))) })
+      SB_NEXT -> ready when (and (>= @entity.cursor (array/len @entity.steps)) (= @entity.rc 0))
+        (emit SANDBOX_ANSWERED { status: 200, body: (str/trim @entity.out) })
+      SB_NEXT -> ready when (and (>= @entity.cursor (array/len @entity.steps)) (!= @entity.rc 0))
+        (emit SANDBOX_ANSWERED { status: 500, body: (str/trim @entity.out) })
+      SB_DONE -> running when (and (= @payload.stage "mkstage") (= @payload.exitCode 0))
+        (set @entity.stageDir (str/trim @payload.stdout))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit SB_NEXT { })
+      SB_DONE -> running when (and (!= @payload.stage "mkstage") (= @payload.exitCode 0) (!= @payload.stage "check") (!= @payload.stage "rmstage"))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit SB_NEXT { })
+      SB_DONE -> running when (= @payload.stage "rmstage")
+        (set @entity.stageDir "")
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit SB_NEXT { })
+      SB_DONE -> running when (= @payload.stage "check")
+        (set @entity.out (str/concat @entity.out @payload.stdout @payload.stderr))
+        (set @entity.rc @payload.exitCode)
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit SB_NEXT { })
+      SB_DONE -> running when (and (!= @payload.exitCode 0) (= (object/get (array/nth @entity.steps @entity.cursor) "mode") "soft") (!= @payload.stage "rmstage") (!= @payload.stage "check"))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit SB_NEXT { })
+      SB_DONE -> running when (and (!= @payload.exitCode 0) (= (object/get (array/nth @entity.steps @entity.cursor) "mode") "need") (not @entity.aborted) (!= @payload.stage "check"))
+        (set @entity.out (str/concat @entity.out @payload.stdout @payload.stderr))
+        (set @entity.rc 1)
+        (set @entity.aborted true)
+        (set @entity.steps (array/concat (if (!= @entity.stageDir "") [{ tool: "sh", stage: "rmstage", mode: "soft", argv: (str/split "-c\nrm -rf \"$1\"\nsh\n%STAGE%" "\n") }] []) (if (= @entity.verb "all") [{ tool: "docker", stage: "rm-gate", mode: "soft", argv: (str/split "rm\n-f\norbital-sandbox-gate" "\n") }, { tool: "docker", stage: "rm-sock", mode: "soft", argv: (str/split "volume\nrm\norbital-sandbox-sock" "\n") }] [])))
+        (set @entity.cursor 0)
+        (emit SB_NEXT { })
+      SB_FAILED -> ready
+        (emit SANDBOX_ANSWERED { status: 500, body: (str/concat "FAIL  " @payload.error) })
+    }
+
+    emits {
+      SANDBOX_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      SB_NEXT { }
+        @description "Internal: run the next step."
+        @tier "internal"
+      SB_ARGS_PARSE {
+        stage : string!
+        argv : [string]!
+        flags : [ArgFlag]!
+      }
+        @description "Internal: parse the call's words."
+        @tier "internal"
+      SB_DOCKER_RUN {
+        stage : string!
+        argv : [string]!
+      }
+        @description "Internal: run docker."
+        @tier "internal"
+      SB_SH_RUN {
+        stage : string!
+        argv : [string]!
+      }
+        @description "Internal: run sh."
+        @tier "internal"
+    }
+
+    listens {
+      SB_CALLED -> inbound "cli-sandbox" answers SANDBOX_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb sandbox smoke`."
+        @synonyms "orb sandbox, sandbox smoke test"
+      SB_DONE {
+        stage : string!
+        exitCode : number!
+        signal : number!
+        stdout : string!
+        stderr : string!
+      }
+        @description "std-cli's CLI_DONE."
+      SB_FAILED {
+        stage : string!
+        error : string!
+        code : string!
+      }
+        @description "std-cli's CLI_FAILED."
+      SB_ARGS_DONE {
+        stage : string!
+        flags : Map string [string]!
+        positionals : [string]!
+        errors : [string]!
+        words : [string]!
+      }
+        @description "std-args's ARGS_PARSED."
+      ArgsCli.ARGS_PARSED -> SB_ARGS_DONE
+      DockerCli.CLI_DONE -> SB_DONE
+      DockerCli.CLI_FAILED -> SB_FAILED
+      ShCli.CLI_DONE -> SB_DONE
+      ShCli.CLI_FAILED -> SB_FAILED
+    }
+  }
+
+  page "/orb-sandbox" as OrbSandboxPage -> OrbSandbox, ArgsCli, DockerCli, ShCli
+}

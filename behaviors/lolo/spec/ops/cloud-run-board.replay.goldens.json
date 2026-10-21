@@ -1,0 +1,88 @@
+{
+ "atom": "ops/atoms/std-cloud-run-board.lolo",
+ "trait": "CloudRunStatus",
+ "cases": [
+  {
+   "id": "load-mints-token-first",
+   "now": "2026-10-15T12:30:45.678Z",
+   "steps": [
+    {
+     "event": "CLOUD_RUN_LOAD",
+     "payload": {},
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "CR_GCLOUD",
+        "payload": {
+         "stage": "token",
+         "argv": [
+          "auth",
+          "print-access-token"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-empty-token-skips-monitoring-reads-cost",
+   "now": "2026-10-15T12:30:45.678Z",
+   "steps": [
+    {
+     "event": "CLOUD_RUN_LOAD",
+     "payload": {}
+    },
+    {
+     "event": "CR_RAN",
+     "payload": {
+      "stage": "token",
+      "exitCode": 1,
+      "signal": 0,
+      "stdout": "",
+      "stderr": "",
+      "stdoutBytes": ""
+     },
+     "from": "reading",
+     "expect": {
+      "emits": [
+       {
+        "event": "CR_COST",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "cli-failed-token-reads-cost",
+   "now": "2026-10-15T12:30:45.678Z",
+   "steps": [
+    {
+     "event": "CLOUD_RUN_LOAD",
+     "payload": {}
+    },
+    {
+     "event": "CR_CLI_FAILED",
+     "payload": {
+      "stage": "token",
+      "error": "no gcloud",
+      "code": "cli_failed"
+     },
+     "from": "reading",
+     "expect": {
+      "emits": [
+       {
+        "event": "CR_COST",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

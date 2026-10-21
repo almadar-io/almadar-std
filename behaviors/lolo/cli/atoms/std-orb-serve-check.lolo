@@ -1,0 +1,351 @@
+app std-orb-serve-check [
+  version: "1.0.0",
+  inbound: ["cli-serve-check"],
+  exec: ["sh", "curl", "lsof", "python3"],
+  env: ["PATH", "HOME", "ORB_BIN"],
+  description: "std-orb-serve-check — the `orb serve-check PROGRAM [--port N] [--cwd DIR]` command, with the commands tools/orb-serve-e2e/run.sh ran: python3 hands out a free port (or --port), a shell starts `orb serve` in the background in the working directory (--cwd, default <invocation directory>/packages/almadar-std) with its output in a temp serve.log, curl polls /api/health once a second for up to 120 tries, lsof names the listener, ps lists the node/bun processes, curl runs the page, ticket mint and spent-ticket checks, and the server is killed and the temp directory removed. One PASS or FAIL line per check, the serve.log after any FAIL. Status 200 (exit 0) when every line is PASS, 500 (exit 1) otherwise; a missing PROGRAM, an unknown flag or a further word answers the usage (status 400, exit 2). The page-only checks run in tools/runtime-verify."
+]
+uses Spec from "almadar-std/orb-serve-check"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
+type TicketReply = { ticket : string }
+
+orbital OrbServeCheckOrbital {
+  uses Cli from "std/behaviors/std-cli"
+  uses Args from "std/behaviors/std-args"
+
+  entity OrbServeCheckRun [runtime] {
+    id : string!
+    invokeCwd : string = ""
+    program : string = ""
+    workDir : string = ""
+    orbBin : string = ""
+    port : string = ""
+    base : string = ""
+    pid : string = ""
+    tmp : string = ""
+    ticket : string = ""
+    report : string = ""
+    failed : boolean = false
+  }
+
+  trait ArgsCli = Args.traits.ArgsParser {
+    listens {
+      OrbServeCheck.SC_ARGS_PARSE -> ARGS_PARSE
+    }
+  }
+
+  trait ShCli = Cli.traits.CliRunner {
+    listens {
+      OrbServeCheck.SC_SH_RUN -> CLI_RUN
+    }
+    config {
+      commands: ["sh"]
+      passEnv: ["PATH", "HOME"]
+    }
+  }
+
+  trait CurlCli = Cli.traits.CliRunner {
+    listens {
+      OrbServeCheck.SC_CURL_RUN -> CLI_RUN
+    }
+    config {
+      commands: ["curl"]
+      passEnv: ["PATH", "HOME"]
+    }
+  }
+
+  trait LsofCli = Cli.traits.CliRunner {
+    listens {
+      OrbServeCheck.SC_LSOF_RUN -> CLI_RUN
+    }
+    config {
+      commands: ["lsof"]
+      passEnv: ["PATH", "HOME"]
+    }
+  }
+
+  trait PyCli = Cli.traits.CliRunner {
+    listens {
+      OrbServeCheck.SC_PY_RUN -> CLI_RUN
+    }
+    config {
+      commands: ["python3"]
+      passEnv: ["PATH", "HOME"]
+    }
+  }
+
+  trait OrbServeCheck -> OrbServeCheckRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      SC_CALLED -> parsing
+        (set @entity.invokeCwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
+        (emit SC_ARGS_PARSE { stage: "serve-check" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "port" aliases: [] takesValue: true repeatable: false }, { name: "cwd" aliases: [] takesValue: true repeatable: false }] })
+    }
+
+    state parsing {
+      INIT -> parsing
+      SC_ARGS_DONE -> ready when (not (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1)))
+        (emit SERVE_CHECK_ANSWERED { status: 400, body: "usage: orb serve-check PROGRAM [--port N] [--cwd DIR]" })
+      SC_ARGS_DONE -> starting when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1))
+        (set @entity.program (array/first @payload.positionals))
+        (set @entity.workDir (if (> (array/len (or (object/get @payload.flags "cwd") [])) 0) (array/first (object/get @payload.flags "cwd")) (str/concat @entity.invokeCwd "/packages/almadar-std")))
+        (set @entity.port (if (> (array/len (or (object/get @payload.flags "port") [])) 0) (array/first (object/get @payload.flags "port")) ""))
+        (set @entity.report "")
+        (set @entity.failed false)
+        (os/getenv "ORB_BIN" { key: "orbbin" emit: { success: SC_ORBBIN, failure: SC_HOST_FAILED } })
+    }
+
+    state starting {
+      INIT -> starting
+      SC_HOST_FAILED -> ready
+        (emit SERVE_CHECK_ANSWERED { status: 500, body: (str/concat "FAIL  host: " (or @payload.error "")) })
+      SC_ORBBIN -> starting when (!= @entity.port "")
+        (set @entity.orbBin (if (= (or @payload.value "") "") "orb" @payload.value))
+        (emit SC_START { })
+      SC_ORBBIN -> starting when (= @entity.port "")
+        (set @entity.orbBin (if (= (or @payload.value "") "") "orb" @payload.value))
+        (emit SC_PY_RUN { stage: "port" argv: ["-c", "import socket; s=socket.socket(); s.bind((chr(49)+chr(50)+chr(55)+chr(46)+chr(48)+chr(46)+chr(48)+chr(46)+chr(49),0)); print(s.getsockname()[1])"] })
+      SC_PY_DONE -> starting when (and (= @payload.stage "port") (= @payload.exitCode 0))
+        (set @entity.port (str/trim @payload.stdout))
+        (emit SC_START { })
+      SC_PY_DONE -> ready when (and (= @payload.stage "port") (!= @payload.exitCode 0))
+        (emit SERVE_CHECK_ANSWERED { status: 500, body: (str/concat "FAIL  no free port: " (str/trim @payload.stderr)) })
+      SC_START -> starting
+        (set @entity.base (str/concat "http://127.0.0.1:" @entity.port))
+        (emit SC_SH_RUN { stage: "start" argv: ["-c", "W=$(mktemp -d); cd \"$1\" || exit 1; ORB_NO_AUTO_SETUP=1 DATA_BACKEND=mock NODE_ENV=development nohup \"$2\" serve \"$3\" --port \"$4\" --no-mock --no-emulators >\"$W/serve.log\" 2>&1 </dev/null & echo \"$! $W\"", "sh", @entity.workDir, @entity.orbBin, @entity.program, @entity.port] })
+      SC_SH_DONE -> polling when (and (= @payload.stage "start") (= @payload.exitCode 0))
+        (set @entity.pid (array/first (str/split (str/trim @payload.stdout) " ")))
+        (set @entity.tmp (array/nth (str/split (str/trim @payload.stdout) " ") 1))
+        (emit SC_CURL_RUN { stage: "health" argv: ["-sf", "--retry", "119", "--retry-all-errors", "--retry-delay", "1", (str/concat @entity.base "/api/health")] })
+      SC_SH_DONE -> ready when (and (= @payload.stage "start") (!= @payload.exitCode 0))
+        (emit SERVE_CHECK_ANSWERED { status: 500, body: (str/concat "FAIL  orb serve did not start: " (str/trim @payload.stderr)) })
+      SC_SH_FAILED -> ready
+        (emit SERVE_CHECK_ANSWERED { status: 500, body: (str/concat "FAIL  " @payload.error) })
+      SC_PY_FAILED -> ready
+        (emit SERVE_CHECK_ANSWERED { status: 500, body: (str/concat "FAIL  no free port: " @payload.error) })
+    }
+
+    state polling {
+      INIT -> polling
+      SC_CURL_DONE -> finishing when (and (= @payload.stage "health") (!= @payload.exitCode 0))
+        (set @entity.report "FAIL  orb serve did not answer /api/health")
+        (set @entity.failed true)
+        (emit SC_FINISH { })
+      SC_CURL_DONE -> checking when (and (= @payload.stage "health") (= @payload.exitCode 0))
+        (emit SC_LSOF_RUN { stage: "lsof" argv: ["-nP", (str/concat "-iTCP:" @entity.port), "-sTCP:LISTEN"] })
+      SC_CURL_FAILED -> finishing
+        (set @entity.report (str/concat "FAIL  curl: " @payload.error))
+        (set @entity.failed true)
+        (emit SC_FINISH { })
+    }
+
+    state checking {
+      INIT -> checking
+      SC_LSOF_DONE -> checking when (array/some (array/map (str/split @payload.stdout "\n") (fn l (str/startsWith @l "orb "))) (fn b @b))
+        (set @entity.report (str/concat "--- who listens on :" @entity.port "\n" (str/join (array/sort (array/unique (array/map (array/filter (str/split @payload.stdout "\n") (fn l (and (!= @l "") (not (str/startsWith @l "COMMAND"))))) (fn l (str/join (array/take (str/split (str/replace-pattern @l "\\s+" " ") " ") 2) " "))))) "\n") "\n"))
+        (emit SC_SH_RUN { stage: "ps" argv: ["-c", "echo '--- node/bun processes on this machine (the runner below is the only one allowed to be new)'; ps -axo pid,command | grep -E '(^| )(node|bun)( |$)|/node |/bun ' | grep -v grep | grep -E \"$1|$2|serve\\.log\" || echo \"none serving :$1\"", "sh", @entity.port, @entity.tmp] })
+      SC_LSOF_DONE -> checking when (not (array/some (array/map (str/split @payload.stdout "\n") (fn l (str/startsWith @l "orb "))) (fn b @b)))
+        (set @entity.report (str/concat "--- who listens on :" @entity.port "\n" (str/join (array/sort (array/unique (array/map (array/filter (str/split @payload.stdout "\n") (fn l (and (!= @l "") (not (str/startsWith @l "COMMAND"))))) (fn l (str/join (array/take (str/split (str/replace-pattern @l "\\s+" " ") " ") 2) " "))))) "\n") "\nFAIL  the listener is not orb\n"))
+        (set @entity.failed true)
+        (emit SC_SH_RUN { stage: "ps" argv: ["-c", "echo '--- node/bun processes on this machine (the runner below is the only one allowed to be new)'; ps -axo pid,command | grep -E '(^| )(node|bun)( |$)|/node |/bun ' | grep -v grep | grep -E \"$1|$2|serve\\.log\" || echo \"none serving :$1\"", "sh", @entity.port, @entity.tmp] })
+      SC_LSOF_FAILED -> checking
+        (set @entity.report (str/concat "--- who listens on :" @entity.port "\nFAIL  the listener is not orb\n"))
+        (set @entity.failed true)
+        (emit SC_SH_RUN { stage: "ps" argv: ["-c", "echo '--- node/bun processes on this machine (the runner below is the only one allowed to be new)'; ps -axo pid,command | grep -E '(^| )(node|bun)( |$)|/node |/bun ' | grep -v grep | grep -E \"$1|$2|serve\\.log\" || echo \"none serving :$1\"", "sh", @entity.port, @entity.tmp] })
+      SC_SH_DONE -> checking when (= @payload.stage "ps")
+        (set @entity.report (str/concat @entity.report (str/trim @payload.stdout) "\n"))
+        (emit SC_CURL_RUN { stage: "page" argv: ["-s", "-o", "/dev/null", "-w", "%{http_code} %{size_download}", (str/concat @entity.base "/")] })
+      SC_CURL_DONE -> checking when (and (= @payload.stage "page") (= @payload.exitCode 0) (str/startsWith @payload.stdout "200 ") (!= @payload.stdout "200 0"))
+        (set @entity.report (str/concat @entity.report "PASS  the page is served by orb serve\n"))
+        (emit SC_SH_RUN { stage: "wasm" argv: ["-c", "J=$(curl -s \"$1/\" | grep -oE \"/assets/index-[A-Za-z0-9_-]+\\.js\" | head -1); W=$(curl -s \"$1$J\" | grep -oE \"/assets/[A-Za-z0-9_.-]+\\.wasm\" | head -1); curl -sI \"$1$W\" | tr -d \"\\r\" | grep -iE \"^(HTTP|content-type)\"", "sh", @entity.base] })
+      SC_CURL_DONE -> checking when (and (= @payload.stage "page") (not (and (= @payload.exitCode 0) (str/startsWith @payload.stdout "200 ") (!= @payload.stdout "200 0"))))
+        (set @entity.report (str/concat @entity.report "FAIL  the page is served by orb serve\n"))
+        (set @entity.failed true)
+        (emit SC_SH_RUN { stage: "wasm" argv: ["-c", "J=$(curl -s \"$1/\" | grep -oE \"/assets/index-[A-Za-z0-9_-]+\\.js\" | head -1); W=$(curl -s \"$1$J\" | grep -oE \"/assets/[A-Za-z0-9_.-]+\\.wasm\" | head -1); curl -sI \"$1$W\" | tr -d \"\\r\" | grep -iE \"^(HTTP|content-type)\"", "sh", @entity.base] })
+      SC_SH_DONE -> checking when (and (= @payload.stage "wasm") (str/includes @payload.stdout " 200") (str/includes (str/lower @payload.stdout) "content-type: application/wasm"))
+        (set @entity.report (str/concat @entity.report "PASS  the wasm kernel is served by orb serve\n"))
+        (emit SC_CURL_RUN { stage: "mint" argv: ["-s", "-X", "POST", "-w", "\n%{http_code}", (str/concat @entity.base "/api/events/ticket")] })
+      SC_SH_DONE -> checking when (and (= @payload.stage "wasm") (not (and (str/includes @payload.stdout " 200") (str/includes (str/lower @payload.stdout) "content-type: application/wasm"))))
+        (set @entity.report (str/concat @entity.report "FAIL  the wasm kernel is served by orb serve\n"))
+        (set @entity.failed true)
+        (emit SC_CURL_RUN { stage: "mint" argv: ["-s", "-X", "POST", "-w", "\n%{http_code}", (str/concat @entity.base "/api/events/ticket")] })
+      SC_CURL_DONE -> checking when (and (= @payload.stage "mint") (= @payload.exitCode 0) (str/endsWith @payload.stdout "\n200") (!= (object/get (json/parse (str/slice @payload.stdout 0 (- (str/len @payload.stdout) 4)) TicketReply) "ticket") ""))
+        (set @entity.report (str/concat @entity.report "PASS  a stream ticket is minted\n"))
+        (set @entity.ticket (object/get (json/parse (str/slice @payload.stdout 0 (- (str/len @payload.stdout) 4)) TicketReply) "ticket"))
+        (emit SC_CURL_RUN { stage: "spend" argv: ["-s", "-m", "2", "-o", "/dev/null", (str/concat @entity.base "/api/events?clientId=spend&ticket=" @entity.ticket)] })
+      SC_CURL_DONE -> finishing when (and (= @payload.stage "mint") (not (and (= @payload.exitCode 0) (str/endsWith @payload.stdout "\n200") (json/valid (str/slice @payload.stdout 0 (- (str/len @payload.stdout) 4))) (!= (object/get (json/parse (str/slice @payload.stdout 0 (- (str/len @payload.stdout) 4)) TicketReply) "ticket") ""))))
+        (set @entity.report (str/concat @entity.report "FAIL  a stream ticket is minted\nFAIL  a spent ticket is refused\n"))
+        (set @entity.failed true)
+        (emit SC_FINISH { })
+      SC_CURL_DONE -> checking when (= @payload.stage "spend")
+        (emit SC_CURL_RUN { stage: "replay" argv: ["-s", "-m", "5", "-o", "/dev/null", "-w", "%{http_code}", (str/concat @entity.base "/api/events?clientId=replay&ticket=" @entity.ticket)] })
+      SC_CURL_DONE -> finishing when (and (= @payload.stage "replay") (= @payload.stdout "401"))
+        (set @entity.report (str/concat @entity.report "PASS  a spent ticket is refused\n"))
+        (emit SC_FINISH { })
+      SC_CURL_DONE -> finishing when (and (= @payload.stage "replay") (!= @payload.stdout "401"))
+        (set @entity.report (str/concat @entity.report "FAIL  a spent ticket is refused\n"))
+        (set @entity.failed true)
+        (emit SC_FINISH { })
+      SC_CURL_FAILED -> finishing
+        (set @entity.report (str/concat @entity.report "FAIL  curl: " @payload.error "\n"))
+        (set @entity.failed true)
+        (emit SC_FINISH { })
+    }
+
+    state finishing {
+      INIT -> finishing
+      SC_FINISH -> finishing when @entity.failed
+        (emit SC_SH_RUN { stage: "log" argv: ["-c", "cat \"$1/serve.log\"", "sh", @entity.tmp] })
+      SC_FINISH -> finishing when (not @entity.failed)
+        (emit SC_SH_RUN { stage: "stop" argv: ["-c", "kill \"$1\" 2>/dev/null; rm -rf \"$2\"", "sh", @entity.pid, @entity.tmp] })
+      SC_SH_DONE -> finishing when (= @payload.stage "log")
+        (set @entity.report (str/concat @entity.report "--- serve.log\n" @payload.stdout))
+        (emit SC_SH_RUN { stage: "stop" argv: ["-c", "kill \"$1\" 2>/dev/null; rm -rf \"$2\"", "sh", @entity.pid, @entity.tmp] })
+      SC_SH_FAILED -> ready
+        (emit SERVE_CHECK_ANSWERED { status: 500, body: (str/trim (str/concat @entity.report "\nFAIL  " @payload.error)) })
+      SC_SH_DONE -> ready when (and (= @payload.stage "stop") @entity.failed)
+        (emit SERVE_CHECK_ANSWERED { status: 500, body: (str/trim @entity.report) })
+      SC_SH_DONE -> ready when (and (= @payload.stage "stop") (not @entity.failed))
+        (emit SERVE_CHECK_ANSWERED { status: 200, body: (str/trim @entity.report) })
+    }
+
+    emits {
+      SERVE_CHECK_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      SC_ORBBIN { value : string }
+        @description "os/getenv: ORB_BIN."
+        @tier "internal"
+      SC_HOST_FAILED { error : string }
+        @description "An os/getenv failure."
+        @tier "internal"
+      SC_START { }
+        @description "Internal: the port is known; start orb serve."
+        @tier "internal"
+      SC_FINISH { }
+        @description "Internal: the checks are done; print the log if any failed and stop the server."
+        @tier "internal"
+      SC_ARGS_PARSE {
+        stage : string!
+        argv : [string]!
+        flags : [ArgFlag]!
+      }
+        @description "Internal: parse the call's words."
+        @tier "internal"
+      SC_SH_RUN {
+        stage : string!
+        argv : [string]!
+      }
+        @description "Internal: run sh."
+        @tier "internal"
+      SC_CURL_RUN {
+        stage : string!
+        argv : [string]!
+      }
+        @description "Internal: run curl."
+        @tier "internal"
+      SC_LSOF_RUN {
+        stage : string!
+        argv : [string]!
+      }
+        @description "Internal: run lsof."
+        @tier "internal"
+      SC_PY_RUN {
+        stage : string!
+        argv : [string]!
+      }
+        @description "Internal: run python3."
+        @tier "internal"
+    }
+
+    listens {
+      SC_CALLED -> inbound "cli-serve-check" answers SERVE_CHECK_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb serve-check` with its program."
+        @synonyms "orb serve-check, check orb serve end to end"
+      SC_SH_DONE {
+        stage : string!
+        exitCode : number!
+        signal : number!
+        stdout : string!
+        stderr : string!
+      }
+        @description "std-cli's CLI_DONE: sh exited."
+      SC_SH_FAILED {
+        stage : string!
+        error : string!
+        code : string!
+      }
+        @description "std-cli's CLI_FAILED: sh could not be run."
+      SC_CURL_DONE {
+        stage : string!
+        exitCode : number!
+        signal : number!
+        stdout : string!
+        stderr : string!
+      }
+        @description "std-cli's CLI_DONE: curl exited."
+      SC_CURL_FAILED {
+        stage : string!
+        error : string!
+        code : string!
+      }
+        @description "std-cli's CLI_FAILED: curl could not be run."
+      SC_LSOF_DONE {
+        stage : string!
+        exitCode : number!
+        signal : number!
+        stdout : string!
+        stderr : string!
+      }
+        @description "std-cli's CLI_DONE: lsof exited."
+      SC_LSOF_FAILED {
+        stage : string!
+        error : string!
+        code : string!
+      }
+        @description "std-cli's CLI_FAILED: lsof could not be run."
+      SC_PY_DONE {
+        stage : string!
+        exitCode : number!
+        signal : number!
+        stdout : string!
+        stderr : string!
+      }
+        @description "std-cli's CLI_DONE: python3 exited."
+      SC_PY_FAILED {
+        stage : string!
+        error : string!
+        code : string!
+      }
+        @description "std-cli's CLI_FAILED: python3 could not be run."
+      SC_ARGS_DONE {
+        stage : string!
+        flags : Map string [string]!
+        positionals : [string]!
+        errors : [string]!
+        words : [string]!
+      }
+        @description "std-args's ARGS_PARSED."
+      ArgsCli.ARGS_PARSED -> SC_ARGS_DONE
+      ShCli.CLI_DONE -> SC_SH_DONE
+      ShCli.CLI_FAILED -> SC_SH_FAILED
+      CurlCli.CLI_DONE -> SC_CURL_DONE
+      CurlCli.CLI_FAILED -> SC_CURL_FAILED
+      LsofCli.CLI_DONE -> SC_LSOF_DONE
+      LsofCli.CLI_FAILED -> SC_LSOF_FAILED
+      PyCli.CLI_DONE -> SC_PY_DONE
+      PyCli.CLI_FAILED -> SC_PY_FAILED
+    }
+  }
+
+  page "/orb-serve-check" as OrbServeCheckPage -> OrbServeCheck, ArgsCli, ShCli, CurlCli, LsofCli, PyCli
+}

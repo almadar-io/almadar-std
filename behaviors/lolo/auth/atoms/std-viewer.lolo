@@ -1,0 +1,153 @@
+app std-viewer [
+  version: "1.0.0",
+  description: "std-viewer — the one place a verified token becomes the program's viewer (@user). VIEWER_RESOLVE { requestId?, verified?, sourceKind, sourceFields?, sourceEntity? }: no token answers the anonymous viewer under every source. Source none: id is the uid, email and name the token's, a role claim the role, every claim plus uid readable in claims. Source claims: id, email and name only from the token, only the declared fields (other than id, email, name) read from the claims. Source directory: the row keyed by the verified uid (rebind ViewerRow to the identity entity) supplies role and the claims, with no row the viewer carries only the token id, email and name. Overlapping resolutions queue first-in first-out (maxQueue, beyond it refused busy); each is answered once, in order. Source derivation from the schema stays in the compiler. Answers VIEWER_RESOLVED { requestId, viewer } or VIEWER_REFUSED."
+]
+uses Spec from "almadar-std/viewer"
+type Claim = { name : string!, value : string! }
+type ViewerJob = { requestId : number, verified : VerifiedToken, sourceKind : string!, sourceFields : [string] }
+type VerifiedToken = { uid : string!, email : string, name : string, claims : [Claim]! }
+orbital ViewerOrbital {
+  type VIEWER_RESOLVE = Event { requestId : number, verified : VerifiedToken, sourceKind : string!, sourceFields : [string], sourceEntity : string } "Resolve one verified token into the viewer."
+
+  entity ViewerRow [persistent: viewer_rows] {
+    id : string! @description "The identity row's key: the verified uid."
+    role : string @description "What the person may do in the app." = ""
+    name : string @description "The person's display name." = ""
+  }
+
+  entity ViewerCheck [runtime] {
+    id : string!
+    requestId : number @description "The request being resolved; echoed on the answer." = 0
+    verified : VerifiedToken @description "The token whose directory row is being read."
+    queue : [ViewerJob] @description "Resolutions that arrived while a directory row was being read, oldest first; each starts when the one before it is answered." = []
+  }
+
+  trait ViewerResolver -> ViewerCheck [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      VIEWER_RESOLVE -> idle when (< (array/len @entity.queue) @config.maxQueue)
+        (set @entity.queue (array/append @entity.queue { requestId: (or @payload.requestId 0), verified: (or @payload.verified null), sourceKind: @payload.sourceKind, sourceFields: (or @payload.sourceFields []) }))
+        (emit VIEWER_PUMP {})
+      VIEWER_RESOLVE -> idle when (>= (array/len @entity.queue) @config.maxQueue)
+        (emit VIEWER_REFUSED { requestId: (or @payload.requestId 0), reason: "busy" })
+      VIEWER_PUMP -> idle when (= (array/len @entity.queue) 0)
+      VIEWER_NEXT -> idle
+        (emit VIEWER_PUMP {})
+      VIEWER_PUMP -> idle when (and (> (array/len @entity.queue) 0) (not (array/includes ["none", "claims", "directory"] (object/get (array/first @entity.queue) "sourceKind"))))
+        (emit VIEWER_REFUSED { requestId: (or (object/get (array/first @entity.queue) "requestId") 0), reason: "source" })
+        (set @entity.queue (array/slice @entity.queue 1))
+        (emit VIEWER_NEXT {})
+      VIEWER_PUMP -> idle when (and (> (array/len @entity.queue) 0) (array/includes ["none", "claims", "directory"] (object/get (array/first @entity.queue) "sourceKind")) (= (object/get (array/first @entity.queue) "verified") null))
+        (emit VIEWER_RESOLVED { requestId: (or (object/get (array/first @entity.queue) "requestId") 0), viewer: { id: "anonymous", role: "anonymous", permissions: [], claims: [] } })
+        (set @entity.queue (array/slice @entity.queue 1))
+        (emit VIEWER_NEXT {})
+      VIEWER_PUMP -> idle when (and (> (array/len @entity.queue) 0) (= (object/get (array/first @entity.queue) "sourceKind") "none") (!= (object/get (array/first @entity.queue) "verified") null))
+        (let ((job (array/first @entity.queue)))
+          (let ((tok (object/get @job "verified")))
+            (let ((named (array/filter (object/get @tok "claims") (fn c (= (object/get @c "name") "role")))))
+              (do
+                (emit VIEWER_RESOLVED { requestId: (or (object/get @job "requestId") 0), viewer: { id: (object/get @tok "uid"), email: (object/get @tok "email"), name: (object/get @tok "name"), role: (if (> (array/len @named) 0) (object/get (array/first @named) "value") null), permissions: [], claims: (array/append (object/get @tok "claims") { name: "uid", value: (object/get @tok "uid") }) } })
+                (set @entity.queue (array/slice @entity.queue 1))
+                (emit VIEWER_NEXT {})))))
+      VIEWER_PUMP -> idle when (and (> (array/len @entity.queue) 0) (= (object/get (array/first @entity.queue) "sourceKind") "claims") (!= (object/get (array/first @entity.queue) "verified") null))
+        (let ((job (array/first @entity.queue)))
+          (let ((tok (object/get @job "verified")) (declared (array/filter (object/get @job "sourceFields") (fn f (not (array/includes ["id", "email", "name"] @f))))))
+            (let ((read (array/filter (object/get @tok "claims") (fn c (array/includes @declared (object/get @c "name"))))))
+              (let ((named (array/filter @read (fn c (= (object/get @c "name") "role")))))
+                (do
+                  (emit VIEWER_RESOLVED { requestId: (or (object/get @job "requestId") 0), viewer: { id: (object/get @tok "uid"), email: (object/get @tok "email"), name: (object/get @tok "name"), role: (if (> (array/len @named) 0) (object/get (array/first @named) "value") null), permissions: [], claims: @read } })
+                  (set @entity.queue (array/slice @entity.queue 1))
+                  (emit VIEWER_NEXT {}))))))
+      VIEWER_PUMP -> looking when (and (> (array/len @entity.queue) 0) (= (object/get (array/first @entity.queue) "sourceKind") "directory") (!= (object/get (array/first @entity.queue) "verified") null))
+        (let ((job (array/first @entity.queue)))
+          (do
+            (set @entity.requestId (or (object/get @job "requestId") 0))
+            (set @entity.verified (object/get @job "verified"))
+            (set @entity.queue (array/slice @entity.queue 1))
+            (fetch ViewerRow { id: (object/get (object/get @job "verified") "uid"), emit: { success: DIRECTORY_FOUND, failure: DIRECTORY_ABSENT } })))
+    }
+
+    state looking {
+      INIT -> idle
+
+      VIEWER_RESOLVE -> looking when (< (array/len @entity.queue) @config.maxQueue)
+        (set @entity.queue (array/append @entity.queue { requestId: (or @payload.requestId 0), verified: (or @payload.verified null), sourceKind: @payload.sourceKind, sourceFields: (or @payload.sourceFields []) }))
+      VIEWER_RESOLVE -> looking when (>= (array/len @entity.queue) @config.maxQueue)
+        (emit VIEWER_REFUSED { requestId: (or @payload.requestId 0), reason: "busy" })
+      DIRECTORY_ABSENT -> idle when (= @payload.code "not-found")
+        (emit VIEWER_RESOLVED { requestId: @entity.requestId, viewer: { id: @entity.verified.uid, email: @entity.verified.email, name: @entity.verified.name, permissions: [], claims: [] } })
+        (emit VIEWER_PUMP {})
+      DIRECTORY_ABSENT -> idle when (!= @payload.code "not-found")
+        (emit VIEWER_REFUSED { requestId: @entity.requestId, reason: "no-lookup" })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Viewer lookup failed" })
+        (emit VIEWER_PUMP {})
+      DIRECTORY_FOUND -> idle
+        (emit VIEWER_RESOLVED { requestId: @entity.requestId, viewer: { id: @entity.verified.uid, email: @entity.verified.email, name: (or @payload.data.name @entity.verified.name), role: @payload.data.role, permissions: [], claims: (array/map (object/entries (object/omit @payload.data ["id", "role"])) (fn t { name: (array/nth @t 0), value: (array/nth @t 1) })) } })
+        (emit VIEWER_PUMP {})
+    }
+
+    emits {
+      VIEWER_RESOLVED -> external {
+        requestId : number
+        viewer : Viewer!
+      }
+        @description "The verified token (or its absence) resolved to this viewer."
+        @synonyms "viewer resolved, current user"
+        @tier "primary"
+      VIEWER_REFUSED -> external {
+        requestId : number
+        reason : string!
+      }
+        @description "The viewer could not be resolved: an unknown source kind, a directory lookup already in flight, or the identity row lookup failed."
+        @synonyms "viewer refused"
+        @tier "primary"
+      VIEWER_NEXT {}
+        @description "Internal: a resolution that needed no lookup is done; start the next queued one."
+        @tier "secondary"
+      VIEWER_PUMP {}
+        @description "Internal: start the oldest queued resolution."
+        @tier "secondary"
+      DIRECTORY_FOUND {
+        data : ViewerRow!
+      }
+        @description "Internal: the identity row exists."
+        @tier "secondary"
+      DIRECTORY_ABSENT {
+        error : string
+        code : string
+      }
+        @description "Internal: no identity row, or the store failed."
+        @tier "secondary"
+    }
+
+    config {
+      statusSlot : slot = system
+        @label "Status slot"
+        @description "Where the atom reports a failed identity lookup; a page running it in the background keeps it in `system`."
+        @synonyms "status area, slot"
+        @tier "presentation"
+      maxQueue : number = 32
+        @label "Queue limit"
+        @description "How many resolutions may wait; one beyond is refused busy."
+        @synonyms "backlog"
+        @tier "presentation"
+    }
+
+    listens {
+      VIEWER_RESOLVE {
+        requestId : number
+        verified : VerifiedToken
+        sourceKind : string!
+        sourceFields : [string]
+        sourceEntity : string
+      }
+        @description "Resolve one verified token into the viewer."
+        @synonyms "resolve viewer, who is signed in"
+    }
+  }
+
+  page "/viewer" as ViewerPage -> ViewerResolver
+}

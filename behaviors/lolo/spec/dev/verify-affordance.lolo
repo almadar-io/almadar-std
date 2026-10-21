@@ -1,0 +1,23 @@
+app verify-affordance-spec [
+  version: "1.0.0",
+  description: "Design contract for std-verify-affordance: the kernel's judge_click (orbital-core verify/flows.rs) as data. AFFORDANCE_REQUEST carries a planned AffordanceStep (only its precondition matters to the verdict) and the ClickObservation {found, answered}; AFFORDANCE_ANSWERED returns the verdict {status, reason}. An absent element drove nothing (inconclusive, not-driven); a click a machine answered passes (reached); a click nothing answered is a dead affordance (fail, arm-not-fired) unless the step's guard precondition is not shown to hold (inconclusive, arm-not-fired). Not ported: plan_affordance / plan_click_paths (they read the whole schema through the Rust planner), so the step arrives already planned."
+]
+
+type Precondition = { kind : string!, proof : string, reason : string }
+type AffordanceStep = { trait : string!, from : string!, event : string!, to : string!, declared : boolean!, navigates : boolean!, precondition : Precondition }
+type ClickObservation = { found : boolean!, answered : boolean! }
+type AffordanceVerdict = { status : string!, reason : string! }
+
+orbital VerifyAffordanceSpec {
+  expects entity AffordanceRun [runtime] {
+    id : string!
+    verdict : AffordanceVerdict
+  }
+  expects trait Affordance {
+    state ready
+    emits {
+      AFFORDANCE_ANSWERED { verdict : AffordanceVerdict! }
+    }
+  }
+  expects page "/verify-affordance" -> Affordance
+}

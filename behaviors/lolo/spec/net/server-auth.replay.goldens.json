@@ -1,0 +1,89 @@
+{
+ "atom": "net/organisms/std-http-server.lolo",
+ "trait": "ServerBearer",
+ "cases": [
+  {
+   "id": "jwt-control",
+   "steps": [
+    {
+     "trait": "ServerBearer",
+     "event": "KEY_SALT_READ",
+     "payload": {
+      "value": "00112233445566778899aabbccddeeff"
+     }
+    },
+    {
+     "trait": "ServerBearer",
+     "event": "BEARER_VERIFY",
+     "payload": {
+      "requestId": 8,
+      "authorization": "Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6ImsifQ.e30.sig"
+     }
+    },
+    {
+     "trait": "ServerBearer",
+     "event": "JWS_VERIFIED",
+     "payload": {
+      "header": {
+       "alg": "RS256"
+      },
+      "payload": {
+       "iss": "",
+       "sub": "u1",
+       "aud": "",
+       "exp": 9999999999,
+       "extra": {}
+      }
+     },
+     "from": "verifying",
+     "expect": {
+      "emits": [
+       {
+        "event": "BEARER_VERIFIED",
+        "payload": {
+         "viewer": {
+          "id": "u1",
+          "role": null,
+          "permissions": null,
+          "claims": []
+         }
+        }
+       }
+      ],
+      "neverEmits": [
+       "VERIFY_KEY"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "key-with-keys-disabled",
+   "steps": [
+    {
+     "trait": "ServerBearer",
+     "event": "BEARER_VERIFY",
+     "payload": {
+      "requestId": 9,
+      "authorization": "Bearer sk_live_abcdef"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "BEARER_REFUSED",
+        "payload": {
+         "requestId": 9,
+         "reason": "keys-disabled"
+        }
+       }
+      ],
+      "neverEmits": [
+       "VERIFY_KEY",
+       "JWS_VERIFY"
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

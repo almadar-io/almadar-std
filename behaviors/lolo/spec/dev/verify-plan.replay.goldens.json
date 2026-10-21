@@ -1,0 +1,2453 @@
+{
+ "atom": "dev/atoms/std-verify-plan.lolo",
+ "trait": "Plan",
+ "cases": [
+  {
+   "id": "unguarded-row-seed-and-slot-placeholders",
+   "steps": [
+    {
+     "event": "PLAN_REQUEST",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Item",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Item",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "a",
+              "to": "b",
+              "event": "GO",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "rows": [
+       {
+        "orbital": "O",
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "payload": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         },
+         {
+          "name": "qty",
+          "type": "number",
+          "required": true
+         },
+         {
+          "name": "ok",
+          "type": "boolean",
+          "required": true
+         },
+         {
+          "name": "mail",
+          "type": "email",
+          "required": true
+         },
+         {
+          "name": "tags",
+          "type": "[string]",
+          "required": true
+         },
+         {
+          "name": "title",
+          "type": "string",
+          "required": true
+         },
+         {
+          "name": "kind",
+          "type": "string",
+          "required": true,
+          "values": [
+           "x",
+           "y"
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_COMPUTED",
+        "payload": {
+         "count": 1
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "PLAN_COMPUTED",
+     "payload": {
+      "count": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_ANSWERED",
+        "payload": {
+         "steps": [
+          {
+           "trait": "T",
+           "linkedEntity": "Item",
+           "from": "a",
+           "event": "GO",
+           "to": "b",
+           "toStates": [
+            "b"
+           ],
+           "variant": "success",
+           "guarded": false,
+           "solved": true,
+           "payloadCase": "success",
+           "payload": {
+            "id": "Item-verify-seed-1",
+            "qty": 1,
+            "ok": true,
+            "mail": "verify@example.com",
+            "tags": [],
+            "title": "verify",
+            "kind": "x"
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "object-slot-is-unplanned",
+   "steps": [
+    {
+     "event": "PLAN_REQUEST",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Item",
+          "fields": []
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Item",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "a",
+              "to": "b",
+              "event": "GO",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "rows": [
+       {
+        "orbital": "O",
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "payload": [
+         {
+          "name": "blob",
+          "type": "object",
+          "required": true
+         }
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_COMPUTED",
+        "payload": {
+         "count": 1
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "PLAN_COMPUTED",
+     "payload": {
+      "count": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_ANSWERED",
+        "payload": {
+         "steps": [
+          {
+           "trait": "T",
+           "linkedEntity": "Item",
+           "from": "a",
+           "event": "GO",
+           "to": "b",
+           "toStates": [
+            "b"
+           ],
+           "variant": "success",
+           "payload": {
+            "blob": "verify"
+           },
+           "guarded": false,
+           "solved": false,
+           "payloadCase": "success",
+           "unplanned": "object-slot-unplanned"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "guard-payload-comparison-is-solved",
+   "steps": [
+    {
+     "event": "PLAN_REQUEST",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Item",
+          "fields": []
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Item",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "a",
+              "to": "b",
+              "event": "TRY",
+              "guard": [
+               ">",
+               "@payload.qty",
+               0
+              ],
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "rows": [
+       {
+        "orbital": "O",
+        "trait": "T",
+        "from": "a",
+        "event": "TRY",
+        "to": "b",
+        "guarded": true,
+        "payload": [
+         {
+          "name": "qty",
+          "type": "number",
+          "required": true
+         }
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_COMPUTED",
+        "payload": {
+         "count": 1
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "PLAN_COMPUTED",
+     "payload": {
+      "count": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_ANSWERED",
+        "payload": {
+         "steps": [
+          {
+           "trait": "T",
+           "linkedEntity": "Item",
+           "from": "a",
+           "event": "TRY",
+           "to": "b",
+           "toStates": [
+            "b"
+           ],
+           "variant": "success",
+           "payload": {
+            "qty": 1
+           },
+           "guarded": true,
+           "solved": true,
+           "payloadCase": "success",
+           "guardCase": "pass"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-unsteerable-guard-is-guard-unsolved",
+   "steps": [
+    {
+     "event": "PLAN_REQUEST",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Item",
+          "fields": []
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Item",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "a",
+              "to": "b",
+              "event": "TRY",
+              "guard": [
+               "fn/opaque",
+               "@payload.qty"
+              ],
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "rows": [
+       {
+        "orbital": "O",
+        "trait": "T",
+        "from": "a",
+        "event": "TRY",
+        "to": "b",
+        "guarded": true,
+        "payload": [
+         {
+          "name": "qty",
+          "type": "number",
+          "required": true
+         }
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_COMPUTED",
+        "payload": {
+         "count": 1
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "PLAN_COMPUTED",
+     "payload": {
+      "count": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_ANSWERED",
+        "payload": {
+         "steps": [
+          {
+           "trait": "T",
+           "linkedEntity": "Item",
+           "from": "a",
+           "event": "TRY",
+           "to": "b",
+           "toStates": [
+            "b"
+           ],
+           "variant": "success",
+           "payload": {
+            "qty": 1
+           },
+           "guarded": true,
+           "solved": false,
+           "payloadCase": "success",
+           "guardCase": "pass",
+           "unplanned": "guard-unsolved"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "wasm-02-state-machine-unguarded-rows",
+   "steps": [
+    {
+     "event": "PLAN_REQUEST",
+     "payload": {
+      "program": {
+       "name": "State Machine Test",
+       "description": "Complex state machine with transitions, guards, and effects",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "Order Processing",
+         "entity": {
+          "name": "Order",
+          "collection": "orders",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "primaryKey": true
+           },
+           {
+            "name": "customerName",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "items",
+            "type": "array"
+           },
+           {
+            "name": "total",
+            "type": "number",
+            "required": true
+           },
+           {
+            "name": "status",
+            "type": "enum",
+            "values": [
+             "draft",
+             "submitted",
+             "processing",
+             "shipped",
+             "delivered",
+             "cancelled"
+            ],
+            "default": "draft"
+           },
+           {
+            "name": "shippingAddress",
+            "type": "string"
+           },
+           {
+            "name": "trackingNumber",
+            "type": "string"
+           },
+           {
+            "name": "createdAt",
+            "type": "timestamp",
+            "default": "@now"
+           },
+           {
+            "name": "submittedAt",
+            "type": "timestamp"
+           },
+           {
+            "name": "shippedAt",
+            "type": "timestamp"
+           },
+           {
+            "name": "deliveredAt",
+            "type": "timestamp"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "OrderLifecycle",
+           "category": "lifecycle",
+           "linkedEntity": "Order",
+           "emits": [
+            {
+             "event": "INIT",
+             "scope": "internal"
+            },
+            {
+             "event": "VIEW",
+             "scope": "internal"
+            }
+           ],
+           "stateMachine": {
+            "states": [
+             {
+              "name": "listing",
+              "isInitial": true
+             },
+             {
+              "name": "viewing"
+             },
+             {
+              "name": "creating"
+             },
+             {
+              "name": "editing"
+             }
+            ],
+            "events": [
+             {
+              "key": "INIT",
+              "name": "Initialize"
+             },
+             {
+              "key": "VIEW",
+              "name": "View Order",
+              "payload": [
+               {
+                "name": "row",
+                "type": "Order"
+               }
+              ]
+             },
+             {
+              "key": "CREATE",
+              "name": "Create Order"
+             },
+             {
+              "key": "EDIT",
+              "name": "Edit Order",
+              "payload": [
+               {
+                "name": "row",
+                "type": "Order"
+               }
+              ]
+             },
+             {
+              "key": "SAVE",
+              "name": "Save",
+              "payload": [
+               {
+                "name": "id",
+                "type": "string"
+               },
+               {
+                "name": "data",
+                "type": "Order"
+               }
+              ]
+             },
+             {
+              "key": "SUBMIT",
+              "name": "Submit Order",
+              "payload": [
+               {
+                "name": "id",
+                "type": "string"
+               }
+              ]
+             },
+             {
+              "key": "PROCESS",
+              "name": "Start Processing",
+              "payload": [
+               {
+                "name": "id",
+                "type": "string"
+               }
+              ]
+             },
+             {
+              "key": "SHIP",
+              "name": "Ship Order",
+              "payload": [
+               {
+                "name": "id",
+                "type": "string"
+               },
+               {
+                "name": "trackingNumber",
+                "type": "string"
+               }
+              ]
+             },
+             {
+              "key": "DELIVER",
+              "name": "Mark Delivered",
+              "payload": [
+               {
+                "name": "id",
+                "type": "string"
+               }
+              ]
+             },
+             {
+              "key": "CANCEL",
+              "name": "Cancel",
+              "payload": [
+               {
+                "name": "id",
+                "type": "string"
+               }
+              ]
+             },
+             {
+              "key": "BACK",
+              "name": "Back"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "listing",
+              "to": "listing",
+              "event": "INIT",
+              "effects": [
+               [
+                "fetch",
+                "Order"
+               ],
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "page-header",
+                 "title": "Orders",
+                 "actions": [
+                  {
+                   "label": "New Order",
+                   "event": "CREATE"
+                  }
+                 ]
+                }
+               ],
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "entity-table",
+                 "entity": "Order",
+                 "fields": [
+                  "customerName",
+                  "total",
+                  "status",
+                  "createdAt"
+                 ],
+                 "itemActions": [
+                  {
+                   "label": "View",
+                   "event": "VIEW"
+                  }
+                 ]
+                }
+               ]
+              ]
+             },
+             {
+              "from": "listing",
+              "to": "viewing",
+              "event": "VIEW",
+              "effects": [
+               [
+                "fetch",
+                "Order",
+                {
+                 "id": "@payload.row.id"
+                }
+               ],
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "page-header",
+                 "title": "Order Details",
+                 "showBack": true,
+                 "backEvent": "BACK",
+                 "actions": [
+                  {
+                   "label": "Back",
+                   "event": "BACK"
+                  }
+                 ]
+                }
+               ],
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "detail-panel",
+                 "entity": "Order",
+                 "entityId": "@payload.row.id",
+                 "fields": [
+                  "customerName",
+                  "items",
+                  "total",
+                  "status",
+                  "shippingAddress",
+                  "trackingNumber"
+                 ],
+                 "actions": [
+                  "EDIT",
+                  "BACK"
+                 ]
+                }
+               ]
+              ]
+             },
+             {
+              "from": "viewing",
+              "to": "listing",
+              "event": "BACK",
+              "effects": [
+               [
+                "emit",
+                "INIT"
+               ]
+              ]
+             },
+             {
+              "from": "listing",
+              "to": "creating",
+              "event": "CREATE",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "page-header",
+                 "title": "New Order",
+                 "showBack": true,
+                 "backEvent": "CANCEL"
+                }
+               ],
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "form-section",
+                 "entity": "Order",
+                 "fields": [
+                  "customerName",
+                  "total",
+                  "shippingAddress"
+                 ],
+                 "onSubmit": "SAVE",
+                 "onCancel": "CANCEL"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "creating",
+              "to": "listing",
+              "event": "SAVE",
+              "guard": [
+               "and",
+               [
+                "!=",
+                "@payload.data.customerName",
+                ""
+               ],
+               [
+                ">",
+                "@payload.data.total",
+                0
+               ]
+              ],
+              "effects": [
+               [
+                "persist",
+                "create",
+                "Order",
+                "@payload.data"
+               ],
+               [
+                "render-ui",
+                "toast",
+                {
+                 "type": "alert",
+                 "variant": "success",
+                 "message": "Order created successfully",
+                 "dismissible": true
+                }
+               ],
+               [
+                "emit",
+                "INIT"
+               ]
+              ]
+             },
+             {
+              "from": "creating",
+              "to": "listing",
+              "event": "CANCEL",
+              "effects": [
+               [
+                "emit",
+                "INIT"
+               ]
+              ]
+             },
+             {
+              "from": "viewing",
+              "to": "editing",
+              "event": "EDIT",
+              "guard": [
+               "or",
+               [
+                "=",
+                "@entity.status",
+                "draft"
+               ],
+               [
+                "=",
+                "@entity.status",
+                "submitted"
+               ]
+              ],
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "page-header",
+                 "title": "Edit Order",
+                 "showBack": true,
+                 "backEvent": "CANCEL"
+                }
+               ],
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "form-section",
+                 "entity": "Order",
+                 "entityId": "@payload.row.id",
+                 "fields": [
+                  "customerName",
+                  "total",
+                  "shippingAddress"
+                 ],
+                 "onSubmit": "SAVE",
+                 "onCancel": "CANCEL"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "editing",
+              "to": "viewing",
+              "event": "SAVE",
+              "effects": [
+               [
+                "persist",
+                "update",
+                "Order",
+                "@payload.id"
+               ],
+               [
+                "render-ui",
+                "toast",
+                {
+                 "type": "alert",
+                 "variant": "success",
+                 "message": "Order updated",
+                 "dismissible": true
+                }
+               ],
+               [
+                "emit",
+                "VIEW"
+               ]
+              ]
+             },
+             {
+              "from": "editing",
+              "to": "viewing",
+              "event": "CANCEL",
+              "effects": [
+               [
+                "emit",
+                "VIEW"
+               ]
+              ]
+             },
+             {
+              "from": "viewing",
+              "to": "viewing",
+              "event": "SUBMIT",
+              "guard": [
+               "=",
+               "@entity.status",
+               "draft"
+              ],
+              "effects": [
+               [
+                "persist",
+                "update",
+                "Order",
+                "@payload.id"
+               ],
+               [
+                "render-ui",
+                "toast",
+                {
+                 "type": "alert",
+                 "variant": "success",
+                 "message": "Order submitted for processing",
+                 "dismissible": true
+                }
+               ],
+               [
+                "fetch",
+                "Order",
+                {
+                 "id": "@payload.id"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "viewing",
+              "to": "viewing",
+              "event": "PROCESS",
+              "guard": [
+               "=",
+               "@entity.status",
+               "submitted"
+              ],
+              "effects": [
+               [
+                "persist",
+                "update",
+                "Order",
+                "@payload.id"
+               ],
+               [
+                "render-ui",
+                "toast",
+                {
+                 "type": "alert",
+                 "variant": "info",
+                 "message": "Order is now being processed",
+                 "dismissible": true
+                }
+               ]
+              ]
+             },
+             {
+              "from": "viewing",
+              "to": "viewing",
+              "event": "SHIP",
+              "guard": [
+               "and",
+               [
+                "=",
+                "@entity.status",
+                "processing"
+               ],
+               [
+                "!=",
+                "@payload.trackingNumber",
+                ""
+               ]
+              ],
+              "effects": [
+               [
+                "persist",
+                "update",
+                "Order",
+                "@payload.id"
+               ],
+               [
+                "render-ui",
+                "toast",
+                {
+                 "type": "alert",
+                 "variant": "success",
+                 "message": "Order shipped",
+                 "dismissible": true
+                }
+               ]
+              ]
+             },
+             {
+              "from": "viewing",
+              "to": "viewing",
+              "event": "DELIVER",
+              "guard": [
+               "=",
+               "@entity.status",
+               "shipped"
+              ],
+              "effects": [
+               [
+                "persist",
+                "update",
+                "Order",
+                "@payload.id"
+               ],
+               [
+                "render-ui",
+                "toast",
+                {
+                 "type": "alert",
+                 "variant": "success",
+                 "message": "Order marked as delivered",
+                 "dismissible": true
+                }
+               ]
+              ]
+             },
+             {
+              "from": "viewing",
+              "to": "listing",
+              "event": "CANCEL",
+              "guard": [
+               "or",
+               [
+                "=",
+                "@entity.status",
+                "draft"
+               ],
+               [
+                "=",
+                "@entity.status",
+                "submitted"
+               ]
+              ],
+              "effects": [
+               [
+                "persist",
+                "update",
+                "Order",
+                "@payload.id"
+               ],
+               [
+                "render-ui",
+                "toast",
+                {
+                 "type": "alert",
+                 "variant": "warning",
+                 "message": "Order cancelled",
+                 "dismissible": true
+                }
+               ],
+               [
+                "emit",
+                "INIT"
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "OrdersPage",
+           "path": "/orders",
+           "viewType": "list",
+           "primaryEntity": "Order",
+           "isInitial": true,
+           "traits": [
+            {
+             "ref": "OrderLifecycle"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "rows": [
+       {
+        "orbital": "Order Processing",
+        "trait": "OrderLifecycle",
+        "from": "listing",
+        "event": "INIT",
+        "to": "listing",
+        "guarded": false,
+        "payload": []
+       },
+       {
+        "orbital": "Order Processing",
+        "trait": "OrderLifecycle",
+        "from": "listing",
+        "event": "VIEW",
+        "to": "viewing",
+        "guarded": false,
+        "payload": []
+       },
+       {
+        "orbital": "Order Processing",
+        "trait": "OrderLifecycle",
+        "from": "viewing",
+        "event": "BACK",
+        "to": "listing",
+        "guarded": false,
+        "payload": []
+       },
+       {
+        "orbital": "Order Processing",
+        "trait": "OrderLifecycle",
+        "from": "listing",
+        "event": "CREATE",
+        "to": "creating",
+        "guarded": false,
+        "payload": []
+       },
+       {
+        "orbital": "Order Processing",
+        "trait": "OrderLifecycle",
+        "from": "creating",
+        "event": "CANCEL",
+        "to": "listing",
+        "guarded": false,
+        "payload": []
+       },
+       {
+        "orbital": "Order Processing",
+        "trait": "OrderLifecycle",
+        "from": "editing",
+        "event": "SAVE",
+        "to": "viewing",
+        "guarded": false,
+        "payload": []
+       },
+       {
+        "orbital": "Order Processing",
+        "trait": "OrderLifecycle",
+        "from": "editing",
+        "event": "CANCEL",
+        "to": "viewing",
+        "guarded": false,
+        "payload": []
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_COMPUTED",
+        "payload": {
+         "count": 7
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "PLAN_COMPUTED",
+     "payload": {
+      "count": 7
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_ANSWERED",
+        "payload": {
+         "steps": [
+          {
+           "trait": "OrderLifecycle",
+           "linkedEntity": "Order",
+           "from": "listing",
+           "event": "INIT",
+           "to": "listing",
+           "toStates": [
+            "listing"
+           ],
+           "variant": "auto-init",
+           "payload": {},
+           "guarded": false,
+           "solved": true,
+           "payloadCase": "success"
+          },
+          {
+           "trait": "OrderLifecycle",
+           "linkedEntity": "Order",
+           "from": "listing",
+           "event": "VIEW",
+           "to": "viewing",
+           "toStates": [
+            "viewing"
+           ],
+           "variant": "auto-init",
+           "payload": {},
+           "guarded": false,
+           "solved": true,
+           "payloadCase": "success"
+          },
+          {
+           "trait": "OrderLifecycle",
+           "linkedEntity": "Order",
+           "from": "viewing",
+           "event": "BACK",
+           "to": "listing",
+           "toStates": [
+            "listing"
+           ],
+           "variant": "success",
+           "payload": {},
+           "guarded": false,
+           "solved": true,
+           "payloadCase": "success"
+          },
+          {
+           "trait": "OrderLifecycle",
+           "linkedEntity": "Order",
+           "from": "listing",
+           "event": "CREATE",
+           "to": "creating",
+           "toStates": [
+            "creating"
+           ],
+           "variant": "auto-init",
+           "payload": {},
+           "guarded": false,
+           "solved": true,
+           "payloadCase": "success"
+          },
+          {
+           "trait": "OrderLifecycle",
+           "linkedEntity": "Order",
+           "from": "creating",
+           "event": "CANCEL",
+           "to": "listing",
+           "toStates": [
+            "listing"
+           ],
+           "variant": "success",
+           "payload": {},
+           "guarded": false,
+           "solved": true,
+           "payloadCase": "success"
+          },
+          {
+           "trait": "OrderLifecycle",
+           "linkedEntity": "Order",
+           "from": "editing",
+           "event": "SAVE",
+           "to": "viewing",
+           "toStates": [
+            "viewing"
+           ],
+           "variant": "success",
+           "payload": {},
+           "guarded": false,
+           "solved": true,
+           "payloadCase": "success"
+          },
+          {
+           "trait": "OrderLifecycle",
+           "linkedEntity": "Order",
+           "from": "editing",
+           "event": "CANCEL",
+           "to": "viewing",
+           "toStates": [
+            "viewing"
+           ],
+           "variant": "success",
+           "payload": {},
+           "guarded": false,
+           "solved": true,
+           "payloadCase": "success"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "auto-init-only-from-the-initial-state",
+   "steps": [
+    {
+     "event": "PLAN_REQUEST",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Item",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Item",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "a",
+              "isInitial": true
+             },
+             {
+              "name": "b"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "a",
+              "to": "b",
+              "event": "GO",
+              "effects": []
+             },
+             {
+              "from": "b",
+              "to": "a",
+              "event": "BACK",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "rows": [
+       {
+        "orbital": "O",
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "payload": []
+       },
+       {
+        "orbital": "O",
+        "trait": "T",
+        "from": "b",
+        "event": "BACK",
+        "to": "a",
+        "guarded": false,
+        "payload": []
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_COMPUTED",
+        "payload": {
+         "count": 2
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "PLAN_COMPUTED",
+     "payload": {
+      "count": 2
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_ANSWERED",
+        "payload": {
+         "steps": [
+          {
+           "trait": "T",
+           "linkedEntity": "Item",
+           "from": "a",
+           "event": "GO",
+           "to": "b",
+           "toStates": [
+            "b"
+           ],
+           "variant": "auto-init",
+           "payload": {},
+           "guarded": false,
+           "solved": true,
+           "payloadCase": "success"
+          },
+          {
+           "trait": "T",
+           "linkedEntity": "Item",
+           "from": "b",
+           "event": "BACK",
+           "to": "a",
+           "toStates": [
+            "a"
+           ],
+           "variant": "success",
+           "payload": {},
+           "guarded": false,
+           "solved": true,
+           "payloadCase": "success"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "http-emit-routes-are-reply-routes",
+   "steps": [
+    {
+     "event": "PLAN_REQUEST",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Item",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Caller",
+           "linkedEntity": "Item",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "waiting",
+              "isInitial": true
+             },
+             {
+              "name": "failed"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "waiting",
+              "to": "waiting",
+              "event": "CALL",
+              "effects": [
+               [
+                "http",
+                "GET",
+                "/x",
+                {
+                 "emit": {
+                  "success": "CALLED",
+                  "failure": "CALL_FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "waiting",
+              "to": "waiting",
+              "event": "CALLED",
+              "effects": []
+             },
+             {
+              "from": "waiting",
+              "to": "failed",
+              "event": "CALL_FAILED",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "rows": [
+       {
+        "orbital": "O",
+        "trait": "Caller",
+        "from": "waiting",
+        "event": "CALL",
+        "to": "waiting",
+        "guarded": false,
+        "payload": []
+       },
+       {
+        "orbital": "O",
+        "trait": "Caller",
+        "from": "waiting",
+        "event": "CALLED",
+        "to": "waiting",
+        "guarded": false,
+        "payload": []
+       },
+       {
+        "orbital": "O",
+        "trait": "Caller",
+        "from": "waiting",
+        "event": "CALL_FAILED",
+        "to": "failed",
+        "guarded": false,
+        "payload": []
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_COMPUTED",
+        "payload": {
+         "count": 3
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "PLAN_COMPUTED",
+     "payload": {
+      "count": 3
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_ANSWERED",
+        "payload": {
+         "steps": [
+          {
+           "trait": "Caller",
+           "linkedEntity": "Item",
+           "from": "waiting",
+           "event": "CALL",
+           "to": "waiting",
+           "toStates": [
+            "waiting"
+           ],
+           "variant": "auto-init",
+           "payload": {},
+           "guarded": false,
+           "solved": true,
+           "payloadCase": "success"
+          },
+          {
+           "trait": "Caller",
+           "linkedEntity": "Item",
+           "from": "waiting",
+           "event": "CALLED",
+           "to": "waiting",
+           "toStates": [
+            "waiting"
+           ],
+           "variant": "auto-init",
+           "payload": {},
+           "guarded": false,
+           "solved": true,
+           "payloadCase": "success",
+           "reply": "other"
+          },
+          {
+           "trait": "Caller",
+           "linkedEntity": "Item",
+           "from": "waiting",
+           "event": "CALL_FAILED",
+           "to": "failed",
+           "toStates": [
+            "failed"
+           ],
+           "variant": "auto-init",
+           "payload": {},
+           "guarded": false,
+           "solved": true,
+           "payloadCase": "success",
+           "reply": "failure"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-no-failure-route-declared-no-reply-on-it",
+   "steps": [
+    {
+     "event": "PLAN_REQUEST",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Item",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Caller",
+           "linkedEntity": "Item",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "waiting",
+              "isInitial": true
+             },
+             {
+              "name": "failed"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "waiting",
+              "to": "waiting",
+              "event": "CALL",
+              "effects": [
+               [
+                "http",
+                "GET",
+                "/x",
+                {
+                 "emit": {
+                  "success": "CALLED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "waiting",
+              "to": "waiting",
+              "event": "CALLED",
+              "effects": []
+             },
+             {
+              "from": "waiting",
+              "to": "failed",
+              "event": "CALL_FAILED",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "rows": [
+       {
+        "orbital": "O",
+        "trait": "Caller",
+        "from": "waiting",
+        "event": "CALL",
+        "to": "waiting",
+        "guarded": false,
+        "payload": []
+       },
+       {
+        "orbital": "O",
+        "trait": "Caller",
+        "from": "waiting",
+        "event": "CALLED",
+        "to": "waiting",
+        "guarded": false,
+        "payload": []
+       },
+       {
+        "orbital": "O",
+        "trait": "Caller",
+        "from": "waiting",
+        "event": "CALL_FAILED",
+        "to": "failed",
+        "guarded": false,
+        "payload": []
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_COMPUTED",
+        "payload": {
+         "count": 3
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "PLAN_COMPUTED",
+     "payload": {
+      "count": 3
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_ANSWERED",
+        "payload": {
+         "steps": [
+          {
+           "trait": "Caller",
+           "linkedEntity": "Item",
+           "from": "waiting",
+           "event": "CALL",
+           "to": "waiting",
+           "toStates": [
+            "waiting"
+           ],
+           "variant": "auto-init",
+           "payload": {},
+           "guarded": false,
+           "solved": true,
+           "payloadCase": "success"
+          },
+          {
+           "trait": "Caller",
+           "linkedEntity": "Item",
+           "from": "waiting",
+           "event": "CALLED",
+           "to": "waiting",
+           "toStates": [
+            "waiting"
+           ],
+           "variant": "auto-init",
+           "payload": {},
+           "guarded": false,
+           "solved": true,
+           "payloadCase": "success",
+           "reply": "other"
+          },
+          {
+           "trait": "Caller",
+           "linkedEntity": "Item",
+           "from": "waiting",
+           "event": "CALL_FAILED",
+           "to": "failed",
+           "toStates": [
+            "failed"
+           ],
+           "variant": "auto-init",
+           "payload": {},
+           "guarded": false,
+           "solved": true,
+           "payloadCase": "success"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "listener-triggered-by-an-emit-route-inherits-its-reply",
+   "steps": [
+    {
+     "event": "PLAN_REQUEST",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Item",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Caller",
+           "linkedEntity": "Item",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "waiting",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "waiting",
+              "to": "waiting",
+              "event": "CALL",
+              "effects": [
+               [
+                "http",
+                "GET",
+                "/x",
+                {
+                 "emit": {
+                  "success": "CALLED",
+                  "failure": "CALL_FAILED"
+                 }
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          },
+          {
+           "name": "Handler",
+           "linkedEntity": "Item",
+           "listens": [
+            {
+             "event": "CALL_FAILED",
+             "triggers": "ON_FAIL",
+             "source": {
+              "kind": "trait",
+              "trait": "Caller"
+             }
+            },
+            {
+             "event": "CALLED",
+             "triggers": "ON_OK",
+             "source": {
+              "kind": "trait",
+              "trait": "Caller"
+             }
+            }
+           ],
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "ON_FAIL",
+              "effects": []
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "ON_OK",
+              "effects": []
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "OTHER",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "rows": [
+       {
+        "orbital": "O",
+        "trait": "Handler",
+        "from": "idle",
+        "event": "ON_FAIL",
+        "to": "idle",
+        "guarded": false,
+        "payload": []
+       },
+       {
+        "orbital": "O",
+        "trait": "Handler",
+        "from": "idle",
+        "event": "ON_OK",
+        "to": "idle",
+        "guarded": false,
+        "payload": []
+       },
+       {
+        "orbital": "O",
+        "trait": "Handler",
+        "from": "idle",
+        "event": "OTHER",
+        "to": "idle",
+        "guarded": false,
+        "payload": []
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_COMPUTED",
+        "payload": {
+         "count": 3
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "PLAN_COMPUTED",
+     "payload": {
+      "count": 3
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_ANSWERED",
+        "payload": {
+         "steps": [
+          {
+           "trait": "Handler",
+           "linkedEntity": "Item",
+           "from": "idle",
+           "event": "ON_FAIL",
+           "to": "idle",
+           "toStates": [
+            "idle"
+           ],
+           "variant": "auto-init",
+           "payload": {},
+           "guarded": false,
+           "solved": true,
+           "payloadCase": "success",
+           "reply": "failure"
+          },
+          {
+           "trait": "Handler",
+           "linkedEntity": "Item",
+           "from": "idle",
+           "event": "ON_OK",
+           "to": "idle",
+           "toStates": [
+            "idle"
+           ],
+           "variant": "auto-init",
+           "payload": {},
+           "guarded": false,
+           "solved": true,
+           "payloadCase": "success",
+           "reply": "other"
+          },
+          {
+           "trait": "Handler",
+           "linkedEntity": "Item",
+           "from": "idle",
+           "event": "OTHER",
+           "to": "idle",
+           "toStates": [
+            "idle"
+           ],
+           "variant": "auto-init",
+           "payload": {},
+           "guarded": false,
+           "solved": true,
+           "payloadCase": "success"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "listener-with-any-source-inherits-too",
+   "steps": [
+    {
+     "event": "PLAN_REQUEST",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Item",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Caller",
+           "linkedEntity": "Item",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "waiting",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "waiting",
+              "to": "waiting",
+              "event": "CALL",
+              "effects": [
+               [
+                "http",
+                "GET",
+                "/x",
+                {
+                 "emit": {
+                  "success": "CALLED",
+                  "failure": "CALL_FAILED"
+                 }
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          },
+          {
+           "name": "Handler",
+           "linkedEntity": "Item",
+           "listens": [
+            {
+             "event": "CALL_FAILED",
+             "triggers": "ON_FAIL",
+             "source": {
+              "kind": "any"
+             }
+            },
+            {
+             "event": "CALLED",
+             "triggers": "ON_OK",
+             "source": {
+              "kind": "any"
+             }
+            }
+           ],
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "ON_FAIL",
+              "effects": []
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "ON_OK",
+              "effects": []
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "OTHER",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "rows": [
+       {
+        "orbital": "O",
+        "trait": "Handler",
+        "from": "idle",
+        "event": "ON_FAIL",
+        "to": "idle",
+        "guarded": false,
+        "payload": []
+       },
+       {
+        "orbital": "O",
+        "trait": "Handler",
+        "from": "idle",
+        "event": "ON_OK",
+        "to": "idle",
+        "guarded": false,
+        "payload": []
+       },
+       {
+        "orbital": "O",
+        "trait": "Handler",
+        "from": "idle",
+        "event": "OTHER",
+        "to": "idle",
+        "guarded": false,
+        "payload": []
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_COMPUTED",
+        "payload": {
+         "count": 3
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "PLAN_COMPUTED",
+     "payload": {
+      "count": 3
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_ANSWERED",
+        "payload": {
+         "steps": [
+          {
+           "trait": "Handler",
+           "linkedEntity": "Item",
+           "from": "idle",
+           "event": "ON_FAIL",
+           "to": "idle",
+           "toStates": [
+            "idle"
+           ],
+           "variant": "auto-init",
+           "payload": {},
+           "guarded": false,
+           "solved": true,
+           "payloadCase": "success",
+           "reply": "failure"
+          },
+          {
+           "trait": "Handler",
+           "linkedEntity": "Item",
+           "from": "idle",
+           "event": "ON_OK",
+           "to": "idle",
+           "toStates": [
+            "idle"
+           ],
+           "variant": "auto-init",
+           "payload": {},
+           "guarded": false,
+           "solved": true,
+           "payloadCase": "success",
+           "reply": "other"
+          },
+          {
+           "trait": "Handler",
+           "linkedEntity": "Item",
+           "from": "idle",
+           "event": "OTHER",
+           "to": "idle",
+           "toStates": [
+            "idle"
+           ],
+           "variant": "auto-init",
+           "payload": {},
+           "guarded": false,
+           "solved": true,
+           "payloadCase": "success"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-listener-addressed-to-another-trait-gets-no-reply",
+   "steps": [
+    {
+     "event": "PLAN_REQUEST",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Item",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Caller",
+           "linkedEntity": "Item",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "waiting",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "waiting",
+              "to": "waiting",
+              "event": "CALL",
+              "effects": [
+               [
+                "http",
+                "GET",
+                "/x",
+                {
+                 "emit": {
+                  "success": "CALLED",
+                  "failure": "CALL_FAILED"
+                 }
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          },
+          {
+           "name": "Handler",
+           "linkedEntity": "Item",
+           "listens": [
+            {
+             "event": "CALL_FAILED",
+             "triggers": "ON_FAIL",
+             "source": {
+              "kind": "trait",
+              "trait": "Elsewhere"
+             }
+            },
+            {
+             "event": "CALLED",
+             "triggers": "ON_OK",
+             "source": {
+              "kind": "trait",
+              "trait": "Elsewhere"
+             }
+            }
+           ],
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "ON_FAIL",
+              "effects": []
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "ON_OK",
+              "effects": []
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "OTHER",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "rows": [
+       {
+        "orbital": "O",
+        "trait": "Handler",
+        "from": "idle",
+        "event": "ON_FAIL",
+        "to": "idle",
+        "guarded": false,
+        "payload": []
+       },
+       {
+        "orbital": "O",
+        "trait": "Handler",
+        "from": "idle",
+        "event": "ON_OK",
+        "to": "idle",
+        "guarded": false,
+        "payload": []
+       },
+       {
+        "orbital": "O",
+        "trait": "Handler",
+        "from": "idle",
+        "event": "OTHER",
+        "to": "idle",
+        "guarded": false,
+        "payload": []
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_COMPUTED",
+        "payload": {
+         "count": 3
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "PLAN_COMPUTED",
+     "payload": {
+      "count": 3
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_ANSWERED",
+        "payload": {
+         "steps": [
+          {
+           "trait": "Handler",
+           "linkedEntity": "Item",
+           "from": "idle",
+           "event": "ON_FAIL",
+           "to": "idle",
+           "toStates": [
+            "idle"
+           ],
+           "variant": "auto-init",
+           "payload": {},
+           "guarded": false,
+           "solved": true,
+           "payloadCase": "success"
+          },
+          {
+           "trait": "Handler",
+           "linkedEntity": "Item",
+           "from": "idle",
+           "event": "ON_OK",
+           "to": "idle",
+           "toStates": [
+            "idle"
+           ],
+           "variant": "auto-init",
+           "payload": {},
+           "guarded": false,
+           "solved": true,
+           "payloadCase": "success"
+          },
+          {
+           "trait": "Handler",
+           "linkedEntity": "Item",
+           "from": "idle",
+           "event": "OTHER",
+           "to": "idle",
+           "toStates": [
+            "idle"
+           ],
+           "variant": "auto-init",
+           "payload": {},
+           "guarded": false,
+           "solved": true,
+           "payloadCase": "success"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

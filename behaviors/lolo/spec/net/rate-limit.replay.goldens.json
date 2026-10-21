@@ -1,0 +1,141 @@
+{
+ "atom": "net/atoms/std-rate-limiter-ip.lolo",
+ "trait": "RateKeyRateLimiter",
+ "cases": [
+  {
+   "id": "limit-3-per-ip",
+   "config": {
+    "enabled": true,
+    "requestsPerMinute": 3,
+    "windowSeconds": 10
+   },
+   "steps": [
+    {
+     "event": "REQUEST",
+     "payload": {
+      "requestId": 1,
+      "ip": "A"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ADMITTED",
+        "payload": {
+         "requestId": 1,
+         "remaining": 2
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "REQUEST",
+     "payload": {
+      "requestId": 2,
+      "ip": "B"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ADMITTED",
+        "payload": {
+         "requestId": 2,
+         "remaining": 2
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "REQUEST",
+     "payload": {
+      "requestId": 3,
+      "ip": "B"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ADMITTED",
+        "payload": {
+         "requestId": 3,
+         "remaining": 1
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "REQUEST",
+     "payload": {
+      "requestId": 4,
+      "ip": "B"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ADMITTED",
+        "payload": {
+         "requestId": 4,
+         "remaining": 0
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "REQUEST",
+     "payload": {
+      "requestId": 5,
+      "ip": "B"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "THROTTLED",
+        "payload": {
+         "requestId": 5
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "REQUEST",
+     "payload": {
+      "requestId": 6,
+      "ip": "A"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ADMITTED",
+        "payload": {
+         "requestId": 6,
+         "remaining": 1
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "REQUEST",
+     "payload": {
+      "requestId": 7
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ADMITTED",
+        "payload": {
+         "requestId": 7,
+         "remaining": 3
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "skip": "needs PS1 case-level config (enabled, requestsPerMinute 3, windowSeconds 10): the runner already passes it, the current orb ignores it"
+  }
+ ]
+}

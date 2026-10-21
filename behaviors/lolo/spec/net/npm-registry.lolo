@@ -1,0 +1,36 @@
+app npm-registry-spec [
+  version: "1.0.0",
+  description: "Design contract for a client of an npm-protocol registry (public npm or GitHub Packages; the origin and the token credential come from config, never from the atom). One ask at a time; an ask during another is refused npm_busy, never queued. NPM_VERSIONS answers the package's published versions (semver ascending) and its dist-tags. NPM_NEXT_VERSION answers the next version to publish: current bumped by patch|minor|major (a minor on a 0.x version is demoted to patch unless major is asked for), then incremented by patch past every version already published. NPM_WAIT polls the packument with std-retry backoff until the version is listed and its tarball downloads (one ranged byte; 200 or 206), answering NPM_VISIBLE, or NPM_WAIT_TIMEOUT when the attempts are spent. NPM_AUTH_PROBE reads one package the token must be able to read. Every reply is classified: 200 ok, 401 and 403 auth (never retried), 404 absent, 5xx and transport unreachable."
+]
+
+orbital NpmRegistrySpec {
+  expects config { registry : url  authenticated : boolean = false  token : secret }
+  expects entity NpmRegistryAsk [runtime] {
+    id : string!
+    name : string
+    version : string
+  }
+  expects trait NpmRegistry {
+    state idle {
+      NPM_VERSIONS -> listing
+      NPM_NEXT_VERSION -> listing
+      NPM_AUTH_PROBE -> listing
+      NPM_WAIT -> waiting
+    }
+    state listing {
+      NPM_VERSIONS -> listing
+    }
+    state waiting {
+      NPM_WAIT -> waiting
+    }
+    emits {
+      NPM_VERSIONS_LISTED { name : string!  versions : [string]!  tags : Map string string }
+      NPM_NEXT { name : string!  current : string!  next : string!  skipped : [string]! }
+      NPM_VISIBLE { name : string!  version : string!  attempts : number! }
+      NPM_WAIT_TIMEOUT { name : string!  version : string!  attempts : number!  error : string }
+      NPM_AUTH_OK { name : string! }
+      NPM_FAILED { name : string  code : string!  status : number!  error : string! }
+    }
+  }
+  expects page "/npm-registry" -> NpmRegistry
+}

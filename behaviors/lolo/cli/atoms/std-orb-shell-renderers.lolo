@@ -1,0 +1,778 @@
+app std-orb-shell-renderers [
+  version: "1.0.0",
+  inbound: ["cli-shell-renderers"],
+  fs: { cwd: "**": [read, write, create, remove] },
+  description: "std-orb-shell-renderers — the `orb shell-renderers <target>` command, the generator of the native shells' renderer files. Target icon-map reads the icon table (packages/almadar-ui/lib/iconNativeMap.json, or --table) and writes IconMap.swift into the iOS SwiftUI pack and IconMap.kt into the Android Compose pack, or both into --out <dir>, and answers `icon-map: N icons, 2 files` (status 200, exit 0). A missing or unknown target, a word or flag it does not know answers the usage (status 400, exit 2); an unreadable or malformed table answers `error: cannot read <file>` (status 500, exit 1)."
+]
+uses Spec from "almadar-std/orb-shell-renderers"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
+type IconGlyph = { sfSymbol : string!, materialSymbol : string! }
+type IconTable = { fallback : IconGlyph!, map : Map string IconGlyph! }
+type IconMembers = [string]
+type PropDef = { required : boolean, kind : string }
+type PatEntry = { tier : string!, propsSchema : Map string PropDef }
+type TokenRule = { re : string!, rule : string! }
+type AtomRule = { label : string!, re : string! }
+type ActionCall = { name : string!, opener : string!, boundary : boolean!, mode : string!, platform : string! }
+type MapEntry = { component : string!, importPath : string }
+type MapReg = { mappings : Map string MapEntry! }
+type RsRec = { tier : string!, module : string!, structName : string!, prune : boolean!, fallback : boolean! }
+type RsOut = { name : string, tier : string!, module : string!, structName : string!, alias : string }
+type GateLists = { rustKeywords : [string]!, actionCalls : [ActionCall]!, chrome : Map string [string]!, accessor : string!, tokenRules : Map string [TokenRule]!, atomOwned : Map string [AtomRule]!, subcomposeRoots : string!, localDecl : string! }
+type PatReg = { patterns : Map string PatEntry! }
+type PatRef = { name : string!, tier : string! }
+type NativeLists = { deferred : [string]!, canvas : [string]!, fixedSize : [string]!, families : Map string string! }
+type CoreVersion = { version : string! }
+type PackManifest = { name : string!, version : string!, description : string! }
+type DirEntry = { name : string!, kind : string! }
+type SizeEntry = { key : string!, value : number! }
+type SizeScales = { maxWidth : [SizeEntry]!, width : [SizeEntry]!, minWidth : [SizeEntry]! }
+type CoreIds = { actionPrefix : string!, overflowKey : string!, gestureEventProps : Map string string!, nativeIdPrefix : Map string string!, nativeIdSeparator : string! }
+type NativeTokens = { breakpoints : Map string number!, sizes : SizeScales!, gestureTpl : Map string string!, sizeLine : Map string string! }
+type RenderFile = { path : string!, text : string! }
+
+orbital OrbShellRenderersOrbital {
+  uses Args from "std/behaviors/std-args"
+
+  entity OrbShellRenderersRun [runtime] {
+    id : string!
+    target : string = ""
+    cwd : string = ""
+    tablePath : string = ""
+    membersPath : string = ""
+    tableText : string = ""
+    badMembers : [string] = []
+    platform : string = ""
+    pack : string = ""
+    ext : string = ""
+    registryPath : string = ""
+    listsPath : string = ""
+    curPath : string = ""
+    listsText : string = ""
+    regText : string = ""
+    coreVer : string = ""
+    stubTpl : string = ""
+    regTpl : string = ""
+    manText : string = ""
+    pats : [PatRef] = []
+    have : [string] = []
+    stubbed : [string] = []
+    tcur : number = 0
+    hcur : number = 0
+    rcur : number = 0
+    keys : [string] = []
+    natives : [string] = []
+    missing : [PatRef] = []
+    orphans : [string] = []
+    bad : [string] = []
+    removals : [string] = []
+    summary : string = ""
+    rlive : [RsRec] = []
+    rkeys : [string] = []
+    rstubs : [RsOut] = []
+    rall : [RsOut] = []
+    rmBase : string = "/renderers/"
+    domains : [string] = []
+    dcur : number = 0
+    curDomain : string = ""
+    liveNames : [string] = []
+    mapText : string = ""
+    rsStub : string = ""
+    rsReg : string = ""
+    rfiles : [string] = []
+    rrecs : [RsRec] = []
+    offenders : [string] = []
+    mappingPath : string = ""
+    violations : [string] = []
+    tokText : string = ""
+    idsText : string = ""
+    tokensPath : string = ""
+    idsPath : string = ""
+    bpTpl : string = ""
+    szTpl : string = ""
+    vidTpl : string = ""
+    outDir : string = ""
+    outFiles : [RenderFile] = []
+    wcur : number = 0
+  }
+
+  trait ArgsCli = Args.traits.ArgsParser {
+    listens {
+      OrbShellRenderers.SHELL_ARGS_PARSE -> ARGS_PARSE
+    }
+  }
+
+  trait OrbShellRenderers -> OrbShellRenderersRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      SHELL_CALLED -> ready
+        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
+        (set @entity.target (str/default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) ""))
+        (emit SHELL_ARGS_PARSE { stage: "shell-renderers" argv: (array/drop (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") 1) flags: [{ name: "table" aliases: [] takesValue: true repeatable: false }, { name: "out" aliases: [] takesValue: true repeatable: false }, { name: "members" aliases: [] takesValue: true repeatable: false }, { name: "registry" aliases: [] takesValue: true repeatable: false }, { name: "lists" aliases: [] takesValue: true repeatable: false }, { name: "mapping" aliases: [] takesValue: true repeatable: false }, { name: "tokens" aliases: [] takesValue: true repeatable: false }, { name: "ids" aliases: [] takesValue: true repeatable: false }] })
+      SHELL_ARGS_DONE -> ready when (or (not (array/includes (str/split "icon-map|ios|android|dioxus|tui" "|") @entity.target)) (> (array/len @payload.errors) 0) (> (array/len @payload.positionals) 0))
+        (emit SHELL_RENDERERS_ANSWERED { status: 400, body: "usage: orb shell-renderers icon-map|ios|android|dioxus|tui [--table <file>] [--members <file>] [--registry <file>] [--lists <file>] [--out <dir>]" })
+      SHELL_ARGS_DONE -> planning when (and (!= @entity.target "icon-map") (array/includes (str/split "ios|android" "|") @entity.target) (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0))
+        (set @entity.platform @entity.target)
+        (set @entity.pack (if (= @entity.target "ios") "orbital-rust/crates/orbital-shell-ios/renderers/swiftui" "orbital-rust/crates/orbital-shell-android/renderers/compose"))
+        (set @entity.ext (if (= @entity.target "ios") "swift" "kt"))
+        (set @entity.registryPath (if (!= (object/get @payload.flags "registry") null) (str/default (array/first (object/get @payload.flags "registry")) "") "packages/almadar-core/dist/patterns/patterns-registry.json"))
+        (set @entity.listsPath (if (!= (object/get @payload.flags "lists") null) (str/default (array/first (object/get @payload.flags "lists")) "") "orbital-rust/crates/orbital-shell-ios/renderers/swiftui/pattern-lists.json"))
+        (set @entity.tokensPath (if (!= (object/get @payload.flags "tokens") null) (str/default (array/first (object/get @payload.flags "tokens")) "") "orbital-rust/crates/orbital-shell-typescript/renderers/web/src/core/tokens/native-tokens.json"))
+        (set @entity.idsPath (if (!= (object/get @payload.flags "ids") null) (str/default (array/first (object/get @payload.flags "ids")) "") "packages/almadar-core/src/types/verification-ids.json"))
+        (set @entity.outDir (if (!= (object/get @payload.flags "out") null) (str/default (array/first (object/get @payload.flags "out")) "") ""))
+        (set @entity.curPath @entity.listsPath)
+        (os/read-file { anchor: "cwd" path: @entity.listsPath } { key: "lists", emit: { success: NS_LISTS_READ, failure: NS_READ_FAIL } })
+      SHELL_ARGS_DONE -> rscan when (and (array/includes (str/split "dioxus|tui" "|") @entity.target) (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0))
+        (set @entity.platform @entity.target)
+        (set @entity.pack (str/concat "orbital-rust/crates/orbital-shell-rust/renderers/" @entity.target))
+        (set @entity.domains (if (= @entity.target "dioxus") (str/split "core|game" "|") (str/split "core" "|")))
+        (set @entity.registryPath (if (!= (object/get @payload.flags "registry") null) (str/default (array/first (object/get @payload.flags "registry")) "") "packages/almadar-core/dist/patterns/patterns-registry.json"))
+        (set @entity.mappingPath (if (!= (object/get @payload.flags "mapping") null) (str/default (array/first (object/get @payload.flags "mapping")) "") "packages/almadar-core/dist/patterns/component-mapping.json"))
+        (set @entity.listsPath (if (!= (object/get @payload.flags "lists") null) (str/default (array/first (object/get @payload.flags "lists")) "") "orbital-rust/crates/orbital-shell-ios/renderers/swiftui/pattern-lists.json"))
+        (set @entity.outDir (if (!= (object/get @payload.flags "out") null) (str/default (array/first (object/get @payload.flags "out")) "") ""))
+        (set @entity.curPath @entity.listsPath)
+        (os/read-file { anchor: "cwd" path: @entity.listsPath } { key: "lists", emit: { success: RS_LISTS_READ, failure: NS_READ_FAIL } })
+      SHELL_ARGS_DONE -> reading when (and (= @entity.target "icon-map") (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0))
+        (set @entity.tablePath (if (!= (object/get @payload.flags "table") null) (str/default (array/first (object/get @payload.flags "table")) "") "packages/almadar-ui/lib/iconNativeMap.json"))
+        (set @entity.membersPath (if (!= (object/get @payload.flags "members") null) (str/default (array/first (object/get @payload.flags "members")) "") "orbital-rust/crates/orbital-shell-android/renderers/compose/material-icons-filled-members.json"))
+        (set @entity.outDir (if (!= (object/get @payload.flags "out") null) (str/default (array/first (object/get @payload.flags "out")) "") ""))
+        (emit SHELL_READ { })
+    }
+
+    state reading {
+      INIT -> reading
+      SHELL_READ -> reading
+        (os/read-file { anchor: "cwd" path: @entity.tablePath } { key: "table", emit: { success: SHELL_TABLE_READ, failure: SHELL_TABLE_FAIL } })
+      SHELL_TABLE_READ -> reading
+        (set @entity.tableText (bytes/to-string @payload.data))
+        (os/read-file { anchor: "cwd" path: @entity.membersPath } { key: "members", emit: { success: SHELL_MEMBERS_READ, failure: SHELL_MEMBERS_FAIL } })
+      SHELL_MEMBERS_FAIL -> ready
+        (emit SHELL_RENDERERS_ANSWERED { status: 500, body: (str/concat "error: cannot read " @entity.membersPath) })
+      SHELL_MEMBERS_READ -> reading
+        (let ((tbl (json/parse @entity.tableText IconTable))
+              (known (json/parse (bytes/to-string @payload.data) IconMembers)))
+          (let ((bad (array/filter
+                       (array/concat
+                         (array/map (array/sort (object/keys (object/get @tbl "map"))) (fn nm (object/get (object/get (object/get @tbl "map") @nm) "materialSymbol")))
+                         [(object/get (object/get @tbl "fallback") "materialSymbol")])
+                       (fn sy (not (array/includes @known (str/join (array/map (array/filter (str/split @sy "_") (fn seg (> (str/len @seg) 0))) (fn seg (str/concat (str/upper (str/slice @seg 0 1)) (str/slice @seg 1)))) "")))))))
+            (set @entity.badMembers (array/filter @bad (fn sy (= (array/indexOf @bad @sy) @index))))))
+        (emit SHELL_CHECKED { })
+      SHELL_CHECKED -> ready when (> (array/len @entity.badMembers) 0)
+        (emit SHELL_RENDERERS_ANSWERED { status: 500, body: (str/concat "error: " (array/len @entity.badMembers) " materialSymbol value(s) have no Icons.Filled.* member: " (str/join @entity.badMembers ", ")) })
+      SHELL_CHECKED -> writing when (= (array/len @entity.badMembers) 0)
+        (let ((tbl (json/parse @entity.tableText IconTable))
+              (names (array/sort (object/keys (object/get (json/parse @entity.tableText IconTable) "map")))))
+          (do
+          (set @entity.summary (str/concat "icon-map: " (array/len @names) " icons, 2 files"))
+          (set @entity.outFiles (array/concat
+            [{ path: (if (= @entity.outDir "") "orbital-rust/crates/orbital-shell-ios/renderers/swiftui/renderers/IconMap.swift" (str/concat @entity.outDir "/IconMap.swift")),
+               text: (str/concat "// generated by almadar-sync icon-map from packages/almadar-ui/lib/iconNativeMap.ts\nimport Foundation\n\nenum IconMap {\n    static let table: [String: String] = [\n"
+                 (str/join (array/map @names (fn n (str/concat "        " (json/stringify @n) ": " (json/stringify (object/get (object/get (object/get @tbl "map") @n) "sfSymbol")) ","))) "\n")
+                 "\n    ]\n\n    static let fallback: String = " (json/stringify (object/get (object/get @tbl "fallback") "sfSymbol")) "\n\n    static func resolve(_ name: String) -> String {\n        table[name] ?? fallback\n    }\n}\n") }]
+            [{ path: (if (= @entity.outDir "") "orbital-rust/crates/orbital-shell-android/renderers/compose/renderers/IconMap.kt" (str/concat @entity.outDir "/IconMap.kt")),
+               text: (str/concat "// generated by almadar-sync icon-map from packages/almadar-ui/lib/iconNativeMap.ts\npackage generated.patterns.core\n\nimport androidx.compose.material.icons.Icons\nimport androidx.compose.material.icons.filled.*\nimport androidx.compose.ui.graphics.vector.ImageVector\n\n// `table`/`resolve` give the Material Symbols glyph NAME (e.g. " (json/stringify "add") ");\n// `vectors`/`resolveVector` give the real Compose ImageVector — every\n// `materialSymbol` deterministically converted to `Icons.Filled.<Member>`\n// (arrow_back -> ArrowBack) and verified against the resolved\n// material-icons-core + material-icons-extended classpath at generation\n// time (wave C5) — a name with no real member is a generation error, not\n// a silent per-icon fallback.\nobject IconMap {\n    val table: Map<String, String> = mapOf(\n"
+                 (str/join (array/map @names (fn n (str/concat "        " (json/stringify @n) " to " (json/stringify (object/get (object/get (object/get @tbl "map") @n) "materialSymbol")) ","))) "\n")
+                 "\n    )\n\n    val fallback: String = " (json/stringify (object/get (object/get @tbl "fallback") "materialSymbol")) "\n\n    fun resolve(name: String): String = table[name] ?: fallback\n\n    val vectors: Map<String, ImageVector> = mapOf(\n"
+                 (str/join (array/map @names (fn n (str/concat "        " (json/stringify @n) " to Icons.Filled." (str/join (array/map (array/filter (str/split (object/get (object/get (object/get @tbl "map") @n) "materialSymbol") "_") (fn seg (> (str/len @seg) 0))) (fn seg (str/concat (str/upper (str/slice @seg 0 1)) (str/slice @seg 1)))) "") ","))) "\n")
+                 "\n    )\n\n    val fallbackVector: ImageVector = Icons.Filled." (str/join (array/map (array/filter (str/split (object/get (object/get @tbl "fallback") "materialSymbol") "_") (fn seg (> (str/len @seg) 0))) (fn seg (str/concat (str/upper (str/slice @seg 0 1)) (str/slice @seg 1)))) "") "\n\n    fun resolveVector(name: String): ImageVector = vectors[name] ?: fallbackVector\n}\n") }]))
+          (set @entity.wcur 0)
+          (emit SHELL_W_NEXT { })))
+      SHELL_TABLE_FAIL -> ready
+        (emit SHELL_RENDERERS_ANSWERED { status: 500, body: (str/concat "error: cannot read " @entity.tablePath) })
+    }
+
+    state planning {
+      INIT -> planning
+      NS_LISTS_READ -> planning
+        (set @entity.listsText (bytes/to-string @payload.data))
+        (set @entity.curPath @entity.registryPath)
+        (os/read-file { anchor: "cwd" path: @entity.registryPath } { key: "registry", emit: { success: NS_REG_READ, failure: NS_READ_FAIL } })
+      NS_REG_READ -> planning
+        (set @entity.regText (bytes/to-string @payload.data))
+        (set @entity.curPath "packages/almadar-core/package.json")
+        (os/read-file { anchor: "cwd" path: "packages/almadar-core/package.json" } { key: "corepkg", emit: { success: NS_VER_READ, failure: NS_READ_FAIL } })
+      NS_VER_READ -> planning
+        (set @entity.coreVer (object/get (json/parse (bytes/to-string @payload.data) CoreVersion) "version"))
+        (set @entity.curPath (str/concat @entity.pack "/stub.tpl"))
+        (os/read-file { anchor: "cwd" path: (str/concat @entity.pack "/stub.tpl") } { key: "stub", emit: { success: NS_STUB_READ, failure: NS_READ_FAIL } })
+      NS_STUB_READ -> planning
+        (set @entity.stubTpl (bytes/to-string @payload.data))
+        (set @entity.curPath (str/concat @entity.pack "/registry.tpl"))
+        (os/read-file { anchor: "cwd" path: (str/concat @entity.pack "/registry.tpl") } { key: "regtpl", emit: { success: NS_TPL_READ, failure: NS_READ_FAIL } })
+      NS_TPL_READ -> planning
+        (set @entity.regTpl (bytes/to-string @payload.data))
+        (set @entity.curPath (str/concat @entity.pack "/package.json"))
+        (os/read-file { anchor: "cwd" path: (str/concat @entity.pack "/package.json") } { key: "manifest", emit: { success: NS_MAN_READ, failure: NS_READ_FAIL } })
+      NS_MAN_READ -> planning
+        (set @entity.manText (bytes/to-string @payload.data))
+        (set @entity.curPath @entity.tokensPath)
+        (os/read-file { anchor: "cwd" path: @entity.tokensPath } { key: "tokens", emit: { success: NS_TOK_READ, failure: NS_READ_FAIL } })
+      NS_TOK_READ -> planning
+        (set @entity.tokText (bytes/to-string @payload.data))
+        (set @entity.curPath @entity.idsPath)
+        (os/read-file { anchor: "cwd" path: @entity.idsPath } { key: "ids", emit: { success: NS_IDS_READ, failure: NS_READ_FAIL } })
+      NS_IDS_READ -> planning
+        (set @entity.idsText (bytes/to-string @payload.data))
+        (set @entity.curPath (str/concat @entity.pack "/breakpoints.tpl"))
+        (os/read-file { anchor: "cwd" path: (str/concat @entity.pack "/breakpoints.tpl") } { key: "bptpl", emit: { success: NS_BP_READ, failure: NS_READ_FAIL } })
+      NS_BP_READ -> planning
+        (set @entity.bpTpl (bytes/to-string @payload.data))
+        (set @entity.curPath (str/concat @entity.pack "/sizes.tpl"))
+        (os/read-file { anchor: "cwd" path: (str/concat @entity.pack "/sizes.tpl") } { key: "sztpl", emit: { success: NS_SZ_READ, failure: NS_READ_FAIL } })
+      NS_SZ_READ -> planning
+        (set @entity.szTpl (bytes/to-string @payload.data))
+        (set @entity.curPath (str/concat @entity.pack "/verification-ids.tpl"))
+        (os/read-file { anchor: "cwd" path: (str/concat @entity.pack "/verification-ids.tpl") } { key: "vidtpl", emit: { success: NS_VID_READ, failure: NS_READ_FAIL } })
+      NS_VID_READ -> planning
+        (set @entity.vidTpl (bytes/to-string @payload.data))
+        (set @entity.pats (array/map
+          (array/filter
+            (array/map (array/map (array/sort (array/map (object/keys (object/get (json/parse @entity.regText PatReg) "patterns")) (fn nm { sort: (str/collate-key @nm), name: @nm })) "sort") (fn k (object/get @k "name")))
+              (fn nm { name: @nm, tier: (object/get (object/get (object/get (json/parse @entity.regText PatReg) "patterns") @nm) "tier") }))
+            (fn pr (and (array/includes (str/split "atoms|molecules|organisms|templates" "|") (object/get @pr "tier"))
+                        (not (array/includes (object/get (json/parse @entity.listsText NativeLists) "deferred") (object/get @pr "name")))
+                        (not (array/includes (object/get (json/parse @entity.listsText NativeLists) "canvas") (object/get @pr "name"))))))
+          (fn pr { name: (object/get @pr "name"), tier: (object/get @pr "tier") })))
+        (set @entity.keys (array/map @entity.pats (fn pr (str/concat (object/get @pr "tier") "/" (str/replaceAll (object/get @pr "name") "-" "_") "." @entity.ext))))
+        (set @entity.tcur 0)
+        (emit NS_LIST { })
+      NS_LIST -> planning when (< @entity.tcur 4)
+        (os/list-dir { anchor: "cwd" path: (str/concat @entity.pack "/renderers/" (array/nth (str/split "atoms|molecules|organisms|templates" "|") @entity.tcur)) } { key: "dir", emit: { success: NS_DIR, failure: NS_DIR_MISSING } })
+      NS_DIR -> planning
+        (set @entity.have (array/concat @entity.have
+          (array/map (array/filter @payload.entries (fn en (str/endsWith (object/get @en "name") (str/concat "." @entity.ext))))
+            (fn en (str/concat (array/nth (str/split "atoms|molecules|organisms|templates" "|") @entity.tcur) "/" (object/get @en "name"))))))
+        (set @entity.tcur (+ @entity.tcur 1))
+        (emit NS_LIST { })
+      NS_DIR_MISSING -> planning
+        (set @entity.tcur (+ @entity.tcur 1))
+        (emit NS_LIST { })
+      NS_LIST -> planning when (>= @entity.tcur 4)
+        (set @entity.hcur 0)
+        (emit NS_FREAD { })
+      NS_FREAD -> planning when (< @entity.hcur (array/len @entity.have))
+        (os/read-file { anchor: "cwd" path: (str/concat @entity.pack "/renderers/" (array/nth @entity.have @entity.hcur)) } { key: "body", emit: { success: NS_FILE_READ, failure: NS_FILE_FAIL } })
+      NS_FILE_READ -> planning when (str/includes (bytes/to-string @payload.data) "🔧")
+        (set @entity.stubbed (array/append @entity.stubbed (array/nth @entity.have @entity.hcur)))
+        (set @entity.violations (array/concat @entity.violations (let ((tx (bytes/to-string @payload.data)) (ix (array/indexOf @entity.keys (array/nth @entity.have @entity.hcur))))
+          (if (< @ix 0) (array/take @entity.violations 0)
+            (let ((nm (object/get (array/nth @entity.pats @ix) "name")) (tr (object/get (array/nth @entity.pats @ix) "tier")) (gl (json/parse @entity.listsText GateLists)))
+              (array/concat
+                (array/map (array/filter (object/get (object/get @gl "chrome") @entity.platform) (fn tk (str/includes @tx @tk))) (fn tk (str/concat "[chrome] " @nm ": body contains page chrome " (json/stringify @tk) " — chrome belongs to the generated page")))
+                (array/map (array/filter (array/map (object/get (object/get @gl "tokenRules") @entity.platform) (fn ru { rule: (object/get @ru "rule"), line: (array/find (str/split @tx "\n") (fn ln (and (not (validate/pattern @ln (object/get @gl "accessor"))) (validate/pattern @ln (object/get @ru "re"))))) })) (fn rr (!= (object/get @rr "line") null)))
+                  (fn rr (str/concat "[token-only] " @nm ": body has " (object/get @rr "rule") " outside a theme accessor: " (str/trim (object/get @rr "line")))))
+                (if (= @tr "atoms") (array/take @entity.violations 0)
+                  (array/map (array/filter (object/get (object/get @gl "atomOwned") @entity.platform) (fn ar (validate/pattern @tx (object/get @ar "re")))) (fn ar (str/concat "[composes-atoms] " @nm ": " @tr " body draws " (json/stringify (object/get @ar "label")) " directly — compose the atom renderer instead"))))
+                (if (= @entity.platform "android")
+                  (let ((roots (- (array/len (str/split (str/replace-pattern @tx (object/get @gl "subcomposeRoots") "§§") "§§")) 1)) (declared (- (array/len (str/split @tx ".almadarFlexFill()")) 1)))
+                    (if (> @roots @declared) (array/append (array/take @entity.violations 0) (str/concat "[flex-basis] " @nm ": body has " @roots " subcompose root(s) (Lazy*, Pager, BoxWithConstraints) but declares " @declared " .almadarFlexFill() — an undeclared root throws when a flex row asks its intrinsic width")) (array/take @entity.violations 0)))
+                  (let ((decl (array/find (str/split (array/last (str/split @tx ") -> AnyView {\n")) "\n") (fn ln (validate/pattern @ln (object/get @gl "localDecl"))))))
+                    (if (!= @decl null) (array/append (array/take @entity.violations 0) (str/concat "[body-declarations] " @nm ": body declares " (json/stringify (str/trim @decl)) " — move it to the pattern header or AtomKit")) (array/take @entity.violations 0))))
+                (let ((pd (object/get (object/get (object/get (json/parse @entity.regText PatReg) "patterns") @nm) "propsSchema")))
+                  (array/map (array/filter (if (= @pd null) (array/take @entity.violations 0) (array/filter (object/keys @pd) (fn pk (or (= (object/get (object/get @pd @pk) "required") true) (array/includes (str/split "event-ref|event" "|") (str/default (object/get (object/get @pd @pk) "kind") "")))))) (fn pk (and (not (str/includes @tx (json/stringify @pk))) (not (and (= @pk "children") (str/includes @tx ".children()"))))))
+                    (fn pk (str/concat "[props-contract] " @nm ": declared prop " (json/stringify @pk) " is not referenced by the body"))))))))))
+        (set @entity.violations (array/concat @entity.violations (let ((tx (bytes/to-string @payload.data)) (ix (array/indexOf @entity.keys (array/nth @entity.have @entity.hcur))) (qc (str/slice (json/stringify "x") 0 1)))
+          (if (< @ix 0) (array/take @entity.violations 0)
+            (let ((nm (object/get (array/nth @entity.pats @ix) "name")) (gl (json/parse @entity.listsText GateLists)))
+              (array/concat
+                (let ((bare (array/filter
+                              (array/map
+                                (array/filter (array/map (array/drop (str/split @tx "onEvent(") 1) (fn pc { pc: @pc, prev: (array/nth (str/split @tx "onEvent(") @index) }))
+                                  (fn pr (or (= (str/len (object/get @pr "prev")) 0) (not (validate/pattern (str/slice (object/get @pr "prev") (- (str/len (object/get @pr "prev")) 1)) "^[A-Za-z0-9_]$")))))
+                                (fn pr (let ((pc (object/get @pr "pc"))) (object/get (array/reduce (str/split @pc "") { d: 1, s: false, e: false, done: false, o: "" } (fn (a c) (if (object/get @a "done") @a (if (object/get @a "s") (if (object/get @a "e") { d: (object/get @a "d"), s: true, e: false, done: false, o: (str/concat (object/get @a "o") @c) } (if (= @c "\\") { d: (object/get @a "d"), s: true, e: true, done: false, o: (str/concat (object/get @a "o") @c) } (if (= @c @qc) { d: (object/get @a "d"), s: false, e: false, done: false, o: (str/concat (object/get @a "o") @c) } { d: (object/get @a "d"), s: true, e: false, done: false, o: (str/concat (object/get @a "o") @c) }))) (if (= @c @qc) { d: (object/get @a "d"), s: true, e: false, done: false, o: (str/concat (object/get @a "o") @c) } (if (= @c "(") { d: (+ (object/get @a "d") 1), s: false, e: false, done: false, o: (str/concat (object/get @a "o") @c) } (if (= @c ")") (if (= (object/get @a "d") 1) { d: 0, s: false, e: false, done: true, o: (object/get @a "o") } { d: (- (object/get @a "d") 1), s: false, e: false, done: false, o: (str/concat (object/get @a "o") @c) }) { d: (object/get @a "d"), s: false, e: false, done: false, o: (str/concat (object/get @a "o") @c) })))))))  "o"))))
+                              (fn ar (not (str/includes @ar "eventEnvelope("))))))
+                  (if (> (array/len @bare) 0) (array/append (array/take @entity.violations 0) (str/concat "[props-contract] " @nm ": " (array/len @bare) " onEvent( call(s) skip eventEnvelope(props, …), first: onEvent(" (str/trim (array/first @bare)) ")")) (array/take @entity.violations 0)))
+                (array/map
+                  (array/filter
+                    (array/map
+                      (array/filter (object/get @gl "actionCalls") (fn sp (and (or (= (object/get @sp "platform") "any") (= (object/get @sp "platform") @entity.platform)) (str/includes @tx (object/get @sp "opener")))))
+                      (fn sp { name: (object/get @sp "name"),
+                               lit: (array/find
+                                      (array/map
+                                        (array/filter (array/map (array/drop (str/split @tx (object/get @sp "opener")) 1) (fn pc { pc: @pc, prev: (array/nth (str/split @tx (object/get @sp "opener")) @index) }))
+                                          (fn pr (or (not (object/get @sp "boundary")) (= (str/len (object/get @pr "prev")) 0) (not (validate/pattern (str/slice (object/get @pr "prev") (- (str/len (object/get @pr "prev")) 1)) "^[A-Za-z0-9_]$")))))
+                                        (fn pr (let ((pc (object/get @pr "pc"))) (object/get (array/reduce (str/split @pc "") { d: 1, s: false, e: false, done: false, o: "" } (fn (a c) (if (object/get @a "done") @a (if (object/get @a "s") (if (object/get @a "e") { d: (object/get @a "d"), s: true, e: false, done: false, o: (str/concat (object/get @a "o") @c) } (if (= @c "\\") { d: (object/get @a "d"), s: true, e: true, done: false, o: (str/concat (object/get @a "o") @c) } (if (= @c @qc) { d: (object/get @a "d"), s: false, e: false, done: false, o: (str/concat (object/get @a "o") @c) } { d: (object/get @a "d"), s: true, e: false, done: false, o: (str/concat (object/get @a "o") @c) }))) (if (= @c @qc) { d: (object/get @a "d"), s: true, e: false, done: false, o: (str/concat (object/get @a "o") @c) } (if (= @c "(") { d: (+ (object/get @a "d") 1), s: false, e: false, done: false, o: (str/concat (object/get @a "o") @c) } (if (= @c ")") (if (= (object/get @a "d") 1) { d: 0, s: false, e: false, done: true, o: (object/get @a "o") } { d: (- (object/get @a "d") 1), s: false, e: false, done: false, o: (str/concat (object/get @a "o") @c) }) { d: (object/get @a "d"), s: false, e: false, done: false, o: (str/concat (object/get @a "o") @c) })))))))  "o"))))
+                                      (fn ar (let ((sa (let ((fin (array/reduce (str/split @ar "") { d: 0, s: false, e: false, cur: "", out: [] } (fn (b c) (if (object/get @b "s") (if (object/get @b "e") { d: (object/get @b "d"), s: true, e: false, cur: (str/concat (object/get @b "cur") @c), out: (object/get @b "out") } (if (= @c "\\") { d: (object/get @b "d"), s: true, e: true, cur: (str/concat (object/get @b "cur") @c), out: (object/get @b "out") } (if (= @c @qc) { d: (object/get @b "d"), s: false, e: false, cur: (str/concat (object/get @b "cur") @c), out: (object/get @b "out") } { d: (object/get @b "d"), s: true, e: false, cur: (str/concat (object/get @b "cur") @c), out: (object/get @b "out") }))) (if (= @c @qc) { d: (object/get @b "d"), s: true, e: false, cur: (str/concat (object/get @b "cur") @c), out: (object/get @b "out") } (if (str/includes "([{" @c) { d: (+ (object/get @b "d") 1), s: false, e: false, cur: (str/concat (object/get @b "cur") @c), out: (object/get @b "out") } (if (str/includes ")]}" @c) { d: (- (object/get @b "d") 1), s: false, e: false, cur: (str/concat (object/get @b "cur") @c), out: (object/get @b "out") } (if (and (= @c ",") (= (object/get @b "d") 0)) { d: (object/get @b "d"), s: false, e: false, cur: "", out: (array/append (object/get @b "out") (object/get @b "cur")) } { d: (object/get @b "d"), s: false, e: false, cur: (str/concat (object/get @b "cur") @c), out: (object/get @b "out") }))))))))) (if (> (str/len (str/trim (object/get @fin "cur"))) 0) (array/append (object/get @fin "out") (object/get @fin "cur")) (object/get @fin "out")))))
+                                        (if (= (object/get @sp "mode") "first") (validate/pattern (str/default (array/first @sa) "") "^\\s*\\x22")
+                                          (if (= (object/get @sp "mode") "third") (and (> (array/len @sa) 2) (validate/pattern (array/nth @sa 2) "^\\s*\\x22"))
+                                            (if (= (object/get @sp "mode") "event") (!= (array/find @sa (fn x (validate/pattern @x "^\\s*event:\\s*\\x22"))) null)
+                                              (and (validate/pattern @ar "\\x22(action|onRemove)\\x22\\s*:\\s*(\\.string\\()?\\x22") (not (validate/pattern @ar "\\x22local\\x22\\s*:"))))))))) }))
+                    (fn r (!= (object/get @r "lit") null)))
+                  (fn r (if (or (= (object/get @r "name") "ButtonRenderer") (= (object/get @r "name") "BadgeRenderer"))
+                    (str/concat "[action-id-literal] " @nm ": " (object/get @r "name") " child takes a literal event without " (json/stringify "local") ": true — a local handler must not stamp an action id: " (str/trim (str/replace-pattern (object/get @r "lit") "\\s+" " ")))
+                    (str/concat "[action-id-literal] " @nm ": " (object/get @r "name") "(" (str/trim (object/get @r "lit")) ") takes a string literal — the action id must be the exact bus event key from props or an event constant"))))))))))
+        (set @entity.hcur (+ @entity.hcur 1))
+        (emit NS_FREAD { })
+      NS_FILE_READ -> planning when (not (str/includes (bytes/to-string @payload.data) "🔧"))
+        (set @entity.violations (array/concat @entity.violations (let ((tx (bytes/to-string @payload.data)) (ix (array/indexOf @entity.keys (array/nth @entity.have @entity.hcur))))
+          (if (< @ix 0) (array/take @entity.violations 0)
+            (let ((nm (object/get (array/nth @entity.pats @ix) "name")) (tr (object/get (array/nth @entity.pats @ix) "tier")) (gl (json/parse @entity.listsText GateLists)))
+              (array/concat
+                (array/map (array/filter (object/get (object/get @gl "chrome") @entity.platform) (fn tk (str/includes @tx @tk))) (fn tk (str/concat "[chrome] " @nm ": body contains page chrome " (json/stringify @tk) " — chrome belongs to the generated page")))
+                (array/map (array/filter (array/map (object/get (object/get @gl "tokenRules") @entity.platform) (fn ru { rule: (object/get @ru "rule"), line: (array/find (str/split @tx "\n") (fn ln (and (not (validate/pattern @ln (object/get @gl "accessor"))) (validate/pattern @ln (object/get @ru "re"))))) })) (fn rr (!= (object/get @rr "line") null)))
+                  (fn rr (str/concat "[token-only] " @nm ": body has " (object/get @rr "rule") " outside a theme accessor: " (str/trim (object/get @rr "line")))))
+                (if (= @tr "atoms") (array/take @entity.violations 0)
+                  (array/map (array/filter (object/get (object/get @gl "atomOwned") @entity.platform) (fn ar (validate/pattern @tx (object/get @ar "re")))) (fn ar (str/concat "[composes-atoms] " @nm ": " @tr " body draws " (json/stringify (object/get @ar "label")) " directly — compose the atom renderer instead"))))
+                (if (= @entity.platform "android")
+                  (let ((roots (- (array/len (str/split (str/replace-pattern @tx (object/get @gl "subcomposeRoots") "§§") "§§")) 1)) (declared (- (array/len (str/split @tx ".almadarFlexFill()")) 1)))
+                    (if (> @roots @declared) (array/append (array/take @entity.violations 0) (str/concat "[flex-basis] " @nm ": body has " @roots " subcompose root(s) (Lazy*, Pager, BoxWithConstraints) but declares " @declared " .almadarFlexFill() — an undeclared root throws when a flex row asks its intrinsic width")) (array/take @entity.violations 0)))
+                  (let ((decl (array/find (str/split (array/last (str/split @tx ") -> AnyView {\n")) "\n") (fn ln (validate/pattern @ln (object/get @gl "localDecl"))))))
+                    (if (!= @decl null) (array/append (array/take @entity.violations 0) (str/concat "[body-declarations] " @nm ": body declares " (json/stringify (str/trim @decl)) " — move it to the pattern header or AtomKit")) (array/take @entity.violations 0))))
+                (let ((pd (object/get (object/get (object/get (json/parse @entity.regText PatReg) "patterns") @nm) "propsSchema")))
+                  (array/map (array/filter (if (= @pd null) (array/take @entity.violations 0) (array/filter (object/keys @pd) (fn pk (or (= (object/get (object/get @pd @pk) "required") true) (array/includes (str/split "event-ref|event" "|") (str/default (object/get (object/get @pd @pk) "kind") "")))))) (fn pk (and (not (str/includes @tx (json/stringify @pk))) (not (and (= @pk "children") (str/includes @tx ".children()"))))))
+                    (fn pk (str/concat "[props-contract] " @nm ": declared prop " (json/stringify @pk) " is not referenced by the body"))))))))))
+        (set @entity.violations (array/concat @entity.violations (let ((tx (bytes/to-string @payload.data)) (ix (array/indexOf @entity.keys (array/nth @entity.have @entity.hcur))) (qc (str/slice (json/stringify "x") 0 1)))
+          (if (< @ix 0) (array/take @entity.violations 0)
+            (let ((nm (object/get (array/nth @entity.pats @ix) "name")) (gl (json/parse @entity.listsText GateLists)))
+              (array/concat
+                (let ((bare (array/filter
+                              (array/map
+                                (array/filter (array/map (array/drop (str/split @tx "onEvent(") 1) (fn pc { pc: @pc, prev: (array/nth (str/split @tx "onEvent(") @index) }))
+                                  (fn pr (or (= (str/len (object/get @pr "prev")) 0) (not (validate/pattern (str/slice (object/get @pr "prev") (- (str/len (object/get @pr "prev")) 1)) "^[A-Za-z0-9_]$")))))
+                                (fn pr (let ((pc (object/get @pr "pc"))) (object/get (array/reduce (str/split @pc "") { d: 1, s: false, e: false, done: false, o: "" } (fn (a c) (if (object/get @a "done") @a (if (object/get @a "s") (if (object/get @a "e") { d: (object/get @a "d"), s: true, e: false, done: false, o: (str/concat (object/get @a "o") @c) } (if (= @c "\\") { d: (object/get @a "d"), s: true, e: true, done: false, o: (str/concat (object/get @a "o") @c) } (if (= @c @qc) { d: (object/get @a "d"), s: false, e: false, done: false, o: (str/concat (object/get @a "o") @c) } { d: (object/get @a "d"), s: true, e: false, done: false, o: (str/concat (object/get @a "o") @c) }))) (if (= @c @qc) { d: (object/get @a "d"), s: true, e: false, done: false, o: (str/concat (object/get @a "o") @c) } (if (= @c "(") { d: (+ (object/get @a "d") 1), s: false, e: false, done: false, o: (str/concat (object/get @a "o") @c) } (if (= @c ")") (if (= (object/get @a "d") 1) { d: 0, s: false, e: false, done: true, o: (object/get @a "o") } { d: (- (object/get @a "d") 1), s: false, e: false, done: false, o: (str/concat (object/get @a "o") @c) }) { d: (object/get @a "d"), s: false, e: false, done: false, o: (str/concat (object/get @a "o") @c) })))))))  "o"))))
+                              (fn ar (not (str/includes @ar "eventEnvelope("))))))
+                  (if (> (array/len @bare) 0) (array/append (array/take @entity.violations 0) (str/concat "[props-contract] " @nm ": " (array/len @bare) " onEvent( call(s) skip eventEnvelope(props, …), first: onEvent(" (str/trim (array/first @bare)) ")")) (array/take @entity.violations 0)))
+                (array/map
+                  (array/filter
+                    (array/map
+                      (array/filter (object/get @gl "actionCalls") (fn sp (and (or (= (object/get @sp "platform") "any") (= (object/get @sp "platform") @entity.platform)) (str/includes @tx (object/get @sp "opener")))))
+                      (fn sp { name: (object/get @sp "name"),
+                               lit: (array/find
+                                      (array/map
+                                        (array/filter (array/map (array/drop (str/split @tx (object/get @sp "opener")) 1) (fn pc { pc: @pc, prev: (array/nth (str/split @tx (object/get @sp "opener")) @index) }))
+                                          (fn pr (or (not (object/get @sp "boundary")) (= (str/len (object/get @pr "prev")) 0) (not (validate/pattern (str/slice (object/get @pr "prev") (- (str/len (object/get @pr "prev")) 1)) "^[A-Za-z0-9_]$")))))
+                                        (fn pr (let ((pc (object/get @pr "pc"))) (object/get (array/reduce (str/split @pc "") { d: 1, s: false, e: false, done: false, o: "" } (fn (a c) (if (object/get @a "done") @a (if (object/get @a "s") (if (object/get @a "e") { d: (object/get @a "d"), s: true, e: false, done: false, o: (str/concat (object/get @a "o") @c) } (if (= @c "\\") { d: (object/get @a "d"), s: true, e: true, done: false, o: (str/concat (object/get @a "o") @c) } (if (= @c @qc) { d: (object/get @a "d"), s: false, e: false, done: false, o: (str/concat (object/get @a "o") @c) } { d: (object/get @a "d"), s: true, e: false, done: false, o: (str/concat (object/get @a "o") @c) }))) (if (= @c @qc) { d: (object/get @a "d"), s: true, e: false, done: false, o: (str/concat (object/get @a "o") @c) } (if (= @c "(") { d: (+ (object/get @a "d") 1), s: false, e: false, done: false, o: (str/concat (object/get @a "o") @c) } (if (= @c ")") (if (= (object/get @a "d") 1) { d: 0, s: false, e: false, done: true, o: (object/get @a "o") } { d: (- (object/get @a "d") 1), s: false, e: false, done: false, o: (str/concat (object/get @a "o") @c) }) { d: (object/get @a "d"), s: false, e: false, done: false, o: (str/concat (object/get @a "o") @c) })))))))  "o"))))
+                                      (fn ar (let ((sa (let ((fin (array/reduce (str/split @ar "") { d: 0, s: false, e: false, cur: "", out: [] } (fn (b c) (if (object/get @b "s") (if (object/get @b "e") { d: (object/get @b "d"), s: true, e: false, cur: (str/concat (object/get @b "cur") @c), out: (object/get @b "out") } (if (= @c "\\") { d: (object/get @b "d"), s: true, e: true, cur: (str/concat (object/get @b "cur") @c), out: (object/get @b "out") } (if (= @c @qc) { d: (object/get @b "d"), s: false, e: false, cur: (str/concat (object/get @b "cur") @c), out: (object/get @b "out") } { d: (object/get @b "d"), s: true, e: false, cur: (str/concat (object/get @b "cur") @c), out: (object/get @b "out") }))) (if (= @c @qc) { d: (object/get @b "d"), s: true, e: false, cur: (str/concat (object/get @b "cur") @c), out: (object/get @b "out") } (if (str/includes "([{" @c) { d: (+ (object/get @b "d") 1), s: false, e: false, cur: (str/concat (object/get @b "cur") @c), out: (object/get @b "out") } (if (str/includes ")]}" @c) { d: (- (object/get @b "d") 1), s: false, e: false, cur: (str/concat (object/get @b "cur") @c), out: (object/get @b "out") } (if (and (= @c ",") (= (object/get @b "d") 0)) { d: (object/get @b "d"), s: false, e: false, cur: "", out: (array/append (object/get @b "out") (object/get @b "cur")) } { d: (object/get @b "d"), s: false, e: false, cur: (str/concat (object/get @b "cur") @c), out: (object/get @b "out") }))))))))) (if (> (str/len (str/trim (object/get @fin "cur"))) 0) (array/append (object/get @fin "out") (object/get @fin "cur")) (object/get @fin "out")))))
+                                        (if (= (object/get @sp "mode") "first") (validate/pattern (str/default (array/first @sa) "") "^\\s*\\x22")
+                                          (if (= (object/get @sp "mode") "third") (and (> (array/len @sa) 2) (validate/pattern (array/nth @sa 2) "^\\s*\\x22"))
+                                            (if (= (object/get @sp "mode") "event") (!= (array/find @sa (fn x (validate/pattern @x "^\\s*event:\\s*\\x22"))) null)
+                                              (and (validate/pattern @ar "\\x22(action|onRemove)\\x22\\s*:\\s*(\\.string\\()?\\x22") (not (validate/pattern @ar "\\x22local\\x22\\s*:"))))))))) }))
+                    (fn r (!= (object/get @r "lit") null)))
+                  (fn r (if (or (= (object/get @r "name") "ButtonRenderer") (= (object/get @r "name") "BadgeRenderer"))
+                    (str/concat "[action-id-literal] " @nm ": " (object/get @r "name") " child takes a literal event without " (json/stringify "local") ": true — a local handler must not stamp an action id: " (str/trim (str/replace-pattern (object/get @r "lit") "\\s+" " ")))
+                    (str/concat "[action-id-literal] " @nm ": " (object/get @r "name") "(" (str/trim (object/get @r "lit")) ") takes a string literal — the action id must be the exact bus event key from props or an event constant"))))))))))
+        (set @entity.hcur (+ @entity.hcur 1))
+        (emit NS_FREAD { })
+      NS_FILE_FAIL -> planning
+        (set @entity.hcur (+ @entity.hcur 1))
+        (emit NS_FREAD { })
+      NS_FREAD -> planning when (>= @entity.hcur (array/len @entity.have))
+        (set @entity.keys (array/map @entity.pats (fn pr (str/concat (object/get @pr "tier") "/" (str/replaceAll (object/get @pr "name") "-" "_") "." @entity.ext))))
+        (set @entity.natives (array/map (array/filter @entity.pats (fn pr (let ((key (str/concat (object/get @pr "tier") "/" (str/replaceAll (object/get @pr "name") "-" "_") "." @entity.ext))) (and (array/includes @entity.have @key) (not (array/includes @entity.stubbed @key)))))) (fn pr (object/get @pr "name"))))
+        (set @entity.missing (array/filter @entity.pats (fn pr (not (array/includes @entity.have (str/concat (object/get @pr "tier") "/" (str/replaceAll (object/get @pr "name") "-" "_") "." @entity.ext))))))
+        (set @entity.orphans (array/filter @entity.have (fn hv (not (array/includes @entity.keys @hv)))))
+        (set @entity.bad (array/map (array/filter @entity.pats (fn pr (not (array/includes @entity.natives (object/get @pr "name"))))) (fn pr (object/get @pr "name"))))
+        (set @entity.removals (if (= @entity.outDir "") @entity.orphans (array/take @entity.orphans 0)))
+        (emit NS_BUILD { })
+      NS_BUILD -> pruning
+        (set @entity.summary (str/concat @entity.platform ": " (array/len @entity.natives) " native, " (array/len @entity.missing) " stub(s) written, " (array/len @entity.orphans) " orphan(s) " (if (= @entity.outDir "") "pruned" "found") (if (> (array/len @entity.bad) 0) (str/concat "\nerror: placeholder renderer(s), add a body: " (str/join @entity.bad ", ")) "") (if (> (array/len @entity.violations) 0) (str/concat "\nerror: " (array/len @entity.violations) " gate violation(s):\n" (str/join (array/map @entity.violations (fn vl (str/concat "  - " @vl))) "\n")) "")))
+        (set @entity.outFiles (array/concat
+          (array/map @entity.missing (fn pr { path: (str/concat (if (= @entity.outDir "") (str/concat @entity.pack "/renderers") (str/concat @entity.outDir "/renderers")) "/" (object/get @pr "tier") "/" (str/replaceAll (object/get @pr "name") "-" "_") "." @entity.ext),
+            text: (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll @entity.stubTpl "{{family}}" (object/get (object/get (json/parse @entity.listsText NativeLists) "families") (str/concat @entity.platform "/" (object/get @pr "tier")))) "{{Pascal}}" (str/join (array/map (array/filter (str/split (str/replaceAll (object/get @pr "name") "_" "-") "-") (fn sg (> (str/len @sg) 0))) (fn sg (str/concat (str/upper (str/slice @sg 0 1)) (str/slice @sg 1)))) "")) "{{name}}" (object/get @pr "name")) "{{tier}}" (object/get @pr "tier")) }))
+          [{ path: (str/concat (if (= @entity.outDir "") (str/concat @entity.pack "/renderers") (str/concat @entity.outDir "/renderers")) "/CorePatternRegistry." @entity.ext),
+             text: (str/replaceAll @entity.regTpl "{{entries}}" (str/join (array/concat
+               (array/map @entity.pats (fn pr (let ((q (json/stringify (object/get @pr "name"))) (fnm (str/join (array/map (array/filter (str/split (str/replaceAll (object/get @pr "name") "_" "-") "-") (fn sg (> (str/len @sg) 0))) (fn sg (str/concat (str/upper (str/slice @sg 0 1)) (str/slice @sg 1)))) "")))
+                 (if (= @entity.platform "ios")
+                   (str/concat "        " @q ": { props, modifier, onEvent in " (if (array/includes @entity.natives (object/get @pr "name")) (str/concat @fnm "Renderer(props: props, modifier: modifier, onEvent: onEvent) }") (str/concat "FallbackRendererView(patternName: " @q ", props: props, modifier: modifier, onEvent: onEvent) }")))
+                   (str/concat "        " @q " to { props, modifier, onEvent -> " (if (array/includes @entity.natives (object/get @pr "name")) (str/concat @fnm "Renderer(props, modifier, onEvent) }") (str/concat "FallbackRenderer(" @q ", props, modifier, onEvent) }")))))))
+               (array/map (str/split "canvas|game-canvas|canvas-2d|game-canvas-2d" "|") (fn al (if (= @entity.platform "ios")
+                 (str/concat "        " (json/stringify @al) ": { props, modifier, onEvent in GameCanvas2dRenderer(props: props, modifier: modifier, onEvent: onEvent) }")
+                 (str/concat "        " (json/stringify @al) " to { props, modifier, onEvent -> GameCanvas2dRenderer(props, modifier, onEvent) }"))))
+               (array/map (array/sort (object/get (json/parse @entity.listsText NativeLists) "canvas")) (fn cn (let ((fixed (array/includes (object/get (json/parse @entity.listsText NativeLists) "fixedSize") @cn)))
+                 (if (= @entity.platform "ios")
+                   (str/concat "        " (json/stringify @cn) ": { props, modifier, onEvent in LearningCanvasRenderer(pattern: " (json/stringify @cn) ", props: props, modifier: modifier, onEvent: onEvent" (if @fixed ", fixedSize: true" "") ") }")
+                   (str/concat "        " (json/stringify @cn) " to { props, modifier, onEvent -> LearningCanvasRenderer(" (json/stringify @cn) ", props, modifier, onEvent" (if @fixed ", fixedSize = true" "") ") }")))))) ",\n")) }
+           { path: (str/concat (if (= @entity.outDir "") @entity.pack @entity.outDir) "/package.json"),
+             text: (str/concat "{\n  \"name\": " (json/stringify (object/get (json/parse @entity.manText PackManifest) "name")) ",\n  \"version\": " (json/stringify (object/get (json/parse @entity.manText PackManifest) "version")) ",\n  \"private\": true,\n  \"description\": " (json/stringify (object/get (json/parse @entity.manText PackManifest) "description")) ",\n  \"orbRenderer\": {\n    \"target\": " (json/stringify @entity.platform) ",\n    \"rendererInterface\": 2,\n    \"patternsRegistry\": " (json/stringify @entity.coreVer) ",\n    \"coverage\": [\n" (str/join (array/map (let ((all (array/sort (array/concat @entity.natives (object/get (json/parse @entity.listsText NativeLists) "canvas"))))) (array/filter @all (fn cv (= (array/indexOf @all @cv) @index)))) (fn cv (str/concat "      " (json/stringify @cv)))) ",\n") "\n    ],\n    \"sources\": \"renderers\",\n    \"fixtures\": \"fixtures\"\n  }\n}\n") }]))
+        (set @entity.outFiles (let ((tk (json/parse @entity.tokText NativeTokens))) (array/concat @entity.outFiles
+          [{ path: (str/concat (if (= @entity.outDir "") (str/concat @entity.pack "/renderers") (str/concat @entity.outDir "/renderers")) "/AlmadarBreakpoints." @entity.ext), text: (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll @entity.bpTpl "{{sm}}" (str/concat (object/get (object/get @tk "breakpoints") "sm"))) "{{md}}" (str/concat (object/get (object/get @tk "breakpoints") "md"))) "{{lg}}" (str/concat (object/get (object/get @tk "breakpoints") "lg"))) "{{xl}}" (str/concat (object/get (object/get @tk "breakpoints") "xl"))) "{{xxl}}" (str/concat (object/get (object/get @tk "breakpoints") "xxl"))) }
+           { path: (str/concat (if (= @entity.outDir "") (str/concat @entity.pack "/renderers") (str/concat @entity.outDir "/renderers")) "/AlmadarSizes." @entity.ext), text: (str/replaceAll @entity.szTpl "{{members}}" (str/join (array/concat (array/map (object/get (object/get @tk "sizes") "maxWidth") (fn en (str/replaceAll (str/replaceAll (object/get (object/get @tk "sizeLine") @entity.ext) "{{name}}" (str/concat "maxW" (str/replaceAll (str/join (array/map (str/split (object/get @en "key") "-") (fn pt (str/concat (str/upper (str/slice @pt 0 1)) (str/slice @pt 1)))) "") "." "_"))) "{{value}}" (str/concat (object/get @en "value"))))) (array/map (object/get (object/get @tk "sizes") "width") (fn en (str/replaceAll (str/replaceAll (object/get (object/get @tk "sizeLine") @entity.ext) "{{name}}" (str/concat "w" (str/replaceAll (str/join (array/map (str/split (object/get @en "key") "-") (fn pt (str/concat (str/upper (str/slice @pt 0 1)) (str/slice @pt 1)))) "") "." "_"))) "{{value}}" (str/concat (object/get @en "value"))))) (array/map (object/get (object/get @tk "sizes") "minWidth") (fn en (str/replaceAll (str/replaceAll (object/get (object/get @tk "sizeLine") @entity.ext) "{{name}}" (str/concat "minW" (str/replaceAll (str/join (array/map (str/split (object/get @en "key") "-") (fn pt (str/concat (str/upper (str/slice @pt 0 1)) (str/slice @pt 1)))) "") "." "_"))) "{{value}}" (str/concat (object/get @en "value")))))) "\n")) }
+           { path: (str/concat (if (= @entity.outDir "") (str/concat @entity.pack "/renderers") (str/concat @entity.outDir "/renderers")) "/VerificationIds." @entity.ext), text: (let ((cid (json/parse @entity.idsText CoreIds))) (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll @entity.vidTpl "{{actionOverflow}}" (str/concat (object/get @cid "actionPrefix") (object/get @cid "overflowKey"))) "{{actionPrefix}}" (object/get @cid "actionPrefix")) "{{separator}}" (object/get @cid "nativeIdSeparator")) "{{patternPrefix}}" (object/get (object/get @cid "nativeIdPrefix") "pattern")) "{{rowPrefix}}" (object/get (object/get @cid "nativeIdPrefix") "row")) "{{fieldPrefix}}" (object/get (object/get @cid "nativeIdPrefix") "field")) "{{slotPrefix}}" (object/get (object/get @cid "nativeIdPrefix") "slot")) "{{gestures}}" (str/join (array/map (let ((gv (object/values (object/get @cid "gestureEventProps")))) (array/filter @gv (fn g (= (array/indexOf @gv @g) @index)))) (fn gs (str/replaceAll (str/replaceAll (object/get (object/get @tk "gestureTpl") @entity.ext) "{{name}}" (str/camelCase @gs)) "{{prefix}}" (str/concat (object/get @cid "actionPrefix") @gs ":")))) ""))) }])))
+        (set @entity.rcur 0)
+        (set @entity.wcur 0)
+        (emit NS_RM_NEXT { })
+      NS_READ_FAIL -> ready
+        (emit SHELL_RENDERERS_ANSWERED { status: 500, body: (str/concat "error: cannot read " @entity.curPath) })
+    }
+
+    state rscan {
+      INIT -> rscan
+      RS_LISTS_READ -> rscan
+        (set @entity.listsText (bytes/to-string @payload.data))
+        (set @entity.curPath @entity.registryPath)
+        (os/read-file { anchor: "cwd" path: @entity.registryPath } { key: "registry", emit: { success: RS_REG_READ, failure: NS_READ_FAIL } })
+      RS_REG_READ -> rscan
+        (set @entity.liveNames (object/keys (object/get (json/parse (bytes/to-string @payload.data) PatReg) "patterns")))
+        (set @entity.regText (bytes/to-string @payload.data))
+        (set @entity.curPath @entity.mappingPath)
+        (os/read-file { anchor: "cwd" path: @entity.mappingPath } { key: "mapping", emit: { success: RS_MAP_READ, failure: NS_READ_FAIL } })
+      RS_MAP_READ -> rscan
+        (set @entity.mapText (bytes/to-string @payload.data))
+        (set @entity.curPath (str/concat @entity.pack "/register.tpl"))
+        (os/read-file { anchor: "cwd" path: (str/concat @entity.pack "/register.tpl") } { key: "regtpl", emit: { success: RS_TPL_READ, failure: NS_READ_FAIL } })
+      RS_TPL_READ -> rscan
+        (set @entity.rsReg (bytes/to-string @payload.data))
+        (set @entity.curPath (str/concat @entity.pack "/stub.tpl"))
+        (os/read-file { anchor: "cwd" path: (str/concat @entity.pack "/stub.tpl") } { key: "stub", emit: { success: RS_STUB_READ, failure: RS_STUB_NONE } })
+      RS_STUB_READ -> rscan
+        (set @entity.rsStub (bytes/to-string @payload.data))
+        (set @entity.dcur 0)
+        (set @entity.outFiles (array/take @entity.outFiles 0))
+        (set @entity.removals (array/take @entity.removals 0))
+        (emit RS_DOM { })
+      RS_STUB_NONE -> rscan
+        (set @entity.dcur 0)
+        (set @entity.outFiles (array/take @entity.outFiles 0))
+        (set @entity.removals (array/take @entity.removals 0))
+        (emit RS_DOM { })
+      RS_DOM -> rscan when (< @entity.dcur (array/len @entity.domains))
+        (set @entity.curDomain (array/nth @entity.domains @entity.dcur))
+        (set @entity.rfiles (array/take @entity.rfiles 0))
+        (set @entity.rrecs (array/take @entity.rrecs 0))
+        (set @entity.tcur 0)
+        (emit RS_LIST { })
+      RS_LIST -> rscan when (< @entity.tcur 4)
+        (os/list-dir { anchor: "cwd" path: (str/concat @entity.pack "/src/components/" @entity.curDomain "/" (array/nth (str/split "atoms|molecules|organisms|templates" "|") @entity.tcur)) } { key: "dir", emit: { success: RS_DIR, failure: RS_DIR_MISSING } })
+      RS_DIR -> rscan
+        (set @entity.rfiles (array/concat @entity.rfiles
+          (array/map (array/filter @payload.entries (fn en (and (str/endsWith (object/get @en "name") ".rs") (!= (object/get @en "name") "mod.rs") (!= (object/get @en "name") "register.rs"))))
+            (fn en (str/concat (array/nth (str/split "atoms|molecules|organisms|templates" "|") @entity.tcur) "/" (object/get @en "name"))))))
+        (set @entity.tcur (+ @entity.tcur 1))
+        (emit RS_LIST { })
+      RS_DIR_MISSING -> rscan
+        (set @entity.tcur (+ @entity.tcur 1))
+        (emit RS_LIST { })
+      RS_LIST -> rscan when (>= @entity.tcur 4)
+        (set @entity.hcur 0)
+        (emit RS_FREAD { })
+      RS_FREAD -> rscan when (< @entity.hcur (array/len @entity.rfiles))
+        (os/read-file { anchor: "cwd" path: (str/concat @entity.pack "/src/components/" @entity.curDomain "/" (array/nth @entity.rfiles @entity.hcur)) } { key: "body", emit: { success: RS_FILE_READ, failure: RS_FILE_FAIL } })
+      RS_FILE_READ -> rscan
+        (set @entity.rrecs (array/append @entity.rrecs
+          (let ((tx (bytes/to-string @payload.data)) (fk (array/nth @entity.rfiles @entity.hcur)))
+            (let ((first (array/first (str/split @tx "\n"))))
+              { tier: (array/first (str/split @fk "/")),
+                module: (str/replaceAll (array/last (str/split @fk "/")) ".rs" ""),
+                structName: (str/default (array/find (array/map (array/drop (str/split @tx "pub struct ") 1) (fn pc (object/get (array/reduce (str/split @pc "") { done: false, o: "" } (fn (a c) (if (object/get @a "done") @a (if (validate/pattern @c "^[A-Za-z0-9_]$") { done: false, o: (str/concat (object/get @a "o") @c) } { done: true, o: (object/get @a "o") })))) "o"))) (fn sn (str/endsWith @sn "Renderer"))) ""),
+                prune: (and (validate/pattern @first "^//! Auto-generated (?:Dioxus )?renderer for the `([^`]+)` pattern\\.") (not (array/includes @entity.liveNames (array/nth (str/split @first "`") 1)))),
+                fallback: (str/includes @tx "🔧") }))))
+        (set @entity.hcur (+ @entity.hcur 1))
+        (emit RS_FREAD { })
+      RS_FILE_FAIL -> rscan
+        (set @entity.hcur (+ @entity.hcur 1))
+        (emit RS_FREAD { })
+      RS_FREAD -> rscan when (>= @entity.hcur (array/len @entity.rfiles))
+        (emit RS_BUILD { })
+      RS_BUILD -> rscan
+        (let ((dm (json/parse @entity.mapText MapReg)) (rg (json/parse @entity.regText PatReg)))
+          (do
+            (set @entity.rlive (array/filter @entity.rrecs (fn rc (and (not (object/get @rc "prune")) (!= (object/get @rc "structName") "")))))
+            (set @entity.removals (array/concat @entity.removals (if (= @entity.outDir "") (array/map (array/filter @entity.rrecs (fn rc (object/get @rc "prune"))) (fn rc (str/concat @entity.curDomain "/" (object/get @rc "tier") "/" (object/get @rc "module") ".rs"))) (array/take @entity.removals 0))))
+            (set @entity.rkeys (array/map @entity.rlive (fn rc (str/concat (object/get @rc "tier") "/" (object/get @rc "module")))))
+            (set @entity.rstubs (if (= @entity.platform "tui")
+              (array/map
+                (array/filter (object/keys (object/get @dm "mappings"))
+                  (fn nm (and (array/includes @entity.liveNames @nm)
+                              (or (str/includes (str/default (object/get (object/get (object/get @dm "mappings") @nm) "importPath") "") (str/concat "/components/" @entity.curDomain "/"))
+                                  (and (= @entity.curDomain "core") (str/includes (str/default (object/get (object/get (object/get @dm "mappings") @nm) "importPath") "") "/components/avl/")))
+                              (not (array/includes @entity.rkeys (str/concat (object/get (object/get (object/get @rg "patterns") @nm) "tier") "/" (str/replaceAll @nm "-" "_")))))))
+                (fn nm { name: @nm, tier: (object/get (object/get (object/get @rg "patterns") @nm) "tier"), module: (str/replaceAll @nm "-" "_"), structName: (str/concat (object/get (object/get (object/get @dm "mappings") @nm) "component") "Renderer") }))
+              (array/take @entity.rstubs 0)))
+            (emit RS_BUILD2 { })))
+      RS_BUILD2 -> rscan
+        (set @entity.rall (object/get (array/reduce (array/concat (array/map (array/sort (array/concat (array/map (array/filter @entity.rlive (fn rc (= (object/get @rc "tier") "atoms"))) (fn rc { sort: (str/collate-key (object/get @rc "module")), module: (object/get @rc "module"), structName: (object/get @rc "structName") })) (array/map (array/filter @entity.rstubs (fn st (= (object/get @st "tier") "atoms"))) (fn st { sort: (str/collate-key (object/get @st "module")), module: (object/get @st "module"), structName: (object/get @st "structName") }))) "sort") (fn k { tier: "atoms", module: (object/get @k "module"), structName: (object/get @k "structName"), alias: "" })) (array/map (array/sort (array/concat (array/map (array/filter @entity.rlive (fn rc (= (object/get @rc "tier") "molecules"))) (fn rc { sort: (str/collate-key (object/get @rc "module")), module: (object/get @rc "module"), structName: (object/get @rc "structName") })) (array/map (array/filter @entity.rstubs (fn st (= (object/get @st "tier") "molecules"))) (fn st { sort: (str/collate-key (object/get @st "module")), module: (object/get @st "module"), structName: (object/get @st "structName") }))) "sort") (fn k { tier: "molecules", module: (object/get @k "module"), structName: (object/get @k "structName"), alias: "" })) (array/map (array/sort (array/concat (array/map (array/filter @entity.rlive (fn rc (= (object/get @rc "tier") "organisms"))) (fn rc { sort: (str/collate-key (object/get @rc "module")), module: (object/get @rc "module"), structName: (object/get @rc "structName") })) (array/map (array/filter @entity.rstubs (fn st (= (object/get @st "tier") "organisms"))) (fn st { sort: (str/collate-key (object/get @st "module")), module: (object/get @st "module"), structName: (object/get @st "structName") }))) "sort") (fn k { tier: "organisms", module: (object/get @k "module"), structName: (object/get @k "structName"), alias: "" })) (array/map (array/sort (array/concat (array/map (array/filter @entity.rlive (fn rc (= (object/get @rc "tier") "templates"))) (fn rc { sort: (str/collate-key (object/get @rc "module")), module: (object/get @rc "module"), structName: (object/get @rc "structName") })) (array/map (array/filter @entity.rstubs (fn st (= (object/get @st "tier") "templates"))) (fn st { sort: (str/collate-key (object/get @st "module")), module: (object/get @st "module"), structName: (object/get @st "structName") }))) "sort") (fn k { tier: "templates", module: (object/get @k "module"), structName: (object/get @k "structName"), alias: "" }))) { used: [], out: [] }
+          (fn (a e) (let ((al0 (str/concat (str/join (array/map (array/filter (str/split (object/get @e "module") "_") (fn sg (> (str/len @sg) 0))) (fn sg (str/concat (str/upper (str/slice @sg 0 1)) (str/slice @sg 1)))) "") "Renderer")))
+            (let ((al (if (array/includes (object/get @a "used") @al0) (str/concat (str/join (array/map (array/filter (str/split (object/get @e "tier") "_") (fn sg (> (str/len @sg) 0))) (fn sg (str/concat (str/upper (str/slice @sg 0 1)) (str/slice @sg 1)))) "") (str/join (array/map (array/filter (str/split (object/get @e "module") "_") (fn sg (> (str/len @sg) 0))) (fn sg (str/concat (str/upper (str/slice @sg 0 1)) (str/slice @sg 1)))) "") "Renderer") @al0)))
+              { used: (array/append (object/get @a "used") @al), out: (array/append (object/get @a "out") { tier: (object/get @e "tier"), module: (object/get @e "module"), structName: (object/get @e "structName"), alias: @al }) })))) "out"))
+        (emit RS_BUILD3 { })
+      RS_BUILD3 -> rscan
+        (do
+          (set @entity.outFiles (array/concat @entity.outFiles
+            (array/map (str/split "atoms|molecules|organisms|templates" "|") (fn tr { path: (str/concat (str/concat (if (= @entity.outDir "") @entity.pack @entity.outDir) "/src/components/" @entity.curDomain "/") @tr "/mod.rs"),
+              text: (str/concat "//! " @entity.curDomain " " @tr " renderers.\n\n" (str/join (array/map (array/filter @entity.rall (fn e (= (object/get @e "tier") @tr))) (fn e (str/concat "pub mod " (if (array/includes (object/get (json/parse @entity.listsText GateLists) "rustKeywords") (object/get @e "module")) (str/concat "r#" (object/get @e "module")) (object/get @e "module")) ";"))) "\n") "\n") }))
+            (array/map @entity.rstubs (fn st { path: (str/concat (str/concat (if (= @entity.outDir "") @entity.pack @entity.outDir) "/src/components/" @entity.curDomain "/") (object/get @st "tier") "/" (object/get @st "module") ".rs"),
+              text: (str/replaceAll (str/replaceAll @entity.rsStub "{{name}}" (object/get @st "name")) "{{Struct}}" (object/get @st "structName")) }))
+            [{ path: (str/concat (str/concat (if (= @entity.outDir "") @entity.pack @entity.outDir) "/src/components/" @entity.curDomain "/") "mod.rs"), text: (str/concat "//! " @entity.curDomain " pattern renderers, mirroring almadar-ui/components/" @entity.curDomain ".\n\npub mod register;\n\npub mod atoms;\npub mod molecules;\npub mod organisms;\npub mod templates;\n") }
+             { path: (str/concat (str/concat (if (= @entity.outDir "") @entity.pack @entity.outDir) "/src/components/" @entity.curDomain "/") "register.rs"),
+               text: (str/replaceAll (str/replaceAll (str/replaceAll @entity.rsReg "{{domain}}" @entity.curDomain)
+                 "{{imports}}" (str/join (array/map @entity.rall (fn e (str/concat "use crate::components::" @entity.curDomain "::" (object/get @e "tier") "::" (if (array/includes (object/get (json/parse @entity.listsText GateLists) "rustKeywords") (object/get @e "module")) (str/concat "r#" (object/get @e "module")) (object/get @e "module")) "::" (object/get @e "structName") " as " (object/get @e "alias") ";"))) "\n"))
+                 "{{registrations}}" (str/join (array/map @entity.rall (fn e (str/concat "    registry.register(Box::new(" (object/get @e "alias") "));"))) "\n")) }]))
+          (set @entity.offenders (array/concat @entity.offenders
+            (array/map (array/filter @entity.rlive (fn rc (object/get @rc "fallback"))) (fn rc (str/concat @entity.curDomain "/" (object/get @rc "tier") "/" (object/get @rc "module") ".rs")))
+            (array/map @entity.rstubs (fn st (str/concat @entity.curDomain "/" (object/get @st "tier") "/" (object/get @st "module") ".rs")))))
+          (set @entity.summary (str/concat @entity.summary (if (= @entity.summary "") "" "; ") @entity.curDomain " " (array/len @entity.rall) " renderers (" (array/len @entity.rstubs) " stub(s))"))
+          (set @entity.dcur (+ @entity.dcur 1))
+          (emit RS_DOM { }))
+      RS_DOM -> pruning when (>= @entity.dcur (array/len @entity.domains))
+        (set @entity.outFiles (array/append @entity.outFiles { path: (str/concat (if (= @entity.outDir "") @entity.pack @entity.outDir) "/src/components/mod.rs"), text: (str/concat "//! Component-structured renderers mirroring almadar-ui/components.\n\n" (str/join (array/map (array/sort (array/map @entity.domains (fn dn { sort: @dn, name: @dn })) "sort") (fn k (str/concat "pub mod " (object/get @k "name") ";\n"))) "")) }))
+        (set @entity.summary (str/concat @entity.platform ": " @entity.summary " (" (array/len @entity.removals) " orphan(s) " (if (= @entity.outDir "") "pruned" "found") ")" (if (> (array/len @entity.offenders) 0) (str/concat "\nerror: " (array/len @entity.offenders) " placeholder renderer(s), implement a real renderer for each:\n" (str/join (array/map (array/sort (array/map @entity.offenders (fn o { sort: @o, name: @o })) "sort") (fn k (str/concat "  " (object/get @k "name")))) "\n")) "")))
+        (set @entity.bad @entity.offenders)
+        (set @entity.rmBase "/src/components/")
+        (set @entity.rcur 0)
+        (set @entity.wcur 0)
+        (emit NS_RM_NEXT { })
+    }
+
+    state pruning {
+      INIT -> pruning
+      NS_RM_NEXT -> pruning when (< @entity.rcur (array/len @entity.removals))
+        (os/remove { anchor: "cwd" path: (str/concat @entity.pack @entity.rmBase (array/nth @entity.removals @entity.rcur)) } { key: "rm", emit: { success: NS_RM_OK, failure: SHELL_W_FAILED } })
+      NS_RM_OK -> pruning
+        (set @entity.rcur (+ @entity.rcur 1))
+        (emit NS_RM_NEXT { })
+      NS_RM_NEXT -> writing when (>= @entity.rcur (array/len @entity.removals))
+        (emit SHELL_W_NEXT { })
+    }
+
+    state writing {
+      INIT -> writing
+      SHELL_W_NEXT -> writing when (and (< @entity.wcur (array/len @entity.outFiles)) (!= @entity.outDir ""))
+        (os/mkdir { anchor: "cwd" path: (os/path-dir (object/get (array/nth @entity.outFiles @entity.wcur) "path")) } true { key: "mkdir", emit: { success: SHELL_W_MKDIR, failure: SHELL_W_FAILED } })
+      SHELL_W_NEXT -> writing when (and (< @entity.wcur (array/len @entity.outFiles)) (= @entity.outDir ""))
+        (emit SHELL_W_WRITE { })
+      SHELL_W_MKDIR -> writing
+        (emit SHELL_W_WRITE { })
+      SHELL_W_WRITE -> writing
+        (os/write-file { anchor: "cwd" path: (object/get (array/nth @entity.outFiles @entity.wcur) "path") } (bytes/from-string (object/get (array/nth @entity.outFiles @entity.wcur) "text")) { key: "write", emit: { success: SHELL_W_WROTE, failure: SHELL_W_FAILED } })
+      SHELL_W_WROTE -> writing
+        (set @entity.wcur (+ @entity.wcur 1))
+        (emit SHELL_W_NEXT { })
+      SHELL_W_FAILED -> ready
+        (emit SHELL_RENDERERS_ANSWERED { status: 500, body: (str/concat "error: cannot write " (object/get (array/nth @entity.outFiles @entity.wcur) "path")) })
+      SHELL_W_NEXT -> ready when (>= @entity.wcur (array/len @entity.outFiles))
+        (emit SHELL_RENDERERS_ANSWERED { status: (if (and (= (array/len @entity.bad) 0) (= (array/len @entity.violations) 0)) 200 500), body: @entity.summary })
+    }
+
+    emits {
+      SHELL_RENDERERS_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      SHELL_ARGS_PARSE {
+        stage : string!
+        argv : [string]!
+        flags : [ArgFlag]!
+      }
+        @description "Internal: parse the words after the target against the --table and --out flags."
+        @tier "internal"
+      NS_LISTS_READ {
+        data : bytes!
+      }
+        @description "A file read for the native renderer plan."
+        @tier "internal"
+      NS_REG_READ {
+        data : bytes!
+      }
+        @description "A file read for the native renderer plan."
+        @tier "internal"
+      NS_VER_READ {
+        data : bytes!
+      }
+        @description "A file read for the native renderer plan."
+        @tier "internal"
+      NS_STUB_READ {
+        data : bytes!
+      }
+        @description "A file read for the native renderer plan."
+        @tier "internal"
+      NS_TPL_READ {
+        data : bytes!
+      }
+        @description "A file read for the native renderer plan."
+        @tier "internal"
+      NS_MAN_READ {
+        data : bytes!
+      }
+        @description "A file read for the native renderer plan."
+        @tier "internal"
+      NS_FILE_READ {
+        data : bytes!
+      }
+        @description "A file read for the native renderer plan."
+        @tier "internal"
+      NS_DIR {
+        entries : [DirEntry]!
+      }
+        @description "A tier directory listing."
+        @tier "internal"
+      NS_RM_OK { }
+        @description "An orphan removed."
+        @tier "internal"
+      NS_READ_FAIL { }
+        @description "Internal: native renderer plan step."
+        @tier "internal"
+      NS_DIR_MISSING { }
+        @description "Internal: native renderer plan step."
+        @tier "internal"
+      NS_FILE_FAIL { }
+        @description "Internal: native renderer plan step."
+        @tier "internal"
+      NS_LIST { }
+        @description "Internal: native renderer plan step."
+        @tier "internal"
+      NS_FREAD { }
+        @description "Internal: native renderer plan step."
+        @tier "internal"
+      NS_BUILD { }
+        @description "Internal: native renderer plan step."
+        @tier "internal"
+      NS_RM_NEXT { }
+        @description "Internal: native renderer plan step."
+        @tier "internal"
+      NS_TOK_READ {
+        data : bytes!
+      }
+        @description "A file read for the native renderer plan."
+        @tier "internal"
+      NS_BP_READ {
+        data : bytes!
+      }
+        @description "A file read for the native renderer plan."
+        @tier "internal"
+      NS_SZ_READ {
+        data : bytes!
+      }
+        @description "A file read for the native renderer plan."
+        @tier "internal"
+      NS_VID_READ {
+        data : bytes!
+      }
+        @description "A file read for the native renderer plan."
+        @tier "internal"
+      NS_IDS_READ {
+        data : bytes!
+      }
+        @description "A file read for the native renderer plan."
+        @tier "internal"
+      RS_LISTS_READ {
+        data : bytes!
+      }
+        @description "A file read for the Rust renderer plan."
+        @tier "internal"
+      RS_REG_READ {
+        data : bytes!
+      }
+        @description "A file read for the Rust renderer plan."
+        @tier "internal"
+      RS_MAP_READ {
+        data : bytes!
+      }
+        @description "A file read for the Rust renderer plan."
+        @tier "internal"
+      RS_TPL_READ {
+        data : bytes!
+      }
+        @description "A file read for the Rust renderer plan."
+        @tier "internal"
+      RS_STUB_READ {
+        data : bytes!
+      }
+        @description "A file read for the Rust renderer plan."
+        @tier "internal"
+      RS_FILE_READ {
+        data : bytes!
+      }
+        @description "A file read for the Rust renderer plan."
+        @tier "internal"
+      RS_DIR {
+        entries : [DirEntry]!
+      }
+        @description "A tier directory listing."
+        @tier "internal"
+      RS_STUB_NONE { }
+        @description "Internal: Rust renderer plan step."
+        @tier "internal"
+      RS_DIR_MISSING { }
+        @description "Internal: Rust renderer plan step."
+        @tier "internal"
+      RS_FILE_FAIL { }
+        @description "Internal: Rust renderer plan step."
+        @tier "internal"
+      RS_DOM { }
+        @description "Internal: Rust renderer plan step."
+        @tier "internal"
+      RS_LIST { }
+        @description "Internal: Rust renderer plan step."
+        @tier "internal"
+      RS_FREAD { }
+        @description "Internal: Rust renderer plan step."
+        @tier "internal"
+      RS_BUILD { }
+        @description "Internal: Rust renderer plan step."
+        @tier "internal"
+      RS_BUILD2 { }
+        @description "Internal: Rust renderer plan step."
+        @tier "internal"
+      RS_BUILD3 { }
+        @description "Internal: Rust renderer plan step."
+        @tier "internal"
+      SHELL_CHECKED { }
+        @description "Internal: the material members were checked."
+        @tier "internal"
+      SHELL_MEMBERS_READ {
+        data : bytes!
+      }
+        @description "The known Icons.Filled members file's bytes."
+        @tier "internal"
+      SHELL_MEMBERS_FAIL { }
+        @description "The members file could not be read."
+        @tier "internal"
+      SHELL_READ { }
+        @description "Internal: read the table file."
+        @tier "internal"
+      SHELL_W_NEXT { }
+        @description "Internal: write the next generated file."
+        @tier "internal"
+      SHELL_W_WRITE { }
+        @description "Internal: write the current generated file."
+        @tier "internal"
+      SHELL_TABLE_READ {
+        data : bytes!
+      }
+        @description "The table file's bytes."
+        @tier "internal"
+      SHELL_TABLE_FAIL { }
+        @description "The table file could not be read."
+        @tier "internal"
+      SHELL_W_MKDIR { }
+        @description "A directory made."
+        @tier "internal"
+      SHELL_W_WROTE {
+        bytes : number!
+      }
+        @description "A file written."
+        @tier "internal"
+      SHELL_W_FAILED {
+        error : string
+      }
+        @description "A directory or file that could not be written."
+        @tier "internal"
+    }
+
+    listens {
+      SHELL_CALLED -> inbound "cli-shell-renderers" answers SHELL_RENDERERS_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb shell-renderers` with its arguments and working directory."
+        @synonyms "orb shell-renderers, generate native renderer files"
+      SHELL_ARGS_DONE {
+        stage : string!
+        flags : Map string [string]!
+        positionals : [string]!
+        errors : [string]!
+        words : [string]!
+      }
+        @description "std-args's ARGS_PARSED: the call's words, parsed."
+      ArgsCli.ARGS_PARSED -> SHELL_ARGS_DONE
+    }
+  }
+
+  page "/orb-shell-renderers" as OrbShellRenderersPage -> OrbShellRenderers, ArgsCli
+}

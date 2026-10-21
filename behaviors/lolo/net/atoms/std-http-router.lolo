@@ -45,9 +45,9 @@ orbital HttpRouterOrbital {
         @label "Stream path"
         @description "The path a GET opens the live stream on, with ?ticket=<t> in the query."
         @tier "infra"
-      externalPrefix : string = ""
-        @label "External prefix"
-        @description "When set, a request whose path starts with this is left to another atom listening to the same REQUEST_RECEIVED: the router counts it and then drops it without answering or a 404."
+      externalPrefixes : [string] = []
+        @label "External prefixes"
+        @description "A request whose path starts with any of these is left to another atom listening to the same REQUEST_RECEIVED: the router counts it, tells that atom ROUTE_EXTERNAL { requestId, responseHeaders } (the policy's CORS headers and the rate-limit headers, to carry onto its answer) and then drops it without answering or a 404."
         @tier "infra"
       healthPath : string = "/api/health"
         @label "Health path"
@@ -108,7 +108,9 @@ orbital HttpRouterOrbital {
       HTTP_DECIDED -> routing when (and (= @payload.verdict "ok") (not (str/startsWith (or (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "path") "") @config.apiPrefix)))
         (set @entity.pending (array/map @entity.pending (fn p (if (= @p.requestId @payload.requestId) { requestId: @p.requestId, method: @p.method, path: @p.path, query: @p.query, authorization: @p.authorization, ip: @p.ip, responseHeaders: @payload.responseHeaders } @p))))
         (emit ROUTE_REQUEST { requestId: @payload.requestId, rateHeaders: [] })
-      ADMITTED -> routing
+      ADMITTED -> routing when (= @payload.counted false)
+        (emit ROUTE_REQUEST { requestId: @payload.requestId, rateHeaders: [] })
+      ADMITTED -> routing when (not (= @payload.counted false))
         (emit ROUTE_REQUEST {
           requestId: @payload.requestId,
           rateHeaders: [
@@ -201,7 +203,8 @@ orbital HttpRouterOrbital {
         (emit RESPOND { requestId: (object/get (array/find @entity.streams (fn s (= @s.ticket @payload.ticket))) "requestId"), status: 401, headers: (array/append (object/get (array/find @entity.pending (fn p (= @p.requestId (object/get (array/find @entity.streams (fn s (= @s.ticket @payload.ticket))) "requestId")))) "responseHeaders") { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: "Unauthorized", code: "UNAUTHORIZED" })) })
         (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId (object/get (array/find @entity.streams (fn s (= @s.ticket @payload.ticket))) "requestId")))))
         (set @entity.streams (array/filter @entity.streams (fn s (!= @s.ticket @payload.ticket))))
-      ROUTE_REQUEST -> routing when (let ((req (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (and (!= @config.externalPrefix "") (str/startsWith (object/get @req "path") @config.externalPrefix)))
+      ROUTE_REQUEST -> routing when (let ((req (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (array/some @config.externalPrefixes (fn x (str/startsWith (object/get @req "path") @x))))
+        (emit ROUTE_EXTERNAL { requestId: @payload.requestId, responseHeaders: (array/concat (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") @payload.rateHeaders) })
         (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
       ROUTE_REQUEST -> routing when (let ((req (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (and (= (str/upper (object/get @req "method")) "GET") (= (object/get @req "path") @config.healthPath)))
         (set @entity.status 200)
@@ -251,13 +254,13 @@ orbital HttpRouterOrbital {
         (emit REQUEST_ANSWERED { requestId: @payload.requestId, status: 401, headers: (array/append (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") { name: "content-type", value: "application/json" }), body: (json/stringify { error: "Unauthorized", code: "UNAUTHORIZED" }) })
         (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
         (set @entity.ticks (array/filter @entity.ticks (fn m (!= @m @payload.requestId))))
-      ROUTE_REQUEST -> routing when (let ((req (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (and (not @config.clientFallback) (not (and @config.requireSignIn (str/startsWith (object/get @req "path") @config.dispatchPrefix))) (not (and (!= @config.externalPrefix "") (str/startsWith (object/get @req "path") @config.externalPrefix))) (not (or (and (= (str/upper (object/get @req "method")) "GET") (= (object/get @req "path") @config.healthPath)) (and (= (str/upper (object/get @req "method")) "GET") (= (object/get @req "path") @config.streamPath)) (and (= (str/upper (object/get @req "method")) "POST") (= (object/get @req "path") @config.ticketPath)) (and (= (str/upper (object/get @req "method")) "GET") (= (object/get @req "path") @config.vapidPath)) (and (= (str/upper (object/get @req "method")) "POST") (= (object/get @req "path") @config.tickPath))))))
+      ROUTE_REQUEST -> routing when (let ((req (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (and (not @config.clientFallback) (not (and @config.requireSignIn (str/startsWith (object/get @req "path") @config.dispatchPrefix))) (not (array/some @config.externalPrefixes (fn x (str/startsWith (object/get @req "path") @x)))) (not (or (and (= (str/upper (object/get @req "method")) "GET") (= (object/get @req "path") @config.healthPath)) (and (= (str/upper (object/get @req "method")) "GET") (= (object/get @req "path") @config.streamPath)) (and (= (str/upper (object/get @req "method")) "POST") (= (object/get @req "path") @config.ticketPath)) (and (= (str/upper (object/get @req "method")) "GET") (= (object/get @req "path") @config.vapidPath)) (and (= (str/upper (object/get @req "method")) "POST") (= (object/get @req "path") @config.tickPath))))))
         (set @entity.status 404)
         (emit RESPOND { requestId: @payload.requestId, status: 404, headers: (array/append (array/concat (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") @payload.rateHeaders) { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: "Not found", code: "NOT_FOUND" })) })
         (emit ROUTE_REFUSED { requestId: @payload.requestId })
         (emit REQUEST_ANSWERED { requestId: @payload.requestId, status: 404, headers: (array/append (array/concat (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") @payload.rateHeaders) { name: "content-type", value: "application/json" }), body: (json/stringify { error: "Not found", code: "NOT_FOUND" }) })
         (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
-      ROUTE_REQUEST -> routing when (let ((req (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (and @config.clientFallback (not (and @config.requireSignIn (str/startsWith (object/get @req "path") @config.dispatchPrefix))) (not (and (!= @config.externalPrefix "") (str/startsWith (object/get @req "path") @config.externalPrefix))) (not (or (and (= (str/upper (object/get @req "method")) "GET") (= (object/get @req "path") @config.healthPath)) (and (= (str/upper (object/get @req "method")) "GET") (= (object/get @req "path") @config.streamPath)) (and (= (str/upper (object/get @req "method")) "POST") (= (object/get @req "path") @config.ticketPath)) (and (= (str/upper (object/get @req "method")) "GET") (= (object/get @req "path") @config.vapidPath)) (and (= (str/upper (object/get @req "method")) "POST") (= (object/get @req "path") @config.tickPath))))))
+      ROUTE_REQUEST -> routing when (let ((req (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (and @config.clientFallback (not (and @config.requireSignIn (str/startsWith (object/get @req "path") @config.dispatchPrefix))) (not (array/some @config.externalPrefixes (fn x (str/startsWith (object/get @req "path") @x)))) (not (or (and (= (str/upper (object/get @req "method")) "GET") (= (object/get @req "path") @config.healthPath)) (and (= (str/upper (object/get @req "method")) "GET") (= (object/get @req "path") @config.streamPath)) (and (= (str/upper (object/get @req "method")) "POST") (= (object/get @req "path") @config.ticketPath)) (and (= (str/upper (object/get @req "method")) "GET") (= (object/get @req "path") @config.vapidPath)) (and (= (str/upper (object/get @req "method")) "POST") (= (object/get @req "path") @config.tickPath))))))
         (emit ROUTE_CLIENT { requestId: @payload.requestId, method: (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "method"), path: (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "path"), responseHeaders: (array/concat (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") @payload.rateHeaders) })
         (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
     }
@@ -292,6 +295,12 @@ orbital HttpRouterOrbital {
         responseHeaders : [RouterHeader]!
       }
         @description "A request no route owns, handed to std-static-files when clientFallback is on."
+        @tier "secondary"
+      ROUTE_EXTERNAL -> external {
+        requestId : number!
+        responseHeaders : [RouterHeader]!
+      }
+        @description "A request under an external prefix was admitted and left to another atom, with the headers its answer should carry."
         @tier "secondary"
       ROUTE_HEALTH -> external {
         requestId : number!
@@ -402,6 +411,7 @@ orbital HttpRouterOrbital {
         resetIn : number!
         limit : number!
         window : number!
+        counted : boolean
       }
       THROTTLED {
         requestId : number!

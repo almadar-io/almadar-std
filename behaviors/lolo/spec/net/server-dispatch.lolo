@@ -1,6 +1,6 @@
 app server-dispatch-spec [
   version: "1.0.0",
-  description: "Design contract for the routes of the HTTP server program that are not built yet, left unbound until an organism provides them: dispatch, inputs, row resolution, hooks, tick, stream tickets, static files and the bearer guard (401 UNAUTHORIZED). Routes: GET /api/orbitals, /api/orbitals/:name, /api/orbitals/:name/state, /api/stats, /api/trace, /api/orbitals/inputs, /api/push/vapid-public-key, /api/events (SSE, needs a ticket); POST /api/orbitals/:orbital/events, /api/orbitals/:orbital/traits/:trait/entities/:id/events, /api/orbitals/:orbital/inputs, /api/orbitals/resolve-rows, /api/events/ticket, /api/hooks/:name, /api/tick. Every dispatch route except the ticket needs a verified bearer; the ticket route admits the anonymous viewer; hooks, tick, push and health are outside the guard. Any other path is a static file, never under /api or /__."
+  description: "Design contract for the dispatch routes of the HTTP server program, bound by net/atoms/std-http-dispatch: dispatch, inputs, row resolution, hooks and the bearer guard (401 UNAUTHORIZED). Tick, stream tickets and static files are owned by std-http-router, std-stream-ticket and std-static-files. Routes: GET /api/orbitals, /api/orbitals/:name, /api/orbitals/:name/state, /api/stats, /api/trace, /api/orbitals/inputs, /api/push/vapid-public-key, /api/events (SSE, needs a ticket); POST /api/orbitals/:orbital/events, /api/orbitals/:orbital/traits/:trait/entities/:id/events, /api/orbitals/:orbital/inputs, /api/orbitals/resolve-rows, /api/events/ticket, /api/hooks/:name, /api/tick. Every dispatch route except the ticket needs a verified bearer; the ticket route admits the anonymous viewer; hooks, tick, push and health are outside the guard. Any other path is a static file, never under /api or /__."
 ]
 
 type ServerHeader = { name : string!, value : string! }
@@ -17,10 +17,6 @@ orbital ServerDispatchSpec {
       INPUT_REQUESTED { requestId : number!  orbital : string!  traitName : string!  entityId : string  event : string!  payload : string  stream : boolean!  viewer : Viewer }
       RESOLVE_ROWS_REQUESTED { requestId : number!  reference : string!  viewer : Viewer }
       HOOK_DELIVERED { requestId : number!  name : string!  headers : [ServerHeader]  body : bytes! }
-      TICK_REQUESTED { requestId : number!  authorization : string }
-      TICKET_MINT_REQUESTED { requestId : number!  viewer : Viewer }
-      STREAM_OPEN_REQUESTED { requestId : number!  ticket : string!  clientId : string }
-      STATIC_FILE_REQUESTED { requestId : number!  path : string! }
     }
   }
   expects page "/server" -> ServerDispatch

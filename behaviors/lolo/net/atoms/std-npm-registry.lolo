@@ -1,0 +1,292 @@
+app std-npm-registry [
+  version: "1.0.0",
+  description: "std-npm-registry — a client of an npm-protocol registry (public npm or GitHub Packages; the origin is the registry knob and the bearer token is the token credential, both from config). One ask at a time; an ask during another answers NPM_FAILED npm_busy. NPM_VERSIONS { name } answers NPM_VERSIONS_LISTED { name, versions (semver ascending), tags (dist-tags) } from the packument. NPM_NEXT_VERSION { name, current, bump, major } answers NPM_NEXT { name, current, next, skipped }: current bumped by patch, minor or major (a minor on a 0.x version is demoted to patch unless major is true, which cuts a major), then incremented by patch past every version already published; a package the registry does not know has none published. NPM_WAIT { name, version } polls the packument under std-retry backoff (every pollIntervalMs, up to 80 attempts) until the version is listed and its tarball downloads (one ranged byte, 200 or 206), then answers NPM_VISIBLE { name, version, attempts }; the attempts spent answer NPM_WAIT_TIMEOUT. NPM_AUTH_PROBE { name } reads one package and answers NPM_AUTH_OK. A reply is classified in NPM_FAILED.code: 401 and 403 are auth (never retried, the poll is cancelled), 404 absent, 5xx unreachable, any other status unexpected; a transport failure is unreachable, an unset credential unconfigured. The tarball url must sit under the registry origin. The poll cadence is std-retry's constant schedule: a changed pollIntervalMs needs the composing realization to restate WaitRetry's config.",
+  egress: ["https://registry.npmjs.org", "https://npm.pkg.github.com"]
+]
+uses Spec from "almadar-std/npm-registry"
+type NpmDist = { tarball : string? }
+type NpmVersionDoc = { dist : NpmDist? }
+type NpmPackument = { versions : Map string NpmVersionDoc?, dist-tags : Map string string? }
+
+orbital NpmRegistryOrbital {
+  uses Retry from "std/behaviors/std-retry"
+
+  entity NpmRegistryAsk [runtime] {
+    id : string!
+    name : string @description "The package the ask in flight is about." = ""
+    version : string @description "The version being waited for; empty otherwise." = ""
+    bump : string @description "The bump a next-version ask applies: patch, minor or major." = ""
+    major : boolean @description "Whether a next-version ask cuts a major regardless of bump." = false
+    current : string @description "The version a next-version ask bumps from." = ""
+    seq : number @description "Waits accepted so far; makes each retry key unique." = 0
+  }
+
+  trait WaitRetry = Retry.traits.Retry {
+    listens {
+      NpmRegistry.NPM_WAIT_RETRY_START -> START
+      NpmRegistry.NPM_WAIT_RETRY_SUCCEEDED -> SUCCEEDED
+      NpmRegistry.NPM_WAIT_RETRY_FAILED -> FAILED
+      NpmRegistry.NPM_WAIT_RETRY_CANCEL -> CANCEL
+    }
+    config {
+      maxAttempts: 80
+      baseDelayMs: 15000
+      multiplier: 1
+      maxDelayMs: 15000
+    }
+  }
+
+  trait NpmRegistry -> NpmRegistryAsk [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      NPM_VERSIONS -> listing
+        (set @entity.name @payload.name)
+        (emit NPM_GET { kind: "versions" })
+      NPM_AUTH_PROBE -> listing
+        (set @entity.name @payload.name)
+        (emit NPM_GET { kind: "probe" })
+      NPM_NEXT_VERSION -> listing when (and (= (str/replace-pattern @payload.current "^[0-9]+\\.[0-9]+\\.[0-9]+$" "") "") (or (= @payload.bump "patch") (= @payload.bump "minor") (= @payload.bump "major")))
+        (set @entity.name @payload.name)
+        (set @entity.current @payload.current)
+        (set @entity.bump @payload.bump)
+        (set @entity.major (if @payload.major true false))
+        (emit NPM_GET { kind: "next" })
+      NPM_NEXT_VERSION -> idle when (not (and (= (str/replace-pattern @payload.current "^[0-9]+\\.[0-9]+\\.[0-9]+$" "") "") (or (= @payload.bump "patch") (= @payload.bump "minor") (= @payload.bump "major"))))
+        (emit NPM_FAILED { name: @payload.name, code: "invalid_version", status: 0, error: (str/concat "cannot bump " @payload.current " by " @payload.bump) })
+      NPM_WAIT -> waiting
+                (set @entity.name @payload.name)
+        (set @entity.version @payload.version)
+        (set @entity.seq (+ @entity.seq 1))
+        (emit NPM_WAIT_RETRY_START { key: (as (str/concat "npm-wait:" (+ @entity.seq 1)) CallKey) })
+    }
+
+    state listing {
+      INIT -> idle
+      NPM_VERSIONS -> listing
+        (emit NPM_FAILED { name: @payload.name, code: "npm_busy", status: 0, error: (str/concat "the registry is being asked about " @entity.name) })
+      NPM_NEXT_VERSION -> listing
+        (emit NPM_FAILED { name: @payload.name, code: "npm_busy", status: 0, error: (str/concat "the registry is being asked about " @entity.name) })
+      NPM_AUTH_PROBE -> listing
+        (emit NPM_FAILED { name: @payload.name, code: "npm_busy", status: 0, error: (str/concat "the registry is being asked about " @entity.name) })
+      NPM_WAIT -> listing
+        (emit NPM_FAILED { name: @payload.name, code: "npm_busy", status: 0, error: (str/concat "the registry is being asked about " @entity.name) })
+
+      NPM_GET -> listing when (not @config.authenticated)
+        (http GET @config.registry (str/concat "/" (str/slice @entity.name 0 1) (str/encode-uri-component (str/slice @entity.name 1 (str/len @entity.name)))) {
+          headers: { Accept: "application/json" },
+          timeoutMs: @config.timeoutMs
+        } { key: @payload.kind, emit: { success: NPM_PACKUMENT, failure: NPM_UNREACHABLE } })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Reading the registry for " @entity.name "…") })
+      NPM_GET -> listing when @config.authenticated
+        (http GET @config.registry (str/concat "/" (str/slice @entity.name 0 1) (str/encode-uri-component (str/slice @entity.name 1 (str/len @entity.name)))) {
+          headers: { Accept: "application/json" },
+          auth: { scheme: bearer, credential: @config.token },
+          timeoutMs: @config.timeoutMs
+        } { key: @payload.kind, emit: { success: NPM_PACKUMENT, failure: NPM_UNREACHABLE } })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Reading the registry for " @entity.name "…") })
+
+      NPM_PACKUMENT -> idle when (and (= @payload.status 200) (= @payload.key "versions"))
+        (emit NPM_VERSIONS_LISTED { name: @entity.name, versions: (array/map (array/sort (array/map (object/keys (object/get (json/parse @payload.body NpmPackument) "versions" {})) (fn v { version: @v, key: (+ (* 1000000000000 (str/to-number (array/nth (str/split @v ".") 0))) (* 1000000 (str/to-number (array/nth (str/split @v ".") 1))) (str/to-number (array/nth (str/split (str/replace-pattern @v "-.*$" "") ".") 2))) })) "key" "asc") (fn r @r.version)), tags: (object/get (json/parse @payload.body NpmPackument) "dist-tags" {}) })
+      NPM_PACKUMENT -> idle when (and (= @payload.status 200) (= @payload.key "probe"))
+        (emit NPM_AUTH_OK { name: @entity.name })
+      NPM_PACKUMENT -> idle when (and (= @payload.key "next") (or (= @payload.status 404) (= @payload.status 200)))
+        (let ((published (if (= @payload.status 200) (object/keys (object/get (json/parse @payload.body NpmPackument) "versions" {})) [])))
+          (let ((cm (str/to-number (array/nth (str/split @entity.current ".") 0))) (cn (str/to-number (array/nth (str/split @entity.current ".") 1))) (cp (str/to-number (array/nth (str/split @entity.current ".") 2))))
+            (let ((cut (if (or (= @entity.bump "major") @entity.major) "major" (if (and (= @entity.bump "minor") (= @cm 0)) "patch" @entity.bump))))
+              (let ((bm (if (= @cut "major") (+ @cm 1) @cm)) (bn (if (= @cut "major") 0 (if (= @cut "minor") (+ @cn 1) @cn))) (bp (if (or (= @cut "major") (= @cut "minor")) 0 (+ @cp 1))))
+                (let ((n (array/find (array/range 0 1000) (fn i (not (array/includes @published (str/concat @bm "." @bn "." (+ @bp @i))))))))
+                  (emit NPM_NEXT { name: @entity.name, current: @entity.current, next: (str/concat @bm "." @bn "." (+ @bp @n)), skipped: (array/map (array/range 0 @n) (fn i (str/concat @bm "." @bn "." (+ @bp @i)))) }))))))
+      NPM_PACKUMENT -> idle when (and (!= @payload.status 200) (not (and (= @payload.key "next") (= @payload.status 404))))
+        (emit NPM_FAILED { name: @entity.name, code: (if (or (= @payload.status 401) (= @payload.status 403)) "auth" (if (= @payload.status 404) "absent" (if (>= @payload.status 500) "unreachable" "unexpected"))), status: @payload.status, error: (str/concat "the registry answered " @payload.status " for " @entity.name) })
+      NPM_UNREACHABLE -> idle
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "The registry could not be reached: " @payload.error) })
+        (emit NPM_FAILED { name: @entity.name, code: (if (= @payload.kind "unconfigured") "unconfigured" "unreachable"), status: 0, error: @payload.error })
+    }
+
+    state waiting {
+      INIT -> idle
+      NPM_VERSIONS -> waiting
+        (emit NPM_FAILED { name: @payload.name, code: "npm_busy", status: 0, error: (str/concat "the registry is being waited on for " @entity.name) })
+      NPM_NEXT_VERSION -> waiting
+        (emit NPM_FAILED { name: @payload.name, code: "npm_busy", status: 0, error: (str/concat "the registry is being waited on for " @entity.name) })
+      NPM_AUTH_PROBE -> waiting
+        (emit NPM_FAILED { name: @payload.name, code: "npm_busy", status: 0, error: (str/concat "the registry is being waited on for " @entity.name) })
+      NPM_WAIT -> waiting
+        (emit NPM_FAILED { name: @payload.name, code: "npm_busy", status: 0, error: (str/concat "the registry is being waited on for " @entity.name) })
+
+      NPM_WAIT_ATTEMPT -> waiting when (not @config.authenticated)
+        (http GET @config.registry (str/concat "/" (str/slice @entity.name 0 1) (str/encode-uri-component (str/slice @entity.name 1 (str/len @entity.name)))) {
+          headers: { Accept: "application/json" },
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: NPM_WAIT_PACKUMENT, failure: NPM_WAIT_UNREACHABLE } })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Reading the registry for " @entity.name "…") })
+      NPM_WAIT_ATTEMPT -> waiting when @config.authenticated
+        (http GET @config.registry (str/concat "/" (str/slice @entity.name 0 1) (str/encode-uri-component (str/slice @entity.name 1 (str/len @entity.name)))) {
+          headers: { Accept: "application/json" },
+          auth: { scheme: bearer, credential: @config.token },
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: NPM_WAIT_PACKUMENT, failure: NPM_WAIT_UNREACHABLE } })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Reading the registry for " @entity.name "…") })
+
+      NPM_WAIT_PACKUMENT -> waiting when (and (= @payload.status 200) (str/startsWith (object/get (object/get (array/nth (object/values (object/pick (object/get (json/parse @payload.body NpmPackument) "versions" {}) [@entity.version])) 0) "dist" {}) "tarball" "") @config.registry))
+        (emit NPM_WAIT_TARBALL { url: (object/get (object/get (array/nth (object/values (object/pick (object/get (json/parse @payload.body NpmPackument) "versions" {}) [@entity.version])) 0) "dist" {}) "tarball" "") })
+      NPM_WAIT_PACKUMENT -> idle when (or (= @payload.status 401) (= @payload.status 403))
+        (emit NPM_WAIT_RETRY_CANCEL { })
+        (emit NPM_FAILED { name: @entity.name, code: "auth", status: @payload.status, error: (str/concat "the registry refused the token (" @payload.status ") for " @entity.name) })
+      NPM_WAIT_PACKUMENT -> waiting when (and (not (or (= @payload.status 401) (= @payload.status 403))) (not (and (= @payload.status 200) (str/startsWith (object/get (object/get (array/nth (object/values (object/pick (object/get (json/parse @payload.body NpmPackument) "versions" {}) [@entity.version])) 0) "dist" {}) "tarball" "") @config.registry))))
+        (emit NPM_WAIT_RETRY_FAILED { key: (as (str/concat "npm-wait:" (+ @entity.seq 1)) CallKey), error: (str/concat "not yet visible: " @entity.name (quote "@") @entity.version " (" @payload.status ")") })
+
+      NPM_WAIT_TARBALL -> waiting when (not @config.authenticated)
+        (http GET @config.registry (str/slice @payload.url (str/len @config.registry) (str/len @payload.url)) {
+          headers: { Range: "bytes=0-0" },
+          responseAs: "bytes",
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: NPM_WAIT_TARBALL_REPLIED, failure: NPM_WAIT_UNREACHABLE } })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Reading the registry for " @entity.name "…") })
+      NPM_WAIT_TARBALL -> waiting when @config.authenticated
+        (http GET @config.registry (str/slice @payload.url (str/len @config.registry) (str/len @payload.url)) {
+          headers: { Range: "bytes=0-0" },
+          auth: { scheme: bearer, credential: @config.token },
+          responseAs: "bytes",
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: NPM_WAIT_TARBALL_REPLIED, failure: NPM_WAIT_UNREACHABLE } })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Reading the registry for " @entity.name "…") })
+      NPM_WAIT_TARBALL_REPLIED -> waiting when (or (= @payload.status 200) (= @payload.status 206))
+        (emit NPM_WAIT_RETRY_SUCCEEDED { key: (as (str/concat "npm-wait:" (+ @entity.seq 1)) CallKey) })
+      NPM_WAIT_TARBALL_REPLIED -> idle when (or (= @payload.status 401) (= @payload.status 403))
+        (emit NPM_WAIT_RETRY_CANCEL { })
+        (emit NPM_FAILED { name: @entity.name, code: "auth", status: @payload.status, error: (str/concat "the registry refused the token (" @payload.status ") for the tarball of " @entity.name (quote "@") @entity.version) })
+      NPM_WAIT_TARBALL_REPLIED -> waiting when (not (or (= @payload.status 200) (= @payload.status 206) (= @payload.status 401) (= @payload.status 403)))
+        (emit NPM_WAIT_RETRY_FAILED { key: (as (str/concat "npm-wait:" (+ @entity.seq 1)) CallKey), error: (str/concat "version listed but its tarball is not downloadable yet (" @payload.status ")") })
+      NPM_WAIT_UNREACHABLE -> idle when (= @payload.kind "unconfigured")
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "The registry credential is not configured: " @payload.error) })
+        (emit NPM_WAIT_RETRY_CANCEL { })
+        (emit NPM_FAILED { name: @entity.name, code: "unconfigured", status: 0, error: @payload.error })
+      NPM_WAIT_UNREACHABLE -> waiting when (!= @payload.kind "unconfigured")
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "The registry could not be reached, retrying: " @payload.error) })
+        (emit NPM_WAIT_RETRY_FAILED { key: (as (str/concat "npm-wait:" (+ @entity.seq 1)) CallKey), error: @payload.error })
+
+      NPM_WAIT_DONE -> idle
+        (emit NPM_VISIBLE { name: @entity.name, version: @entity.version, attempts: @payload.attempts })
+      NPM_WAIT_GAVE_UP -> idle
+        (emit NPM_WAIT_TIMEOUT { name: @entity.name, version: @entity.version, attempts: @payload.attempts, error: @payload.error })
+    }
+
+    emits {
+      NPM_VERSIONS_LISTED -> external { name : string!  versions : [string]!  tags : Map string string }
+        @description "The package's published versions, semver ascending, and its dist-tags."
+        @synonyms "versions list, published versions, dist-tags"
+        @tier "primary"
+      NPM_NEXT -> external { name : string!  current : string!  next : string!  skipped : [string]! }
+        @description "The next version to publish: current bumped, then past every already published version; skipped lists the published candidates passed over."
+        @synonyms "next version, bump version"
+        @tier "primary"
+      NPM_VISIBLE -> external { name : string!  version : string!  attempts : number! }
+        @description "The version is listed and its tarball downloads."
+        @synonyms "version visible, published, installable"
+        @tier "primary"
+      NPM_WAIT_TIMEOUT -> external { name : string!  version : string!  attempts : number!  error : string }
+        @description "The attempts were spent before the version became visible."
+        @synonyms "wait timed out, registry lag"
+        @tier "primary"
+      NPM_AUTH_OK -> external { name : string! }
+        @description "The token can read the probed package."
+        @synonyms "token ok, registry readable"
+        @tier "primary"
+      NPM_FAILED -> external { name : string  code : string!  status : number!  error : string! }
+        @description "The ask failed: code is auth, absent, unreachable, unexpected, unconfigured, invalid_version or npm_busy."
+        @synonyms "registry failed, 401, unauthorized"
+        @tier "primary"
+      NPM_GET { kind : string! }
+        @description "Internal: read the packument of the package in flight."
+        @tier "internal"
+      NPM_WAIT_TARBALL { url : string! }
+        @description "Internal: read one byte of the version's tarball."
+        @tier "internal"
+      NPM_WAIT_RETRY_START -> external { key : CallKey! }
+        @description "Internal: hand a wait to std-retry."
+        @tier "internal"
+      NPM_WAIT_RETRY_SUCCEEDED -> external { key : CallKey! }
+        @description "Internal: tell std-retry the attempt succeeded."
+        @tier "internal"
+      NPM_WAIT_RETRY_FAILED -> external { key : CallKey!  error : string }
+        @description "Internal: tell std-retry the attempt failed."
+        @tier "internal"
+      NPM_WAIT_RETRY_CANCEL -> external { }
+        @description "Internal: stop std-retry."
+        @tier "internal"
+      NPM_PACKUMENT { status : number!  headers : Map string string  body : string!  key : string }
+        @description "Internal: a packument reply."
+        @tier "internal"
+      NPM_UNREACHABLE { error : string!  kind : string! }
+        @description "Internal: a packument call never produced a reply."
+        @tier "internal"
+      NPM_WAIT_PACKUMENT { status : number!  headers : Map string string  body : string!  key : string }
+        @description "Internal: a wait attempt's packument reply."
+        @tier "internal"
+      NPM_WAIT_TARBALL_REPLIED { status : number!  headers : Map string string  body : string!  key : string }
+        @description "Internal: a wait attempt's tarball reply."
+        @tier "internal"
+      NPM_WAIT_UNREACHABLE { error : string!  kind : string! }
+        @description "Internal: a wait attempt never produced a reply."
+        @tier "internal"
+    }
+
+    listens {
+      NPM_VERSIONS { name : string! }
+        @description "List the package's published versions and dist-tags."
+        @synonyms "list versions, dist-tags, npm view"
+      NPM_NEXT_VERSION { name : string!  current : string!  bump : string!  major : boolean }
+        @description "Compute the next version to publish (bump patch, minor or major), skipping published versions."
+        @synonyms "next version, bump"
+      NPM_WAIT { name : string!  version : string! }
+        @description "Poll until the version is listed and its tarball downloads."
+        @synonyms "wait for version, registry lag"
+      NPM_AUTH_PROBE { name : string! }
+        @description "Read one package the token must be able to read."
+        @synonyms "preflight, token check"
+      NPM_WAIT_ATTEMPT { key : CallKey!  attempt : number! }
+        @description "Internal: std-retry's ATTEMPT."
+      NPM_WAIT_DONE { key : CallKey!  attempts : number! }
+        @description "Internal: std-retry's COMPLETED."
+      NPM_WAIT_GAVE_UP { key : CallKey!  attempts : number!  error : string }
+        @description "Internal: std-retry's GAVE_UP."
+      WaitRetry.ATTEMPT -> NPM_WAIT_ATTEMPT
+      WaitRetry.COMPLETED -> NPM_WAIT_DONE
+      WaitRetry.GAVE_UP -> NPM_WAIT_GAVE_UP
+    }
+
+    config {
+      registry : url = "https://registry.npmjs.org"
+        @label "Registry origin"
+        @description "The registry origin (scheme://host, no trailing slash); declared in egress. https://npm.pkg.github.com for GitHub Packages."
+        @synonyms "npm registry, github packages"
+        @tier "infra"
+      authenticated : boolean = false
+        @label "Send the token"
+        @description "Send the token credential as a bearer on every read; off for public npm."
+        @synonyms "private registry, auth"
+        @tier "infra"
+      token : secret = "NPM_REGISTRY_TOKEN"
+        @label "Registry token"
+        @description "Name of the credential holding the registry's bearer token (a GitHub PAT with read:packages for GitHub Packages)."
+        @synonyms "npm token, github token"
+        @tier "infra"
+      statusSlot : slot = system
+        @label "Status slot"
+        @description "Where the atom reports a registry read in flight or a failure; a page running it in the background keeps it in `system`."
+        @synonyms "status area, slot"
+        @tier "presentation"
+      timeoutMs : number = 20000
+        @label "Request timeout (ms)"
+        @description "Milliseconds one registry read may take."
+        @synonyms "timeout"
+        @tier "infra"
+    }
+  }
+
+  page "/npm-registry" as NpmRegistryPage -> NpmRegistry, WaitRetry
+}

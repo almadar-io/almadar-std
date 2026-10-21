@@ -1,0 +1,33 @@
+{
+ "source": "packages/almadar-db/test/{postgres,couchdb,firestore}-rust-twin.test.ts",
+ "atom": "store/atoms/std-row-store-file.lolo",
+ "spec": "spec/store/row-store.lolo",
+ "note": "Cross-driver twin: the Rust driver and the TS adapter read each other's rows over the query-cases.json fixture rows (entity Ticket, rows in row-query.goldens.json). Needs a live Postgres, CouchDB or Firestore, so it is driver-level and not an atom golden. Step 'rust-write' = the Rust test rows_this_driver_writes_are_left_for_the_ts_adapter (insert every fixture row, then a guarded update of t01); the TS side then asserts the stated rows. Firestore adds a control entity bound to no declared collection.",
+ "readHalf": "TS adapter creates every fixture row; Rust test rows_the_ts_adapter_wrote_read_back_through_this_driver reads, queries and counts them",
+ "writeHalf": {
+  "rowCount": "equals the fixture row count",
+  "t01": {
+   "id": "t01",
+   "title": "Rewritten",
+   "tags": [
+    "x",
+    "y"
+   ],
+   "priority": 3,
+   "createdAt": "2026-03-05T10:00:00.000Z"
+  },
+  "t02": "unchanged fixture row"
+ },
+ "firestoreExtra": {
+  "controlEntity": {
+   "rows": [
+    {
+     "id": "n1",
+     "text": "no declared collection"
+    }
+   ]
+  },
+  "unboundStoreListOfEntityName": [],
+  "unboundStoreListOfDeclaredCollectionCount": "fixture row count"
+ }
+}

@@ -1,0 +1,807 @@
+{
+ "atom": "ops/atoms/std-deployment-registry.lolo",
+ "trait": "DeploymentRegistrar",
+ "cases": [
+  {
+   "id": "first-deploy-reads-counter-then-active-then-writes",
+   "steps": [
+    {
+     "event": "DEPLOY",
+     "payload": {
+      "artifact": "acme/shop",
+      "activates": true,
+      "details": {
+       "commit": "c1"
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DEPLOY_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "COUNTER_ABSENT",
+     "payload": {
+      "code": "not-found",
+      "error": "x"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DEPLOY_ACTIVE_CHECK",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "DEPLOY_ACTIVE_ABSENT",
+     "payload": {
+      "code": "not-found",
+      "error": "x"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DEPLOY_WRITE",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "DEPLOY_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "later-deploy-reads-existing-counter-and-active",
+   "steps": [
+    {
+     "event": "DEPLOY",
+     "payload": {
+      "artifact": "acme/shop",
+      "activates": true,
+      "details": {
+       "commit": "c1"
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DEPLOY_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "COUNTER_LOADED",
+     "payload": {
+      "data": {
+       "id": "acme/shop",
+       "last": 1
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DEPLOY_ACTIVE_CHECK",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "DEPLOY_ACTIVE_LOADED",
+     "payload": {
+      "data": {
+       "id": "acme/shop",
+       "version": 1
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DEPLOY_WRITE",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "DEPLOY_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "own-cloud-export-follows-same-read-chain",
+   "steps": [
+    {
+     "event": "DEPLOY",
+     "payload": {
+      "artifact": "acme/shop",
+      "activates": false,
+      "details": {
+       "commit": "c1"
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DEPLOY_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "COUNTER_ABSENT",
+     "payload": {
+      "code": "not-found",
+      "error": "x"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DEPLOY_ACTIVE_CHECK",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "DEPLOY_ACTIVE_ABSENT",
+     "payload": {
+      "code": "not-found",
+      "error": "x"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DEPLOY_WRITE",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "lost-race-retries-next-number",
+   "steps": [
+    {
+     "event": "DEPLOY",
+     "payload": {
+      "artifact": "acme/shop",
+      "activates": true,
+      "details": {
+       "commit": "c1"
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DEPLOY_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "DEPLOY_NOT_WRITTEN",
+     "payload": {
+      "code": "duplicate-id",
+      "error": "dup"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DEPLOY_NEXT",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "DEPLOY_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "COUNTER_LOADED",
+     "payload": {
+      "data": {
+       "id": "acme/shop",
+       "last": 1
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DEPLOY_ACTIVE_CHECK",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "retries-exhausted-contended-after-3",
+   "steps": [
+    {
+     "event": "DEPLOY",
+     "payload": {
+      "artifact": "acme/shop",
+      "activates": true,
+      "details": {
+       "commit": "c1"
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DEPLOY_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "DEPLOY_NOT_WRITTEN",
+     "payload": {
+      "code": "duplicate-id",
+      "error": "dup"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DEPLOY_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "DEPLOY_NOT_WRITTEN",
+     "payload": {
+      "code": "duplicate-id",
+      "error": "dup"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DEPLOY_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "DEPLOY_NOT_WRITTEN",
+     "payload": {
+      "code": "duplicate-id",
+      "error": "dup"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DEPLOY_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "DEPLOY_NOT_WRITTEN",
+     "payload": {
+      "code": "duplicate-id",
+      "error": "dup"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DEPLOY_FAILED",
+        "payload": {
+         "artifact": "acme/shop",
+         "code": "contended",
+         "message": "dup"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "non-race-write-error-fails-without-retry",
+   "steps": [
+    {
+     "event": "DEPLOY",
+     "payload": {
+      "artifact": "acme/shop",
+      "activates": true,
+      "details": {
+       "commit": "c1"
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DEPLOY_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "DEPLOY_NOT_WRITTEN",
+     "payload": {
+      "code": "unavailable",
+      "error": "down"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DEPLOY_FAILED",
+        "payload": {
+         "artifact": "acme/shop",
+         "code": "failed",
+         "message": "down"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DEPLOY_NEXT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "store-error-fails-deploy",
+   "steps": [
+    {
+     "event": "DEPLOY",
+     "payload": {
+      "artifact": "acme/shop",
+      "activates": true,
+      "details": {
+       "commit": "c1"
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DEPLOY_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "COUNTER_ABSENT",
+     "payload": {
+      "code": "unavailable",
+      "error": "down"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DEPLOY_FAILED",
+        "payload": {
+         "artifact": "acme/shop",
+         "code": "failed",
+         "message": "down"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DEPLOY_ACTIVE_CHECK"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "rollback-to-earlier-activatable-version",
+   "steps": [
+    {
+     "event": "ROLLBACK",
+     "payload": {
+      "artifact": "acme/shop",
+      "version": 1
+     }
+    },
+    {
+     "event": "ROLLBACK_LOADED",
+     "payload": {
+      "data": {
+       "id": "acme/shop#1",
+       "artifact": "acme/shop",
+       "version": 1,
+       "activates": true,
+       "details": {
+        "commit": "c1"
+       }
+      }
+     },
+     "expect": {
+      "neverEmits": [
+       "ROLLBACK_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "ROLLBACK_ACTIVE_LOADED",
+     "payload": {
+      "data": {
+       "id": "acme/shop",
+       "version": 2
+      }
+     }
+    },
+    {
+     "event": "ROLLBACK_WRITTEN",
+     "payload": {
+      "id": "acme/shop"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ROLLED_BACK",
+        "payload": {
+         "artifact": "acme/shop",
+         "version": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "rollback-with-no-active-row-creates-it",
+   "steps": [
+    {
+     "event": "ROLLBACK",
+     "payload": {
+      "artifact": "acme/shop",
+      "version": 1
+     }
+    },
+    {
+     "event": "ROLLBACK_LOADED",
+     "payload": {
+      "data": {
+       "id": "acme/shop#1",
+       "artifact": "acme/shop",
+       "version": 1,
+       "activates": true
+      }
+     }
+    },
+    {
+     "event": "ROLLBACK_ACTIVE_ABSENT",
+     "payload": {
+      "code": "not-found",
+      "error": "x"
+     },
+     "expect": {
+      "neverEmits": [
+       "ROLLBACK_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "ROLLBACK_WRITTEN",
+     "payload": {
+      "id": "acme/shop"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ROLLED_BACK",
+        "payload": {
+         "artifact": "acme/shop",
+         "version": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "rollback-to-own-cloud-version-refused",
+   "steps": [
+    {
+     "event": "ROLLBACK",
+     "payload": {
+      "artifact": "acme/shop",
+      "version": 1
+     }
+    },
+    {
+     "event": "ROLLBACK_LOADED",
+     "payload": {
+      "data": {
+       "id": "acme/shop#1",
+       "artifact": "acme/shop",
+       "version": 1,
+       "activates": false
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ROLLBACK_FAILED",
+        "payload": {
+         "artifact": "acme/shop",
+         "code": "not-activatable"
+        }
+       }
+      ],
+      "neverEmits": [
+       "ROLLED_BACK"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "rollback-to-unrecorded-version-refused",
+   "steps": [
+    {
+     "event": "ROLLBACK",
+     "payload": {
+      "artifact": "acme/shop",
+      "version": 9
+     }
+    },
+    {
+     "event": "ROLLBACK_ABSENT",
+     "payload": {
+      "code": "not-found",
+      "error": "x"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ROLLBACK_FAILED",
+        "payload": {
+         "artifact": "acme/shop",
+         "code": "not-recorded",
+         "message": "acme/shop has no recorded version 9"
+        }
+       }
+      ],
+      "neverEmits": [
+       "ROLLED_BACK"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "withdraw-removes-active-keeps-history",
+   "steps": [
+    {
+     "event": "WITHDRAW",
+     "payload": {
+      "artifact": "acme/shop"
+     }
+    },
+    {
+     "event": "WITHDRAW_WRITTEN",
+     "payload": {
+      "id": "acme/shop"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "WITHDRAWN",
+        "payload": {
+         "artifact": "acme/shop"
+        }
+       }
+      ],
+      "neverEmits": [
+       "WITHDRAW_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "withdraw-with-nothing-active-is-withdrawn",
+   "steps": [
+    {
+     "event": "WITHDRAW",
+     "payload": {
+      "artifact": "acme/shop"
+     }
+    },
+    {
+     "event": "WITHDRAW_NOT_WRITTEN",
+     "payload": {
+      "code": "not-found",
+      "error": "x"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "WITHDRAWN",
+        "payload": {
+         "artifact": "acme/shop"
+        }
+       }
+      ],
+      "neverEmits": [
+       "WITHDRAW_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "withdraw-store-error-fails",
+   "steps": [
+    {
+     "event": "WITHDRAW",
+     "payload": {
+      "artifact": "acme/shop"
+     }
+    },
+    {
+     "event": "WITHDRAW_NOT_WRITTEN",
+     "payload": {
+      "code": "unavailable",
+      "error": "down"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "WITHDRAW_FAILED",
+        "payload": {
+         "artifact": "acme/shop",
+         "message": "down"
+        }
+       }
+      ],
+      "neverEmits": [
+       "WITHDRAWN"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "resolve-answers-active-deployment",
+   "steps": [
+    {
+     "event": "RESOLVE",
+     "payload": {
+      "artifact": "acme/shop"
+     }
+    },
+    {
+     "event": "RESOLVE_LOADED",
+     "payload": {
+      "data": {
+       "id": "acme/shop",
+       "version": 2,
+       "recordedAt": 5,
+       "details": {
+        "commit": "c2"
+       }
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESOLVED",
+        "payload": {
+         "artifact": "acme/shop",
+         "found": true,
+         "version": 2,
+         "recordedAt": 5,
+         "details": {
+          "commit": "c2"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "resolve-unpublished-answers-not-found",
+   "steps": [
+    {
+     "event": "RESOLVE",
+     "payload": {
+      "artifact": "nobody/nothing"
+     }
+    },
+    {
+     "event": "RESOLVE_ABSENT",
+     "payload": {
+      "code": "not-found",
+      "error": "x"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESOLVED",
+        "payload": {
+         "artifact": "nobody/nothing",
+         "found": false,
+         "version": 0
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "history-oldest-first",
+   "steps": [
+    {
+     "event": "HISTORY",
+     "payload": {
+      "artifact": "acme/shop"
+     }
+    },
+    {
+     "event": "HISTORY_LOADED",
+     "payload": {
+      "data": [
+       {
+        "id": "acme/shop#2",
+        "artifact": "acme/shop",
+        "version": 2,
+        "activates": false
+       },
+       {
+        "id": "acme/shop#1",
+        "artifact": "acme/shop",
+        "version": 1,
+        "activates": true
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HISTORY_ANSWERED",
+        "payload": {
+         "artifact": "acme/shop",
+         "deployments": [
+          {
+           "id": "acme/shop#1",
+           "artifact": "acme/shop",
+           "version": 1,
+           "activates": true
+          },
+          {
+           "id": "acme/shop#2",
+           "artifact": "acme/shop",
+           "version": 2,
+           "activates": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

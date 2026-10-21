@@ -1,0 +1,222 @@
+{
+ "atom": "net/atoms/std-http-dispatch.lolo",
+ "trait": "ServerDispatch",
+ "source": "orbital-rust/crates/orbital-server/tests/retargeted_leg.rs",
+ "note": "Twin of orbital-server tests/retargeted_leg.rs. Replay limits found: the entity round-trips between steps without its bytes type, so DISPATCH_RUN cannot be asserted after the request is stored (preparedExpect records the intended DISPATCH_PREPARED); a RESPOND payload expectation (requestId, status) does not match even when the event is emitted, so expectedResponse records the intended status and the step asserts only that RESPOND is emitted.",
+ "cases": [
+  {
+   "id": "server-runs-the-listeners-arm-for-a-leg-addressed-to-it",
+   "entity": {
+    "inflight": 0,
+    "waiting": [],
+    "frames": [],
+    "pending": []
+   },
+   "steps": [
+    {
+     "event": "REQUEST_RECEIVED",
+     "payload": {
+      "requestId": 1,
+      "method": "POST",
+      "path": "/api/orbitals/Notes/events",
+      "query": "",
+      "headers": {
+       "content-type": "application/json"
+      },
+      "body": "eyJldmVudCI6Ik5PVEVfRURJVCIsInRhcmdldFRyYWl0IjoiTm90ZUVkaXQiLCJwYXlsb2FkIjp7InRpdGxlIjoiaGVsbG8ifX0=",
+      "peer": "127.0.0.1:5000"
+     }
+    },
+    {
+     "event": "DISPATCH_QUEUED",
+     "payload": {
+      "requestId": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DISPATCH_RUN",
+        "payload": {
+         "requestId": 1
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "DISPATCH_RUN",
+     "payload": {
+      "requestId": 1
+     },
+     "preparedExpect": {
+      "address": "Notes.NoteEdit.NOTE_EDIT",
+      "options": {
+       "wire": true,
+       "input": false,
+       "orbital": "Notes",
+       "targetTrait": "NoteEdit",
+       "entityId": "",
+       "event": "NOTE_EDIT"
+      }
+     }
+    },
+    {
+     "event": "DISPATCH_PREPARED",
+     "payload": {
+      "requestId": 1,
+      "address": "Notes.NoteEdit.NOTE_EDIT",
+      "arguments": {
+       "title": "hello"
+      },
+      "options": {
+       "wire": true,
+       "input": false,
+       "orbital": "Notes",
+       "targetTrait": "NoteEdit",
+       "entityId": "",
+       "event": "NOTE_EDIT"
+      }
+     }
+    },
+    {
+     "event": "DISPATCH_ANSWERED",
+     "payload": {
+      "result": {
+       "success": true,
+       "transitioned": true,
+       "states": {
+        "Browse": "browsing",
+        "NoteEdit": "saved"
+       },
+       "emittedEvents": [],
+       "clientEffects": [],
+       "rejections": [],
+       "effectResults": [
+        {
+         "entityType": "Note",
+         "effect": "persist"
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND"
+       }
+      ]
+     },
+     "expectedResponse": {
+      "requestId": 1,
+      "status": 200,
+      "note": "RESPOND payload (requestId, status) is not asserted: the replay runner does not match it here, see the file note"
+     }
+    }
+   ],
+   "note": "the_server_runs_the_listeners_arm_for_a_leg_addressed_to_it: the client leg (event inferred NOTE_EDIT, targetTrait NoteEdit) is a plain direct dispatch; NoteEdit saved, persist ran on Note, no guardFailed. The event name NOTE_EDIT is inferred from the listens triggers, the Rust test builds the leg from a client kernel"
+  },
+  {
+   "id": "control-seed-addressed-leg-without-an-arm-reports-guard-failed",
+   "entity": {
+    "inflight": 0,
+    "waiting": [],
+    "frames": [],
+    "pending": []
+   },
+   "steps": [
+    {
+     "event": "REQUEST_RECEIVED",
+     "payload": {
+      "requestId": 2,
+      "method": "POST",
+      "path": "/api/orbitals/Notes/events",
+      "query": "",
+      "headers": {
+       "content-type": "application/json"
+      },
+      "body": "eyJldmVudCI6IkVESVQiLCJ0YXJnZXRUcmFpdCI6IkJyb3dzZSIsInBheWxvYWQiOnsidGl0bGUiOiJoZWxsbyJ9fQ==",
+      "peer": "127.0.0.1:5000"
+     }
+    },
+    {
+     "event": "DISPATCH_QUEUED",
+     "payload": {
+      "requestId": 2
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DISPATCH_RUN",
+        "payload": {
+         "requestId": 2
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "DISPATCH_RUN",
+     "payload": {
+      "requestId": 2
+     },
+     "preparedExpect": {
+      "address": "Notes.Browse.EDIT",
+      "options": {
+       "wire": true,
+       "input": false,
+       "orbital": "Notes",
+       "targetTrait": "Browse",
+       "entityId": "",
+       "event": "EDIT"
+      }
+     }
+    },
+    {
+     "event": "DISPATCH_PREPARED",
+     "payload": {
+      "requestId": 2,
+      "address": "Notes.Browse.EDIT",
+      "arguments": {
+       "title": "hello"
+      },
+      "options": {
+       "wire": true,
+       "input": false,
+       "orbital": "Notes",
+       "targetTrait": "Browse",
+       "entityId": "",
+       "event": "EDIT"
+      }
+     }
+    },
+    {
+     "event": "DISPATCH_ANSWERED",
+     "payload": {
+      "result": {
+       "success": true,
+       "transitioned": false,
+       "states": {},
+       "emittedEvents": [],
+       "clientEffects": [],
+       "rejections": [],
+       "guardFailed": "Browse.EDIT"
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND"
+       }
+      ]
+     },
+     "expectedResponse": {
+      "requestId": 2,
+      "status": 200,
+      "note": "RESPOND payload (requestId, status) is not asserted: the replay runner does not match it here, see the file note"
+     }
+    }
+   ],
+   "note": "control_a_seed_addressed_leg_for_an_event_the_seed_has_no_arm_for_reports_guard_failed: 200 with guardFailed Browse.EDIT"
+  }
+ ]
+}

@@ -1,0 +1,58 @@
+app std-verify-expect [
+  version: "1.0.0",
+  description: "std-verify-expect — the kernel's StepWire::expectation (orbital-core verify/plan_wire.rs, verifyExpect) as data. EXPECT_REQUEST carries one planned step; EXPECT_ANSWERED returns the Expectation it must meet: trait, from, event, toStates, guarded, solved, payloadCase always, and arm, reply, guardCase, guardSteerable, acceptStates (non-empty only), preconditionGap only when the step has them. preconditionGap is the Rust Precondition::gap: established with unplannedFields is multiple-preconditions-unplanned, an unproven proof gives its reason, unreachable is unreachable."
+]
+;; @capabilities "verify expect, step expectation, oracle, precondition gap, verifier"
+uses Spec from "almadar-std/verify-expect"
+
+type ExpectProof = { kind : string!, reason : string }
+type ExpectPrecondition = { kind : string!, unplannedFields : [string], proof : ExpectProof }
+type ExpectStep = { trait : string!, from : string!, event : string!, to : string, toStates : [string]!, guarded : boolean!, arm : number, solved : boolean!, reply : string, payloadCase : string!, guardCase : string, guardSteerable : boolean, acceptStates : [string], precondition : ExpectPrecondition }
+type Expectation = { trait : string!, from : string!, event : string!, toStates : [string]!, guarded : boolean!, arm : number, solved : boolean!, reply : string, payloadCase : string!, guardCase : string, guardSteerable : boolean, acceptStates : [string], preconditionGap : string }
+type ExpectKeys = [string]
+
+orbital VerifyExpectOrbital {
+  entity ExpectRun [runtime] {
+    id : string!
+    expectation : Expectation
+  }
+
+  trait Expect -> ExpectRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      EXPECT_REQUEST -> ready
+        (let ((pre (object/get @payload.step "precondition" {})))
+          (let ((kind (object/get @pre "kind" ""))
+                (proof (object/get @pre "proof" {})))
+            (let ((gap (if (= @kind "established")
+                         (if (> (array/len (object/get @pre "unplannedFields" [])) 0) "multiple-preconditions-unplanned"
+                           (if (= (object/get @proof "kind" "") "unproven") (object/get @proof "reason" "") ""))
+                         (if (= @kind "same-trait-setter")
+                           (if (= (object/get @proof "kind" "") "unproven") (object/get @proof "reason" "") "")
+                           (if (= @kind "unreachable") "unreachable" ""))))
+                  (accepts (object/get @payload.step "acceptStates" [])))
+              (let ((kept (array/reduce (json/parse "[\"arm\",\"reply\",\"guardCase\",\"guardSteerable\"]" ExpectKeys)
+                            { trait: (object/get @payload.step "trait"), from: (object/get @payload.step "from"), event: (object/get @payload.step "event"), toStates: (object/get @payload.step "toStates"), guarded: (object/get @payload.step "guarded"), solved: (object/get @payload.step "solved"), payloadCase: (object/get @payload.step "payloadCase") }
+                            (fn (acc k) (if (object/has @payload.step @k) (object/set @acc @k (object/get @payload.step @k)) @acc)))))
+                (let ((withAccept (if (> (array/len @accepts) 0) (object/set @kept "acceptStates" @accepts) @kept)))
+                  (do (set @entity.expectation (if (!= @gap "") (object/set @withAccept "preconditionGap" @gap) @withAccept))
+                      (emit EXPECT_ANSWERED { expectation: @entity.expectation })))))))
+    }
+
+    emits {
+      EXPECT_ANSWERED -> external { expectation : Expectation! }
+        @description "The oracle a planned step must meet."
+        @tier "domain"
+    }
+
+    listens {
+      EXPECT_REQUEST -> external { step : ExpectStep! }
+        @description "Project one planned step to its expectation."
+        @synonyms "verify expect, step expectation, oracle, precondition gap"
+    }
+  }
+
+  page "/verify-expect" as VerifyExpectPage -> Expect
+}

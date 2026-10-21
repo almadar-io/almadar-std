@@ -1,0 +1,49 @@
+app std-verify-affordance [
+  version: "1.0.0",
+  description: "std-verify-affordance — the kernel's judge_click (orbital-core verify/flows.rs) as data. AFFORDANCE_REQUEST carries a planned AffordanceStep and the ClickObservation {found, answered} a host saw clicking it; AFFORDANCE_ANSWERED returns the verdict {status, reason}: not found is inconclusive/not-driven, answered passes/reached, unanswered is a dead affordance (fail/arm-not-fired) unless the step's guard precondition is not shown to hold (kind 'unreachable', or proof 'unproven'), which is inconclusive/arm-not-fired. Not ported: plan_affordance and plan_click_paths (they read the whole schema through the Rust planner), and the Established precondition with unplanned fields."
+]
+;; @capabilities "verify affordance, dead affordance, click path verdict, verifier"
+uses Spec from "almadar-std/verify-affordance"
+
+type Precondition = { kind : string!, proof : string, reason : string }
+type AffordanceStep = { trait : string!, from : string!, event : string!, to : string!, declared : boolean!, navigates : boolean!, precondition : Precondition }
+type ClickObservation = { found : boolean!, answered : boolean! }
+type AffordanceVerdict = { status : string!, reason : string! }
+
+orbital VerifyAffordanceOrbital {
+  entity AffordanceRun [runtime] {
+    id : string!
+    verdict : AffordanceVerdict = { status: "inconclusive", reason: "not-driven" }
+  }
+
+  trait Affordance -> AffordanceRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      AFFORDANCE_REQUEST -> ready
+        (let ((pre (object/get @payload.step "precondition" {})))
+          (let ((gap (or (= (object/get @pre "kind" "") "unreachable") (= (object/get @pre "proof" "") "unproven"))))
+            (do (set @entity.verdict
+                  (if (not @payload.observed.found) { status: "inconclusive", reason: "not-driven" }
+                  (if @payload.observed.answered { status: "pass", reason: "reached" }
+                  (if @gap { status: "inconclusive", reason: "arm-not-fired" }
+                    { status: "fail", reason: "arm-not-fired" }))))
+                (emit AFFORDANCE_ANSWERED { verdict: @entity.verdict }))))
+    }
+
+    emits {
+      AFFORDANCE_ANSWERED -> external { verdict : AffordanceVerdict! }
+        @description "The verdict on one click of a planned affordance."
+        @tier "domain"
+    }
+
+    listens {
+      AFFORDANCE_REQUEST -> external { step : AffordanceStep!, observed : ClickObservation! }
+        @description "Judge a click on a rendered affordance by whether a machine answered it."
+        @synonyms "verify affordance, dead affordance, click verdict, judge click"
+    }
+  }
+
+  page "/verify-affordance" as VerifyAffordancePage -> Affordance
+}

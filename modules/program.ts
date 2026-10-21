@@ -81,14 +81,14 @@ export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
   'program/step': {
     module: 'program', category: 'std-program',
     minArity: 2, maxArity: 3,
-    description: 'Play transitions of a program in one run of the kernel, each from the state it names, and return each request played: the request with its `result` circuit step — whether it fired, the arm that fired, every guard tried, each effect of the fired arm (`routed` when its failure went to its declared `emit.failure`), the events it emitted, and each `@ensures` of the arm judged by the kernel (`held`, `broken` with its counterexample bindings, or `inconclusive` with the reason). With `options.render`, each result also carries `rendered`: the slots its trait filled, walked by the kernel\'s render probe as typed node facts (pattern, renderer coverage, entity binding, `@trait` references).',
+    description: 'Play transitions of a program in one run of the kernel, each from the state it names, and return each request played: the request with its `result` circuit step — whether it fired, the arm that fired, every guard tried, each effect of the fired arm (`routed` when its failure went to its declared `emit.failure`), the events it emitted, and each `@ensures` of the arm judged by the kernel (`held`, `broken` with its counterexample bindings, or `inconclusive` with the reason). It also carries `outcomes`: every trait the dispatch cascade moved, in dispatch order, each `{ orbital, trait, fired, state: { before, after }, emitted }` (the first is the requested trait, equal to the top-level fields). A request may seed its trait\'s entity row (`entity`: fields merged over the row before the event) and pin the clock (`now`: the ms-epoch `@now` its dispatch reads); without them the request plays as before. With `options.render`, each result also carries `rendered`: the slots its trait filled, walked by the kernel\'s render probe as typed node facts (pattern, renderer coverage, entity binding, `@trait` references).',
     hasSideEffects: true,
     runsOn: 'server',
     host: 'program',
     returnType: list('PlayedStep'),
     params: [
       { name: 'program', type: { kind: 'sexpr' }, description: 'A quoted program' },
-      { name: 'requests', type: { kind: 'array', of: { kind: 'object', fields: { orbital: 'string', trait: 'string', from: 'string', event: 'string' }, open: true } }, description: 'The transitions to play: `{ orbital, trait, from, event, payload }` each' },
+      { name: 'requests', type: { kind: 'array', of: { kind: 'object', fields: { orbital: 'string', trait: 'string', from: 'string', event: 'string' }, open: true } }, description: 'The transitions to play: `{ orbital, trait, from, event, payload, entity?, now? }` each' },
       {
         name: 'options',
         type: openShape({ key: STRING, render: BOOLEAN, emit: openShape({ success: EVENT_KEY, failure: EVENT_KEY, cancelled: EVENT_KEY }) }),

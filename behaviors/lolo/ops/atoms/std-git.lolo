@@ -1,0 +1,187 @@
+app std-git [
+  version: "1.0.0",
+  description: "std-git — runs one git step in a repository directory through std-cli (command git; every call is git -C <cwd> ..., run with LC_ALL=C and GIT_TERMINAL_PROMPT=0 so a missing credential fails instead of prompting, and the host's PATH, HOME and SSH_AUTH_SOCK passed through). GIT_STEP { requestId, cwd, op, args } runs one named op: fetch [remote], status (porcelain), branch (the current branch, blank when detached), head (rev-parse HEAD), ahead [upstream] and behind [upstream] (commit counts against the upstream ref), add [paths] (all when none), commit [message] (--no-verify), tag [name], tagDelete [name], remoteTag [remote, name] (ls-remote of one tag; empty stdout means absent), deleteRemoteTag [remote, name], pushBranch [remote, branch] (HEAD:<branch>), pushTag [remote, name], submoduleStatus (git submodule status), diffNames [from, to] (diff --name-only; the working tree against HEAD when none) and revCount [from, to, paths...] (rev-list --count from..to, to defaulting to HEAD, optionally limited to paths). The authorName and authorEmail knobs, when set, add -c user.name=... and -c user.email=... to every call. GIT_DONE answers { requestId, op, exitCode, stdout, stderr } when git exited 0; ahead, behind and tagDelete also answer GIT_DONE on a non-zero exit, because the caller treats a missing upstream or tag as zero. Any other non-zero exit answers GIT_FAILED { requestId, op, code, stderr } with a code read from git's own message: git_auth (authentication failed, no credential, permission denied, 403), git_tag_exists (already exists), git_behind_remote (non-fast-forward, fetch first, rejected), git_locked (an index.lock held), git_nothing_to_commit, else git_failed. git_spawn_failed is a run that could not be made, git_unknown_op an op outside the list, git_busy a step asked for while one is in flight.",
+  exec: ["git"],
+  env: ["PATH", "HOME", "SSH_AUTH_SOCK"]
+]
+uses Spec from "almadar-std/git"
+orbital GitOrbital {
+  uses Cli from "std/behaviors/std-cli"
+
+  entity GitRun [runtime] {
+    id : string!
+    requestId : string @description "The caller's name for the step in flight." = ""
+    op : string @description "The op in flight." = ""
+  }
+
+  trait GitCli = Cli.traits.CliRunner {
+    listens { GitStepRunner.GIT_RUN -> CLI_RUN }
+    config {
+      commands: ["git"]
+      passEnv: ["PATH", "HOME", "SSH_AUTH_SOCK"]
+    }
+  }
+
+  trait GitStepRunner -> GitRun [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      GIT_STEP -> running when (= @payload.op "fetch")
+        (set @entity.requestId @payload.requestId)
+        (set @entity.op @payload.op)
+        (emit GIT_RUN { stage: @payload.requestId, argv: (array/concat (str/split "-C" " ") [@payload.cwd] (if (!= @config.authorName "") (array/concat (str/split "-c" " ") [(str/concat "user.name=" @config.authorName)]) (array/take (str/split "x" " ") 0)) (if (!= @config.authorEmail "") (array/concat (str/split "-c" " ") [(str/concat "user.email=" @config.authorEmail)]) (array/take (str/split "x" " ") 0)) (str/split "fetch" " ") [(str/default (array/nth @payload.args 0) "origin")]), env: (object/fromEntries [["LC_ALL", "C"], ["GIT_TERMINAL_PROMPT", "0"]]) })
+      GIT_STEP -> running when (= @payload.op "status")
+        (set @entity.requestId @payload.requestId)
+        (set @entity.op @payload.op)
+        (emit GIT_RUN { stage: @payload.requestId, argv: (array/concat (str/split "-C" " ") [@payload.cwd] (if (!= @config.authorName "") (array/concat (str/split "-c" " ") [(str/concat "user.name=" @config.authorName)]) (array/take (str/split "x" " ") 0)) (if (!= @config.authorEmail "") (array/concat (str/split "-c" " ") [(str/concat "user.email=" @config.authorEmail)]) (array/take (str/split "x" " ") 0)) (str/split "status --porcelain" " ")), env: (object/fromEntries [["LC_ALL", "C"], ["GIT_TERMINAL_PROMPT", "0"]]) })
+      GIT_STEP -> running when (= @payload.op "branch")
+        (set @entity.requestId @payload.requestId)
+        (set @entity.op @payload.op)
+        (emit GIT_RUN { stage: @payload.requestId, argv: (array/concat (str/split "-C" " ") [@payload.cwd] (if (!= @config.authorName "") (array/concat (str/split "-c" " ") [(str/concat "user.name=" @config.authorName)]) (array/take (str/split "x" " ") 0)) (if (!= @config.authorEmail "") (array/concat (str/split "-c" " ") [(str/concat "user.email=" @config.authorEmail)]) (array/take (str/split "x" " ") 0)) (str/split "branch --show-current" " ")), env: (object/fromEntries [["LC_ALL", "C"], ["GIT_TERMINAL_PROMPT", "0"]]) })
+      GIT_STEP -> running when (= @payload.op "head")
+        (set @entity.requestId @payload.requestId)
+        (set @entity.op @payload.op)
+        (emit GIT_RUN { stage: @payload.requestId, argv: (array/concat (str/split "-C" " ") [@payload.cwd] (if (!= @config.authorName "") (array/concat (str/split "-c" " ") [(str/concat "user.name=" @config.authorName)]) (array/take (str/split "x" " ") 0)) (if (!= @config.authorEmail "") (array/concat (str/split "-c" " ") [(str/concat "user.email=" @config.authorEmail)]) (array/take (str/split "x" " ") 0)) (str/split "rev-parse HEAD" " ")), env: (object/fromEntries [["LC_ALL", "C"], ["GIT_TERMINAL_PROMPT", "0"]]) })
+      GIT_STEP -> running when (= @payload.op "ahead")
+        (set @entity.requestId @payload.requestId)
+        (set @entity.op @payload.op)
+        (emit GIT_RUN { stage: @payload.requestId, argv: (array/concat (str/split "-C" " ") [@payload.cwd] (if (!= @config.authorName "") (array/concat (str/split "-c" " ") [(str/concat "user.name=" @config.authorName)]) (array/take (str/split "x" " ") 0)) (if (!= @config.authorEmail "") (array/concat (str/split "-c" " ") [(str/concat "user.email=" @config.authorEmail)]) (array/take (str/split "x" " ") 0)) (str/split "rev-list --count" " ") [(str/concat (str/default (array/nth @payload.args 0) "origin/main") "..HEAD")]), env: (object/fromEntries [["LC_ALL", "C"], ["GIT_TERMINAL_PROMPT", "0"]]) })
+      GIT_STEP -> running when (= @payload.op "behind")
+        (set @entity.requestId @payload.requestId)
+        (set @entity.op @payload.op)
+        (emit GIT_RUN { stage: @payload.requestId, argv: (array/concat (str/split "-C" " ") [@payload.cwd] (if (!= @config.authorName "") (array/concat (str/split "-c" " ") [(str/concat "user.name=" @config.authorName)]) (array/take (str/split "x" " ") 0)) (if (!= @config.authorEmail "") (array/concat (str/split "-c" " ") [(str/concat "user.email=" @config.authorEmail)]) (array/take (str/split "x" " ") 0)) (str/split "rev-list --count" " ") [(str/concat "HEAD.." (str/default (array/nth @payload.args 0) "origin/main"))]), env: (object/fromEntries [["LC_ALL", "C"], ["GIT_TERMINAL_PROMPT", "0"]]) })
+      GIT_STEP -> running when (= @payload.op "add")
+        (set @entity.requestId @payload.requestId)
+        (set @entity.op @payload.op)
+        (emit GIT_RUN { stage: @payload.requestId, argv: (array/concat (str/split "-C" " ") [@payload.cwd] (if (!= @config.authorName "") (array/concat (str/split "-c" " ") [(str/concat "user.name=" @config.authorName)]) (array/take (str/split "x" " ") 0)) (if (!= @config.authorEmail "") (array/concat (str/split "-c" " ") [(str/concat "user.email=" @config.authorEmail)]) (array/take (str/split "x" " ") 0)) (str/split "add" " ") (if (> (array/len @payload.args) 0) @payload.args (str/split "-A" " "))), env: (object/fromEntries [["LC_ALL", "C"], ["GIT_TERMINAL_PROMPT", "0"]]) })
+      GIT_STEP -> running when (= @payload.op "commit")
+        (set @entity.requestId @payload.requestId)
+        (set @entity.op @payload.op)
+        (emit GIT_RUN { stage: @payload.requestId, argv: (array/concat (str/split "-C" " ") [@payload.cwd] (if (!= @config.authorName "") (array/concat (str/split "-c" " ") [(str/concat "user.name=" @config.authorName)]) (array/take (str/split "x" " ") 0)) (if (!= @config.authorEmail "") (array/concat (str/split "-c" " ") [(str/concat "user.email=" @config.authorEmail)]) (array/take (str/split "x" " ") 0)) (str/split "commit --no-verify -m" " ") [(array/nth @payload.args 0)]), env: (object/fromEntries [["LC_ALL", "C"], ["GIT_TERMINAL_PROMPT", "0"]]) })
+      GIT_STEP -> running when (= @payload.op "tag")
+        (set @entity.requestId @payload.requestId)
+        (set @entity.op @payload.op)
+        (emit GIT_RUN { stage: @payload.requestId, argv: (array/concat (str/split "-C" " ") [@payload.cwd] (if (!= @config.authorName "") (array/concat (str/split "-c" " ") [(str/concat "user.name=" @config.authorName)]) (array/take (str/split "x" " ") 0)) (if (!= @config.authorEmail "") (array/concat (str/split "-c" " ") [(str/concat "user.email=" @config.authorEmail)]) (array/take (str/split "x" " ") 0)) (str/split "tag" " ") [(array/nth @payload.args 0)]), env: (object/fromEntries [["LC_ALL", "C"], ["GIT_TERMINAL_PROMPT", "0"]]) })
+      GIT_STEP -> running when (= @payload.op "tagDelete")
+        (set @entity.requestId @payload.requestId)
+        (set @entity.op @payload.op)
+        (emit GIT_RUN { stage: @payload.requestId, argv: (array/concat (str/split "-C" " ") [@payload.cwd] (if (!= @config.authorName "") (array/concat (str/split "-c" " ") [(str/concat "user.name=" @config.authorName)]) (array/take (str/split "x" " ") 0)) (if (!= @config.authorEmail "") (array/concat (str/split "-c" " ") [(str/concat "user.email=" @config.authorEmail)]) (array/take (str/split "x" " ") 0)) (str/split "tag -d" " ") [(array/nth @payload.args 0)]), env: (object/fromEntries [["LC_ALL", "C"], ["GIT_TERMINAL_PROMPT", "0"]]) })
+      GIT_STEP -> running when (= @payload.op "remoteTag")
+        (set @entity.requestId @payload.requestId)
+        (set @entity.op @payload.op)
+        (emit GIT_RUN { stage: @payload.requestId, argv: (array/concat (str/split "-C" " ") [@payload.cwd] (if (!= @config.authorName "") (array/concat (str/split "-c" " ") [(str/concat "user.name=" @config.authorName)]) (array/take (str/split "x" " ") 0)) (if (!= @config.authorEmail "") (array/concat (str/split "-c" " ") [(str/concat "user.email=" @config.authorEmail)]) (array/take (str/split "x" " ") 0)) (str/split "ls-remote --tags" " ") [(str/default (array/nth @payload.args 0) "origin"), (str/concat "refs/tags/" (array/nth @payload.args 1))]), env: (object/fromEntries [["LC_ALL", "C"], ["GIT_TERMINAL_PROMPT", "0"]]) })
+      GIT_STEP -> running when (= @payload.op "deleteRemoteTag")
+        (set @entity.requestId @payload.requestId)
+        (set @entity.op @payload.op)
+        (emit GIT_RUN { stage: @payload.requestId, argv: (array/concat (str/split "-C" " ") [@payload.cwd] (if (!= @config.authorName "") (array/concat (str/split "-c" " ") [(str/concat "user.name=" @config.authorName)]) (array/take (str/split "x" " ") 0)) (if (!= @config.authorEmail "") (array/concat (str/split "-c" " ") [(str/concat "user.email=" @config.authorEmail)]) (array/take (str/split "x" " ") 0)) (str/split "push" " ") [(str/default (array/nth @payload.args 0) "origin"), (str/concat ":refs/tags/" (array/nth @payload.args 1))]), env: (object/fromEntries [["LC_ALL", "C"], ["GIT_TERMINAL_PROMPT", "0"]]) })
+      GIT_STEP -> running when (= @payload.op "pushBranch")
+        (set @entity.requestId @payload.requestId)
+        (set @entity.op @payload.op)
+        (emit GIT_RUN { stage: @payload.requestId, argv: (array/concat (str/split "-C" " ") [@payload.cwd] (if (!= @config.authorName "") (array/concat (str/split "-c" " ") [(str/concat "user.name=" @config.authorName)]) (array/take (str/split "x" " ") 0)) (if (!= @config.authorEmail "") (array/concat (str/split "-c" " ") [(str/concat "user.email=" @config.authorEmail)]) (array/take (str/split "x" " ") 0)) (str/split "push" " ") [(str/default (array/nth @payload.args 0) "origin"), (str/concat "HEAD:" (str/default (array/nth @payload.args 1) "main"))]), env: (object/fromEntries [["LC_ALL", "C"], ["GIT_TERMINAL_PROMPT", "0"]]) })
+      GIT_STEP -> running when (= @payload.op "pushTag")
+        (set @entity.requestId @payload.requestId)
+        (set @entity.op @payload.op)
+        (emit GIT_RUN { stage: @payload.requestId, argv: (array/concat (str/split "-C" " ") [@payload.cwd] (if (!= @config.authorName "") (array/concat (str/split "-c" " ") [(str/concat "user.name=" @config.authorName)]) (array/take (str/split "x" " ") 0)) (if (!= @config.authorEmail "") (array/concat (str/split "-c" " ") [(str/concat "user.email=" @config.authorEmail)]) (array/take (str/split "x" " ") 0)) (str/split "push" " ") [(str/default (array/nth @payload.args 0) "origin"), (array/nth @payload.args 1)]), env: (object/fromEntries [["LC_ALL", "C"], ["GIT_TERMINAL_PROMPT", "0"]]) })
+      GIT_STEP -> running when (= @payload.op "submoduleStatus")
+        (set @entity.requestId @payload.requestId)
+        (set @entity.op @payload.op)
+        (emit GIT_RUN { stage: @payload.requestId, argv: (array/concat (str/split "-C" " ") [@payload.cwd] (if (!= @config.authorName "") (array/concat (str/split "-c" " ") [(str/concat "user.name=" @config.authorName)]) (array/take (str/split "x" " ") 0)) (if (!= @config.authorEmail "") (array/concat (str/split "-c" " ") [(str/concat "user.email=" @config.authorEmail)]) (array/take (str/split "x" " ") 0)) (str/split "submodule status" " ")), env: (object/fromEntries [["LC_ALL", "C"], ["GIT_TERMINAL_PROMPT", "0"]]) })
+      GIT_STEP -> running when (= @payload.op "diffNames")
+        (set @entity.requestId @payload.requestId)
+        (set @entity.op @payload.op)
+        (emit GIT_RUN { stage: @payload.requestId, argv: (array/concat (str/split "-C" " ") [@payload.cwd] (if (!= @config.authorName "") (array/concat (str/split "-c" " ") [(str/concat "user.name=" @config.authorName)]) (array/take (str/split "x" " ") 0)) (if (!= @config.authorEmail "") (array/concat (str/split "-c" " ") [(str/concat "user.email=" @config.authorEmail)]) (array/take (str/split "x" " ") 0)) (str/split "diff --name-only" " ") (array/take @payload.args 2)), env: (object/fromEntries [["LC_ALL", "C"], ["GIT_TERMINAL_PROMPT", "0"]]) })
+      GIT_STEP -> running when (= @payload.op "revCount")
+        (set @entity.requestId @payload.requestId)
+        (set @entity.op @payload.op)
+        (emit GIT_RUN { stage: @payload.requestId, argv: (array/concat (str/split "-C" " ") [@payload.cwd] (if (!= @config.authorName "") (array/concat (str/split "-c" " ") [(str/concat "user.name=" @config.authorName)]) (array/take (str/split "x" " ") 0)) (if (!= @config.authorEmail "") (array/concat (str/split "-c" " ") [(str/concat "user.email=" @config.authorEmail)]) (array/take (str/split "x" " ") 0)) (str/split "rev-list --count" " ") [(str/concat (array/nth @payload.args 0) ".." (str/default (array/nth @payload.args 1) "HEAD"))] (if (> (array/len @payload.args) 2) (array/concat (str/split "--" " ") (array/drop @payload.args 2)) (array/take (str/split "x" " ") 0))), env: (object/fromEntries [["LC_ALL", "C"], ["GIT_TERMINAL_PROMPT", "0"]]) })
+      GIT_STEP -> idle when (not (array/includes (str/split "fetch status branch head ahead behind add commit tag tagDelete remoteTag deleteRemoteTag pushBranch pushTag submoduleStatus diffNames revCount" " ") @payload.op))
+        (emit GIT_FAILED { requestId: @payload.requestId, op: @payload.op, code: "git_unknown_op", stderr: (str/concat "unknown op " @payload.op) })
+    }
+
+    state running {
+      INIT -> running
+      GIT_STEP -> running
+        (emit GIT_FAILED { requestId: @payload.requestId, op: @payload.op, code: "git_busy", stderr: (str/concat "step " @entity.requestId " is in flight") })
+
+      GIT_RAN -> idle when (== @payload.exitCode 0)
+        (emit GIT_DONE { requestId: @entity.requestId, op: @entity.op, exitCode: 0, stdout: @payload.stdout, stderr: @payload.stderr })
+      GIT_RAN -> idle when (and (!= @payload.exitCode 0) (array/includes (str/split "ahead behind tagDelete" " ") @entity.op))
+        (emit GIT_DONE { requestId: @entity.requestId, op: @entity.op, exitCode: @payload.exitCode, stdout: @payload.stdout, stderr: @payload.stderr })
+      GIT_RAN -> idle when (and (!= @payload.exitCode 0) (not (array/includes (str/split "ahead behind tagDelete" " ") @entity.op)))
+        (emit GIT_FAILED { requestId: @entity.requestId, op: @entity.op, code: (if (or (str/includes (str/lower @payload.stderr) "authentication failed") (str/includes (str/lower @payload.stderr) "could not read username") (str/includes (str/lower @payload.stderr) "terminal prompts disabled") (str/includes (str/lower @payload.stderr) "permission denied") (str/includes (str/lower @payload.stderr) "error: 403")) "git_auth" (if (str/includes (str/lower @payload.stderr) "already exists") "git_tag_exists" (if (or (str/includes (str/lower @payload.stderr) "non-fast-forward") (str/includes (str/lower @payload.stderr) "fetch first") (str/includes (str/lower @payload.stderr) "[rejected]")) "git_behind_remote" (if (str/includes (str/lower @payload.stderr) ".lock") "git_locked" (if (or (str/includes (str/lower @payload.stdout) "nothing to commit") (str/includes (str/lower @payload.stdout) "nothing added to commit")) "git_nothing_to_commit" "git_failed"))))), stderr: @payload.stderr })
+
+      GIT_RUN_FAILED -> idle
+        (emit GIT_FAILED { requestId: @entity.requestId, op: @entity.op, code: "git_spawn_failed", stderr: @payload.error })
+    }
+
+    emits {
+      GIT_DONE -> external {
+        requestId : string!
+        op : string!
+        exitCode : number!
+        stdout : string!
+        stderr : string!
+      }
+        @description "The step ran and git exited 0 (or, for ahead, behind and tagDelete, any code)."
+        @synonyms "git result, git output"
+        @tier "primary"
+      GIT_FAILED -> external {
+        requestId : string!
+        op : string!
+        code : string!
+        stderr : string!
+      }
+        @description "The step failed: git_auth, git_tag_exists, git_behind_remote, git_locked, git_nothing_to_commit, git_failed, git_spawn_failed, git_unknown_op or git_busy."
+        @tier "primary"
+      GIT_RUN {
+        stage : string!
+        argv : [string]!
+        env : Map string string
+      }
+        @description "Internal: one git run, to the CLI runner."
+        @tier "internal"
+    }
+
+    listens {
+      GIT_STEP -> external {
+        requestId : string!
+        cwd : string!
+        op : string!
+        args : [string]!
+      }
+        @description "Run one git op in this directory."
+        @synonyms "git fetch, git commit, git push, git tag"
+      GIT_RAN {
+        stage : string!
+        exitCode : number!
+        signal : number!
+        stdout : string!
+        stdoutBytes : bytes!
+        stderr : string!
+      }
+        @description "A std-cli CLI_DONE: git exited."
+      GIT_RUN_FAILED {
+        stage : string!
+        error : string!
+        code : string!
+      }
+        @description "A std-cli CLI_FAILED: git could not run."
+      GitCli.CLI_DONE -> GIT_RAN
+      GitCli.CLI_FAILED -> GIT_RUN_FAILED
+    }
+
+    config {
+      authorName : string = ""
+        @label "Commit author name"
+        @description "When set, every call runs with -c user.name=<this>."
+        @tier "presentation"
+      authorEmail : string = ""
+        @label "Commit author email"
+        @description "When set, every call runs with -c user.email=<this>."
+        @tier "presentation"
+    }
+  }
+
+  page "/git" as GitPage -> GitStepRunner, GitCli
+}

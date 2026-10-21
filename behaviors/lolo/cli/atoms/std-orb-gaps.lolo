@@ -2,7 +2,7 @@ app std-orb-gaps [
   version: "1.0.0",
   inbound: ["cli-gaps"],
   fs: { "~/.almadar/gaps-out/**": [write, create], cwd: "**": [read, write] },
-  description: "std-orb-gaps — the `orb gaps` command, the port of tools/almadar-gaps (check, sync, rollup). `check` reads docs/Almadar_Gaps.md under the directory the command runs in (the cwd grant anchor) and every repo ledger its generated roll-up names, then reports duplicate gap codes, repo ledgers without a Next code counter, unreadable ledgers and entries without a [mechanical], [architectural] or [owner-decision] tag, one line each (status 500, exit 1); a clean tree answers `gaps: clean` (status 200, exit 0). `sync` and `status` reconcile the master with the repo ledgers by gap code: the repos come from the .gitmodules files, fenced code blocks never count, a three-way merge against tools/almadar-gaps/.sync-state.json decides which side wins per entry and refuses divergent edits, a repo's Next code never decreases, and the preview names every change; --write saves the ledger files and the baseline, --out <dir> saves the proposed files and the baseline under the outRoot knob (~/.almadar/gaps-out, the out grant), --check fails while any ledger file would change, --from master|repos makes one side authoritative. `rollup` rebuilds the master's generated roll-up from the repo ledgers. Any unknown command answers the usage (status 400, exit 2)."
+  description: "std-orb-gaps — the `orb gaps` command, (check, sync, rollup). `check` reads docs/Almadar_Gaps.md under the directory the command runs in (the cwd grant anchor) and every repo ledger its generated roll-up names, then reports duplicate gap codes, repo ledgers without a Next code counter, unreadable ledgers and entries without a [mechanical], [architectural] or [owner-decision] tag, one line each (status 500, exit 1); a clean tree answers `gaps: clean` (status 200, exit 0). `sync` and `status` reconcile the master with the repo ledgers by gap code: the repos come from the .gitmodules files, fenced code blocks never count, a three-way merge against the baseline knob file (.almadar/gaps-sync-state.json) decides which side wins per entry and refuses divergent edits, a repo's Next code never decreases, and the preview names every change; --write saves the ledger files and the baseline, --out <dir> saves the proposed files and the baseline under the outRoot knob (~/.almadar/gaps-out, the out grant), --check fails while any ledger file would change, --from master|repos makes one side authoritative. `rollup` rebuilds the master's generated roll-up from the repo ledgers. Any unknown command answers the usage (status 400, exit 2)."
 ]
 uses Spec from "almadar-std/orb-gaps"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -260,7 +260,7 @@ orbital OrbGapsOrbital {
       GAPS_PROBED -> ready when (!= @entity.fail "")
         (emit GAPS_ANSWERED { status: 500, body: (str/concat "error: " @entity.fail) })
       GAPS_PROBED -> reading when (= @entity.fail "")
-        (set @entity.queue (str/split "docs/Almadar_Gaps.md|tools/almadar-gaps/.sync-state.json" "|"))
+        (set @entity.queue (array/append (str/split "docs/Almadar_Gaps.md" "|") @config.baseline))
         (set @entity.stage "s2")
         (set @entity.cursor 0)
         (emit GAPS_READ { })
@@ -424,9 +424,9 @@ orbital OrbGapsOrbital {
         (set @entity.rCodes (array/map @entity.rEntries (fn e (object/get @e "code"))))
         (set @entity.mOwn (array/map @entity.mEntries (fn e (str/concat (object/get @e "code") "|" (object/get @e "repo")))))
         (set @entity.lOwn (array/map @entity.lEntries (fn e (str/concat (object/get @e "code") "|" (object/get @e "repo")))))
-        (set @entity.hasBaseline (array/some @entity.reads (fn r (and (= (object/get @r "path") "tools/almadar-gaps/.sync-state.json") (object/get @r "ok")))))
+        (set @entity.hasBaseline (array/some @entity.reads (fn r (and (= (object/get @r "path") @config.baseline) (object/get @r "ok")))))
         (set @entity.bEntries (if @entity.hasBaseline
-          (array/map (object/get (json/parse (object/get (array/find @entity.reads (fn r (= (object/get @r "path") "tools/almadar-gaps/.sync-state.json"))) "text") GapBaseline) "entries")
+          (array/map (object/get (json/parse (object/get (array/find @entity.reads (fn r (= (object/get @r "path") @config.baseline))) "text") GapBaseline) "entries")
             (fn p { code: (object/get @p "0"), repo: (object/get @p "1.repo"), heading: (object/get @p "1.heading"), body: (object/get @p "1.body"), at: 0, endAt: 0 }))
           (array/take @entity.mEntries 0)))
         (set @entity.errs [
@@ -546,7 +546,7 @@ orbital OrbGapsOrbital {
         (emit GAPS_ANSWERED { status: (if (and (= @entity.mode "check") (> (+ (array/len @entity.utexts) (if (!= @entity.nextMaster @entity.masterText) 1 0)) 0)) 500 200), body: (str/join (if (and (= @entity.mode "check") (> (+ (array/len @entity.utexts) (if (!= @entity.nextMaster @entity.masterText) 1 0)) 0)) (array/append @entity.out "error: ledgers differ; run sync --write") @entity.out) "\n") })
       GAPS_RENDERED -> writing when (and (!= @entity.cmd "rollup") (or (= @entity.mode "write") (= @entity.mode "out")))
         (set @entity.out (array/append @entity.out (str/concat "sync: " (array/len @entity.merged) " repo-owned gaps; " (+ (array/len @entity.utexts) (if (!= @entity.nextMaster @entity.masterText) 1 0)) " ledger files to update" (if @entity.hasBaseline "" "; baseline not initialized"))))
-        (set @entity.outFiles (array/concat @entity.utexts (if (!= @entity.nextMaster @entity.masterText) [{ path: "docs/Almadar_Gaps.md", ok: true, text: @entity.nextMaster }] (array/take @entity.utexts 0)) [{ path: "tools/almadar-gaps/.sync-state.json", ok: true, text: (str/concat "{\n  \"version\": 1,\n  \"entries\": " (if (= (array/len @entity.merged) 0) "[]" (str/concat "[\n" (str/join (array/map @entity.merged (fn e (str/concat "    [\n      " (json/stringify (object/get @e "code")) ",\n      {\n        \"repo\": " (json/stringify (object/get @e "repo")) ",\n        \"heading\": " (json/stringify (object/get @e "heading")) ",\n        \"body\": " (json/stringify (object/get @e "body")) "\n      }\n    ]"))) ",\n") "\n  ]")) "\n}\n") }]))
+        (set @entity.outFiles (array/concat @entity.utexts (if (!= @entity.nextMaster @entity.masterText) [{ path: "docs/Almadar_Gaps.md", ok: true, text: @entity.nextMaster }] (array/take @entity.utexts 0)) [{ path: @config.baseline, ok: true, text: (str/concat "{\n  \"version\": 1,\n  \"entries\": " (if (= (array/len @entity.merged) 0) "[]" (str/concat "[\n" (str/join (array/map @entity.merged (fn e (str/concat "    [\n      " (json/stringify (object/get @e "code")) ",\n      {\n        \"repo\": " (json/stringify (object/get @e "repo")) ",\n        \"heading\": " (json/stringify (object/get @e "heading")) ",\n        \"body\": " (json/stringify (object/get @e "body")) "\n      }\n    ]"))) ",\n") "\n  ]")) "\n}\n") }]))
         (set @entity.wcur 0)
         (emit GAPS_W_NEXT { })
     }
@@ -805,6 +805,9 @@ orbital OrbGapsOrbital {
     }
 
     config {
+      baseline : string = ".almadar/gaps-sync-state.json"
+        @label "Baseline"
+        @description "The sync baseline file, relative to the working root; gitignored."
       outRoot : string = "~/.almadar/gaps-out"
         @label "Out root"
         @description "Directory --out <dir> writes under; the out grant covers it."

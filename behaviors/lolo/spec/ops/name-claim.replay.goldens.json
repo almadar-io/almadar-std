@@ -1,0 +1,571 @@
+{
+ "atom": "ops/atoms/std-name-claim.lolo",
+ "trait": "NameClaimer",
+ "cases": [
+  {
+   "id": "fresh-claim-writes-and-claims",
+   "steps": [
+    {
+     "event": "CLAIM_NAME",
+     "payload": {
+      "name": "osama",
+      "holder": "user:u1"
+     }
+    },
+    {
+     "event": "HOLDER_ABSENT",
+     "payload": {
+      "code": "not-found",
+      "error": "x"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "NAME_CHECK",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "NAME_CHECK",
+     "payload": {}
+    },
+    {
+     "event": "LOCK_ABSENT",
+     "payload": {
+      "code": "not-found",
+      "error": "x"
+     }
+    },
+    {
+     "event": "NAME_WRITTEN",
+     "payload": {
+      "completedCount": 2,
+      "totalCount": 2
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "NAME_CLAIMED",
+        "payload": {
+         "name": "osama",
+         "holder": "user:u1"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "malformed-name-invalid",
+   "steps": [
+    {
+     "event": "CLAIM_NAME",
+     "payload": {
+      "name": "X",
+      "holder": "user:u1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "NAME_CLAIM_FAILED",
+        "payload": {
+         "code": "invalid",
+         "value": "X"
+        }
+       }
+      ],
+      "neverEmits": [
+       "NAME_CLAIMED",
+       "NAME_CHECK"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "taken-by-other-holder",
+   "steps": [
+    {
+     "event": "CLAIM_NAME",
+     "payload": {
+      "name": "acme",
+      "holder": "user:u1"
+     }
+    },
+    {
+     "event": "HOLDER_ABSENT",
+     "payload": {
+      "code": "not-found",
+      "error": "x"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "NAME_CHECK",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "NAME_CHECK",
+     "payload": {}
+    },
+    {
+     "event": "LOCK_LOADED",
+     "payload": {
+      "data": {
+       "id": "acme",
+       "holder": "team:t1"
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "NAME_CLAIM_FAILED",
+        "payload": {
+         "code": "taken",
+         "value": "acme"
+        }
+       }
+      ],
+      "neverEmits": [
+       "NAME_CLAIMED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "lost-write-race-is-taken",
+   "steps": [
+    {
+     "event": "CLAIM_NAME",
+     "payload": {
+      "name": "acme",
+      "holder": "user:u1"
+     }
+    },
+    {
+     "event": "HOLDER_ABSENT",
+     "payload": {
+      "code": "not-found",
+      "error": "x"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "NAME_CHECK",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "NAME_CHECK",
+     "payload": {}
+    },
+    {
+     "event": "LOCK_ABSENT",
+     "payload": {
+      "code": "not-found",
+      "error": "x"
+     }
+    },
+    {
+     "event": "NAME_NOT_WRITTEN",
+     "payload": {
+      "code": "duplicate-id",
+      "error": "dup"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "NAME_CLAIM_FAILED",
+        "payload": {
+         "code": "taken",
+         "value": "acme"
+        }
+       }
+      ],
+      "neverEmits": [
+       "NAME_CLAIMED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "reclaiming-own-name-is-fine",
+   "steps": [
+    {
+     "event": "CLAIM_NAME",
+     "payload": {
+      "name": "kept-one",
+      "holder": "user:u1"
+     }
+    },
+    {
+     "event": "HOLDER_LOADED",
+     "payload": {
+      "data": {
+       "id": "user:u1",
+       "name": "kept-one"
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "NAME_CHECK",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "NAME_CHECK",
+     "payload": {}
+    },
+    {
+     "event": "LOCK_LOADED",
+     "payload": {
+      "data": {
+       "id": "kept-one",
+       "holder": "user:u1"
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "NAME_CLAIMED",
+        "payload": {
+         "name": "kept-one",
+         "holder": "user:u1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "NAME_CLAIM_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "kept-name-cannot-be-left",
+   "steps": [
+    {
+     "event": "CLAIM_NAME",
+     "payload": {
+      "name": "another",
+      "holder": "user:u1",
+      "keepHeld": true
+     }
+    },
+    {
+     "event": "HOLDER_LOADED",
+     "payload": {
+      "data": {
+       "id": "user:u1",
+       "name": "kept-one"
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "NAME_CHECK",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "NAME_CHECK",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "NAME_CLAIM_FAILED",
+        "payload": {
+         "code": "kept",
+         "value": "kept-one"
+        }
+       }
+      ],
+      "neverEmits": [
+       "NAME_CLAIMED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "kept-own-name-reclaim-allowed",
+   "steps": [
+    {
+     "event": "CLAIM_NAME",
+     "payload": {
+      "name": "kept-one",
+      "holder": "user:u1",
+      "keepHeld": true
+     }
+    },
+    {
+     "event": "HOLDER_LOADED",
+     "payload": {
+      "data": {
+       "id": "user:u1",
+       "name": "kept-one"
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "NAME_CHECK",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "NAME_CHECK",
+     "payload": {}
+    },
+    {
+     "event": "LOCK_LOADED",
+     "payload": {
+      "data": {
+       "id": "kept-one",
+       "holder": "user:u1"
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "NAME_CLAIMED",
+        "payload": {
+         "name": "kept-one",
+         "holder": "user:u1"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "rename-releases-old-handle",
+   "steps": [
+    {
+     "event": "CLAIM_NAME",
+     "payload": {
+      "name": "second",
+      "holder": "user:u1"
+     }
+    },
+    {
+     "event": "HOLDER_LOADED",
+     "payload": {
+      "data": {
+       "id": "user:u1",
+       "name": "first"
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "NAME_CHECK",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "NAME_CHECK",
+     "payload": {}
+    },
+    {
+     "event": "LOCK_ABSENT",
+     "payload": {
+      "code": "not-found",
+      "error": "x"
+     }
+    },
+    {
+     "event": "NAME_WRITTEN",
+     "payload": {
+      "completedCount": 3,
+      "totalCount": 3
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "NAME_CLAIMED",
+        "payload": {
+         "name": "second",
+         "holder": "user:u1"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "holder-store-error-fails",
+   "steps": [
+    {
+     "event": "CLAIM_NAME",
+     "payload": {
+      "name": "acme",
+      "holder": "user:u1"
+     }
+    },
+    {
+     "event": "HOLDER_ABSENT",
+     "payload": {
+      "code": "unavailable",
+      "error": "down"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "NAME_CLAIM_FAILED",
+        "payload": {
+         "code": "failed",
+         "value": "acme"
+        }
+       }
+      ],
+      "neverEmits": [
+       "NAME_CHECK"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "name-of-holder",
+   "steps": [
+    {
+     "event": "NAME_OF",
+     "payload": {
+      "holder": "user:u1"
+     }
+    },
+    {
+     "event": "NAME_OF_LOADED",
+     "payload": {
+      "data": {
+       "id": "user:u1",
+       "name": "osama"
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "NAME_OF_ANSWERED",
+        "payload": {
+         "holder": "user:u1",
+         "name": "osama"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "name-of-holder-with-none",
+   "steps": [
+    {
+     "event": "NAME_OF",
+     "payload": {
+      "holder": "user:u9"
+     }
+    },
+    {
+     "event": "NAME_OF_ABSENT",
+     "payload": {
+      "code": "not-found",
+      "error": "x"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "NAME_OF_ANSWERED",
+        "payload": {
+         "holder": "user:u9",
+         "name": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "holder-of-name",
+   "steps": [
+    {
+     "event": "HOLDER_OF",
+     "payload": {
+      "name": "acme"
+     }
+    },
+    {
+     "event": "HOLDER_OF_LOADED",
+     "payload": {
+      "data": {
+       "id": "acme",
+       "holder": "team:t1"
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HOLDER_OF_ANSWERED",
+        "payload": {
+         "name": "acme",
+         "holder": "team:t1"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "holder-of-unclaimed-name",
+   "steps": [
+    {
+     "event": "HOLDER_OF",
+     "payload": {
+      "name": "free-one"
+     }
+    },
+    {
+     "event": "HOLDER_OF_ABSENT",
+     "payload": {
+      "code": "not-found",
+      "error": "x"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HOLDER_OF_ANSWERED",
+        "payload": {
+         "name": "free-one",
+         "holder": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

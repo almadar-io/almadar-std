@@ -1,0 +1,283 @@
+{
+ "atom": "dev/atoms/std-verify-transient-probe.lolo",
+ "trait": "TransientProbe",
+ "cases": [
+  {
+   "id": "failure-arm-is-forced-through-the-entering-persist",
+   "steps": [
+    {
+     "event": "TRANSIENT_REQUEST",
+     "payload": {
+      "query": {
+       "trait": "Flow",
+       "from": "saving",
+       "event": "FAILED",
+       "to": "failed"
+      },
+      "transitions": [
+       {
+        "from": "idle",
+        "to": "idle",
+        "event": "INIT"
+       },
+       {
+        "from": "idle",
+        "to": "saving",
+        "event": "START",
+        "effects": [
+         {
+          "op": "persist",
+          "kind": "create",
+          "entity": "Note",
+          "emit": {
+           "success": "DONE",
+           "failure": "FAILED"
+          }
+         }
+        ]
+       },
+       {
+        "from": "saving",
+        "to": "saved",
+        "event": "DONE"
+       },
+       {
+        "from": "saving",
+        "to": "failed",
+        "event": "FAILED"
+       },
+       {
+        "from": "saving",
+        "to": "failed",
+        "event": "FETCH_FAILED"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TRANSIENT_ANSWERED",
+        "payload": {
+         "answer": {
+          "outcome": "entering",
+          "entering": {
+           "from": "idle",
+           "event": "START",
+           "to": "saving",
+           "entity": "Note",
+           "operation": "create",
+           "acceptStates": [
+            "saving",
+            "saved",
+            "failed"
+           ],
+           "coverageKey": "Flow:idle+START->saving[transient-failure-probe:FAILED]"
+          }
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-success-event-is-not-a-failure-route",
+   "steps": [
+    {
+     "event": "TRANSIENT_REQUEST",
+     "payload": {
+      "query": {
+       "trait": "Flow",
+       "from": "saving",
+       "event": "DONE",
+       "to": "failed"
+      },
+      "transitions": [
+       {
+        "from": "idle",
+        "to": "idle",
+        "event": "INIT"
+       },
+       {
+        "from": "idle",
+        "to": "saving",
+        "event": "START",
+        "effects": [
+         {
+          "op": "persist",
+          "kind": "create",
+          "entity": "Note",
+          "emit": {
+           "success": "DONE",
+           "failure": "FAILED"
+          }
+         }
+        ]
+       },
+       {
+        "from": "saving",
+        "to": "saved",
+        "event": "DONE"
+       },
+       {
+        "from": "saving",
+        "to": "failed",
+        "event": "FAILED"
+       },
+       {
+        "from": "saving",
+        "to": "failed",
+        "event": "FETCH_FAILED"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TRANSIENT_ANSWERED",
+        "payload": {
+         "answer": {
+          "outcome": "not-transient"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-fetch-failure-has-no-entering-persist",
+   "steps": [
+    {
+     "event": "TRANSIENT_REQUEST",
+     "payload": {
+      "query": {
+       "trait": "Flow",
+       "from": "saving",
+       "event": "FETCH_FAILED",
+       "to": "failed"
+      },
+      "transitions": [
+       {
+        "from": "idle",
+        "to": "idle",
+        "event": "INIT"
+       },
+       {
+        "from": "idle",
+        "to": "saving",
+        "event": "START",
+        "effects": [
+         {
+          "op": "fetch",
+          "entity": "Note",
+          "emit": {
+           "success": "DONE",
+           "failure": "FETCH_FAILED"
+          }
+         }
+        ]
+       },
+       {
+        "from": "saving",
+        "to": "saved",
+        "event": "DONE"
+       },
+       {
+        "from": "saving",
+        "to": "failed",
+        "event": "FAILED"
+       },
+       {
+        "from": "saving",
+        "to": "failed",
+        "event": "FETCH_FAILED"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TRANSIENT_ANSWERED",
+        "payload": {
+         "answer": {
+          "outcome": "finding",
+          "finding": "no-entering-persist"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-from-state-with-no-effect-emitted-advance-is-not-transient",
+   "steps": [
+    {
+     "event": "TRANSIENT_REQUEST",
+     "payload": {
+      "query": {
+       "trait": "Flow",
+       "from": "idle",
+       "event": "FAILED",
+       "to": "failed"
+      },
+      "transitions": [
+       {
+        "from": "idle",
+        "to": "idle",
+        "event": "INIT"
+       },
+       {
+        "from": "idle",
+        "to": "saving",
+        "event": "START",
+        "effects": [
+         {
+          "op": "persist",
+          "kind": "create",
+          "entity": "Note",
+          "emit": {
+           "success": "DONE",
+           "failure": "FAILED"
+          }
+         }
+        ]
+       },
+       {
+        "from": "saving",
+        "to": "saved",
+        "event": "DONE"
+       },
+       {
+        "from": "saving",
+        "to": "failed",
+        "event": "FAILED"
+       },
+       {
+        "from": "saving",
+        "to": "failed",
+        "event": "FETCH_FAILED"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TRANSIENT_ANSWERED",
+        "payload": {
+         "answer": {
+          "outcome": "not-transient"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

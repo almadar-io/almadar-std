@@ -1,22 +1,25 @@
 app verify-judge-spec [
   version: "1.0.0",
-  description: "Design contract for std-verify-judge: the kernel's verdict logic (orbital-core verify/observers.rs effects_fired, plan_wire.rs judge_propositions) as data. JUDGE_REQUEST carries one PlannedStep (std-verify-plan), the PlayedResult program/step answered for it, and the resolved program; JUDGE_ANSWERED returns the verdicts the efficacy manifests name for orb, each {name, passed, detail} exactly as the Rust Verdict, plus the classes not yet ported with their Rust reason. effects_fired: no authored effect of a planned step failed (offender detail 'trait:event type(target) failed: error'). A class the .lolo cannot judge yet is listed in unported, never passed."
+  description: "Design contract for std-verify-judge: the kernel's verdict logic (orbital-core verify/observers.rs effects_fired, plan_wire.rs judge_propositions) as data. JUDGE_REQUEST carries one PlannedStep (std-verify-plan), the PlayedResult program/step answered for it, and the resolved program; JUDGE_ANSWERED returns the verdicts the efficacy manifests name for orb, each {name, passed, detail} exactly as the Rust Verdict, plus the classes not yet ported with their Rust reason. effects_fired: no authored effect of a planned step failed (offender detail 'trait:event type(target) failed: error'). effects_fired exempts a failed effect carrying a routed event (the http failure the program routed to its declared emit.failure). proposition_held reads PlayedResult.ensures (kernel-judged @ensures of the played arm, each {proposition, verdict held|broken|inconclusive, reason?, counterexample?}): a broken one is an offender (detail trait:from--event-->to @ensures <json>), inconclusive passes; the answer's proposition is broken (first, proposition as JSON text), else the first inconclusive with its reason, else held. entity_data_bound (optional input rendered [{pattern, binding {kind, entity, rows, readGated}}]): the render-probe judge_nodes verdict, an inline or named binding with 0 rows is an offender unless readGated (then listed in accessScopedEmpty), a payload-unresolved binding is an offender. A class the .lolo cannot judge yet is listed in unported, never passed."
 ]
 
 type JsonValue = string | number | boolean | [JsonValue] | Map string JsonValue
 type Verdict = { name : string!, passed : boolean!, detail : string! }
 type Unported = { name : string!, reason : string! }
+type PropositionVerdict = { verdict : string!, proposition : string, reason : string }
 
 orbital VerifyJudgeSpec {
   expects entity JudgeRun [runtime] {
     id : string!
     verdicts : [Verdict]!
     unported : [Unported]!
+    proposition : PropositionVerdict
+    accessScopedEmpty : [string]!
   }
   expects trait Judge {
     state ready
     emits {
-      JUDGE_ANSWERED { verdicts : [Verdict]!, unported : [Unported]! }
+      JUDGE_ANSWERED { verdicts : [Verdict]!, unported : [Unported]!, proposition : PropositionVerdict, accessScopedEmpty : [string]! }
     }
   }
   expects page "/verify-judge" -> Judge

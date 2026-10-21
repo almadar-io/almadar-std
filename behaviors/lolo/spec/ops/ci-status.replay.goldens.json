@@ -1,0 +1,188 @@
+{
+ "atom": "ops/atoms/std-ci-status.lolo",
+ "trait": "CiStatus",
+ "note": "from std-ci-status-program.test.ts; GraphQL pages and the retry ticks are host answers",
+ "cases": [
+  {
+   "id": "load-starts-the-retry-keyed-ci-status",
+   "steps": [
+    {
+     "event": "CI_STATUS_LOAD",
+     "payload": {},
+     "expect": {
+      "state": "loading",
+      "emits": [
+       {
+        "event": "CI_RETRY_START",
+        "payload": {
+         "key": "ci-status:2"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "refresh-restarts-the-retry",
+   "steps": [
+    {
+     "event": "CI_STATUS_REFRESH",
+     "payload": {},
+     "expect": {
+      "state": "loading",
+      "emits": [
+       {
+        "event": "CI_RETRY_START",
+        "payload": {
+         "key": "ci-status:2"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "attempt-for-its-key-asks-github",
+   "steps": [
+    {
+     "event": "CI_STATUS_LOAD",
+     "payload": {}
+    },
+    {
+     "event": "CI_ATTEMPT",
+     "payload": {
+      "key": "ci-status:2",
+      "attempt": 1
+     },
+     "from": "loading",
+     "expect": {
+      "emits": [
+       {
+        "event": "CI_GQL"
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "control-attempt-for-another-key-asks-nothing",
+   "steps": [
+    {
+     "event": "CI_STATUS_LOAD",
+     "payload": {}
+    },
+    {
+     "event": "CI_ATTEMPT",
+     "payload": {
+      "key": "other",
+      "attempt": 1
+     },
+     "from": "loading",
+     "expect": {
+      "neverEmits": [
+       "CI_GQL"
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "transient-failure-502-reports-retry-failed",
+   "steps": [
+    {
+     "event": "CI_STATUS_LOAD",
+     "payload": {}
+    },
+    {
+     "event": "CI_GQL_FAILED",
+     "payload": {
+      "status": 502,
+      "message": "bad gateway"
+     },
+     "from": "loading",
+     "expect": {
+      "state": "loading",
+      "emits": [
+       {
+        "event": "CI_RETRY_FAILED",
+        "payload": {
+         "key": "ci-status:2",
+         "error": "bad gateway"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "permanent-failure-401-goes-idle-with-empty-stale-board",
+   "steps": [
+    {
+     "event": "CI_STATUS_LOAD",
+     "payload": {}
+    },
+    {
+     "event": "CI_GQL_FAILED",
+     "payload": {
+      "status": 401,
+      "message": "bad credentials"
+     },
+     "from": "loading",
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "CI_STATUS",
+        "payload": {
+         "runs": [],
+         "stale": true
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "retry-gave-up-goes-idle-with-stale-board",
+   "steps": [
+    {
+     "event": "CI_STATUS_LOAD",
+     "payload": {}
+    },
+    {
+     "event": "CI_GAVE_UP",
+     "payload": {
+      "key": "ci-status:2",
+      "attempts": 3,
+      "error": "x"
+     },
+     "from": "loading",
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "CI_STATUS",
+        "payload": {
+         "runs": [],
+         "stale": true
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  }
+ ]
+}

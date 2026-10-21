@@ -1,0 +1,20 @@
+app x509-spec [
+  version: "1.0.0",
+  description: "Design contract for reading the RSA public key out of a PEM X.509 certificate, what Firebase publishes its signing keys as. X509_PARSE { pem } strips the BEGIN/END CERTIFICATE lines and whitespace, decodes the base64 body to DER and walks it by tag-length-value: Certificate SEQUENCE, tbsCertificate SEQUENCE, an optional explicit version [0], then serialNumber, signature, issuer, validity and subject are skipped, then subjectPublicKeyInfo SEQUENCE whose algorithm SEQUENCE must start with the rsaEncryption OID (else key-type), whose BIT STRING (leading unused-bits byte) holds RSAPublicKey SEQUENCE { modulus INTEGER, publicExponent INTEGER }. Lengths are short form or long form of one or two bytes. The INTEGERs lose their sign-padding zero byte and answer X509_PARSED { n, e } as the big-endian bytes std-rsa takes. Refusals are X509_REFUSED { reason }: pem (no certificate armour), invalid (body is not canonical base64), der (a tag or length is not what the walk expects or runs past the data), key-type (not an rsaEncryption key). Goldens: spec/codec/x509.goldens.json."
+]
+
+orbital X509Spec {
+  expects entity X509Run [runtime] {
+    id : string!
+  }
+  expects trait X509Parse {
+    state ready {
+      X509_PARSE -> ready
+    }
+    emits {
+      X509_PARSED { n : bytes!  e : bytes! }
+      X509_REFUSED { reason : string! }
+    }
+  }
+  expects page "/x509" -> X509Parse
+}

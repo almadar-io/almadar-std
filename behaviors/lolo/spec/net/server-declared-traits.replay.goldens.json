@@ -1,0 +1,354 @@
+{
+ "atom": "net/atoms/std-http-dispatch.lolo",
+ "trait": "ServerDispatch",
+ "source": "orbital-rust/crates/orbital-server/tests/declared_traits.rs",
+ "note": "Twin of orbital-server tests/declared_traits.rs. Each case asserts the atom hands the traits list to program/dispatch (DISPATCH_PREPARED options) and answers the played wire as 200; the per-trait resolution is the host's. Replay limits found: the entity round-trips between steps without its bytes type, so DISPATCH_RUN cannot be asserted after the request is stored (preparedExpect records the intended DISPATCH_PREPARED); a RESPOND payload expectation (requestId, status) does not match even when the event is emitted, so expectedResponse records the intended status and the step asserts only that RESPOND is emitted.",
+ "cases": [
+  {
+   "id": "every-declared-trait-runs",
+   "entity": {
+    "inflight": 0,
+    "waiting": [],
+    "frames": [],
+    "pending": []
+   },
+   "steps": [
+    {
+     "event": "REQUEST_RECEIVED",
+     "payload": {
+      "requestId": 1,
+      "method": "POST",
+      "path": "/api/orbitals/Notes/events",
+      "query": "",
+      "headers": {
+       "content-type": "application/json"
+      },
+      "body": "eyJldmVudCI6IklOSVQiLCJ0cmFpdHMiOlt7InRyYWl0IjoiRmlyc3QiLCJmcm9tIjoiaWRsZSJ9LHsidHJhaXQiOiJUaGlyZCIsImZyb20iOiJpZGxlIn1dfQ==",
+      "peer": "127.0.0.1:5000"
+     }
+    },
+    {
+     "event": "DISPATCH_QUEUED",
+     "payload": {
+      "requestId": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DISPATCH_RUN",
+        "payload": {
+         "requestId": 1
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "DISPATCH_RUN",
+     "payload": {
+      "requestId": 1
+     },
+     "preparedExpect": {
+      "address": "Notes..INIT",
+      "options": {
+       "wire": true,
+       "input": false,
+       "orbital": "Notes",
+       "targetTrait": "",
+       "entityId": "",
+       "event": "INIT",
+       "traits": [
+        {
+         "trait": "First",
+         "from": "idle"
+        },
+        {
+         "trait": "Third",
+         "from": "idle"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "event": "DISPATCH_PREPARED",
+     "payload": {
+      "requestId": 1,
+      "address": "Notes..INIT",
+      "arguments": {},
+      "options": {
+       "wire": true,
+       "input": false,
+       "orbital": "Notes",
+       "targetTrait": "",
+       "entityId": "",
+       "event": "INIT",
+       "traits": [
+        {
+         "trait": "First",
+         "from": "idle"
+        },
+        {
+         "trait": "Third",
+         "from": "idle"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "event": "DISPATCH_ANSWERED",
+     "payload": {
+      "result": {
+       "success": true,
+       "transitioned": true,
+       "states": {
+        "First": "shown",
+        "Second": "idle",
+        "Third": "shown"
+       },
+       "emittedEvents": [],
+       "clientEffects": [],
+       "rejections": []
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND"
+       }
+      ]
+     },
+     "expectedResponse": {
+      "requestId": 1,
+      "status": 200,
+      "note": "RESPOND payload (requestId, status) is not asserted: the replay runner does not match it here, see the file note"
+     }
+    }
+   ],
+   "note": "every_declared_trait_runs: the traits list reaches program/dispatch as options.traits; the whole-orbital snapshot has First and Third shown, Second (not declared) at its initial idle"
+  },
+  {
+   "id": "empty-traits-is-an-inert-rejection-not-a-400",
+   "entity": {
+    "inflight": 0,
+    "waiting": [],
+    "frames": [],
+    "pending": []
+   },
+   "steps": [
+    {
+     "event": "REQUEST_RECEIVED",
+     "payload": {
+      "requestId": 2,
+      "method": "POST",
+      "path": "/api/orbitals/Notes/events",
+      "query": "",
+      "headers": {
+       "content-type": "application/json"
+      },
+      "body": "eyJldmVudCI6IklOSVQiLCJ0cmFpdHMiOltdfQ==",
+      "peer": "127.0.0.1:5000"
+     }
+    },
+    {
+     "event": "DISPATCH_QUEUED",
+     "payload": {
+      "requestId": 2
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DISPATCH_RUN",
+        "payload": {
+         "requestId": 2
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "DISPATCH_RUN",
+     "payload": {
+      "requestId": 2
+     },
+     "preparedExpect": {
+      "address": "Notes..INIT",
+      "options": {
+       "wire": true,
+       "input": false,
+       "orbital": "Notes",
+       "targetTrait": "",
+       "entityId": "",
+       "event": "INIT",
+       "traits": []
+      }
+     }
+    },
+    {
+     "event": "DISPATCH_PREPARED",
+     "payload": {
+      "requestId": 2,
+      "address": "Notes..INIT",
+      "arguments": {},
+      "options": {
+       "wire": true,
+       "input": false,
+       "orbital": "Notes",
+       "targetTrait": "",
+       "entityId": "",
+       "event": "INIT",
+       "traits": []
+      }
+     }
+    },
+    {
+     "event": "DISPATCH_ANSWERED",
+     "payload": {
+      "result": {
+       "success": true,
+       "transitioned": false,
+       "states": {},
+       "emittedEvents": [],
+       "clientEffects": [],
+       "rejections": [
+        {
+         "code": "no-dispatchable-traits"
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND"
+       }
+      ]
+     },
+     "expectedResponse": {
+      "requestId": 2,
+      "status": 200,
+      "note": "RESPOND payload (requestId, status) is not asserted: the replay runner does not match it here, see the file note"
+     }
+    }
+   ],
+   "note": "an_empty_traits_list_is_an_inert_rejection_not_a_400: 200, success true, transitioned false, rejection no-dispatchable-traits"
+  },
+  {
+   "id": "control-a-target-runs-alone-whatever-traits-say",
+   "entity": {
+    "inflight": 0,
+    "waiting": [],
+    "frames": [],
+    "pending": []
+   },
+   "steps": [
+    {
+     "event": "REQUEST_RECEIVED",
+     "payload": {
+      "requestId": 3,
+      "method": "POST",
+      "path": "/api/orbitals/Notes/events",
+      "query": "",
+      "headers": {
+       "content-type": "application/json"
+      },
+      "body": "eyJldmVudCI6IklOSVQiLCJ0YXJnZXRUcmFpdCI6IlNlY29uZCIsInRyYWl0cyI6W3sidHJhaXQiOiJGaXJzdCIsImZyb20iOiJpZGxlIn1dfQ==",
+      "peer": "127.0.0.1:5000"
+     }
+    },
+    {
+     "event": "DISPATCH_QUEUED",
+     "payload": {
+      "requestId": 3
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DISPATCH_RUN",
+        "payload": {
+         "requestId": 3
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "DISPATCH_RUN",
+     "payload": {
+      "requestId": 3
+     },
+     "preparedExpect": {
+      "address": "Notes.Second.INIT",
+      "options": {
+       "wire": true,
+       "input": false,
+       "orbital": "Notes",
+       "targetTrait": "Second",
+       "entityId": "",
+       "event": "INIT",
+       "traits": [
+        {
+         "trait": "First",
+         "from": "idle"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "event": "DISPATCH_PREPARED",
+     "payload": {
+      "requestId": 3,
+      "address": "Notes.Second.INIT",
+      "arguments": {},
+      "options": {
+       "wire": true,
+       "input": false,
+       "orbital": "Notes",
+       "targetTrait": "Second",
+       "entityId": "",
+       "event": "INIT",
+       "traits": [
+        {
+         "trait": "First",
+         "from": "idle"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "event": "DISPATCH_ANSWERED",
+     "payload": {
+      "result": {
+       "success": true,
+       "transitioned": true,
+       "states": {
+        "First": "idle",
+        "Second": "shown",
+        "Third": "idle"
+       },
+       "emittedEvents": [],
+       "clientEffects": [],
+       "rejections": []
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND"
+       }
+      ]
+     },
+     "expectedResponse": {
+      "requestId": 3,
+      "status": 200,
+      "note": "RESPOND payload (requestId, status) is not asserted: the replay runner does not match it here, see the file note"
+     }
+    }
+   ],
+   "note": "control_a_target_still_runs_alone_whatever_traits_say: targetTrait Second is the address; Second shown, First idle"
+  }
+ ]
+}

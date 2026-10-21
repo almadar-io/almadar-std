@@ -1,0 +1,19 @@
+app boot-env-check-spec [
+  version: "1.0.0",
+  description: "Design contract for what keeps a deployment's declared environment from working in production, one line per problem (empty when none). ENV_CHECK { requestId?, env, production, mock, missingCredentials?, catalogError? } carries the declared environment as a record (authProvider, oidcIssuerUrl, oidcAudience, firebaseProjectId, firebaseServiceAccountPath, firebaseAuthEmulatorHost, firestoreEmulatorHost, integrationsMock), whether the server runs under NODE_ENV=production, whether integrations are mocked, and the integration credentials the called services require that the credential store and environment do not hold (computed by the host). Auth problems come first, in order. A provider that is not firebase or oidc (default firebase) answers only AUTH_PROVIDER must be one of firebase, oidc, got '<provider>'. Otherwise a set firebaseAuthEmulatorHost answers FIREBASE_AUTH_EMULATOR_HOST is set: the Auth emulator is for local dev only; provider firebase with neither a project id nor a service account path answers the needs-project line, and a project id starting demo- answers FIREBASE_PROJECT_ID=<id> is an emulator-only demo project; provider oidc answers AUTH_PROVIDER=oidc needs OIDC_ISSUER_URL and then needs OIDC_AUDIENCE for each missing one. Then, only under production, a set firestoreEmulatorHost answers FIRESTORE_EMULATOR_HOST is set: the Firestore emulator is for local dev only. Then, unless mock or integrationsMock, each missing credential answers missing required integration credential <name>, and a catalogError answers the declared integration credentials could not be read: <error>. Success is ENV_CHECKED { requestId, problems, ok } with ok true when problems is empty. Goldens: spec/net/env-problems.goldens.json (authEnvProblems cases; the Rust boot_env_problems cases are the production and credential lines)."
+]
+
+orbital BootEnvCheckSpec {
+  expects entity EnvCheck [runtime] {
+    id : string!
+  }
+  expects trait BootEnvCheck {
+    state ready {
+      ENV_CHECK -> ready
+    }
+    emits {
+      ENV_CHECKED { requestId : number  problems : [string]!  ok : boolean! }
+    }
+  }
+  expects page "/boot-env-check" -> BootEnvCheck
+}

@@ -1,0 +1,459 @@
+{
+ "atom": "net/atoms/std-http-dispatch.lolo",
+ "trait": "ServerDispatch",
+ "note": "Route table, 501/400 answers and queueing of the dispatch atom. The kernel cascades each step's emits and expect reads only that step's own emits, so later hops are played as direct steps. CORS carry-through is checked with orb execute --steps (RESPOND headers hold the ROUTE_EXTERNAL responseHeaders then content-type). Bodies are base64 bytes.",
+ "cases": [
+  {
+   "id": "routes-events",
+   "steps": [
+    {
+     "event": "REQUEST_RECEIVED",
+     "payload": {
+      "requestId": 7,
+      "method": "POST",
+      "path": "/api/orbitals/Notes/events",
+      "query": "",
+      "headers": {
+       "content-type": "application/json"
+      },
+      "body": "e30=",
+      "peer": "127.0.0.1:5000"
+     }
+    },
+    {
+     "event": "ROUTE_EXTERNAL",
+     "payload": {
+      "requestId": 7,
+      "responseHeaders": [
+       {
+        "name": "access-control-allow-origin",
+        "value": "https://app.example"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ROUTE_DISPATCH",
+        "payload": {
+         "requestId": 7,
+         "kind": "events"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "routes-entity-events",
+   "steps": [
+    {
+     "event": "REQUEST_RECEIVED",
+     "payload": {
+      "requestId": 7,
+      "method": "POST",
+      "path": "/api/orbitals/Notes/traits/Layout/entities/e1/events",
+      "query": "",
+      "headers": {
+       "content-type": "application/json"
+      },
+      "body": "e30=",
+      "peer": "127.0.0.1:5000"
+     }
+    },
+    {
+     "event": "ROUTE_EXTERNAL",
+     "payload": {
+      "requestId": 7,
+      "responseHeaders": [
+       {
+        "name": "access-control-allow-origin",
+        "value": "https://app.example"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ROUTE_DISPATCH",
+        "payload": {
+         "requestId": 7,
+         "kind": "entity-events"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "routes-inputs",
+   "steps": [
+    {
+     "event": "REQUEST_RECEIVED",
+     "payload": {
+      "requestId": 7,
+      "method": "POST",
+      "path": "/api/orbitals/Notes/inputs",
+      "query": "",
+      "headers": {
+       "content-type": "application/json"
+      },
+      "body": "e30=",
+      "peer": "127.0.0.1:5000"
+     }
+    },
+    {
+     "event": "ROUTE_EXTERNAL",
+     "payload": {
+      "requestId": 7,
+      "responseHeaders": [
+       {
+        "name": "access-control-allow-origin",
+        "value": "https://app.example"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ROUTE_DISPATCH",
+        "payload": {
+         "requestId": 7,
+         "kind": "inputs"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "routes-inputs-list",
+   "steps": [
+    {
+     "event": "REQUEST_RECEIVED",
+     "payload": {
+      "requestId": 7,
+      "method": "GET",
+      "path": "/api/orbitals/inputs",
+      "query": "",
+      "headers": {
+       "content-type": "application/json"
+      },
+      "body": "",
+      "peer": "127.0.0.1:5000"
+     }
+    },
+    {
+     "event": "ROUTE_EXTERNAL",
+     "payload": {
+      "requestId": 7,
+      "responseHeaders": [
+       {
+        "name": "access-control-allow-origin",
+        "value": "https://app.example"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ROUTE_DISPATCH",
+        "payload": {
+         "requestId": 7,
+         "kind": "inputs-list"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "routes-resolve-rows",
+   "steps": [
+    {
+     "event": "REQUEST_RECEIVED",
+     "payload": {
+      "requestId": 7,
+      "method": "POST",
+      "path": "/api/orbitals/resolve-rows",
+      "query": "",
+      "headers": {
+       "content-type": "application/json"
+      },
+      "body": "e30=",
+      "peer": "127.0.0.1:5000"
+     }
+    },
+    {
+     "event": "ROUTE_EXTERNAL",
+     "payload": {
+      "requestId": 7,
+      "responseHeaders": [
+       {
+        "name": "access-control-allow-origin",
+        "value": "https://app.example"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ROUTE_DISPATCH",
+        "payload": {
+         "requestId": 7,
+         "kind": "resolve-rows"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "routes-hook",
+   "steps": [
+    {
+     "event": "REQUEST_RECEIVED",
+     "payload": {
+      "requestId": 7,
+      "method": "POST",
+      "path": "/api/hooks/file-drop",
+      "query": "",
+      "headers": {
+       "content-type": "application/json"
+      },
+      "body": "e30=",
+      "peer": "127.0.0.1:5000"
+     }
+    },
+    {
+     "event": "ROUTE_EXTERNAL",
+     "payload": {
+      "requestId": 7,
+      "responseHeaders": [
+       {
+        "name": "access-control-allow-origin",
+        "value": "https://app.example"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ROUTE_DISPATCH",
+        "payload": {
+         "requestId": 7,
+         "kind": "hook"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "routes-unknown-path",
+   "steps": [
+    {
+     "event": "REQUEST_RECEIVED",
+     "payload": {
+      "requestId": 7,
+      "method": "POST",
+      "path": "/api/orbitals/Notes/nothing",
+      "query": "",
+      "headers": {
+       "content-type": "application/json"
+      },
+      "body": "e30=",
+      "peer": "127.0.0.1:5000"
+     }
+    },
+    {
+     "event": "ROUTE_EXTERNAL",
+     "payload": {
+      "requestId": 7,
+      "responseHeaders": [
+       {
+        "name": "access-control-allow-origin",
+        "value": "https://app.example"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ROUTE_DISPATCH",
+        "payload": {
+         "requestId": 7,
+         "kind": "none"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "hook-is-501-until-an-inbound-operator-exists",
+   "steps": [
+    {
+     "event": "REQUEST_RECEIVED",
+     "payload": {
+      "requestId": 7,
+      "method": "POST",
+      "path": "/api/hooks/file-drop",
+      "query": "",
+      "headers": {
+       "content-type": "application/json"
+      },
+      "body": "e30=",
+      "peer": "127.0.0.1:5000"
+     }
+    },
+    {
+     "event": "ROUTE_DISPATCH",
+     "payload": {
+      "requestId": 7,
+      "kind": "hook"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HOOK_DELIVERED",
+        "payload": {
+         "requestId": 7,
+         "name": "file-drop"
+        }
+       },
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 7,
+         "status": 501
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "unparseable-json-body-is-400",
+   "note": "axum Json rejection: 400 plain text; the parser detail text is not reproduced",
+   "steps": [
+    {
+     "event": "REQUEST_RECEIVED",
+     "payload": {
+      "requestId": 7,
+      "method": "POST",
+      "path": "/api/orbitals/Notes/events",
+      "query": "",
+      "headers": {
+       "content-type": "application/json"
+      },
+      "body": "eyJldmVudCI6",
+      "peer": "127.0.0.1:5000"
+     }
+    },
+    {
+     "event": "DISPATCH_ADMITTED",
+     "payload": {
+      "requestId": 7
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 7,
+         "status": 400
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "resolve-rows-is-501-until-a-rows-operator-exists",
+   "steps": [
+    {
+     "event": "REQUEST_RECEIVED",
+     "payload": {
+      "requestId": 7,
+      "method": "POST",
+      "path": "/api/orbitals/resolve-rows",
+      "query": "",
+      "headers": {
+       "content-type": "application/json"
+      },
+      "body": "eyJyZWZlcmVuY2UiOnt9fQ==",
+      "peer": "127.0.0.1:5000"
+     }
+    },
+    {
+     "event": "DISPATCH_ADMITTED",
+     "payload": {
+      "requestId": 7
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESOLVE_ROWS_REQUESTED",
+        "payload": {
+         "requestId": 7
+        }
+       },
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 7,
+         "status": 501
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-valid-body-is-queued",
+   "steps": [
+    {
+     "event": "REQUEST_RECEIVED",
+     "payload": {
+      "requestId": 7,
+      "method": "POST",
+      "path": "/api/orbitals/Notes/events",
+      "query": "",
+      "headers": {
+       "content-type": "application/json"
+      },
+      "body": "eyJldmVudCI6IklOSVQiLCJ0YXJnZXRUcmFpdCI6IkxheW91dCJ9",
+      "peer": "127.0.0.1:5000"
+     }
+    },
+    {
+     "event": "DISPATCH_ADMITTED",
+     "payload": {
+      "requestId": 7
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DISPATCH_QUEUED",
+        "payload": {
+         "requestId": 7
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

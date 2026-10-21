@@ -1,0 +1,27 @@
+app viewer-spec [
+  version: "1.0.0",
+  description: "Design contract for turning a verified token into the viewer, the one place a token becomes the program's @user. VIEWER_RESOLVE { requestId?, verified?, sourceKind, sourceFields?, sourceEntity? } carries the token (absent is no token) and the program's identity source: none (no identity entity), claims (a runtime identity entity whose declared fields name the claims read) or directory (a persistent identity entity keyed by the verified uid). No token answers the anonymous viewer (id anonymous, role anonymous, no permissions) under every source. Source none: the id is the uid, email and name are the token's, a string role claim is the role, and every claim plus uid stays readable in claims. Source claims: id, email and name come only from the token (a token claim named id never overwrites the verified uid), and only the declared fields other than id, email and name are read from the claims, a declared field the token lacks staying absent. Source directory: the row keyed by the verified uid supplies the viewer (id the uid, every row field but id a claim, role from the row); with no row yet the viewer carries only the token's id, email and name; a directory source with no identity row lookup available is refused no-lookup. Overlapping resolutions queue first-in first-out in the entity (one directory lookup in flight, VIEWER_PUMP starts the oldest on every completion); one beyond maxQueue is refused busy; each is answered exactly once, in order. An unknown sourceKind is refused source. Deriving the source from the program's identity entity stays in the compiler (identitySourceOf); this contract takes the resolved source. Success is VIEWER_RESOLVED { requestId, viewer }. Goldens: spec/auth/viewer.goldens.json (sources are derived by the compiler from the program's identity entity; this contract takes the resolved source)."
+]
+
+type Claim = { name : string!, value : string! }
+type VerifiedToken = { uid : string!, email : string, name : string, claims : [Claim]! }
+orbital ViewerSpec {
+  expects entity ViewerCheck [runtime] {
+    id : string!
+  }
+  expects trait ViewerResolver {
+    state idle {
+      VIEWER_RESOLVE -> idle
+      VIEWER_PUMP -> looking
+    }
+    state looking {
+      VIEWER_RESOLVE -> looking
+      DIRECTORY_FOUND -> idle
+    }
+    emits {
+      VIEWER_RESOLVED { requestId : number  viewer : Viewer! }
+      VIEWER_REFUSED { requestId : number  reason : string! }
+    }
+  }
+  expects page "/viewer" -> ViewerResolver
+}

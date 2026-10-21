@@ -1,0 +1,16 @@
+app orb-sandbox-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb sandbox smoke [all|build|up|check|down]` (replaces the docker path of tools/orbital-sandbox/docker-smoke.sh; default all). The deploy inputs it drives (gate.Dockerfile, run.Dockerfile, gate-entry.sh, program.json, sandbox-data, and the microvm/ Firecracker, jailer and nft files) move to the io-gate crate's deploy directory and are read from there; the microvm half is written, not run, and is not part of this command. Names: P = orbital-sandbox; volumes P-target, P-cargo, P-sock; images P-gate and P-run; container P-gate. BUILD: `docker volume create P-target`, `docker volume create P-cargo`; `docker run --rm -v <orbital-rust>:/src:ro -v P-target:/target -v P-cargo:/usr/local/cargo/registry -e CARGO_TARGET_DIR=/target -w /src rust:1.93-bookworm sh -c <cargo build --locked -p io-gate --bin io-gate --bin orb-run>`; a staging directory receives io-gate and orb-run copied out of P-target (`docker run --rm -v P-target:/t:ro -v <stage>:/out debian:bookworm-slim cp …`) plus the deploy files; `docker build -q -f gate.Dockerfile -t P-gate <stage>` and the same for run.Dockerfile as P-run; the staging directory is removed. UP: `docker volume create P-sock`; `docker run -d --name P-gate --user 10001 --read-only --tmpfs /etc/gate:uid=10001,mode=0700 --cap-drop ALL --security-opt no-new-privileges:true -e GATE_GRANT_DIR=/data/granted -e GATE_EGRESS= -v P-sock:/run/gate -v <deploy>/sandbox-data:/data:ro P-gate`; then up to 60 times, 0.5 seconds apart, `docker exec P-gate test -S /run/gate/io-gate.sock`; a gate that never comes up prints `the gate did not come up:` and its `docker logs` (exit 1). CHECK: `docker run --rm --network none --user 10001 --read-only --cap-drop ALL --security-opt no-new-privileges:true -v P-sock:/run/gate P-run`, whose output is the six check lines of ask.py (`PASS  <name>` or `FAIL  <name>` in this order: kernel os/read-file of a granted file succeeds; kernel os/read-file of an ungranted file is denied; kernel os/read-file with a dot-dot escape is denied; kernel http outside the egress list fails through the gate; run side has only a loopback interface; run side cannot reach the internet); the exit code is the run container's. DOWN: `docker rm -f P-gate`, `docker volume rm P-sock`, always exit 0. ALL: down, build, up (down and exit 1 when either fails), check, down, exit with check's code. Any other word is a usage error (status 400, exit 2)."
+]
+
+orbital OrbSandboxSpec {
+  expects trait OrbSandbox {
+    state ready
+    state parsing
+    state running
+    emits {
+      SANDBOX_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page "/orb-sandbox" -> OrbSandbox
+}

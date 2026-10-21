@@ -1,0 +1,264 @@
+{
+ "atom": "ops/atoms/std-aws-board.lolo",
+ "trait": "AwsStatus",
+ "cases": [
+  {
+   "id": "load-reads-instances-first",
+   "now": "2026-10-15T12:30:45.678Z",
+   "config": {
+    "region": "us-east-1"
+   },
+   "steps": [
+    {
+     "event": "AWS_LOAD",
+     "payload": {},
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "AWS_RUN",
+        "payload": {
+         "stage": "instances",
+         "argv": [
+          "ec2",
+          "describe-instances",
+          "--query",
+          "Reservations[*].Instances[*].[InstanceId,InstanceType,State.Name,Tags[?Key==`Name`].Value|[0],LaunchTime,PublicIpAddress,Placement.AvailabilityZone]",
+          "--output",
+          "json",
+          "--region",
+          "us-east-1",
+          "--output",
+          "json"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "refresh-reads-instances-first",
+   "now": "2026-10-15T12:30:45.678Z",
+   "config": {
+    "region": "us-east-1"
+   },
+   "steps": [
+    {
+     "event": "AWS_REFRESH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "AWS_RUN",
+        "payload": {
+         "stage": "instances",
+         "argv": [
+          "ec2",
+          "describe-instances",
+          "--query",
+          "Reservations[*].Instances[*].[InstanceId,InstanceType,State.Name,Tags[?Key==`Name`].Value|[0],LaunchTime,PublicIpAddress,Placement.AvailabilityZone]",
+          "--output",
+          "json",
+          "--region",
+          "us-east-1",
+          "--output",
+          "json"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "instances-answered-then-volumes",
+   "now": "2026-10-15T12:30:45.678Z",
+   "config": {
+    "region": "us-east-1"
+   },
+   "steps": [
+    {
+     "event": "AWS_LOAD",
+     "payload": {}
+    },
+    {
+     "event": "AWS_RAN",
+     "payload": {
+      "stage": "instances",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "[[[\"i-1\",\"t3.small\",\"running\",\"x\",\"2026-10-15T00:00:00.000Z\",null,\"us-east-1a\"]]]",
+      "stderr": "",
+      "stdoutBytes": ""
+     },
+     "from": "reading",
+     "expect": {
+      "emits": [
+       {
+        "event": "AWS_RUN",
+        "payload": {
+         "stage": "volumes",
+         "argv": [
+          "ec2",
+          "describe-volumes",
+          "--query",
+          "Volumes[*].[VolumeId,Size,State,VolumeType,AvailabilityZone,Tags[?Key==`Name`].Value|[0],Attachments[0].InstanceId,Iops]",
+          "--output",
+          "json",
+          "--region",
+          "us-east-1",
+          "--output",
+          "json"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "instances-cli-unauthenticated-still-reads-volumes",
+   "now": "2026-10-15T12:30:45.678Z",
+   "config": {
+    "region": "us-east-1"
+   },
+   "steps": [
+    {
+     "event": "AWS_LOAD",
+     "payload": {}
+    },
+    {
+     "event": "AWS_CLI_FAILED",
+     "payload": {
+      "stage": "instances",
+      "error": "no aws",
+      "code": "cli_failed"
+     },
+     "from": "reading",
+     "expect": {
+      "emits": [
+       {
+        "event": "AWS_RUN",
+        "payload": {
+         "stage": "volumes",
+         "argv": [
+          "ec2",
+          "describe-volumes",
+          "--query",
+          "Volumes[*].[VolumeId,Size,State,VolumeType,AvailabilityZone,Tags[?Key==`Name`].Value|[0],Attachments[0].InstanceId,Iops]",
+          "--output",
+          "json",
+          "--region",
+          "us-east-1",
+          "--output",
+          "json"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "volumes-answered-then-images",
+   "now": "2026-10-15T12:30:45.678Z",
+   "config": {
+    "region": "us-east-1"
+   },
+   "steps": [
+    {
+     "event": "AWS_LOAD",
+     "payload": {}
+    },
+    {
+     "event": "AWS_RAN",
+     "payload": {
+      "stage": "volumes",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "[]",
+      "stderr": "",
+      "stdoutBytes": ""
+     },
+     "from": "reading",
+     "expect": {
+      "emits": [
+       {
+        "event": "AWS_RUN",
+        "payload": {
+         "stage": "images",
+         "argv": [
+          "ec2",
+          "describe-images",
+          "--owners",
+          "self",
+          "--query",
+          "Images[*].[ImageId,Name,State,CreationDate,BlockDeviceMappings[0].Ebs.VolumeSize]",
+          "--output",
+          "json",
+          "--region",
+          "us-east-1",
+          "--output",
+          "json"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-instances-not-json-still-advances",
+   "now": "2026-10-15T12:30:45.678Z",
+   "config": {
+    "region": "us-east-1"
+   },
+   "steps": [
+    {
+     "event": "AWS_LOAD",
+     "payload": {}
+    },
+    {
+     "event": "AWS_RAN",
+     "payload": {
+      "stage": "instances",
+      "exitCode": 1,
+      "signal": 0,
+      "stdout": "not json",
+      "stderr": "",
+      "stdoutBytes": ""
+     },
+     "from": "reading",
+     "expect": {
+      "emits": [
+       {
+        "event": "AWS_RUN",
+        "payload": {
+         "stage": "volumes",
+         "argv": [
+          "ec2",
+          "describe-volumes",
+          "--query",
+          "Volumes[*].[VolumeId,Size,State,VolumeType,AvailabilityZone,Tags[?Key==`Name`].Value|[0],Attachments[0].InstanceId,Iops]",
+          "--output",
+          "json",
+          "--region",
+          "us-east-1",
+          "--output",
+          "json"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,79 @@
+{
+ "atom": "ops/atoms/std-training-board.lolo",
+ "trait": "TrainingStatus",
+ "cases": [
+  {
+   "id": "list-answered-walks-the-instances",
+   "config": {
+    "region": "us-east-1",
+    "instanceTypes": [
+     "g4dn.*",
+     "g5.*",
+     "p3.*",
+     "p4d.*"
+    ]
+   },
+   "steps": [
+    {
+     "event": "TRAINING_LOAD",
+     "payload": {}
+    },
+    {
+     "event": "TR_RAN",
+     "payload": {
+      "stage": "list",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "[{\"Id\":\"i-1\",\"Type\":\"g5.xlarge\",\"IP\":\"3.4.5.6\",\"Launch\":\"2026-10-15T00:00:00Z\"}]",
+      "stderr": "",
+      "stdoutBytes": ""
+     },
+     "from": "reading",
+     "expect": {
+      "emits": [
+       {
+        "event": "TR_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "aws-cannot-list-none-walks-nothing",
+   "config": {
+    "region": "us-east-1",
+    "instanceTypes": [
+     "g4dn.*",
+     "g5.*",
+     "p3.*",
+     "p4d.*"
+    ]
+   },
+   "steps": [
+    {
+     "event": "TRAINING_LOAD",
+     "payload": {}
+    },
+    {
+     "event": "TR_CLI_FAILED",
+     "payload": {
+      "stage": "list",
+      "error": "no aws",
+      "code": "cli_failed"
+     },
+     "from": "reading",
+     "expect": {
+      "emits": [
+       {
+        "event": "TR_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

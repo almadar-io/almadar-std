@@ -1,0 +1,52 @@
+app std-verify-credit [
+  version: "1.0.0",
+  description: "std-verify-credit — the kernel's credit_failure_routes (orbital-core verify/plan_wire.rs) as data. CREDIT_REQUEST carries the planned steps as the credit pass sees them; CREDIT_ANSWERED returns a Credit {index, stateBefore, stateAfter} for each failure-route step (reply 'failure') that another step's dispatch already fired as a hop with the same trait, from and event, the arm matching when the step names one. Not ported: plan_init_credits (it reads the whole schema through the Rust planner)."
+]
+;; @capabilities "verify credit, failure route credit, fired hop, coverage credit, verifier"
+uses Spec from "almadar-std/verify-credit"
+
+type FiredHop = { trait : string!, from : string!, event : string!, to : string!, arm : number }
+type CreditStep = { trait : string!, from : string!, event : string!, arm : number, reply : string, fired : [FiredHop] }
+type Credit = { index : number!, stateBefore : string!, stateAfter : string! }
+type CreditIdx = { idx : number!, s : CreditStep! }
+type CreditIdxList = [CreditIdx]
+type CreditList = [Credit]
+type HopList = [FiredHop]
+
+orbital VerifyCreditOrbital {
+  entity CreditRun [runtime] {
+    id : string!
+    credits : [Credit]! = []
+  }
+
+  trait Credit -> CreditRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      CREDIT_REQUEST -> ready
+        (let ((hops (array/reduce @payload.steps (json/parse "[]" HopList) (fn (acc s) (array/concat @acc (object/get @s "fired" (json/parse "[]" HopList)))))))
+          (do (set @entity.credits (array/reduce (array/reduce @payload.steps (json/parse "[]" CreditIdxList) (fn (acc s) (array/concat @acc [{ idx: (array/len @acc), s: @s }]))) (json/parse "[]" CreditList) (fn (acc p)
+                (let ((step (object/get @p "s")))
+                  (let ((hit (array/find @hops (fn h (and (= (object/get @h "trait") (object/get @step "trait")) (= (object/get @h "from") (object/get @step "from")) (= (object/get @h "event") (object/get @step "event")) (or (not (object/has @step "arm")) (= (object/get @h "arm" (- 0 1)) (object/get @step "arm"))))))))
+                    (if (and (= (object/get @step "reply" "") "failure") (!= @hit null))
+                      (array/concat @acc [{ index: (object/get @p "idx"), stateBefore: (object/get @hit "from"), stateAfter: (object/get @hit "to") }])
+                      @acc))))))
+              (emit CREDIT_ANSWERED { credits: @entity.credits })))
+    }
+
+    emits {
+      CREDIT_ANSWERED -> external { credits : [Credit]! }
+        @description "The failure-route steps credited from hops another dispatch fired."
+        @tier "domain"
+    }
+
+    listens {
+      CREDIT_REQUEST -> external { steps : [CreditStep]! }
+        @description "Credit the failure-route steps of a plan from the hops the other steps fired."
+        @synonyms "verify credit, failure route credit, credit pass, fired hops"
+    }
+  }
+
+  page "/verify-credit" as VerifyCreditPage -> Credit
+}

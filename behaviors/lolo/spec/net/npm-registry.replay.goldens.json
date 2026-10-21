@@ -1,0 +1,1084 @@
+{
+ "atom": "net/atoms/std-npm-registry.lolo",
+ "trait": "NpmRegistry",
+ "cases": [
+  {
+   "id": "versions-listed-ascending-with-dist-tags",
+   "steps": [
+    {
+     "event": "NPM_VERSIONS",
+     "payload": {
+      "name": "@almadar/core"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_GET",
+        "payload": {
+         "kind": "versions"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "NPM_GET",
+     "payload": {
+      "kind": "versions"
+     },
+     "from": "listing"
+    },
+    {
+     "event": "NPM_PACKUMENT",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "{\"name\": \"@almadar/core\", \"versions\": {\"1.10.0\": {\"dist\": {\"tarball\": \"https://registry.npmjs.org/@almadar/core/-/core-1.10.0.tgz\"}}, \"1.2.0\": {\"dist\": {\"tarball\": \"https://registry.npmjs.org/@almadar/core/-/core-1.2.0.tgz\"}}, \"1.9.3\": {\"dist\": {\"tarball\": \"https://registry.npmjs.org/@almadar/core/-/core-1.9.3.tgz\"}}, \"0.9.0\": {\"dist\": {\"tarball\": \"https://registry.npmjs.org/@almadar/core/-/core-0.9.0.tgz\"}}}, \"dist-tags\": {\"latest\": \"1.10.0\"}}",
+      "key": "versions"
+     },
+     "from": "listing",
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_VERSIONS_LISTED",
+        "payload": {
+         "name": "@almadar/core",
+         "versions": [
+          "0.9.0",
+          "1.2.0",
+          "1.9.3",
+          "1.10.0"
+         ],
+         "tags": {
+          "latest": "1.10.0"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-versions-404-is-absent-not-an-empty-list",
+   "steps": [
+    {
+     "event": "NPM_VERSIONS",
+     "payload": {
+      "name": "@almadar/core"
+     }
+    },
+    {
+     "event": "NPM_PACKUMENT",
+     "payload": {
+      "status": 404,
+      "headers": {},
+      "body": "{}",
+      "key": "versions"
+     },
+     "from": "listing",
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_FAILED",
+        "payload": {
+         "name": "@almadar/core",
+         "code": "absent",
+         "status": 404
+        }
+       }
+      ],
+      "neverEmits": [
+       "NPM_VERSIONS_LISTED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "next-patch-skips-published-versions",
+   "steps": [
+    {
+     "event": "NPM_NEXT_VERSION",
+     "payload": {
+      "name": "@almadar/core",
+      "current": "1.2.3",
+      "bump": "patch"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_GET",
+        "payload": {
+         "kind": "next"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "NPM_PACKUMENT",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "{\"name\": \"@almadar/core\", \"versions\": {\"1.2.3\": {\"dist\": {\"tarball\": \"https://registry.npmjs.org/@almadar/core/-/core-1.2.3.tgz\"}}, \"1.2.4\": {\"dist\": {\"tarball\": \"https://registry.npmjs.org/@almadar/core/-/core-1.2.4.tgz\"}}, \"1.2.5\": {\"dist\": {\"tarball\": \"https://registry.npmjs.org/@almadar/core/-/core-1.2.5.tgz\"}}}}",
+      "key": "next"
+     },
+     "from": "listing",
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_NEXT",
+        "payload": {
+         "name": "@almadar/core",
+         "current": "1.2.3",
+         "next": "1.2.6",
+         "skipped": [
+          "1.2.4",
+          "1.2.5"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-next-patch-nothing-published-ahead",
+   "steps": [
+    {
+     "event": "NPM_NEXT_VERSION",
+     "payload": {
+      "name": "@almadar/core",
+      "current": "1.2.3",
+      "bump": "patch"
+     }
+    },
+    {
+     "event": "NPM_PACKUMENT",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "{\"name\": \"@almadar/core\", \"versions\": {\"1.2.3\": {\"dist\": {\"tarball\": \"https://registry.npmjs.org/@almadar/core/-/core-1.2.3.tgz\"}}}}",
+      "key": "next"
+     },
+     "from": "listing",
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_NEXT",
+        "payload": {
+         "next": "1.2.4",
+         "skipped": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "next-minor-resets-patch-and-skips",
+   "steps": [
+    {
+     "event": "NPM_NEXT_VERSION",
+     "payload": {
+      "name": "@almadar/core",
+      "current": "1.2.3",
+      "bump": "minor"
+     }
+    },
+    {
+     "event": "NPM_PACKUMENT",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "{\"name\": \"@almadar/core\", \"versions\": {\"1.3.0\": {\"dist\": {\"tarball\": \"https://registry.npmjs.org/@almadar/core/-/core-1.3.0.tgz\"}}}}",
+      "key": "next"
+     },
+     "from": "listing",
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_NEXT",
+        "payload": {
+         "next": "1.3.1",
+         "skipped": [
+          "1.3.0"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "next-minor-on-zero-major-is-demoted-to-patch",
+   "steps": [
+    {
+     "event": "NPM_NEXT_VERSION",
+     "payload": {
+      "name": "@almadar/core",
+      "current": "0.5.1",
+      "bump": "minor"
+     }
+    },
+    {
+     "event": "NPM_PACKUMENT",
+     "payload": {
+      "status": 404,
+      "headers": {},
+      "body": "{}",
+      "key": "next"
+     },
+     "from": "listing",
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_NEXT",
+        "payload": {
+         "next": "0.5.2",
+         "skipped": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "next-minor-with-major-flag-cuts-a-major-even-on-zero-major",
+   "steps": [
+    {
+     "event": "NPM_NEXT_VERSION",
+     "payload": {
+      "name": "@almadar/core",
+      "current": "0.5.1",
+      "bump": "minor",
+      "major": true
+     }
+    },
+    {
+     "event": "NPM_PACKUMENT",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "{\"name\": \"@almadar/core\", \"versions\": {\"1.0.0\": {\"dist\": {\"tarball\": \"https://registry.npmjs.org/@almadar/core/-/core-1.0.0.tgz\"}}}}",
+      "key": "next"
+     },
+     "from": "listing",
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_NEXT",
+        "payload": {
+         "next": "1.0.1",
+         "skipped": [
+          "1.0.0"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "next-major-bump-resets-minor-and-patch",
+   "steps": [
+    {
+     "event": "NPM_NEXT_VERSION",
+     "payload": {
+      "name": "@almadar/core",
+      "current": "2.4.9",
+      "bump": "major"
+     }
+    },
+    {
+     "event": "NPM_PACKUMENT",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "{\"name\": \"@almadar/core\", \"versions\": {}}",
+      "key": "next"
+     },
+     "from": "listing",
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_NEXT",
+        "payload": {
+         "next": "3.0.0",
+         "skipped": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "next-401-is-auth-never-mistaken-for-unpublished",
+   "steps": [
+    {
+     "event": "NPM_NEXT_VERSION",
+     "payload": {
+      "name": "@almadar-io/behaviors",
+      "current": "1.2.3",
+      "bump": "patch"
+     }
+    },
+    {
+     "event": "NPM_PACKUMENT",
+     "payload": {
+      "status": 401,
+      "headers": {},
+      "body": "{}",
+      "key": "next"
+     },
+     "from": "listing",
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_FAILED",
+        "payload": {
+         "name": "@almadar-io/behaviors",
+         "code": "auth",
+         "status": 401
+        }
+       }
+      ],
+      "neverEmits": [
+       "NPM_NEXT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-next-invalid-current-refused",
+   "steps": [
+    {
+     "event": "NPM_NEXT_VERSION",
+     "payload": {
+      "name": "@almadar/core",
+      "current": "1.2",
+      "bump": "patch"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_FAILED",
+        "payload": {
+         "code": "invalid_version"
+        }
+       }
+      ],
+      "neverEmits": [
+       "NPM_GET"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-next-invalid-bump-refused",
+   "steps": [
+    {
+     "event": "NPM_NEXT_VERSION",
+     "payload": {
+      "name": "@almadar/core",
+      "current": "1.2.3",
+      "bump": "huge"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_FAILED",
+        "payload": {
+         "code": "invalid_version"
+        }
+       }
+      ],
+      "neverEmits": [
+       "NPM_GET"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "probe-403-classified-auth",
+   "steps": [
+    {
+     "event": "NPM_AUTH_PROBE",
+     "payload": {
+      "name": "@almadar-io/behaviors"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_GET",
+        "payload": {
+         "kind": "probe"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "NPM_PACKUMENT",
+     "payload": {
+      "status": 403,
+      "headers": {},
+      "body": "{}",
+      "key": "probe"
+     },
+     "from": "listing",
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_FAILED",
+        "payload": {
+         "code": "auth",
+         "status": 403
+        }
+       }
+      ],
+      "neverEmits": [
+       "NPM_AUTH_OK"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "probe-500-classified-unreachable",
+   "steps": [
+    {
+     "event": "NPM_AUTH_PROBE",
+     "payload": {
+      "name": "@almadar-io/behaviors"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_GET",
+        "payload": {
+         "kind": "probe"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "NPM_PACKUMENT",
+     "payload": {
+      "status": 500,
+      "headers": {},
+      "body": "{}",
+      "key": "probe"
+     },
+     "from": "listing",
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_FAILED",
+        "payload": {
+         "code": "unreachable",
+         "status": 500
+        }
+       }
+      ],
+      "neverEmits": [
+       "NPM_AUTH_OK"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "probe-418-classified-unexpected",
+   "steps": [
+    {
+     "event": "NPM_AUTH_PROBE",
+     "payload": {
+      "name": "@almadar-io/behaviors"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_GET",
+        "payload": {
+         "kind": "probe"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "NPM_PACKUMENT",
+     "payload": {
+      "status": 418,
+      "headers": {},
+      "body": "{}",
+      "key": "probe"
+     },
+     "from": "listing",
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_FAILED",
+        "payload": {
+         "code": "unexpected",
+         "status": 418
+        }
+       }
+      ],
+      "neverEmits": [
+       "NPM_AUTH_OK"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-probe-200-is-auth-ok",
+   "steps": [
+    {
+     "event": "NPM_AUTH_PROBE",
+     "payload": {
+      "name": "@almadar-io/behaviors"
+     }
+    },
+    {
+     "event": "NPM_PACKUMENT",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "{\"name\": \"@almadar/core\", \"versions\": {\"1.0.0\": {\"dist\": {\"tarball\": \"https://registry.npmjs.org/@almadar/core/-/core-1.0.0.tgz\"}}}}",
+      "key": "probe"
+     },
+     "from": "listing",
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_AUTH_OK",
+        "payload": {
+         "name": "@almadar-io/behaviors"
+        }
+       }
+      ],
+      "neverEmits": [
+       "NPM_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "transport-failure-is-unreachable-credential-gap-is-unconfigured",
+   "steps": [
+    {
+     "event": "NPM_VERSIONS",
+     "payload": {
+      "name": "@almadar/core"
+     }
+    },
+    {
+     "event": "NPM_UNREACHABLE",
+     "payload": {
+      "error": "timed out",
+      "kind": "timeout"
+     },
+     "from": "listing",
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_FAILED",
+        "payload": {
+         "code": "unreachable",
+         "error": "timed out"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-unset-credential-is-unconfigured",
+   "steps": [
+    {
+     "event": "NPM_VERSIONS",
+     "payload": {
+      "name": "@almadar/core"
+     }
+    },
+    {
+     "event": "NPM_UNREACHABLE",
+     "payload": {
+      "error": "credential NPM_REGISTRY_TOKEN is not set",
+      "kind": "unconfigured"
+     },
+     "from": "listing",
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_FAILED",
+        "payload": {
+         "code": "unconfigured"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "ask-during-an-ask-is-busy",
+   "steps": [
+    {
+     "event": "NPM_VERSIONS",
+     "payload": {
+      "name": "@almadar/core"
+     }
+    },
+    {
+     "event": "NPM_NEXT_VERSION",
+     "payload": {
+      "name": "@almadar/ui",
+      "current": "1.0.0",
+      "bump": "patch"
+     },
+     "from": "listing",
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_FAILED",
+        "payload": {
+         "name": "@almadar/ui",
+         "code": "npm_busy"
+        }
+       }
+      ],
+      "neverEmits": [
+       "NPM_GET"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "wait-visible-then-tarball-downloads-then-visible",
+   "steps": [
+    {
+     "event": "NPM_WAIT",
+     "payload": {
+      "name": "@almadar/core",
+      "version": "3.1.0"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_WAIT_RETRY_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "NPM_WAIT_ATTEMPT",
+     "payload": {
+      "key": "npm-wait:1",
+      "attempt": 1
+     },
+     "from": "waiting"
+    },
+    {
+     "event": "NPM_WAIT_PACKUMENT",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "{\"name\": \"@almadar/core\", \"versions\": {\"3.1.0\": {\"dist\": {\"tarball\": \"https://registry.npmjs.org/@almadar/core/-/core-3.1.0.tgz\"}}}}",
+      "key": ""
+     },
+     "from": "waiting",
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_WAIT_TARBALL",
+        "payload": {
+         "url": "https://registry.npmjs.org/@almadar/core/-/core-3.1.0.tgz"
+        }
+       }
+      ],
+      "neverEmits": [
+       "NPM_WAIT_RETRY_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "NPM_WAIT_TARBALL",
+     "payload": {
+      "url": "https://registry.npmjs.org/@almadar/core/-/core-3.1.0.tgz"
+     },
+     "from": "waiting"
+    },
+    {
+     "event": "NPM_WAIT_TARBALL_REPLIED",
+     "payload": {
+      "status": 206,
+      "headers": {},
+      "body": "x",
+      "key": ""
+     },
+     "from": "waiting",
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_WAIT_RETRY_SUCCEEDED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "NPM_WAIT_DONE",
+     "payload": {
+      "key": "npm-wait:1",
+      "attempts": 4
+     },
+     "from": "waiting",
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_VISIBLE",
+        "payload": {
+         "name": "@almadar/core",
+         "version": "3.1.0",
+         "attempts": 4
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "wait-version-not-listed-yet-retries",
+   "steps": [
+    {
+     "event": "NPM_WAIT",
+     "payload": {
+      "name": "@almadar/core",
+      "version": "3.1.0"
+     }
+    },
+    {
+     "event": "NPM_WAIT_PACKUMENT",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "{\"name\": \"@almadar/core\", \"versions\": {\"3.0.9\": {\"dist\": {\"tarball\": \"https://registry.npmjs.org/@almadar/core/-/core-3.0.9.tgz\"}}}}",
+      "key": ""
+     },
+     "from": "waiting",
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_WAIT_RETRY_FAILED",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "NPM_WAIT_TARBALL",
+       "NPM_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "wait-packument-404-retries",
+   "steps": [
+    {
+     "event": "NPM_WAIT",
+     "payload": {
+      "name": "@almadar/core",
+      "version": "3.1.0"
+     }
+    },
+    {
+     "event": "NPM_WAIT_PACKUMENT",
+     "payload": {
+      "status": 404,
+      "headers": {},
+      "body": "{}",
+      "key": ""
+     },
+     "from": "waiting",
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_WAIT_RETRY_FAILED",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "NPM_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "wait-listed-but-tarball-404-is-cdn-lag-retries",
+   "steps": [
+    {
+     "event": "NPM_WAIT",
+     "payload": {
+      "name": "@almadar/core",
+      "version": "3.1.0"
+     }
+    },
+    {
+     "event": "NPM_WAIT_TARBALL_REPLIED",
+     "payload": {
+      "status": 404,
+      "headers": {},
+      "body": "",
+      "key": ""
+     },
+     "from": "waiting",
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_WAIT_RETRY_FAILED",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "NPM_WAIT_RETRY_SUCCEEDED",
+       "NPM_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "wait-listed-tarball-outside-registry-origin-is-not-probed",
+   "steps": [
+    {
+     "event": "NPM_WAIT",
+     "payload": {
+      "name": "@almadar/core",
+      "version": "3.1.0"
+     }
+    },
+    {
+     "event": "NPM_WAIT_PACKUMENT",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "{\"name\": \"@almadar/core\", \"versions\": {\"3.1.0\": {\"dist\": {\"tarball\": \"https://evil.example.test/x.tgz\"}}}}",
+      "key": ""
+     },
+     "from": "waiting",
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_WAIT_RETRY_FAILED",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "NPM_WAIT_TARBALL"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "wait-401-cancels-the-poll-and-is-auth",
+   "steps": [
+    {
+     "event": "NPM_WAIT",
+     "payload": {
+      "name": "@almadar-io/behaviors",
+      "version": "3.1.0"
+     }
+    },
+    {
+     "event": "NPM_WAIT_PACKUMENT",
+     "payload": {
+      "status": 401,
+      "headers": {},
+      "body": "{}",
+      "key": ""
+     },
+     "from": "waiting",
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_WAIT_RETRY_CANCEL",
+        "payload": {}
+       },
+       {
+        "event": "NPM_FAILED",
+        "payload": {
+         "code": "auth",
+         "status": 401
+        }
+       }
+      ],
+      "neverEmits": [
+       "NPM_WAIT_RETRY_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "wait-tarball-403-cancels-the-poll-and-is-auth",
+   "steps": [
+    {
+     "event": "NPM_WAIT",
+     "payload": {
+      "name": "@almadar-io/behaviors",
+      "version": "3.1.0"
+     }
+    },
+    {
+     "event": "NPM_WAIT_TARBALL_REPLIED",
+     "payload": {
+      "status": 403,
+      "headers": {},
+      "body": "",
+      "key": ""
+     },
+     "from": "waiting",
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_WAIT_RETRY_CANCEL",
+        "payload": {}
+       },
+       {
+        "event": "NPM_FAILED",
+        "payload": {
+         "code": "auth",
+         "status": 403
+        }
+       }
+      ],
+      "neverEmits": [
+       "NPM_WAIT_RETRY_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "wait-transport-failure-retries",
+   "steps": [
+    {
+     "event": "NPM_WAIT",
+     "payload": {
+      "name": "@almadar/core",
+      "version": "3.1.0"
+     }
+    },
+    {
+     "event": "NPM_WAIT_UNREACHABLE",
+     "payload": {
+      "error": "connection reset",
+      "kind": "network"
+     },
+     "from": "waiting",
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_WAIT_RETRY_FAILED",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "NPM_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "wait-attempts-spent-is-timeout",
+   "steps": [
+    {
+     "event": "NPM_WAIT",
+     "payload": {
+      "name": "@almadar/core",
+      "version": "3.1.0"
+     }
+    },
+    {
+     "event": "NPM_WAIT_GAVE_UP",
+     "payload": {
+      "key": "npm-wait:1",
+      "attempts": 80,
+      "error": "not yet visible"
+     },
+     "from": "waiting",
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_WAIT_TIMEOUT",
+        "payload": {
+         "name": "@almadar/core",
+         "version": "3.1.0",
+         "attempts": 80
+        }
+       }
+      ],
+      "neverEmits": [
+       "NPM_VISIBLE"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "ask-during-a-wait-is-busy",
+   "steps": [
+    {
+     "event": "NPM_WAIT",
+     "payload": {
+      "name": "@almadar/core",
+      "version": "3.1.0"
+     }
+    },
+    {
+     "event": "NPM_AUTH_PROBE",
+     "payload": {
+      "name": "@almadar/ui"
+     },
+     "from": "waiting",
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_FAILED",
+        "payload": {
+         "code": "npm_busy"
+        }
+       }
+      ],
+      "neverEmits": [
+       "NPM_GET"
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

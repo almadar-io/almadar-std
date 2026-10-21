@@ -1,0 +1,190 @@
+{
+ "source": "spec/auth/bearer-tokens.goldens.json (firebase.certs fb-key-1 paired with the oidc jwks k-rsa from the same generated key; base64url normalised to padded base64 here). PARSE cascades the whole walk inside one step and reports only its own emit, so the second step replays the settled state's last event to observe the answer. A control with a wrong expected modulus was run and failed as it should.",
+ "atom": "codec/atoms/std-x509.lolo",
+ "trait": "X509Parse",
+ "cases": [
+  {
+   "id": "certificate yields its modulus and exponent",
+   "steps": [
+    {
+     "event": "X509_PARSE",
+     "payload": {
+      "pem": "-----BEGIN CERTIFICATE-----\nMIIDGTCCAgGgAwIBAgIUWSeltjrwOo39kbPhZLMPdruFhMUwDQYJKoZIhvcNAQEL\nBQAwGzEZMBcGA1UEAwwQdGVzdC1zZWN1cmV0b2tlbjAgFw0yNjEwMTcyMTQyMDla\nGA8yMTI2MDkyMzIxNDIwOVowGzEZMBcGA1UEAwwQdGVzdC1zZWN1cmV0b2tlbjCC\nASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMKNTKLp5gzByrX3akLCD7M2\n001GLR4HC5zvmlDQYThj2zysZ2bT7O2fD0jR2Nv/0V/IquNtiYE5RVyivPhyuKCq\nbTlMugfqNx5cXrUAy0VZsg9esOpvCBw7t92MZChdv4BjF7DaOYIF8/zh7idSgSZ3\nZzoOTtN/9wXQEqZZ8ws3Msl0k8zqsUtT4l2C/CTW5Q+Dpa3qi51fZEDOlgdbJtS/\nIgyQ+hj9OS+UnazLjtnYnrC9mJhDFx5keDuUi9dBnAy2E3kqMjJ/QzW0dhHsPtSY\n8n7QGo0uQpsB0AoyKCVfwPTiF1m9cYhcwaEEsWJ6ga8SVu6NMBKBqN5LEXpOId8C\nAwEAAaNTMFEwHQYDVR0OBBYEFPCzJuwbaKw4MaIMoANdqhVJev4CMB8GA1UdIwQY\nMBaAFPCzJuwbaKw4MaIMoANdqhVJev4CMA8GA1UdEwEB/wQFMAMBAf8wDQYJKoZI\nhvcNAQELBQADggEBAJNYF4Ul+E3prjyQmEGaZ4xDuDUlA2Kq/Q7OP7o2MovLfrS9\nRQR+LwsloAPyL+fFDJkt2nRQVZJVoqv0pYn7Krl75aWx8/tir0BSVpOkUmQymmLs\nrNNYiTBsD0g3ZBjEXZf/F2+Ve2jvgdl/MtRq06plZkxZQNiuAC9koakUQMHbFVz5\n9gUlh8A5yNCNI9MW35Ga5t6iXDNuklvc5/HAxW7qOKWfbQUW5/UaoMsf6enmmS/a\nhckDbba0KYyp9y6KOhiw/gLevHgUHf1Vi/fKZ6mxrL9nrfjTzv+uQmTxDl6K1FYz\nFT7lD5LLKW5LvkvLISNZCTtqWgG0Fn4722Js62g=\n-----END CERTIFICATE-----\n"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "X509_STEP",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "X509_ACT",
+     "payload": {
+      "at": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "X509_PARSED",
+        "payload": {
+         "n": "wo1MounmDMHKtfdqQsIPszbTTUYtHgcLnO+aUNBhOGPbPKxnZtPs7Z8PSNHY2//RX8iq422JgTlFXKK8+HK4oKptOUy6B+o3HlxetQDLRVmyD16w6m8IHDu33YxkKF2/gGMXsNo5ggXz/OHuJ1KBJndnOg5O03/3BdASplnzCzcyyXSTzOqxS1PiXYL8JNblD4OlreqLnV9kQM6WB1sm1L8iDJD6GP05L5SdrMuO2diesL2YmEMXHmR4O5SL10GcDLYTeSoyMn9DNbR2Eew+1JjyftAajS5CmwHQCjIoJV/A9OIXWb1xiFzBoQSxYnqBrxJW7o0wEoGo3ksRek4h3w==",
+         "e": "AQAB"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "no armour is refused pem",
+   "steps": [
+    {
+     "event": "X509_PARSE",
+     "payload": {
+      "pem": "hello"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "X509_REFUSED",
+        "payload": {
+         "reason": "pem"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a body that is not base64 is refused invalid",
+   "steps": [
+    {
+     "event": "X509_PARSE",
+     "payload": {
+      "pem": "-----BEGIN CERTIFICATE-----\n!!!\n-----END CERTIFICATE-----\n"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "X509_REFUSED",
+        "payload": {
+         "reason": "invalid"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a truncated certificate is refused der",
+   "steps": [
+    {
+     "event": "X509_PARSE",
+     "payload": {
+      "pem": "-----BEGIN CERTIFICATE-----\nMIIDGTCCAgGgAwIBAgIUWSeltjrwOo39kbPhZLMPdruFhMUwDQYJKoZIhvcNAQEL\nBQAwGzEZMBcGA1UE\n-----END CERTIFICATE-----\n"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "X509_STEP",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "X509_STEP",
+     "payload": {
+      "at": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "X509_REFUSED",
+        "payload": {
+         "reason": "der"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a certificate whose first tag is not a sequence is refused der",
+   "steps": [
+    {
+     "event": "X509_PARSE",
+     "payload": {
+      "pem": "-----BEGIN CERTIFICATE-----\nMYIDGTCCAgGgAwIBAgIUWSeltjrwOo39kbPhZLMPdruFhMUwDQYJKoZIhvcNAQEL\nBQAwGzEZMBcGA1UEAwwQdGVzdC1zZWN1cmV0b2tlbjAgFw0yNjEwMTcyMTQyMDla\nGA8yMTI2MDkyMzIxNDIwOVowGzEZMBcGA1UEAwwQdGVzdC1zZWN1cmV0b2tlbjCC\nASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMKNTKLp5gzByrX3akLCD7M2\n001GLR4HC5zvmlDQYThj2zysZ2bT7O2fD0jR2Nv/0V/IquNtiYE5RVyivPhyuKCq\nbTlMugfqNx5cXrUAy0VZsg9esOpvCBw7t92MZChdv4BjF7DaOYIF8/zh7idSgSZ3\nZzoOTtN/9wXQEqZZ8ws3Msl0k8zqsUtT4l2C/CTW5Q+Dpa3qi51fZEDOlgdbJtS/\nIgyQ+hj9OS+UnazLjtnYnrC9mJhDFx5keDuUi9dBnAy2E3kqMjJ/QzW0dhHsPtSY\n8n7QGo0uQpsB0AoyKCVfwPTiF1m9cYhcwaEEsWJ6ga8SVu6NMBKBqN5LEXpOId8C\nAwEAAaNTMFEwHQYDVR0OBBYEFPCzJuwbaKw4MaIMoANdqhVJev4CMB8GA1UdIwQY\nMBaAFPCzJuwbaKw4MaIMoANdqhVJev4CMA8GA1UdEwEB/wQFMAMBAf8wDQYJKoZI\nhvcNAQELBQADggEBAJNYF4Ul+E3prjyQmEGaZ4xDuDUlA2Kq/Q7OP7o2MovLfrS9\nRQR+LwsloAPyL+fFDJkt2nRQVZJVoqv0pYn7Krl75aWx8/tir0BSVpOkUmQymmLs\nrNNYiTBsD0g3ZBjEXZf/F2+Ve2jvgdl/MtRq06plZkxZQNiuAC9koakUQMHbFVz5\n9gUlh8A5yNCNI9MW35Ga5t6iXDNuklvc5/HAxW7qOKWfbQUW5/UaoMsf6enmmS/a\nhckDbba0KYyp9y6KOhiw/gLevHgUHf1Vi/fKZ6mxrL9nrfjTzv+uQmTxDl6K1FYz\nFT7lD5LLKW5LvkvLISNZCTtqWgG0Fn4722Js62g=\n-----END CERTIFICATE-----\n"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "X509_STEP",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "X509_ACT",
+     "payload": {
+      "at": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "X509_REFUSED",
+        "payload": {
+         "reason": "der"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a key that is not rsaEncryption is refused key-type",
+   "steps": [
+    {
+     "event": "X509_PARSE",
+     "payload": {
+      "pem": "-----BEGIN CERTIFICATE-----\nMIIDGTCCAgGgAwIBAgIUWSeltjrwOo39kbPhZLMPdruFhMUwDQYJKoZIhvcNAQEL\nBQAwGzEZMBcGA1UEAwwQdGVzdC1zZWN1cmV0b2tlbjAgFw0yNjEwMTcyMTQyMDla\nGA8yMTI2MDkyMzIxNDIwOVowGzEZMBcGA1UEAwwQdGVzdC1zZWN1cmV0b2tlbjCC\nASIwDQYJKoZIhvcNAQECBQADggEPADCCAQoCggEBAMKNTKLp5gzByrX3akLCD7M2\n001GLR4HC5zvmlDQYThj2zysZ2bT7O2fD0jR2Nv/0V/IquNtiYE5RVyivPhyuKCq\nbTlMugfqNx5cXrUAy0VZsg9esOpvCBw7t92MZChdv4BjF7DaOYIF8/zh7idSgSZ3\nZzoOTtN/9wXQEqZZ8ws3Msl0k8zqsUtT4l2C/CTW5Q+Dpa3qi51fZEDOlgdbJtS/\nIgyQ+hj9OS+UnazLjtnYnrC9mJhDFx5keDuUi9dBnAy2E3kqMjJ/QzW0dhHsPtSY\n8n7QGo0uQpsB0AoyKCVfwPTiF1m9cYhcwaEEsWJ6ga8SVu6NMBKBqN5LEXpOId8C\nAwEAAaNTMFEwHQYDVR0OBBYEFPCzJuwbaKw4MaIMoANdqhVJev4CMB8GA1UdIwQY\nMBaAFPCzJuwbaKw4MaIMoANdqhVJev4CMA8GA1UdEwEB/wQFMAMBAf8wDQYJKoZI\nhvcNAQELBQADggEBAJNYF4Ul+E3prjyQmEGaZ4xDuDUlA2Kq/Q7OP7o2MovLfrS9\nRQR+LwsloAPyL+fFDJkt2nRQVZJVoqv0pYn7Krl75aWx8/tir0BSVpOkUmQymmLs\nrNNYiTBsD0g3ZBjEXZf/F2+Ve2jvgdl/MtRq06plZkxZQNiuAC9koakUQMHbFVz5\n9gUlh8A5yNCNI9MW35Ga5t6iXDNuklvc5/HAxW7qOKWfbQUW5/UaoMsf6enmmS/a\nhckDbba0KYyp9y6KOhiw/gLevHgUHf1Vi/fKZ6mxrL9nrfjTzv+uQmTxDl6K1FYz\nFT7lD5LLKW5LvkvLISNZCTtqWgG0Fn4722Js62g=\n-----END CERTIFICATE-----\n"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "X509_STEP",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "X509_ACT",
+     "payload": {
+      "at": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "X509_REFUSED",
+        "payload": {
+         "reason": "key-type"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

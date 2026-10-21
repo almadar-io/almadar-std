@@ -1,16 +1,17 @@
 app std-http-server [
   version: "1.0.0",
-  env: ["CORS_ORIGIN", "VAPID_PUBLIC_KEY", "ORB_TICK_INVOKER", "ALMADAR_API_KEY_SALT"],
+  env: ["CORS_ORIGIN", "VAPID_PUBLIC_KEY", "ORB_TICK_INVOKER", "ALMADAR_API_KEY_SALT", "FIREBASE_AUTH_EMULATOR_HOST"],
   egress: ["https://www.googleapis.com"],
   fs: { cwd: "dist/client/**": [read] },
   net: { "127.0.0.1:3000": [listen] },
-  description: "std-http-server — the HTTP server program that replaces orbital-server, first slice, composed from atoms and owning no topology of its own. std-http-policy reads CORS_ORIGIN at boot (a comma list, trimmed, blanks dropped) and answers CORS_CONFIGURED, which tells std-http1 to bind the host and port knobs. std-http1 reads each connection and delivers one typed request; std-http-router asks std-http-policy to decide it (a preflight and a 413 are answered at once), counts an /api request in std-rate-limiter (ADMITTED or THROTTLED, a throttled one is 429 with ratelimit-* headers), routes it by method and path (GET /api/health answers 200 { status, version }, every other path 404 { error, code }) and hands the answer back to std-http1 as RESPOND. Requests are correlated by requestId, so any number are in flight at once. Bound to spec/net/server.lolo. GET /api/events?ticket=<t> is the live stream: the router asks std-stream-ticket to spend the ticket, TICKET_TAKEN opens the stream through std-sse and std-http1 (RESPOND_HEAD/RESPOND_CHUNK/RESPOND_END, heartbeats, close on client disconnect), a missing or bad ticket is 401 { error, code }. POST /api/events/ticket mints a ticket for the anonymous viewer and answers 200 { ticket } (503 if the mint fails). The stream is opened, held and closed with only the retry frame and heartbeats; pushing the kernel broadcast feed is a later item. A bearer starting with the API key prefix goes only to std-api-key-verifier (prefix-exclusive, as the Rust WithApiKeys), anything else only to the JWT path; neither falls back. The other routes, hooks and static files are not in this slice."
+  description: "std-http-server — the HTTP server program that replaces orbital-server, first slice, composed from atoms and owning no topology of its own. std-http-policy reads CORS_ORIGIN at boot (a comma list, trimmed, blanks dropped) and answers CORS_CONFIGURED, which tells std-http1 to bind the host and port knobs. std-http1 reads each connection and delivers one typed request; std-http-router asks std-http-policy to decide it (a preflight and a 413 are answered at once), counts an /api request in std-rate-limiter unless the rateLimit knob is false (ADMITTED or THROTTLED, a throttled one is 429 with ratelimit-* headers), routes it by method and path (GET /api/health answers 200 { status, version }, every other path 404 { error, code }) and hands the answer back to std-http1 as RESPOND. Requests are correlated by requestId, so any number are in flight at once. Bound to spec/net/server.lolo. GET /api/events?ticket=<t> is the live stream: the router asks std-stream-ticket to spend the ticket, TICKET_TAKEN opens the stream through std-sse and std-http1 (RESPOND_HEAD/RESPOND_CHUNK/RESPOND_END, heartbeats, close on client disconnect), a missing or bad ticket is 401 { error, code }. POST /api/events/ticket mints a ticket for the anonymous viewer and answers 200 { ticket } (503 if the mint fails). The stream is opened, held and closed with only the retry frame and heartbeats; pushing the kernel broadcast feed is a later item. A bearer starting with the API key prefix goes only to std-api-key-verifier (prefix-exclusive, as the Rust WithApiKeys), anything else only to the JWT path; neither falls back. POST/GET under /api/orbitals (events, entity events, inputs, resolve-rows 501) are left by the router (externalPrefix) to std-http-dispatch, which dispatches through program/dispatch and answers the EventResponse wire; /api/hooks is 501 there until an inbound-delivery operator exists."
 ]
 uses Spec from "almadar-std/server"
 uses H1 from "std/behaviors/std-http1"
 uses Policy from "std/behaviors/std-http-policy"
 uses Rate from "std/behaviors/std-rate-limiter-ip"
 uses Router from "std/behaviors/std-http-router"
+uses Dispatch from "std/behaviors/std-http-dispatch"
 uses Static from "std/behaviors/std-static-files"
 uses Sse from "std/behaviors/std-sse"
 uses Ticket from "std/behaviors/std-stream-ticket"
@@ -20,6 +21,7 @@ uses Jws from "std/behaviors/std-jws"
 uses Rsa from "std/behaviors/std-rsa"
 uses Big from "std/behaviors/std-bigint"
 uses Ecdsa from "std/behaviors/std-ecdsa"
+uses X509 from "std/behaviors/std-x509"
 orbital HttpServerOrbital {
   entity HttpServerProgram [runtime] {
     id : string!
@@ -40,11 +42,20 @@ orbital HttpServerOrbital {
     expiresAt : number @description "When the key stops working, in epoch milliseconds; 0 means never." = 0
   }
 
+  config {
+    rateLimit : boolean = true
+      @label "Rate limit"
+      @description "Whether /api requests are counted against the per-client window and throttled; off takes the limiter out of the request path (replaces ORB_DISABLE_RATE_LIMIT)."
+      @synonyms "throttle, disable rate limit, request cap"
+      @tier "policy"
+  }
+
   trait Http1 = H1.traits.Http1 {
     listens {
       ServerPolicy.CORS_CONFIGURED -> LISTEN
       ServerRouter.RESPOND -> RESPOND
       ServerStatic.RESPOND -> RESPOND
+      ServerDispatch.RESPOND -> RESPOND
       ServerSse.RESPOND_HEAD -> RESPOND_HEAD
       ServerSse.RESPOND_CHUNK -> RESPOND_CHUNK
       ServerSse.RESPOND_END -> RESPOND_END
@@ -59,7 +70,7 @@ orbital HttpServerOrbital {
 
   trait ServerRateLimiter = Rate.traits.RateKeyRateLimiter {
     config {
-      enabled: true
+      enabled: @config.rateLimit
       requestsPerMinute: 300
       windowSeconds: 900
     }
@@ -71,6 +82,7 @@ orbital HttpServerOrbital {
   trait ServerRouter = Router.traits.HttpRouter {
     config {
       clientFallback: true
+      externalPrefixes: ["/api/orbitals", "/api/hooks/"]
     }
     listens {
       Http1.REQUEST_RECEIVED -> REQUEST_RECEIVED
@@ -81,6 +93,18 @@ orbital HttpServerOrbital {
       Http1.STREAM_CLOSED -> STREAM_CLOSED
       StreamTicketer.TICKET_TAKEN -> TICKET_TAKEN
       StreamTicketer.TICKET_REFUSED -> TICKET_REFUSED
+      ServerBearer.BEARER_VERIFIED -> BEARER_VERIFIED
+      ServerBearer.BEARER_ANONYMOUS -> BEARER_ANONYMOUS
+      ServerBearer.BEARER_REFUSED -> BEARER_REFUSED
+    }
+  }
+
+  trait ServerDispatch = Dispatch.traits.ServerDispatch {
+    listens {
+      Http1.REQUEST_RECEIVED -> REQUEST_RECEIVED
+      ServerRouter.ROUTE_EXTERNAL -> ROUTE_EXTERNAL
+      ServerRouter.REQUEST_ANSWERED -> REQUEST_ANSWERED
+      ServerStatic.REQUEST_ANSWERED -> REQUEST_ANSWERED
       ServerBearer.BEARER_VERIFIED -> BEARER_VERIFIED
       ServerBearer.BEARER_ANONYMOUS -> BEARER_ANONYMOUS
       ServerBearer.BEARER_REFUSED -> BEARER_REFUSED
@@ -98,8 +122,17 @@ orbital HttpServerOrbital {
       ApiKeys.API_KEY_VERIFIED -> API_KEY_VERIFIED
       ApiKeys.API_KEY_REFUSED -> API_KEY_REFUSED
       ServerRouter.BEARER_VERIFY -> BEARER_VERIFY
+      ServerDispatch.BEARER_VERIFY -> BEARER_VERIFY
       BearerJws.JWS_VERIFIED -> JWS_VERIFIED
       BearerJws.JWS_REFUSED -> JWS_REFUSED
+      BearerX509.X509_PARSED -> X509_PARSED
+      BearerX509.X509_REFUSED -> X509_REFUSED
+    }
+  }
+
+  trait BearerX509 = X509.traits.X509Parse {
+    listens {
+      ServerBearer.X509_PARSE -> X509_PARSE
     }
   }
 
@@ -171,10 +204,13 @@ orbital HttpServerOrbital {
   trait ServerSse = Sse.traits.Sse {
     listens {
       ServerRouter.SSE_OPEN -> SSE_OPEN
+      ServerDispatch.SSE_OPEN -> SSE_OPEN
+      ServerDispatch.SSE_SEND -> SSE_SEND
+      ServerDispatch.SSE_CLOSE -> SSE_CLOSE
       Http1.STREAM_IDLE -> STREAM_IDLE
       Http1.STREAM_CLOSED -> STREAM_CLOSED
     }
   }
 
-  page "/server" as HttpServerPage -> Http1, ServerPolicy, ServerRateLimiter, ServerRouter, ServerStatic, StreamTicketer, ServerSse, ServerBearer, ApiKeys, BearerJws, BearerRsa, BearerBig, BearerEc, BearerEcBig
+  page "/server" as HttpServerPage -> Http1, ServerPolicy, ServerRateLimiter, ServerRouter, ServerDispatch, ServerStatic, StreamTicketer, ServerSse, ServerBearer, ApiKeys, BearerJws, BearerX509, BearerRsa, BearerBig, BearerEc, BearerEcBig
 }

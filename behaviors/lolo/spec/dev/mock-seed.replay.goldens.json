@@ -1,0 +1,292 @@
+{
+  "atom": "dev/atoms/std-mock-seed.lolo",
+  "trait": "MockSeed",
+  "cases": [
+    {
+      "id": "default-nonempty-string-no-vocab",
+      "steps": [
+        {
+          "event": "CHECK_DEFAULT",
+          "payload": {
+            "hasDefault": true,
+            "kind": "string",
+            "default": "Title",
+            "values": [],
+            "runtime": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MOCK_VALUE",
+                "payload": {
+                  "honored": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "default-falsy-number-runtime",
+      "steps": [
+        {
+          "event": "CHECK_DEFAULT",
+          "payload": {
+            "hasDefault": true,
+            "kind": "number",
+            "default": "0",
+            "values": [],
+            "runtime": true
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MOCK_VALUE",
+                "payload": {
+                  "honored": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "CHECK_DEFAULT",
+          "payload": {
+            "hasDefault": true,
+            "kind": "boolean",
+            "default": "false",
+            "values": [],
+            "runtime": true
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MOCK_VALUE",
+                "payload": {
+                  "honored": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "default-falsy-number-persistent",
+      "steps": [
+        {
+          "event": "CHECK_DEFAULT",
+          "payload": {
+            "hasDefault": true,
+            "kind": "number",
+            "default": "0",
+            "values": [],
+            "runtime": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MOCK_VALUE",
+                "payload": {
+                  "honored": false
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "default-empty-string-is-absent",
+      "steps": [
+        {
+          "event": "CHECK_DEFAULT",
+          "payload": {
+            "hasDefault": true,
+            "kind": "string",
+            "default": "",
+            "values": [],
+            "runtime": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MOCK_VALUE",
+                "payload": {
+                  "honored": false
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "SAMPLE_TEXT",
+          "payload": {
+            "fieldType": "string",
+            "fieldName": "email",
+            "entityName": "E",
+            "index": 1,
+            "seeded": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MOCK_VALUE",
+                "payload": {
+                  "value": "Email 1"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "default-empty-honored-when-vocab-declares-it",
+      "steps": [
+        {
+          "event": "CHECK_DEFAULT",
+          "payload": {
+            "hasDefault": true,
+            "kind": "string",
+            "default": "",
+            "values": [
+              "approved",
+              "rejected",
+              ""
+            ],
+            "runtime": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MOCK_VALUE",
+                "payload": {
+                  "honored": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "vocab-rotation-one-based",
+      "steps": [
+        {
+          "event": "CHECK_DEFAULT",
+          "payload": {
+            "hasDefault": true,
+            "kind": "string",
+            "default": "basic",
+            "values": [
+              "basic",
+              "premium",
+              "unlimited"
+            ],
+            "runtime": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MOCK_VALUE",
+                "payload": {
+                  "honored": false
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "PICK_VOCAB",
+          "payload": {
+            "values": [
+              "basic",
+              "premium",
+              "unlimited"
+            ],
+            "index": 1,
+            "runtime": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MOCK_VALUE",
+                "payload": {
+                  "value": "basic"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "PICK_VOCAB",
+          "payload": {
+            "values": [
+              "basic",
+              "premium",
+              "unlimited"
+            ],
+            "index": 2,
+            "runtime": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MOCK_VALUE",
+                "payload": {
+                  "value": "premium"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "PICK_VOCAB",
+          "payload": {
+            "values": [
+              "basic",
+              "premium",
+              "unlimited"
+            ],
+            "index": 3,
+            "runtime": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MOCK_VALUE",
+                "payload": {
+                  "value": "unlimited"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "PICK_VOCAB",
+          "payload": {
+            "values": [
+              "basic",
+              "premium",
+              "unlimited"
+            ],
+            "index": 4,
+            "runtime": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MOCK_VALUE",
+                "payload": {
+                  "value": "basic"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

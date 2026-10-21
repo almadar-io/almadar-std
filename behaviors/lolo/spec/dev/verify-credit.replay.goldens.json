@@ -1,0 +1,232 @@
+{
+ "atom": "dev/atoms/std-verify-credit.lolo",
+ "trait": "Credit",
+ "cases": [
+  {
+   "id": "failure-route-credited-from-fired-hop",
+   "steps": [
+    {
+     "event": "CREDIT_REQUEST",
+     "payload": {
+      "steps": [
+       {
+        "trait": "Caller",
+        "from": "waiting",
+        "event": "CALL",
+        "fired": [
+         {
+          "trait": "Caller",
+          "from": "waiting",
+          "event": "CALL_FAILED",
+          "to": "failed"
+         }
+        ]
+       },
+       {
+        "trait": "Caller",
+        "from": "waiting",
+        "event": "CALL_FAILED",
+        "fired": [],
+        "reply": "failure"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CREDIT_ANSWERED",
+        "payload": {
+         "credits": [
+          {
+           "index": 1,
+           "stateBefore": "waiting",
+           "stateAfter": "failed"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-different-event-not-credited",
+   "steps": [
+    {
+     "event": "CREDIT_REQUEST",
+     "payload": {
+      "steps": [
+       {
+        "trait": "Caller",
+        "from": "waiting",
+        "event": "CALL",
+        "fired": [
+         {
+          "trait": "Caller",
+          "from": "waiting",
+          "event": "OTHER",
+          "to": "failed"
+         }
+        ]
+       },
+       {
+        "trait": "Caller",
+        "from": "waiting",
+        "event": "CALL_FAILED",
+        "fired": [],
+        "reply": "failure"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CREDIT_ANSWERED",
+        "payload": {
+         "credits": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-different-arm-not-credited",
+   "steps": [
+    {
+     "event": "CREDIT_REQUEST",
+     "payload": {
+      "steps": [
+       {
+        "trait": "Caller",
+        "from": "waiting",
+        "event": "CALL",
+        "fired": [
+         {
+          "trait": "Caller",
+          "from": "waiting",
+          "event": "CALL_FAILED",
+          "to": "failed",
+          "arm": 0
+         }
+        ]
+       },
+       {
+        "trait": "Caller",
+        "from": "waiting",
+        "event": "CALL_FAILED",
+        "fired": [],
+        "arm": 1,
+        "reply": "failure"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CREDIT_ANSWERED",
+        "payload": {
+         "credits": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-success-route-not-credited",
+   "steps": [
+    {
+     "event": "CREDIT_REQUEST",
+     "payload": {
+      "steps": [
+       {
+        "trait": "Caller",
+        "from": "waiting",
+        "event": "CALL",
+        "fired": [
+         {
+          "trait": "Caller",
+          "from": "waiting",
+          "event": "CALLED",
+          "to": "failed"
+         }
+        ]
+       },
+       {
+        "trait": "Caller",
+        "from": "waiting",
+        "event": "CALLED",
+        "fired": [],
+        "reply": "other"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CREDIT_ANSWERED",
+        "payload": {
+         "credits": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "matching-arm-credited",
+   "steps": [
+    {
+     "event": "CREDIT_REQUEST",
+     "payload": {
+      "steps": [
+       {
+        "trait": "Caller",
+        "from": "waiting",
+        "event": "CALL",
+        "fired": [
+         {
+          "trait": "Caller",
+          "from": "waiting",
+          "event": "CALL_FAILED",
+          "to": "failed",
+          "arm": 1
+         }
+        ]
+       },
+       {
+        "trait": "Caller",
+        "from": "waiting",
+        "event": "CALL_FAILED",
+        "fired": [],
+        "arm": 1,
+        "reply": "failure"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CREDIT_ANSWERED",
+        "payload": {
+         "credits": [
+          {
+           "index": 1,
+           "stateBefore": "waiting",
+           "stateAfter": "failed"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

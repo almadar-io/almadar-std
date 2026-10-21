@@ -1,0 +1,212 @@
+{
+ "atom": "ops/atoms/std-boot-env-check.lolo",
+ "trait": "BootEnvCheck",
+ "cases": [
+  {
+   "id": "oidc-complete",
+   "steps": [
+    {
+     "event": "ENV_CHECK",
+     "payload": {
+      "requestId": 1,
+      "env": {
+       "authProvider": "oidc",
+       "oidcIssuerUrl": "https://i",
+       "oidcAudience": "a"
+      },
+      "production": false,
+      "mock": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ENV_CHECKED",
+        "payload": {
+         "problems": [],
+         "ok": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "oidc-without-issuer",
+   "steps": [
+    {
+     "event": "ENV_CHECK",
+     "payload": {
+      "requestId": 1,
+      "env": {
+       "authProvider": "oidc",
+       "oidcAudience": "a"
+      },
+      "production": false,
+      "mock": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ENV_CHECKED",
+        "payload": {
+         "problems": [
+          "AUTH_PROVIDER=oidc needs OIDC_ISSUER_URL"
+         ],
+         "ok": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "oidc-without-issuer-or-audience",
+   "steps": [
+    {
+     "event": "ENV_CHECK",
+     "payload": {
+      "requestId": 1,
+      "env": {
+       "authProvider": "oidc"
+      },
+      "production": false,
+      "mock": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ENV_CHECKED",
+        "payload": {
+         "problems": [
+          "AUTH_PROVIDER=oidc needs OIDC_ISSUER_URL",
+          "AUTH_PROVIDER=oidc needs OIDC_AUDIENCE"
+         ],
+         "ok": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-auth-emulator-is-set",
+   "steps": [
+    {
+     "event": "ENV_CHECK",
+     "payload": {
+      "requestId": 1,
+      "env": {
+       "authProvider": "oidc",
+       "oidcIssuerUrl": "https://i",
+       "oidcAudience": "a",
+       "firebaseAuthEmulatorHost": "localhost:9099"
+      },
+      "production": false,
+      "mock": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ENV_CHECKED",
+        "payload": {
+         "problems": [
+          "FIREBASE_AUTH_EMULATOR_HOST is set: the Auth emulator is for local dev only"
+         ],
+         "ok": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-demo-project",
+   "steps": [
+    {
+     "event": "ENV_CHECK",
+     "payload": {
+      "requestId": 1,
+      "env": {
+       "firebaseProjectId": "demo-app"
+      },
+      "production": false,
+      "mock": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ENV_CHECKED",
+        "payload": {
+         "problems": [
+          "FIREBASE_PROJECT_ID=demo-app is an emulator-only demo project"
+         ],
+         "ok": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-unknown-provider",
+   "steps": [
+    {
+     "event": "ENV_CHECK",
+     "payload": {
+      "requestId": 1,
+      "env": {
+       "authProvider": "saml"
+      },
+      "production": false,
+      "mock": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ENV_CHECKED",
+        "payload": {
+         "problems": [
+          "AUTH_PROVIDER must be one of firebase, oidc, got 'saml'"
+         ],
+         "ok": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-real-firebase-project",
+   "steps": [
+    {
+     "event": "ENV_CHECK",
+     "payload": {
+      "requestId": 1,
+      "env": {
+       "firebaseProjectId": "prod-app"
+      },
+      "production": false,
+      "mock": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ENV_CHECKED",
+        "payload": {
+         "problems": [],
+         "ok": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

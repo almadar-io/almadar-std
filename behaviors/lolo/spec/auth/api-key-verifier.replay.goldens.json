@@ -1,0 +1,173 @@
+{
+ "atom": "auth/atoms/std-api-key-verifier.lolo",
+ "trait": "ApiKeyVerifier",
+ "note": "store answers (KEY_FOUND/KEY_ABSENT) are played from looking; the scrypt hash and record keying need config.salt",
+ "cases": [
+  {
+   "id": "an-active-key",
+   "golden": {
+    "ok": true,
+    "uid": "team:t1",
+    "claims": {
+     "team": "t1"
+    }
+   },
+   "steps": [
+    {
+     "event": "KEY_FOUND",
+     "from": "looking",
+     "payload": {
+      "data": {
+       "id": "h",
+       "owner": "team:t1",
+       "label": "x",
+       "revoked": false,
+       "expiresAt": 0,
+       "team": "t1"
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "API_KEY_VERIFIED",
+        "payload": {
+         "owner": "team:t1",
+         "claims": [
+          {
+           "name": "label",
+           "value": "x"
+          },
+          {
+           "name": "team",
+           "value": "t1"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-revoked-key",
+   "steps": [
+    {
+     "event": "KEY_FOUND",
+     "from": "looking",
+     "payload": {
+      "data": {
+       "id": "h",
+       "owner": "team:t2",
+       "revoked": true
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "API_KEY_REFUSED",
+        "payload": {
+         "reason": "revoked"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-expired-key",
+   "note": "golden now=5000, expiresAt=1000; the kernel clock is past 1000",
+   "steps": [
+    {
+     "event": "KEY_FOUND",
+     "from": "looking",
+     "payload": {
+      "data": {
+       "id": "h",
+       "owner": "team:t3",
+       "revoked": false,
+       "expiresAt": 1000
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "API_KEY_REFUSED",
+        "payload": {
+         "reason": "expired"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-unknown-key",
+   "steps": [
+    {
+     "event": "KEY_ABSENT",
+     "from": "looking",
+     "payload": {
+      "code": "not-found"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "API_KEY_REFUSED",
+        "payload": {
+         "reason": "unknown"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-bearer-that-is-not-a-key",
+   "steps": [
+    {
+     "event": "VERIFY_KEY",
+     "payload": {
+      "requestId": 3,
+      "token": "not-a-key"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "API_KEY_REFUSED",
+        "payload": {
+         "requestId": 3,
+         "reason": "not-a-key"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "skip": "needs program/step outcomes[]: VERIFY_KEY cascades KEY_PUMP and the refusal is the cascaded outcome"
+  },
+  {
+   "id": "a-key-of-the-live-prefix-is-hashed-with-the-salt",
+   "skip": "needs the salt credential (ALMADAR_API_KEY_SALT = a1b2c3d4e5f60718) answered to hash/scrypt (host secret, config or env seeding, PS1/host), then the ApiKeyRecord fetch id equals the golden keyHash",
+   "steps": [
+    {
+     "event": "VERIFY_KEY",
+     "payload": {
+      "requestId": 1,
+      "token": "sk_live_active0000"
+     }
+    },
+    {
+     "event": "KEY_PUMP",
+     "payload": {},
+     "expect": {
+      "emits": []
+     }
+    }
+   ]
+  }
+ ]
+}

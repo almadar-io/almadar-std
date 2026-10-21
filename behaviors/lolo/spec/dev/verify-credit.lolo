@@ -1,0 +1,22 @@
+app verify-credit-spec [
+  version: "1.0.0",
+  description: "Design contract for std-verify-credit: the kernel's credit_failure_routes (orbital-core verify/plan_wire.rs) as data. CREDIT_REQUEST carries the planned steps as the credit pass sees them, each {trait, from, event, arm?, reply?, fired: [{trait, from, event, to, arm?}]}; CREDIT_ANSWERED returns the Credit {index, stateBefore, stateAfter} of every failure-route step (reply 'failure') whose (trait, from, event) matches a hop another step's dispatch fired, the arm matching when the step has one. A success route, a different event or a different arm is not credited."
+]
+
+type FiredHop = { trait : string!, from : string!, event : string!, to : string!, arm : number }
+type CreditStep = { trait : string!, from : string!, event : string!, arm : number, reply : string, fired : [FiredHop] }
+type Credit = { index : number!, stateBefore : string!, stateAfter : string! }
+
+orbital VerifyCreditSpec {
+  expects entity CreditRun [runtime] {
+    id : string!
+    credits : [Credit]!
+  }
+  expects trait Credit {
+    state ready
+    emits {
+      CREDIT_ANSWERED { credits : [Credit]! }
+    }
+  }
+  expects page "/verify-credit" -> Credit
+}

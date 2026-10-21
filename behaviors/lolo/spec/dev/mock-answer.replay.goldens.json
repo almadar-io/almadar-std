@@ -1,0 +1,161 @@
+{
+ "atom": "dev/atoms/std-mock-answer.lolo",
+ "trait": "MockAnswerer",
+ "note": "nested descriptors (array-of-objects, map-value, control-array-without-items, malformed-*) stay in the Rust host (mock_answer.rs); the atom has no event for them",
+ "cases": [
+  {
+   "id": "flat-string",
+   "steps": [
+    {
+     "event": "MOCK_VALUE",
+     "payload": {
+      "key": "f",
+      "type": "string"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MOCK_ANSWERED",
+        "payload": {
+         "answer": "\"mock_f\""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "flat-union-falls-to-string",
+   "steps": [
+    {
+     "event": "MOCK_VALUE",
+     "payload": {
+      "key": "f",
+      "type": "number | null"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MOCK_ANSWERED",
+        "payload": {
+         "answer": "\"mock_f\""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "flat-array-suffix",
+   "steps": [
+    {
+     "event": "MOCK_VALUE",
+     "payload": {
+      "key": "f",
+      "type": "Row[]"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MOCK_ANSWERED",
+        "payload": {
+         "answer": "[]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "flat-object",
+   "steps": [
+    {
+     "event": "MOCK_VALUE",
+     "payload": {
+      "key": "f",
+      "type": "object"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MOCK_ANSWERED",
+        "payload": {
+         "answer": "{}"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "flat-boolean",
+   "steps": [
+    {
+     "event": "MOCK_VALUE",
+     "payload": {
+      "key": "f",
+      "type": "boolean"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MOCK_ANSWERED",
+        "payload": {
+         "answer": "true"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "flat-number",
+   "steps": [
+    {
+     "event": "MOCK_VALUE",
+     "payload": {
+      "key": "f",
+      "type": "number"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MOCK_ANSWERED",
+        "payload": {
+         "answer": "42"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "no-shape-answer",
+   "steps": [
+    {
+     "event": "MOCK_ANSWER",
+     "payload": {
+      "action": "send",
+      "shape": {}
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MOCK_ANSWERED",
+        "payload": {
+         "answer": "{\"_action\":\"send\",\"_mock\":true,\"success\":true}"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

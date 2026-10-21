@@ -1,0 +1,174 @@
+app std-step-runner [
+  version: "1.0.0",
+  description: "std-step-runner — the one step sequencer over std-cli. STEPS_RUN carries a request name, a base argv prefix, an env, the directories the steps run in and an ordered list of steps (args, stdin text, feed, raw stdin bytes by step index, tolerate, and a scope that picks the working directory: root or repo). Each step runs as the command's arguments dirFlag dir, then prefix, then the step's args, through the CLI runner, one at a time. A step that exits non-zero stops the run unless it is tolerated. STEPS_DONE answers every step's text output, bytes output, exit code and stderr in order; STEPS_FAILED answers the step that stopped the run (its index, code step_failed, stderr and stdout) or a run the CLI could not make (cli_spawn_failed). One run at a time: a run asked for while one is in flight is refused with steps_busy, never queued. The caller owns the prefix and env (for git: -c core.hooksPath=/dev/null -c core.fsmonitor=false -c protocol.allow=never and GIT_CEILING_DIRECTORIES) and what the outputs mean. Needs the exec grant for the command and a CLI runner config naming it.",
+  exec: ["git"]
+]
+uses Spec from "almadar-std/step-runner"
+type StepRunStep = { scope : "root" | "repo", args : [string], stdin : string, feed : boolean, tolerate : boolean, raw : boolean }
+orbital StepRunnerOrbital {
+  uses Cli from "std/behaviors/std-cli"
+
+  entity StepRun [runtime] {
+    id : string!
+    requestId : string @description "The caller's name for the run in flight." = ""
+    steps : [StepRunStep] = []
+    prefix : [string] @description "Arguments placed after the directory flag and before every step's own." = []
+    env : Map string string @description "The env every step runs with." = {}
+    rootDir : string = ""
+    repoDir : string = ""
+    dirFlag : string @description "The flag that names a step's directory in its argv (for git, -C); blank passes no directory." = ""
+    rawInputs : [bytes] @description "Raw stdin bytes, indexed by step." = []
+    cursor : number = 0
+    outputs : [string] = []
+    rawOuts : [bytes] = []
+    codes : [number] = []
+    failures : [string] = []
+    argv : [string] = []
+    stepIn : string = ""
+    stepFeed : boolean = false
+    stepRaw : boolean = false
+    stepRawIn : bytes = ""
+    stdoutBytes : bytes = ""
+    stdoutText : string = ""
+    stderrText : string = ""
+  }
+
+  trait StepCli = Cli.traits.CliRunner {
+    listens { StepRunner.STEP_CLI_RUN -> CLI_RUN }
+    config {
+      commands: ["git"]
+      binaryOutput: true
+    }
+  }
+
+  trait StepRunner -> StepRun [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      STEPS_RUN -> idle when (== (array/len @payload.steps) 0)
+        (emit STEPS_DONE { requestId: @payload.requestId, outputs: [], rawOuts: [], codes: [], failures: [] })
+      STEPS_RUN -> running when (> (array/len @payload.steps) 0)
+        (set @entity.requestId @payload.requestId)
+        (set @entity.steps @payload.steps)
+        (set @entity.prefix @payload.prefix)
+        (set @entity.env @payload.env)
+        (set @entity.rootDir @payload.rootDir)
+        (set @entity.repoDir @payload.repoDir)
+        (set @entity.dirFlag @payload.dirFlag)
+        (set @entity.rawInputs @payload.rawInputs)
+        (set @entity.cursor 0)
+        (set @entity.outputs [])
+        (set @entity.rawOuts [])
+        (set @entity.codes [])
+        (set @entity.failures [])
+        (emit STEP_NEXT { })
+    }
+
+    state running {
+      INIT -> running
+      STEPS_RUN -> running
+        (emit STEPS_FAILED { requestId: @payload.requestId, index: -1, code: "steps_busy", stderr: (str/concat "run " @entity.requestId " is in flight"), stdout: "" })
+
+      STEP_NEXT -> running
+        (set @entity.argv (array/concat (if (!= @entity.dirFlag "") [@entity.dirFlag, (if (== (object/get (array/nth @entity.steps @entity.cursor) scope) "root") @entity.rootDir @entity.repoDir)] []) @entity.prefix (object/get (array/nth @entity.steps @entity.cursor) args)))
+        (set @entity.stepIn (object/get (array/nth @entity.steps @entity.cursor) stdin))
+        (set @entity.stepFeed (object/get (array/nth @entity.steps @entity.cursor) feed))
+        (set @entity.stepRaw (object/get (array/nth @entity.steps @entity.cursor) raw))
+        (set @entity.stepRawIn (if (object/get (array/nth @entity.steps @entity.cursor) raw) (array/nth @entity.rawInputs @entity.cursor) (bytes/from-string "")))
+        (emit STEP_EXEC { })
+
+      STEP_EXEC -> running when (not @entity.stepFeed)
+        (emit STEP_CLI_RUN { stage: @entity.requestId, argv: @entity.argv, env: @entity.env })
+      STEP_EXEC -> running when @entity.stepFeed
+        (emit STEP_CLI_RUN { stage: @entity.requestId, argv: @entity.argv, env: @entity.env, stdin: (if @entity.stepRaw @entity.stepRawIn (bytes/from-string @entity.stepIn)) })
+
+      STEP_RAN -> idle when (and (!= @payload.exitCode 0) (not (object/get (array/nth @entity.steps @entity.cursor) tolerate)))
+        (emit STEPS_FAILED { requestId: @entity.requestId, index: @entity.cursor, code: "step_failed", stderr: @payload.stderr, stdout: (if (base64/valid @payload.stdoutBytes) (bytes/to-string @payload.stdoutBytes) "") })
+      STEP_RAN -> running when (and (or (== @payload.exitCode 0) (object/get (array/nth @entity.steps @entity.cursor) tolerate)) (< (+ @entity.cursor 1) (array/len @entity.steps)))
+        (set @entity.outputs (array/append @entity.outputs (if (base64/valid @payload.stdoutBytes) (bytes/to-string @payload.stdoutBytes) "")))
+        (set @entity.rawOuts (array/append @entity.rawOuts @payload.stdoutBytes))
+        (set @entity.codes (array/append @entity.codes @payload.exitCode))
+        (set @entity.failures (array/append @entity.failures @payload.stderr))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit STEP_NEXT { })
+      STEP_RAN -> idle when (and (or (== @payload.exitCode 0) (object/get (array/nth @entity.steps @entity.cursor) tolerate)) (>= (+ @entity.cursor 1) (array/len @entity.steps)))
+        (set @entity.outputs (array/append @entity.outputs (if (base64/valid @payload.stdoutBytes) (bytes/to-string @payload.stdoutBytes) "")))
+        (set @entity.rawOuts (array/append @entity.rawOuts @payload.stdoutBytes))
+        (set @entity.codes (array/append @entity.codes @payload.exitCode))
+        (set @entity.failures (array/append @entity.failures @payload.stderr))
+        (emit STEPS_DONE { requestId: @entity.requestId, outputs: @entity.outputs, rawOuts: @entity.rawOuts, codes: @entity.codes, failures: @entity.failures })
+
+      STEP_CLI_FAILED -> idle
+        (emit STEPS_FAILED { requestId: @entity.requestId, index: @entity.cursor, code: "cli_spawn_failed", stderr: @payload.error, stdout: "" })
+    }
+
+    emits {
+      STEPS_DONE -> external {
+        requestId : string!
+        outputs : [string]!
+        rawOuts : [bytes]!
+        codes : [number]!
+        failures : [string]!
+      }
+        @description "Every step ran (a non-zero exit only for tolerated steps): each step's text output, bytes output, exit code and stderr, in order."
+        @synonyms "steps finished, run finished"
+        @tier "primary"
+      STEPS_FAILED -> external {
+        requestId : string!
+        index : number!
+        code : string!
+        stderr : string!
+        stdout : string!
+      }
+        @description "The run stopped: step_failed (the step at index exited non-zero and is not tolerated), cli_spawn_failed (the CLI could not run the step) or steps_busy (a run is already in flight)."
+        @tier "primary"
+      STEP_NEXT -> internal { }
+        @tier "internal"
+      STEP_EXEC -> internal { }
+        @tier "internal"
+      STEP_CLI_RUN {
+        stage : string!
+        argv : [string]!
+        env : Map string string
+        stdin : bytes
+      }
+        @description "Internal: one step, to the CLI runner."
+        @tier "internal"
+    }
+
+    listens {
+      STEPS_RUN -> external {
+        requestId : string!
+        steps : [StepRunStep]!
+        prefix : [string]!
+        env : Map string string!
+        rootDir : string!
+        repoDir : string!
+        dirFlag : string!
+        rawInputs : [bytes]!
+      }
+        @description "Run these steps in order, one at a time."
+        @synonyms "run steps, run commands in sequence"
+      STEP_RAN {
+        stage : string!
+        exitCode : number!
+        signal : number!
+        stdout : string!
+        stdoutBytes : bytes!
+        stderr : string!
+      }
+        @description "A std-cli CLI_DONE: the step exited."
+      STEP_CLI_FAILED {
+        stage : string!
+        error : string!
+        code : string!
+      }
+        @description "A std-cli CLI_FAILED: the step could not be run."
+      StepCli.CLI_DONE -> STEP_RAN
+      StepCli.CLI_FAILED -> STEP_CLI_FAILED
+    }
+  }
+
+  page "/step-runner" as StepRunnerPage -> StepRunner, StepCli
+}

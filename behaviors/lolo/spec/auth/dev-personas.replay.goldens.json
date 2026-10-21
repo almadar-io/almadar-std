@@ -1,0 +1,63 @@
+{
+  "atom": "auth/atoms/std-dev-personas.lolo",
+  "trait": "DevPersonas",
+  "note": "Playground persona HTTP contract (register-unregister-lifecycle.test.ts, persona-auth.test.ts server side): list gate, rows filter, sign-in id validation, not-found and failure answers. Emulator http legs are not played.",
+  "cases": [
+    {
+      "id": "list-404-without-emulator",
+      "steps": [
+        { "event": "PERSONAS_HOST", "payload": { "value": "" },
+          "expect": { "emits": [ { "event": "PERSONAS_ANSWERED", "payload": { "status": 404 } } ] } }
+      ]
+    },
+    {
+      "id": "list-filters-rows-without-id",
+      "steps": [
+        { "event": "PERSONAS_ROWS", "payload": { "data": [ { "id": "ada", "name": "Ada" }, { "id": "", "name": "Ghost" } ] },
+          "expect": { "emits": [ { "event": "PERSONAS_ANSWERED", "payload": { "status": 200 } } ] } }
+      ]
+    },
+    {
+      "id": "list-empty-source-none",
+      "steps": [
+        { "event": "PERSONAS_ROWS", "payload": { "data": [] },
+          "expect": { "emits": [ { "event": "PERSONAS_ANSWERED", "payload": { "status": 200 } } ] } }
+      ]
+    },
+    {
+      "id": "sign-in-without-id-is-400",
+      "steps": [
+        { "event": "SIGN_IN_CALLED", "payload": { "rawBody": "{}" },
+          "expect": { "emits": [ { "event": "PERSONA_SIGN_IN_ANSWERED", "payload": { "status": 400 } } ] } }
+      ]
+    },
+    {
+      "id": "sign-in-404-without-emulator",
+      "steps": [
+        { "event": "SIGN_IN_HOST", "payload": { "value": "", "key": "ada" },
+          "expect": { "emits": [ { "event": "PERSONA_SIGN_IN_ANSWERED", "payload": { "status": 404 } } ] } }
+      ]
+    },
+    {
+      "id": "sign-in-unknown-id-is-404",
+      "steps": [
+        { "event": "SIGN_IN_ROW_MISSED", "payload": { "error": "missing", "code": "not-found" },
+          "expect": { "emits": [ { "event": "PERSONA_SIGN_IN_ANSWERED", "payload": { "status": 404 } } ] } }
+      ]
+    },
+    {
+      "id": "sign-in-store-failure-is-500",
+      "steps": [
+        { "event": "SIGN_IN_ROW_MISSED", "payload": { "error": "boom", "code": "unavailable" },
+          "expect": { "emits": [ { "event": "PERSONA_SIGN_IN_ANSWERED", "payload": { "status": 500 } } ] } }
+      ]
+    },
+    {
+      "id": "sign-in-reserved-claim-is-500",
+      "steps": [
+        { "event": "SIGN_IN_ROW", "payload": { "data": { "id": "ada", "iss": "x" } },
+          "expect": { "emits": [ { "event": "PERSONA_SIGN_IN_ANSWERED", "payload": { "status": 500 } } ] } }
+      ]
+    }
+  ]
+}

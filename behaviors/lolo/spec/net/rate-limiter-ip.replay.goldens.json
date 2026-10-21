@@ -1,0 +1,371 @@
+{
+ "atom": "net/atoms/std-rate-limiter-ip.lolo",
+ "trait": "RateKeyRateLimiter",
+ "cases": [
+  {
+   "id": "under-limit-headers",
+   "config": {
+    "enabled": true,
+    "requestsPerMinute": 3,
+    "windowSeconds": 10
+   },
+   "steps": [
+    {
+     "event": "REQUEST",
+     "payload": {
+      "requestId": 1,
+      "ip": "A"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ADMITTED",
+        "payload": {
+         "requestId": 1,
+         "remaining": 2,
+         "limit": 3,
+         "window": 10
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "skip": "needs PS1 config/now"
+  },
+  {
+   "id": "at-limit-throttled",
+   "config": {
+    "enabled": true,
+    "requestsPerMinute": 3,
+    "windowSeconds": 10
+   },
+   "steps": [
+    {
+     "event": "REQUEST",
+     "payload": {
+      "requestId": 1,
+      "ip": "A"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ADMITTED",
+        "payload": {
+         "requestId": 1,
+         "remaining": 2
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "REQUEST",
+     "payload": {
+      "requestId": 2,
+      "ip": "A"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ADMITTED",
+        "payload": {
+         "requestId": 2,
+         "remaining": 1
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "REQUEST",
+     "payload": {
+      "requestId": 3,
+      "ip": "A"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ADMITTED",
+        "payload": {
+         "requestId": 3,
+         "remaining": 0
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "REQUEST",
+     "payload": {
+      "requestId": 4,
+      "ip": "A"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "THROTTLED",
+        "payload": {
+         "requestId": 4,
+         "limit": 3,
+         "window": 10
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "skip": "needs PS1 config/now"
+  },
+  {
+   "id": "empty-ip-no-headers",
+   "config": {
+    "enabled": true,
+    "requestsPerMinute": 3,
+    "windowSeconds": 10
+   },
+   "steps": [
+    {
+     "event": "REQUEST",
+     "payload": {
+      "requestId": 1,
+      "ip": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ADMITTED",
+        "payload": {
+         "requestId": 1,
+         "remaining": 3,
+         "counted": false
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "REQUEST",
+     "payload": {
+      "requestId": 2
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ADMITTED",
+        "payload": {
+         "requestId": 2,
+         "remaining": 3,
+         "counted": false
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "skip": "needs PS1 config/now (enabled true)"
+  },
+  {
+   "id": "window-rollover",
+   "config": {
+    "enabled": true,
+    "requestsPerMinute": 3,
+    "windowSeconds": 10
+   },
+   "now": 0,
+   "steps": [
+    {
+     "event": "REQUEST",
+     "payload": {
+      "requestId": 1,
+      "ip": "A"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ADMITTED",
+        "payload": {
+         "requestId": 1,
+         "remaining": 2
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "REQUEST",
+     "payload": {
+      "requestId": 2,
+      "ip": "A"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ADMITTED",
+        "payload": {
+         "requestId": 2,
+         "remaining": 1
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "REQUEST",
+     "payload": {
+      "requestId": 3,
+      "ip": "A"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ADMITTED",
+        "payload": {
+         "requestId": 3,
+         "remaining": 0
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "REQUEST",
+     "payload": {
+      "requestId": 4,
+      "ip": "A"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "THROTTLED",
+        "payload": {
+         "requestId": 4
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "REQUEST",
+     "payload": {
+      "requestId": 5,
+      "ip": "A"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ADMITTED",
+        "payload": {
+         "requestId": 5,
+         "remaining": 2
+        }
+       }
+      ]
+     },
+     "now": 10000
+    }
+   ],
+   "skip": "needs PS1 config/now"
+  },
+  {
+   "id": "disabled-admits-uncounted",
+   "steps": [
+    {
+     "event": "REQUEST",
+     "payload": {
+      "requestId": 1,
+      "ip": "A"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ADMITTED",
+        "payload": {
+         "requestId": 1,
+         "remaining": 300,
+         "counted": false
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "REQUEST",
+     "payload": {
+      "requestId": 2,
+      "ip": "A"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ADMITTED",
+        "payload": {
+         "requestId": 2,
+         "remaining": 300,
+         "counted": false
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "REQUEST",
+     "payload": {
+      "requestId": 3,
+      "ip": "A"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ADMITTED",
+        "payload": {
+         "requestId": 3,
+         "remaining": 300,
+         "counted": false
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "REQUEST",
+     "payload": {
+      "requestId": 4,
+      "ip": "A"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ADMITTED",
+        "payload": {
+         "requestId": 4,
+         "remaining": 300,
+         "counted": false
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "REQUEST",
+     "payload": {
+      "requestId": 5,
+      "ip": "A"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ADMITTED",
+        "payload": {
+         "requestId": 5,
+         "remaining": 300,
+         "counted": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

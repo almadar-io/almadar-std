@@ -1,0 +1,26 @@
+app mini-reply [
+  version: "1.0.0",
+  egress: ["https://example.test"],
+  description: "walk fixture with an http failure route"
+]
+orbital MiniReply {
+  entity Item [runtime] {
+    id : string!
+    title : string!
+  }
+  trait Caller -> Item [integration] {
+    initial: waiting
+    state waiting {
+      INIT -> waiting
+      CALL -> waiting
+        (http GET "https://example.test/x" { key: "x" emit: { success: CALLED, failure: CALL_FAILED } })
+      CALLED -> waiting
+      CALL_FAILED -> failed
+        (render-ui main { type: "alert", variant: "error", message: "Call failed" })
+    }
+    state failed {
+      INIT -> failed
+    }
+  }
+  page "/mini-reply" as MiniReplyPage -> Caller
+}

@@ -1,0 +1,484 @@
+app std-orb-runners [
+  version: "1.0.0",
+  inbound: ["cli-runners"],
+  exec: ["docker", "curl", "sh"],
+  stdio: [in, out, err],
+  env: ["PATH", "HOME", "GITHUB_ORG", "GITHUB_RUNNER_SCOPE", "RUNNER_IMAGE", "RUNNER_COUNT", "RUNNER_PREFIX", "GITHUB_TOKEN", "ALMADAR_ROOT", "RUNNER_VERSION", "RUNNER_DIR", "RUNNER_LABELS"],
+  fs: { "~/kflow.ai.builder/.env": [read], env ALMADAR_ROOT: ".env": [read] },
+  description: "std-orb-runners — the `orb runners up|once|down [--mac]` command over the ephemeral self-hosted GitHub Actions runners of tools/local-ci, with the argv of run-runner.sh and run-mac-runner.sh. The token is GITHUB_TOKEN from the environment, else the GITHUB_TOKEN= line of $ALMADAR_ROOT/.env (default ~/kflow.ai.builder/.env), quotes and carriage returns stripped; a registration token is minted per container or job with curl. Linux: `up` prints `supervising <count> ephemeral runner(s) for <url path> — ctrl-c to stop`, then every 5 seconds starts a container for each missing <prefix>-runner-<i> (found by `docker ps --format`) and prints `  started …` or `  !! failed to start runner <i> (retrying)`; `once` runs one container on the terminal; `down` removes the containers. --mac: registers the native runner (config.sh --ephemeral), runs one job with run.sh, deregisters, and under `up` repeats after 5 seconds. Interrupt cleanup needs os/watch-signal (G-ORB-307): until the host streams it, `orb runners down` is the clean-up."
+]
+uses Spec from "almadar-std/orb-runners"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
+type RunnerVars = Map string string
+type RegistrationReply = { token : string, message : string }
+
+orbital OrbRunnersOrbital {
+  uses Cli from "std/behaviors/std-cli"
+  uses Args from "std/behaviors/std-args"
+
+  entity OrbRunnersRun [runtime] {
+    id : string!
+    verb : string = ""
+    mac : boolean = false
+    vars : RunnerVars = {}
+    cursor : number = 0
+    index : number = 0
+    count : number = 0
+    prefix : string = ""
+    image : string = ""
+    urlPath : string = ""
+    scope : string = ""
+    pat : string = ""
+    rtok : string = ""
+    cont : string = ""
+    queue : [number] = []
+    names : string = ""
+    runnerDir : string = ""
+    runnerVersion : string = ""
+    labels : string = ""
+    host : string = ""
+    pid : string = ""
+    jobName : string = ""
+    home : string = ""
+    say : string = ""
+    report : string = ""
+  }
+
+  trait ArgsCli = Args.traits.ArgsParser {
+    listens {
+      OrbRunners.RN_ARGS_PARSE -> ARGS_PARSE
+    }
+  }
+
+  trait DockerCli = Cli.traits.CliRunner {
+    listens {
+      OrbRunners.RN_DOCKER_RUN -> CLI_RUN
+    }
+    config {
+      commands: ["docker"]
+      passEnv: ["PATH", "HOME"]
+    }
+  }
+
+  trait DockerTty = Cli.traits.CliRunner {
+    listens {
+      OrbRunners.RN_DOCKER_TTY -> CLI_RUN
+    }
+    config {
+      commands: ["docker"]
+      passEnv: ["PATH", "HOME"]
+      stdio: "inherit"
+    }
+  }
+
+  trait CurlCli = Cli.traits.CliRunner {
+    listens {
+      OrbRunners.RN_CURL_RUN -> CLI_RUN
+    }
+    config {
+      commands: ["curl"]
+      passEnv: ["PATH", "HOME"]
+    }
+  }
+
+  trait ShCli = Cli.traits.CliRunner {
+    listens {
+      OrbRunners.RN_SH_RUN -> CLI_RUN
+    }
+    config {
+      commands: ["sh"]
+      passEnv: ["PATH", "HOME"]
+    }
+  }
+
+  trait ShTty = Cli.traits.CliRunner {
+    listens {
+      OrbRunners.RN_TTY_RUN -> CLI_RUN
+    }
+    config {
+      commands: ["sh"]
+      passEnv: ["PATH", "HOME"]
+      stdio: "inherit"
+    }
+  }
+
+  trait OrbRunners -> OrbRunnersRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      RN_CALLED -> parsing
+        (emit RN_ARGS_PARSE { stage: "runners" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "mac" aliases: [] takesValue: false repeatable: false }] })
+    }
+
+    state parsing {
+      INIT -> parsing
+      RN_ARGS_DONE -> ready when (not (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1) (array/includes ["up", "once", "down"] (array/first @payload.positionals))))
+        (emit RUNNERS_ANSWERED { status: 400, body: "usage: orb runners up|once|down [--mac]" })
+      RN_ARGS_DONE -> reading when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1) (array/includes ["up", "once", "down"] (array/first @payload.positionals)))
+        (set @entity.verb (array/first @payload.positionals))
+        (set @entity.mac (!= (object/get @payload.flags "mac") null))
+        (set @entity.cursor 0)
+        (set @entity.vars (json/parse "{}" RunnerVars))
+        (emit RN_ENV_NEXT { })
+    }
+
+    state reading {
+      INIT -> reading
+      RN_HOST_FAILED -> ready
+        (emit RUNNERS_ANSWERED { status: 500, body: (or @payload.error "host failure") })
+      RN_ENV_NEXT -> reading when (= @entity.cursor 0)
+        (os/getenv "GITHUB_ORG" { key: "GITHUB_ORG" emit: { success: RN_ENV_READ, failure: RN_HOST_FAILED } })
+      RN_ENV_NEXT -> reading when (= @entity.cursor 1)
+        (os/getenv "GITHUB_RUNNER_SCOPE" { key: "GITHUB_RUNNER_SCOPE" emit: { success: RN_ENV_READ, failure: RN_HOST_FAILED } })
+      RN_ENV_NEXT -> reading when (= @entity.cursor 2)
+        (os/getenv "RUNNER_IMAGE" { key: "RUNNER_IMAGE" emit: { success: RN_ENV_READ, failure: RN_HOST_FAILED } })
+      RN_ENV_NEXT -> reading when (= @entity.cursor 3)
+        (os/getenv "RUNNER_COUNT" { key: "RUNNER_COUNT" emit: { success: RN_ENV_READ, failure: RN_HOST_FAILED } })
+      RN_ENV_NEXT -> reading when (= @entity.cursor 4)
+        (os/getenv "RUNNER_PREFIX" { key: "RUNNER_PREFIX" emit: { success: RN_ENV_READ, failure: RN_HOST_FAILED } })
+      RN_ENV_NEXT -> reading when (= @entity.cursor 5)
+        (os/getenv "GITHUB_TOKEN" { key: "GITHUB_TOKEN" emit: { success: RN_ENV_READ, failure: RN_HOST_FAILED } })
+      RN_ENV_NEXT -> reading when (= @entity.cursor 6)
+        (os/getenv "ALMADAR_ROOT" { key: "ALMADAR_ROOT" emit: { success: RN_ENV_READ, failure: RN_HOST_FAILED } })
+      RN_ENV_NEXT -> reading when (= @entity.cursor 7)
+        (os/getenv "RUNNER_VERSION" { key: "RUNNER_VERSION" emit: { success: RN_ENV_READ, failure: RN_HOST_FAILED } })
+      RN_ENV_NEXT -> reading when (= @entity.cursor 8)
+        (os/getenv "RUNNER_DIR" { key: "RUNNER_DIR" emit: { success: RN_ENV_READ, failure: RN_HOST_FAILED } })
+      RN_ENV_NEXT -> reading when (= @entity.cursor 9)
+        (os/getenv "RUNNER_LABELS" { key: "RUNNER_LABELS" emit: { success: RN_ENV_READ, failure: RN_HOST_FAILED } })
+      RN_ENV_READ -> reading
+        (set @entity.vars (object/merge @entity.vars (object/fromEntries [[@payload.key, (or @payload.value "")]])))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit RN_ENV_NEXT { })
+      RN_ENV_NEXT -> reading when (>= @entity.cursor 10)
+        (set @entity.scope (if (!= (object/get @entity.vars "GITHUB_RUNNER_SCOPE") "") (object/get @entity.vars "GITHUB_RUNNER_SCOPE") (str/concat "orgs/" (if (!= (object/get @entity.vars "GITHUB_ORG") "") (object/get @entity.vars "GITHUB_ORG") "almadar-io"))))
+        (set @entity.urlPath (if (str/startsWith @entity.scope "orgs/") (str/slice @entity.scope 5) (if (str/startsWith @entity.scope "repos/") (str/slice @entity.scope 6) @entity.scope)))
+        (set @entity.image (if (!= (object/get @entity.vars "RUNNER_IMAGE") "") (object/get @entity.vars "RUNNER_IMAGE") "almadar-runner:2.337.0-r5"))
+        (set @entity.prefix (if (!= (object/get @entity.vars "RUNNER_PREFIX") "") (object/get @entity.vars "RUNNER_PREFIX") "almadar"))
+        (set @entity.count (if (!= (object/get @entity.vars "RUNNER_COUNT") "") (str/to-number (object/get @entity.vars "RUNNER_COUNT")) 2))
+        (set @entity.runnerVersion (if (!= (object/get @entity.vars "RUNNER_VERSION") "") (object/get @entity.vars "RUNNER_VERSION") "2.337.0"))
+        (set @entity.labels (if (!= (object/get @entity.vars "RUNNER_LABELS") "") (object/get @entity.vars "RUNNER_LABELS") "self-hosted,macos,arm64,almadar-mac"))
+        (set @entity.pat (object/get @entity.vars "GITHUB_TOKEN"))
+        (set @entity.index 1)
+        (emit RN_TOKEN_NEXT { })
+      RN_TOKEN_NEXT -> reading when (!= @entity.pat "")
+        (emit RN_START { })
+      RN_TOKEN_NEXT -> reading when (and (= @entity.pat "") (!= (object/get @entity.vars "ALMADAR_ROOT") ""))
+        (os/read-file { anchor: { env: "ALMADAR_ROOT" } path: ".env" } { key: "dotenv" emit: { success: RN_DOTENV, failure: RN_DOTENV_MISSING } })
+      RN_TOKEN_NEXT -> reading when (and (= @entity.pat "") (= (object/get @entity.vars "ALMADAR_ROOT") ""))
+        (os/read-file "~/kflow.ai.builder/.env" { key: "dotenv" emit: { success: RN_DOTENV, failure: RN_DOTENV_MISSING } })
+      RN_DOTENV -> reading
+        (set @entity.pat (str/replace-pattern (or (array/first (array/map (array/filter (str/split (bytes/to-string @payload.data) "\n") (fn l (str/startsWith @l "GITHUB_TOKEN="))) (fn l (str/slice @l 13)))) "") "[\\x22'\\r]" ""))
+        (emit RN_START { })
+      RN_DOTENV_MISSING -> reading
+        (emit RN_START { })
+      RN_START -> ready when (and (= @entity.pat "") (!= @entity.verb "down"))
+        (emit RUNNERS_ANSWERED { status: 500, body: (str/concat "no GITHUB_TOKEN (env or " (if (!= (object/get @entity.vars "ALMADAR_ROOT") "") (object/get @entity.vars "ALMADAR_ROOT") "~/kflow.ai.builder") "/.env)") })
+      RN_START -> running when (and (or (!= @entity.pat "") (= @entity.verb "down")) (= @entity.verb "down"))
+        (emit RN_DOCKER_RUN { stage: "rm" argv: ["rm", "-f", (str/concat @entity.prefix "-runner-" @entity.index)] })
+      RN_START -> running when (and (!= @entity.pat "") (!= @entity.verb "down") (not @entity.mac) (= @entity.verb "once"))
+        (set @entity.cont "once")
+        (emit RN_MINT { })
+      RN_START -> running when (and (!= @entity.pat "") (!= @entity.verb "down") (not @entity.mac) (= @entity.verb "up"))
+        (set @entity.say (str/concat "supervising " @entity.count " ephemeral runner(s) for " @entity.urlPath " — ctrl-c to stop"))
+        (set @entity.cont "reconcile")
+        (emit RN_TTY_RUN { stage: "say", argv: ["-c", "printf '%s\\n' \"$1\"", "sh", @entity.say] })
+      RN_START -> running when (and (!= @entity.pat "") (!= @entity.verb "down") @entity.mac)
+        (set @entity.cont "mac-software")
+        (os/getenv "HOME" { key: "home" emit: { success: RN_HOME, failure: RN_HOST_FAILED } })
+    }
+
+    state running {
+      INIT -> running
+      RN_HOST_FAILED -> ready
+        (emit RUNNERS_ANSWERED { status: 500, body: (or @payload.error "host failure") })
+      RN_DOCKER_FAILED -> ready
+        (emit RUNNERS_ANSWERED { status: 500, body: (or @payload.error "docker failed") })
+      RN_PID -> running
+        (set @entity.pid (str/concat @payload.pid))
+      RN_HOME -> running
+        (os/pid { key: "pid" emit: { success: RN_PID, failure: RN_HOST_FAILED } })
+        (set @entity.runnerDir (if (!= (object/get @entity.vars "RUNNER_DIR") "") (object/get @entity.vars "RUNNER_DIR") (str/concat @payload.value "/actions-runner-mac")))
+        (emit RN_SH_RUN { stage: "mac-software" argv: ["-c", "[ -x \"$1/config.sh\" ] || { echo \"downloading actions/runner osx-arm64 v$2 to $1...\"; mkdir -p \"$1\" && curl -fsSL -o \"$1/runner.tar.gz\" \"https://github.com/actions/runner/releases/download/v$2/actions-runner-osx-arm64-$2.tar.gz\" && tar xzf \"$1/runner.tar.gz\" -C \"$1\" && rm \"$1/runner.tar.gz\"; }", "sh", @entity.runnerDir, @entity.runnerVersion] })
+      RN_DOCKER_DONE -> running when (and (= @payload.stage "rm") (< @entity.index @entity.count))
+        (set @entity.index (+ @entity.index 1))
+        (emit RN_DOCKER_RUN { stage: "rm" argv: ["rm", "-f", (str/concat @entity.prefix "-runner-" @entity.index)] })
+      RN_DOCKER_DONE -> ready when (and (= @payload.stage "rm") (>= @entity.index @entity.count))
+        (emit RUNNERS_ANSWERED { status: 200, body: "stopped" })
+      RN_MINT -> running
+        (emit RN_CURL_RUN { stage: "mint" argv: ["-sS", "-X", "POST", "-H", (str/concat "Authorization: Bearer " @entity.pat), "-H", "Accept: application/vnd.github+json", (str/concat "https://api.github.com/" @entity.scope "/actions/runners/registration-token")] })
+      RN_CURL_FAILED -> ready
+        (emit RUNNERS_ANSWERED { status: 500, body: (str/concat "registration-token failed: " @payload.error) })
+      RN_CURL_DONE -> running when (and (= @payload.stage "mint") (= @payload.exitCode 0) (json/valid @payload.stdout) (!= (object/get (json/parse @payload.stdout RegistrationReply) "token") ""))
+        (set @entity.rtok (object/get (json/parse @payload.stdout RegistrationReply) "token"))
+        (emit RN_MINTED { })
+      RN_CURL_DONE -> running when (and (= @payload.stage "mint") (not (and (= @payload.exitCode 0) (json/valid @payload.stdout) (!= (object/get (json/parse @payload.stdout RegistrationReply) "token") ""))))
+        (set @entity.report (str/concat "registration-token failed: " (if (json/valid @payload.stdout) (object/get (json/parse @payload.stdout RegistrationReply) "message") (str/trim @payload.stderr))))
+        (emit RN_MINT_FAILED { })
+      RN_MINT_FAILED -> ready when (= @entity.verb "once")
+        (emit RUNNERS_ANSWERED { status: 500, body: @entity.report })
+      RN_MINT_FAILED -> running when (and (= @entity.verb "up") (not @entity.mac))
+        (set @entity.say (str/concat "  !! failed to start runner " @entity.index " (retrying)"))
+        (set @entity.cont "next")
+        (emit RN_TTY_RUN { stage: "say", argv: ["-c", "printf '%s\\n' \"$1\"", "sh", @entity.say] })
+      RN_MINT_FAILED -> running when (and (= @entity.verb "up") @entity.mac)
+        (set @entity.say "  !! runner job failed to start or run (retrying)")
+        (set @entity.cont "sleep")
+        (emit RN_TTY_RUN { stage: "say", argv: ["-c", "printf '%s\\n' \"$1\"", "sh", @entity.say] })
+      RN_MINTED -> running when (and (= @entity.cont "once") (not @entity.mac))
+        (emit RN_DOCKER_TTY { stage: "once" argv: ["run", "--rm", "-it", "--shm-size=2g", "--ulimit", "core=0", "-v", "almadar-pnpm-store:/home/runner/.pnpm-store", "-v", "almadar-npm-cache:/home/runner/.npm", "-e", (str/concat "GITHUB_URL_PATH=" @entity.urlPath), "-e", (str/concat "RUNNER_TOKEN=" @entity.rtok), "-e", (str/concat "RUNNER_NAME=" @entity.prefix "-local-" "once"), "-e", "RUNNER_LABELS=self-hosted,linux,arm64,almadar-local", @entity.image] })
+      RN_MINTED -> running when (and (= @entity.cont "start") (not @entity.mac))
+        (emit RN_DOCKER_RUN { stage: "start" argv: ["run", "--rm", "-d", "--shm-size=2g", "--ulimit", "core=0", "--name", (str/concat @entity.prefix "-runner-" @entity.index), "-v", "almadar-pnpm-store:/home/runner/.pnpm-store", "-v", "almadar-npm-cache:/home/runner/.npm", "-e", (str/concat "GITHUB_URL_PATH=" @entity.urlPath), "-e", (str/concat "RUNNER_TOKEN=" @entity.rtok), "-e", (str/concat "RUNNER_NAME=" @entity.prefix "-local-" @entity.index), "-e", "RUNNER_LABELS=self-hosted,linux,arm64,almadar-local", @entity.image] })
+      RN_MINTED -> running when @entity.mac
+        (set @entity.jobName (str/concat "almadar-mac-" @entity.host "-" @entity.pid "-" @now))
+        (emit RN_SH_RUN { stage: "mac-config" argv: ["-c", "cd \"$1\" && ./config.sh --url \"https://github.com/$2\" --token \"$3\" --name \"$4\" --labels \"$5\" --work _work --unattended --replace --ephemeral", "sh", @entity.runnerDir, @entity.urlPath, @entity.rtok, @entity.jobName, @entity.labels] })
+      RN_DOCKER_TTY_DONE -> ready when (= @payload.stage "once")
+        (emit RUNNERS_ANSWERED { status: (if (= @payload.exitCode 0) 200 500), body: "" })
+      RN_DOCKER_DONE -> running when (and (= @payload.stage "start") (= @payload.exitCode 0))
+        (set @entity.say (str/concat "  started " @entity.prefix "-runner-" @entity.index))
+        (set @entity.cont "next")
+        (emit RN_TTY_RUN { stage: "say", argv: ["-c", "printf '%s\\n' \"$1\"", "sh", @entity.say] })
+      RN_DOCKER_DONE -> running when (and (= @payload.stage "start") (!= @payload.exitCode 0))
+        (set @entity.say (str/concat "  !! failed to start runner " @entity.index " (retrying)"))
+        (set @entity.cont "next")
+        (emit RN_TTY_RUN { stage: "say", argv: ["-c", "printf '%s\\n' \"$1\"", "sh", @entity.say] })
+      RN_TTY_DONE -> running when (and (= @payload.stage "say") (= @entity.cont "reconcile"))
+        (emit RN_DOCKER_RUN { stage: "ps" argv: ["ps", "--format", "{{.Names}}"] })
+      RN_DOCKER_DONE -> running when (= @payload.stage "ps")
+        (set @entity.names @payload.stdout)
+        (set @entity.queue (array/filter (array/range 1 (+ @entity.count 1)) (fn i (not (array/includes (str/split @payload.stdout "\n") (str/concat @entity.prefix "-runner-" @i))))))
+        (emit RN_NEXT { })
+      RN_TTY_DONE -> running when (and (= @payload.stage "say") (= @entity.cont "next"))
+        (emit RN_NEXT { })
+      RN_NEXT -> running when (> (array/len @entity.queue) 0)
+        (set @entity.index (array/first @entity.queue))
+        (set @entity.queue (array/slice @entity.queue 1))
+        (set @entity.cont "start")
+        (emit RN_MINT { })
+      RN_NEXT -> running when (= (array/len @entity.queue) 0)
+        (emit RN_SLEEP { })
+      RN_SLEEP -> running
+        (emit RN_SH_RUN { stage: "sleep" argv: ["-c", "sleep 5"] })
+      RN_TTY_DONE -> running when (and (= @payload.stage "say") (= @entity.cont "sleep"))
+        (emit RN_SLEEP { })
+      RN_SH_DONE -> running when (and (= @payload.stage "sleep") (not @entity.mac))
+        (emit RN_DOCKER_RUN { stage: "ps" argv: ["ps", "--format", "{{.Names}}"] })
+      RN_SH_DONE -> running when (and (= @payload.stage "sleep") @entity.mac)
+        (set @entity.cont "mac-job")
+        (emit RN_MINT { })
+      RN_SH_DONE -> running when (and (= @payload.stage "mac-software") (= @payload.exitCode 0))
+        (emit RN_SH_RUN { stage: "host" argv: ["-c", "hostname -s"] })
+      RN_SH_DONE -> running when (= @payload.stage "host")
+        (set @entity.host (str/trim @payload.stdout))
+        (set @entity.say (str/concat "supervising an ephemeral almadar-mac runner for " @entity.urlPath " — ctrl-c to stop"))
+        (set @entity.cont (if (= @entity.verb "up") "mac-job" "mac-job"))
+        (emit RN_MINT { })
+      RN_SH_DONE -> running when (and (= @payload.stage "mac-config") (= @payload.exitCode 0))
+        (emit RN_TTY_RUN { stage: "mac-run" argv: ["-c", "cd \"$1\" && ./run.sh", "sh", @entity.runnerDir] })
+      RN_SH_DONE -> running when (and (= @payload.stage "mac-config") (!= @payload.exitCode 0))
+        (emit RN_SH_RUN { stage: "mac-remove" argv: ["-c", "cd \"$1\" && ./config.sh remove --token \"$2\" >/dev/null 2>&1 || true", "sh", @entity.runnerDir, @entity.rtok] })
+      RN_TTY_DONE -> running when (= @payload.stage "mac-run")
+        (emit RN_SH_RUN { stage: "mac-remove" argv: ["-c", "cd \"$1\" && ./config.sh remove --token \"$2\" >/dev/null 2>&1 || true", "sh", @entity.runnerDir, @entity.rtok] })
+      RN_SH_DONE -> ready when (and (= @payload.stage "mac-remove") (= @entity.verb "once"))
+        (emit RUNNERS_ANSWERED { status: 200, body: "" })
+      RN_SH_DONE -> running when (and (= @payload.stage "mac-remove") (= @entity.verb "up"))
+        (emit RN_SLEEP { })
+      RN_SH_FAILED -> ready
+        (emit RUNNERS_ANSWERED { status: 500, body: (or @payload.error "sh failed") })
+      RN_TTY_FAILED -> ready
+        (emit RUNNERS_ANSWERED { status: 500, body: (or @payload.error "sh failed") })
+      RN_DOCKER_TTY_FAILED -> ready
+        (emit RUNNERS_ANSWERED { status: 500, body: (or @payload.error "docker failed") })
+    }
+
+    emits {
+      RUNNERS_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      RN_ENV_NEXT {  }
+        @description "Internal: read the next runner variable."
+        @tier "internal"
+      RN_ENV_READ { key : string  value : string }
+        @description "os/getenv: one runner variable."
+        @tier "internal"
+      RN_HOST_FAILED { error : string }
+        @description "An os/ failure."
+        @tier "internal"
+      RN_TOKEN_NEXT {  }
+        @description "Internal: resolve GITHUB_TOKEN."
+        @tier "internal"
+      RN_DOTENV { data : bytes! }
+        @description "os/read-file: the repo .env."
+        @tier "internal"
+      RN_DOTENV_MISSING { error : string }
+        @description "os/read-file: no .env."
+        @tier "internal"
+      RN_START {  }
+        @description "Internal: the environment and token are known."
+        @tier "internal"
+      RN_PID { pid : number! }
+        @description "os/pid: this process, the $$ of the job name."
+        @tier "internal"
+      RN_HOME { value : string }
+        @description "os/getenv: HOME."
+        @tier "internal"
+      RN_MINT {  }
+        @description "Internal: mint a registration token."
+        @tier "internal"
+      RN_MINTED {  }
+        @description "Internal: a registration token is in hand."
+        @tier "internal"
+      RN_MINT_FAILED {  }
+        @description "Internal: the registration token could not be minted."
+        @tier "internal"
+      RN_NEXT {  }
+        @description "Internal: start the next missing container."
+        @tier "internal"
+      RN_SLEEP {  }
+        @description "Internal: wait five seconds, then reconcile again."
+        @tier "internal"
+      RN_ARGS_PARSE {
+        stage : string!
+        argv : [string]!
+        flags : [ArgFlag]!
+      }
+        @description "Internal: parse the call's words."
+        @tier "internal"
+      RN_DOCKER_RUN {
+        stage : string!
+        argv : [string]!
+      }
+        @description "Internal: run one command."
+        @tier "internal"
+      RN_DOCKER_TTY {
+        stage : string!
+        argv : [string]!
+      }
+        @description "Internal: run one command."
+        @tier "internal"
+      RN_CURL_RUN {
+        stage : string!
+        argv : [string]!
+      }
+        @description "Internal: run one command."
+        @tier "internal"
+      RN_SH_RUN {
+        stage : string!
+        argv : [string]!
+      }
+        @description "Internal: run one command."
+        @tier "internal"
+      RN_TTY_RUN {
+        stage : string!
+        argv : [string]!
+      }
+        @description "Internal: run one command."
+        @tier "internal"
+    }
+
+    listens {
+      RN_CALLED -> inbound "cli-runners" answers RUNNERS_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb runners` with its verb."
+        @synonyms "orb runners, ephemeral self-hosted runners"
+      RN_DOCKER_DONE {
+        stage : string!
+        exitCode : number!
+        signal : number!
+        stdout : string!
+        stderr : string!
+      }
+        @description "std-cli's CLI_DONE."
+      RN_DOCKER_FAILED {
+        stage : string!
+        error : string!
+        code : string!
+      }
+        @description "std-cli's CLI_FAILED."
+      RN_DOCKER_TTY_DONE {
+        stage : string!
+        exitCode : number!
+        signal : number!
+        stdout : string!
+        stderr : string!
+      }
+        @description "std-cli's CLI_DONE."
+      RN_DOCKER_TTY_FAILED {
+        stage : string!
+        error : string!
+        code : string!
+      }
+        @description "std-cli's CLI_FAILED."
+      RN_CURL_DONE {
+        stage : string!
+        exitCode : number!
+        signal : number!
+        stdout : string!
+        stderr : string!
+      }
+        @description "std-cli's CLI_DONE."
+      RN_CURL_FAILED {
+        stage : string!
+        error : string!
+        code : string!
+      }
+        @description "std-cli's CLI_FAILED."
+      RN_SH_DONE {
+        stage : string!
+        exitCode : number!
+        signal : number!
+        stdout : string!
+        stderr : string!
+      }
+        @description "std-cli's CLI_DONE."
+      RN_SH_FAILED {
+        stage : string!
+        error : string!
+        code : string!
+      }
+        @description "std-cli's CLI_FAILED."
+      RN_TTY_DONE {
+        stage : string!
+        exitCode : number!
+        signal : number!
+        stdout : string!
+        stderr : string!
+      }
+        @description "std-cli's CLI_DONE."
+      RN_TTY_FAILED {
+        stage : string!
+        error : string!
+        code : string!
+      }
+        @description "std-cli's CLI_FAILED."
+      RN_ARGS_DONE {
+        stage : string!
+        flags : Map string [string]!
+        positionals : [string]!
+        errors : [string]!
+        words : [string]!
+      }
+        @description "std-args's ARGS_PARSED."
+      ArgsCli.ARGS_PARSED -> RN_ARGS_DONE
+      DockerCli.CLI_DONE -> RN_DOCKER_DONE
+      DockerCli.CLI_FAILED -> RN_DOCKER_FAILED
+      DockerTty.CLI_DONE -> RN_DOCKER_TTY_DONE
+      DockerTty.CLI_FAILED -> RN_DOCKER_TTY_FAILED
+      CurlCli.CLI_DONE -> RN_CURL_DONE
+      CurlCli.CLI_FAILED -> RN_CURL_FAILED
+      ShCli.CLI_DONE -> RN_SH_DONE
+      ShCli.CLI_FAILED -> RN_SH_FAILED
+      ShTty.CLI_DONE -> RN_TTY_DONE
+      ShTty.CLI_FAILED -> RN_TTY_FAILED
+    }
+  }
+
+  page "/orb-runners" as OrbRunnersPage -> OrbRunners, ArgsCli, DockerCli, DockerTty, CurlCli, ShCli, ShTty
+}

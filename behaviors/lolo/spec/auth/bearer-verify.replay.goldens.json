@@ -1,0 +1,342 @@
+{
+ "atom": "auth/atoms/std-bearer-verify.lolo",
+ "trait": "BearerVerifier",
+ "cases": [
+  {
+   "id": "emulator set: an unsigned token is handed to the claim policy",
+   "entity": {
+    "emulator": true,
+    "queue": [
+     {
+      "requestId": 7,
+      "authorization": "Bearer eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpc3MiOiIiLCJhdWQiOiIiLCJzdWIiOiJ1MSIsImV4cCI6NDEwMjQ0NDgwMH0."
+     }
+    ]
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "BEARER_PUMP",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "JWS_VERIFIED",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ],
+   "skip": "needs PS1 config"
+  },
+  {
+   "id": "emulator set: the claim policy accepts the unsigned token's claims",
+   "entity": {
+    "emulator": true,
+    "requestId": 7
+   },
+   "steps": [
+    {
+     "from": "verifying",
+     "event": "JWS_VERIFIED",
+     "payload": {
+      "header": {
+       "alg": "none"
+      },
+      "payload": {
+       "iss": "",
+       "aud": "",
+       "sub": "u1",
+       "exp": 4102444800,
+       "extra": {}
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "BEARER_VERIFIED",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "CONTROL emulator unset: an unsigned token is not handed to the claim policy",
+   "entity": {
+    "emulator": false,
+    "queue": [
+     {
+      "requestId": 7,
+      "authorization": "Bearer eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpc3MiOiIiLCJhdWQiOiIiLCJzdWIiOiJ1MSIsImV4cCI6NDEwMjQ0NDgwMH0."
+     }
+    ]
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "BEARER_PUMP",
+     "payload": {},
+     "expect": {
+      "neverEmits": [
+       "JWS_VERIFIED",
+       "BEARER_VERIFIED"
+      ]
+     }
+    }
+   ],
+   "skip": "needs PS1 config"
+  },
+  {
+   "id": "CONTROL emulator host read empty: an unsigned token is still not accepted",
+   "entity": {
+    "emulator": true,
+    "queue": [
+     {
+      "requestId": 7,
+      "authorization": "Bearer eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpc3MiOiIiLCJhdWQiOiIiLCJzdWIiOiJ1MSIsImV4cCI6NDEwMjQ0NDgwMH0."
+     }
+    ]
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "EMULATOR_READ",
+     "payload": {
+      "value": ""
+     },
+     "expect": {}
+    },
+    {
+     "from": "idle",
+     "event": "BEARER_PUMP",
+     "payload": {},
+     "expect": {
+      "neverEmits": [
+       "JWS_VERIFIED",
+       "BEARER_VERIFIED"
+      ]
+     }
+    }
+   ],
+   "skip": "needs PS1 config"
+  },
+  {
+   "id": "x509 format: the fetched document goes to std-x509 one certificate at a time",
+   "config": {
+    "statusSlot": "system",
+    "jwksOrigin": "https://www.googleapis.com",
+    "jwksPath": "/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com",
+    "issuer": "",
+    "audience": "",
+    "clockSkewSeconds": 0,
+    "requireAuthTime": false,
+    "allowedTenants": [],
+    "keyPrefix": "sk_live_",
+    "maxQueue": 256,
+    "timeoutMs": 10000,
+    "keysFormat": "x509"
+   },
+   "entity": {
+    "kid": "fb-key-1",
+    "token": "a.b.c",
+    "requestId": 3
+   },
+   "steps": [
+    {
+     "from": "fetching",
+     "event": "JWKS_REPLIED",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "{\"fb-key-1\": \"-----BEGIN CERTIFICATE-----\\nMIIDGTCCAgGgAwIBAgIUWSeltjrwOo39kbPhZLMPdruFhMUwDQYJKoZIhvcNAQEL\\nBQAwGzEZMBcGA1UEAwwQdGVzdC1zZWN1cmV0b2tlbjAgFw0yNjEwMTcyMTQyMDla\\nGA8yMTI2MDkyMzIxNDIwOVowGzEZMBcGA1UEAwwQdGVzdC1zZWN1cmV0b2tlbjCC\\nASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMKNTKLp5gzByrX3akLCD7M2\\n001GLR4HC5zvmlDQYThj2zysZ2bT7O2fD0jR2Nv/0V/IquNtiYE5RVyivPhyuKCq\\nbTlMugfqNx5cXrUAy0VZsg9esOpvCBw7t92MZChdv4BjF7DaOYIF8/zh7idSgSZ3\\nZzoOTtN/9wXQEqZZ8ws3Msl0k8zqsUtT4l2C/CTW5Q+Dpa3qi51fZEDOlgdbJtS/\\nIgyQ+hj9OS+UnazLjtnYnrC9mJhDFx5keDuUi9dBnAy2E3kqMjJ/QzW0dhHsPtSY\\n8n7QGo0uQpsB0AoyKCVfwPTiF1m9cYhcwaEEsWJ6ga8SVu6NMBKBqN5LEXpOId8C\\nAwEAAaNTMFEwHQYDVR0OBBYEFPCzJuwbaKw4MaIMoANdqhVJev4CMB8GA1UdIwQY\\nMBaAFPCzJuwbaKw4MaIMoANdqhVJev4CMA8GA1UdEwEB/wQFMAMBAf8wDQYJKoZI\\nhvcNAQELBQADggEBAJNYF4Ul+E3prjyQmEGaZ4xDuDUlA2Kq/Q7OP7o2MovLfrS9\\nRQR+LwsloAPyL+fFDJkt2nRQVZJVoqv0pYn7Krl75aWx8/tir0BSVpOkUmQymmLs\\nrNNYiTBsD0g3ZBjEXZf/F2+Ve2jvgdl/MtRq06plZkxZQNiuAC9koakUQMHbFVz5\\n9gUlh8A5yNCNI9MW35Ga5t6iXDNuklvc5/HAxW7qOKWfbQUW5/UaoMsf6enmmS/a\\nhckDbba0KYyp9y6KOhiw/gLevHgUHf1Vi/fKZ6mxrL9nrfjTzv+uQmTxDl6K1FYz\\nFT7lD5LLKW5LvkvLISNZCTtqWgG0Fn4722Js62g=\\n-----END CERTIFICATE-----\\n\"}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "X509_PARSE",
+        "payload": {
+         "pem": "-----BEGIN CERTIFICATE-----\nMIIDGTCCAgGgAwIBAgIUWSeltjrwOo39kbPhZLMPdruFhMUwDQYJKoZIhvcNAQEL\nBQAwGzEZMBcGA1UEAwwQdGVzdC1zZWN1cmV0b2tlbjAgFw0yNjEwMTcyMTQyMDla\nGA8yMTI2MDkyMzIxNDIwOVowGzEZMBcGA1UEAwwQdGVzdC1zZWN1cmV0b2tlbjCC\nASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMKNTKLp5gzByrX3akLCD7M2\n001GLR4HC5zvmlDQYThj2zysZ2bT7O2fD0jR2Nv/0V/IquNtiYE5RVyivPhyuKCq\nbTlMugfqNx5cXrUAy0VZsg9esOpvCBw7t92MZChdv4BjF7DaOYIF8/zh7idSgSZ3\nZzoOTtN/9wXQEqZZ8ws3Msl0k8zqsUtT4l2C/CTW5Q+Dpa3qi51fZEDOlgdbJtS/\nIgyQ+hj9OS+UnazLjtnYnrC9mJhDFx5keDuUi9dBnAy2E3kqMjJ/QzW0dhHsPtSY\n8n7QGo0uQpsB0AoyKCVfwPTiF1m9cYhcwaEEsWJ6ga8SVu6NMBKBqN5LEXpOId8C\nAwEAAaNTMFEwHQYDVR0OBBYEFPCzJuwbaKw4MaIMoANdqhVJev4CMB8GA1UdIwQY\nMBaAFPCzJuwbaKw4MaIMoANdqhVJev4CMA8GA1UdEwEB/wQFMAMBAf8wDQYJKoZI\nhvcNAQELBQADggEBAJNYF4Ul+E3prjyQmEGaZ4xDuDUlA2Kq/Q7OP7o2MovLfrS9\nRQR+LwsloAPyL+fFDJkt2nRQVZJVoqv0pYn7Krl75aWx8/tir0BSVpOkUmQymmLs\nrNNYiTBsD0g3ZBjEXZf/F2+Ve2jvgdl/MtRq06plZkxZQNiuAC9koakUQMHbFVz5\n9gUlh8A5yNCNI9MW35Ga5t6iXDNuklvc5/HAxW7qOKWfbQUW5/UaoMsf6enmmS/a\nhckDbba0KYyp9y6KOhiw/gLevHgUHf1Vi/fKZ6mxrL9nrfjTzv+uQmTxDl6K1FYz\nFT7lD5LLKW5LvkvLISNZCTtqWgG0Fn4722Js62g=\n-----END CERTIFICATE-----\n"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "certifying",
+     "event": "X509_PARSED",
+     "payload": {
+      "n": "wo1MounmDMHKtfdqQsIPszbTTUYtHgcLnO+aUNBhOGPbPKxnZtPs7Z8PSNHY2//RX8iq422JgTlFXKK8+HK4oKptOUy6B+o3HlxetQDLRVmyD16w6m8IHDu33YxkKF2/gGMXsNo5ggXz/OHuJ1KBJndnOg5O03/3BdASplnzCzcyyXSTzOqxS1PiXYL8JNblD4OlreqLnV9kQM6WB1sm1L8iDJD6GP05L5SdrMuO2diesL2YmEMXHmR4O5SL10GcDLYTeSoyMn9DNbR2Eew+1JjyftAajS5CmwHQCjIoJV/A9OIXWb1xiFzBoQSxYnqBrxJW7o0wEoGo3ksRek4h3w==",
+      "e": "AQAB"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "JWS_VERIFY",
+        "payload": {
+         "token": "a.b.c",
+         "jwk": {
+          "kty": "RSA",
+          "n": "wo1MounmDMHKtfdqQsIPszbTTUYtHgcLnO+aUNBhOGPbPKxnZtPs7Z8PSNHY2//RX8iq422JgTlFXKK8+HK4oKptOUy6B+o3HlxetQDLRVmyD16w6m8IHDu33YxkKF2/gGMXsNo5ggXz/OHuJ1KBJndnOg5O03/3BdASplnzCzcyyXSTzOqxS1PiXYL8JNblD4OlreqLnV9kQM6WB1sm1L8iDJD6GP05L5SdrMuO2diesL2YmEMXHmR4O5SL10GcDLYTeSoyMn9DNbR2Eew+1JjyftAajS5CmwHQCjIoJV/A9OIXWb1xiFzBoQSxYnqBrxJW7o0wEoGo3ksRek4h3w==",
+          "e": "AQAB",
+          "kid": "fb-key-1",
+          "alg": "RS256",
+          "use": "sig"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "skip": "needs PS1 config"
+  },
+  {
+   "id": "x509 format: a kid the document lacks is unknown-key",
+   "config": {
+    "statusSlot": "system",
+    "jwksOrigin": "https://www.googleapis.com",
+    "jwksPath": "/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com",
+    "issuer": "",
+    "audience": "",
+    "clockSkewSeconds": 0,
+    "requireAuthTime": false,
+    "allowedTenants": [],
+    "keyPrefix": "sk_live_",
+    "maxQueue": 256,
+    "timeoutMs": 10000,
+    "keysFormat": "x509"
+   },
+   "entity": {
+    "kid": "other",
+    "token": "a.b.c",
+    "requestId": 3
+   },
+   "steps": [
+    {
+     "from": "fetching",
+     "event": "JWKS_REPLIED",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "{\"fb-key-1\": \"-----BEGIN CERTIFICATE-----\\nMIIDGTCCAgGgAwIBAgIUWSeltjrwOo39kbPhZLMPdruFhMUwDQYJKoZIhvcNAQEL\\nBQAwGzEZMBcGA1UEAwwQdGVzdC1zZWN1cmV0b2tlbjAgFw0yNjEwMTcyMTQyMDla\\nGA8yMTI2MDkyMzIxNDIwOVowGzEZMBcGA1UEAwwQdGVzdC1zZWN1cmV0b2tlbjCC\\nASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMKNTKLp5gzByrX3akLCD7M2\\n001GLR4HC5zvmlDQYThj2zysZ2bT7O2fD0jR2Nv/0V/IquNtiYE5RVyivPhyuKCq\\nbTlMugfqNx5cXrUAy0VZsg9esOpvCBw7t92MZChdv4BjF7DaOYIF8/zh7idSgSZ3\\nZzoOTtN/9wXQEqZZ8ws3Msl0k8zqsUtT4l2C/CTW5Q+Dpa3qi51fZEDOlgdbJtS/\\nIgyQ+hj9OS+UnazLjtnYnrC9mJhDFx5keDuUi9dBnAy2E3kqMjJ/QzW0dhHsPtSY\\n8n7QGo0uQpsB0AoyKCVfwPTiF1m9cYhcwaEEsWJ6ga8SVu6NMBKBqN5LEXpOId8C\\nAwEAAaNTMFEwHQYDVR0OBBYEFPCzJuwbaKw4MaIMoANdqhVJev4CMB8GA1UdIwQY\\nMBaAFPCzJuwbaKw4MaIMoANdqhVJev4CMA8GA1UdEwEB/wQFMAMBAf8wDQYJKoZI\\nhvcNAQELBQADggEBAJNYF4Ul+E3prjyQmEGaZ4xDuDUlA2Kq/Q7OP7o2MovLfrS9\\nRQR+LwsloAPyL+fFDJkt2nRQVZJVoqv0pYn7Krl75aWx8/tir0BSVpOkUmQymmLs\\nrNNYiTBsD0g3ZBjEXZf/F2+Ve2jvgdl/MtRq06plZkxZQNiuAC9koakUQMHbFVz5\\n9gUlh8A5yNCNI9MW35Ga5t6iXDNuklvc5/HAxW7qOKWfbQUW5/UaoMsf6enmmS/a\\nhckDbba0KYyp9y6KOhiw/gLevHgUHf1Vi/fKZ6mxrL9nrfjTzv+uQmTxDl6K1FYz\\nFT7lD5LLKW5LvkvLISNZCTtqWgG0Fn4722Js62g=\\n-----END CERTIFICATE-----\\n\"}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "X509_PARSE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "from": "certifying",
+     "event": "X509_PARSED",
+     "payload": {
+      "n": "wo1MounmDMHKtfdqQsIPszbTTUYtHgcLnO+aUNBhOGPbPKxnZtPs7Z8PSNHY2//RX8iq422JgTlFXKK8+HK4oKptOUy6B+o3HlxetQDLRVmyD16w6m8IHDu33YxkKF2/gGMXsNo5ggXz/OHuJ1KBJndnOg5O03/3BdASplnzCzcyyXSTzOqxS1PiXYL8JNblD4OlreqLnV9kQM6WB1sm1L8iDJD6GP05L5SdrMuO2diesL2YmEMXHmR4O5SL10GcDLYTeSoyMn9DNbR2Eew+1JjyftAajS5CmwHQCjIoJV/A9OIXWb1xiFzBoQSxYnqBrxJW7o0wEoGo3ksRek4h3w==",
+      "e": "AQAB"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "BEARER_REFUSED",
+        "payload": {
+         "requestId": 3,
+         "reason": "unknown-key"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "skip": "needs PS1 config"
+  },
+  {
+   "id": "x509 format: std-x509 refusing a certificate is keys-unavailable",
+   "config": {
+    "statusSlot": "system",
+    "jwksOrigin": "https://www.googleapis.com",
+    "jwksPath": "/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com",
+    "issuer": "",
+    "audience": "",
+    "clockSkewSeconds": 0,
+    "requireAuthTime": false,
+    "allowedTenants": [],
+    "keyPrefix": "sk_live_",
+    "maxQueue": 256,
+    "timeoutMs": 10000,
+    "keysFormat": "x509"
+   },
+   "entity": {
+    "kid": "fb-key-1",
+    "token": "a.b.c",
+    "requestId": 3
+   },
+   "steps": [
+    {
+     "from": "fetching",
+     "event": "JWKS_REPLIED",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "{\"fb-key-1\": \"-----BEGIN CERTIFICATE-----\\nMIIDGTCCAgGgAwIBAgIUWSeltjrwOo39kbPhZLMPdruFhMUwDQYJKoZIhvcNAQEL\\nBQAwGzEZMBcGA1UEAwwQdGVzdC1zZWN1cmV0b2tlbjAgFw0yNjEwMTcyMTQyMDla\\nGA8yMTI2MDkyMzIxNDIwOVowGzEZMBcGA1UEAwwQdGVzdC1zZWN1cmV0b2tlbjCC\\nASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMKNTKLp5gzByrX3akLCD7M2\\n001GLR4HC5zvmlDQYThj2zysZ2bT7O2fD0jR2Nv/0V/IquNtiYE5RVyivPhyuKCq\\nbTlMugfqNx5cXrUAy0VZsg9esOpvCBw7t92MZChdv4BjF7DaOYIF8/zh7idSgSZ3\\nZzoOTtN/9wXQEqZZ8ws3Msl0k8zqsUtT4l2C/CTW5Q+Dpa3qi51fZEDOlgdbJtS/\\nIgyQ+hj9OS+UnazLjtnYnrC9mJhDFx5keDuUi9dBnAy2E3kqMjJ/QzW0dhHsPtSY\\n8n7QGo0uQpsB0AoyKCVfwPTiF1m9cYhcwaEEsWJ6ga8SVu6NMBKBqN5LEXpOId8C\\nAwEAAaNTMFEwHQYDVR0OBBYEFPCzJuwbaKw4MaIMoANdqhVJev4CMB8GA1UdIwQY\\nMBaAFPCzJuwbaKw4MaIMoANdqhVJev4CMA8GA1UdEwEB/wQFMAMBAf8wDQYJKoZI\\nhvcNAQELBQADggEBAJNYF4Ul+E3prjyQmEGaZ4xDuDUlA2Kq/Q7OP7o2MovLfrS9\\nRQR+LwsloAPyL+fFDJkt2nRQVZJVoqv0pYn7Krl75aWx8/tir0BSVpOkUmQymmLs\\nrNNYiTBsD0g3ZBjEXZf/F2+Ve2jvgdl/MtRq06plZkxZQNiuAC9koakUQMHbFVz5\\n9gUlh8A5yNCNI9MW35Ga5t6iXDNuklvc5/HAxW7qOKWfbQUW5/UaoMsf6enmmS/a\\nhckDbba0KYyp9y6KOhiw/gLevHgUHf1Vi/fKZ6mxrL9nrfjTzv+uQmTxDl6K1FYz\\nFT7lD5LLKW5LvkvLISNZCTtqWgG0Fn4722Js62g=\\n-----END CERTIFICATE-----\\n\"}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "X509_PARSE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "from": "certifying",
+     "event": "X509_REFUSED",
+     "payload": {
+      "reason": "der"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "BEARER_REFUSED",
+        "payload": {
+         "requestId": 3,
+         "reason": "keys-unavailable"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "skip": "needs PS1 config"
+  },
+  {
+   "id": "CONTROL jwks format: a certificate document never reaches std-x509",
+   "entity": {
+    "kid": "fb-key-1",
+    "token": "a.b.c",
+    "requestId": 3
+   },
+   "steps": [
+    {
+     "from": "fetching",
+     "event": "JWKS_REPLIED",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "{\"fb-key-1\": \"-----BEGIN CERTIFICATE-----\\nMIIDGTCCAgGgAwIBAgIUWSeltjrwOo39kbPhZLMPdruFhMUwDQYJKoZIhvcNAQEL\\nBQAwGzEZMBcGA1UEAwwQdGVzdC1zZWN1cmV0b2tlbjAgFw0yNjEwMTcyMTQyMDla\\nGA8yMTI2MDkyMzIxNDIwOVowGzEZMBcGA1UEAwwQdGVzdC1zZWN1cmV0b2tlbjCC\\nASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMKNTKLp5gzByrX3akLCD7M2\\n001GLR4HC5zvmlDQYThj2zysZ2bT7O2fD0jR2Nv/0V/IquNtiYE5RVyivPhyuKCq\\nbTlMugfqNx5cXrUAy0VZsg9esOpvCBw7t92MZChdv4BjF7DaOYIF8/zh7idSgSZ3\\nZzoOTtN/9wXQEqZZ8ws3Msl0k8zqsUtT4l2C/CTW5Q+Dpa3qi51fZEDOlgdbJtS/\\nIgyQ+hj9OS+UnazLjtnYnrC9mJhDFx5keDuUi9dBnAy2E3kqMjJ/QzW0dhHsPtSY\\n8n7QGo0uQpsB0AoyKCVfwPTiF1m9cYhcwaEEsWJ6ga8SVu6NMBKBqN5LEXpOId8C\\nAwEAAaNTMFEwHQYDVR0OBBYEFPCzJuwbaKw4MaIMoANdqhVJev4CMB8GA1UdIwQY\\nMBaAFPCzJuwbaKw4MaIMoANdqhVJev4CMA8GA1UdEwEB/wQFMAMBAf8wDQYJKoZI\\nhvcNAQELBQADggEBAJNYF4Ul+E3prjyQmEGaZ4xDuDUlA2Kq/Q7OP7o2MovLfrS9\\nRQR+LwsloAPyL+fFDJkt2nRQVZJVoqv0pYn7Krl75aWx8/tir0BSVpOkUmQymmLs\\nrNNYiTBsD0g3ZBjEXZf/F2+Ve2jvgdl/MtRq06plZkxZQNiuAC9koakUQMHbFVz5\\n9gUlh8A5yNCNI9MW35Ga5t6iXDNuklvc5/HAxW7qOKWfbQUW5/UaoMsf6enmmS/a\\nhckDbba0KYyp9y6KOhiw/gLevHgUHf1Vi/fKZ6mxrL9nrfjTzv+uQmTxDl6K1FYz\\nFT7lD5LLKW5LvkvLISNZCTtqWgG0Fn4722Js62g=\\n-----END CERTIFICATE-----\\n\"}"
+     },
+     "expect": {
+      "neverEmits": [
+       "X509_PARSE"
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

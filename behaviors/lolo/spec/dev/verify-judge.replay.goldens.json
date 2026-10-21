@@ -1,0 +1,981 @@
+{
+  "atom": "dev/atoms/std-verify-judge.lolo",
+  "trait": "Judge",
+  "cases": [
+    {
+      "id": "effects-fired-passes-when-none-failed",
+      "steps": [
+        {
+          "event": "JUDGE_REQUEST",
+          "payload": {
+            "step": {
+              "trait": "T",
+              "from": "a",
+              "event": "GO",
+              "to": "b",
+              "toStates": [
+                "b"
+              ],
+              "variant": "success",
+              "payload": {},
+              "guarded": false,
+              "solved": true,
+              "payloadCase": "success"
+            },
+            "played": {
+              "trait": "T",
+              "event": "GO",
+              "transitionFired": true,
+              "guard": "none",
+              "effects": [
+                {
+                  "type": "persist",
+                  "args": [
+                    "create",
+                    "Item"
+                  ],
+                  "status": "ok"
+                }
+              ],
+              "emitted": [],
+              "guards": [],
+              "state": {}
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "JUDGE_ANSWERED",
+                "payload": {
+                  "verdicts": [
+                    {
+                      "name": "effects_fired",
+                      "passed": true,
+                      "detail": ""
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "failed-persist-is-an-offender",
+      "steps": [
+        {
+          "event": "JUDGE_REQUEST",
+          "payload": {
+            "step": {
+              "trait": "T",
+              "from": "a",
+              "event": "GO",
+              "to": "b",
+              "toStates": [
+                "b"
+              ],
+              "variant": "success",
+              "payload": {},
+              "guarded": false,
+              "solved": true,
+              "payloadCase": "success"
+            },
+            "played": {
+              "trait": "T",
+              "event": "GO",
+              "transitionFired": true,
+              "guard": "none",
+              "effects": [
+                {
+                  "type": "persist",
+                  "args": [
+                    "create",
+                    "Item"
+                  ],
+                  "status": "failed",
+                  "error": "boom"
+                }
+              ],
+              "emitted": [],
+              "guards": [],
+              "state": {}
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "JUDGE_ANSWERED",
+                "payload": {
+                  "verdicts": [
+                    {
+                      "name": "effects_fired",
+                      "passed": false,
+                      "detail": "1 offender(s): T:GO persist(Item) failed: boom"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-unplanned-step-is-not-evidence",
+      "steps": [
+        {
+          "event": "JUDGE_REQUEST",
+          "payload": {
+            "step": {
+              "trait": "T",
+              "from": "a",
+              "event": "GO",
+              "to": "b",
+              "toStates": [
+                "b"
+              ],
+              "variant": "success",
+              "payload": {},
+              "guarded": false,
+              "solved": false,
+              "payloadCase": "success",
+              "unplanned": "guard-unsolved"
+            },
+            "played": {
+              "trait": "T",
+              "event": "GO",
+              "transitionFired": false,
+              "guard": "fail",
+              "effects": [
+                {
+                  "type": "persist",
+                  "args": [
+                    "create",
+                    "Item"
+                  ],
+                  "status": "failed",
+                  "error": "boom"
+                }
+              ],
+              "emitted": [],
+              "guards": [],
+              "state": {}
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "JUDGE_ANSWERED",
+                "payload": {
+                  "verdicts": [
+                    {
+                      "name": "effects_fired",
+                      "passed": true,
+                      "detail": ""
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "routed-failure-is-exempt",
+      "steps": [
+        {
+          "event": "JUDGE_REQUEST",
+          "payload": {
+            "step": {
+              "trait": "T",
+              "from": "a",
+              "event": "GO",
+              "to": "b",
+              "toStates": [
+                "b"
+              ],
+              "variant": "success",
+              "payload": {},
+              "guarded": false,
+              "solved": true,
+              "payloadCase": "success"
+            },
+            "played": {
+              "trait": "T",
+              "event": "GO",
+              "transitionFired": true,
+              "guard": "none",
+              "effects": [
+                {
+                  "type": "http",
+                  "args": [
+                    "x"
+                  ],
+                  "status": "failed",
+                  "error": "500",
+                  "routed": "CALL_FAILED"
+                }
+              ],
+              "emitted": [],
+              "guards": [],
+              "state": {}
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "JUDGE_ANSWERED",
+                "payload": {
+                  "verdicts": [
+                    {
+                      "name": "effects_fired",
+                      "passed": true,
+                      "detail": ""
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-unrouted-http-failure-offends",
+      "steps": [
+        {
+          "event": "JUDGE_REQUEST",
+          "payload": {
+            "step": {
+              "trait": "T",
+              "from": "a",
+              "event": "GO",
+              "to": "b",
+              "toStates": [
+                "b"
+              ],
+              "variant": "success",
+              "payload": {},
+              "guarded": false,
+              "solved": true,
+              "payloadCase": "success"
+            },
+            "played": {
+              "trait": "T",
+              "event": "GO",
+              "transitionFired": true,
+              "guard": "none",
+              "effects": [
+                {
+                  "type": "http",
+                  "args": [
+                    "x"
+                  ],
+                  "status": "failed",
+                  "error": "500"
+                }
+              ],
+              "emitted": [],
+              "guards": [],
+              "state": {}
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "JUDGE_ANSWERED",
+                "payload": {
+                  "verdicts": [
+                    {
+                      "name": "effects_fired",
+                      "passed": false,
+                      "detail": "1 offender(s): T:GO http(x) failed: 500"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "entity-data-bound-empty-named-and-unresolved-offend",
+      "steps": [
+        {
+          "event": "JUDGE_REQUEST",
+          "payload": {
+            "step": {
+              "trait": "T",
+              "from": "a",
+              "event": "GO",
+              "to": "b",
+              "toStates": [
+                "b"
+              ],
+              "variant": "success",
+              "payload": {},
+              "guarded": false,
+              "solved": true,
+              "payloadCase": "success"
+            },
+            "played": {
+              "trait": "T",
+              "event": "GO",
+              "transitionFired": true,
+              "guard": "none",
+              "effects": [],
+              "emitted": [],
+              "guards": [],
+              "state": {}
+            },
+            "rendered": [
+              {
+                "pattern": "table-view",
+                "binding": {
+                  "kind": "named",
+                  "entity": "Note",
+                  "rows": 2,
+                  "readGated": false
+                }
+              },
+              {
+                "pattern": "data-list",
+                "binding": {
+                  "kind": "named",
+                  "entity": "Tag",
+                  "rows": 0,
+                  "readGated": false
+                }
+              },
+              {
+                "pattern": "data-grid",
+                "binding": {
+                  "kind": "inline",
+                  "entity": "Note",
+                  "rows": 0,
+                  "readGated": false
+                }
+              },
+              {
+                "pattern": "data-grid",
+                "binding": {
+                  "kind": "payload-unresolved",
+                  "entity": "@payload.rows",
+                  "rows": 0,
+                  "readGated": false
+                }
+              },
+              {
+                "pattern": "data-list",
+                "binding": {
+                  "kind": "context-unresolved",
+                  "entity": "@entity.items",
+                  "rows": 0,
+                  "readGated": false
+                }
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "JUDGE_ANSWERED",
+                "payload": {
+                  "verdicts": [
+                    {
+                      "name": "effects_fired",
+                      "passed": true,
+                      "detail": ""
+                    },
+                    {
+                      "name": "entity_data_bound",
+                      "passed": false,
+                      "detail": "3 offender(s): data-list[entity=Tag]; data-grid[entity=<empty-array>]; data-grid[unresolved=@payload.rows]"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-read-gated-empty-list-is-not-an-offender",
+      "steps": [
+        {
+          "event": "JUDGE_REQUEST",
+          "payload": {
+            "step": {
+              "trait": "T",
+              "from": "a",
+              "event": "GO",
+              "to": "b",
+              "toStates": [
+                "b"
+              ],
+              "variant": "success",
+              "payload": {},
+              "guarded": false,
+              "solved": true,
+              "payloadCase": "success"
+            },
+            "played": {
+              "trait": "T",
+              "event": "GO",
+              "transitionFired": true,
+              "guard": "none",
+              "effects": [],
+              "emitted": [],
+              "guards": [],
+              "state": {}
+            },
+            "rendered": [
+              {
+                "pattern": "table-view",
+                "binding": {
+                  "kind": "named",
+                  "entity": "Note",
+                  "rows": 0,
+                  "readGated": true
+                }
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "JUDGE_ANSWERED",
+                "payload": {
+                  "verdicts": [
+                    {
+                      "name": "effects_fired",
+                      "passed": true,
+                      "detail": ""
+                    },
+                    {
+                      "name": "entity_data_bound",
+                      "passed": true,
+                      "detail": ""
+                    }
+                  ],
+                  "accessScopedEmpty": [
+                    "table-view[Note: @read]"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "proposition-held",
+      "steps": [
+        {
+          "event": "JUDGE_REQUEST",
+          "payload": {
+            "step": {
+              "trait": "T",
+              "from": "a",
+              "event": "GO",
+              "to": "b",
+              "toStates": [
+                "b"
+              ],
+              "variant": "success",
+              "payload": {},
+              "guarded": false,
+              "solved": true,
+              "payloadCase": "success"
+            },
+            "played": {
+              "trait": "T",
+              "event": "GO",
+              "transitionFired": true,
+              "guard": "none",
+              "effects": [],
+              "emitted": [],
+              "guards": [],
+              "ensures": [
+                {
+                  "proposition": [
+                    "=",
+                    "@entity.balance",
+                    [
+                      "-",
+                      "@fromEntity.balance",
+                      "@payload.amount"
+                    ]
+                  ],
+                  "verdict": "held"
+                }
+              ],
+              "state": {}
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "JUDGE_ANSWERED",
+                "payload": {
+                  "verdicts": [
+                    {
+                      "name": "effects_fired",
+                      "passed": true,
+                      "detail": ""
+                    },
+                    {
+                      "name": "proposition_held",
+                      "passed": true,
+                      "detail": ""
+                    }
+                  ],
+                  "proposition": {
+                    "verdict": "held"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "proposition-broken-fails-with-json-detail",
+      "steps": [
+        {
+          "event": "JUDGE_REQUEST",
+          "payload": {
+            "step": {
+              "trait": "T",
+              "from": "a",
+              "event": "GO",
+              "to": "b",
+              "toStates": [
+                "b"
+              ],
+              "variant": "success",
+              "payload": {},
+              "guarded": false,
+              "solved": true,
+              "payloadCase": "success"
+            },
+            "played": {
+              "trait": "T",
+              "event": "GO",
+              "transitionFired": true,
+              "guard": "none",
+              "effects": [],
+              "emitted": [],
+              "guards": [],
+              "ensures": [
+                {
+                  "proposition": [
+                    "=",
+                    "@entity.balance",
+                    [
+                      "-",
+                      "@fromEntity.balance",
+                      "@payload.amount"
+                    ]
+                  ],
+                  "verdict": "held"
+                },
+                {
+                  "proposition": [
+                    "=",
+                    "@entity.balance",
+                    [
+                      "-",
+                      "@fromEntity.balance",
+                      "@payload.amount"
+                    ]
+                  ],
+                  "verdict": "broken",
+                  "counterexample": {
+                    "entity": {
+                      "balance": 6
+                    },
+                    "fromEntity": {
+                      "balance": 10
+                    },
+                    "payload": {
+                      "amount": 3
+                    }
+                  }
+                }
+              ],
+              "state": {}
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "JUDGE_ANSWERED",
+                "payload": {
+                  "verdicts": [
+                    {
+                      "name": "effects_fired",
+                      "passed": true,
+                      "detail": ""
+                    },
+                    {
+                      "name": "proposition_held",
+                      "passed": false,
+                      "detail": "1 offender(s): T:a--GO-->b @ensures [\"=\",\"@entity.balance\",[\"-\",\"@fromEntity.balance\",\"@payload.amount\"]]"
+                    }
+                  ],
+                  "proposition": {
+                    "verdict": "broken",
+                    "proposition": "[\"=\",\"@entity.balance\",[\"-\",\"@fromEntity.balance\",\"@payload.amount\"]]"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "proposition-two-broken-both-reported",
+      "steps": [
+        {
+          "event": "JUDGE_REQUEST",
+          "payload": {
+            "step": {
+              "trait": "T",
+              "from": "a",
+              "event": "GO",
+              "to": "b",
+              "toStates": [
+                "b"
+              ],
+              "variant": "success",
+              "payload": {},
+              "guarded": false,
+              "solved": true,
+              "payloadCase": "success"
+            },
+            "played": {
+              "trait": "T",
+              "event": "GO",
+              "transitionFired": true,
+              "guard": "none",
+              "effects": [],
+              "emitted": [],
+              "guards": [],
+              "ensures": [
+                {
+                  "proposition": [
+                    "=",
+                    "@entity.balance",
+                    [
+                      "-",
+                      "@fromEntity.balance",
+                      "@payload.amount"
+                    ]
+                  ],
+                  "verdict": "broken",
+                  "counterexample": {
+                    "entity": {
+                      "balance": 6
+                    },
+                    "fromEntity": {
+                      "balance": 10
+                    },
+                    "payload": {
+                      "amount": 3
+                    }
+                  }
+                },
+                {
+                  "proposition": [
+                    "=",
+                    "@entity.balance",
+                    [
+                      "-",
+                      "@fromEntity.balance",
+                      "@payload.amount"
+                    ]
+                  ],
+                  "verdict": "broken",
+                  "counterexample": {
+                    "entity": {
+                      "balance": 6
+                    },
+                    "fromEntity": {
+                      "balance": 10
+                    },
+                    "payload": {
+                      "amount": 3
+                    }
+                  }
+                }
+              ],
+              "state": {}
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "JUDGE_ANSWERED",
+                "payload": {
+                  "verdicts": [
+                    {
+                      "name": "effects_fired",
+                      "passed": true,
+                      "detail": ""
+                    },
+                    {
+                      "name": "proposition_held",
+                      "passed": false,
+                      "detail": "2 offender(s): T:a--GO-->b @ensures [\"=\",\"@entity.balance\",[\"-\",\"@fromEntity.balance\",\"@payload.amount\"]]; T:a--GO-->b @ensures [\"=\",\"@entity.balance\",[\"-\",\"@fromEntity.balance\",\"@payload.amount\"]]"
+                    }
+                  ],
+                  "proposition": {
+                    "verdict": "broken",
+                    "proposition": "[\"=\",\"@entity.balance\",[\"-\",\"@fromEntity.balance\",\"@payload.amount\"]]"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "proposition-inconclusive-passes-with-reason",
+      "steps": [
+        {
+          "event": "JUDGE_REQUEST",
+          "payload": {
+            "step": {
+              "trait": "T",
+              "from": "a",
+              "event": "GO",
+              "to": "b",
+              "toStates": [
+                "b"
+              ],
+              "variant": "success",
+              "payload": {},
+              "guarded": false,
+              "solved": true,
+              "payloadCase": "success"
+            },
+            "played": {
+              "trait": "T",
+              "event": "GO",
+              "transitionFired": true,
+              "guard": "none",
+              "effects": [],
+              "emitted": [],
+              "guards": [],
+              "ensures": [
+                {
+                  "proposition": [
+                    "=",
+                    "@entity.balance",
+                    [
+                      "-",
+                      "@fromEntity.balance",
+                      "@payload.amount"
+                    ]
+                  ],
+                  "verdict": "inconclusive",
+                  "reason": "the transition did not fire"
+                }
+              ],
+              "state": {}
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "JUDGE_ANSWERED",
+                "payload": {
+                  "verdicts": [
+                    {
+                      "name": "effects_fired",
+                      "passed": true,
+                      "detail": ""
+                    },
+                    {
+                      "name": "proposition_held",
+                      "passed": true,
+                      "detail": ""
+                    }
+                  ],
+                  "proposition": {
+                    "verdict": "inconclusive",
+                    "reason": "the transition did not fire"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-broken-outranks-inconclusive",
+      "steps": [
+        {
+          "event": "JUDGE_REQUEST",
+          "payload": {
+            "step": {
+              "trait": "T",
+              "from": "a",
+              "event": "GO",
+              "to": "b",
+              "toStates": [
+                "b"
+              ],
+              "variant": "success",
+              "payload": {},
+              "guarded": false,
+              "solved": true,
+              "payloadCase": "success"
+            },
+            "played": {
+              "trait": "T",
+              "event": "GO",
+              "transitionFired": true,
+              "guard": "none",
+              "effects": [],
+              "emitted": [],
+              "guards": [],
+              "ensures": [
+                {
+                  "proposition": [
+                    "=",
+                    "@entity.balance",
+                    [
+                      "-",
+                      "@fromEntity.balance",
+                      "@payload.amount"
+                    ]
+                  ],
+                  "verdict": "inconclusive",
+                  "reason": "x"
+                },
+                {
+                  "proposition": [
+                    "=",
+                    "@entity.balance",
+                    [
+                      "-",
+                      "@fromEntity.balance",
+                      "@payload.amount"
+                    ]
+                  ],
+                  "verdict": "broken",
+                  "counterexample": {
+                    "entity": {
+                      "balance": 6
+                    },
+                    "fromEntity": {
+                      "balance": 10
+                    },
+                    "payload": {
+                      "amount": 3
+                    }
+                  }
+                }
+              ],
+              "state": {}
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "JUDGE_ANSWERED",
+                "payload": {
+                  "verdicts": [
+                    {
+                      "name": "effects_fired",
+                      "passed": true,
+                      "detail": ""
+                    },
+                    {
+                      "name": "proposition_held",
+                      "passed": false,
+                      "detail": "1 offender(s): T:a--GO-->b @ensures [\"=\",\"@entity.balance\",[\"-\",\"@fromEntity.balance\",\"@payload.amount\"]]"
+                    }
+                  ],
+                  "proposition": {
+                    "verdict": "broken",
+                    "proposition": "[\"=\",\"@entity.balance\",[\"-\",\"@fromEntity.balance\",\"@payload.amount\"]]"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-no-ensures-is-held",
+      "steps": [
+        {
+          "event": "JUDGE_REQUEST",
+          "payload": {
+            "step": {
+              "trait": "T",
+              "from": "a",
+              "event": "GO",
+              "to": "b",
+              "toStates": [
+                "b"
+              ],
+              "variant": "success",
+              "payload": {},
+              "guarded": false,
+              "solved": true,
+              "payloadCase": "success"
+            },
+            "played": {
+              "trait": "T",
+              "event": "GO",
+              "transitionFired": true,
+              "guard": "none",
+              "effects": [],
+              "emitted": [],
+              "guards": [],
+              "ensures": [],
+              "state": {}
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "JUDGE_ANSWERED",
+                "payload": {
+                  "verdicts": [
+                    {
+                      "name": "effects_fired",
+                      "passed": true,
+                      "detail": ""
+                    },
+                    {
+                      "name": "proposition_held",
+                      "passed": true,
+                      "detail": ""
+                    }
+                  ],
+                  "proposition": {
+                    "verdict": "held"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

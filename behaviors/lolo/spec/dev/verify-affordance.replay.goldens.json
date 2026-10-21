@@ -1,0 +1,228 @@
+{
+ "atom": "dev/atoms/std-verify-affordance.lolo",
+ "trait": "Affordance",
+ "cases": [
+  {
+   "id": "answered-click-passes",
+   "steps": [
+    {
+     "event": "AFFORDANCE_REQUEST",
+     "payload": {
+      "step": {
+       "trait": "Runner",
+       "from": "idle",
+       "event": "GO",
+       "to": "loading",
+       "declared": true,
+       "navigates": false
+      },
+      "observed": {
+       "found": true,
+       "answered": true
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "AFFORDANCE_ANSWERED",
+        "payload": {
+         "verdict": {
+          "status": "pass",
+          "reason": "reached"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "dead-affordance-fails",
+   "steps": [
+    {
+     "event": "AFFORDANCE_REQUEST",
+     "payload": {
+      "step": {
+       "trait": "Runner",
+       "from": "idle",
+       "event": "GO",
+       "to": "loading",
+       "declared": true,
+       "navigates": false
+      },
+      "observed": {
+       "found": true,
+       "answered": false
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "AFFORDANCE_ANSWERED",
+        "payload": {
+         "verdict": {
+          "status": "fail",
+          "reason": "arm-not-fired"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-absent-element-drove-nothing",
+   "steps": [
+    {
+     "event": "AFFORDANCE_REQUEST",
+     "payload": {
+      "step": {
+       "trait": "Runner",
+       "from": "idle",
+       "event": "GO",
+       "to": "loading",
+       "declared": true,
+       "navigates": false
+      },
+      "observed": {
+       "found": false,
+       "answered": false
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "AFFORDANCE_ANSWERED",
+        "payload": {
+         "verdict": {
+          "status": "inconclusive",
+          "reason": "not-driven"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-unproven-precondition-is-inconclusive",
+   "steps": [
+    {
+     "event": "AFFORDANCE_REQUEST",
+     "payload": {
+      "step": {
+       "trait": "Runner",
+       "from": "idle",
+       "event": "GO",
+       "to": "loading",
+       "declared": true,
+       "navigates": false,
+       "precondition": {
+        "kind": "established",
+        "proof": "unproven",
+        "reason": "x"
+       }
+      },
+      "observed": {
+       "found": true,
+       "answered": false
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "AFFORDANCE_ANSWERED",
+        "payload": {
+         "verdict": {
+          "status": "inconclusive",
+          "reason": "arm-not-fired"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-unreachable-precondition-is-inconclusive",
+   "steps": [
+    {
+     "event": "AFFORDANCE_REQUEST",
+     "payload": {
+      "step": {
+       "trait": "Runner",
+       "from": "idle",
+       "event": "GO",
+       "to": "loading",
+       "declared": true,
+       "navigates": false,
+       "precondition": {
+        "kind": "unreachable"
+       }
+      },
+      "observed": {
+       "found": true,
+       "answered": false
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "AFFORDANCE_ANSWERED",
+        "payload": {
+         "verdict": {
+          "status": "inconclusive",
+          "reason": "arm-not-fired"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-proven-precondition-still-fails",
+   "steps": [
+    {
+     "event": "AFFORDANCE_REQUEST",
+     "payload": {
+      "step": {
+       "trait": "Runner",
+       "from": "idle",
+       "event": "GO",
+       "to": "loading",
+       "declared": true,
+       "navigates": false,
+       "precondition": {
+        "kind": "established",
+        "proof": "proven"
+       }
+      },
+      "observed": {
+       "found": true,
+       "answered": false
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "AFFORDANCE_ANSWERED",
+        "payload": {
+         "verdict": {
+          "status": "fail",
+          "reason": "arm-not-fired"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

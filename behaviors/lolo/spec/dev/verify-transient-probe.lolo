@@ -1,0 +1,25 @@
+app verify-transient-probe-spec [
+  version: "1.0.0",
+  description: "Design contract for std-verify-transient-probe: the structural half of the kernel's plan_transient_probe (orbital-core verify/flows.rs, exported as verifyTransientProbe) as data. TRANSIENT_REQUEST carries the query {trait, from, event, to} and the trait's transitions {from, event, to, effects} (each effect as {op, kind, entity, emit {success, failure, cancelled}}, the typed projection of the effect S-expression; effects nested in if/do bodies are not walked). TRANSIENT_ANSWERED returns the outcome: not-transient when the event is no declared emit.failure of a persist/fetch/call-service effect or the machine has no effect-emitted advance out of from; finding no-entering-persist when no persist declares the event as its failure; otherwise entering {from, event, to, entity, operation, acceptStates, coverageKey} for the host to finish (denying viewer role, payload and setup preamble are not ported)."
+]
+
+type EmitRoutes = { success : string, failure : string, cancelled : string }
+type TransientEffect = { op : string!, kind : string, entity : string, emit : EmitRoutes }
+type TransientTransition = { from : string!, event : string!, to : string!, effects : [TransientEffect] }
+type TransientQuery = { trait : string!, from : string!, event : string!, to : string! }
+type Entering = { from : string!, event : string!, to : string!, entity : string!, operation : string!, acceptStates : [string]!, coverageKey : string! }
+type TransientOutcome = { outcome : string!, finding : string, entering : Entering }
+
+orbital VerifyTransientProbeSpec {
+  expects entity TransientRun [runtime] {
+    id : string!
+    answer : TransientOutcome
+  }
+  expects trait TransientProbe {
+    state ready
+    emits {
+      TRANSIENT_ANSWERED { answer : TransientOutcome! }
+    }
+  }
+  expects page "/verify-transient-probe" -> TransientProbe
+}

@@ -1,0 +1,317 @@
+{
+ "atom": "net/atoms/std-http-dispatch.lolo",
+ "trait": "ServerDispatch",
+ "note": "The EventResponse wire answers of the dispatch routes. They wait on G-ORB-446: program/dispatch must accept wire: true and hold the dispatch in flight (today it fails 'unsupported option wire' and the atom answers 500). DISPATCH_ANSWERED plays the wire that option returns.",
+ "cases": [
+  {
+   "id": "targeted-init-answers-200",
+   "note": "events_wire.rs init_request_shape_round_trips_as_event_response",
+   "steps": [
+    {
+     "event": "REQUEST_RECEIVED",
+     "payload": {
+      "requestId": 7,
+      "method": "POST",
+      "path": "/api/orbitals/Notes/events",
+      "query": "",
+      "headers": {
+       "content-type": "application/json"
+      },
+      "body": "eyJldmVudCI6IklOSVQiLCJ0YXJnZXRUcmFpdCI6IkxheW91dCJ9",
+      "peer": "127.0.0.1:5000"
+     }
+    },
+    {
+     "event": "DISPATCH_QUEUED",
+     "payload": {
+      "requestId": 7
+     }
+    },
+    {
+     "event": "DISPATCH_ANSWERED",
+     "payload": {
+      "result": {
+       "success": true,
+       "transitioned": true,
+       "states": {
+        "Layout": "ready",
+        "Modal": "closed"
+       },
+       "emittedEvents": [],
+       "clientEffects": [
+        [
+         "render-ui",
+         "main",
+         {
+          "type": "stack"
+         }
+        ]
+       ],
+       "rejections": []
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 7,
+         "status": 200
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "cascade-carries-emitted-event",
+   "note": "events_wire.rs cascade_emits_and_bubble_to_listening_trait",
+   "steps": [
+    {
+     "event": "REQUEST_RECEIVED",
+     "payload": {
+      "requestId": 7,
+      "method": "POST",
+      "path": "/api/orbitals/Notes/events",
+      "query": "",
+      "headers": {
+       "content-type": "application/json"
+      },
+      "body": "eyJldmVudCI6IkNSRUFURSIsInRhcmdldFRyYWl0IjoiTGF5b3V0In0=",
+      "peer": "127.0.0.1:5000"
+     }
+    },
+    {
+     "event": "DISPATCH_QUEUED",
+     "payload": {
+      "requestId": 7
+     }
+    },
+    {
+     "event": "DISPATCH_ANSWERED",
+     "payload": {
+      "result": {
+       "success": true,
+       "transitioned": true,
+       "states": {
+        "Layout": "ready",
+        "Modal": "open"
+       },
+       "emittedEvents": [
+        {
+         "event": "DRAFT_OPENED",
+         "source": {
+          "trait": "Modal"
+         }
+        }
+       ],
+       "clientEffects": [
+        [
+         "render-ui",
+         "modal",
+         {
+          "type": "form"
+         }
+        ]
+       ],
+       "rejections": []
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 7,
+         "status": 200
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "guard-rejection-is-200-with-guard-failed",
+   "note": "events_wire.rs guard_rejection_on_the_seed_trait_reports_guard_failed",
+   "steps": [
+    {
+     "event": "REQUEST_RECEIVED",
+     "payload": {
+      "requestId": 7,
+      "method": "POST",
+      "path": "/api/orbitals/Notes/events",
+      "query": "",
+      "headers": {
+       "content-type": "application/json"
+      },
+      "body": "eyJldmVudCI6IkNMT1NFIiwidGFyZ2V0VHJhaXQiOiJNb2RhbCJ9",
+      "peer": "127.0.0.1:5000"
+     }
+    },
+    {
+     "event": "DISPATCH_QUEUED",
+     "payload": {
+      "requestId": 7
+     }
+    },
+    {
+     "event": "DISPATCH_ANSWERED",
+     "payload": {
+      "result": {
+       "success": true,
+       "transitioned": false,
+       "states": {
+        "Layout": "idle",
+        "Modal": "closed"
+       },
+       "emittedEvents": [],
+       "clientEffects": [],
+       "rejections": [
+        {
+         "code": "no-matching-transition",
+         "trait": "Modal",
+         "event": "CLOSE"
+        }
+       ],
+       "guardFailed": "Modal.CLOSE"
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 7,
+         "status": 200
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "undeclared-input-is-403",
+   "note": "external_inputs_route.rs; the host refuses, the atom maps the rejection to 403",
+   "steps": [
+    {
+     "event": "REQUEST_RECEIVED",
+     "payload": {
+      "requestId": 7,
+      "method": "POST",
+      "path": "/api/orbitals/Notes/inputs",
+      "query": "",
+      "headers": {
+       "content-type": "application/json"
+      },
+      "body": "eyJ0YXJnZXRUcmFpdCI6Ik1vZGFsIiwiZXZlbnQiOiJDTE9TRSJ9",
+      "peer": "127.0.0.1:5000"
+     }
+    },
+    {
+     "event": "DISPATCH_QUEUED",
+     "payload": {
+      "requestId": 7
+     }
+    },
+    {
+     "event": "DISPATCH_ANSWERED",
+     "payload": {
+      "result": {
+       "success": false,
+       "transitioned": false,
+       "states": {},
+       "emittedEvents": [],
+       "clientEffects": [],
+       "rejections": [
+        {
+         "code": "not-an-external-input",
+         "trait": "Modal",
+         "event": "CLOSE"
+        }
+       ],
+       "error": "Modal.CLOSE is not a declared external input"
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 7,
+         "status": 403
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "stream-true-opens-the-event-stream",
+   "note": "events_wire.rs stream_true_answers_with_an_sse_item_sequence_ending_in_complete",
+   "steps": [
+    {
+     "event": "REQUEST_RECEIVED",
+     "payload": {
+      "requestId": 7,
+      "method": "POST",
+      "path": "/api/orbitals/Notes/events",
+      "query": "stream=true",
+      "headers": {
+       "content-type": "application/json"
+      },
+      "body": "eyJldmVudCI6IkNSRUFURSIsInRhcmdldFRyYWl0IjoiTGF5b3V0In0=",
+      "peer": "127.0.0.1:5000"
+     }
+    },
+    {
+     "event": "DISPATCH_QUEUED",
+     "payload": {
+      "requestId": 7
+     }
+    },
+    {
+     "event": "DISPATCH_ANSWERED",
+     "payload": {
+      "result": {
+       "success": true,
+       "transitioned": true,
+       "states": {
+        "Layout": "ready",
+        "Modal": "open"
+       },
+       "emittedEvents": [
+        {
+         "event": "DRAFT_OPENED"
+        }
+       ],
+       "clientEffects": [
+        [
+         "render-ui",
+         "modal",
+         {
+          "type": "form"
+         }
+        ]
+       ],
+       "rejections": []
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SSE_OPEN",
+        "payload": {
+         "requestId": 7
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

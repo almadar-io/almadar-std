@@ -1,0 +1,59 @@
+app std-verify-transient-probe [
+  version: "1.0.0",
+  description: "std-verify-transient-probe — the structural half of the kernel's plan_transient_probe (orbital-core verify/flows.rs, verifyTransientProbe) as data. TRANSIENT_REQUEST carries the query {trait, from, event, to} and the trait's transitions {from, event, to, effects}; TRANSIENT_ANSWERED returns {outcome}: not-transient (the event is no declared emit.failure of a persist, fetch or call-service effect, or no effect-emitted event advances the machine out of from), finding (no persist declares the event as its failure: finding no-entering-persist) or entering, the transition that enters the failing persist with its entity, operation, the transient closure as acceptStates and the coverage key. Not ported: the denying viewer role (an entity policy analysis), the planned payload and the setup preamble (they read the whole schema through the Rust planner), so the host finishes an entering outcome; and effects nested inside if/do bodies (the walk is over each transition's top-level effects)."
+]
+;; @capabilities "verify transient probe, transient failure arm, entering persist, forced failure, verifier"
+uses Spec from "almadar-std/verify-transient-probe"
+
+type StrList = [string]
+type TransientQuery = { trait : string!, from : string!, event : string!, to : string! }
+type EmitRoutes = { success : string, failure : string, cancelled : string }
+type TransientEffect = { op : string!, kind : string, entity : string, emit : EmitRoutes }
+type TransientTransition = { from : string!, event : string!, to : string!, effects : [TransientEffect] }
+type Entering = { from : string!, event : string!, to : string!, entity : string!, operation : string!, acceptStates : [string]!, coverageKey : string! }
+type TransientOutcome = { outcome : string!, finding : string, entering : Entering }
+
+orbital VerifyTransientProbeOrbital {
+  entity TransientRun [runtime] {
+    id : string!
+    answer : TransientOutcome
+  }
+
+  trait TransientProbe -> TransientRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      TRANSIENT_REQUEST -> ready
+        (let ((ts @payload.transitions)
+              (ev @payload.query.event))
+          (let ((effs (array/flatten (array/map @ts (fn t (object/get @t "effects" [])))))
+                (rounds (array/range 0 (array/len @payload.transitions))))
+            (let ((fails (array/filter @effs (fn e (and (array/includes (json/parse "[\"persist\",\"fetch\",\"call-service\"]" StrList) (object/get @e "op")) (= (object/get (object/get @e "emit" {}) "failure" "") @ev)))))
+                  (emitted (array/unique (array/filter (array/flatten (array/map @effs (fn e [(object/get (object/get @e "emit" {}) "success" ""), (object/get (object/get @e "emit" {}) "failure" ""), (object/get (object/get @e "emit" {}) "cancelled" "")]))) (fn x (!= @x ""))))))
+              (let ((closureFrom (array/reduce @rounds [@payload.query.from] (fn (seen r) (array/unique (array/concat @seen (array/map (array/filter @ts (fn t (and (array/includes @seen (object/get @t "from")) (array/includes @emitted (object/get @t "event"))))) (fn t (object/get @t "to"))))))))
+                    (enter (array/find @ts (fn t (array/some (object/get @t "effects" []) (fn e (and (= (object/get @e "op") "persist") (array/includes (json/parse "[\"create\",\"update\",\"delete\"]" StrList) (object/get @e "kind" "")) (= (object/get (object/get @e "emit" {}) "failure" "") @ev))))))))
+                (let ((closureTo (if (= @enter null) [] (array/reduce @rounds [(object/get @enter "to")] (fn (seen r) (array/unique (array/concat @seen (array/map (array/filter @ts (fn t (and (array/includes @seen (object/get @t "from")) (array/includes @emitted (object/get @t "event"))))) (fn t (object/get @t "to"))))))))))
+                  (do (set @entity.answer
+                        (if (or (= (array/len @fails) 0) (<= (array/len @closureFrom) 1)) { outcome: "not-transient" }
+                        (if (= @enter null) { outcome: "finding", finding: "no-entering-persist" }
+                          (let ((eff (array/find (object/get @enter "effects" []) (fn e (and (= (object/get @e "op") "persist") (= (object/get (object/get @e "emit" {}) "failure" "") @ev))))))
+                            { outcome: "entering", entering: { from: (object/get @enter "from"), event: (object/get @enter "event"), to: (object/get @enter "to"), entity: (object/get @eff "entity" ""), operation: (object/get @eff "kind" ""), acceptStates: (if (> (array/len @closureTo) 1) @closureTo []), coverageKey: (str/concat @payload.query.trait ":" (object/get @enter "from") "+" (object/get @enter "event") "->" (object/get @enter "to") "[transient-failure-probe:" @ev "]") } }))))
+                      (emit TRANSIENT_ANSWERED { answer: @entity.answer })))))))
+    }
+
+    emits {
+      TRANSIENT_ANSWERED -> external { answer : TransientOutcome! }
+        @description "The transient-probe outcome for one failure arm."
+        @tier "domain"
+    }
+
+    listens {
+      TRANSIENT_REQUEST -> external { query : TransientQuery!, transitions : [TransientTransition]! }
+        @description "Decide whether a failure arm owes a forced-failure probe, and which transition enters it."
+        @synonyms "verify transient probe, transient failure, entering persist, forced failure"
+    }
+  }
+
+  page "/verify-transient-probe" as VerifyTransientProbePage -> TransientProbe
+}

@@ -1,0 +1,26 @@
+app step-runner-spec [
+  version: "1.0.0",
+  description: "Design contract for the one step sequencer over std-cli: STEPS_RUN carries a request name, a base argv prefix, an env, and an ordered list of steps (args, stdin text, feed, raw stdin bytes, tolerate, and a scope that picks the working directory). The sequencer runs them one at a time through the CLI runner; a step that exits non-zero stops the run unless it is tolerated. STEPS_DONE answers every step's text output, bytes output, exit code and stderr in order; STEPS_FAILED answers the step that stopped the run (its index, args, stderr and stdout) or a run the CLI could not make (cli_spawn_failed). One run at a time; a run asked for while one is in flight is refused with steps_busy, never queued. Callers (std-workspace, std-git) own what the outputs mean."
+]
+
+orbital StepRunnerSpec {
+  expects entity StepRun [runtime] {
+    id : string!
+    requestId : string
+    cursor : number
+  }
+  expects trait StepRunner {
+    state idle {
+      STEPS_RUN -> running
+    }
+    state running {
+      STEPS_RUN -> running
+      STEP_RAN -> running
+    }
+    emits {
+      STEPS_DONE { requestId : string!  outputs : [string]!  rawOuts : [bytes]!  codes : [number]!  failures : [string]! }
+      STEPS_FAILED { requestId : string!  index : number!  code : string!  stderr : string!  stdout : string! }
+    }
+  }
+  expects page "/step-runner" -> StepRunner
+}

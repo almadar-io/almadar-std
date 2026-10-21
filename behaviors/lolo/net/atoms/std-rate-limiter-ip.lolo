@@ -1,7 +1,8 @@
 app std-rate-limiter-ip [
   version: "1.0.0",
-  description: "std-rate-limiter-ip — the per-client fixed-window rate limiter of the HTTP server, mirroring orbital-server RateWindows. Each client address ip on REQUEST { requestId, ip } has its own window {count, windowStart}: the first request opens it, the count rises per request, admitted while count <= limit (exactly limit admissions), then THROTTLED until a request arrives at or after windowStart plus windowSeconds, which opens a new window at that request (lazy roll from the clock at request time, no ticks). ADMITTED { remaining = limit - count floored at 0, resetIn = floor((window ms - elapsed ms) / 1000) } ; THROTTLED carries the same resetIn. A request with no ip, or a disabled limiter, is admitted without counting. Entries are never evicted, as in RateWindows. Defaults 300 requests per 900 s. Bound to spec/net/rate-limit.goldens.json."
+  description: "std-rate-limiter-ip — the per-client fixed-window rate limiter of the HTTP server, mirroring orbital-server RateWindows. Each client address ip on REQUEST { requestId, ip } has its own window {count, windowStart}: the first request opens it, the count rises per request, admitted while count <= limit (exactly limit admissions), then THROTTLED until a request arrives at or after windowStart plus windowSeconds, which opens a new window at that request (lazy roll from the clock at request time, no ticks). ADMITTED { remaining = limit - count floored at 0, resetIn = floor((window ms - elapsed ms) / 1000) } ; THROTTLED carries the same resetIn. A request with no ip, or a disabled limiter, is admitted without counting and with counted false (the Rust layer sends no ratelimit headers then). Entries are never evicted, as in RateWindows. Defaults 300 requests per 900 s. Bound to spec/net/rate-limiter-ip.lolo and spec/net/rate-limit.goldens.json."
 ]
+uses Spec from "almadar-std/rate-limiter-ip"
 
 type RateKey = { ip : string!, count : number!, windowStart : number! }
 
@@ -18,7 +19,7 @@ orbital RateClientOrbital {
       INIT -> counting
         (set @entity.buckets [])
       REQUEST -> counting when (not (and @config.enabled (!= (or @payload.ip "") "")))
-        (emit ADMITTED { requestId: @payload.requestId, remaining: @config.requestsPerMinute, resetIn: @config.windowSeconds, limit: @config.requestsPerMinute, window: @config.windowSeconds })
+        (emit ADMITTED { requestId: @payload.requestId, remaining: @config.requestsPerMinute, resetIn: @config.windowSeconds, limit: @config.requestsPerMinute, window: @config.windowSeconds, counted: false })
       REQUEST -> counting when (and @config.enabled (!= (or @payload.ip "") "") (or (= (array/find @entity.buckets (fn b (= @b.ip @payload.ip))) null) (>= (- (time/now) (object/get (array/find @entity.buckets (fn b (= @b.ip @payload.ip))) "windowStart")) (* @config.windowSeconds 1000))))
         (set @entity.buckets (array/append (array/filter @entity.buckets (fn b (!= @b.ip @payload.ip))) { ip: @payload.ip, count: 1, windowStart: (time/now) }))
         (emit ADMITTED { requestId: @payload.requestId, remaining: (- @config.requestsPerMinute 1), resetIn: @config.windowSeconds, limit: @config.requestsPerMinute, window: @config.windowSeconds })
@@ -45,8 +46,9 @@ orbital RateClientOrbital {
         resetIn : number!
         limit : number!
         window : number!
+        counted : boolean
       }
-        @description "The request was admitted: requests left in this client's window and seconds until it resets."
+        @description "The request was admitted: requests left in this client's window and seconds until it resets. counted is false when the request was not counted (no ip, or a disabled limiter); the server then sends no ratelimit headers, as the Rust layer does."
         @tier "primary"
       THROTTLED -> external {
         requestId : number!

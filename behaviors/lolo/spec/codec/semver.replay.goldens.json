@@ -1,0 +1,3693 @@
+{
+ "atom": "codec/atoms/std-semver.lolo",
+ "trait": "Semver",
+ "note": "expected values generated with the semver npm package (7.x) the cascade uses today; refusals are the atom contract (workspace pins, partial and compound ranges)",
+ "cases": [
+  {
+   "id": "parse 1.2.3",
+   "steps": [
+    {
+     "event": "SEMVER_PARSE",
+     "payload": {
+      "version": "1.2.3"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_PARSED",
+        "payload": {
+         "valid": true,
+         "major": 1,
+         "minor": 2,
+         "patch": 3,
+         "prerelease": "",
+         "build": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "parse 0.0.0",
+   "steps": [
+    {
+     "event": "SEMVER_PARSE",
+     "payload": {
+      "version": "0.0.0"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_PARSED",
+        "payload": {
+         "valid": true,
+         "major": 0,
+         "minor": 0,
+         "patch": 0,
+         "prerelease": "",
+         "build": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "parse 10.20.30",
+   "steps": [
+    {
+     "event": "SEMVER_PARSE",
+     "payload": {
+      "version": "10.20.30"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_PARSED",
+        "payload": {
+         "valid": true,
+         "major": 10,
+         "minor": 20,
+         "patch": 30,
+         "prerelease": "",
+         "build": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "parse 1.2.3-alpha.1",
+   "steps": [
+    {
+     "event": "SEMVER_PARSE",
+     "payload": {
+      "version": "1.2.3-alpha.1"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_PARSED",
+        "payload": {
+         "valid": true,
+         "major": 1,
+         "minor": 2,
+         "patch": 3,
+         "prerelease": "alpha.1",
+         "build": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "parse 1.2.3-0.3.7",
+   "steps": [
+    {
+     "event": "SEMVER_PARSE",
+     "payload": {
+      "version": "1.2.3-0.3.7"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_PARSED",
+        "payload": {
+         "valid": true,
+         "major": 1,
+         "minor": 2,
+         "patch": 3,
+         "prerelease": "0.3.7",
+         "build": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "parse 1.2.3+build.5",
+   "steps": [
+    {
+     "event": "SEMVER_PARSE",
+     "payload": {
+      "version": "1.2.3+build.5"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_PARSED",
+        "payload": {
+         "valid": true,
+         "major": 1,
+         "minor": 2,
+         "patch": 3,
+         "prerelease": "",
+         "build": "build.5"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "parse 1.2.3-rc.1+sha.abc",
+   "steps": [
+    {
+     "event": "SEMVER_PARSE",
+     "payload": {
+      "version": "1.2.3-rc.1+sha.abc"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_PARSED",
+        "payload": {
+         "valid": true,
+         "major": 1,
+         "minor": 2,
+         "patch": 3,
+         "prerelease": "rc.1",
+         "build": "sha.abc"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "parse 1.0.0-x-y-z.--",
+   "steps": [
+    {
+     "event": "SEMVER_PARSE",
+     "payload": {
+      "version": "1.0.0-x-y-z.--"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_PARSED",
+        "payload": {
+         "valid": true,
+         "major": 1,
+         "minor": 0,
+         "patch": 0,
+         "prerelease": "x-y-z.--",
+         "build": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "parse invalid \"1.2\"",
+   "steps": [
+    {
+     "event": "SEMVER_PARSE",
+     "payload": {
+      "version": "1.2"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_PARSED",
+        "payload": {
+         "valid": false,
+         "major": 0,
+         "minor": 0,
+         "patch": 0,
+         "prerelease": "",
+         "build": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "parse invalid \"v1.2.3\"",
+   "steps": [
+    {
+     "event": "SEMVER_PARSE",
+     "payload": {
+      "version": "v1.2.3"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_PARSED",
+        "payload": {
+         "valid": false,
+         "major": 0,
+         "minor": 0,
+         "patch": 0,
+         "prerelease": "",
+         "build": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "parse invalid \"01.2.3\"",
+   "steps": [
+    {
+     "event": "SEMVER_PARSE",
+     "payload": {
+      "version": "01.2.3"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_PARSED",
+        "payload": {
+         "valid": false,
+         "major": 0,
+         "minor": 0,
+         "patch": 0,
+         "prerelease": "",
+         "build": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "parse invalid \"1.2.3-01\"",
+   "steps": [
+    {
+     "event": "SEMVER_PARSE",
+     "payload": {
+      "version": "1.2.3-01"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_PARSED",
+        "payload": {
+         "valid": false,
+         "major": 0,
+         "minor": 0,
+         "patch": 0,
+         "prerelease": "",
+         "build": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "parse invalid \"1.2.3-\"",
+   "steps": [
+    {
+     "event": "SEMVER_PARSE",
+     "payload": {
+      "version": "1.2.3-"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_PARSED",
+        "payload": {
+         "valid": false,
+         "major": 0,
+         "minor": 0,
+         "patch": 0,
+         "prerelease": "",
+         "build": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "parse invalid \"1.2.3+\"",
+   "steps": [
+    {
+     "event": "SEMVER_PARSE",
+     "payload": {
+      "version": "1.2.3+"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_PARSED",
+        "payload": {
+         "valid": false,
+         "major": 0,
+         "minor": 0,
+         "patch": 0,
+         "prerelease": "",
+         "build": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "parse invalid \"a.b.c\"",
+   "steps": [
+    {
+     "event": "SEMVER_PARSE",
+     "payload": {
+      "version": "a.b.c"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_PARSED",
+        "payload": {
+         "valid": false,
+         "major": 0,
+         "minor": 0,
+         "patch": 0,
+         "prerelease": "",
+         "build": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "parse invalid \"1.2.3.4\"",
+   "steps": [
+    {
+     "event": "SEMVER_PARSE",
+     "payload": {
+      "version": "1.2.3.4"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_PARSED",
+        "payload": {
+         "valid": false,
+         "major": 0,
+         "minor": 0,
+         "patch": 0,
+         "prerelease": "",
+         "build": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "parse invalid \"\"",
+   "steps": [
+    {
+     "event": "SEMVER_PARSE",
+     "payload": {
+      "version": ""
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_PARSED",
+        "payload": {
+         "valid": false,
+         "major": 0,
+         "minor": 0,
+         "patch": 0,
+         "prerelease": "",
+         "build": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "parse invalid \"1.2.3-a..b\"",
+   "steps": [
+    {
+     "event": "SEMVER_PARSE",
+     "payload": {
+      "version": "1.2.3-a..b"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_PARSED",
+        "payload": {
+         "valid": false,
+         "major": 0,
+         "minor": 0,
+         "patch": 0,
+         "prerelease": "",
+         "build": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "parse invalid \"1.2.3+a+b\"",
+   "steps": [
+    {
+     "event": "SEMVER_PARSE",
+     "payload": {
+      "version": "1.2.3+a+b"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_PARSED",
+        "payload": {
+         "valid": false,
+         "major": 0,
+         "minor": 0,
+         "patch": 0,
+         "prerelease": "",
+         "build": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "compare 1.0.0 2.0.0",
+   "steps": [
+    {
+     "event": "SEMVER_COMPARE",
+     "payload": {
+      "a": "1.0.0",
+      "b": "2.0.0"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_COMPARED",
+        "payload": {
+         "value": -1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "compare 2.0.0 2.1.0",
+   "steps": [
+    {
+     "event": "SEMVER_COMPARE",
+     "payload": {
+      "a": "2.0.0",
+      "b": "2.1.0"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_COMPARED",
+        "payload": {
+         "value": -1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "compare 2.1.0 2.1.1",
+   "steps": [
+    {
+     "event": "SEMVER_COMPARE",
+     "payload": {
+      "a": "2.1.0",
+      "b": "2.1.1"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_COMPARED",
+        "payload": {
+         "value": -1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "compare 1.0.0 1.0.0",
+   "steps": [
+    {
+     "event": "SEMVER_COMPARE",
+     "payload": {
+      "a": "1.0.0",
+      "b": "1.0.0"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_COMPARED",
+        "payload": {
+         "value": 0
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "compare 1.0.0-alpha 1.0.0",
+   "steps": [
+    {
+     "event": "SEMVER_COMPARE",
+     "payload": {
+      "a": "1.0.0-alpha",
+      "b": "1.0.0"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_COMPARED",
+        "payload": {
+         "value": -1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "compare 1.0.0-alpha 1.0.0-alpha.1",
+   "steps": [
+    {
+     "event": "SEMVER_COMPARE",
+     "payload": {
+      "a": "1.0.0-alpha",
+      "b": "1.0.0-alpha.1"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_COMPARED",
+        "payload": {
+         "value": -1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "compare 1.0.0-alpha.1 1.0.0-alpha.beta",
+   "steps": [
+    {
+     "event": "SEMVER_COMPARE",
+     "payload": {
+      "a": "1.0.0-alpha.1",
+      "b": "1.0.0-alpha.beta"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_COMPARED",
+        "payload": {
+         "value": -1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "compare 1.0.0-alpha.beta 1.0.0-beta",
+   "steps": [
+    {
+     "event": "SEMVER_COMPARE",
+     "payload": {
+      "a": "1.0.0-alpha.beta",
+      "b": "1.0.0-beta"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_COMPARED",
+        "payload": {
+         "value": -1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "compare 1.0.0-beta 1.0.0-beta.2",
+   "steps": [
+    {
+     "event": "SEMVER_COMPARE",
+     "payload": {
+      "a": "1.0.0-beta",
+      "b": "1.0.0-beta.2"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_COMPARED",
+        "payload": {
+         "value": -1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "compare 1.0.0-beta.2 1.0.0-beta.11",
+   "steps": [
+    {
+     "event": "SEMVER_COMPARE",
+     "payload": {
+      "a": "1.0.0-beta.2",
+      "b": "1.0.0-beta.11"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_COMPARED",
+        "payload": {
+         "value": -1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "compare 1.0.0-beta.11 1.0.0-rc.1",
+   "steps": [
+    {
+     "event": "SEMVER_COMPARE",
+     "payload": {
+      "a": "1.0.0-beta.11",
+      "b": "1.0.0-rc.1"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_COMPARED",
+        "payload": {
+         "value": -1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "compare 1.0.0-rc.1 1.0.0",
+   "steps": [
+    {
+     "event": "SEMVER_COMPARE",
+     "payload": {
+      "a": "1.0.0-rc.1",
+      "b": "1.0.0"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_COMPARED",
+        "payload": {
+         "value": -1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "compare 1.0.0+a 1.0.0+b",
+   "steps": [
+    {
+     "event": "SEMVER_COMPARE",
+     "payload": {
+      "a": "1.0.0+a",
+      "b": "1.0.0+b"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_COMPARED",
+        "payload": {
+         "value": 0
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "compare 1.0.0-Z 1.0.0-a",
+   "steps": [
+    {
+     "event": "SEMVER_COMPARE",
+     "payload": {
+      "a": "1.0.0-Z",
+      "b": "1.0.0-a"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_COMPARED",
+        "payload": {
+         "value": -1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "compare 10.0.0 9.9.9",
+   "steps": [
+    {
+     "event": "SEMVER_COMPARE",
+     "payload": {
+      "a": "10.0.0",
+      "b": "9.9.9"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_COMPARED",
+        "payload": {
+         "value": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "compare 6.65.0 6.63.0",
+   "steps": [
+    {
+     "event": "SEMVER_COMPARE",
+     "payload": {
+      "a": "6.65.0",
+      "b": "6.63.0"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_COMPARED",
+        "payload": {
+         "value": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "compare 1.0.0-1 1.0.0-alpha",
+   "steps": [
+    {
+     "event": "SEMVER_COMPARE",
+     "payload": {
+      "a": "1.0.0-1",
+      "b": "1.0.0-alpha"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_COMPARED",
+        "payload": {
+         "value": -1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "compare invalid a",
+   "steps": [
+    {
+     "event": "SEMVER_COMPARE",
+     "payload": {
+      "a": "x",
+      "b": "1.0.0"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_REFUSED",
+        "payload": {
+         "operation": "compare",
+         "reason": "invalid"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "compare invalid b",
+   "steps": [
+    {
+     "event": "SEMVER_COMPARE",
+     "payload": {
+      "a": "1.0.0",
+      "b": "1.0"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_REFUSED",
+        "payload": {
+         "operation": "compare",
+         "reason": "invalid"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bump 1.2.3 patch",
+   "steps": [
+    {
+     "event": "SEMVER_BUMP",
+     "payload": {
+      "version": "1.2.3",
+      "kind": "patch"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_BUMPED",
+        "payload": {
+         "version": "1.2.4"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bump 1.2.3 minor",
+   "steps": [
+    {
+     "event": "SEMVER_BUMP",
+     "payload": {
+      "version": "1.2.3",
+      "kind": "minor"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_BUMPED",
+        "payload": {
+         "version": "1.3.0"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bump 1.2.3 major",
+   "steps": [
+    {
+     "event": "SEMVER_BUMP",
+     "payload": {
+      "version": "1.2.3",
+      "kind": "major"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_BUMPED",
+        "payload": {
+         "version": "2.0.0"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bump 0.16.203 patch",
+   "steps": [
+    {
+     "event": "SEMVER_BUMP",
+     "payload": {
+      "version": "0.16.203",
+      "kind": "patch"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_BUMPED",
+        "payload": {
+         "version": "0.16.204"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bump 0.16.203 minor",
+   "steps": [
+    {
+     "event": "SEMVER_BUMP",
+     "payload": {
+      "version": "0.16.203",
+      "kind": "minor"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_BUMPED",
+        "payload": {
+         "version": "0.17.0"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bump 0.0.9 major",
+   "steps": [
+    {
+     "event": "SEMVER_BUMP",
+     "payload": {
+      "version": "0.0.9",
+      "kind": "major"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_BUMPED",
+        "payload": {
+         "version": "1.0.0"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bump 1.2.3-rc.1 patch",
+   "steps": [
+    {
+     "event": "SEMVER_BUMP",
+     "payload": {
+      "version": "1.2.3-rc.1",
+      "kind": "patch"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_BUMPED",
+        "payload": {
+         "version": "1.2.3"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bump 1.2.0-rc.1 minor",
+   "steps": [
+    {
+     "event": "SEMVER_BUMP",
+     "payload": {
+      "version": "1.2.0-rc.1",
+      "kind": "minor"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_BUMPED",
+        "payload": {
+         "version": "1.2.0"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bump 1.2.3-rc.1 minor",
+   "steps": [
+    {
+     "event": "SEMVER_BUMP",
+     "payload": {
+      "version": "1.2.3-rc.1",
+      "kind": "minor"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_BUMPED",
+        "payload": {
+         "version": "1.3.0"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bump 1.0.0-rc.1 major",
+   "steps": [
+    {
+     "event": "SEMVER_BUMP",
+     "payload": {
+      "version": "1.0.0-rc.1",
+      "kind": "major"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_BUMPED",
+        "payload": {
+         "version": "1.0.0"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bump 1.2.3-rc.1 major",
+   "steps": [
+    {
+     "event": "SEMVER_BUMP",
+     "payload": {
+      "version": "1.2.3-rc.1",
+      "kind": "major"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_BUMPED",
+        "payload": {
+         "version": "2.0.0"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bump 1.2.3 prerelease",
+   "steps": [
+    {
+     "event": "SEMVER_BUMP",
+     "payload": {
+      "version": "1.2.3",
+      "kind": "prerelease"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_BUMPED",
+        "payload": {
+         "version": "1.2.4-0"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bump 1.2.3-0 prerelease",
+   "steps": [
+    {
+     "event": "SEMVER_BUMP",
+     "payload": {
+      "version": "1.2.3-0",
+      "kind": "prerelease"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_BUMPED",
+        "payload": {
+         "version": "1.2.3-1"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bump 1.2.3-rc.1 prerelease",
+   "steps": [
+    {
+     "event": "SEMVER_BUMP",
+     "payload": {
+      "version": "1.2.3-rc.1",
+      "kind": "prerelease"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_BUMPED",
+        "payload": {
+         "version": "1.2.3-rc.2"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bump 1.2.3-rc prerelease",
+   "steps": [
+    {
+     "event": "SEMVER_BUMP",
+     "payload": {
+      "version": "1.2.3-rc",
+      "kind": "prerelease"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_BUMPED",
+        "payload": {
+         "version": "1.2.3-rc.0"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bump 1.2.3-alpha.9 prerelease",
+   "steps": [
+    {
+     "event": "SEMVER_BUMP",
+     "payload": {
+      "version": "1.2.3-alpha.9",
+      "kind": "prerelease"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_BUMPED",
+        "payload": {
+         "version": "1.2.3-alpha.10"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bump 1.2.3+build.1 patch",
+   "steps": [
+    {
+     "event": "SEMVER_BUMP",
+     "payload": {
+      "version": "1.2.3+build.1",
+      "kind": "patch"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_BUMPED",
+        "payload": {
+         "version": "1.2.4"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bump 1.2.3-1.x prerelease",
+   "steps": [
+    {
+     "event": "SEMVER_BUMP",
+     "payload": {
+      "version": "1.2.3-1.x",
+      "kind": "prerelease"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_BUMPED",
+        "payload": {
+         "version": "1.2.3-2.x"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bump 1.2.3-7.x.8 prerelease",
+   "steps": [
+    {
+     "event": "SEMVER_BUMP",
+     "payload": {
+      "version": "1.2.3-7.x.8",
+      "kind": "prerelease"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_BUMPED",
+        "payload": {
+         "version": "1.2.3-7.x.9"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bump 1.2.3 prerelease beta",
+   "steps": [
+    {
+     "event": "SEMVER_BUMP",
+     "payload": {
+      "version": "1.2.3",
+      "kind": "prerelease",
+      "identifier": "beta"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_BUMPED",
+        "payload": {
+         "version": "1.2.4-beta.0"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bump 1.2.3-beta.1 prerelease beta",
+   "steps": [
+    {
+     "event": "SEMVER_BUMP",
+     "payload": {
+      "version": "1.2.3-beta.1",
+      "kind": "prerelease",
+      "identifier": "beta"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_BUMPED",
+        "payload": {
+         "version": "1.2.3-beta.2"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bump 1.2.3-alpha.4 prerelease beta",
+   "steps": [
+    {
+     "event": "SEMVER_BUMP",
+     "payload": {
+      "version": "1.2.3-alpha.4",
+      "kind": "prerelease",
+      "identifier": "beta"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_BUMPED",
+        "payload": {
+         "version": "1.2.3-beta.0"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bump 1.2.3-beta prerelease beta",
+   "steps": [
+    {
+     "event": "SEMVER_BUMP",
+     "payload": {
+      "version": "1.2.3-beta",
+      "kind": "prerelease",
+      "identifier": "beta"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_BUMPED",
+        "payload": {
+         "version": "1.2.3-beta.0"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bump 1.2.3-1 prerelease beta",
+   "steps": [
+    {
+     "event": "SEMVER_BUMP",
+     "payload": {
+      "version": "1.2.3-1",
+      "kind": "prerelease",
+      "identifier": "beta"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_BUMPED",
+        "payload": {
+         "version": "1.2.3-beta.0"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bump bad kind",
+   "steps": [
+    {
+     "event": "SEMVER_BUMP",
+     "payload": {
+      "version": "1.0.0",
+      "kind": "premajor"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_REFUSED",
+        "payload": {
+         "operation": "bump",
+         "reason": "kind"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bump bad identifier",
+   "steps": [
+    {
+     "event": "SEMVER_BUMP",
+     "payload": {
+      "version": "1.0.0",
+      "kind": "prerelease",
+      "identifier": "a.b"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_REFUSED",
+        "payload": {
+         "operation": "bump",
+         "reason": "identifier"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bump invalid version",
+   "steps": [
+    {
+     "event": "SEMVER_BUMP",
+     "payload": {
+      "version": "1.0",
+      "kind": "patch"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_REFUSED",
+        "payload": {
+         "operation": "bump",
+         "reason": "invalid"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies 6.65.0 ^6.63.0",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "6.65.0",
+      "range": "^6.63.0"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_SATISFIED",
+        "payload": {
+         "value": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies 6.62.0 ^6.63.0",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "6.62.0",
+      "range": "^6.63.0"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_SATISFIED",
+        "payload": {
+         "value": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies 7.0.0 ^6.63.0",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "7.0.0",
+      "range": "^6.63.0"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_SATISFIED",
+        "payload": {
+         "value": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies 0.16.203 ^0.16.172",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "0.16.203",
+      "range": "^0.16.172"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_SATISFIED",
+        "payload": {
+         "value": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies 0.17.0 ^0.16.172",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "0.17.0",
+      "range": "^0.16.172"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_SATISFIED",
+        "payload": {
+         "value": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies 0.0.3 ^0.0.3",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "0.0.3",
+      "range": "^0.0.3"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_SATISFIED",
+        "payload": {
+         "value": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies 0.0.4 ^0.0.3",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "0.0.4",
+      "range": "^0.0.3"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_SATISFIED",
+        "payload": {
+         "value": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies 0.2.5 ^0.2.3",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "0.2.5",
+      "range": "^0.2.3"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_SATISFIED",
+        "payload": {
+         "value": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies 0.3.0 ^0.2.3",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "0.3.0",
+      "range": "^0.2.3"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_SATISFIED",
+        "payload": {
+         "value": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies 1.9.9 ^1.2.3",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "1.9.9",
+      "range": "^1.2.3"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_SATISFIED",
+        "payload": {
+         "value": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies 2.0.0 ^1.2.3",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "2.0.0",
+      "range": "^1.2.3"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_SATISFIED",
+        "payload": {
+         "value": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies 1.2.9 ~1.2.3",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "1.2.9",
+      "range": "~1.2.3"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_SATISFIED",
+        "payload": {
+         "value": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies 1.3.0 ~1.2.3",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "1.3.0",
+      "range": "~1.2.3"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_SATISFIED",
+        "payload": {
+         "value": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies 1.2.2 ~1.2.3",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "1.2.2",
+      "range": "~1.2.3"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_SATISFIED",
+        "payload": {
+         "value": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies 1.2.3 1.2.3",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "1.2.3",
+      "range": "1.2.3"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_SATISFIED",
+        "payload": {
+         "value": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies 1.2.4 1.2.3",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "1.2.4",
+      "range": "1.2.3"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_SATISFIED",
+        "payload": {
+         "value": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies 1.2.3 =1.2.3",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "1.2.3",
+      "range": "=1.2.3"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_SATISFIED",
+        "payload": {
+         "value": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies 1.2.3 >=1.2.3",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "1.2.3",
+      "range": ">=1.2.3"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_SATISFIED",
+        "payload": {
+         "value": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies 1.2.2 >=1.2.3",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "1.2.2",
+      "range": ">=1.2.3"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_SATISFIED",
+        "payload": {
+         "value": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies 9.0.0 >=1.2.3",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "9.0.0",
+      "range": ">=1.2.3"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_SATISFIED",
+        "payload": {
+         "value": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies 1.2.4 >1.2.3",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "1.2.4",
+      "range": ">1.2.3"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_SATISFIED",
+        "payload": {
+         "value": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies 1.2.3 >1.2.3",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "1.2.3",
+      "range": ">1.2.3"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_SATISFIED",
+        "payload": {
+         "value": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies 1.2.3 <=1.2.3",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "1.2.3",
+      "range": "<=1.2.3"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_SATISFIED",
+        "payload": {
+         "value": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies 1.2.4 <=1.2.3",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "1.2.4",
+      "range": "<=1.2.3"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_SATISFIED",
+        "payload": {
+         "value": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies 1.2.2 <1.2.3",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "1.2.2",
+      "range": "<1.2.3"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_SATISFIED",
+        "payload": {
+         "value": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies 1.2.3 <1.2.3",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "1.2.3",
+      "range": "<1.2.3"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_SATISFIED",
+        "payload": {
+         "value": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies 1.2.3-rc.1 ^1.2.0",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "1.2.3-rc.1",
+      "range": "^1.2.0"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_SATISFIED",
+        "payload": {
+         "value": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies 1.2.3-rc.1 ^1.2.3-rc.0",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "1.2.3-rc.1",
+      "range": "^1.2.3-rc.0"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_SATISFIED",
+        "payload": {
+         "value": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies 1.2.4-rc.1 ^1.2.3-rc.0",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "1.2.4-rc.1",
+      "range": "^1.2.3-rc.0"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_SATISFIED",
+        "payload": {
+         "value": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies 1.2.3-rc.0 ^1.2.3-rc.1",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "1.2.3-rc.0",
+      "range": "^1.2.3-rc.1"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_SATISFIED",
+        "payload": {
+         "value": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies 2.0.0-rc.1 ^1.2.3-rc.0",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "2.0.0-rc.1",
+      "range": "^1.2.3-rc.0"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_SATISFIED",
+        "payload": {
+         "value": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies 1.2.3 *",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "1.2.3",
+      "range": "*"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_SATISFIED",
+        "payload": {
+         "value": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies 1.2.3-rc.1 *",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "1.2.3-rc.1",
+      "range": "*"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_SATISFIED",
+        "payload": {
+         "value": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies 1.2.3   ^1.2.3 ",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "1.2.3",
+      "range": "  ^1.2.3 "
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_SATISFIED",
+        "payload": {
+         "value": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies 1.2.3+b ^1.2.3",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "1.2.3+b",
+      "range": "^1.2.3"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_SATISFIED",
+        "payload": {
+         "value": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies workspace:*",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "1.0.0",
+      "range": "workspace:*"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_REFUSED",
+        "payload": {
+         "operation": "satisfies",
+         "reason": "workspace"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies workspace:^",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "1.0.0",
+      "range": "workspace:^"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_REFUSED",
+        "payload": {
+         "operation": "satisfies",
+         "reason": "workspace"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies link:../x",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "1.0.0",
+      "range": "link:../x"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_REFUSED",
+        "payload": {
+         "operation": "satisfies",
+         "reason": "workspace"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies file:../x",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "1.0.0",
+      "range": "file:../x"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_REFUSED",
+        "payload": {
+         "operation": "satisfies",
+         "reason": "workspace"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies range ^1",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "1.0.0",
+      "range": "^1"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_REFUSED",
+        "payload": {
+         "operation": "satisfies",
+         "reason": "range"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies range 1.x",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "1.0.0",
+      "range": "1.x"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_REFUSED",
+        "payload": {
+         "operation": "satisfies",
+         "reason": "range"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies range >=1.0.0 <2.0.0",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "1.0.0",
+      "range": ">=1.0.0 <2.0.0"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_REFUSED",
+        "payload": {
+         "operation": "satisfies",
+         "reason": "range"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies range latest",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "1.0.0",
+      "range": "latest"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_REFUSED",
+        "payload": {
+         "operation": "satisfies",
+         "reason": "range"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies range ^",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "1.0.0",
+      "range": "^"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_REFUSED",
+        "payload": {
+         "operation": "satisfies",
+         "reason": "range"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies range ~1.2",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "1.0.0",
+      "range": "~1.2"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_REFUSED",
+        "payload": {
+         "operation": "satisfies",
+         "reason": "range"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "satisfies invalid version",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "nope",
+      "range": "^1.0.0"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_REFUSED",
+        "payload": {
+         "operation": "satisfies",
+         "reason": "invalid"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "min ^6.63.0",
+   "steps": [
+    {
+     "event": "SEMVER_MIN",
+     "payload": {
+      "range": "^6.63.0"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_MINIMUM",
+        "payload": {
+         "version": "6.63.0"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "min ~1.2.3",
+   "steps": [
+    {
+     "event": "SEMVER_MIN",
+     "payload": {
+      "range": "~1.2.3"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_MINIMUM",
+        "payload": {
+         "version": "1.2.3"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "min >=1.2.3",
+   "steps": [
+    {
+     "event": "SEMVER_MIN",
+     "payload": {
+      "range": ">=1.2.3"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_MINIMUM",
+        "payload": {
+         "version": "1.2.3"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "min 1.2.3",
+   "steps": [
+    {
+     "event": "SEMVER_MIN",
+     "payload": {
+      "range": "1.2.3"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_MINIMUM",
+        "payload": {
+         "version": "1.2.3"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "min =1.2.3",
+   "steps": [
+    {
+     "event": "SEMVER_MIN",
+     "payload": {
+      "range": "=1.2.3"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_MINIMUM",
+        "payload": {
+         "version": "1.2.3"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "min >1.2.3",
+   "steps": [
+    {
+     "event": "SEMVER_MIN",
+     "payload": {
+      "range": ">1.2.3"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_MINIMUM",
+        "payload": {
+         "version": "1.2.4"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "min ^0.16.172",
+   "steps": [
+    {
+     "event": "SEMVER_MIN",
+     "payload": {
+      "range": "^0.16.172"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_MINIMUM",
+        "payload": {
+         "version": "0.16.172"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "min *",
+   "steps": [
+    {
+     "event": "SEMVER_MIN",
+     "payload": {
+      "range": "*"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_MINIMUM",
+        "payload": {
+         "version": "0.0.0"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "min <",
+   "steps": [
+    {
+     "event": "SEMVER_MIN",
+     "payload": {
+      "range": "<1.2.3"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_REFUSED",
+        "payload": {
+         "operation": "min",
+         "reason": "range"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "min workspace",
+   "steps": [
+    {
+     "event": "SEMVER_MIN",
+     "payload": {
+      "range": "workspace:*"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_REFUSED",
+        "payload": {
+         "operation": "min",
+         "reason": "workspace"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "min partial",
+   "steps": [
+    {
+     "event": "SEMVER_MIN",
+     "payload": {
+      "range": "^1"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {}
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_REFUSED",
+        "payload": {
+         "operation": "min",
+         "reason": "range"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,17 @@
+app orb-runners-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb runners up|once|down` (replaces tools/local-ci run-runner.sh, the Linux container half). The environment is the script's: GITHUB_ORG (almadar-io), GITHUB_RUNNER_SCOPE (orgs/<org>, or repos/<owner>/<repo>), RUNNER_IMAGE (almadar-runner:2.337.0-r5), RUNNER_COUNT (2), RUNNER_PREFIX (almadar), GITHUB_TOKEN (else the GITHUB_TOKEN= line of $ALMADAR_ROOT/.env, default ~/kflow.ai.builder/.env; none is exit 1 `no GITHUB_TOKEN`). The registration token is minted per container with POST https://api.github.com/<scope>/actions/runners/registration-token (Bearer, Accept application/vnd.github+json); a reply without a token fails with `registration-token failed: <message>`. THE DOCKER ARGV is the contract. A supervised start (`up`, per missing index i in 1..COUNT, every 5 seconds, found through `docker ps --format {{.Names}}` holding no line equal to <prefix>-runner-<i>) runs `docker run --rm -d --shm-size=2g --ulimit core=0 --name <prefix>-runner-<i> -v almadar-pnpm-store:/home/runner/.pnpm-store -v almadar-npm-cache:/home/runner/.npm -e GITHUB_URL_PATH=<scope without orgs/ or repos/> -e RUNNER_TOKEN=<token> -e RUNNER_NAME=<prefix>-local-<i> -e RUNNER_LABELS=self-hosted,linux,arm64,almadar-local <image>` and prints `  started <prefix>-runner-<i>`; a failed start prints `  !! failed to start runner <i> (retrying)`. `once` runs `docker run --rm -it --shm-size=2g --ulimit core=0 -v … -v … -e GITHUB_URL_PATH=… -e RUNNER_TOKEN=… -e RUNNER_NAME=<prefix>-local-once -e RUNNER_LABELS=… <image>` on the terminal (no --name, no -d) and exits with docker's code. `down` runs `docker rm -f <prefix>-runner-<i>` for each i in 1..COUNT and prints `stopped`. The 5-second supervising loop of run-runner.sh (`supervising <count> ephemeral runner(s) for <url path>`) is the next slice; `up` is one reconcile pass until then. Any other word is a usage error (status 400, exit 2). The macOS native runner (run-mac-runner.sh) is not part of this contract."
+]
+
+orbital OrbRunnersSpec {
+  expects trait OrbRunners {
+    state ready
+    state parsing
+    state reading
+    state running
+    emits {
+      RUNNERS_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page "/orb-runners" -> OrbRunners
+}

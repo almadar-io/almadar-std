@@ -1,0 +1,59 @@
+{
+ "atom": "net/atoms/std-http-dispatch.lolo",
+ "trait": "ServerDispatch",
+ "source": "orbital-rust/crates/orbital-server/tests/live_broadcast_persist.rs",
+ "note": "Twin of orbital-server tests/live_broadcast_persist.rs. Both pending on the live broadcast stream. Replay limits found: the entity round-trips between steps without its bytes type, so DISPATCH_RUN cannot be asserted after the request is stored (preparedExpect records the intended DISPATCH_PREPARED); a RESPOND payload expectation (requestId, status) does not match even when the event is emitted, so expectedResponse records the intended status and the step asserts only that RESPOND is emitted.",
+ "cases": [
+  {
+   "id": "persist-success-envelope-is-broadcast-and-plain-emit-is-not",
+   "skip": "pending: live stream \u2014 pushing the kernel broadcast feed through std-sse (GET /api/events, subscribe_live) is unbuilt; the atoms open, hold and close the stream with heartbeats only",
+   "pending": "pending: live stream \u2014 pushing the kernel broadcast feed through std-sse (GET /api/events, subscribe_live) is unbuilt; the atoms open, hold and close the stream with heartbeats only",
+   "fixture": {
+    "schema": "App: orbital Notes, entity Note [persistent: notes] (id, title), trait Saver with SAVE (persist create Note { emit success SAVED }, plain emit PLAIN) and PING (plain emit PLAIN)",
+    "subscriber": "a live stream subscribed before the request"
+   },
+   "request": {
+    "method": "POST",
+    "path": "/api/orbitals/Notes/events",
+    "body": {
+     "event": "SAVE",
+     "targetTrait": "Saver",
+     "clientId": "tab-1"
+    }
+   },
+   "expected": {
+    "liveItems": [
+     {
+      "event": "SAVED",
+      "originClientId": "tab-1",
+      "persistSuccessMark": null
+     }
+    ],
+    "note": "the persist-success mark is not part of the broadcast; PLAIN is not broadcast"
+   },
+   "steps": []
+  },
+  {
+   "id": "control-plain-emit-only-broadcasts-nothing",
+   "skip": "pending: live stream \u2014 pushing the kernel broadcast feed through std-sse (GET /api/events, subscribe_live) is unbuilt; the atoms open, hold and close the stream with heartbeats only",
+   "pending": "pending: live stream \u2014 pushing the kernel broadcast feed through std-sse (GET /api/events, subscribe_live) is unbuilt; the atoms open, hold and close the stream with heartbeats only",
+   "fixture": {
+    "schema": "App: orbital Notes, entity Note [persistent: notes] (id, title), trait Saver with SAVE (persist create Note { emit success SAVED }, plain emit PLAIN) and PING (plain emit PLAIN)",
+    "subscriber": "a live stream subscribed before the request"
+   },
+   "request": {
+    "method": "POST",
+    "path": "/api/orbitals/Notes/events",
+    "body": {
+     "event": "PING",
+     "targetTrait": "Saver",
+     "clientId": "tab-1"
+    }
+   },
+   "expected": {
+    "liveItems": []
+   },
+   "steps": []
+  }
+ ]
+}

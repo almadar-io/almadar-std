@@ -1,0 +1,21 @@
+app verify-expect-spec [
+  version: "1.0.0",
+  description: "Design contract for std-verify-expect: the kernel's StepWire::expectation (orbital-core verify/plan_wire.rs, exported as verifyExpect) as data. EXPECT_REQUEST carries one planned step; EXPECT_ANSWERED returns its Expectation, the oracle a step must meet: trait, from, event, toStates, guarded, solved and payloadCase always; arm, reply, guardCase, guardSteerable present only when the step has them; acceptStates only when non-empty; preconditionGap only when the step's precondition is not shown to hold (established with unplannedFields -> multiple-preconditions-unplanned; an unproven proof -> its reason; unreachable -> unreachable)."
+]
+
+type ExpectProof = { kind : string!, reason : string }
+type ExpectPrecondition = { kind : string!, unplannedFields : [string], proof : ExpectProof }
+type ExpectStep = { trait : string!, from : string!, event : string!, to : string, toStates : [string]!, guarded : boolean!, arm : number, solved : boolean!, reply : string, payloadCase : string!, guardCase : string, guardSteerable : boolean, acceptStates : [string], precondition : ExpectPrecondition }
+
+orbital VerifyExpectSpec {
+  expects entity ExpectRun [runtime] {
+    id : string!
+  }
+  expects trait Expect {
+    state ready
+    emits {
+      EXPECT_ANSWERED { expectation : ExpectStep! }
+    }
+  }
+  expects page "/verify-expect" -> Expect
+}

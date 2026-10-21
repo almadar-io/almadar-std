@@ -1,0 +1,253 @@
+{
+ "atom": "net/atoms/std-stream-ticket.lolo",
+ "trait": "StreamTicketer",
+ "note": "from the stream-ticket scenarios; the host answers (random draw, store fetch/persist) are played as steps; the mint-with-bearer 401s are router verdicts, not atom events",
+ "cases": [
+  {
+   "id": "a-minted-ticket-opens-the-stream-once",
+   "note": "keep t binds the minted ticket; $t is spent once, the second spend finds the row gone",
+   "steps": [
+    {
+     "event": "MINT_TICKET",
+     "payload": {
+      "viewer": {
+       "id": "alice"
+      },
+      "requestId": 1
+     }
+    },
+    {
+     "event": "TICKET_PUMP",
+     "payload": {}
+    },
+    {
+     "event": "SEED_DRAWN",
+     "payload": {
+      "value": "tk1"
+     },
+     "from": "drawing"
+    },
+    {
+     "event": "TICKET_SAVED",
+     "payload": {
+      "id": "tk1"
+     },
+     "from": "saving",
+     "keep": "t",
+     "keepField": "ticket",
+     "expect": {
+      "emits": [
+       {
+        "event": "TICKET_MINTED",
+        "payload": {
+         "ticket": "tk1",
+         "requestId": 1
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "TAKE_TICKET",
+     "payload": {
+      "ticket": "$t"
+     }
+    },
+    {
+     "event": "TICKET_PUMP",
+     "payload": {}
+    },
+    {
+     "event": "TICKET_LOADED",
+     "payload": {
+      "data": {
+       "id": "tk1",
+       "viewer": {
+        "id": "alice"
+       },
+       "expiresAt": 99999999999999
+      }
+     },
+     "from": "taking"
+    },
+    {
+     "event": "TICKET_SPENT",
+     "payload": {
+      "id": "tk1"
+     },
+     "from": "spending",
+     "expect": {
+      "emits": [
+       {
+        "event": "TICKET_TAKEN",
+        "payload": {
+         "ticket": "tk1"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "TAKE_TICKET",
+     "payload": {
+      "ticket": "$t"
+     }
+    },
+    {
+     "event": "TICKET_PUMP",
+     "payload": {}
+    },
+    {
+     "event": "TICKET_LOADED",
+     "payload": {
+      "data": {
+       "id": "tk1",
+       "viewer": {
+        "id": "alice"
+       },
+       "expiresAt": 99999999999999
+      }
+     },
+     "from": "taking"
+    },
+    {
+     "event": "TICKET_NOT_SPENT",
+     "payload": {
+      "error": "gone"
+     },
+     "from": "spending",
+     "expect": {
+      "emits": [
+       {
+        "event": "TICKET_REFUSED",
+        "payload": {
+         "code": "used",
+         "ticket": "tk1"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-forged-ticket-is-refused",
+   "steps": [
+    {
+     "event": "TAKE_TICKET",
+     "payload": {
+      "ticket": "forged"
+     }
+    },
+    {
+     "event": "TICKET_PUMP",
+     "payload": {}
+    },
+    {
+     "event": "TICKET_ABSENT",
+     "payload": {
+      "code": "not-found"
+     },
+     "from": "taking",
+     "expect": {
+      "emits": [
+       {
+        "event": "TICKET_REFUSED",
+        "payload": {
+         "code": "unknown",
+         "ticket": "forged"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-expired-ticket-is-refused",
+   "steps": [
+    {
+     "event": "MINT_TICKET",
+     "payload": {
+      "viewer": {
+       "id": "alice"
+      },
+      "requestId": 1
+     }
+    },
+    {
+     "event": "TICKET_PUMP",
+     "payload": {}
+    },
+    {
+     "event": "SEED_DRAWN",
+     "payload": {
+      "value": "tk1"
+     },
+     "from": "drawing"
+    },
+    {
+     "event": "TICKET_SAVED",
+     "payload": {
+      "id": "tk1"
+     },
+     "from": "saving",
+     "keep": "t",
+     "keepField": "ticket",
+     "expect": {
+      "emits": [
+       {
+        "event": "TICKET_MINTED",
+        "payload": {
+         "ticket": "tk1",
+         "requestId": 1
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "TAKE_TICKET",
+     "payload": {
+      "ticket": "$t"
+     }
+    },
+    {
+     "event": "TICKET_PUMP",
+     "payload": {}
+    },
+    {
+     "event": "TICKET_LOADED",
+     "payload": {
+      "data": {
+       "id": "tk1",
+       "viewer": {
+        "id": "alice"
+       },
+       "expiresAt": 1
+      }
+     },
+     "from": "taking"
+    },
+    {
+     "event": "TICKET_SPENT",
+     "payload": {
+      "id": "tk1"
+     },
+     "from": "spending",
+     "expect": {
+      "emits": [
+       {
+        "event": "TICKET_REFUSED",
+        "payload": {
+         "code": "expired",
+         "ticket": "tk1"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

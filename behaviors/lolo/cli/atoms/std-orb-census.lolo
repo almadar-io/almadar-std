@@ -101,7 +101,7 @@ orbital OrbCensusOrbital {
           @entity.stack))
         (set @entity.files (array/map (array/filter @payload.entries (fn e (and (= (object/get @e "kind") "file")
             (if (= @entity.cur "") (= (object/get @e "name") "package.json")
-              (and (validate/pattern (object/get @e "name") @config.referrerPattern) (not (str/endsWith (object/get @e "name") ".d.ts")) (not (str/startsWith (object/get @e "name") "pnpm-lock")) (!= (object/get @e "name") "package-lock.json")))))) (fn e (if (= @entity.cur "") (object/get @e "name") (str/concat @entity.cur "/" (object/get @e "name"))))))
+              (and (validate/pattern (object/get @e "name") (if (> (array/len @entity.acc.dirs) 0) @config.referrerPattern (str/concat "(" @config.sourcePattern "|^package\\.json$)"))) (not (str/endsWith (object/get @e "name") ".d.ts")) (not (str/startsWith (object/get @e "name") "pnpm-lock")) (!= (object/get @e "name") "package-lock.json")))))) (fn e (if (= @entity.cur "") (object/get @e "name") (str/concat @entity.cur "/" (object/get @e "name"))))))
         (set @entity.cursor 0)
         (emit CENSUS_STAT { })
       CENSUS_LIST_FAILED -> walking when (= @entity.cur "")
@@ -219,7 +219,7 @@ orbital OrbCensusOrbital {
         @description "A file name pattern: the files whose imports are counted."
       referrerPattern : string = "\\.(ts|tsx|mts|cts|js|jsx|mjs|cjs|json|sh|ya?ml|toml|rs|py)$"
         @label "Referrer files"
-        @description "A file name pattern: the files that may name a directory path, and the files the size guard stats."
+        @description "A file name pattern: the files that may name a directory path; with --path they are also the files the size guard stats (without it only the source files and the manifests are listed)."
       importPrefix : string = "(\\bfrom[ \\t\\r\\n]*|\\bimport[ \\t\\r\\n]*\\([ \\t\\r\\n]*|\\brequire[ \\t\\r\\n]*\\([ \\t\\r\\n]*|\n[ \\t\\r\\n]*import[ \\t\\r\\n]+)['\"\\x60]$"
         @label "Import prefix"
         @description "What must end the text before a package name for it to be an import specifier."
