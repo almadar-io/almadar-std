@@ -30,8 +30,8 @@ export const OS_ENV_STDIO_OPERATORS: Record<string, StdOperatorMeta> = {
     example: '["os/watch-env", "NODE_ENV", { "emit": { "success": "ENV_CHANGED", "failure": "WATCH_FAILED", "key": "node-env" } }]',
   }),
   'os/stdin-read': osEffect({
-    description: 'Read standard input (grant stdio: in). Events are { data: bytes }; the final answer is { eof }.',
-    params: [arg('count', NUMBER, 'Maximum bytes per event', true)],
+    description: 'Read standard input (grant stdio: in), at most count bytes per chunk. Keyed with an onMessage route, each chunk is an event { data: bytes } and the final answer is { eof: true }; otherwise one read answers { data, eof } with at most count bytes.',
+    params: [arg('count', NUMBER, 'Maximum bytes per chunk', true)],
     stream: true,
     example: '["os/stdin-read", { "emit": { "success": "STDIN_CHUNK", "failure": "STDIN_FAILED", "key": "stdin" } }]',
   }),

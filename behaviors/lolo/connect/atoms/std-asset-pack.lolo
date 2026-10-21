@@ -85,19 +85,19 @@ orbital StdAssetPackOrbital {
         (notify error (str/concat "Asset pack " (str/concat @config.assetPack (str/concat " failed to load: " @payload.error))))
         (emit ASSET_PACK_FAILED { pack: @config.assetPack, message: @payload.error })
         (emit ASSET_PACK_PUBLISH { })
-      PACK_TEXT -> reporting when (and (not (array/some (object/get (json/parse @payload.text AssetPackManifest) "assets") (fn r (not (validate/required (object/get @r "key")))))) (not (!= (array/len (array/unique (array/map (object/get (json/parse @payload.text AssetPackManifest) "assets") (fn r (object/get @r "key"))))) (array/len (object/get (json/parse @payload.text AssetPackManifest) "assets")))) (not (array/some (object/get (json/parse @payload.text AssetPackManifest) "assets") (fn r (and (validate/required (object/get @r "style")) (not (array/includes @config.styles (object/get @r "style"))))))))
+      PACK_TEXT -> reporting when (and (!= (json/parse @payload.text AssetPackManifest) null) (not (array/some (object/get (json/parse @payload.text AssetPackManifest) "assets") (fn r (not (validate/required (object/get @r "key")))))) (not (!= (array/len (array/unique (array/map (object/get (json/parse @payload.text AssetPackManifest) "assets") (fn r (object/get @r "key"))))) (array/len (object/get (json/parse @payload.text AssetPackManifest) "assets")))))
         (set @entity.assetByKey (object/fromEntries (array/map (object/get (json/parse @payload.text AssetPackManifest) "assets") (fn r [(object/get @r "key") (object/merge @r (object/merge { url: (str/concat (object/get (json/parse @payload.text AssetPackManifest) "base") (object/get @r "url")) } (if (validate/required (object/get @r "atlas")) { atlas: (str/concat (object/get (json/parse @payload.text AssetPackManifest) "base") (object/get @r "atlas")) } {})))]))))
         (set @entity.assetPackMissing (array/filter @config.expectedKeys (fn k (not (object/has @entity.assetByKey @k)))))
         (set @entity.assetPackCursor 0)
         (set @entity.assetByKey (object/merge @entity.assetByKey (object/fromEntries (array/map @entity.assetPackMissing (fn k [@k { url: @config.placeholderUrl, role: "placeholder", category: "missing", name: @k }])))))
         (set @entity.assetManifest (object/fromEntries (array/map @config.groups (fn g [@g (object/fromEntries (array/map (array/filter (object/entries @entity.assetByKey) (fn e (str/startsWith (array/nth @e 0) (str/concat @g "/")))) (fn e [(str/replace (array/nth @e 0) (str/concat @g "/") "") (array/nth @e 1)])))]))))
         (emit ASSET_PACK_REPORT_NEXT { cursor: 0 })
-      PACK_TEXT -> failed when (or (array/some (object/get (json/parse @payload.text AssetPackManifest) "assets") (fn r (not (validate/required (object/get @r "key"))))) (!= (array/len (array/unique (array/map (object/get (json/parse @payload.text AssetPackManifest) "assets") (fn r (object/get @r "key"))))) (array/len (object/get (json/parse @payload.text AssetPackManifest) "assets"))) (array/some (object/get (json/parse @payload.text AssetPackManifest) "assets") (fn r (and (validate/required (object/get @r "style")) (not (array/includes @config.styles (object/get @r "style")))))))
+      PACK_TEXT -> failed when (or (= (json/parse @payload.text AssetPackManifest) null) (array/some (object/get (json/parse @payload.text AssetPackManifest) "assets") (fn r (not (validate/required (object/get @r "key"))))) (!= (array/len (array/unique (array/map (object/get (json/parse @payload.text AssetPackManifest) "assets") (fn r (object/get @r "key"))))) (array/len (object/get (json/parse @payload.text AssetPackManifest) "assets"))))
         (set @entity.assetPackStatus "failed")
         (set @entity.assetPackMissing @config.expectedKeys)
         (set @entity.assetPackCursor 0)
         (set @entity.assetByKey (object/fromEntries (array/map @config.expectedKeys (fn k [@k { url: @config.placeholderUrl, role: "placeholder", category: "missing", name: @k }]))))
-        (emit ASSET_PACK_FAILED { pack: @config.assetPack, message: (str/concat (if (array/some (object/get (json/parse @payload.text AssetPackManifest) "assets") (fn r (not (validate/required (object/get @r "key"))))) "asset row without key" (if (!= (array/len (array/unique (array/map (object/get (json/parse @payload.text AssetPackManifest) "assets") (fn r (object/get @r "key"))))) (array/len (object/get (json/parse @payload.text AssetPackManifest) "assets"))) "duplicate asset key" "asset row with invalid style")) (str/concat " in " @config.packPath)) })
+        (emit ASSET_PACK_FAILED { pack: @config.assetPack, message: (str/concat (if (= (json/parse @payload.text AssetPackManifest) null) "invalid asset pack manifest" (if (array/some (object/get (json/parse @payload.text AssetPackManifest) "assets") (fn r (not (validate/required (object/get @r "key"))))) "asset row without key" "duplicate asset key")) (str/concat " in " @config.packPath)) })
         (emit ASSET_PACK_PUBLISH { })
     }
 
@@ -194,10 +194,6 @@ orbital StdAssetPackOrbital {
         @label "Groups"
         @description "Key prefixes the nested assetManifest is built from (key group/name -> assetManifest.group.name)."
         @tier "presentation"
-      styles : [string] = ["pixel", "vector", "hd", "1-bit", "isometric", "lowpoly"]
-        @label "Styles"
-        @description "The accepted Asset.style values (the std-asset-types Asset.style enum); a pack row whose style is not listed refuses the whole pack with ASSET_PACK_FAILED."
-        @tier "domain"
       expectedKeys : [string] = []
         @label "Expected Keys"
         @description "The group/name keys the board draws. Absent from the pack = placeholder + ASSET_PACK_MISSING; all of them are placeholders while loading and after a failed load."

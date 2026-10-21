@@ -154,10 +154,10 @@ orbital RowStoreFileOrbital {
     state loading {
       INIT -> ready
 
-      FILE_READ -> ready when (not (and (json/valid (bytes/to-string @payload.data)) (!= (object/get (json/parse (bytes/to-string @payload.data) RowFile) "rows" null) null) (!= (object/get (json/parse (bytes/to-string @payload.data) RowFile) "changes" null) null)))
+      FILE_READ -> ready when (or (not (json/valid (bytes/to-string @payload.data))) (= (json/parse (bytes/to-string @payload.data) RowFile) null))
         (set @entity.logged [])
         (emit STORE_FAILED { key: @entity.key, message: "the rows file must be JSON of the shape { rows, changes }; a bare array (the retired format) or malformed JSON is not accepted, recreate the file" })
-      FILE_READ -> loading when (and (json/valid (bytes/to-string @payload.data)) (!= (object/get (json/parse (bytes/to-string @payload.data) RowFile) "rows" null) null) (!= (object/get (json/parse (bytes/to-string @payload.data) RowFile) "changes" null) null))
+      FILE_READ -> loading when (and (json/valid (bytes/to-string @payload.data)) (!= (json/parse (bytes/to-string @payload.data) RowFile) null))
         (set @entity.logged [])
         (set @entity.rows (object/get (json/parse (base64/decode @payload.data) RowFile) "rows" []))
         (set @entity.changes (object/get (json/parse (base64/decode @payload.data) RowFile) "changes" []))

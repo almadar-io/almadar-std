@@ -1,7 +1,7 @@
 {
  "atom": "cli/atoms/std-orb-lint-orbital-missing-pages.lolo",
  "trait": "OrbLintOrbitalMissingPages",
- "note": "Expected findings are the code, path, message and suggestion `orb validate` (the Rust validator) reports for the same program.",
+ "note": "Expected findings are the code, path, message and suggestion `orb validate` (the Rust validator) reports for the same program. Added cases follow page.rs validate_all_pages (the missing-pages branch; its test is test_page_empty_traits' sibling in the same module): one finding per orbital with no pages, in order.",
  "cases": [
   {
    "id": "orbital-with-no-page",
@@ -177,6 +177,380 @@
         "payload": {
          "rule": "orbital-missing-pages",
          "findings": []
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintOrbitalMissingPages"
+    }
+   ]
+  },
+  {
+   "id": "two-orbitals-without-pages-are-two-findings",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E1",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T1",
+           "linkedEntity": "E1",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "name": "B",
+         "entity": {
+          "name": "E2",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T2",
+           "linkedEntity": "E2",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintOrbitalMissingPages"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "orbital-missing-pages",
+         "findings": [
+          {
+           "code": "ORB_O_MISSING_PAGES",
+           "path": "orbitals[0]",
+           "message": "Orbital 'A' has no pages defined - traits won't be accessible",
+           "suggestion": "Add a pages array with at least one page to expose the orbital's traits",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_O_MISSING_PAGES",
+           "path": "orbitals[1]",
+           "message": "Orbital 'B' has no pages defined - traits won't be accessible",
+           "suggestion": "Add a pages array with at least one page to expose the orbital's traits",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintOrbitalMissingPages"
+    }
+   ]
+  },
+  {
+   "id": "orbital-with-an-empty-pages-array-is-reported",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintOrbitalMissingPages"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "orbital-missing-pages",
+         "findings": [
+          {
+           "code": "ORB_O_MISSING_PAGES",
+           "path": "orbitals[0]",
+           "message": "Orbital 'A' has no pages defined - traits won't be accessible",
+           "suggestion": "Add a pages array with at least one page to expose the orbital's traits",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintOrbitalMissingPages"
+    }
+   ]
+  },
+  {
+   "id": "control-only-the-pageless-orbital-is-reported",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E1",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T1",
+           "linkedEntity": "E1",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "PA",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T1"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "B",
+         "entity": {
+          "name": "E2",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T2",
+           "linkedEntity": "E2",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintOrbitalMissingPages"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "orbital-missing-pages",
+         "findings": [
+          {
+           "code": "ORB_O_MISSING_PAGES",
+           "path": "orbitals[1]",
+           "message": "Orbital 'B' has no pages defined - traits won't be accessible",
+           "suggestion": "Add a pages array with at least one page to expose the orbital's traits",
+           "severity": "error"
+          }
+         ]
         }
        }
       ]

@@ -1,7 +1,7 @@
 {
  "atom": "cli/atoms/std-orb-lint-entity-browser-storage.lolo",
  "trait": "OrbLintEntityBrowserStorage",
- "note": "Expected findings are the code, path, message and suggestion `orb validate` (the Rust validator) reports for the same program.",
+ "note": "Expected findings are the code, path, message and suggestion `orb validate` (the Rust validator) reports for the same program. Added cases follow entity.rs validate_browser_storage (persistent is any persistence other than runtime; no Rust test names it directly).",
  "cases": [
   {
    "id": "local-on-a-runtime-entity",
@@ -190,6 +190,507 @@
         "payload": {
          "rule": "entity-browser-storage",
          "findings": []
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintEntityBrowserStorage"
+    }
+   ]
+  },
+  {
+   "id": "control-local-with-no-persistence-mode-counts-as-persistent",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ],
+          "local": true
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintEntityBrowserStorage"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-browser-storage",
+         "findings": []
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintEntityBrowserStorage"
+    }
+   ]
+  },
+  {
+   "id": "mock-seeding-on-a-non-local-entity",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ],
+          "persistence": "persistent",
+          "collection": "c",
+          "seedMock": true
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintEntityBrowserStorage"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-browser-storage",
+         "findings": [
+          {
+           "code": "ORB_E_MOCK_SEED_NOT_LOCAL",
+           "path": "orbitals[0].entity.seedMock",
+           "message": "Entity 'E' declares `mock` seeding but its rows are not browser-stored — a server's mock data is its own deployment mode",
+           "suggestion": "Add `local` (`[persistent: <collection>, local, mock]`) or drop `mock`.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintEntityBrowserStorage"
+    }
+   ]
+  },
+  {
+   "id": "control-mock-seeding-on-a-local-entity",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ],
+          "persistence": "persistent",
+          "collection": "c",
+          "seedMock": true,
+          "local": true
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintEntityBrowserStorage"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-browser-storage",
+         "findings": []
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintEntityBrowserStorage"
+    }
+   ]
+  },
+  {
+   "id": "identity-and-local-on-a-persistent-entity",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ],
+          "persistence": "persistent",
+          "collection": "c",
+          "identity": true,
+          "local": true
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintEntityBrowserStorage"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-browser-storage",
+         "findings": [
+          {
+           "code": "ORB_E_IDENTITY_LOCAL",
+           "path": "orbitals[0].entity.local",
+           "message": "Entity 'E' is [identity] and `local` — the viewer directory is never browser-resident",
+           "suggestion": "Drop `local` from the identity entity.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintEntityBrowserStorage"
+    }
+   ]
+  },
+  {
+   "id": "runtime-local-identity-entity-fires-both-in-order",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ],
+          "persistence": "runtime",
+          "identity": true,
+          "local": true
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintEntityBrowserStorage"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-browser-storage",
+         "findings": [
+          {
+           "code": "ORB_E_LOCAL_REQUIRES_PERSISTENT",
+           "path": "orbitals[0].entity.local",
+           "message": "Entity 'E' is [runtime, local] — a runtime entity's frame already lives in the client; `local` declares where PERSISTED rows live",
+           "suggestion": "Use `[persistent: <collection>, local]` for rows stored in the browser, or drop `local`.",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_E_IDENTITY_LOCAL",
+           "path": "orbitals[0].entity.local",
+           "message": "Entity 'E' is [identity] and `local` — the viewer directory is never browser-resident",
+           "suggestion": "Drop `local` from the identity entity.",
+           "severity": "error"
+          }
+         ]
         }
        }
       ]

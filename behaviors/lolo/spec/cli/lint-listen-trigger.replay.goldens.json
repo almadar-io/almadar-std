@@ -1,7 +1,7 @@
 {
  "atom": "cli/atoms/std-orb-lint-listen-trigger.lolo",
  "trait": "OrbLintListenTrigger",
- "note": "Expected findings are the code, path, message and suggestion `orb validate` (the Rust validator) reports for the same program.",
+ "note": "Expected findings are the code, path, message and suggestion `orb validate` (the Rust validator) reports for the same program. Added cases follow validate_listen_triggers (cross_orbital/listen_trigger.rs; it has no Rust test): the trigger defaults to the listened event, and each unmatched entry is its own finding.",
  "cases": [
   {
    "id": "listen-trigger-matches-no-transition",
@@ -199,6 +199,328 @@
         "payload": {
          "rule": "listen-trigger",
          "findings": []
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintListenTrigger"
+    }
+   ]
+  },
+  {
+   "id": "listen-without-an-explicit-trigger-defaults-to-its-event",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "listens": [
+            {
+             "event": "PING"
+            }
+           ]
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintListenTrigger"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-trigger",
+         "findings": [
+          {
+           "code": "ORB_X_LISTEN_TRIGGER_UNMATCHED",
+           "path": "orbitals.A.traits.T.listens",
+           "message": "Listen entry in 'A.T' triggers 'PING' but no transition in the same trait reacts to it.",
+           "suggestion": "Add a transition whose event matches the listen trigger, or fix the `-> TRIGGER` to name an event the trait's state machine handles.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintListenTrigger"
+    }
+   ]
+  },
+  {
+   "id": "control-listen-without-a-trigger-whose-event-is-a-transition",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "listens": [
+            {
+             "event": "INIT"
+            }
+           ]
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintListenTrigger"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-trigger",
+         "findings": []
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintListenTrigger"
+    }
+   ]
+  },
+  {
+   "id": "two-unmatched-listens-are-reported-in-order",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "listens": [
+            {
+             "event": "A1",
+             "triggers": "X1"
+            },
+            {
+             "event": "A2",
+             "triggers": "INIT"
+            },
+            {
+             "event": "A3"
+            }
+           ]
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintListenTrigger"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-trigger",
+         "findings": [
+          {
+           "code": "ORB_X_LISTEN_TRIGGER_UNMATCHED",
+           "path": "orbitals.A.traits.T.listens",
+           "message": "Listen entry in 'A.T' triggers 'X1' but no transition in the same trait reacts to it.",
+           "suggestion": "Add a transition whose event matches the listen trigger, or fix the `-> TRIGGER` to name an event the trait's state machine handles.",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_X_LISTEN_TRIGGER_UNMATCHED",
+           "path": "orbitals.A.traits.T.listens",
+           "message": "Listen entry in 'A.T' triggers 'A3' but no transition in the same trait reacts to it.",
+           "suggestion": "Add a transition whose event matches the listen trigger, or fix the `-> TRIGGER` to name an event the trait's state machine handles.",
+           "severity": "error"
+          }
+         ]
         }
        }
       ]

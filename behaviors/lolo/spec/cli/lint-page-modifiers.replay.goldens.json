@@ -1,7 +1,7 @@
 {
  "atom": "cli/atoms/std-orb-lint-page-modifiers.lolo",
  "trait": "OrbLintPageModifiers",
- "note": "Expected findings are the code, path, message and suggestion `orb validate` (the Rust validator) reports for the same program.",
+ "note": "Expected findings are the code, path, message and suggestion `orb validate` (the Rust validator) reports for the same program. Added cases follow validate_page_modifiers (page.rs; it has no Rust test of its own): the missing parts are listed access, title, description; the parameter-route error is independent of the missing-parts error.",
  "cases": [
   {
    "id": "indexed-page-that-is-not-public-titled-or-described",
@@ -379,6 +379,513 @@
          ]
         }
        ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintPageModifiers"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "page-modifiers",
+         "findings": []
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintPageModifiers"
+    }
+   ]
+  },
+  {
+   "id": "indexed-public-titled-page-lacking-only-a-description",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P_a",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ],
+           "indexing": "index",
+           "access": "public",
+           "title": "T"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintPageModifiers"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "page-modifiers",
+         "findings": [
+          {
+           "code": "ORB_P_INDEX_REQUIRES_PUBLIC",
+           "path": "orbitals[0].pages[0]",
+           "message": "page 'P' (/a) declares `indexing: index` but lacks `description:`",
+           "suggestion": "an indexed page is public, titled and described; otherwise declare `indexing: noindex`",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintPageModifiers"
+    }
+   ]
+  },
+  {
+   "id": "indexed-page-lists-every-missing-part-in-order",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P_a",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ],
+           "indexing": "index",
+           "title": "T"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintPageModifiers"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "page-modifiers",
+         "findings": [
+          {
+           "code": "ORB_P_INDEX_REQUIRES_PUBLIC",
+           "path": "orbitals[0].pages[0]",
+           "message": "page 'P' (/a) declares `indexing: index` but lacks `access: public`, `description:`",
+           "suggestion": "an indexed page is public, titled and described; otherwise declare `indexing: noindex`",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintPageModifiers"
+    }
+   ]
+  },
+  {
+   "id": "indexed-public-titled-described-parameter-route-fires-only-the-route-error",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P_a_:id",
+           "path": "/a/:id",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ],
+           "indexing": "index",
+           "access": "public",
+           "title": "T",
+           "description": "D"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintPageModifiers"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "page-modifiers",
+         "findings": [
+          {
+           "code": "ORB_P_INDEX_PARAM_ROUTE",
+           "path": "orbitals[0].pages[0]",
+           "message": "page 'P_a_:id' (/a/:id) is a parameter route; it cannot be `indexing: index` because its concrete URLs are not declared",
+           "suggestion": "declare `indexing: noindex` on parameter routes",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintPageModifiers"
+    }
+   ]
+  },
+  {
+   "id": "control-noindex-parameter-route",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P_a_:id",
+           "path": "/a/:id",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ],
+           "indexing": "noindex"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintPageModifiers"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "page-modifiers",
+         "findings": []
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintPageModifiers"
+    }
+   ]
+  },
+  {
+   "id": "control-authenticated-page-with-a-sign-in-route",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P_a",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ],
+           "access": "authenticated"
+          },
+          {
+           "name": "P_in",
+           "path": "/in",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "site": {
+        "signIn": "/in"
+       }
       }
      },
      "expect": {

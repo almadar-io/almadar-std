@@ -1,7 +1,7 @@
 {
  "atom": "cli/atoms/std-orb-lint-page-path-uniqueness.lolo",
  "trait": "OrbLintPagePathUniqueness",
- "note": "Expected findings are the code, path, message and suggestion `orb validate` (the Rust validator) reports for the same program.",
+ "note": "Expected findings are the code, path, message and suggestion `orb validate` (the Rust validator) reports for the same program. Added cases copy page.rs param_shape_collision_fires_once_through_validate_comprehensive_full and different_param_shapes_do_not_collide, and follow validate_page_path_uniqueness for three pages and two orbitals.",
  "cases": [
   {
    "id": "two-pages-share-a-path",
@@ -452,6 +452,654 @@
         "payload": {
          "rule": "page-path-uniqueness",
          "findings": []
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintPagePathUniqueness"
+    }
+   ]
+  },
+  {
+   "id": "control-different-param-shapes-do-not-collide",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P_x_:id",
+           "path": "/x/:id",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          },
+          {
+           "name": "P_y_:id",
+           "path": "/y/:id",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "B",
+         "entity": {
+          "name": "E2",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T2",
+           "linkedEntity": "E2",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P2",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T2"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintPagePathUniqueness"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "page-path-uniqueness",
+         "findings": []
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintPagePathUniqueness"
+    }
+   ]
+  },
+  {
+   "id": "param-names-only-differ-collide-once",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P_x_:id",
+           "path": "/x/:id",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          },
+          {
+           "name": "P_x_:slug",
+           "path": "/x/:slug",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "B",
+         "entity": {
+          "name": "E2",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T2",
+           "linkedEntity": "E2",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P2",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T2"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintPagePathUniqueness"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "page-path-uniqueness",
+         "findings": [
+          {
+           "code": "ORB_P_DUPLICATE_PATH",
+           "path": "orbitals[0].pages[0]",
+           "message": "Duplicate page path (normalized to '/x/:'): [\"/x/:id\", \"/x/:slug\"] found at: [\"orbitals[0].pages[0]\", \"orbitals[0].pages[1]\"]",
+           "suggestion": "Each page must have a unique path — two routes that only differ by a param NAME still collide at dispatch",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintPagePathUniqueness"
+    }
+   ]
+  },
+  {
+   "id": "three-pages-on-one-path-fire-once",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P_t",
+           "path": "/t",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          },
+          {
+           "name": "P_t",
+           "path": "/t",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          },
+          {
+           "name": "P_t",
+           "path": "/t",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "B",
+         "entity": {
+          "name": "E2",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T2",
+           "linkedEntity": "E2",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P2",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T2"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintPagePathUniqueness"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "page-path-uniqueness",
+         "findings": [
+          {
+           "code": "ORB_P_DUPLICATE_PATH",
+           "path": "orbitals[0].pages[0]",
+           "message": "Duplicate page path (normalized to '/t'): [\"/t\", \"/t\", \"/t\"] found at: [\"orbitals[0].pages[0]\", \"orbitals[0].pages[1]\", \"orbitals[0].pages[2]\"]",
+           "suggestion": "Each page must have a unique path — two routes that only differ by a param NAME still collide at dispatch",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintPagePathUniqueness"
+    }
+   ]
+  },
+  {
+   "id": "duplicate-across-two-orbitals",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E1",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T1",
+           "linkedEntity": "E1",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "PA",
+           "path": "/t",
+           "traits": [
+            {
+             "ref": "T1"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "B",
+         "entity": {
+          "name": "E2",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T2",
+           "linkedEntity": "E2",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "PB",
+           "path": "/t",
+           "traits": [
+            {
+             "ref": "T2"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintPagePathUniqueness"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "page-path-uniqueness",
+         "findings": [
+          {
+           "code": "ORB_P_DUPLICATE_PATH",
+           "path": "orbitals[0].pages[0]",
+           "message": "Duplicate page path (normalized to '/t'): [\"/t\", \"/t\"] found at: [\"orbitals[0].pages[0]\", \"orbitals[1].pages[0]\"]",
+           "suggestion": "Each page must have a unique path — two routes that only differ by a param NAME still collide at dispatch",
+           "severity": "error"
+          }
+         ]
         }
        }
       ]

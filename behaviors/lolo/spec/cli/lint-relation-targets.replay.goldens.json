@@ -1,7 +1,7 @@
 {
  "atom": "cli/atoms/std-orb-lint-relation-targets.lolo",
  "trait": "OrbLintRelationTargets",
- "note": "Expected findings are the code, path, message and suggestion `orb validate` (the Rust validator) reports for the same program. The nested cases copy cross_orbital/relations.rs test_relation_targets_nested_in_array_items and entity.rs a_map_value_relation_without_a_definition_is_a_coded_error (paths .items.properties.byKey.items.items.relation.entity and .items.relation.entity); the order case pins the check_relation_targets walk (field, items, properties sorted by name). Every case folds the entity fields with tree/fold, so all of them await the orb reinstall.",
+ "note": "Expected findings are the code, path, message and suggestion `orb validate` (the Rust validator) reports for the same program. The nested cases copy cross_orbital/relations.rs test_relation_targets_nested_in_array_items and entity.rs a_map_value_relation_without_a_definition_is_a_coded_error (paths .items.properties.byKey.items.items.relation.entity and .items.relation.entity); the order case pins the check_relation_targets walk (field, items, properties sorted by name). Every case folds the entity fields with tree/fold, so all of them await the orb reinstall. The auxiliary cases follow cross_orbital/relations.rs validate_relation_targets, which walks primary and auxiliary entities with base paths orbitals[i].entity and orbitals[i].auxiliaryEntities[j]; entity.rs reports ORB_E_INVALID_RELATION for the primary entity only here. They fold fields and await the orb reinstall.",
  "cases": [
   {
    "id": "relation-to-an-undeclared-entity",
@@ -843,6 +843,361 @@
         "payload": {
          "rule": "relation-targets",
          "findings": []
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintRelationTargets"
+    }
+   ]
+  },
+  {
+   "id": "auxiliary-entity-relation-to-an-undeclared-entity-is-the-cross-orbital-finding-only",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ],
+         "auxiliaryEntities": [
+          {
+           "name": "Aux",
+           "persistence": "runtime",
+           "fields": [
+            {
+             "name": "id",
+             "type": "string"
+            },
+            {
+             "type": "relation",
+             "relation": {
+              "entity": "Ghost",
+              "cardinality": "one"
+             },
+             "name": "ref"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintRelationTargets"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "relation-targets",
+         "findings": [
+          {
+           "code": "ORB_X_UNRESOLVED_RELATION_TARGET",
+           "path": "orbitals[0].auxiliaryEntities[0].fields[1].relation.entity",
+           "message": "Relation field 'ref' on 'Aux' points at 'Ghost', which is not declared in this schema",
+           "suggestion": "Declare the target entity in one of the schema's orbitals, or correct the relation.entity name.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintRelationTargets"
+    }
+   ]
+  },
+  {
+   "id": "control-auxiliary-relation-to-the-primary-entity",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ],
+         "auxiliaryEntities": [
+          {
+           "name": "Aux",
+           "persistence": "runtime",
+           "fields": [
+            {
+             "name": "id",
+             "type": "string"
+            },
+            {
+             "type": "relation",
+             "relation": {
+              "entity": "E",
+              "cardinality": "one"
+             },
+             "name": "ref"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintRelationTargets"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "relation-targets",
+         "findings": []
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintRelationTargets"
+    }
+   ]
+  },
+  {
+   "id": "nested-relation-in-an-auxiliary-entity-is-found",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ],
+         "auxiliaryEntities": [
+          {
+           "name": "Aux",
+           "persistence": "runtime",
+           "fields": [
+            {
+             "name": "id",
+             "type": "string"
+            },
+            {
+             "name": "xs",
+             "type": "array",
+             "items": {
+              "type": "relation",
+              "relation": {
+               "entity": "Ghost",
+               "cardinality": "one"
+              }
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintRelationTargets"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "relation-targets",
+         "findings": [
+          {
+           "code": "ORB_X_UNRESOLVED_RELATION_TARGET",
+           "path": "orbitals[0].auxiliaryEntities[0].fields[1].items.relation.entity",
+           "message": "Relation field '<anonymous>' on 'Aux' points at 'Ghost', which is not declared in this schema",
+           "suggestion": "Declare the target entity in one of the schema's orbitals, or correct the relation.entity name.",
+           "severity": "error"
+          }
+         ]
         }
        }
       ]

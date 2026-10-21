@@ -1,6 +1,6 @@
 app std-sha256 [
   version: "1.0.0",
-  description: "std-sha256 — SHA-256 as an event: a thin wrapper over the one hash/sha256 operator. SHA256_DIGEST { data, encoding, requestId? } answers SHA256_DIGESTED { requestId, digest } (lowercase hex or standard base64) or SHA256_REFUSED { requestId, reason: encoding } for any other encoding. The input is bytes: until hash/sha256 accepts bytes (lane HB1) a binary input is hashed by the operator as its string, so the byte-input goldens stay red.",
+  description: "std-sha256 — SHA-256 as an event: a thin wrapper over the one hash/sha256 operator. SHA256_DIGEST { data, encoding, requestId? } answers SHA256_DIGESTED { requestId, digest } (lowercase hex or standard base64) or SHA256_REFUSED { requestId, reason: encoding } for any other encoding. The input is bytes, hashed through hash/sha256's bytes reading.",
   egress: []
 ]
 uses Spec from "almadar-std/sha256"
@@ -21,7 +21,7 @@ orbital Sha256Orbital {
         (emit SHA256_REFUSED { requestId: (str/default ?requestId ""), reason: "encoding" })
       SHA256_DIGEST -> idle when (array/includes ["hex", "base64"] ?encoding)
         (set @entity.requestId (str/default ?requestId ""))
-        (set @entity.digest (hash/sha256 ?data ?encoding))
+        (set @entity.digest (hash/sha256 ?data ?encoding "bytes"))
         (emit SHA256_DIGESTED { requestId: (str/default ?requestId ""), digest: @entity.digest })
     }
 

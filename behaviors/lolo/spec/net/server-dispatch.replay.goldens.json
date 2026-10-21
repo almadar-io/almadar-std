@@ -454,6 +454,127 @@
      }
     }
    ]
+  },
+  {
+   "id": "routes-trace",
+   "note": "routes.rs create_router event_routes: GET /trace; events.rs:115 trace()",
+   "steps": [
+    {
+     "event": "REQUEST_RECEIVED",
+     "payload": {
+      "requestId": 7,
+      "method": "GET",
+      "path": "/api/trace",
+      "query": "",
+      "headers": {
+       "content-type": "application/json"
+      },
+      "body": "",
+      "peer": "127.0.0.1:5000"
+     }
+    },
+    {
+     "event": "ROUTE_EXTERNAL",
+     "payload": {
+      "requestId": 7,
+      "responseHeaders": [
+       {
+        "name": "access-control-allow-origin",
+        "value": "https://app.example"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ROUTE_DISPATCH",
+        "payload": {
+         "requestId": 7,
+         "kind": "trace"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "trace-post-is-not-a-route",
+   "note": "control: only GET /trace exists (events.rs:64)",
+   "steps": [
+    {
+     "event": "REQUEST_RECEIVED",
+     "payload": {
+      "requestId": 7,
+      "method": "POST",
+      "path": "/api/trace",
+      "query": "",
+      "headers": {
+       "content-type": "application/json"
+      },
+      "body": "",
+      "peer": "127.0.0.1:5000"
+     }
+    },
+    {
+     "event": "ROUTE_EXTERNAL",
+     "payload": {
+      "requestId": 7,
+      "responseHeaders": [
+       {
+        "name": "access-control-allow-origin",
+        "value": "https://app.example"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ROUTE_DISPATCH",
+        "payload": {
+         "requestId": 7,
+         "kind": "none"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "trace-is-queued",
+   "steps": [
+    {
+     "event": "REQUEST_RECEIVED",
+     "payload": {
+      "requestId": 7,
+      "method": "GET",
+      "path": "/api/trace",
+      "query": "",
+      "headers": {
+       "content-type": "application/json"
+      },
+      "body": "",
+      "peer": "127.0.0.1:5000"
+     }
+    },
+    {
+     "event": "DISPATCH_ADMITTED",
+     "payload": {
+      "requestId": 7
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DISPATCH_QUEUED",
+        "payload": {
+         "requestId": 7
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

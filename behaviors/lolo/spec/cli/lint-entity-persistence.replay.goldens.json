@@ -1,7 +1,7 @@
 {
  "atom": "cli/atoms/std-orb-lint-entity-persistence.lolo",
  "trait": "OrbLintEntityPersistence",
- "note": "Expected findings are the code, path, message and suggestion `orb validate` (the Rust validator) reports for the same program.",
+ "note": "Expected findings are the code, path, message and suggestion `orb validate` (the Rust validator) reports for the same program. Added cases follow entity.rs validate_entity (the persistent-without-collection branch) and its test test_persistent_entity_missing_collection; the shared-without-persistence-mode test (test_shared_entity_without_persistence_mode_errors) is not ported by this lint (gap).",
  "cases": [
   {
    "id": "persistent-entity-without-collection",
@@ -188,6 +188,351 @@
         "payload": {
          "rule": "entity-persistence",
          "findings": []
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintEntityPersistence"
+    }
+   ]
+  },
+  {
+   "id": "control-runtime-entity-without-a-collection",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ],
+          "persistence": "runtime"
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintEntityPersistence"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-persistence",
+         "findings": []
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintEntityPersistence"
+    }
+   ]
+  },
+  {
+   "id": "control-entity-with-no-persistence-mode-is-not-persistent",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintEntityPersistence"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-persistence",
+         "findings": []
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintEntityPersistence"
+    }
+   ]
+  },
+  {
+   "id": "two-orbitals-each-missing-a-collection-are-two-findings",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T1",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "PA",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T1"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "B",
+         "entity": {
+          "name": "F",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T2",
+           "linkedEntity": "F",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "PB",
+           "path": "/b",
+           "traits": [
+            {
+             "ref": "T2"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintEntityPersistence"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-persistence",
+         "findings": [
+          {
+           "code": "ORB_E_MISSING_COLLECTION",
+           "path": "orbitals[0].entity.collection",
+           "message": "Persistent entity requires a collection name",
+           "suggestion": "Add a 'collection' property for database storage",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_E_MISSING_COLLECTION",
+           "path": "orbitals[1].entity.collection",
+           "message": "Persistent entity requires a collection name",
+           "suggestion": "Add a 'collection' property for database storage",
+           "severity": "error"
+          }
+         ]
         }
        }
       ]

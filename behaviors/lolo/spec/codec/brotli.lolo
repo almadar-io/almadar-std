@@ -1,0 +1,22 @@
+app brotli-spec [
+  version: "1.0.0",
+  description: "Design contract for packing bytes as a brotli stream (RFC 7932). BROTLI { data } answers BROTLI_ANSWERED { data, size, packed }; the stream decodes (brotli -d, any RFC 7932 decoder) to exactly the input. Source of the vectors: the system brotli 1.x command line as decoder oracle (the encoder here emits uncompressed meta-blocks, RFC 7932 9.2, so no reference encoder output is compared byte for byte, the decoder round trip is the check). Empty input is the single byte 0x06 (the vector the brotli decoder tests use for an empty stream); a 5-byte input is 3 header bytes, the 5 raw bytes and 0x03; an input over 65536 bytes is split in meta-blocks of 65536."
+]
+
+orbital BrotliSpec {
+  expects entity BrotliRun [runtime] {
+    id : string!
+    size : number
+    packed : number
+    @invariant (>= @entity.size 0)
+  }
+  expects trait Brotli {
+    state idle {
+      BROTLI -> idle
+    }
+    emits {
+      BROTLI_ANSWERED { data : bytes!  size : number!  packed : number! }
+    }
+  }
+  expects page "/brotli" -> Brotli
+}

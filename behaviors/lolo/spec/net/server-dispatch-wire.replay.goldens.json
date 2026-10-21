@@ -312,6 +312,96 @@
      }
     }
    ]
+  },
+  {
+   "id": "trace-is-answered-200-as-the-recorded-array",
+   "note": "events.rs:115 Json(runtime.trace()) -> 200 JSON array of TraceEntry (host/runtime.rs TraceEntry, camelCase)",
+   "steps": [
+    {
+     "event": "REQUEST_RECEIVED",
+     "payload": {
+      "requestId": 7,
+      "method": "GET",
+      "path": "/api/trace",
+      "query": "",
+      "headers": {
+       "content-type": "application/json"
+      },
+      "body": "",
+      "peer": "127.0.0.1:5000"
+     }
+    },
+    {
+     "event": "DISPATCH_QUEUED",
+     "payload": {
+      "requestId": 7
+     }
+    },
+    {
+     "event": "TRACE_ANSWERED",
+     "payload": {
+      "result": [
+       {
+        "seq": 1
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 7,
+         "status": 200
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "empty-trace-is-an-empty-array",
+   "note": "control: no dispatch traced yet",
+   "steps": [
+    {
+     "event": "REQUEST_RECEIVED",
+     "payload": {
+      "requestId": 7,
+      "method": "GET",
+      "path": "/api/trace",
+      "query": "",
+      "headers": {
+       "content-type": "application/json"
+      },
+      "body": "",
+      "peer": "127.0.0.1:5000"
+     }
+    },
+    {
+     "event": "DISPATCH_QUEUED",
+     "payload": {
+      "requestId": 7
+     }
+    },
+    {
+     "event": "TRACE_ANSWERED",
+     "payload": {
+      "result": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 7,
+         "status": 200
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

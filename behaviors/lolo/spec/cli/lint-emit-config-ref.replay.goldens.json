@@ -1,7 +1,7 @@
 {
  "atom": "cli/atoms/std-orb-lint-emit-config-ref.lolo",
  "trait": "OrbLintEmitConfigRef",
- "note": "Expected findings are the code, path, message and suggestion `orb validate` (the Rust validator) reports for the same program.",
+ "note": "Expected findings are the code, path, message and suggestion `orb validate` (the Rust validator) reports for the same program. Added cases follow validate_all_config_ref_emits (emit_config_ref.rs; it has no Rust test): the three ConfigRefEventError clauses UnknownKnob, NotString and NoDefault.",
  "cases": [
   {
    "id": "config-knob-not-declared",
@@ -158,6 +158,330 @@
               ]
              }
             ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintEmitConfigRef"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "emit-config-ref",
+         "findings": []
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintEmitConfigRef"
+    }
+   ]
+  },
+  {
+   "id": "config-knob-that-is-not-string-typed",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "emits": [
+            {
+             "event": "@config.target"
+            }
+           ],
+           "config": {
+            "target": {
+             "type": "number",
+             "default": 1
+            }
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintEmitConfigRef"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "emit-config-ref",
+         "findings": [
+          {
+           "code": "ORB_EMIT_CONFIG_REF_INVALID",
+           "path": "orbitals[0 (A)].traits[0 (T)].emits(@config.target)",
+           "message": "emits references `@config.target` but the `target` config field is not string-typed (or its call-site/default value isn't a string literal).",
+           "suggestion": "Declare `config { target : string = \"...\" }` on this trait, or reference an existing string-typed knob with a default.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintEmitConfigRef"
+    }
+   ]
+  },
+  {
+   "id": "config-knob-with-no-default",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "emits": [
+            {
+             "event": "@config.target"
+            }
+           ],
+           "config": {
+            "target": {
+             "type": "string"
+            }
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintEmitConfigRef"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "emit-config-ref",
+         "findings": [
+          {
+           "code": "ORB_EMIT_CONFIG_REF_INVALID",
+           "path": "orbitals[0 (A)].traits[0 (T)].emits(@config.target)",
+           "message": "emits references `@config.target` but the `target` config field has no declared default.",
+           "suggestion": "Declare `config { target : string = \"...\" }` on this trait, or reference an existing string-typed knob with a default.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintEmitConfigRef"
+    }
+   ]
+  },
+  {
+   "id": "control-string-knob-with-a-default-is-not-reported",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "emits": [
+            {
+             "event": "@config.target"
+            }
+           ],
+           "config": {
+            "target": {
+             "type": "string",
+             "default": "DONE"
+            }
            }
           }
          ],

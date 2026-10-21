@@ -2,7 +2,7 @@ app std-orb-lint-relation-targets [
   version: "1.0.0",
   inbound: ["cli-lint-relation-targets"],
   fs: { cwd: "**": [read] },
-  description: "std-orb-lint-relation-targets - the `orb lint relation-targets <file>` command, the port of ORB_X_UNRESOLVED_RELATION_TARGET. It lowers the file with program/read and reports every primary-entity field of type relation, at any depth, whose target entity is not a declared entity of the program (any orbital's primary or auxiliary entity, or an expects entity or identity), with its path and suggestion (status 500, exit 1). Relations nested in array items or object properties are walked at any depth with tree/fold, in the Rust order (the field, its items, its properties by name). Clean answers `lint relation-targets: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  description: "std-orb-lint-relation-targets - the `orb lint relation-targets <file>` command, the port of ORB_X_UNRESOLVED_RELATION_TARGET. It lowers the file with program/read and reports every field of type relation, at any depth, of each orbital's primary entity (both codes) and auxiliary entities (the cross-orbital code only, as in Rust), whose target entity is not a declared entity of the program (any orbital's primary or auxiliary entity, or an expects entity or identity), with its path and suggestion (status 500, exit 1). Relations nested in array items or object properties are walked at any depth with tree/fold, in the Rust order (the field, its items, its properties by name). Clean answers `lint relation-targets: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-relation-targets"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -39,11 +39,17 @@ orbital OrbLintRelationTargetsOrbital {
                       (array/map (object/get @o "auxiliaryEntities" []) (fn x (if (validate/object @x) (object/get @x "name" "") ""))))
                     (array/map (array/filter (object/get @o "expects" []) (fn x (or (= (object/get @x "kind" "") "entity") (= (object/get @x "kind" "") "identity")))) (fn x (object/get @x "name" "")))))))))
             (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
-              (let ((fields (if (validate/object (object/get (array/nth @orbitals @oi) "entity" {})) (object/get (object/get (array/nth @orbitals @oi) "entity" {}) "fields" []) []))
-                    (ename (if (validate/object (object/get (array/nth @orbitals @oi) "entity" {})) (object/get (object/get (array/nth @orbitals @oi) "entity" {}) "name" "") "")))
-                (array/flatten (array/map (array/range 0 (array/len @fields)) (fn fi
-                  (let ((f (array/nth @fields @fi)))
-                    (array/flatten (array/map (tree/fold @f (fn (n k)
+              (let ((prim (object/get (array/nth @orbitals @oi) "entity" {}))
+                    (auxs (object/get (array/nth @orbitals @oi) "auxiliaryEntities" [])))
+                (array/flatten (array/map
+                  (array/concat
+                    (if (validate/object @prim) [{ ent: @prim, base: (str/concat "orbitals[" @oi "].entity"), e: true }] [])
+                    (array/map (array/range 0 (array/len @auxs)) (fn ai { ent: (array/nth @auxs @ai), base: (str/concat "orbitals[" @oi "].auxiliaryEntities[" @ai "]"), e: false })))
+                  (fn eb
+                    (let ((fields (object/get (object/get @eb "ent") "fields" [])) (ename (object/get (object/get @eb "ent") "name" "")))
+                      (array/flatten (array/map (array/range 0 (array/len @fields)) (fn fi
+                        (let ((f (array/nth @fields @fi)))
+                          (array/flatten (array/map (tree/fold @f  (fn (n k)
                         (if (validate/array @n)
                           (array/flatten @k)
                           (if (validate/object @n)
@@ -54,7 +60,9 @@ orbital OrbLintRelationTargetsOrbital {
                               (array/map (object/get @k "items" []) (fn h { rel: (str/concat ".items" (object/get @h "rel")), nm: (object/get @h "nm"), tg: (object/get @h "tg") }))
                               (array/flatten (array/map (array/sort (object/keys (object/get @k "properties" {})) "" "asc") (fn key (array/map (object/get (object/get @k "properties" {}) @key) (fn h { rel: (str/concat ".properties." @key (object/get @h "rel")), nm: (object/get @h "nm"), tg: (object/get @h "tg") }))))))
                             []))) FieldShape) (fn h
-                      [{ code: "ORB_E_INVALID_RELATION", path: (str/concat "orbitals[" @oi "].entity.fields[" @fi "]" (object/get @h "rel") ".relation.entity"), message: (str/concat "Relation target entity '" (object/get @h "tg") "' does not exist"), suggestion: "Ensure the related entity is defined in the schema", severity: "error" } { code: "ORB_X_UNRESOLVED_RELATION_TARGET", path: (str/concat "orbitals[" @oi "].entity.fields[" @fi "]" (object/get @h "rel") ".relation.entity"), message: (str/concat "Relation field '" (object/get @h "nm") "' on '" @ename "' points at '" (object/get @h "tg") "', which is not declared in this schema"), suggestion: "Declare the target entity in one of the schema's orbitals, or correct the relation.entity name.", severity: "error" }]))))))))))))))
+                            (array/concat
+                              (if (object/get @eb "e") [{ code: "ORB_E_INVALID_RELATION", path: (str/concat (object/get @eb "base") ".fields[" @fi "]" (object/get @h "rel") ".relation.entity"), message: (str/concat "Relation target entity '" (object/get @h "tg") "' does not exist"), suggestion: "Ensure the related entity is defined in the schema", severity: "error" }] [])
+                              [{ code: "ORB_X_UNRESOLVED_RELATION_TARGET", path: (str/concat (object/get @eb "base") ".fields[" @fi "]" (object/get @h "rel") ".relation.entity"), message: (str/concat "Relation field '" (object/get @h "nm") "' on '" @ename "' points at '" (object/get @h "tg") "', which is not declared in this schema"), suggestion: "Declare the target entity in one of the schema's orbitals, or correct the relation.entity name.", severity: "error" }])))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FILE_UNREAD -> ready
         (emit LINT_UNREAD { rule: "relation-targets" })

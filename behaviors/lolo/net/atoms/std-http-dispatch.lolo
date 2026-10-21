@@ -43,6 +43,10 @@ orbital HttpDispatchOrbital {
         @label "Hooks prefix"
         @description "A path starting with this is an inbound hook, outside the bearer guard."
         @tier "infra"
+      traceSteps : number = 200
+        @label "Trace steps"
+        @description "How many of the host's most recent dispatch steps GET /api/trace answers; the host keeps 200."
+        @tier "infra"
       requireSignIn : boolean = false
         @label "Require sign-in"
         @description "When on, a dispatch route needs a verified bearer (401 UNAUTHORIZED otherwise); hooks are outside the guard."
@@ -52,10 +56,10 @@ orbital HttpDispatchOrbital {
     state serving {
       INIT -> serving
 
-      REQUEST_RECEIVED -> serving when (or (str/startsWith @payload.path @config.dispatchPrefix) (str/startsWith @payload.path @config.hooksPrefix))
+      REQUEST_RECEIVED -> serving when (or (str/startsWith @payload.path @config.dispatchPrefix) (str/startsWith @payload.path @config.hooksPrefix) (= @payload.path (str/concat @config.apiPrefix "/trace")))
         (let ((parts (str/split (str/slice @payload.path (str/len @config.apiPrefix)) "/")))
           (let ((n (array/len @parts)) (m (str/upper @payload.method)))
-            (let ((kind (if (and (= @m "POST") (= @n 4) (= (array/nth @parts 1) "orbitals") (= (array/nth @parts 3) "events")) "events" (if (and (= @m "POST") (= @n 8) (= (array/nth @parts 1) "orbitals") (= (array/nth @parts 3) "traits") (= (array/nth @parts 5) "entities") (= (array/nth @parts 7) "events")) "entity-events" (if (and (= @m "POST") (= @n 4) (= (array/nth @parts 1) "orbitals") (= (array/nth @parts 3) "inputs")) "inputs" (if (and (= @m "GET") (= @n 3) (= (array/nth @parts 1) "orbitals") (= (array/nth @parts 2) "inputs")) "inputs-list" (if (and (= @m "POST") (= @n 3) (= (array/nth @parts 1) "orbitals") (= (array/nth @parts 2) "resolve-rows")) "resolve-rows" (if (and (= @m "POST") (= @n 3) (= (array/nth @parts 1) "hooks")) "hook" "none"))))))) )
+            (let ((kind (if (and (= @m "POST") (= @n 4) (= (array/nth @parts 1) "orbitals") (= (array/nth @parts 3) "events")) "events" (if (and (= @m "POST") (= @n 8) (= (array/nth @parts 1) "orbitals") (= (array/nth @parts 3) "traits") (= (array/nth @parts 5) "entities") (= (array/nth @parts 7) "events")) "entity-events" (if (and (= @m "POST") (= @n 4) (= (array/nth @parts 1) "orbitals") (= (array/nth @parts 3) "inputs")) "inputs" (if (and (= @m "GET") (= @n 3) (= (array/nth @parts 1) "orbitals") (= (array/nth @parts 2) "inputs")) "inputs-list" (if (and (= @m "POST") (= @n 3) (= (array/nth @parts 1) "orbitals") (= (array/nth @parts 2) "resolve-rows")) "resolve-rows" (if (and (= @m "POST") (= @n 3) (= (array/nth @parts 1) "hooks")) "hook" (if (and (= @m "GET") (= @n 2) (= (array/nth @parts 1) "trace")) "trace" "none"))))))))  )
               (do
                 (set @entity.pending (array/append @entity.pending { requestId: @payload.requestId, kind: @kind, orbital: (if (and (>= @n 3) (or (= @kind "events") (= @kind "entity-events") (= @kind "inputs"))) (array/nth @parts 2) ""), traitName: (if (= @kind "entity-events") (array/nth @parts 4) ""), entityId: (if (= @kind "entity-events") (array/nth @parts 6) ""), stream: (or (str/includes (or @payload.query "") "stream=true") (str/includes (or (object/get @payload.headers "accept") "") "text/event-stream")), authorization: (or (object/get @payload.headers "authorization") ""), body: (or @payload.body (bytes/from-string "")), hookName: (if (= @kind "hook") (array/nth @parts 2) ""), responseHeaders: [] }))
 ))))
@@ -99,12 +103,12 @@ orbital HttpDispatchOrbital {
       DISPATCH_ADMITTED -> serving when (let ((p (array/find @entity.pending (fn q (= @q.requestId @payload.requestId))))) (and (or (= (object/get @p "kind") "events") (= (object/get @p "kind") "entity-events") (= (object/get @p "kind") "inputs")) (not (json/valid (bytes/to-string (object/get @p "body"))))))
         (emit RESPOND { requestId: @payload.requestId, status: 400, headers: (array/append (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") { name: "content-type", value: "text/plain; charset=utf-8" }), body: (bytes/from-string "Failed to parse the request body as JSON") })
         (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
-      DISPATCH_ADMITTED -> serving when (let ((p (array/find @entity.pending (fn q (= @q.requestId @payload.requestId))))) (or (= (object/get @p "kind") "inputs-list") (and (or (= (object/get @p "kind") "events") (= (object/get @p "kind") "entity-events") (= (object/get @p "kind") "inputs")) (json/valid (bytes/to-string (object/get @p "body"))))))
+      DISPATCH_ADMITTED -> serving when (let ((p (array/find @entity.pending (fn q (= @q.requestId @payload.requestId))))) (or (= (object/get @p "kind") "inputs-list") (= (object/get @p "kind") "trace") (and (or (= (object/get @p "kind") "events") (= (object/get @p "kind") "entity-events") (= (object/get @p "kind") "inputs")) (json/valid (bytes/to-string (object/get @p "body"))))))
         (emit DISPATCH_QUEUED { requestId: @payload.requestId })
 
-      DISPATCH_QUEUED -> serving when (and (!= @entity.inflight 0) (let ((k (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "kind"))) (or (= @k "events") (= @k "entity-events") (= @k "inputs") (= @k "inputs-list"))))
+      DISPATCH_QUEUED -> serving when (and (!= @entity.inflight 0) (let ((k (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "kind"))) (or (= @k "events") (= @k "entity-events") (= @k "inputs") (= @k "inputs-list") (= @k "trace"))))
         (set @entity.waiting (array/append @entity.waiting @payload.requestId))
-      DISPATCH_QUEUED -> serving when (and (= @entity.inflight 0) (let ((k (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "kind"))) (or (= @k "events") (= @k "entity-events") (= @k "inputs") (= @k "inputs-list"))))
+      DISPATCH_QUEUED -> serving when (and (= @entity.inflight 0) (let ((k (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "kind"))) (or (= @k "events") (= @k "entity-events") (= @k "inputs") (= @k "inputs-list") (= @k "trace"))))
         (set @entity.inflight @payload.requestId)
         (emit DISPATCH_RUN { requestId: @payload.requestId })
 
@@ -144,10 +148,18 @@ orbital HttpDispatchOrbital {
       DISPATCH_RUN -> serving when (= (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "kind") "inputs-list")
         (program/inputs {} { emit: { success: INPUTS_ANSWERED, failure: DISPATCH_FAILED } })
 
+      DISPATCH_RUN -> serving when (= (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "kind") "trace")
+        (program/inputs { trace: @config.traceSteps } { emit: { success: TRACE_ANSWERED, failure: DISPATCH_FAILED } })
+
       DISPATCH_ADMITTED -> serving when (= (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "kind") "resolve-rows")
         (emit RESOLVE_ROWS_REQUESTED { requestId: @payload.requestId, reference: "" })
         (emit RESPOND { requestId: @payload.requestId, status: 501, headers: (array/append (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: "No operator resolves a row set yet", code: "NOT_IMPLEMENTED" })) })
         (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
+
+      TRACE_ANSWERED -> serving
+        (emit RESPOND { requestId: @entity.inflight, status: 200, headers: (array/append (object/get (array/find @entity.pending (fn p (= @p.requestId @entity.inflight))) "responseHeaders") { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify @payload.result)) })
+        (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @entity.inflight))))
+        (emit DISPATCH_DONE {})
 
       INPUTS_ANSWERED -> serving
         (emit RESPOND { requestId: @entity.inflight, status: 200, headers: (array/append (object/get (array/find @entity.pending (fn p (= @p.requestId @entity.inflight))) "responseHeaders") { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { success: true, inputs: @payload.result.inputs })) })
@@ -253,6 +265,9 @@ orbital HttpDispatchOrbital {
       }
       INPUTS_ANSWERED -> internal {
         result : DispatchInputs!
+      }
+      TRACE_ANSWERED -> internal {
+        result : [DispatchJson]!
       }
       DISPATCH_FAILED -> internal {
         error : string!

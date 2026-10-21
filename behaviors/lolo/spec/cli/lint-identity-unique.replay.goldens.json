@@ -1,7 +1,7 @@
 {
  "atom": "cli/atoms/std-orb-lint-identity-unique.lolo",
  "trait": "OrbLintIdentityUnique",
- "note": "Expected findings are the code, path, message and suggestion `orb validate` (the Rust validator) reports for the same program.",
+ "note": "Expected findings are the code, path, message and suggestion `orb validate` (the Rust validator) reports for the same program. Added cases copy user_identity.rs primary_shadows_auxiliary_import_over_an_arbitrary_orbital_slice and no_primary_roster_falls_back_to_imported_copies, and follow validate_user_identity (names are sorted and deduplicated).",
  "cases": [
   {
    "id": "two-differently-named-identity-entities",
@@ -300,6 +300,708 @@
         "payload": {
          "rule": "identity-unique",
          "findings": []
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintIdentityUnique"
+    }
+   ]
+  },
+  {
+   "id": "three-identity-entities-are-listed-sorted",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "O0",
+         "entity": {
+          "name": "U3",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ],
+          "identity": true
+         },
+         "traits": [
+          {
+           "name": "T0",
+           "linkedEntity": "U3",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "PO0",
+           "path": "/p0",
+           "traits": [
+            {
+             "ref": "T0"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "O1",
+         "entity": {
+          "name": "U1",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ],
+          "identity": true
+         },
+         "traits": [
+          {
+           "name": "T1",
+           "linkedEntity": "U1",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "PO1",
+           "path": "/p1",
+           "traits": [
+            {
+             "ref": "T1"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "O2",
+         "entity": {
+          "name": "U2",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ],
+          "identity": true
+         },
+         "traits": [
+          {
+           "name": "T2",
+           "linkedEntity": "U2",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "PO2",
+           "path": "/p2",
+           "traits": [
+            {
+             "ref": "T2"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintIdentityUnique"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "identity-unique",
+         "findings": [
+          {
+           "code": "ORB_S_IDENTITY_NOT_UNIQUE",
+           "path": "orbitals",
+           "message": "3 entities are tagged [identity]: U1, U2, U3. `@user` resolves to a single viewer, so more than one declaration makes every `@user.x` ambiguous.",
+           "suggestion": "Keep exactly one [identity] entity and reference it from the other orbitals (`ownerId : <IdentityEntity>`).",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintIdentityUnique"
+    }
+   ]
+  },
+  {
+   "id": "control-the-same-identity-name-in-two-orbitals-is-one-name",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "O0",
+         "entity": {
+          "name": "U1",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ],
+          "identity": true
+         },
+         "traits": [
+          {
+           "name": "T0",
+           "linkedEntity": "U1",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "PO0",
+           "path": "/p0",
+           "traits": [
+            {
+             "ref": "T0"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "O1",
+         "entity": {
+          "name": "U1",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ],
+          "identity": true
+         },
+         "traits": [
+          {
+           "name": "T1",
+           "linkedEntity": "U1",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "PO1",
+           "path": "/p1",
+           "traits": [
+            {
+             "ref": "T1"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintIdentityUnique"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "identity-unique",
+         "findings": []
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintIdentityUnique"
+    }
+   ]
+  },
+  {
+   "id": "control-the-primary-roster-shadows-an-auxiliary-copy",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "O0",
+         "entity": {
+          "name": "U1",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ],
+          "identity": true
+         },
+         "traits": [
+          {
+           "name": "T0",
+           "linkedEntity": "U1",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "PO0",
+           "path": "/p0",
+           "traits": [
+            {
+             "ref": "T0"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "O1",
+         "entity": {
+          "name": "X",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T1",
+           "linkedEntity": "X",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "PO1",
+           "path": "/p1",
+           "traits": [
+            {
+             "ref": "T1"
+            }
+           ]
+          }
+         ],
+         "auxiliaryEntities": [
+          {
+           "name": "U2",
+           "persistence": "runtime",
+           "fields": [
+            {
+             "name": "id",
+             "type": "string"
+            }
+           ],
+           "identity": true
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintIdentityUnique"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "identity-unique",
+         "findings": []
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintIdentityUnique"
+    }
+   ]
+  },
+  {
+   "id": "auxiliary-identity-entities-count-when-no-primary-is-tagged",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "O0",
+         "entity": {
+          "name": "X",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T0",
+           "linkedEntity": "X",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "PO0",
+           "path": "/p0",
+           "traits": [
+            {
+             "ref": "T0"
+            }
+           ]
+          }
+         ],
+         "auxiliaryEntities": [
+          {
+           "name": "U2",
+           "persistence": "runtime",
+           "fields": [
+            {
+             "name": "id",
+             "type": "string"
+            }
+           ],
+           "identity": true
+          },
+          {
+           "name": "U3",
+           "persistence": "runtime",
+           "fields": [
+            {
+             "name": "id",
+             "type": "string"
+            }
+           ],
+           "identity": true
+          }
+         ]
+        },
+        {
+         "name": "O1",
+         "entity": {
+          "name": "Y",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T1",
+           "linkedEntity": "Y",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "PO1",
+           "path": "/p1",
+           "traits": [
+            {
+             "ref": "T1"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintIdentityUnique"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "identity-unique",
+         "findings": [
+          {
+           "code": "ORB_S_IDENTITY_NOT_UNIQUE",
+           "path": "orbitals",
+           "message": "2 entities are tagged [identity]: U2, U3. `@user` resolves to a single viewer, so more than one declaration makes every `@user.x` ambiguous.",
+           "suggestion": "Keep exactly one [identity] entity and reference it from the other orbitals (`ownerId : <IdentityEntity>`).",
+           "severity": "error"
+          }
+         ]
         }
        }
       ]
