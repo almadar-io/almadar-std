@@ -1,0 +1,24 @@
+app program-host-spec [
+  version: "1.0.0",
+  description: "Design contract for the std program host, the runtime as a .lolo program (`orb host <shell> <program>`). The cli-host command takes argv: the guest program path, then optional grant flags `--grant=<kind>` (fs, net, exec, egress, credentials) that narrow the host's guestGrants knob to those kinds. It reads and parses the program: HOST_LOADED { path } when it parses; HOST_REFUSED { reason } when argv names no program, the file cannot be read or parsed, or a grant flag names a kind the guestGrants knob does not hold. External events reach the guest as HOST_EVENT { key, orbital, trait, event, payload }, each forwarded through a keyed program/dispatch; every guest answer is relayed as HOST_ANSWERED { key, result }. The guest runs with exactly the grants guestGrants names (default none), never the host's own."
+]
+
+type HostGrants = Map string [string]
+
+orbital ProgramHostSpec {
+  expects entity GuestProgram [runtime] {
+    id : string!
+    path : string!
+    loaded : boolean!
+  }
+  expects trait ProgramHost {
+    state waiting
+    state hosting
+    emits {
+      HOST_LOADED { path : string! }
+      HOST_REFUSED { reason : string! }
+      HOST_ANSWERED { key : string!  result : string! }
+    }
+  }
+  expects page "/host" -> ProgramHost
+}

@@ -58,7 +58,9 @@ A spec sits under the same folder path as the behavior it specs: the spec for `i
 | `agent/planner.lolo` | `std-agent-planner` (bound; a failed recall still plans, a failed generation still ends `planned`) |
 | `ml/similarity.lolo` | `std-ml-similarity` (bound; an embed failure resolves as an abstain, never stays `embedding`) |
 | `infra/store-selection.lolo` | `std-store-selection` (bound; `reading` keeps `poolMax` absent or >= 0) |
+| `infra/sha256.lolo` | `std-sha256` (unbound until the `bit/*` operators land; `SHA256_DIGEST { data, encoding }` answers `SHA256_DIGESTED { digest }` / `SHA256_REFUSED { reason }`, golden vectors in the description) |
 | `infra/row-store.lolo` | the store drivers (unbound; declares the `Row*` record types the verbs and replies carry) |
+| `infra/row-store-kv.lolo` | `std-row-store-kv` (unbound; the file driver's public contract with `config.store` for `config.dir`, so `store:` swaps drivers; waits on the `kv/*` operators) |
 | `infra/server.lolo` | the WS-S server program (unbound; route contract of `orbital-server`) |
 | `infra/mock-seed.lolo` | `std-mock-seed` (bound; composes `std-mock-random` for the seeded draws; the index strategy matches the `sample-rows.index.json` golden on every row) |
 | `infra/redis.lolo` | `std-redis` (bound; RESP over `os/tcp-connect`/`send`/`recv`/`close`; dropping the `handshaking`/`awaiting`/`closing` states or the `REDIS_WIRE_SENT` emit fails it) |

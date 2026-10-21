@@ -41,6 +41,10 @@ orbital HttpRouterOrbital {
         @label "Stream path"
         @description "The path a GET opens the live stream on, with ?ticket=<t> in the query."
         @tier "infra"
+      externalPrefix : string = ""
+        @label "External prefix"
+        @description "When set, a request whose path starts with this is left to another atom listening to the same REQUEST_RECEIVED: the router counts it and then drops it without answering or a 404."
+        @tier "infra"
       healthPath : string = "/api/health"
         @label "Health path"
         @description "The path a GET answers 200 with the status and version."
@@ -171,13 +175,15 @@ orbital HttpRouterOrbital {
         (emit RESPOND { requestId: (object/get (array/find @entity.streams (fn s (= @s.ticket @payload.ticket))) "requestId"), status: 401, headers: (array/append (object/get (array/find @entity.pending (fn p (= @p.requestId (object/get (array/find @entity.streams (fn s (= @s.ticket @payload.ticket))) "requestId")))) "responseHeaders") { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: "Unauthorized", code: "UNAUTHORIZED" })) })
         (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId (object/get (array/find @entity.streams (fn s (= @s.ticket @payload.ticket))) "requestId")))))
         (set @entity.streams (array/filter @entity.streams (fn s (!= @s.ticket @payload.ticket))))
+      ROUTE_REQUEST -> routing when (let ((req (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (and (!= @config.externalPrefix "") (str/startsWith (object/get @req "path") @config.externalPrefix)))
+        (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
       ROUTE_REQUEST -> routing when (let ((req (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (and (= (str/upper (object/get @req "method")) "GET") (= (object/get @req "path") @config.healthPath)))
         (set @entity.status 200)
         (emit RESPOND { requestId: @payload.requestId, status: 200, headers: (array/append (array/concat (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") @payload.rateHeaders) { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { status: "healthy", version: @config.version })) })
         (emit ROUTE_HEALTH { requestId: @payload.requestId })
         (emit REQUEST_ANSWERED { requestId: @payload.requestId, status: 200, headers: (array/append (array/concat (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") @payload.rateHeaders) { name: "content-type", value: "application/json" }), body: (json/stringify { status: "healthy", version: @config.version }) })
         (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
-      ROUTE_REQUEST -> routing when (let ((req (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (and (not (and @config.requireSignIn (str/startsWith (object/get @req "path") @config.dispatchPrefix))) (not (or (and (= (str/upper (object/get @req "method")) "GET") (= (object/get @req "path") @config.healthPath)) (and (= (str/upper (object/get @req "method")) "GET") (= (object/get @req "path") @config.streamPath)) (and (= (str/upper (object/get @req "method")) "POST") (= (object/get @req "path") @config.ticketPath))))))
+      ROUTE_REQUEST -> routing when (let ((req (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (and (not (and @config.requireSignIn (str/startsWith (object/get @req "path") @config.dispatchPrefix))) (not (and (!= @config.externalPrefix "") (str/startsWith (object/get @req "path") @config.externalPrefix))) (not (or (and (= (str/upper (object/get @req "method")) "GET") (= (object/get @req "path") @config.healthPath)) (and (= (str/upper (object/get @req "method")) "GET") (= (object/get @req "path") @config.streamPath)) (and (= (str/upper (object/get @req "method")) "POST") (= (object/get @req "path") @config.ticketPath))))))
         (set @entity.status 404)
         (emit RESPOND { requestId: @payload.requestId, status: 404, headers: (array/append (array/concat (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") @payload.rateHeaders) { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: "Not found", code: "NOT_FOUND" })) })
         (emit ROUTE_REFUSED { requestId: @payload.requestId })

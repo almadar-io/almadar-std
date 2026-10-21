@@ -1,14 +1,13 @@
 app std-row-store-file [
   version: "1.0.0",
-  fs: { cwd: ".orb/rows/**": [read, write], cwd: ".orb/rows/": [create] },
-  description: "std-row-store-file — a row-store driver over one JSON file per entity type (<dir><entityType>.json, an array of rows). ROW_READ answers the row with the id (or none), ROW_LIST every row; ROWS_QUERY is answered only for the plain whole-table query (no policy, filter, order, window or nearest: ROWS_PAGE or ROWS_IDS with the file's row count) and is STORE_UNSUPPORTED otherwise, because the file store pushes no query down (queryCapabilities lists nothing, so the kernel reads ROW_LIST and filters itself). ROWS_WRITE applies the batch's create, upsert, update and delete ops in order against the file's rows with the kernel's reference semantics: create on a taken id is duplicate-id, update or delete of a miss is not-found, a guard that does not hold on the stored row is refused (guards run through row/matches, the kernel's one predicate evaluator, so every guard form is declared), and update and delete report the row as it was only when the op carried a guard. An atomic batch writes nothing when an op fails and reports rolled-back for the earlier ops; a stop batch keeps what was applied and reports only the ops that ran. All ops of a batch must name one entity type. The entity type names the file, so it is letters, digits, _ and - only; anything else is STORE_FAILED. Needs the fs grants on the directory."
+  fs: { cwd: ".orb/rows/**": [read, write, remove, create], cwd: ".orb/rows/": [create] },
+  description: "std-row-store-file — a row-store driver over one JSON file per entity type (<dir><entityType>.json holding { rows, changes }: the rows and the change log in the same file). ROW_READ answers the row with the id (or none), ROW_LIST every row; ROWS_QUERY is answered only for the plain whole-table query (no policy, filter, order, window or nearest: ROWS_PAGE or ROWS_IDS with the file's row count) and is STORE_UNSUPPORTED otherwise, because the file store pushes no query down (queryCapabilities lists nothing, so the kernel reads ROW_LIST and filters itself). ROWS_WRITE applies the batch's create, upsert, update and delete ops in order against the file's rows with the kernel's reference semantics: create on a taken id is duplicate-id, update or delete of a miss is not-found, a guard that does not hold on the stored row is refused (guards run through row/matches, the kernel's one predicate evaluator, so every guard form is declared), and update and delete report the row as it was only when the op carried a guard. An atomic batch writes nothing when an op fails and reports rolled-back for the earlier ops; a stop batch keeps what was applied and reports only the ops that ran. All ops of a batch must name one entity type. The entity type names the file, so it is letters, digits, _ and - only; anything else is STORE_FAILED. A batch lands through one temp file: the whole new value { rows, changes } (the log is the old changes plus one record per applied create, update or delete) is written to <file>.tmp, then ONE rename puts it onto <type>.json, so rows and log can never disagree and a failed write leaves the previous file unchanged. A bare-array <type>.json (the retired format) is not accepted or migrated: reading one (or malformed JSON) is STORE_FAILED naming the expected { rows, changes } shape; a typed json/parse is not checked at run time, so conformance is decided by json/valid plus the presence of rows and changes; a missing file is empty. Needs the fs grants on the directory (read, write, remove, create)."
 ]
 uses Spec from "almadar-std/row-store"
 
 orbital RowStoreFileOrbital {
   type RowCell = string | number | boolean | [RowCell] | Map string RowCell
   type Row = Map string RowCell
-  type RowFile = [Row]
 
   type CompareLeaf = { kind : "compare", field : string!, op : "==" | "!=" | "<" | "<=" | ">" | ">=", value : RowCell }
   type MemberLeaf = { kind : "member", field : string!, values : [RowCell]! }
@@ -54,6 +53,10 @@ orbital RowStoreFileOrbital {
   type RolledBackOutcome = { kind : "rolled-back" }
   type RowWriteOutcome = CreatedOutcome | UpdatedOutcome | DeletedOutcome | NotFoundOutcome | DuplicateIdOutcome | RefusedOutcome | FailedOutcome | RolledBackOutcome
 
+  type ChangeOp = "create" | "update" | "delete"
+  type ChangeRecord = { op : ChangeOp!, entityType : string!, id : string!, row : Row?, at : string! }
+  type ChangeScan = { i : number!, recs : [ChangeRecord]! }
+  type RowFile = { rows : [Row]!, changes : [ChangeRecord]! }
   type WriteRun = { rows : [Row]!, outcomes : [RowWriteOutcome]!, halted : boolean! }
 
   entity RowStoreFlight [runtime] {
@@ -66,6 +69,8 @@ orbital RowStoreFileOrbital {
     batch : RowWriteBatch @description "The batch a write applies"
     rows : [Row] @description "The rows of the entity's file"
     run : WriteRun @description "The result of applying the batch to the rows"
+    logged : [ChangeRecord] @description "The change records THIS batch appended: one per applied create, update or delete, none for a read, list, query or rolled-back batch" = []
+    changes : [ChangeRecord] @description "The whole change log read from the entity's file; a write saves it plus logged" = []
   }
 
   trait RowStoreDriver -> RowStoreFlight [integration, instance] {
@@ -89,8 +94,10 @@ orbital RowStoreFileOrbital {
       INIT -> ready
 
       ROW_READ -> ready when (not (validate/pattern @payload.entityType "^[A-Za-z0-9_-]+$"))
+        (set @entity.logged [])
         (emit STORE_FAILED { key: @payload.key, message: "the entity type must be letters, digits, _ and -" })
       ROW_READ -> loading when (validate/pattern @payload.entityType "^[A-Za-z0-9_-]+$")
+        (set @entity.logged [])
         (set @entity.key @payload.key)
         (set @entity.entityType @payload.entityType)
         (set @entity.rowId @payload.id)
@@ -98,18 +105,23 @@ orbital RowStoreFileOrbital {
         (os/read-file { anchor: "cwd" path: (str/concat @config.dir @payload.entityType ".json") } { emit: { success: FILE_READ, failure: FILE_READ_FAILED } })
 
       ROW_LIST -> ready when (not (validate/pattern @payload.entityType "^[A-Za-z0-9_-]+$"))
+        (set @entity.logged [])
         (emit STORE_FAILED { key: @payload.key, message: "the entity type must be letters, digits, _ and -" })
       ROW_LIST -> loading when (validate/pattern @payload.entityType "^[A-Za-z0-9_-]+$")
+        (set @entity.logged [])
         (set @entity.key @payload.key)
         (set @entity.entityType @payload.entityType)
         (set @entity.op "list")
         (os/read-file { anchor: "cwd" path: (str/concat @config.dir @payload.entityType ".json") } { emit: { success: FILE_READ, failure: FILE_READ_FAILED } })
 
       ROWS_QUERY -> ready when (not (= (array/len (array/filter (object/keys @payload.query) (fn k (!= @k "total")))) 0))
+        (set @entity.logged [])
         (emit STORE_UNSUPPORTED { key: @payload.key, reason: (str/concat "the file store pushes no query down; declared " (json/stringify @config.queryCapabilities)) })
       ROWS_QUERY -> ready when (and (= (array/len (array/filter (object/keys @payload.query) (fn k (!= @k "total")))) 0) (not (validate/pattern @payload.entityType "^[A-Za-z0-9_-]+$")))
+        (set @entity.logged [])
         (emit STORE_FAILED { key: @payload.key, message: "the entity type must be letters, digits, _ and -" })
       ROWS_QUERY -> loading when (and (= (array/len (array/filter (object/keys @payload.query) (fn k (!= @k "total")))) 0) (validate/pattern @payload.entityType "^[A-Za-z0-9_-]+$"))
+        (set @entity.logged [])
         (set @entity.key @payload.key)
         (set @entity.entityType @payload.entityType)
         (set @entity.project @payload.project)
@@ -117,55 +129,88 @@ orbital RowStoreFileOrbital {
         (os/read-file { anchor: "cwd" path: (str/concat @config.dir @payload.entityType ".json") } { emit: { success: FILE_READ, failure: FILE_READ_FAILED } })
 
       ROWS_WRITE -> ready when (and (= @payload.batch.onFailure "atomic") (not @config.writeCapabilities.atomicBatch))
+        (set @entity.logged [])
         (emit STORE_UNSUPPORTED { key: @payload.key, reason: "this store declares no atomic batches" })
       ROWS_WRITE -> ready when (and (= @payload.batch.onFailure "stop") (not @config.writeCapabilities.stopRuns))
+        (set @entity.logged [])
         (emit STORE_UNSUPPORTED { key: @payload.key, reason: "this store declares no stop runs" })
       ROWS_WRITE -> ready when (= (array/len @payload.batch.ops) 0)
+        (set @entity.logged [])
         (emit ROWS_WRITTEN { key: @payload.key, outcomes: [] })
       ROWS_WRITE -> ready when (and (> (array/len @payload.batch.ops) 0) (> (array/len (array/filter @payload.batch.ops (fn o (!= (object/get @o "entityType" "") (object/get (array/nth @payload.batch.ops 0) "entityType" ""))))) 0))
+        (set @entity.logged [])
         (emit STORE_UNSUPPORTED { key: @payload.key, reason: "a batch must name one entity type" })
       ROWS_WRITE -> ready when (and (> (array/len @payload.batch.ops) 0) (= (array/len (array/filter @payload.batch.ops (fn o (!= (object/get @o "entityType" "") (object/get (array/nth @payload.batch.ops 0) "entityType" ""))))) 0) (not (validate/pattern (object/get (array/nth @payload.batch.ops 0) "entityType" "") "^[A-Za-z0-9_-]+$")))
+        (set @entity.logged [])
         (emit STORE_FAILED { key: @payload.key, message: "the entity type must be letters, digits, _ and -" })
       ROWS_WRITE -> loading when (and (> (array/len @payload.batch.ops) 0) (= (array/len (array/filter @payload.batch.ops (fn o (!= (object/get @o "entityType" "") (object/get (array/nth @payload.batch.ops 0) "entityType" ""))))) 0) (validate/pattern (object/get (array/nth @payload.batch.ops 0) "entityType" "") "^[A-Za-z0-9_-]+$"))
+        (set @entity.logged [])
         (set @entity.key @payload.key)
         (set @entity.entityType (object/get (array/nth @payload.batch.ops 0) "entityType" ""))
         (set @entity.batch @payload.batch)
         (set @entity.op "write")
         (os/read-file { anchor: "cwd" path: (str/concat @config.dir (object/get (array/nth @payload.batch.ops 0) "entityType" "") ".json") } { emit: { success: FILE_READ, failure: FILE_READ_FAILED } })
     }
-
     state loading {
       INIT -> ready
 
-      FILE_READ -> loading
-        (set @entity.rows (json/parse (base64/decode @payload.data) RowFile))
+      FILE_READ -> ready when (not (and (json/valid (bytes/to-string @payload.data)) (!= (object/get (json/parse (bytes/to-string @payload.data) RowFile) "rows" null) null) (!= (object/get (json/parse (bytes/to-string @payload.data) RowFile) "changes" null) null)))
+        (set @entity.logged [])
+        (emit STORE_FAILED { key: @entity.key, message: "the rows file must be JSON of the shape { rows, changes }; a bare array (the retired format) or malformed JSON is not accepted, recreate the file" })
+      FILE_READ -> loading when (and (json/valid (bytes/to-string @payload.data)) (!= (object/get (json/parse (bytes/to-string @payload.data) RowFile) "rows" null) null) (!= (object/get (json/parse (bytes/to-string @payload.data) RowFile) "changes" null) null))
+        (set @entity.logged [])
+        (set @entity.rows (object/get (json/parse (base64/decode @payload.data) RowFile) "rows" []))
+        (set @entity.changes (object/get (json/parse (base64/decode @payload.data) RowFile) "changes" []))
         (emit ROWS_LOADED { })
       FILE_READ_FAILED -> loading when (= @payload.kind "not-found")
+        (set @entity.logged [])
         (set @entity.rows [])
+        (set @entity.changes [])
         (emit ROWS_LOADED { })
       FILE_READ_FAILED -> ready when (!= @payload.kind "not-found")
         (emit STORE_FAILED { key: @entity.key, message: @payload.error })
 
       ROWS_LOADED -> ready when (= @entity.op "read")
+        (set @entity.logged [])
         (emit ROW_FOUND { key: @entity.key, row: (array/find @entity.rows (fn r (= (object/get @r "id" "") @entity.rowId))) })
       ROWS_LOADED -> ready when (= @entity.op "list")
+        (set @entity.logged [])
         (emit ROWS_LISTED { key: @entity.key, rows: @entity.rows })
       ROWS_LOADED -> ready when (and (= @entity.op "query") (= @entity.project "ids"))
+        (set @entity.logged [])
         (emit ROWS_IDS { key: @entity.key, ids: (array/map @entity.rows (fn r (str/concat @r.id))), total: (array/len @entity.rows) })
       ROWS_LOADED -> ready when (and (= @entity.op "query") (!= @entity.project "ids"))
+        (set @entity.logged [])
         (emit ROWS_PAGE { key: @entity.key, rows: @entity.rows, total: (array/len @entity.rows) })
       ROWS_LOADED -> writing when (= @entity.op "write")
         (set @entity.run (array/reduce @entity.batch.ops { rows: @entity.rows, outcomes: [], halted: false } (fn acc op (if @acc.halted @acc (let ((id (if (!= (object/get @op "id" "") "") (object/get @op "id" "") (object/get (object/get @op "data" {}) "id" "")))) (let ((ex (array/find @acc.rows (fn r (= (object/get @r "id" "") @id))))) (let ((guard (object/get @op "guard" null))) (let ((out (if (and (= (object/get @op "id" "") "") (= @id "") (or (= @op.kind "create") (= @op.kind "upsert"))) { kind: "failed", message: (str/concat "a " @op.kind " needs a string id") } (if (= @op.kind "create") (if (!= @ex null) { kind: "duplicate-id" } { kind: "created", row: (object/set @op.data "id" @id) }) (if (= @op.kind "upsert") (if (!= @ex null) { kind: "updated", row: (if (!= (object/get @ex "createdAt" null) null) (object/set (object/set @op.data "id" @id) "createdAt" (object/get @ex "createdAt" null)) (object/set @op.data "id" @id)) } { kind: "created", row: (object/set @op.data "id" @id) }) (if (= @ex null) { kind: "not-found" } (if (and (!= @guard null) (!= (row/matches @guard @ex) true)) { kind: "refused" } (if (= @op.kind "update") (if (!= @guard null) { kind: "updated", row: (object/set (object/merge @ex @op.data) "id" @id), before: @ex } { kind: "updated", row: (object/set (object/merge @ex @op.data) "id" @id) }) (if (!= @guard null) { kind: "deleted", before: @ex } { kind: "deleted" }))))))))) (let ((ok (or (= @out.kind "created") (= @out.kind "updated") (= @out.kind "deleted")))) { rows: (if (not @ok) @acc.rows (if (= @out.kind "deleted") (array/filter @acc.rows (fn r (!= (object/get @r "id" "") @id))) (if (= @ex null) (array/append @acc.rows @out.row) (array/map @acc.rows (fn r (if (= (object/get @r "id" "") @id) @out.row @r)))))) outcomes: (array/append @acc.outcomes @out), halted: (not @ok) })))))))))
         (set @entity.run (if (and @entity.run.halted (= @entity.batch.onFailure "atomic")) { rows: @entity.rows, outcomes: (array/append (array/map (array/take @entity.run.outcomes (- (array/len @entity.run.outcomes) 1)) (fn o { kind: "rolled-back" })) (array/last @entity.run.outcomes)), halted: true } @entity.run))
+        (set @entity.logged (if (and @entity.run.halted (= @entity.batch.onFailure "atomic")) [] (let ((scan (array/reduce @entity.run.outcomes { i: 0, recs: [] } (fn acc o (let ((src (array/nth @entity.batch.ops @acc.i))) { i: (+ @acc.i 1), recs: (if (= @o.kind "created") (array/append @acc.recs { op: "create", entityType: @entity.entityType, id: (str/concat (object/get @o.row "id" "")), row: @o.row, at: (time/now) }) (if (= @o.kind "updated") (array/append @acc.recs { op: "update", entityType: @entity.entityType, id: (str/concat (object/get @o.row "id" "")), row: @o.row, at: (time/now) }) (if (= @o.kind "deleted") (array/append @acc.recs { op: "delete", entityType: @entity.entityType, id: (str/concat (object/get @src "id" "")), at: (time/now) }) @acc.recs))) }))))) @scan.recs)))
         (os/mkdir { anchor: "cwd" path: @config.dir } true { emit: { success: DIR_READY, failure: WRITE_FAILED } })
     }
 
     state writing {
       INIT -> ready
 
-      DIR_READY -> writing
-        (os/write-file { anchor: "cwd" path: (str/concat @config.dir @entity.entityType ".json") } (base64/encode (json/stringify @entity.run.rows)) { emit: { success: ROWS_SAVED, failure: WRITE_FAILED } })
-      ROWS_SAVED -> ready
+      DIR_READY -> saving
+        (os/write-file { anchor: "cwd" path: (str/concat @config.dir @entity.entityType ".json.tmp") } (base64/encode (json/stringify { rows: @entity.run.rows, changes: (array/concat @entity.changes @entity.logged) })) { emit: { success: ROWS_SAVED, failure: WRITE_FAILED } })
+      WRITE_FAILED -> ready
+        (emit STORE_FAILED { key: @entity.key, message: @payload.error })
+    }
+
+    state saving {
+      INIT -> ready
+
+      ROWS_SAVED -> moving
+        (os/rename { anchor: "cwd" path: (str/concat @config.dir @entity.entityType ".json.tmp") } { anchor: "cwd" path: (str/concat @config.dir @entity.entityType ".json") } { emit: { success: ROWS_MOVED, failure: WRITE_FAILED } })
+      WRITE_FAILED -> ready
+        (emit STORE_FAILED { key: @entity.key, message: @payload.error })
+    }
+
+    state moving {
+      INIT -> ready
+
+      ROWS_MOVED -> ready
         (emit ROWS_WRITTEN { key: @entity.key, outcomes: @entity.run.outcomes })
       WRITE_FAILED -> ready
         (emit STORE_FAILED { key: @entity.key, message: @payload.error })
@@ -216,6 +261,8 @@ orbital RowStoreFileOrbital {
       ROWS_SAVED -> internal {
         bytes : number
       }
+        @tier "internal"
+      ROWS_MOVED -> internal { }
         @tier "internal"
       FILE_READ -> internal {
         data : bytes!

@@ -1,0 +1,99 @@
+app row-store-kv-spec [
+  version: "1.0.0",
+  description: "Design contract for the key-value row-store driver: the same public contract as std-row-store-file (same RowStoreDriver trait, states, listens, emits, record types and RowStoreFlight entity) so a store: binding swaps between the two drivers, with config.store naming the kv store (grant kv: { <store>: [read, write] }) where the file driver has config.dir. Rows live at <entityType>/<id>, change records at <entityType>.log/<seq>; ROW_LIST and plain ROWS_QUERY are one kv/scan of the entity prefix, ROW_READ one kv/get, and a write is one kv/batch of row puts, row deletes and log puts, so an atomic batch that fails applies nothing. Unstated here until the prover decides array/len (G-ORB-427): one change record per applied create, update or delete and none per read, list, query or rolled-back batch; ROW_LIST isolation between prefix-colliding entity types (order vs order-line); the atomic-batch no-change replay; stop-batch keeps applied ops; parity of outcomes and decoded change records against std-row-store-file; the host-level cases (locale namespace isolation, denied store, non-JSON value, cancel)."
+]
+
+orbital RowStoreKvSpec {
+  type RowCell = string | number | boolean | [RowCell] | Map string RowCell
+  type Row = Map string RowCell
+
+  type CompareLeaf = { kind : "compare", field : string!, op : "==" | "!=" | "<" | "<=" | ">" | ">=", value : RowCell }
+  type MemberLeaf = { kind : "member", field : string!, values : [RowCell]! }
+  type HasElementLeaf = { kind : "hasElement", field : string!, value : RowCell }
+  type ContainsLeaf = { kind : "contains", field : string!, text : string!, caseSensitive : boolean! }
+  type IsNullLeaf = { kind : "isNull", field : string!, isNull : boolean! }
+  type AllNode = { kind : "all", of : [RowPredicate]! }
+  type AnyNode = { kind : "any", of : [RowPredicate]! }
+  type NotNode = { kind : "not", of : RowPredicate! }
+  type ConstLeaf = { kind : "const", value : boolean! }
+  type RowPredicate = CompareLeaf | MemberLeaf | HasElementLeaf | ContainsLeaf | IsNullLeaf | AllNode | AnyNode | NotNode | ConstLeaf
+
+  type RowOrder = { field : string!, direction : "asc" | "desc" }
+  type RowNearest = { field : string!, vector : [number]!, k : number! }
+  type RowQuery = { policy : RowPredicate?, filter : RowPredicate?, order : RowOrder?, offset : number?, limit : number?, total : "exact" | "none"?, nearest : RowNearest? }
+
+  type RowLeafKind = "compare" | "member" | "hasElement" | "contains" | "isNull"
+  type RowCombinator = "all" | "any" | "not"
+  type RowOperator = "==" | "!=" | "<" | "<=" | ">" | ">=" | "member" | "hasElement" | "contains"
+  type RowValueKind = "string" | "number" | "boolean" | "date" | "null"
+  type OperatorValueKinds = { operator : RowOperator!, valueKinds : [RowValueKind]! }
+  type EveryFieldOrderable = { kind : "every-field" }
+  type ListedOrderable = { kind : "listed", fields : [string]! }
+  type RowOrderableFields = EveryFieldOrderable | ListedOrderable
+  type QueryCapabilities = { leaves : [RowLeafKind]!, combinators : [RowCombinator]!, compareOps : [string]!, operatorValueKinds : [OperatorValueKinds]?, orderableFields : RowOrderableFields!, window : boolean!, exactTotal : boolean!, idsOnly : boolean?, nearest : boolean? }
+  type GuardCapabilities = { leaves : [RowLeafKind]!, combinators : [RowCombinator]!, compareOps : [string]! }
+  type WriteCapabilities = { guards : GuardCapabilities!, conditional : boolean!, returnsRow : boolean!, stopRuns : boolean!, atomicBatch : boolean! }
+
+  type CreateOp = { kind : "create", entityType : string!, data : Row! }
+  type UpsertOp = { kind : "upsert", entityType : string!, data : Row! }
+  type UpdateOp = { kind : "update", entityType : string!, id : string!, data : Row!, guard : RowPredicate? }
+  type DeleteOp = { kind : "delete", entityType : string!, id : string!, guard : RowPredicate? }
+  type RowWriteOp = CreateOp | UpsertOp | UpdateOp | DeleteOp
+  type RowWriteBatch = { ops : [RowWriteOp]!, onFailure : "atomic" | "stop" }
+
+  type CreatedOutcome = { kind : "created", row : Row! }
+  type UpdatedOutcome = { kind : "updated", row : Row!, before : Row? }
+  type DeletedOutcome = { kind : "deleted", before : Row? }
+  type NotFoundOutcome = { kind : "not-found" }
+  type DuplicateIdOutcome = { kind : "duplicate-id" }
+  type RefusedOutcome = { kind : "refused" }
+  type FailedOutcome = { kind : "failed", message : string! }
+  type RolledBackOutcome = { kind : "rolled-back" }
+  type RowWriteOutcome = CreatedOutcome | UpdatedOutcome | DeletedOutcome | NotFoundOutcome | DuplicateIdOutcome | RefusedOutcome | FailedOutcome | RolledBackOutcome
+
+  type RowReadVerb = { key : string!, entityType : string!, id : string! }
+  type RowListVerb = { key : string!, entityType : string! }
+  type RowsQueryVerb = { key : string!, entityType : string!, query : RowQuery!, project : "rows" | "ids" }
+  type RowsWriteVerb = { key : string!, batch : RowWriteBatch! }
+
+  type ChangeOp = "create" | "update" | "delete"
+  type ChangeRecord = { op : ChangeOp!, entityType : string!, id : string!, row : Row?, at : string! }
+  type WriteRun = { rows : [Row]!, outcomes : [RowWriteOutcome]!, halted : boolean! }
+
+  expects entity RowStoreFlight [runtime] {
+    id : string!
+    key : string
+    entityType : string
+    op : string
+    project : string
+    rowId : string
+    batch : RowWriteBatch
+    rows : [Row]
+    run : WriteRun
+    logged : [ChangeRecord]
+    changes : [ChangeRecord]
+  }
+
+  expects trait RowStoreDriver {
+    state ready {
+      ROW_READ -> ready
+      ROW_LIST -> ready
+      ROWS_QUERY -> ready
+      ROWS_WRITE -> ready
+    }
+    state loading
+    state writing
+    state saving
+    emits {
+      ROW_FOUND { key : string!  row : Row? }
+      ROWS_LISTED { key : string!  rows : [Row]! }
+      ROWS_PAGE { key : string!  rows : [Row]!  total : number! }
+      ROWS_IDS { key : string!  ids : [string]!  total : number! }
+      ROWS_WRITTEN { key : string!  outcomes : [RowWriteOutcome]! }
+      STORE_UNSUPPORTED { key : string!  reason : string! }
+      STORE_FAILED { key : string!  message : string! }
+    }
+  }
+  expects config { store : string = "rows"  queryCapabilities : QueryCapabilities  writeCapabilities : WriteCapabilities }
+  expects page "/row-store-kv" -> RowStoreDriver
+}

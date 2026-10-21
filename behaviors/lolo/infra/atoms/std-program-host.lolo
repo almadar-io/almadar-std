@@ -1,0 +1,109 @@
+app std-program-host [
+  version: "1.0.0",
+  inbound: ["cli-program-host"],
+  fs: { cwd: "**/*.lolo": [read] },
+  description: "std-program-host — the runtime as a .lolo program (`orb host <shell> <program>`). The cli-program-host command takes argv: the guest program path, then optional `--grant=<kind>` flags (fs, net, exec, egress, credentials) that narrow the guestGrants knob to those kinds; with no flag the guest gets the whole knob, and the knob defaults to no grants at all, so the guest never inherits the host's own. It reads and parses the program (os/read-file, program/read) and emits HOST_LOADED { path }, or HOST_REFUSED { reason } when argv names no program, the file cannot be read or parsed, or a flag names a kind the knob does not hold; the command is answered with a status and body (200 loaded, 400 usage or refused grants, 500 unreadable). Once loaded, each HOST_EVENT { key, orbital, trait, event, payload } is forwarded to the guest by a keyed program/dispatch to Orbital.Trait.EVENT carrying the explicit grants subset, and each guest answer is relayed as HOST_ANSWERED { key, result }. Pending the kernel slice: the kernel does not yet honor the grants option on program/dispatch, nor bind the parsed program as the dispatch target; the contract is passed in full so the atom needs no change when it lands."
+]
+uses Spec from "almadar-std/program-host"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type HostGrants = Map string [string]
+
+orbital ProgramHostOrbital {
+  entity GuestProgram [runtime] {
+    id : string!
+    path : string! = ""
+    loaded : boolean! = false
+    grants : HostGrants = {}
+  }
+
+  trait ProgramHost -> GuestProgram [integration] {
+    initial: waiting
+
+    state waiting {
+      INIT -> waiting
+      HOST_CALLED -> waiting when (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 0)
+        (emit HOST_REFUSED { reason: "usage: orb host <shell> <program.lolo> [--grant=<kind>]" })
+        (emit HOST_COMMAND_ANSWERED { status: 400, body: "usage: orb host <shell> <program.lolo> [--grant=<kind>]" })
+      HOST_CALLED -> waiting when (and (> (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 0) (> (array/len (array/filter (array/map (array/filter (array/drop (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") 1) (fn a (str/startsWith @a "--grant="))) (fn a (str/slice @a 8))) (fn k (not (object/has @config.guestGrants @k))))) 0))
+        (emit HOST_REFUSED { reason: "a grant flag names a kind the guestGrants knob does not hold" })
+        (emit HOST_COMMAND_ANSWERED { status: 400, body: "host: a grant flag names a kind the guestGrants knob does not hold" })
+      HOST_CALLED -> reading when (and (> (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 0) (= (array/len (array/filter (array/map (array/filter (array/drop (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") 1) (fn a (str/startsWith @a "--grant="))) (fn a (str/slice @a 8))) (fn k (not (object/has @config.guestGrants @k))))) 0))
+        (set @entity.path (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))
+        (set @entity.grants (if (= (array/len (array/filter (array/drop (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") 1) (fn a (str/startsWith @a "--grant=")))) 0)
+          @config.guestGrants
+          (object/pick @config.guestGrants (array/map (array/filter (array/drop (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") 1) (fn a (str/startsWith @a "--grant="))) (fn a (str/slice @a 8))))))
+        (os/read-file { anchor: "cwd" path: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) } { key: "file" emit: { success: HOST_FILE_READ, failure: HOST_LOAD_FAILED } })
+    }
+
+    state reading {
+      INIT -> reading
+      HOST_FILE_READ -> reading
+        (program/read (bytes/to-string @payload.data) { key: "program" emit: { success: HOST_PROGRAM_READ, failure: HOST_LOAD_FAILED } })
+      HOST_PROGRAM_READ -> hosting
+        (set @entity.loaded true)
+        (emit HOST_LOADED { path: @entity.path })
+        (emit HOST_COMMAND_ANSWERED { status: 200, body: (str/concat "hosting " @entity.path) })
+      HOST_LOAD_FAILED -> waiting
+        (emit HOST_REFUSED { reason: @payload.error })
+        (emit HOST_COMMAND_ANSWERED { status: 500, body: (str/concat "host: " @payload.error) })
+    }
+
+    state hosting {
+      INIT -> hosting
+      HOST_EVENT -> hosting
+        (program/dispatch (str/concat @payload.orbital "." @payload.trait "." @payload.event) (json/stringify @payload.payload) { key: @payload.key grants: @entity.grants emit: { success: HOST_GUEST_ANSWERED, failure: HOST_GUEST_FAILED } })
+      HOST_GUEST_ANSWERED -> hosting
+        (emit HOST_ANSWERED { key: @payload.key, result: (json/stringify @payload.result) })
+      HOST_GUEST_FAILED -> hosting
+        (emit HOST_ANSWERED { key: "", result: (json/stringify { ok: false, error: @payload.error }) })
+    }
+
+    emits {
+      HOST_COMMAND_ANSWERED -> internal { status : number!  body : string! }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      HOST_LOADED -> external { path : string! }
+        @description "The guest program was read and parsed."
+      HOST_REFUSED -> external { reason : string! }
+        @description "The command or the guest program was refused."
+      HOST_ANSWERED -> external { key : string!  result : string! }
+        @description "A guest's answer to a forwarded event."
+      HOST_FILE_READ { data : bytes! }
+        @description "The guest program file read."
+        @tier "internal"
+      HOST_PROGRAM_READ { result : SExpr! }
+        @description "The guest program parsed."
+        @tier "internal"
+      HOST_LOAD_FAILED { error : string }
+        @description "A read or parse that failed."
+        @tier "internal"
+      HOST_GUEST_ANSWERED { key : string, result : string }
+        @description "The keyed dispatch completed."
+        @tier "internal"
+      HOST_GUEST_FAILED { error : string }
+        @description "The keyed dispatch failed."
+        @tier "internal"
+    }
+
+    listens {
+      HOST_CALLED -> inbound "cli-program-host" answers HOST_COMMAND_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb host` with its arguments and working directory."
+        @synonyms "orb host, runtime host, host a program"
+      HOST_EVENT { key : string!, orbital : string!, trait : string!, event : string!, payload : string }
+        @description "An external event for the guest program."
+    }
+
+    config {
+      guestGrants : HostGrants = {}
+        @label "Guest grants"
+        @description "The grants the guest receives, by kind (fs, net, exec, egress, credentials) to the patterns allowed; the guest gets nothing else. The default is no grants."
+        @synonyms "guest permissions, sandbox grants"
+        @tier "domain"
+    }
+  }
+
+  page "/host" -> ProgramHost
+}

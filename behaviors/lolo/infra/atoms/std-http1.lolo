@@ -1,10 +1,9 @@
 app std-http1 [
   version: "1.0.0",
   net: { "127.0.0.1:3000": [listen] },
-  description: "std-http1 — HTTP/1.1 over a raw TCP listener, in .lolo over os/tcp-listen, os/recv, os/send, os/close, std-bytes and str/*. LISTEN binds the host and port knobs as one keyed stream; each accepted connection is read until its head ends in CRLF CRLF (the end found by std-bytes INDEX_OF), then until content-length body bytes have arrived (a transfer-encoding: chunked body is decoded per RFC 7230 section 4.1: hex size lines, chunk extensions ignored, CRLF framing, the 0 last chunk, trailer fields read and discarded), and is delivered once as REQUEST_RECEIVED { requestId (the connection's socket id), method, path, query, headers (names lower-cased, repeats joined with a comma and a space), body (bytes, delivered intact), peer }. The atom never routes. It answers a connection it cannot deliver: 400 for a head with any byte of 0x80 or above (checked on the bytes, never decoded) and for a head that is not an HTTP/1.0 or 1.1 request line followed by name: value lines and for a content-length that is not a number or repeats with another value, 400 for a request with both content-length and transfer-encoding and for malformed chunk framing, 501 for a transfer-encoding other than chunked, 431 for a head with no end after maxHead bytes or more than maxHeaders headers, 413 for a content-length or a decoded chunked body over maxBody. RESPOND { requestId, status, headers, body (bytes) } answers a delivered request once: the status line with the standard reason phrase, the given headers, content-length (not for 204 and 304) and connection: close, then the body; the connection closes and RESPONDED { requestId, bytes } follows. RESPOND_REFUSED { requestId, kind, error } refuses it and leaves the request pending: invalid for a status outside 200-599, a header name that is not a token, a value with a control character, a content-length, transfer-encoding or connection header (the atom writes the framing), or a body on 204 and 304; closed when no pending request has the id. Same rules as the os_host/http.rs reader and writer it replaces.."
+  description: "std-http1 — HTTP/1.1 over a raw TCP listener, in .lolo over os/tcp-listen, os/recv, os/send, os/close, bytes/* and str/*. LISTEN binds the host and port knobs as one keyed stream; each accepted connection is read until its head ends in CRLF CRLF (the end found by bytes/index-of), then until content-length body bytes have arrived (a transfer-encoding: chunked body is decoded per RFC 7230 section 4.1: hex size lines, chunk extensions ignored, CRLF framing, the 0 last chunk, trailer fields read and discarded), and is delivered once as REQUEST_RECEIVED { requestId (the connection's socket id), method, path, query, headers (names lower-cased, repeats joined with a comma and a space), body (bytes, delivered intact), peer }. The atom never routes. It answers a connection it cannot deliver: 400 for a head with any byte of 0x80 or above (checked on the bytes, never decoded) and for a head that is not an HTTP/1.0 or 1.1 request line followed by name: value lines and for a content-length that is not a number or repeats with another value, 400 for a request with both content-length and transfer-encoding and for malformed chunk framing, 501 for a transfer-encoding other than chunked, 431 for a head with no end after maxHead bytes or more than maxHeaders headers, 413 for a content-length or a decoded chunked body over maxBody. RESPOND { requestId, status, headers, body (bytes) } answers a delivered request once: the status line with the standard reason phrase, the given headers, content-length (not for 204 and 304) and a connection header, then the body; RESPONDED { requestId, bytes } follows. Connections are kept alive by HTTP/1.1 rules: the connection stays open for the next request unless the request said connection: close, was HTTP/1.0 without keep-alive, or maxRequestsPerConn requests have been served on it, in which case it is closed after the response. A response can also be streamed: RESPOND_HEAD { requestId, status, headers } sends the head (chunked transfer-encoding on HTTP/1.1) and HEAD_SENT follows, each RESPOND_CHUNK { requestId, body } sends a piece and CHUNK_SENT follows, and RESPOND_END { requestId } finishes it. Every send carries its own key, so concurrent sends on one connection never collide. A client that disconnects mid-stream, or stays silent past a read timeout, surfaces as STREAM_IDLE and STREAM_CLOSED { requestId, reason }. RESPOND_REFUSED { requestId, kind, error } refuses a response and leaves the request pending: invalid for a status outside 200-599, a header name that is not a token, a value with a control character, a content-length, transfer-encoding or connection header (the atom writes the framing), or a body on 204 and 304; closed when no pending request has the id. Parity with the native listener is gated by http1_listen_parity."
 ]
 uses Spec from "almadar-std/http1"
-uses Bytes from "std/behaviors/std-bytes"
 type Http1Header = { name : string!, value : string! }
 type Http1Reason = { status : number!, text : string! }
 type Http1Conn = { sock : number!, key : string!, peer : string!, buf : string!, headLen : number!, need : number!, refuse : number!, method : string!, path : string!, query : string!, headers : [Http1Header]!, te : boolean!, dec : string!, dstate : string!, phase : string!, keepAlive : boolean!, http10 : boolean!, chunked : boolean!, served : number!, idle : number!, sends : number! }
@@ -15,7 +14,6 @@ orbital Http1Orbital {
     host : string @description "The address the stream is bound to." = ""
     port : number @description "The port the stream is bound to." = 0
     conns : [Http1Conn] @description "Connections accepted and not yet answered, each with the bytes read so far and what the head said." = []
-    asking : number @description "The socket whose head end std-bytes is searching for; the answer carries no id." = -1
     @invariant (>= @entity.port 0)
   }
 
@@ -161,20 +159,19 @@ orbital Http1Orbital {
         (set @entity.conns (array/filter @entity.conns (fn c (not (= @c.key @payload.key)))))
 
       CONN_ADVANCE -> serving when (let ((conn (array/find @entity.conns (fn c (= @c.sock @payload.sock))))) (and (!= @conn null) (= (object/get @conn "headLen") 0) (>= (bytes/length (object/get @conn "buf")) 4)))
-        (set @entity.asking @payload.sock)
-        (emit HEAD_SEARCH { data: (object/get (array/find @entity.conns (fn c (= @c.sock @payload.sock))) "buf"), needle: @config.headEnd, from: 0 })
+        (emit HEAD_SEARCHED { sock: @payload.sock, value: (bytes/index-of (object/get (array/find @entity.conns (fn c (= @c.sock @payload.sock))) "buf") @config.headEnd 0) })
       CONN_ADVANCE -> serving when (let ((conn (array/find @entity.conns (fn c (= @c.sock @payload.sock))))) (and (!= @conn null) (= (object/get @conn "headLen") 0) (< (bytes/length (object/get @conn "buf")) 4)))
         (emit WANT_MORE { sock: @payload.sock })
       CONN_ADVANCE -> serving when (let ((conn (array/find @entity.conns (fn c (= @c.sock @payload.sock))))) (and (!= @conn null) (> (object/get @conn "headLen") 0)))
         (emit BODY_CHECK { sock: @payload.sock })
 
-      HEAD_SEARCHED -> serving when (and (= @payload.value -1) (> (bytes/length (object/get (array/find @entity.conns (fn c (= @c.sock @entity.asking))) "buf")) @config.maxHead))
-        (set @entity.conns (array/map @entity.conns (fn c (if (= @c.sock @entity.asking) (object/merge @c { phase: "pending" }) @c))))
-        (emit RESPOND { requestId: @entity.asking, status: 431, headers: [], body: (bytes/from-string "") })
-      HEAD_SEARCHED -> serving when (and (= @payload.value -1) (<= (bytes/length (object/get (array/find @entity.conns (fn c (= @c.sock @entity.asking))) "buf")) @config.maxHead))
-        (emit WANT_MORE { sock: @entity.asking })
+      HEAD_SEARCHED -> serving when (and (= @payload.value -1) (> (bytes/length (object/get (array/find @entity.conns (fn c (= @c.sock @payload.sock))) "buf")) @config.maxHead))
+        (set @entity.conns (array/map @entity.conns (fn c (if (= @c.sock @payload.sock) (object/merge @c { phase: "pending" }) @c))))
+        (emit RESPOND { requestId: @payload.sock, status: 431, headers: [], body: (bytes/from-string "") })
+      HEAD_SEARCHED -> serving when (and (= @payload.value -1) (<= (bytes/length (object/get (array/find @entity.conns (fn c (= @c.sock @payload.sock))) "buf")) @config.maxHead))
+        (emit WANT_MORE { sock: @payload.sock })
       HEAD_SEARCHED -> serving when (>= @payload.value 0)
-        (set @entity.conns (array/map @entity.conns (fn c (if (= @c.sock @entity.asking)
+        (set @entity.conns (array/map @entity.conns (fn c (if (= @c.sock @payload.sock)
           (let ((ascii (validate/pattern (bytes/slice @c.buf 0 @payload.value) @config.asciiPattern))
                 (lines (if @ascii (str/split (bytes/to-string (bytes/slice @c.buf 0 @payload.value)) "\r\n") [""]))
                 (parts (str/split (array/first @lines) " "))
@@ -204,7 +201,7 @@ orbital Http1Orbital {
               need: (if (and (> (array/len @lengths) 0) (validate/pattern (array/first @lengths) @config.lengthPattern)) (str/to-number (str/replace (array/first @lengths) "+" "")) 0)
             }))
           @c))))
-        (emit HEAD_PARSED { sock: @entity.asking })
+        (emit HEAD_PARSED { sock: @payload.sock })
 
       HEAD_PARSED -> serving when (> (object/get (array/find @entity.conns (fn c (= @c.sock @payload.sock))) "refuse") 0)
         (set @entity.conns (array/map @entity.conns (fn c (if (= @c.sock @payload.sock) (object/merge @c { phase: "pending", keepAlive: false }) @c))))
@@ -391,17 +388,16 @@ orbital Http1Orbital {
       }
         @description "Internal: answer a connection the atom itself refuses."
         @tier "internal"
-      HEAD_SEARCH -> external {
-        data : string!
-        needle : string!
-        from : number
-      }
-        @description "Internal: ask std-bytes where the head ends."
-        @tier "secondary"
       CONN_ADVANCE -> internal {
         sock : number!
       }
         @description "Internal: a chunk was added to this connection; decide what to read next."
+        @tier "internal"
+      HEAD_SEARCHED -> internal {
+        sock : number!
+        value : number!
+      }
+        @description "Internal: where the head ends in this connection's bytes, -1 when it has not arrived."
         @tier "internal"
       HEAD_PARSED -> internal {
         sock : number!
@@ -518,10 +514,6 @@ orbital Http1Orbital {
     }
 
     listens {
-      Http1HeadSearch.INDEX_OF_ANSWERED -> HEAD_SEARCHED
-      HEAD_SEARCHED {
-        value : number!
-      }
       LISTEN {
       }
       RESPOND {
@@ -584,11 +576,5 @@ orbital Http1Orbital {
     }
   }
 
-  trait Http1HeadSearch = Bytes.traits.BytesCodec {
-    listens {
-      Http1.HEAD_SEARCH -> INDEX_OF
-    }
-  }
-
-  page "/http1" as Http1Page -> Http1, Http1HeadSearch
+  page "/http1" as Http1Page -> Http1
 }

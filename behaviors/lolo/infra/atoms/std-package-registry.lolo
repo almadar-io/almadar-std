@@ -1,0 +1,287 @@
+app std-package-registry [
+  version: "1.0.0",
+  description: "std-package-registry — the package registry server as one atom, following spec/infra/package-registry.lolo (not bound with uses: its PackageRegistry @ensures obligations are stated on PackageVersion as the trait's own entity, which this atom keeps separate from its request state). It listens to REQUEST_RECEIVED from std-http1 for paths under apiPrefix/packages/ and answers RESPOND { requestId, status, headers, body }, one request at a time with later ones queued: PUT /packages/:name/:version publishes (bearer token compared to publishToken, else 401 UNAUTHORIZED; empty body 400 EMPTY_TARBALL; a stored name+version 409 VERSION_EXISTS), GET /packages/:name/:version answers the version row (404 NOT_FOUND), GET /packages/:name/:version/tarball streams the stored bytes as application/gzip (410 YANKED when yanked), GET /packages/:name lists versions newest publish first, POST /packages/:name/:version/yank (bearer token) marks the version yanked and is idempotent; every error answers { error, code }, and an unmatched path under the prefix answers 404 NOT_FOUND. PackageVersion rows live in the row store seam (persistent: package_versions); a deployment binds the store. PUBLISH IS NOT LIVE YET: the integrity of a package is sha256 over the tarball BYTES, which needs the approved bit/* operators and a std-sha256 atom that do not exist yet; hashing the base64 text would be wrong, so a publish that passes auth, the empty check and the duplicate check emits PACKAGE_REFUSED { code: INTEGRITY_UNAVAILABLE } (status 501) and stores nothing, until std-sha256 lands. Answers carry no CORS headers (the router owns the policy headers). A server composing it sets std-http-router's `externalPrefix` to apiPrefix/packages/ so the router leaves those paths to this atom (composition pending G-STD-086)."
+]
+type RegistryHeader = { name : string!, value : string! }
+type RegistryRequest = { requestId : number!, method : string!, path : string!, authorization : string!, body : bytes! }
+type RegistryCall = { requestId : number!, op : string!, name : string!, version : string!, integrity : string! }
+orbital PackageRegistryOrbital {
+  entity RegistryState [runtime] {
+    id : string!
+    busy : boolean = false
+    current : RegistryCall @description "The request being served."
+    queue : [RegistryRequest] @description "Requests received while one is being served." = []
+  }
+
+  entity PackageVersion [persistent: package_versions] {
+    id : string! @key @description "name@version."
+    name : string!
+    version : string!
+    integrity : string!
+    tarball : bytes!
+    yanked : boolean = false
+    publishedAt : number!
+    @read none "served only through the registry routes"
+  }
+
+  trait PackageRegistry -> RegistryState [integration, instance] {
+    initial: serving
+
+    config {
+      publishToken : string = ""
+        @label "Publish token"
+        @description "The bearer token that authorises publish and yank; empty refuses both."
+        @tier "infra"
+      apiPrefix : string = "/api"
+        @label "API prefix"
+        @description "The routes live under this prefix followed by /packages."
+        @tier "infra"
+      statusSlot : slot = system
+        @label "Status slot"
+        @description "Where the atom reports a refused request; a page running it in the background keeps it in `system`."
+        @tier "infra"
+      baseUrl : string = ""
+        @label "Base URL"
+        @description "Prepended to the tarball url the registry answers."
+        @tier "infra"
+    }
+
+    state serving {
+      INIT -> serving
+      REQUEST_RECEIVED -> serving when (and (str/startsWith @payload.path (str/concat @config.apiPrefix "/packages/")) (not @entity.busy))
+        (set @entity.busy true)
+        (emit REGISTRY_ENTER { requestId: @payload.requestId, method: @payload.method, path: @payload.path, authorization: (or (object/get @payload.headers "authorization") ""), body: (or @payload.body (bytes/from-string "")) })
+      REQUEST_RECEIVED -> serving when (and (str/startsWith @payload.path (str/concat @config.apiPrefix "/packages/")) @entity.busy)
+        (set @entity.queue (array/append @entity.queue { requestId: @payload.requestId, method: @payload.method, path: @payload.path, authorization: (or (object/get @payload.headers "authorization") ""), body: (or @payload.body (bytes/from-string "")) }))
+      REGISTRY_DONE -> serving when (= (array/len @entity.queue) 0)
+        (set @entity.busy false)
+      REGISTRY_DONE -> serving when (> (array/len @entity.queue) 0)
+        (emit REGISTRY_ENTER { requestId: (object/get (array/first @entity.queue) "requestId"), method: (object/get (array/first @entity.queue) "method"), path: (object/get (array/first @entity.queue) "path"), authorization: (object/get (array/first @entity.queue) "authorization"), body: (object/get (array/first @entity.queue) "body") })
+        (set @entity.queue (array/drop @entity.queue 1))
+      REGISTRY_ENTER -> serving when (let ((rest (str/split (str/slice @payload.path (str/len (str/concat @config.apiPrefix "/packages/"))) "/"))
+              (n (array/len (str/split (str/slice @payload.path (str/len (str/concat @config.apiPrefix "/packages/"))) "/")))
+              (m (str/upper @payload.method))) (and (= @m "PUT") (= @n 2)))
+        (let ((rest (str/split (str/slice @payload.path (str/len (str/concat @config.apiPrefix "/packages/"))) "/"))
+              (n (array/len (str/split (str/slice @payload.path (str/len (str/concat @config.apiPrefix "/packages/"))) "/")))
+              (m (str/upper @payload.method))) (emit PACKAGE_PUBLISH { requestId: @payload.requestId, name: (array/nth @rest 0), version: (array/nth @rest 1), token: (str/replace @payload.authorization "Bearer " ""), tarball: @payload.body }))
+      REGISTRY_ENTER -> serving when (let ((rest (str/split (str/slice @payload.path (str/len (str/concat @config.apiPrefix "/packages/"))) "/"))
+              (n (array/len (str/split (str/slice @payload.path (str/len (str/concat @config.apiPrefix "/packages/"))) "/")))
+              (m (str/upper @payload.method))) (and (= @m "GET") (= @n 2)))
+        (let ((rest (str/split (str/slice @payload.path (str/len (str/concat @config.apiPrefix "/packages/"))) "/"))
+              (n (array/len (str/split (str/slice @payload.path (str/len (str/concat @config.apiPrefix "/packages/"))) "/")))
+              (m (str/upper @payload.method))) (emit PACKAGE_FETCH { requestId: @payload.requestId, name: (array/nth @rest 0), version: (array/nth @rest 1) }))
+      REGISTRY_ENTER -> serving when (let ((rest (str/split (str/slice @payload.path (str/len (str/concat @config.apiPrefix "/packages/"))) "/"))
+              (n (array/len (str/split (str/slice @payload.path (str/len (str/concat @config.apiPrefix "/packages/"))) "/")))
+              (m (str/upper @payload.method))) (and (= @m "GET") (= @n 3) (= (array/nth @rest 2) "tarball")))
+        (let ((rest (str/split (str/slice @payload.path (str/len (str/concat @config.apiPrefix "/packages/"))) "/"))
+              (n (array/len (str/split (str/slice @payload.path (str/len (str/concat @config.apiPrefix "/packages/"))) "/")))
+              (m (str/upper @payload.method))) (emit PACKAGE_TARBALL { requestId: @payload.requestId, name: (array/nth @rest 0), version: (array/nth @rest 1) }))
+      REGISTRY_ENTER -> serving when (let ((rest (str/split (str/slice @payload.path (str/len (str/concat @config.apiPrefix "/packages/"))) "/"))
+              (n (array/len (str/split (str/slice @payload.path (str/len (str/concat @config.apiPrefix "/packages/"))) "/")))
+              (m (str/upper @payload.method))) (and (= @m "GET") (= @n 1)))
+        (let ((rest (str/split (str/slice @payload.path (str/len (str/concat @config.apiPrefix "/packages/"))) "/"))
+              (n (array/len (str/split (str/slice @payload.path (str/len (str/concat @config.apiPrefix "/packages/"))) "/")))
+              (m (str/upper @payload.method))) (emit PACKAGE_VERSIONS { requestId: @payload.requestId, name: (array/nth @rest 0) }))
+      REGISTRY_ENTER -> serving when (let ((rest (str/split (str/slice @payload.path (str/len (str/concat @config.apiPrefix "/packages/"))) "/"))
+              (n (array/len (str/split (str/slice @payload.path (str/len (str/concat @config.apiPrefix "/packages/"))) "/")))
+              (m (str/upper @payload.method))) (and (= @m "POST") (= @n 3) (= (array/nth @rest 2) "yank")))
+        (let ((rest (str/split (str/slice @payload.path (str/len (str/concat @config.apiPrefix "/packages/"))) "/"))
+              (n (array/len (str/split (str/slice @payload.path (str/len (str/concat @config.apiPrefix "/packages/"))) "/")))
+              (m (str/upper @payload.method))) (emit PACKAGE_YANK { requestId: @payload.requestId, name: (array/nth @rest 0), version: (array/nth @rest 1), token: (str/replace @payload.authorization "Bearer " "") }))
+      REGISTRY_ENTER -> serving when (let ((rest (str/split (str/slice @payload.path (str/len (str/concat @config.apiPrefix "/packages/"))) "/"))
+              (n (array/len (str/split (str/slice @payload.path (str/len (str/concat @config.apiPrefix "/packages/"))) "/")))
+              (m (str/upper @payload.method))) (not (or (and (= @m "PUT") (= @n 2)) (and (= @m "GET") (= @n 2)) (and (= @m "GET") (= @n 3) (= (array/nth @rest 2) "tarball")) (and (= @m "GET") (= @n 1)) (and (= @m "POST") (= @n 3) (= (array/nth @rest 2) "yank")))))
+        (emit PACKAGE_REFUSED { requestId: @payload.requestId, status: 404, code: "NOT_FOUND", error: "Not found" })
+        (emit RESPOND { requestId: @payload.requestId, status: 404, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { error: "Not found", code: "NOT_FOUND" })) })
+        (emit REGISTRY_DONE {})
+      PACKAGE_PUBLISH -> serving when (or (= @config.publishToken "") (!= @payload.token @config.publishToken))
+        (emit RESPOND { requestId: @payload.requestId, status: 401, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { error: "Unauthorized", code: "UNAUTHORIZED" })) })
+        (emit PACKAGE_REFUSED { requestId: @payload.requestId, status: 401, code: "UNAUTHORIZED", error: "Unauthorized" })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "UNAUTHORIZED" })
+        (emit REGISTRY_DONE {})
+      PACKAGE_PUBLISH -> serving when (and (not (or (= @config.publishToken "") (!= @payload.token @config.publishToken))) (= (bytes/length @payload.tarball) 0))
+        (emit RESPOND { requestId: @payload.requestId, status: 400, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { error: "Empty tarball", code: "EMPTY_TARBALL" })) })
+        (emit PACKAGE_REFUSED { requestId: @payload.requestId, status: 400, code: "EMPTY_TARBALL", error: "Empty tarball" })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "EMPTY_TARBALL" })
+        (emit REGISTRY_DONE {})
+      PACKAGE_PUBLISH -> serving when (and (not (or (= @config.publishToken "") (!= @payload.token @config.publishToken))) (> (bytes/length @payload.tarball) 0))
+        (set @entity.current { requestId: @payload.requestId, op: "publish", name: @payload.name, version: @payload.version, integrity: "" })
+        (fetch PackageVersion { id: (str/concat @payload.name (str/slice "a@b" 1 2) @payload.version), emit: { success: REGISTRY_FOUND, failure: REGISTRY_MISSING } })
+      PACKAGE_YANK -> serving when (or (= @config.publishToken "") (!= @payload.token @config.publishToken))
+        (emit RESPOND { requestId: @payload.requestId, status: 401, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { error: "Unauthorized", code: "UNAUTHORIZED" })) })
+        (emit PACKAGE_REFUSED { requestId: @payload.requestId, status: 401, code: "UNAUTHORIZED", error: "Unauthorized" })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "UNAUTHORIZED" })
+        (emit REGISTRY_DONE {})
+      PACKAGE_YANK -> serving when (not (or (= @config.publishToken "") (!= @payload.token @config.publishToken)))
+        (set @entity.current { requestId: @payload.requestId, op: "yank", name: @payload.name, version: @payload.version, integrity: "" })
+        (fetch PackageVersion { id: (str/concat @payload.name (str/slice "a@b" 1 2) @payload.version), emit: { success: REGISTRY_FOUND, failure: REGISTRY_MISSING } })
+      PACKAGE_FETCH -> serving
+        (set @entity.current { requestId: @payload.requestId, op: "fetch", name: @payload.name, version: @payload.version, integrity: "" })
+        (fetch PackageVersion { id: (str/concat @payload.name (str/slice "a@b" 1 2) @payload.version), emit: { success: REGISTRY_FOUND, failure: REGISTRY_MISSING } })
+      PACKAGE_TARBALL -> serving
+        (set @entity.current { requestId: @payload.requestId, op: "tarball", name: @payload.name, version: @payload.version, integrity: "" })
+        (fetch PackageVersion { id: (str/concat @payload.name (str/slice "a@b" 1 2) @payload.version), emit: { success: REGISTRY_FOUND, failure: REGISTRY_MISSING } })
+      PACKAGE_VERSIONS -> serving
+        (set @entity.current { requestId: @payload.requestId, op: "versions", name: @payload.name, version: "", integrity: "" })
+        (fetch PackageVersion { filter: (= (object/get @entity name) @payload.name), emit: { success: REGISTRY_LISTED, failure: REGISTRY_STORE_REFUSED } })
+      REGISTRY_FOUND -> serving when (= @entity.current.op "publish")
+        (emit RESPOND { requestId: @entity.current.requestId, status: 409, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { error: "Version already published", code: "VERSION_EXISTS" })) })
+        (emit PACKAGE_REFUSED { requestId: @entity.current.requestId, status: 409, code: "VERSION_EXISTS", error: "Version already published" })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "VERSION_EXISTS" })
+        (emit REGISTRY_DONE {})
+      REGISTRY_FOUND -> serving when (= @entity.current.op "fetch")
+        (emit RESPOND { requestId: @entity.current.requestId, status: 200, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { name: @entity.current.name, version: @entity.current.version, url: (str/concat @config.baseUrl @config.apiPrefix "/packages/" @entity.current.name "/" @entity.current.version "/tarball"), integrity: @payload.data.integrity, yanked: @payload.data.yanked })) })
+        (emit REGISTRY_DONE {})
+      REGISTRY_FOUND -> serving when (and (= @entity.current.op "tarball") @payload.data.yanked)
+        (emit RESPOND { requestId: @entity.current.requestId, status: 410, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { error: "Version yanked", code: "YANKED" })) })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "YANKED" })
+        (emit REGISTRY_DONE {})
+      REGISTRY_FOUND -> serving when (and (= @entity.current.op "tarball") (not @payload.data.yanked))
+        (emit RESPOND { requestId: @entity.current.requestId, status: 200, headers: [{ name: "content-type", value: "application/gzip" }], body: @payload.data.tarball })
+        (emit REGISTRY_DONE {})
+      REGISTRY_FOUND -> serving when (= @entity.current.op "yank")
+        (persist update PackageVersion (object/set @payload.data "yanked" true) { emit: { success: REGISTRY_YANKED, failure: REGISTRY_STORE_REFUSED } })
+      REGISTRY_YANKED -> serving
+        (emit RESPOND { requestId: @entity.current.requestId, status: 200, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { name: @entity.current.name, version: @entity.current.version, yanked: true })) })
+        (emit REGISTRY_DONE {})
+      REGISTRY_MISSING -> serving when (and (= @entity.current.op "publish") (= @payload.code "not-found"))
+        (emit RESPOND { requestId: @entity.current.requestId, status: 501, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { error: "Package integrity needs std-sha256 over bytes, which is not available yet", code: "INTEGRITY_UNAVAILABLE" })) })
+        (emit PACKAGE_REFUSED { requestId: @entity.current.requestId, status: 501, code: "INTEGRITY_UNAVAILABLE", error: "Package integrity needs std-sha256 over bytes, which is not available yet" })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "INTEGRITY_UNAVAILABLE" })
+        (emit REGISTRY_DONE {})
+      REGISTRY_MISSING -> serving when (and (!= @entity.current.op "publish") (= @payload.code "not-found"))
+        (emit RESPOND { requestId: @entity.current.requestId, status: 404, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { error: "Not found", code: "NOT_FOUND" })) })
+        (emit PACKAGE_REFUSED { requestId: @entity.current.requestId, status: 404, code: "NOT_FOUND", error: "Not found" })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "NOT_FOUND" })
+        (emit REGISTRY_DONE {})
+      REGISTRY_MISSING -> serving when (!= @payload.code "not-found")
+        (emit RESPOND { requestId: @entity.current.requestId, status: 503, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { error: "Package store unavailable", code: "STORE_UNAVAILABLE" })) })
+        (emit PACKAGE_REFUSED { requestId: @entity.current.requestId, status: 503, code: "STORE_UNAVAILABLE", error: "Package store unavailable" })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "STORE_UNAVAILABLE" })
+        (emit REGISTRY_DONE {})
+      REGISTRY_STORE_REFUSED -> serving
+        (emit RESPOND { requestId: @entity.current.requestId, status: 503, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { error: "Package store unavailable", code: "STORE_UNAVAILABLE" })) })
+        (emit PACKAGE_REFUSED { requestId: @entity.current.requestId, status: 503, code: "STORE_UNAVAILABLE", error: "Package store unavailable" })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "STORE_UNAVAILABLE" })
+        (emit REGISTRY_DONE {})
+      REGISTRY_LISTED -> serving when (= (array/len @payload.data) 0)
+        (emit RESPOND { requestId: @entity.current.requestId, status: 404, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { error: "Not found", code: "NOT_FOUND" })) })
+        (emit PACKAGE_REFUSED { requestId: @entity.current.requestId, status: 404, code: "NOT_FOUND", error: "Not found" })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "NOT_FOUND" })
+        (emit REGISTRY_DONE {})
+      REGISTRY_LISTED -> serving when (> (array/len @payload.data) 0)
+        (emit RESPOND { requestId: @entity.current.requestId, status: 200, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { name: @entity.current.name, versions: (array/map (array/sort @payload.data "publishedAt" "desc") (fn r { version: @r.version, integrity: @r.integrity, yanked: @r.yanked, publishedAt: @r.publishedAt })) })) })
+        (emit REGISTRY_DONE {})
+    }
+
+    emits {
+      RESPOND -> external {
+        requestId : number!
+        status : number!
+        headers : [RegistryHeader]!
+        body : bytes!
+      }
+        @description "Answer this request: status, headers and body for std-http1 to write."
+        @tier "primary"
+      PACKAGE_REFUSED -> external {
+        requestId : number!
+        status : number!
+        code : string!
+        error : string!
+      }
+        @description "A registry request was refused with this status and code."
+        @tier "primary"
+      REGISTRY_ENTER -> internal {
+        requestId : number!
+        method : string!
+        path : string!
+        authorization : string!
+        body : bytes!
+      }
+        @description "Internal: start serving one request."
+        @tier "secondary"
+      REGISTRY_DONE -> internal {
+      }
+        @description "Internal: the request was answered."
+        @tier "secondary"
+      PACKAGE_PUBLISH -> internal {
+        requestId : number!
+        name : string!
+        version : string!
+        token : string
+        tarball : bytes!
+      }
+        @description "Internal: a publish request, parsed."
+        @tier "secondary"
+      PACKAGE_FETCH -> internal {
+        requestId : number!
+        name : string!
+        version : string!
+      }
+        @description "Internal: a version lookup, parsed."
+        @tier "secondary"
+      PACKAGE_TARBALL -> internal {
+        requestId : number!
+        name : string!
+        version : string!
+      }
+        @description "Internal: a tarball download, parsed."
+        @tier "secondary"
+      PACKAGE_VERSIONS -> internal {
+        requestId : number!
+        name : string!
+      }
+        @description "Internal: a version listing, parsed."
+        @tier "secondary"
+      PACKAGE_YANK -> internal {
+        requestId : number!
+        name : string!
+        version : string!
+        token : string
+      }
+        @description "Internal: a yank request, parsed."
+        @tier "secondary"
+      REGISTRY_FOUND -> internal {
+        data : PackageVersion!
+      }
+        @description "Internal: a store result."
+        @tier "secondary"
+      REGISTRY_MISSING -> internal {
+        error : string
+        code : string
+      }
+        @description "Internal: a store result."
+        @tier "secondary"
+      REGISTRY_LISTED -> internal {
+        data : [PackageVersion]!
+      }
+        @description "Internal: a store result."
+        @tier "secondary"
+      REGISTRY_YANKED -> internal {
+        id : string
+      }
+        @description "Internal: a store result."
+        @tier "secondary"
+      REGISTRY_STORE_REFUSED -> internal {
+        error : string
+        code : string
+      }
+        @description "Internal: a store result."
+        @tier "secondary"
+    }
+
+    listens {
+      REQUEST_RECEIVED {
+        requestId : number!
+        method : string!
+        path : string!
+        query : string
+        headers : Map string string
+        body : bytes
+        peer : string
+      }
+    }
+  }
+
+  page "/packages" as PackageRegistryPage -> PackageRegistry
+}
