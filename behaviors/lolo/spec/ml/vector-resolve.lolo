@@ -1,0 +1,30 @@
+app ml-vector-resolve-spec [
+  version: "1.0.0",
+  description: "Design contract for resolving embedding vectors. A resolve takes texts with the caller's keys, the package snapshot files, the user vectors directory and the model the configured provider produces (empty when none is configured). The model is the first non-empty snapshot's, else the provider's, else baai/bge-base-en-v1.5; an empty wanted list answers with no vectors. Stored vectors answer from the snapshots first and the user store last (the user store file is userDir/model-slug.vec with every character outside A-Za-z0-9._- replaced by _). Texts no store holds are deduplicated and embedded in batches of 64; the embedded vectors are reported so the caller can persist them. A miss with no provider refuses ORB_VECTOR_PROVIDER_MISSING naming the miss count and the first 5 caller keys, never an empty vector; a provider whose model differs from the stored model refuses ORB_VECTOR_MODEL_MISMATCH; a provider failure or a vector count that differs from the batch refuses; a store refusal passes through. Every resolve ends answered or refused."
+]
+
+orbital MlVectorResolveSpec {
+  expects entity ResolveRun [runtime] {
+    id : string
+    wanted : [{ key : string!, text : string! }]
+    model : string
+  }
+  expects trait VectorResolve {
+    state idle {
+      RESOLVE -> reading
+    }
+    state reading {
+      USER_STORE_READ -> looking
+    }
+    state looking {
+      VECTOR_RESOLVED -> looking
+    }
+    emits {
+      USER_STORE_NEEDED { model : string!  path : string! }
+      VECTORS_ANSWERED { model : string!  vectors : [{ key : string!, vector : [number]! }]! }
+      VECTORS_EMBEDDED { model : string!  texts : [string]!  vectors : [[number]]! }
+      VECTORS_REFUSED { code : string!  detail : string! }
+    }
+  }
+  expects page "/vector-resolve" -> VectorResolve
+}

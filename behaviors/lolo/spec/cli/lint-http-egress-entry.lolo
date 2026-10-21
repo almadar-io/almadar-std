@@ -1,0 +1,22 @@
+app lint-http-egress-entry-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint http-egress-entry <file>`, the port of ORB_HTTP_EGRESS_ENTRY_INVALID. It lowers the file with program/read and reports each app egress entry that is not scheme://host[:port] for an http, https, redis, rediss, postgres or postgresql origin, with the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint http-egress-entry: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintHttpEgressEntrySpec {
+  expects trait OrbLintHttpEgressEntry {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+      LINT_UNREAD { rule : string! }
+    }
+  }
+  expects trait OrbLintHttpEgressEntryCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page "/orb-lint-http-egress-entry" -> OrbLintHttpEgressEntry, OrbLintHttpEgressEntryCli
+}

@@ -2,12 +2,13 @@ app lint-trait-id-uniqueness-spec [
   version: "1.0.0",
   description: "Design contract for `orb lint trait-id-uniqueness <file>`, the port of the compiler rule ORB_X_DUPLICATE_TRAIT_ID. The file is lowered with program/read. Every inline trait that carries an id is grouped by that id across all orbitals; an id carried by more than one trait is reported once, in id order, as `[ORB_X_DUPLICATE_TRAIT_ID] orbitals: trait id <id> is carried by <Orbital.Trait, ...>; listens match sources by id, so each of these hears the others' emits`, status 500 (exit 1). Traits without an id are not compared. A clean program answers `lint trait-id-uniqueness: clean` (status 200, exit 0). Anything but exactly one file argument is the usage (status 400, exit 2). A file that cannot be read or lowered fails the run (status 500)."
 ]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
 orbital LintTraitIdUniquenessSpec {
   expects trait OrbLintTraitIdUniqueness {
     state ready
     emits {
-      LINT_FOUND { rule : string!  findings : [string]! }
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
       LINT_UNREAD { rule : string! }
     }
   }

@@ -1,0 +1,26 @@
+app ci-runners-status-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb runners status [--mac]`, the read-only health view of the self-hosted CI fleet that today lives only as a manual procedure. It answers three facts and changes nothing: the registered runners of the scope (name, status online or offline, busy, labels) read from GitHub's <scope>/actions/runners with the token resolved as in std-orb-runners; the containers named <prefix>-runner-<i> that docker lists (name, image, status), or `docker unavailable` when the daemon cannot be reached; and the verdict per expected runner i in 1..RUNNER_COUNT: healthy when a container is up and a runner named <prefix>-local-<i> is online, otherwise the missing half is named (container missing, runner offline, runner unregistered). A runner busy with a job is healthy. Output is one line per runner then one summary line; exit 0 when every expected runner is healthy, 1 otherwise. A GitHub read that fails answers its HTTP status and still prints the docker half. Composes std-github (list the scope's runners: an added read action on the existing atom, no new operator), std-docker LIST for the containers, and the std-orb-runners token and scope resolution. Never starts, stops, registers or removes anything."
+]
+
+orbital CiRunnersStatusSpec {
+  expects entity CiRunnersStatusRead [runtime] {
+    id : string!
+    scope : string
+    expected : number
+  }
+  expects trait CiRunnersStatus {
+    state idle {
+      CI_RUNNERS_STATUS_CALLED -> reading
+    }
+    state reading {
+      CI_RUNNERS_GITHUB_READ -> reading
+      CI_RUNNERS_DOCKER_READ -> reading
+      CI_RUNNERS_STATUS_JOINED -> idle
+    }
+    emits {
+      CI_RUNNERS_STATUS_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page "/ci-runners-status" -> CiRunnersStatus
+}

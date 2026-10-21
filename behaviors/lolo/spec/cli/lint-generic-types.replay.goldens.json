@@ -1,0 +1,1444 @@
+{
+ "atom": "cli/atoms/std-orb-lint-generic-types.lolo",
+ "trait": "OrbLintGenericTypes",
+ "note": "Expected findings are the code, path, message and suggestion `orb validate` (the Rust validator) reports for the same program. The nested cases copy generic_types.rs tests nested_payload_generic_is_found, typed_payload_object_passes, control_a_generic_inside_payload_items_is_still_found, a_payload_map_or_list_of_a_union_is_typed_by_its_items, recursive_backref_forms_produce_no_finding, types_alias_map_generics_are_rejected, shapeless_object_entity_field_rejected_typed_passes and config_json_and_any_rejected_object_left_to_existing_ban. Every case folds the entity fields with tree/fold, so all of them await the orb reinstall that folds object nodes.",
+ "cases": [
+  {
+   "id": "config-knob-typed-any",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "config": {
+            "knob": {
+             "type": "any"
+            }
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintGenericTypes"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "generic-types",
+         "findings": [
+          {
+           "code": "ORB_T_GENERIC_TYPE_DEPRECATED",
+           "path": "orbitals[0 (A)].traits[0 (T)].config.knob",
+           "message": "Config field declares the generic type 'any' — generic types (`json`, shapeless `object`, `any`, `scalar`) are not allowed in a declaration position.",
+           "suggestion": "Replace the generic type: renderable content → `node`; structured data → an inline `{ k: T }` shape, a named `type` alias, or `Map K V`; a value of several kinds → a named tagged-union `type` alias (or the concrete primitive); the row of an entity a config knob names → `@entity @config.<knob>`; the row of the linked entity → `@entity @config.<knob>`; genuinely polymorphic atoms → a declared type parameter.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintGenericTypes"
+    }
+   ]
+  },
+  {
+   "id": "control-config-knob-typed-string",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "config": {
+            "knob": {
+             "type": "string",
+             "default": "x"
+            }
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintGenericTypes"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "generic-types",
+         "findings": []
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintGenericTypes"
+    }
+   ]
+  },
+  {
+   "id": "nested-payload-property-any-is-found",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "emits": [
+            {
+             "event": "DONE",
+             "payloadSchema": [
+              {
+               "name": "value",
+               "type": "object",
+               "properties": [
+                {
+                 "name": "inner",
+                 "type": "any"
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintGenericTypes"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "generic-types",
+         "findings": [
+          {
+           "code": "ORB_T_GENERIC_TYPE_DEPRECATED",
+           "path": "orbitals[0 (A)].traits[0 (T)].emits.DONE.value.inner",
+           "message": "Payload field declares the generic type 'any' — generic types (`json`, shapeless `object`, `any`, `scalar`) are not allowed in a declaration position.",
+           "suggestion": "Replace the generic type: renderable content → `node`; structured data → an inline `{ k: T }` shape, a named `type` alias, or `Map K V`; a value of several kinds → a named tagged-union `type` alias (or the concrete primitive); the row of an entity a config knob names → `@entity @config.<knob>`; the row of the linked entity → `@entity @config.<knob>`; genuinely polymorphic atoms → a declared type parameter.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintGenericTypes"
+    }
+   ]
+  },
+  {
+   "id": "control-typed-payload-object-passes",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "emits": [
+            {
+             "event": "DONE",
+             "payloadSchema": [
+              {
+               "name": "value",
+               "type": "object",
+               "properties": [
+                {
+                 "name": "inner",
+                 "type": "string"
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintGenericTypes"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "generic-types",
+         "findings": []
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintGenericTypes"
+    }
+   ]
+  },
+  {
+   "id": "generic-inside-payload-items-is-found",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "emits": [
+            {
+             "event": "DONE",
+             "payloadSchema": [
+              {
+               "name": "value",
+               "type": "object",
+               "items": {
+                "name": "item",
+                "type": "json"
+               }
+              }
+             ]
+            }
+           ]
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintGenericTypes"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "generic-types",
+         "findings": [
+          {
+           "code": "ORB_T_GENERIC_TYPE_DEPRECATED",
+           "path": "orbitals[0 (A)].traits[0 (T)].emits.DONE.value[].item",
+           "message": "Payload field declares the generic type 'json' — generic types (`json`, shapeless `object`, `any`, `scalar`) are not allowed in a declaration position.",
+           "suggestion": "Replace the generic type: renderable content → `node`; structured data → an inline `{ k: T }` shape, a named `type` alias, or `Map K V`; a value of several kinds → a named tagged-union `type` alias (or the concrete primitive); the row of an entity a config knob names → `@entity @config.<knob>`; the row of the linked entity → `@entity @config.<knob>`; genuinely polymorphic atoms → a declared type parameter.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintGenericTypes"
+    }
+   ]
+  },
+  {
+   "id": "control-payload-list-of-union-is-typed-by-its-items",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "emits": [
+            {
+             "event": "DONE",
+             "payloadSchema": [
+              {
+               "name": "value",
+               "type": "array",
+               "items": {
+                "name": "item",
+                "type": "union",
+                "properties": [
+                 {
+                  "name": "a",
+                  "type": "string"
+                 },
+                 {
+                  "name": "b",
+                  "type": "number"
+                 }
+                ]
+               }
+              }
+             ]
+            }
+           ]
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintGenericTypes"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "generic-types",
+         "findings": []
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintGenericTypes"
+    }
+   ]
+  },
+  {
+   "id": "control-recursive-back-reference-is-not-generic",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "emits": [
+            {
+             "event": "DONE",
+             "payloadSchema": [
+              {
+               "name": "a",
+               "type": "[MenuItem]",
+               "properties": []
+              },
+              {
+               "name": "b",
+               "type": "MenuItem",
+               "properties": []
+              }
+             ]
+            }
+           ]
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintGenericTypes"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "generic-types",
+         "findings": []
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintGenericTypes"
+    }
+   ]
+  },
+  {
+   "id": "nested-event-payload-scalar-list-is-found",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ],
+            "events": [
+             {
+              "key": "GO",
+              "payloadSchema": [
+               {
+                "name": "o",
+                "type": "object",
+                "properties": [
+                 {
+                  "name": "xs",
+                  "type": "[scalar]"
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintGenericTypes"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "generic-types",
+         "findings": [
+          {
+           "code": "ORB_T_GENERIC_TYPE_DEPRECATED",
+           "path": "orbitals[0 (A)].traits[0 (T)].events.GO.o.xs",
+           "message": "Payload field declares the generic type '[scalar]' — generic types (`json`, shapeless `object`, `any`, `scalar`) are not allowed in a declaration position.",
+           "suggestion": "Replace the generic type: renderable content → `node`; structured data → an inline `{ k: T }` shape, a named `type` alias, or `Map K V`; a value of several kinds → a named tagged-union `type` alias (or the concrete primitive); the row of an entity a config knob names → `@entity @config.<knob>`; the row of the linked entity → `@entity @config.<knob>`; genuinely polymorphic atoms → a declared type parameter.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintGenericTypes"
+    }
+   ]
+  },
+  {
+   "id": "types-alias-member-json-is-found",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ],
+         "types": {
+          "RulesItem": [
+           {
+            "name": "label",
+            "type": "string"
+           },
+           {
+            "name": "value",
+            "type": "json"
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintGenericTypes"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "generic-types",
+         "findings": [
+          {
+           "code": "ORB_T_GENERIC_TYPE_DEPRECATED",
+           "path": "orbitals[0].types.RulesItem.value",
+           "message": "Payload field declares the generic type 'json' — generic types (`json`, shapeless `object`, `any`, `scalar`) are not allowed in a declaration position.",
+           "suggestion": "Replace the generic type: renderable content → `node`; structured data → an inline `{ k: T }` shape, a named `type` alias, or `Map K V`; a value of several kinds → a named tagged-union `type` alias (or the concrete primitive); the row of an entity a config knob names → `@entity @config.<knob>`; the row of the linked entity → `@entity @config.<knob>`; genuinely polymorphic atoms → a declared type parameter.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintGenericTypes"
+    }
+   ]
+  },
+  {
+   "id": "entity-array-of-shapeless-object-is-found",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "rows",
+            "type": "array",
+            "items": {
+             "type": "object"
+            }
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintGenericTypes"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "generic-types",
+         "findings": [
+          {
+           "code": "ORB_T_GENERIC_TYPE_DEPRECATED",
+           "path": "entities.E.fields.rows[]",
+           "message": "Entity field declares the generic type 'object (no declared properties — authored `object`/`json`)' — generic types (`json`, shapeless `object`, `any`, `scalar`) are not allowed in a declaration position.",
+           "suggestion": "Replace the generic type: renderable content → `node`; structured data → an inline `{ k: T }` shape, a named `type` alias, or `Map K V`; a value of several kinds → a named tagged-union `type` alias (or the concrete primitive); the row of an entity a config knob names → `@entity @config.<knob>`; the row of the linked entity → `@entity @config.<knob>`; genuinely polymorphic atoms → a declared type parameter.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintGenericTypes"
+    }
+   ]
+  },
+  {
+   "id": "control-entity-typed-object-passes",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "point",
+            "type": "object",
+            "properties": {
+             "x": {
+              "type": "number"
+             }
+            }
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintGenericTypes"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "generic-types",
+         "findings": []
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintGenericTypes"
+    }
+   ]
+  },
+  {
+   "id": "entity-nested-shapeless-object-property-is-found",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "point",
+            "type": "object",
+            "properties": {
+             "meta": {
+              "type": "object"
+             }
+            }
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintGenericTypes"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "generic-types",
+         "findings": [
+          {
+           "code": "ORB_T_GENERIC_TYPE_DEPRECATED",
+           "path": "entities.E.fields.point.meta",
+           "message": "Entity field declares the generic type 'object (no declared properties — authored `object`/`json`)' — generic types (`json`, shapeless `object`, `any`, `scalar`) are not allowed in a declaration position.",
+           "suggestion": "Replace the generic type: renderable content → `node`; structured data → an inline `{ k: T }` shape, a named `type` alias, or `Map K V`; a value of several kinds → a named tagged-union `type` alias (or the concrete primitive); the row of an entity a config knob names → `@entity @config.<knob>`; the row of the linked entity → `@entity @config.<knob>`; genuinely polymorphic atoms → a declared type parameter.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintGenericTypes"
+    }
+   ]
+  },
+  {
+   "id": "config-json-and-any-list-are-found-typed-map-and-object-are-left",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "config": {
+            "a": {
+             "type": "json"
+            },
+            "b": {
+             "type": "[any]"
+            },
+            "c": {
+             "type": "object"
+            },
+            "d": {
+             "type": "Map string string"
+            }
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintGenericTypes"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "generic-types",
+         "findings": [
+          {
+           "code": "ORB_T_GENERIC_TYPE_DEPRECATED",
+           "path": "orbitals[0 (A)].traits[0 (T)].config.a",
+           "message": "Config field declares the generic type 'json' — generic types (`json`, shapeless `object`, `any`, `scalar`) are not allowed in a declaration position.",
+           "suggestion": "Replace the generic type: renderable content → `node`; structured data → an inline `{ k: T }` shape, a named `type` alias, or `Map K V`; a value of several kinds → a named tagged-union `type` alias (or the concrete primitive); the row of an entity a config knob names → `@entity @config.<knob>`; the row of the linked entity → `@entity @config.<knob>`; genuinely polymorphic atoms → a declared type parameter.",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_GENERIC_TYPE_DEPRECATED",
+           "path": "orbitals[0 (A)].traits[0 (T)].config.b",
+           "message": "Config field declares the generic type '[any]' — generic types (`json`, shapeless `object`, `any`, `scalar`) are not allowed in a declaration position.",
+           "suggestion": "Replace the generic type: renderable content → `node`; structured data → an inline `{ k: T }` shape, a named `type` alias, or `Map K V`; a value of several kinds → a named tagged-union `type` alias (or the concrete primitive); the row of an entity a config knob names → `@entity @config.<knob>`; the row of the linked entity → `@entity @config.<knob>`; genuinely polymorphic atoms → a declared type parameter.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintGenericTypes"
+    }
+   ]
+  }
+ ]
+}

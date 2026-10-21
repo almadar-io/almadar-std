@@ -1,0 +1,25 @@
+app npm-lookup-spec [
+  version: "1.0.0",
+  description: "Design contract for a read-only client of an npm-protocol registry (public npm or GitHub Packages; the origin and the token credential come from config, never from the atom). GET only. One ask at a time; an ask during another is refused npm_busy, never queued. NPM_LOOKUP answers the package's published versions (semver ascending), its dist-tags and the version the asked tag points to. Every reply is classified: 200 ok, 401 and 403 auth, 404 absent, 5xx and transport unreachable, anything else unexpected."
+]
+
+orbital NpmLookupSpec {
+  expects config { registry : url  authenticated : boolean = false  token : secret }
+  expects entity NpmLookupAsk [runtime] {
+    id : string!
+    name : string
+  }
+  expects trait NpmLookup {
+    state idle {
+      NPM_LOOKUP -> looking
+    }
+    state looking {
+      NPM_LOOKUP -> looking
+    }
+    emits {
+      NPM_LOOKED { requestId : string!  name : string!  versions : [string]!  distTags : Map string string  version : string!  tarballs : Map string string }
+      NPM_LOOKUP_REFUSED { requestId : string!  name : string  code : string!  status : number!  error : string! }
+    }
+  }
+  expects page "/npm-lookup" -> NpmLookup
+}

@@ -6,11 +6,12 @@ app std-orb-lint-entity-browser-storage [
 ]
 uses Spec from "almadar-std/lint-entity-browser-storage"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
 orbital OrbLintEntityBrowserStorageOrbital {
   entity OrbLintEntityBrowserStorageRun [runtime] {
     id : string!
-    findings : [string] = []
+    findings : [OrbFinding] = []
   }
 
   trait OrbLintEntityBrowserStorage -> OrbLintEntityBrowserStorageRun [integration] {
@@ -35,10 +36,10 @@ orbital OrbLintEntityBrowserStorageOrbital {
             (let ((ent (object/get (array/nth @orbitals @oi) "entity" {})))
               (if (validate/object @ent) (let ((nm (object/get @ent "name" "")) (lc (object/get @ent "local" false)) (sd (object/get @ent "seedMock" false)) (idn (object/get @ent "identity" false)) (rt (= (object/get @ent "persistence" "") "runtime")))
                 (array/concat
-                  (if (and @lc @rt) [(str/concat "[ORB_E_LOCAL_REQUIRES_PERSISTENT] orbitals[" @oi "].entity.local: " "Entity '" @nm "' is [runtime, local] — a runtime entity's frame already lives in the client; `local` declares where PERSISTED rows live" "\n  suggestion: Use `[persistent: <collection>, local]` for rows stored in the browser, or drop `local`.")] [])
+                  (if (and @lc @rt) [{ code: "ORB_E_LOCAL_REQUIRES_PERSISTENT", path: (str/concat "orbitals[" @oi "].entity.local"), message: (str/concat "Entity '" @nm "' is [runtime, local] — a runtime entity's frame already lives in the client; `local` declares where PERSISTED rows live"), suggestion: "Use `[persistent: <collection>, local]` for rows stored in the browser, or drop `local`.", severity: "error" }] [])
                   (array/concat
-                    (if (and @sd (not @lc)) [(str/concat "[ORB_E_MOCK_SEED_NOT_LOCAL] orbitals[" @oi "].entity.seedMock: " "Entity '" @nm "' declares `mock` seeding but its rows are not browser-stored — a server's mock data is its own deployment mode" "\n  suggestion: Add `local` (`[persistent: <collection>, local, mock]`) or drop `mock`.")] [])
-                    (if (and @idn @lc) [(str/concat "[ORB_E_IDENTITY_LOCAL] orbitals[" @oi "].entity.local: " "Entity '" @nm "' is [identity] and `local` — the viewer directory is never browser-resident" "\n  suggestion: Drop `local` from the identity entity.")] [])))) [])))))))
+                    (if (and @sd (not @lc)) [{ code: "ORB_E_MOCK_SEED_NOT_LOCAL", path: (str/concat "orbitals[" @oi "].entity.seedMock"), message: (str/concat "Entity '" @nm "' declares `mock` seeding but its rows are not browser-stored — a server's mock data is its own deployment mode"), suggestion: "Add `local` (`[persistent: <collection>, local, mock]`) or drop `mock`.", severity: "error" }] [])
+                    (if (and @idn @lc) [{ code: "ORB_E_IDENTITY_LOCAL", path: (str/concat "orbitals[" @oi "].entity.local"), message: (str/concat "Entity '" @nm "' is [identity] and `local` — the viewer directory is never browser-resident"), suggestion: "Drop `local` from the identity entity.", severity: "error" }] [])))) [])))))))
         (emit LINT_FINISH { })
       LINT_FILE_UNREAD -> ready
         (emit LINT_UNREAD { rule: "entity-browser-storage" })
@@ -51,7 +52,7 @@ orbital OrbLintEntityBrowserStorageOrbital {
       LINT_RUN -> external { file : string! }
         @description "The lint request this trait answers, from the cli trait or the umbrella."
         @tier "internal"
-      LINT_FOUND -> external { rule : string!  findings : [string]! }
+      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
         @description "This rule's findings for the file, offered to the lint-all umbrella."
         @tier "internal"
       LINT_FILE_READ { data : bytes! }
@@ -89,7 +90,7 @@ orbital OrbLintEntityBrowserStorageOrbital {
       LINT_FOUND -> ready when (and (= @payload.rule "entity-browser-storage") (= (array/len @payload.findings) 0))
         (emit LINT_ANSWERED { status: 200, body: "lint entity-browser-storage: clean" })
       LINT_FOUND -> ready when (and (= @payload.rule "entity-browser-storage") (> (array/len @payload.findings) 0))
-        (emit LINT_ANSWERED { status: 500, body: (str/join @payload.findings "\n") })
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
       LINT_UNREAD -> ready when (= @payload.rule "entity-browser-storage")
         (emit LINT_ANSWERED { status: 500, body: "lint entity-browser-storage: the file could not be read or lowered" })
     }
@@ -104,7 +105,7 @@ orbital OrbLintEntityBrowserStorageOrbital {
       LINT_RUN -> external { file : string! }
         @description "Ask the rule trait to lint this file."
         @tier "internal"
-      LINT_FOUND -> external { rule : string!  findings : [string]! }
+      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
         @description "The rule trait's findings for the file."
         @tier "internal"
       LINT_UNREAD -> external { rule : string! }

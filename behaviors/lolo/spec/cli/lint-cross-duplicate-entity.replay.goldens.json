@@ -1,0 +1,309 @@
+{
+ "atom": "cli/atoms/std-orb-lint-cross-duplicate-entity.lolo",
+ "trait": "OrbLintCrossDuplicateEntity",
+ "note": "Expected findings are the code, path, message and suggestion `orb validate` (the Rust validator) reports for the same program.",
+ "cases": [
+  {
+   "id": "entity-declared-by-two-orbitals",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "B",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P2",
+           "path": "/b",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintCrossDuplicateEntity"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "cross-duplicate-entity",
+         "findings": [
+          {
+           "code": "ORB_X_DUPLICATE_ENTITY",
+           "path": "orbitals",
+           "message": "Entity 'E' is defined in multiple orbitals: [\"A\", \"B\"]",
+           "suggestion": "Each entity name must be unique across all orbitals",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintCrossDuplicateEntity"
+    }
+   ]
+  },
+  {
+   "id": "control-distinct-entity-names",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "B",
+         "entity": {
+          "name": "E2",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E2",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P2",
+           "path": "/b",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintCrossDuplicateEntity"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "cross-duplicate-entity",
+         "findings": []
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintCrossDuplicateEntity"
+    }
+   ]
+  }
+ ]
+}

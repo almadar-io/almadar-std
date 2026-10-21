@@ -1,0 +1,35 @@
+app orb-language-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb language which`: for each language package orb compiles against (@almadar/core, @almadar/std) and every installed language pack (a package whose package.json declares orbVocabulary), one row. The packages resolve node-style: the working directory's node_modules, each parent directory's, then the user store ~/.orb/node_modules (nearest wins). A package whose orbLanguage.compiler range the running orb (`orb --version`) does not satisfy prints `<package> → ORB_LANGUAGE_DATA_INCOMPATIBLE: installed <package>@<version> requires orb <range>, but this orb is <running> — install a <package> whose `orbLanguage.compiler` accepts <running>, or upgrade orb`. A pack with a missing compiler or vocabulary field, an unsatisfied range, an unreadable vocabulary file, the code en or a code another pack claims makes one `language packs → <CODE>: <problem>` row instead of the pack rows. A resolved package prints `<package>@<version> → <canonical root>`; a missing one prints `<package> → <CODE>: <package> is not installed — run `orb update` (or with `--global`)` with code ORB_LANGUAGE_DATA_NOT_INSTALLED for core and ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED for std; one whose package.json lacks the orbLanguage block or its compiler range prints `<package> → ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at <root>/package.json, JSON-quoted: missing `orbLanguage` block` (or `... missing `orbLanguage.compiler` range`). Packs follow, sorted by package, de-duplicated by name (working directory wins). Any other argument answers the usage (status 400). Golden = orbital-cli language.rs run_which."
+]
+
+type PackageProbe = { name : string!, hint : string!, code : string! }
+
+orbital OrbLanguageSpec {
+  expects entity LanguageCall [runtime] {
+    id : string!
+    cwd : string
+    cursor : number
+    lines : [string]
+  }
+  expects trait OrbLanguage {
+    state ready
+    state parsing
+    emits {
+      LANGUAGE_ANSWERED { status : number!  body : string!  stderr : string }
+    }
+  }
+  expects trait OrbLanguageEngine {
+    state idle
+    state versioning
+    state probing
+    state scanning
+    emits {
+      SCAN_ANSWERED { status : number!  body : string!  stderr : string }
+      LANGUAGE_ROW { line : string! }
+      LANGUAGE_PACK_VOCAB { name : string!  text : string! }
+      LANGUAGE_PACKS_DONE { problem : string! }
+    }
+  }
+  expects page "/orb-language" -> OrbLanguage
+}

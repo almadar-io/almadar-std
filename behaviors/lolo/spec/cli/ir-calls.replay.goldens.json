@@ -1,0 +1,1260 @@
+{
+ "atom": "cli/atoms/std-orb-ir-calls.lolo",
+ "trait": "IrCalls",
+ "note": "Paths are index-only (orbitals[i].traits[j]), without the validator's name suffix. Effects are folded as one list, so an effect is .effects[m]. Mixed string/list arrays (G-ORB-452) reject most array operators on a node, so the atom reads a node only through array/nth and the child-results length.",
+ "cases": [
+  {
+   "id": "top-level-effect",
+   "steps": [
+    {
+     "event": "IR_CALLS_FIND",
+     "payload": {
+      "requestId": "r1",
+      "program": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "a",
+              "to": "a",
+              "event": "E",
+              "effects": [
+               [
+                "http",
+                "GET",
+                "u"
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "heads": [
+       "http"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "IR_CALLS_FOUND",
+        "payload": {
+         "requestId": "r1",
+         "calls": [
+          {
+           "head": "http",
+           "args": [
+            "GET",
+            "u"
+           ],
+           "path": "orbitals[0].traits[0].stateMachine.transitions[0].effects[0]"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "second-transition-second-effect",
+   "steps": [
+    {
+     "event": "IR_CALLS_FIND",
+     "payload": {
+      "requestId": "r1",
+      "program": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "a",
+              "to": "a",
+              "event": "E",
+              "effects": [
+               [
+                "set",
+                "@entity.a",
+                "b"
+               ]
+              ]
+             },
+             {
+              "from": "a",
+              "to": "a",
+              "event": "E",
+              "effects": [
+               [
+                "set",
+                "@entity.a",
+                "c"
+               ],
+               [
+                "http",
+                "POST",
+                "v"
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "heads": [
+       "http"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "IR_CALLS_FOUND",
+        "payload": {
+         "requestId": "r1",
+         "calls": [
+          {
+           "head": "http",
+           "args": [
+            "POST",
+            "v"
+           ],
+           "path": "orbitals[0].traits[0].stateMachine.transitions[1].effects[1]"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "guard-call",
+   "steps": [
+    {
+     "event": "IR_CALLS_FIND",
+     "payload": {
+      "requestId": "r1",
+      "program": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "a",
+              "to": "a",
+              "event": "E",
+              "effects": [],
+              "guard": [
+               "and",
+               [
+                "http",
+                "G"
+               ],
+               "@x"
+              ]
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "heads": [
+       "http"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "IR_CALLS_FOUND",
+        "payload": {
+         "requestId": "r1",
+         "calls": [
+          {
+           "head": "http",
+           "args": [
+            "G"
+           ],
+           "path": "orbitals[0].traits[0].stateMachine.transitions[0].guard[1]"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "do-if-then-else",
+   "steps": [
+    {
+     "event": "IR_CALLS_FIND",
+     "payload": {
+      "requestId": "r1",
+      "program": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "a",
+              "to": "a",
+              "event": "E",
+              "effects": [
+               [
+                "do",
+                [
+                 "set",
+                 "@entity.a",
+                 "x"
+                ],
+                [
+                 "if",
+                 [
+                  "=",
+                  "@a",
+                  "1"
+                 ],
+                 [
+                  "http",
+                  "GET",
+                  "t"
+                 ],
+                 [
+                  "http",
+                  "GET",
+                  "e"
+                 ]
+                ]
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "heads": [
+       "http"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "IR_CALLS_FOUND",
+        "payload": {
+         "requestId": "r1",
+         "calls": [
+          {
+           "head": "http",
+           "args": [
+            "GET",
+            "t"
+           ],
+           "path": "orbitals[0].traits[0].stateMachine.transitions[0].effects[0].do[1].then"
+          },
+          {
+           "head": "http",
+           "args": [
+            "GET",
+            "e"
+           ],
+           "path": "orbitals[0].traits[0].stateMachine.transitions[0].effects[0].do[1].else"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "when-and-let-body",
+   "steps": [
+    {
+     "event": "IR_CALLS_FIND",
+     "payload": {
+      "requestId": "r1",
+      "program": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "a",
+              "to": "a",
+              "event": "E",
+              "effects": [
+               [
+                "do",
+                [
+                 "when",
+                 "@a",
+                 [
+                  "http",
+                  "GET",
+                  "w"
+                 ]
+                ],
+                [
+                 "let",
+                 [
+                  [
+                   "x",
+                   "1"
+                  ]
+                 ],
+                 [
+                  "http",
+                  "GET",
+                  "l"
+                 ]
+                ]
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "heads": [
+       "http"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "IR_CALLS_FOUND",
+        "payload": {
+         "requestId": "r1",
+         "calls": [
+          {
+           "head": "http",
+           "args": [
+            "GET",
+            "w"
+           ],
+           "path": "orbitals[0].traits[0].stateMachine.transitions[0].effects[0].do[0].then[0]"
+          },
+          {
+           "head": "http",
+           "args": [
+            "GET",
+            "l"
+           ],
+           "path": "orbitals[0].traits[0].stateMachine.transitions[0].effects[0].do[1].body[0]"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "lambda-body",
+   "steps": [
+    {
+     "event": "IR_CALLS_FIND",
+     "payload": {
+      "requestId": "r1",
+      "program": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "a",
+              "to": "a",
+              "event": "E",
+              "effects": [
+               [
+                "set",
+                "@entity.r",
+                [
+                 "array/map",
+                 "@xs",
+                 [
+                  "fn",
+                  "i",
+                  [
+                   "http",
+                   "GET",
+                   "f"
+                  ]
+                 ]
+                ]
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "heads": [
+       "http"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "IR_CALLS_FOUND",
+        "payload": {
+         "requestId": "r1",
+         "calls": [
+          {
+           "head": "http",
+           "args": [
+            "GET",
+            "f"
+           ],
+           "path": "orbitals[0].traits[0].stateMachine.transitions[0].effects[0][2][2][2]"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "tick-guard-and-effects",
+   "steps": [
+    {
+     "event": "IR_CALLS_FIND",
+     "payload": {
+      "requestId": "r1",
+      "program": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "transitions": []
+           },
+           "ticks": [
+            {
+             "interval": 1000,
+             "guard": [
+              "http",
+              "G"
+             ],
+             "effects": [
+              [
+               "do",
+               [
+                "emit",
+                "DONE"
+               ],
+               [
+                "http",
+                "GET",
+                "t"
+               ]
+              ]
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "heads": [
+       "http"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "IR_CALLS_FOUND",
+        "payload": {
+         "requestId": "r1",
+         "calls": [
+          {
+           "head": "http",
+           "args": [
+            "G"
+           ],
+           "path": "orbitals[0].traits[0].ticks[0].guard"
+          },
+          {
+           "head": "http",
+           "args": [
+            "GET",
+            "t"
+           ],
+           "path": "orbitals[0].traits[0].ticks[0].effects[0].do[1]"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "depth-five",
+   "steps": [
+    {
+     "event": "IR_CALLS_FIND",
+     "payload": {
+      "requestId": "r1",
+      "program": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "a",
+              "to": "a",
+              "event": "E",
+              "effects": [
+               [
+                "a",
+                [
+                 "b",
+                 [
+                  "c",
+                  [
+                   "d",
+                   [
+                    "http",
+                    "X"
+                   ]
+                  ]
+                 ]
+                ]
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "heads": [
+       "http"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "IR_CALLS_FOUND",
+        "payload": {
+         "requestId": "r1",
+         "calls": [
+          {
+           "head": "http",
+           "args": [
+            "X"
+           ],
+           "path": "orbitals[0].traits[0].stateMachine.transitions[0].effects[0][1][1][1][1]"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "several-heads-in-preorder",
+   "steps": [
+    {
+     "event": "IR_CALLS_FIND",
+     "payload": {
+      "requestId": "r1",
+      "program": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "a",
+              "to": "a",
+              "event": "E",
+              "effects": [
+               [
+                "do",
+                [
+                 "emit",
+                 "A"
+                ],
+                [
+                 "persist",
+                 "save",
+                 "T"
+                ],
+                [
+                 "http",
+                 "GET",
+                 "u"
+                ]
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "heads": [
+       "emit",
+       "persist"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "IR_CALLS_FOUND",
+        "payload": {
+         "requestId": "r1",
+         "calls": [
+          {
+           "head": "emit",
+           "args": [
+            "A"
+           ],
+           "path": "orbitals[0].traits[0].stateMachine.transitions[0].effects[0].do[0]"
+          },
+          {
+           "head": "persist",
+           "args": [
+            "save",
+            "T"
+           ],
+           "path": "orbitals[0].traits[0].stateMachine.transitions[0].effects[0].do[1]"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nested-same-head-outer-first",
+   "steps": [
+    {
+     "event": "IR_CALLS_FIND",
+     "payload": {
+      "requestId": "r1",
+      "program": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "a",
+              "to": "a",
+              "event": "E",
+              "effects": [
+               [
+                "http",
+                "GET",
+                [
+                 "http",
+                 "GET",
+                 "inner"
+                ]
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "heads": [
+       "http"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "IR_CALLS_FOUND",
+        "payload": {
+         "requestId": "r1",
+         "calls": [
+          {
+           "head": "http",
+           "args": [
+            "GET",
+            [
+             "http",
+             "GET",
+             "inner"
+            ]
+           ],
+           "path": "orbitals[0].traits[0].stateMachine.transitions[0].effects[0]"
+          },
+          {
+           "head": "http",
+           "args": [
+            "GET",
+            "inner"
+           ],
+           "path": "orbitals[0].traits[0].stateMachine.transitions[0].effects[0][2]"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "map-value",
+   "steps": [
+    {
+     "event": "IR_CALLS_FIND",
+     "payload": {
+      "requestId": "r1",
+      "program": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "a",
+              "to": "a",
+              "event": "E",
+              "effects": [
+               [
+                "os/read-file",
+                {
+                 "path": [
+                  "http",
+                  "GET",
+                  "m"
+                 ]
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "heads": [
+       "http"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "IR_CALLS_FOUND",
+        "payload": {
+         "requestId": "r1",
+         "calls": [
+          {
+           "head": "http",
+           "args": [
+            "GET",
+            "m"
+           ],
+           "path": "orbitals[0].traits[0].stateMachine.transitions[0].effects[0][1].path"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-absent-head",
+   "steps": [
+    {
+     "event": "IR_CALLS_FIND",
+     "payload": {
+      "requestId": "r1",
+      "program": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "a",
+              "to": "a",
+              "event": "E",
+              "effects": [
+               [
+                "set",
+                "@entity.a",
+                "b"
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "heads": [
+       "http"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "IR_CALLS_FOUND",
+        "payload": {
+         "requestId": "r1",
+         "calls": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-string-equal-to-head-is-data",
+   "steps": [
+    {
+     "event": "IR_CALLS_FIND",
+     "payload": {
+      "requestId": "r1",
+      "program": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "a",
+              "to": "a",
+              "event": "E",
+              "effects": [
+               [
+                "set",
+                "@entity.n",
+                "http"
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "heads": [
+       "http"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "IR_CALLS_FOUND",
+        "payload": {
+         "requestId": "r1",
+         "calls": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-quote-is-data",
+   "steps": [
+    {
+     "event": "IR_CALLS_FIND",
+     "payload": {
+      "requestId": "r1",
+      "program": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "a",
+              "to": "a",
+              "event": "E",
+              "effects": [
+               [
+                "do",
+                [
+                 "quote",
+                 [
+                  "http",
+                  "GET",
+                  "q"
+                 ]
+                ]
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "heads": [
+       "http"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "IR_CALLS_FOUND",
+        "payload": {
+         "requestId": "r1",
+         "calls": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-let-binding-named-head",
+   "steps": [
+    {
+     "event": "IR_CALLS_FIND",
+     "payload": {
+      "requestId": "r1",
+      "program": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "a",
+              "to": "a",
+              "event": "E",
+              "effects": [
+               [
+                "let",
+                [
+                 [
+                  "http",
+                  "1"
+                 ]
+                ],
+                "@http"
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "heads": [
+       "http"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "IR_CALLS_FOUND",
+        "payload": {
+         "requestId": "r1",
+         "calls": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-lambda-param-named-head",
+   "steps": [
+    {
+     "event": "IR_CALLS_FIND",
+     "payload": {
+      "requestId": "r1",
+      "program": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "a",
+              "to": "a",
+              "event": "E",
+              "effects": [
+               [
+                "array/map",
+                "@xs",
+                [
+                 "fn",
+                 [
+                  "http"
+                 ],
+                 "@http"
+                ]
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "heads": [
+       "http"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "IR_CALLS_FOUND",
+        "payload": {
+         "requestId": "r1",
+         "calls": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-no-heads-requested",
+   "steps": [
+    {
+     "event": "IR_CALLS_FIND",
+     "payload": {
+      "requestId": "r1",
+      "program": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "a",
+              "to": "a",
+              "event": "E",
+              "effects": [
+               [
+                "http",
+                "GET",
+                "u"
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "heads": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "IR_CALLS_FOUND",
+        "payload": {
+         "requestId": "r1",
+         "calls": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-no-orbitals",
+   "steps": [
+    {
+     "event": "IR_CALLS_FIND",
+     "payload": {
+      "requestId": "r1",
+      "program": {
+       "name": "app",
+       "orbitals": []
+      },
+      "heads": [
+       "http"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "IR_CALLS_FOUND",
+        "payload": {
+         "requestId": "r1",
+         "calls": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

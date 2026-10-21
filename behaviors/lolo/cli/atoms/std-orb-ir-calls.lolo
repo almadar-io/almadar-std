@@ -1,0 +1,91 @@
+app std-orb-ir-calls [
+  version: "1.0.0",
+  description: "std-orb-ir-calls — the one shared finder of operator and effect calls in a program's S-expression trees. IR_CALLS_FIND { requestId, program, heads } answers IR_CALLS_FOUND { requestId, calls } with one { head, args, path } per call whose head is in heads, in pre-order. It reads the guards and effects of every transition (path orbitals[i].traits[j].stateMachine.transitions[k].guard or .effects[m]) and of every tick (.ticks[k].guard or .effects[m]) of every inline trait, and walks each tree with tree/fold over the recursive IrExpr type: nested calls, lists, maps and lambda bodies are all reached. The path continues below the effect with the validator's convention: do[i-1] under do, then and else under if, then[i-2] under when, body[i-2] under let, and a bare [i] (or .key for a map) elsewhere. A quote form is data and is not entered, a lambda's parameter list and a let binding name are not calls, and a string that equals a head but is not the head of a list is data. The lints http, emit, call-service and persist compose this atom instead of walking the tree themselves."
+]
+
+uses Spec from "almadar-std/ir-calls"
+
+type IrExpr = string | number | boolean | [IrExpr] | Map string IrExpr
+type IrCall = { head : string!, args : [IrExpr]!, path : string! }
+type IrTransition = { guard : IrExpr, effects : IrExpr }
+type IrTick = { guard : IrExpr, effects : IrExpr }
+type IrMachine = { transitions : [IrTransition] }
+type IrTrait = { stateMachine : IrMachine, ticks : [IrTick] }
+type IrOrbital = { traits : [IrTrait] }
+type IrProgram = { orbitals : [IrOrbital] }
+
+orbital IrCallsOrbital {
+  entity IrCallsRun [runtime] {
+    id : string!
+    calls : [IrCall] = []
+  }
+
+  trait IrCalls -> IrCallsRun [lifecycle, instance] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      IR_CALLS_FIND -> ready
+        (set @entity.calls (let ((hs ?heads) (orbs (object/get ?program "orbitals" [])))
+            (let ((units (array/flatten (array/map (array/range 0 (array/len @orbs)) (fn oi
+                    (let ((trs (object/get (array/nth @orbs @oi) "traits" [])))
+                      (array/flatten (array/map (array/range 0 (array/len @trs)) (fn ti
+                        (let ((base (str/concat "orbitals[" @oi "].traits[" @ti "]"))
+                              (xs (object/get (object/get (array/nth @trs @ti) "stateMachine" {}) "transitions" []))
+                              (ks (object/get (array/nth @trs @ti) "ticks" [])))
+                          (array/concat
+                            (array/map (array/range 0 (array/len @xs)) (fn xi { path: (str/concat @base ".stateMachine.transitions[" @xi "]"), unit: (array/nth @xs @xi) }))
+                            (array/map (array/range 0 (array/len @ks)) (fn ki { path: (str/concat @base ".ticks[" @ki "]"), unit: (array/nth @ks @ki) })))))))))))))
+              (let ((roots (array/flatten (array/map @units (fn u
+                      (let ((x (object/get @u "unit")) (p (object/get @u "path")))
+                        (array/concat
+                          (if (object/has @x "guard") [{ path: (str/concat @p ".guard"), expr: (object/get @x "guard") }] [])
+                          (if (object/has @x "effects") [{ path: (str/concat @p ".effects"), expr: (object/get @x "effects") }] []))))))))
+                (array/flatten (array/map @roots (fn r
+                  (array/map
+                    (tree/fold (object/get @r "expr")
+                      (fn (n k)
+                        (if (validate/array @n)
+                          (let ((hd (if (and (> (array/len @k) 0) (validate/string (array/nth @n 0))) (array/nth @n 0) "")))
+                            (if (= @hd "quote")
+                              []
+                              (array/concat
+                                (if (and (!= @hd "") (array/includes @hs @hd)) [{ head: @hd, args: (array/map (array/range 1 (array/len @k)) (fn a (array/nth @n @a))), rel: "", d: 0 }] [])
+                                (let ((pairs (array/flatten (array/map (array/range 0 (array/len @k)) (fn i
+                                        (let ((piece (if (= @hd "do") (str/concat ".do[" (- @i 1) "]")
+                                                       (if (= @hd "if") (if (= @i 2) ".then" (if (= @i 3) ".else" (str/concat "[" @i "]")))
+                                                         (if (and (= @hd "when") (>= @i 2)) (str/concat ".then[" (- @i 2) "]")
+                                                           (if (and (= @hd "let") (>= @i 2)) (str/concat ".body[" (- @i 2) "]")
+                                                             (str/concat "[" @i "]"))))))
+                                              (res (array/nth @k @i)))
+                                          (if (and (= @hd "fn") (= @i 1))
+                                            []
+                                            (array/map
+                                              (if (and (= @hd "let") (= @i 1))
+                                                (array/filter @res (fn h (!= (object/get @h "d") 1)))
+                                                @res)
+                                              (fn h { head: (object/get @h "head"), args: (object/get @h "args"), rel: (str/concat @piece (object/get @h "rel")), d: (+ 1 (object/get @h "d")) })))))))))
+                                  @pairs))))
+                          (array/flatten (array/map (object/entries @k) (fn e
+                            (array/map (array/nth @e 1) (fn h { head: (object/get @h "head"), args: (object/get @h "args"), rel: (str/concat "." (array/nth @e 0) (object/get @h "rel")), d: (+ 1 (object/get @h "d")) })))))))
+                      "IrExpr")
+                    (fn h { head: (object/get @h "head"), args: (object/get @h "args"), path: (str/concat (object/get @r "path") (object/get @h "rel")) })))))))))
+        (emit IR_CALLS_FOUND { requestId: ?requestId, calls: @entity.calls })
+    }
+
+    emits {
+      IR_CALLS_FOUND -> external { requestId : string!  calls : [IrCall]! }
+        @description "Every call of a requested head in the program, in pre-order, each with its arguments and path."
+        @synonyms "ir calls found, operator calls, effect calls"
+        @tier "primary"
+    }
+
+    listens {
+      IR_CALLS_FIND -> external { requestId : string!  program : IrProgram!  heads : [string]! }
+        @description "Find every call whose head is in heads in the guards, effects and ticks of a program."
+        @synonyms "find calls, find operator, find effects, tree walk"
+    }
+  }
+
+  page "/orb-ir-calls" as IrCallsPage -> IrCalls
+}

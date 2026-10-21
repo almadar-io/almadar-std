@@ -1,0 +1,419 @@
+{
+ "atom": "cli/atoms/std-orb-lint-sign-in-route.lolo",
+ "trait": "OrbLintSignInRoute",
+ "note": "Expected findings are the code, path, message and suggestion `orb validate` (the Rust validator) reports for the same program.",
+ "cases": [
+  {
+   "id": "page-on-the-host-login-route",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/login",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintSignInRoute"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "sign-in-route",
+         "findings": [
+          {
+           "code": "ORB_P_HOST_RESERVED_ROUTE",
+           "path": "/login",
+           "message": "'/login' is the host's own sign-in route; no page may be declared on it",
+           "suggestion": "move this page to another route; name `signIn: \"/login\"` to send viewers to the host's sign-in",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintSignInRoute"
+    }
+   ]
+  },
+  {
+   "id": "sign-in-route-that-is-no-page",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "site": {
+        "signIn": "/enter"
+       }
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintSignInRoute"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "sign-in-route",
+         "findings": [
+          {
+           "code": "ORB_P_SIGN_IN_UNKNOWN_ROUTE",
+           "path": "site.signIn",
+           "message": "the `signIn` route '/enter' is no page of this app",
+           "suggestion": "point `signIn:` at a page anonymous viewers can open",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintSignInRoute"
+    }
+   ]
+  },
+  {
+   "id": "sign-in-route-that-is-itself-authenticated",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ],
+           "access": "authenticated"
+          }
+         ]
+        }
+       ],
+       "site": {
+        "signIn": "/a"
+       }
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintSignInRoute"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "sign-in-route",
+         "findings": [
+          {
+           "code": "ORB_P_SIGN_IN_UNKNOWN_ROUTE",
+           "path": "site.signIn",
+           "message": "the `signIn` route '/a' is itself `access: authenticated`",
+           "suggestion": "point `signIn:` at a page anonymous viewers can open",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintSignInRoute"
+    }
+   ]
+  },
+  {
+   "id": "control-sign-in-route-is-a-public-page",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          },
+          {
+           "name": "P2",
+           "path": "/enter",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ],
+           "access": "public"
+          }
+         ]
+        }
+       ],
+       "site": {
+        "signIn": "/enter"
+       }
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintSignInRoute"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "sign-in-route",
+         "findings": []
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintSignInRoute"
+    }
+   ]
+  }
+ ]
+}

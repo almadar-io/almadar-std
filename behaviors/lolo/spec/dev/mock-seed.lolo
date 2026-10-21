@@ -1,31 +1,18 @@
 app mock-seed-spec [
   version: "1.0.0",
-  description: "Design contract for mock row synthesis from declared fields: one value per field type, a declared default honored where it is a claim about every row, a declared mock candidate list rotated by row, relative mock dates resolved against the stream clock, and the same row ordinal always yielding the same index-strategy value."
+  description: "Design contract for mock row synthesis from declared fields: a field tree walked into cells and a nested value, the gates in order (intrinsic, honored default, declared mock, projection, vocabulary, type), relative mock dates resolved against the stream clock, the same row ordinal always yielding the same index-strategy value, and a whole dataset derived from a program: identity store first, rows with stamps from one stream, owner columns stamped for the viewer, later registrants backfilled, relations and projected fields linked."
 ]
 
 orbital MockSeedSpec {
   expects entity MockCell [runtime] {
     id : string!
-    fieldType : string
-    fieldName : string
-    entityName : string
-    declared : string
-    index : number
-    seeded : boolean
-    runtime : boolean
-    value : string
-    num : number
-    honored : boolean
-    hit : boolean
-    shape : string
-    omit : boolean
-    ids : [string]
-    kind : string
+    rng : number
+    words : [string]
   }
   expects trait MockSeed {
     state ready
-    state ready { SAMPLE_VALUE -> ready  SAMPLE_DATE -> ready  SAMPLE_TEXT -> ready  SAMPLE_IMAGE_URL -> ready  CHECK_DEFAULT -> ready  PICK_CANDIDATE -> ready  RESOLVE_MOCK_DATE -> ready  TYPE_MOCK -> ready  TITLE_CASE -> ready  SAMPLE_ROW_COUNT -> ready  MOCK_ROW_ID -> ready  SLUG -> ready  STORE_KEY -> ready  SEEDS_MOCK -> ready  FIELD_SHAPE -> ready  OMIT_ON_EVEN_ROW -> ready  PICK_VOCAB -> ready  PICK_MEMBER -> ready  CROSS_RELATION -> ready  SELF_RELATION -> ready  PROJECTION_PICK -> ready  FILE_VALUE -> ready  BYTES_VALUE -> ready  INSTANCE_META -> ready }
-    emits { MOCK_VALUE }
+    state ready { INIT -> ready  CORPUS_IS -> ready  WALK_START -> ready  WALK_ROW -> ready  SEED_STREAM -> ready  SEED_ROW -> ready  SAMPLE_ROWS -> ready  ROWS_NEXT -> ready  WALKED -> ready  DATASET_START -> ready  DS_OWNS_ENV -> ready  DS_OWNS_ENV_FAILED -> ready  DS_PROGRAM_FAILED -> ready  DS_PROGRAM_READ -> ready  DS_STORE -> ready  DS_LINKS -> ready  READ_OWNERS -> ready  DERIVE_OWNERS -> ready }
+    emits { WALKED  ROWS_DONE  SEED_ROW_DONE  STREAM_SEEDED  DATASET_DONE  DATASET_FAILED  READ_OWNERS_FOUND  OWNERS_DERIVED }
   }
   expects page "/mock-seed" -> MockSeed
 }

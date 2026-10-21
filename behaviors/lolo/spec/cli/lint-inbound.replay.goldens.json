@@ -1,0 +1,1570 @@
+{
+ "atom": "cli/atoms/std-orb-lint-inbound.lolo",
+ "trait": "OrbLintInbound",
+ "cases": [
+  {
+   "id": "control-declared-handler-declared-answer",
+   "steps": [
+    {
+     "trait": "OrbLintInbound",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "name": "CalOrbital",
+         "traits": [
+          {
+           "name": "Inbound",
+           "stateMachine": {
+            "events": [
+             {
+              "key": "PUSH_0",
+              "inbound": {
+               "name": "google-calendar",
+               "answers": "DONE"
+              }
+             }
+            ]
+           },
+           "emits": [
+            {
+             "event": "DONE"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "inbound": [
+        "google-calendar"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintInbound",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "inbound",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "handler-not-declared-by-app",
+   "steps": [
+    {
+     "trait": "OrbLintInbound",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "name": "CalOrbital",
+         "traits": [
+          {
+           "name": "Inbound",
+           "stateMachine": {
+            "events": [
+             {
+              "key": "PUSH_0",
+              "inbound": {
+               "name": "google-calendar",
+               "answers": "DONE"
+              }
+             }
+            ]
+           },
+           "emits": [
+            {
+             "event": "DONE"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "inbound": []
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintInbound",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "inbound",
+         "findings": [
+          {
+           "code": "ORB_INBOUND_UNDECLARED",
+           "path": "orbitals[0 (CalOrbital)].traits[0 (Inbound)].stateMachine.events[0]",
+           "message": "event 'PUSH_0' handles the inbound hook 'google-calendar', which the program's `inbound` does not declare",
+           "suggestion": "Add the hook name to the app's `inbound: [...]`",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "handler-with-app-inbound-absent",
+   "steps": [
+    {
+     "trait": "OrbLintInbound",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "name": "CalOrbital",
+         "traits": [
+          {
+           "name": "Inbound",
+           "stateMachine": {
+            "events": [
+             {
+              "key": "PUSH_0",
+              "inbound": {
+               "name": "google-calendar",
+               "answers": "DONE"
+              }
+             }
+            ]
+           },
+           "emits": [
+            {
+             "event": "DONE"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintInbound",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "inbound",
+         "findings": [
+          {
+           "code": "ORB_INBOUND_UNDECLARED",
+           "path": "orbitals[0 (CalOrbital)].traits[0 (Inbound)].stateMachine.events[0]",
+           "message": "event 'PUSH_0' handles the inbound hook 'google-calendar', which the program's `inbound` does not declare",
+           "suggestion": "Add the hook name to the app's `inbound: [...]`",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-declared-name-without-handler",
+   "steps": [
+    {
+     "trait": "OrbLintInbound",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "name": "CalOrbital",
+         "traits": [
+          {
+           "name": "Inbound",
+           "stateMachine": {
+            "events": []
+           },
+           "emits": []
+          }
+         ]
+        }
+       ],
+       "inbound": [
+        "google-calendar"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintInbound",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "inbound",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "two-handlers-of-one-name",
+   "steps": [
+    {
+     "trait": "OrbLintInbound",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "name": "CalOrbital",
+         "traits": [
+          {
+           "name": "Inbound",
+           "stateMachine": {
+            "events": [
+             {
+              "key": "PUSH_0",
+              "inbound": {
+               "name": "a",
+               "answers": "DONE"
+              }
+             },
+             {
+              "key": "PUSH_1",
+              "inbound": {
+               "name": "a",
+               "answers": "DONE"
+              }
+             }
+            ]
+           },
+           "emits": [
+            {
+             "event": "DONE"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "inbound": [
+        "a"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintInbound",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "inbound",
+         "findings": [
+          {
+           "code": "ORB_INBOUND_DUPLICATE",
+           "path": "orbitals[0 (CalOrbital)].traits[0 (Inbound)].stateMachine.events[1]",
+           "message": "the inbound hook 'a' has more than one handler",
+           "suggestion": "",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "answer-not-emitted",
+   "steps": [
+    {
+     "trait": "OrbLintInbound",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "name": "CalOrbital",
+         "traits": [
+          {
+           "name": "Inbound",
+           "stateMachine": {
+            "events": [
+             {
+              "key": "PUSH_0",
+              "inbound": {
+               "name": "a",
+               "answers": "DONE"
+              }
+             }
+            ]
+           },
+           "emits": [
+            {
+             "event": "OTHER"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "inbound": [
+        "a"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintInbound",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "inbound",
+         "findings": [
+          {
+           "code": "ORB_INBOUND_ANSWER_UNDECLARED",
+           "path": "orbitals[0 (CalOrbital)].traits[0 (Inbound)].stateMachine.events[0]",
+           "message": "event 'PUSH_0' answers with 'DONE', which the trait does not declare in `emits`",
+           "suggestion": "Declare the answer event in the trait's `emits { … }` with a `status : number!` and a `body : string!` payload",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-two-distinct-handlers",
+   "steps": [
+    {
+     "trait": "OrbLintInbound",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "name": "CalOrbital",
+         "traits": [
+          {
+           "name": "Inbound",
+           "stateMachine": {
+            "events": [
+             {
+              "key": "PUSH_0",
+              "inbound": {
+               "name": "a",
+               "answers": "DONE"
+              }
+             },
+             {
+              "key": "PUSH_1",
+              "inbound": {
+               "name": "b",
+               "answers": "DONE"
+              }
+             }
+            ]
+           },
+           "emits": [
+            {
+             "event": "DONE"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "inbound": [
+        "a",
+        "b"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintInbound",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "inbound",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "entry-invalid-empty",
+   "steps": [
+    {
+     "trait": "OrbLintInbound",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "name": "CalOrbital",
+         "traits": [
+          {
+           "name": "Inbound",
+           "stateMachine": {
+            "events": []
+           },
+           "emits": []
+          }
+         ]
+        }
+       ],
+       "inbound": [
+        ""
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintInbound",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "inbound",
+         "findings": [
+          {
+           "code": "ORB_INBOUND_ENTRY_INVALID",
+           "path": "inbound[0]",
+           "message": "inbound entry '' is not a hook name",
+           "suggestion": "Write the one path segment after /api/hooks/: lower-case letters, digits and '-'",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "entry-invalid-Google",
+   "steps": [
+    {
+     "trait": "OrbLintInbound",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "name": "CalOrbital",
+         "traits": [
+          {
+           "name": "Inbound",
+           "stateMachine": {
+            "events": []
+           },
+           "emits": []
+          }
+         ]
+        }
+       ],
+       "inbound": [
+        "Google"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintInbound",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "inbound",
+         "findings": [
+          {
+           "code": "ORB_INBOUND_ENTRY_INVALID",
+           "path": "inbound[0]",
+           "message": "inbound entry 'Google' is not a hook name",
+           "suggestion": "Write the one path segment after /api/hooks/: lower-case letters, digits and '-'",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "entry-invalid-aslashb",
+   "steps": [
+    {
+     "trait": "OrbLintInbound",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "name": "CalOrbital",
+         "traits": [
+          {
+           "name": "Inbound",
+           "stateMachine": {
+            "events": []
+           },
+           "emits": []
+          }
+         ]
+        }
+       ],
+       "inbound": [
+        "a/b"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintInbound",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "inbound",
+         "findings": [
+          {
+           "code": "ORB_INBOUND_ENTRY_INVALID",
+           "path": "inbound[0]",
+           "message": "inbound entry 'a/b' is not a hook name",
+           "suggestion": "Write the one path segment after /api/hooks/: lower-case letters, digits and '-'",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "entry-invalid--a",
+   "steps": [
+    {
+     "trait": "OrbLintInbound",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "name": "CalOrbital",
+         "traits": [
+          {
+           "name": "Inbound",
+           "stateMachine": {
+            "events": []
+           },
+           "emits": []
+          }
+         ]
+        }
+       ],
+       "inbound": [
+        "-a"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintInbound",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "inbound",
+         "findings": [
+          {
+           "code": "ORB_INBOUND_ENTRY_INVALID",
+           "path": "inbound[0]",
+           "message": "inbound entry '-a' is not a hook name",
+           "suggestion": "Write the one path segment after /api/hooks/: lower-case letters, digits and '-'",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "entry-invalid-aspaceb",
+   "steps": [
+    {
+     "trait": "OrbLintInbound",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "name": "CalOrbital",
+         "traits": [
+          {
+           "name": "Inbound",
+           "stateMachine": {
+            "events": []
+           },
+           "emits": []
+          }
+         ]
+        }
+       ],
+       "inbound": [
+        "a b"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintInbound",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "inbound",
+         "findings": [
+          {
+           "code": "ORB_INBOUND_ENTRY_INVALID",
+           "path": "inbound[0]",
+           "message": "inbound entry 'a b' is not a hook name",
+           "suggestion": "Write the one path segment after /api/hooks/: lower-case letters, digits and '-'",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "entry-invalid-aunderb",
+   "steps": [
+    {
+     "trait": "OrbLintInbound",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "name": "CalOrbital",
+         "traits": [
+          {
+           "name": "Inbound",
+           "stateMachine": {
+            "events": []
+           },
+           "emits": []
+          }
+         ]
+        }
+       ],
+       "inbound": [
+        "a_b"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintInbound",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "inbound",
+         "findings": [
+          {
+           "code": "ORB_INBOUND_ENTRY_INVALID",
+           "path": "inbound[0]",
+           "message": "inbound entry 'a_b' is not a hook name",
+           "suggestion": "Write the one path segment after /api/hooks/: lower-case letters, digits and '-'",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "entry-listed-twice",
+   "steps": [
+    {
+     "trait": "OrbLintInbound",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "name": "CalOrbital",
+         "traits": [
+          {
+           "name": "Inbound",
+           "stateMachine": {
+            "events": []
+           },
+           "emits": []
+          }
+         ]
+        }
+       ],
+       "inbound": [
+        "a",
+        "a"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintInbound",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "inbound",
+         "findings": [
+          {
+           "code": "ORB_INBOUND_ENTRY_INVALID",
+           "path": "inbound[1]",
+           "message": "inbound entry 'a' is listed twice",
+           "suggestion": "",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-entries-digit-and-hyphen",
+   "steps": [
+    {
+     "trait": "OrbLintInbound",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "name": "CalOrbital",
+         "traits": [
+          {
+           "name": "Inbound",
+           "stateMachine": {
+            "events": []
+           },
+           "emits": []
+          }
+         ]
+        }
+       ],
+       "inbound": [
+        "a-1",
+        "0b"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintInbound",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "inbound",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-verifies-well-formed",
+   "steps": [
+    {
+     "trait": "OrbLintInbound",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "name": "CalOrbital",
+         "traits": [
+          {
+           "name": "Inbound",
+           "stateMachine": {
+            "events": [
+             {
+              "key": "PUSH_0",
+              "inbound": {
+               "name": "a",
+               "answers": "DONE",
+               "verifies": {
+                "header": "x-goog-channel-token",
+                "credential": "GOOGLE_CALENDAR_CHANNEL_TOKEN"
+               }
+              }
+             }
+            ]
+           },
+           "emits": [
+            {
+             "event": "DONE"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "inbound": [
+        "a"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintInbound",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "inbound",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "verifies-invalid-X-Token-A",
+   "steps": [
+    {
+     "trait": "OrbLintInbound",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "name": "CalOrbital",
+         "traits": [
+          {
+           "name": "Inbound",
+           "stateMachine": {
+            "events": [
+             {
+              "key": "PUSH_0",
+              "inbound": {
+               "name": "a",
+               "answers": "DONE",
+               "verifies": {
+                "header": "X-Token",
+                "credential": "A"
+               }
+              }
+             }
+            ]
+           },
+           "emits": [
+            {
+             "event": "DONE"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "inbound": [
+        "a"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintInbound",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "inbound",
+         "findings": [
+          {
+           "code": "ORB_INBOUND_VERIFY_INVALID",
+           "path": "orbitals[0 (CalOrbital)].traits[0 (Inbound)].stateMachine.events[0]",
+           "message": "inbound hook 'a' verifies header 'X-Token' against credential 'A', which are not a lower-case header name and a credential name",
+           "suggestion": "Write `verifies \"x-signature-token\" \"PROVIDER_TOKEN\"`: a lower-case header, then a credential name of letters, digits and '_'",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "verifies-invalid-emptyhdr-A",
+   "steps": [
+    {
+     "trait": "OrbLintInbound",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "name": "CalOrbital",
+         "traits": [
+          {
+           "name": "Inbound",
+           "stateMachine": {
+            "events": [
+             {
+              "key": "PUSH_0",
+              "inbound": {
+               "name": "a",
+               "answers": "DONE",
+               "verifies": {
+                "header": "",
+                "credential": "A"
+               }
+              }
+             }
+            ]
+           },
+           "emits": [
+            {
+             "event": "DONE"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "inbound": [
+        "a"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintInbound",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "inbound",
+         "findings": [
+          {
+           "code": "ORB_INBOUND_VERIFY_INVALID",
+           "path": "orbitals[0 (CalOrbital)].traits[0 (Inbound)].stateMachine.events[0]",
+           "message": "inbound hook 'a' verifies header '' against credential 'A', which are not a lower-case header name and a credential name",
+           "suggestion": "Write `verifies \"x-signature-token\" \"PROVIDER_TOKEN\"`: a lower-case header, then a credential name of letters, digits and '_'",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "verifies-invalid-x token-A",
+   "steps": [
+    {
+     "trait": "OrbLintInbound",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "name": "CalOrbital",
+         "traits": [
+          {
+           "name": "Inbound",
+           "stateMachine": {
+            "events": [
+             {
+              "key": "PUSH_0",
+              "inbound": {
+               "name": "a",
+               "answers": "DONE",
+               "verifies": {
+                "header": "x token",
+                "credential": "A"
+               }
+              }
+             }
+            ]
+           },
+           "emits": [
+            {
+             "event": "DONE"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "inbound": [
+        "a"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintInbound",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "inbound",
+         "findings": [
+          {
+           "code": "ORB_INBOUND_VERIFY_INVALID",
+           "path": "orbitals[0 (CalOrbital)].traits[0 (Inbound)].stateMachine.events[0]",
+           "message": "inbound hook 'a' verifies header 'x token' against credential 'A', which are not a lower-case header name and a credential name",
+           "suggestion": "Write `verifies \"x-signature-token\" \"PROVIDER_TOKEN\"`: a lower-case header, then a credential name of letters, digits and '_'",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "verifies-invalid-x-token-emptycred",
+   "steps": [
+    {
+     "trait": "OrbLintInbound",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "name": "CalOrbital",
+         "traits": [
+          {
+           "name": "Inbound",
+           "stateMachine": {
+            "events": [
+             {
+              "key": "PUSH_0",
+              "inbound": {
+               "name": "a",
+               "answers": "DONE",
+               "verifies": {
+                "header": "x-token",
+                "credential": ""
+               }
+              }
+             }
+            ]
+           },
+           "emits": [
+            {
+             "event": "DONE"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "inbound": [
+        "a"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintInbound",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "inbound",
+         "findings": [
+          {
+           "code": "ORB_INBOUND_VERIFY_INVALID",
+           "path": "orbitals[0 (CalOrbital)].traits[0 (Inbound)].stateMachine.events[0]",
+           "message": "inbound hook 'a' verifies header 'x-token' against credential '', which are not a lower-case header name and a credential name",
+           "suggestion": "Write `verifies \"x-signature-token\" \"PROVIDER_TOKEN\"`: a lower-case header, then a credential name of letters, digits and '_'",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "verifies-invalid-x-token-A-B",
+   "steps": [
+    {
+     "trait": "OrbLintInbound",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "name": "CalOrbital",
+         "traits": [
+          {
+           "name": "Inbound",
+           "stateMachine": {
+            "events": [
+             {
+              "key": "PUSH_0",
+              "inbound": {
+               "name": "a",
+               "answers": "DONE",
+               "verifies": {
+                "header": "x-token",
+                "credential": "A-B"
+               }
+              }
+             }
+            ]
+           },
+           "emits": [
+            {
+             "event": "DONE"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "inbound": [
+        "a"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintInbound",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "inbound",
+         "findings": [
+          {
+           "code": "ORB_INBOUND_VERIFY_INVALID",
+           "path": "orbitals[0 (CalOrbital)].traits[0 (Inbound)].stateMachine.events[0]",
+           "message": "inbound hook 'a' verifies header 'x-token' against credential 'A-B', which are not a lower-case header name and a credential name",
+           "suggestion": "Write `verifies \"x-signature-token\" \"PROVIDER_TOKEN\"`: a lower-case header, then a credential name of letters, digits and '_'",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "verifies-invalid-x-token-A B",
+   "steps": [
+    {
+     "trait": "OrbLintInbound",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "name": "CalOrbital",
+         "traits": [
+          {
+           "name": "Inbound",
+           "stateMachine": {
+            "events": [
+             {
+              "key": "PUSH_0",
+              "inbound": {
+               "name": "a",
+               "answers": "DONE",
+               "verifies": {
+                "header": "x-token",
+                "credential": "A B"
+               }
+              }
+             }
+            ]
+           },
+           "emits": [
+            {
+             "event": "DONE"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "inbound": [
+        "a"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintInbound",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "inbound",
+         "findings": [
+          {
+           "code": "ORB_INBOUND_VERIFY_INVALID",
+           "path": "orbitals[0 (CalOrbital)].traits[0 (Inbound)].stateMachine.events[0]",
+           "message": "inbound hook 'a' verifies header 'x-token' against credential 'A B', which are not a lower-case header name and a credential name",
+           "suggestion": "Write `verifies \"x-signature-token\" \"PROVIDER_TOKEN\"`: a lower-case header, then a credential name of letters, digits and '_'",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

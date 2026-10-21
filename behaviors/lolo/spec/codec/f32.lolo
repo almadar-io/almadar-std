@@ -1,0 +1,21 @@
+app f32-spec [
+  version: "1.0.0",
+  description: "Design contract for encoding numbers as IEEE 754 binary32, the width the orb vector store keeps its scale in. F32_ENCODE { values } answers F32_ENCODED { bits, rounded } with, for each value in order, the binary32 bit pattern as an unsigned number (sign, 8 exponent bits, 23 mantissa bits) and the number that pattern stands for, rounded to nearest with ties to the even mantissa exactly as a Rust f64 to f32 cast does: a tie between two representable neighbours goes to the one with an even last bit, a value below the smallest normal rounds on the subnormal grid (the unit 2^-149), a value that rounds up through the top of its binade carries into the next exponent, and a value rounding to zero gives bits 0. A value whose rounding would pass the largest finite binary32 is refused with F32_REFUSED { index, reason: overflow } naming the first such value, never an infinity."
+]
+
+orbital F32Spec {
+  expects entity F32Run [runtime] {
+    id : string
+    values : [number]
+  }
+  expects trait F32Encode {
+    state idle {
+      F32_ENCODE -> idle
+    }
+    emits {
+      F32_ENCODED { bits : [number]!  rounded : [number]! }
+      F32_REFUSED { index : number!  reason : string! }
+    }
+  }
+  expects page "/f32" -> F32Encode
+}

@@ -1,0 +1,199 @@
+app std-orb-reference [
+  version: "1.0.0",
+  inbound: ["cli-reference"],
+  fs: { cwd: "**": [read] },
+  description: "std-orb-reference — the `orb reference [TOPIC]` command (spec/cli/orb-reference.lolo; port of orbital-cli commands/reference.rs). It reads the installed @almadar/core package.json, follows its orbLanguage block to the constructs, validation-codes and vocabulary tables, and answers one compact JSON line (a value read from the tables keeps the table's key order as the Rust verb prints it; the index's own keys come out alphabetical, codes then constructs then vocabulary): no topic lists the constructs, the vocabulary and the code topics (codes/<category> with a count); `vocabulary` prints the vocabulary; `codes/<category>` lists that category's codes; any other topic names a construct (case-insensitive) with its doc and fields. examples is always [] until program/print can print one node (G-ORB-453). An unknown topic or an empty category answers status 500 (exit 1); more than one word or an unknown flag answers the usage (status 400, exit 2)."
+]
+uses Spec from "almadar-std/orb-reference"
+uses Args from "std/behaviors/std-args"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
+type RefCoreManifest = { orbLanguage : RefLanguageBlock? }
+type RefLanguageBlock = { constructs : string?, validationCodes : string?, vocabulary : string? }
+type RefField = { name : string!, type : string!, doc : string! }
+type RefConstruct = { name : string!, kind : string!, doc : string!, fields : [RefField]! }
+type RefConstructs = [RefConstruct]
+type RefCode = { code : string!, category : string!, description : string! }
+type RefCodes = [RefCode]
+type RefVocabulary = { keywords : [string]!, shapes : [string]!, tags : [string]!, categories : [string]!, capabilities : [string]!, annotations : [string]!, sigils : [string]!, effects : [string]!, types : [string]!, units : [string]!, literals : [string]!, reservedEvents : [string]! }
+
+orbital OrbReferenceOrbital {
+  entity ReferenceRun [runtime] {
+    id : string!
+    cwd : string = ""
+    topic : string = ""
+    constructsPath : string = ""
+    codesPath : string = ""
+    vocabulary : RefVocabulary = { keywords: [], shapes: [], tags: [], categories: [], capabilities: [], annotations: [], sigils: [], effects: [], types: [], units: [], literals: [], reservedEvents: [] }
+    constructs : [RefConstruct] = []
+  }
+
+  trait ArgsCli = Args.traits.ArgsParser {
+    listens {
+      OrbReference.REFERENCE_ARGS_PARSE -> ARGS_PARSE
+    }
+  }
+
+  trait OrbReference -> ReferenceRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      REFERENCE_CALLED -> parsing
+        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
+        (emit REFERENCE_ARGS_PARSE { stage: "reference" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [] })
+    }
+
+    state parsing {
+      INIT -> parsing
+      REFERENCE_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (> (array/len @payload.positionals) 1))
+        (emit REFERENCE_ANSWERED { status: 400, body: "usage: orb reference [TOPIC]" })
+      REFERENCE_ARGS_DONE -> working when (and (= (array/len @payload.errors) 0) (<= (array/len @payload.positionals) 1))
+        (emit REFERENCE_START { topic: (str/default (array/first @payload.positionals) "") })
+    }
+
+    state working {
+      INIT -> working
+      REFERENCE_DONE -> ready
+        (emit REFERENCE_ANSWERED { status: @payload.status, body: @payload.body })
+    }
+
+    emits {
+      REFERENCE_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      REFERENCE_ARGS_PARSE {
+        stage : string!
+        argv : [string]!
+        flags : [ArgFlag]!
+      }
+        @description "Internal: parse the call's words."
+        @tier "internal"
+      REFERENCE_START {
+        topic : string!
+      }
+        @description "Internal: answer the topic."
+        @tier "internal"
+    }
+
+    listens {
+      REFERENCE_CALLED -> inbound "cli-reference" answers REFERENCE_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb reference`."
+        @synonyms "orb reference, the language reference, a construct, the vocabulary, validation codes"
+      REFERENCE_ARGS_DONE {
+        stage : string!
+        flags : Map string [string]!
+        positionals : [string]!
+        errors : [string]!
+        words : [string]!
+      }
+        @description "std-args's ARGS_PARSED."
+      ArgsCli.ARGS_PARSED -> REFERENCE_ARGS_DONE
+      ReferenceEngine.REFERENCE_ANSWERED -> REFERENCE_DONE
+      REFERENCE_DONE { status : number!  body : string! }
+        @description "Internal: the engine's answer, relayed to the hook by its handler."
+        @tier "internal"
+    }
+  }
+
+  trait ReferenceEngine -> ReferenceRun [integration] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      REFERENCE_START -> loading
+        (set @entity.topic @payload.topic)
+        (os/read-file { anchor: "cwd" path: "node_modules/@almadar/core/package.json" } { key: "manifest" emit: { success: REFERENCE_MANIFEST, failure: REFERENCE_FAILED } })
+    }
+
+    state loading {
+      INIT -> loading
+      REFERENCE_FAILED -> idle
+        (emit REFERENCE_ANSWERED { status: 500, body: (str/concat "orb reference: " @payload.error) })
+      REFERENCE_MANIFEST -> idle when (or (= (object/get (json/parse (bytes/to-string @payload.data) RefCoreManifest) "orbLanguage") null) (= (object/get (object/get (json/parse (bytes/to-string @payload.data) RefCoreManifest) "orbLanguage") "constructs") null) (= (object/get (object/get (json/parse (bytes/to-string @payload.data) RefCoreManifest) "orbLanguage") "validationCodes") null) (= (object/get (object/get (json/parse (bytes/to-string @payload.data) RefCoreManifest) "orbLanguage") "vocabulary") null))
+        (emit REFERENCE_ANSWERED { status: 500, body: "orb reference: the installed @almadar/core declares no orbLanguage constructs, validationCodes and vocabulary" })
+      REFERENCE_MANIFEST -> loading when (and (!= (object/get (json/parse (bytes/to-string @payload.data) RefCoreManifest) "orbLanguage") null) (!= (object/get (object/get (json/parse (bytes/to-string @payload.data) RefCoreManifest) "orbLanguage") "constructs") null) (!= (object/get (object/get (json/parse (bytes/to-string @payload.data) RefCoreManifest) "orbLanguage") "validationCodes") null) (!= (object/get (object/get (json/parse (bytes/to-string @payload.data) RefCoreManifest) "orbLanguage") "vocabulary") null))
+        (set @entity.constructsPath (str/concat "node_modules/@almadar/core/" (object/get (object/get (json/parse (bytes/to-string @payload.data) RefCoreManifest) "orbLanguage") "constructs")))
+        (set @entity.codesPath (str/concat "node_modules/@almadar/core/" (object/get (object/get (json/parse (bytes/to-string @payload.data) RefCoreManifest) "orbLanguage") "validationCodes")))
+        (os/read-file { anchor: "cwd" path: (str/concat "node_modules/@almadar/core/" (object/get (object/get (json/parse (bytes/to-string @payload.data) RefCoreManifest) "orbLanguage") "vocabulary")) } { key: "vocabulary" emit: { success: REFERENCE_VOCABULARY, failure: REFERENCE_FAILED } })
+      REFERENCE_VOCABULARY -> loading
+        (set @entity.vocabulary (json/parse (bytes/to-string @payload.data) RefVocabulary))
+        (os/read-file { anchor: "cwd" path: @entity.constructsPath } { key: "constructs", emit: { success: REFERENCE_CONSTRUCTS, failure: REFERENCE_FAILED } })
+      REFERENCE_CONSTRUCTS -> loading
+        (set @entity.constructs (json/parse (bytes/to-string @payload.data) RefConstructs))
+        (os/read-file { anchor: "cwd" path: @entity.codesPath } { key: "codes", emit: { success: REFERENCE_CODES, failure: REFERENCE_FAILED } })
+      REFERENCE_CODES -> loading
+        (emit REFERENCE_RUN { topic: @entity.topic, vocabulary: @entity.vocabulary, constructs: @entity.constructs, codes: (json/parse (bytes/to-string @payload.data) RefCodes) })
+      REFERENCE_RUN -> idle when (= @payload.topic "")
+        (emit REFERENCE_ANSWERED { status: 200, body: (json/stringify { constructs: (array/map @payload.constructs (fn c { name: (object/get @c "name"), kind: (object/get @c "kind") })), vocabulary: @payload.vocabulary, codes: (array/map (array/sort (array/unique (array/map @payload.codes (fn c (object/get @c "category"))))) (fn cat { topic: (str/concat "codes/" @cat), count: (array/len (array/filter @payload.codes (fn c (= (object/get @c "category") @cat)))) })) }) })
+      REFERENCE_RUN -> idle when (= @payload.topic "vocabulary")
+        (emit REFERENCE_ANSWERED { status: 200, body: (json/stringify @payload.vocabulary) })
+      REFERENCE_RUN -> idle when (and (str/startsWith @payload.topic "codes/") (> (array/len (array/filter @payload.codes (fn c (= (object/get @c "category") (str/slice @payload.topic 6 (str/len @payload.topic)))))) 0))
+        (emit REFERENCE_ANSWERED { status: 200, body: (json/stringify { category: (str/slice @payload.topic 6 (str/len @payload.topic)), codes: (array/filter @payload.codes (fn c (= (object/get @c "category") (str/slice @payload.topic 6 (str/len @payload.topic))))) }) })
+      REFERENCE_RUN -> idle when (and (str/startsWith @payload.topic "codes/") (= (array/len (array/filter @payload.codes (fn c (= (object/get @c "category") (str/slice @payload.topic 6 (str/len @payload.topic)))))) 0))
+        (emit REFERENCE_ANSWERED { status: 500, body: (str/concat "Error: no validation codes in category `" (str/slice @payload.topic 6 (str/len @payload.topic)) "`") })
+      REFERENCE_RUN -> idle when (and (!= @payload.topic "") (!= @payload.topic "vocabulary") (not (str/startsWith @payload.topic "codes/")) (array/some @payload.constructs (fn c (= (str/lower (object/get @c "name")) (str/lower @payload.topic)))))
+        (emit REFERENCE_ANSWERED { status: 200, body: (json/stringify (object/merge (array/find @payload.constructs (fn c (= (str/lower (object/get @c "name")) (str/lower @payload.topic)))) { examples: [] })) })
+      REFERENCE_RUN -> idle when (and (!= @payload.topic "") (!= @payload.topic "vocabulary") (not (str/startsWith @payload.topic "codes/")) (not (array/some @payload.constructs (fn c (= (str/lower (object/get @c "name")) (str/lower @payload.topic))))))
+        (emit REFERENCE_ANSWERED { status: 500, body: (str/concat "Error: no reference topic `" @payload.topic "`; `orb reference` lists them") })
+    }
+
+    emits {
+      REFERENCE_ANSWERED -> external {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      REFERENCE_RUN {
+        topic : string!
+        vocabulary : RefVocabulary!
+        constructs : [RefConstruct]!
+        codes : [RefCode]!
+      }
+        @description "Internal: answer the topic against the loaded language tables."
+        @tier "internal"
+      REFERENCE_FAILED {
+        error : string
+      }
+        @description "A read failed."
+        @tier "internal"
+      REFERENCE_MANIFEST {
+        data : bytes!
+      }
+        @description "os/read-file: the installed @almadar/core package.json."
+        @tier "internal"
+      REFERENCE_VOCABULARY {
+        data : bytes!
+      }
+        @description "os/read-file: the installed vocabulary."
+        @tier "internal"
+      REFERENCE_CONSTRUCTS {
+        data : bytes!
+      }
+        @description "os/read-file: the installed constructs table."
+        @tier "internal"
+      REFERENCE_CODES {
+        data : bytes!
+      }
+        @description "os/read-file: the installed validation codes."
+        @tier "internal"
+    }
+
+    listens {
+      REFERENCE_START {
+        topic : string!
+      }
+        @description "Answer a reference topic."
+      OrbReference.REFERENCE_START -> REFERENCE_START
+    }
+  }
+
+  page "/orb-reference" as OrbReferencePage -> OrbReference, ArgsCli, ReferenceEngine
+}

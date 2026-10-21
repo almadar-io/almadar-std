@@ -1,0 +1,2279 @@
+{
+ "atom": "cli/atoms/std-orb-lint-id-refs.lolo",
+ "trait": "OrbLintIdRefs",
+ "cases": [
+  {
+   "id": "control-healthy-schema-is-silent",
+   "steps": [
+    {
+     "trait": "OrbLintIdRefs",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "name": "TestApp",
+       "orbitals": [
+        {
+         "name": "TaskOrbital",
+         "id": "orb_TASK000000000000000000000",
+         "entity": {
+          "name": "Task",
+          "id": "ent_TASK000000000000000000000",
+          "fields": [
+           {
+            "name": "title",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "TaskList",
+           "id": "trt_LIST000000000000000000000",
+           "linkedEntity": "Task",
+           "linkedEntityId": "ent_TASK000000000000000000000",
+           "emits": [
+            {
+             "event": "REFRESH",
+             "eventId": "evt_REFRESH0000000000000000"
+            }
+           ],
+           "listens": [
+            {
+             "event": "PING",
+             "eventId": "evt_PING0000000000000000000",
+             "triggers": "REFRESH",
+             "triggersId": "evt_REFRESH0000000000000000",
+             "source": {
+              "kind": "trait",
+              "trait": "TaskList",
+              "traitId": "trt_LIST000000000000000000000"
+             }
+            }
+           ],
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "Home",
+           "id": "pag_HOME000000000000000000000",
+           "path": "/"
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "ledger": {
+        "schemaVersion": 1,
+        "entries": {
+         "orb_TASK000000000000000000000": {
+          "id": "orb_TASK000000000000000000000",
+          "kind": "orbital",
+          "bakedName": "TaskOrbital",
+          "curName": "TaskOrbital",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "ent_TASK000000000000000000000": {
+          "id": "ent_TASK000000000000000000000",
+          "kind": "entity",
+          "bakedName": "Task",
+          "curName": "Task",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "trt_LIST000000000000000000000": {
+          "id": "trt_LIST000000000000000000000",
+          "kind": "trait",
+          "bakedName": "TaskList",
+          "curName": "TaskList",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "evt_REFRESH0000000000000000": {
+          "id": "evt_REFRESH0000000000000000",
+          "kind": "event",
+          "bakedName": "REFRESH",
+          "curName": "REFRESH",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_LIST000000000000000000000"
+         },
+         "evt_PING0000000000000000000": {
+          "id": "evt_PING0000000000000000000",
+          "kind": "event",
+          "bakedName": "PING",
+          "curName": "PING",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_LIST000000000000000000000"
+         },
+         "pag_HOME000000000000000000000": {
+          "id": "pag_HOME000000000000000000000",
+          "kind": "page",
+          "bakedName": "Home",
+          "curName": "Home",
+          "renames": [],
+          "owner": "workspace"
+         }
+        }
+       }
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintIdRefs",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "id-refs",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "unknown-ref-dangling-linked-entity",
+   "steps": [
+    {
+     "trait": "OrbLintIdRefs",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "name": "TestApp",
+       "orbitals": [
+        {
+         "name": "TaskOrbital",
+         "id": "orb_TASK000000000000000000000",
+         "entity": {
+          "name": "Task",
+          "id": "ent_TASK000000000000000000000",
+          "fields": [
+           {
+            "name": "title",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "TaskList",
+           "id": "trt_LIST000000000000000000000",
+           "linkedEntity": "Task",
+           "linkedEntityId": "ent_GHOST00000000000000000000",
+           "emits": [
+            {
+             "event": "REFRESH",
+             "eventId": "evt_REFRESH0000000000000000"
+            }
+           ],
+           "listens": [
+            {
+             "event": "PING",
+             "eventId": "evt_PING0000000000000000000",
+             "triggers": "REFRESH",
+             "triggersId": "evt_REFRESH0000000000000000",
+             "source": {
+              "kind": "trait",
+              "trait": "TaskList",
+              "traitId": "trt_LIST000000000000000000000"
+             }
+            }
+           ],
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "Home",
+           "id": "pag_HOME000000000000000000000",
+           "path": "/"
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "ledger": {
+        "schemaVersion": 1,
+        "entries": {
+         "orb_TASK000000000000000000000": {
+          "id": "orb_TASK000000000000000000000",
+          "kind": "orbital",
+          "bakedName": "TaskOrbital",
+          "curName": "TaskOrbital",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "ent_TASK000000000000000000000": {
+          "id": "ent_TASK000000000000000000000",
+          "kind": "entity",
+          "bakedName": "Task",
+          "curName": "Task",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "trt_LIST000000000000000000000": {
+          "id": "trt_LIST000000000000000000000",
+          "kind": "trait",
+          "bakedName": "TaskList",
+          "curName": "TaskList",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "evt_REFRESH0000000000000000": {
+          "id": "evt_REFRESH0000000000000000",
+          "kind": "event",
+          "bakedName": "REFRESH",
+          "curName": "REFRESH",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_LIST000000000000000000000"
+         },
+         "evt_PING0000000000000000000": {
+          "id": "evt_PING0000000000000000000",
+          "kind": "event",
+          "bakedName": "PING",
+          "curName": "PING",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_LIST000000000000000000000"
+         },
+         "pag_HOME000000000000000000000": {
+          "id": "pag_HOME000000000000000000000",
+          "kind": "page",
+          "bakedName": "Home",
+          "curName": "Home",
+          "renames": [],
+          "owner": "workspace"
+         }
+        }
+       }
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintIdRefs",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "id-refs",
+         "findings": [
+          {
+           "code": "ORB_ID_UNKNOWN_REF",
+           "path": "orbitals[0 (TaskOrbital)].traits[0].linkedEntity",
+           "message": "id `ent_GHOST00000000000000000000` matches no arena node nor ledger entry.",
+           "suggestion": "",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "unknown-ref-entity-ref-ids",
+   "steps": [
+    {
+     "trait": "OrbLintIdRefs",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "name": "TestApp",
+       "orbitals": [
+        {
+         "name": "TaskOrbital",
+         "id": "orb_TASK000000000000000000000",
+         "entity": {
+          "name": "Task",
+          "id": "ent_TASK000000000000000000000",
+          "fields": [
+           {
+            "name": "title",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "TaskList",
+           "id": "trt_LIST000000000000000000000",
+           "linkedEntity": "Task",
+           "linkedEntityId": "ent_TASK000000000000000000000",
+           "emits": [
+            {
+             "event": "REFRESH",
+             "eventId": "evt_REFRESH0000000000000000"
+            }
+           ],
+           "listens": [
+            {
+             "event": "PING",
+             "eventId": "evt_PING0000000000000000000",
+             "triggers": "REFRESH",
+             "triggersId": "evt_REFRESH0000000000000000",
+             "source": {
+              "kind": "trait",
+              "trait": "TaskList",
+              "traitId": "trt_LIST000000000000000000000"
+             }
+            }
+           ],
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "entityRefIds": {
+            "UpstreamTask": "ent_GHOST00000000000000000000"
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "Home",
+           "id": "pag_HOME000000000000000000000",
+           "path": "/"
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "ledger": {
+        "schemaVersion": 1,
+        "entries": {
+         "orb_TASK000000000000000000000": {
+          "id": "orb_TASK000000000000000000000",
+          "kind": "orbital",
+          "bakedName": "TaskOrbital",
+          "curName": "TaskOrbital",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "ent_TASK000000000000000000000": {
+          "id": "ent_TASK000000000000000000000",
+          "kind": "entity",
+          "bakedName": "Task",
+          "curName": "Task",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "trt_LIST000000000000000000000": {
+          "id": "trt_LIST000000000000000000000",
+          "kind": "trait",
+          "bakedName": "TaskList",
+          "curName": "TaskList",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "evt_REFRESH0000000000000000": {
+          "id": "evt_REFRESH0000000000000000",
+          "kind": "event",
+          "bakedName": "REFRESH",
+          "curName": "REFRESH",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_LIST000000000000000000000"
+         },
+         "evt_PING0000000000000000000": {
+          "id": "evt_PING0000000000000000000",
+          "kind": "event",
+          "bakedName": "PING",
+          "curName": "PING",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_LIST000000000000000000000"
+         },
+         "pag_HOME000000000000000000000": {
+          "id": "pag_HOME000000000000000000000",
+          "kind": "page",
+          "bakedName": "Home",
+          "curName": "Home",
+          "renames": [],
+          "owner": "workspace"
+         }
+        }
+       }
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintIdRefs",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "id-refs",
+         "findings": [
+          {
+           "code": "ORB_ID_UNKNOWN_REF",
+           "path": "orbitals[0 (TaskOrbital)].traits[0].entityRefIds[UpstreamTask]",
+           "message": "id `ent_GHOST00000000000000000000` matches no arena node nor ledger entry.",
+           "suggestion": "",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-stale-entity-ref-key-with-live-id",
+   "steps": [
+    {
+     "trait": "OrbLintIdRefs",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "name": "TestApp",
+       "orbitals": [
+        {
+         "name": "TaskOrbital",
+         "id": "orb_TASK000000000000000000000",
+         "entity": {
+          "name": "Task",
+          "id": "ent_TASK000000000000000000000",
+          "fields": [
+           {
+            "name": "title",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "TaskList",
+           "id": "trt_LIST000000000000000000000",
+           "linkedEntity": "Task",
+           "linkedEntityId": "ent_TASK000000000000000000000",
+           "emits": [
+            {
+             "event": "REFRESH",
+             "eventId": "evt_REFRESH0000000000000000"
+            }
+           ],
+           "listens": [
+            {
+             "event": "PING",
+             "eventId": "evt_PING0000000000000000000",
+             "triggers": "REFRESH",
+             "triggersId": "evt_REFRESH0000000000000000",
+             "source": {
+              "kind": "trait",
+              "trait": "TaskList",
+              "traitId": "trt_LIST000000000000000000000"
+             }
+            }
+           ],
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "entityRefIds": {
+            "OldTaskName": "ent_TASK000000000000000000000"
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "Home",
+           "id": "pag_HOME000000000000000000000",
+           "path": "/"
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "ledger": {
+        "schemaVersion": 1,
+        "entries": {
+         "orb_TASK000000000000000000000": {
+          "id": "orb_TASK000000000000000000000",
+          "kind": "orbital",
+          "bakedName": "TaskOrbital",
+          "curName": "TaskOrbital",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "ent_TASK000000000000000000000": {
+          "id": "ent_TASK000000000000000000000",
+          "kind": "entity",
+          "bakedName": "Task",
+          "curName": "Task",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "trt_LIST000000000000000000000": {
+          "id": "trt_LIST000000000000000000000",
+          "kind": "trait",
+          "bakedName": "TaskList",
+          "curName": "TaskList",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "evt_REFRESH0000000000000000": {
+          "id": "evt_REFRESH0000000000000000",
+          "kind": "event",
+          "bakedName": "REFRESH",
+          "curName": "REFRESH",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_LIST000000000000000000000"
+         },
+         "evt_PING0000000000000000000": {
+          "id": "evt_PING0000000000000000000",
+          "kind": "event",
+          "bakedName": "PING",
+          "curName": "PING",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_LIST000000000000000000000"
+         },
+         "pag_HOME000000000000000000000": {
+          "id": "pag_HOME000000000000000000000",
+          "kind": "page",
+          "bakedName": "Home",
+          "curName": "Home",
+          "renames": [],
+          "owner": "workspace"
+         }
+        }
+       }
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintIdRefs",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "id-refs",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "name-mismatch-emit-drift",
+   "steps": [
+    {
+     "trait": "OrbLintIdRefs",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "name": "TestApp",
+       "orbitals": [
+        {
+         "name": "TaskOrbital",
+         "id": "orb_TASK000000000000000000000",
+         "entity": {
+          "name": "Task",
+          "id": "ent_TASK000000000000000000000",
+          "fields": [
+           {
+            "name": "title",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "TaskList",
+           "id": "trt_LIST000000000000000000000",
+           "linkedEntity": "Task",
+           "linkedEntityId": "ent_TASK000000000000000000000",
+           "emits": [
+            {
+             "event": "RELOAD",
+             "eventId": "evt_REFRESH0000000000000000"
+            }
+           ],
+           "listens": [
+            {
+             "event": "PING",
+             "eventId": "evt_PING0000000000000000000",
+             "triggers": "REFRESH",
+             "triggersId": "evt_REFRESH0000000000000000",
+             "source": {
+              "kind": "trait",
+              "trait": "TaskList",
+              "traitId": "trt_LIST000000000000000000000"
+             }
+            }
+           ],
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "Home",
+           "id": "pag_HOME000000000000000000000",
+           "path": "/"
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "ledger": {
+        "schemaVersion": 1,
+        "entries": {
+         "orb_TASK000000000000000000000": {
+          "id": "orb_TASK000000000000000000000",
+          "kind": "orbital",
+          "bakedName": "TaskOrbital",
+          "curName": "TaskOrbital",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "ent_TASK000000000000000000000": {
+          "id": "ent_TASK000000000000000000000",
+          "kind": "entity",
+          "bakedName": "Task",
+          "curName": "Task",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "trt_LIST000000000000000000000": {
+          "id": "trt_LIST000000000000000000000",
+          "kind": "trait",
+          "bakedName": "TaskList",
+          "curName": "TaskList",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "evt_REFRESH0000000000000000": {
+          "id": "evt_REFRESH0000000000000000",
+          "kind": "event",
+          "bakedName": "REFRESH",
+          "curName": "REFRESH",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_LIST000000000000000000000"
+         },
+         "evt_PING0000000000000000000": {
+          "id": "evt_PING0000000000000000000",
+          "kind": "event",
+          "bakedName": "PING",
+          "curName": "PING",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_LIST000000000000000000000"
+         },
+         "pag_HOME000000000000000000000": {
+          "id": "pag_HOME000000000000000000000",
+          "kind": "page",
+          "bakedName": "Home",
+          "curName": "Home",
+          "renames": [],
+          "owner": "workspace"
+         }
+        }
+       }
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintIdRefs",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "id-refs",
+         "findings": [
+          {
+           "code": "ORB_ID_NAME_MISMATCH",
+           "path": "orbitals[0 (TaskOrbital)].traits[0].emits[0 (RELOAD)]",
+           "message": "name `RELOAD` disagrees with ledger curName `REFRESH` for id `evt_REFRESH0000000000000000`.",
+           "suggestion": "",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-config-forward-alias-accepted",
+   "steps": [
+    {
+     "trait": "OrbLintIdRefs",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "name": "TestApp",
+       "orbitals": [
+        {
+         "name": "TaskOrbital",
+         "id": "orb_TASK000000000000000000000",
+         "entity": {
+          "name": "Task",
+          "id": "ent_TASK000000000000000000000",
+          "fields": [
+           {
+            "name": "title",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "TaskList",
+           "id": "trt_LIST000000000000000000000",
+           "linkedEntity": "Task",
+           "linkedEntityId": "ent_TASK000000000000000000000",
+           "emits": [
+            {
+             "event": "REFRESH",
+             "eventId": "evt_REFRESH0000000000000000"
+            }
+           ],
+           "listens": [
+            {
+             "event": "PING",
+             "eventId": "evt_PING0000000000000000000",
+             "triggers": "REFRESH",
+             "triggersId": "evt_REFRESH0000000000000000",
+             "source": {
+              "kind": "trait",
+              "trait": "TaskList",
+              "traitId": "trt_LIST000000000000000000000"
+             }
+            }
+           ],
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "config": {
+            "onRefresh": {
+             "type": "string",
+             "default": "REFRESH"
+            }
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "Home",
+           "id": "pag_HOME000000000000000000000",
+           "path": "/"
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "ledger": {
+        "schemaVersion": 1,
+        "entries": {
+         "orb_TASK000000000000000000000": {
+          "id": "orb_TASK000000000000000000000",
+          "kind": "orbital",
+          "bakedName": "TaskOrbital",
+          "curName": "TaskOrbital",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "ent_TASK000000000000000000000": {
+          "id": "ent_TASK000000000000000000000",
+          "kind": "entity",
+          "bakedName": "Task",
+          "curName": "Task",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "trt_LIST000000000000000000000": {
+          "id": "trt_LIST000000000000000000000",
+          "kind": "trait",
+          "bakedName": "TaskList",
+          "curName": "TaskList",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "evt_REFRESH0000000000000000": {
+          "id": "evt_REFRESH0000000000000000",
+          "kind": "event",
+          "bakedName": "REFRESH",
+          "curName": "@config.onRefresh",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_LIST000000000000000000000"
+         },
+         "evt_PING0000000000000000000": {
+          "id": "evt_PING0000000000000000000",
+          "kind": "event",
+          "bakedName": "PING",
+          "curName": "PING",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_LIST000000000000000000000"
+         },
+         "pag_HOME000000000000000000000": {
+          "id": "pag_HOME000000000000000000000",
+          "kind": "page",
+          "bakedName": "Home",
+          "curName": "Home",
+          "renames": [],
+          "owner": "workspace"
+         }
+        }
+       }
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintIdRefs",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "id-refs",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "name-mismatch-config-forward-with-other-value",
+   "steps": [
+    {
+     "trait": "OrbLintIdRefs",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "name": "TestApp",
+       "orbitals": [
+        {
+         "name": "TaskOrbital",
+         "id": "orb_TASK000000000000000000000",
+         "entity": {
+          "name": "Task",
+          "id": "ent_TASK000000000000000000000",
+          "fields": [
+           {
+            "name": "title",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "TaskList",
+           "id": "trt_LIST000000000000000000000",
+           "linkedEntity": "Task",
+           "linkedEntityId": "ent_TASK000000000000000000000",
+           "emits": [
+            {
+             "event": "REFRESH",
+             "eventId": "evt_REFRESH0000000000000000"
+            }
+           ],
+           "listens": [
+            {
+             "event": "PING",
+             "eventId": "evt_PING0000000000000000000",
+             "triggers": "REFRESH",
+             "triggersId": "evt_REFRESH0000000000000000",
+             "source": {
+              "kind": "trait",
+              "trait": "TaskList",
+              "traitId": "trt_LIST000000000000000000000"
+             }
+            }
+           ],
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "config": {
+            "onRefresh": {
+             "type": "string",
+             "default": "OTHER"
+            }
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "Home",
+           "id": "pag_HOME000000000000000000000",
+           "path": "/"
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "ledger": {
+        "schemaVersion": 1,
+        "entries": {
+         "orb_TASK000000000000000000000": {
+          "id": "orb_TASK000000000000000000000",
+          "kind": "orbital",
+          "bakedName": "TaskOrbital",
+          "curName": "TaskOrbital",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "ent_TASK000000000000000000000": {
+          "id": "ent_TASK000000000000000000000",
+          "kind": "entity",
+          "bakedName": "Task",
+          "curName": "Task",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "trt_LIST000000000000000000000": {
+          "id": "trt_LIST000000000000000000000",
+          "kind": "trait",
+          "bakedName": "TaskList",
+          "curName": "TaskList",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "evt_REFRESH0000000000000000": {
+          "id": "evt_REFRESH0000000000000000",
+          "kind": "event",
+          "bakedName": "REFRESH",
+          "curName": "@config.onRefresh",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_LIST000000000000000000000"
+         },
+         "evt_PING0000000000000000000": {
+          "id": "evt_PING0000000000000000000",
+          "kind": "event",
+          "bakedName": "PING",
+          "curName": "PING",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_LIST000000000000000000000"
+         },
+         "pag_HOME000000000000000000000": {
+          "id": "pag_HOME000000000000000000000",
+          "kind": "page",
+          "bakedName": "Home",
+          "curName": "Home",
+          "renames": [],
+          "owner": "workspace"
+         }
+        }
+       }
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintIdRefs",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "id-refs",
+         "findings": [
+          {
+           "code": "ORB_ID_NAME_MISMATCH",
+           "path": "orbitals[0 (TaskOrbital)].traits[0].emits[0 (REFRESH)]",
+           "message": "name `REFRESH` disagrees with ledger curName `@config.onRefresh` for id `evt_REFRESH0000000000000000`.",
+           "suggestion": "",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_ID_NAME_MISMATCH",
+           "path": "orbitals[0 (TaskOrbital)].traits[0].listens[0].triggers",
+           "message": "name `REFRESH` disagrees with ledger curName `@config.onRefresh` for id `evt_REFRESH0000000000000000`.",
+           "suggestion": "",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "kind-mismatch-trait-id-at-entity-position",
+   "steps": [
+    {
+     "trait": "OrbLintIdRefs",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "name": "TestApp",
+       "orbitals": [
+        {
+         "name": "TaskOrbital",
+         "id": "orb_TASK000000000000000000000",
+         "entity": {
+          "name": "Task",
+          "id": "ent_TASK000000000000000000000",
+          "fields": [
+           {
+            "name": "title",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "TaskList",
+           "id": "trt_LIST000000000000000000000",
+           "linkedEntity": "Task",
+           "linkedEntityId": "trt_LIST000000000000000000000",
+           "emits": [
+            {
+             "event": "REFRESH",
+             "eventId": "evt_REFRESH0000000000000000"
+            }
+           ],
+           "listens": [
+            {
+             "event": "PING",
+             "eventId": "evt_PING0000000000000000000",
+             "triggers": "REFRESH",
+             "triggersId": "evt_REFRESH0000000000000000",
+             "source": {
+              "kind": "trait",
+              "trait": "TaskList",
+              "traitId": "trt_LIST000000000000000000000"
+             }
+            }
+           ],
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "Home",
+           "id": "pag_HOME000000000000000000000",
+           "path": "/"
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "ledger": {
+        "schemaVersion": 1,
+        "entries": {
+         "orb_TASK000000000000000000000": {
+          "id": "orb_TASK000000000000000000000",
+          "kind": "orbital",
+          "bakedName": "TaskOrbital",
+          "curName": "TaskOrbital",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "ent_TASK000000000000000000000": {
+          "id": "ent_TASK000000000000000000000",
+          "kind": "entity",
+          "bakedName": "Task",
+          "curName": "Task",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "trt_LIST000000000000000000000": {
+          "id": "trt_LIST000000000000000000000",
+          "kind": "trait",
+          "bakedName": "TaskList",
+          "curName": "TaskList",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "evt_REFRESH0000000000000000": {
+          "id": "evt_REFRESH0000000000000000",
+          "kind": "event",
+          "bakedName": "REFRESH",
+          "curName": "REFRESH",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_LIST000000000000000000000"
+         },
+         "evt_PING0000000000000000000": {
+          "id": "evt_PING0000000000000000000",
+          "kind": "event",
+          "bakedName": "PING",
+          "curName": "PING",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_LIST000000000000000000000"
+         },
+         "pag_HOME000000000000000000000": {
+          "id": "pag_HOME000000000000000000000",
+          "kind": "page",
+          "bakedName": "Home",
+          "curName": "Home",
+          "renames": [],
+          "owner": "workspace"
+         }
+        }
+       }
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintIdRefs",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "id-refs",
+         "findings": [
+          {
+           "code": "ORB_ID_KIND_MISMATCH",
+           "path": "orbitals[0 (TaskOrbital)].traits[0].linkedEntity",
+           "message": "id `trt_LIST000000000000000000000` has kind `trt_` but this position requires a `ent_` id.",
+           "suggestion": "",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_ID_NAME_MISMATCH",
+           "path": "orbitals[0 (TaskOrbital)].traits[0].linkedEntity",
+           "message": "name `Task` disagrees with ledger curName `TaskList` for id `trt_LIST000000000000000000000`.",
+           "suggestion": "",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-dotted-name-is-not-compared",
+   "steps": [
+    {
+     "trait": "OrbLintIdRefs",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "name": "TestApp",
+       "orbitals": [
+        {
+         "name": "TaskOrbital",
+         "id": "orb_TASK000000000000000000000",
+         "entity": {
+          "name": "Task",
+          "id": "ent_TASK000000000000000000000",
+          "fields": [
+           {
+            "name": "title",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "TaskList",
+           "id": "trt_LIST000000000000000000000",
+           "linkedEntity": "Alias.entity",
+           "linkedEntityId": "ent_TASK000000000000000000000",
+           "emits": [
+            {
+             "event": "REFRESH",
+             "eventId": "evt_REFRESH0000000000000000"
+            }
+           ],
+           "listens": [
+            {
+             "event": "PING",
+             "eventId": "evt_PING0000000000000000000",
+             "triggers": "REFRESH",
+             "triggersId": "evt_REFRESH0000000000000000",
+             "source": {
+              "kind": "trait",
+              "trait": "TaskList",
+              "traitId": "trt_LIST000000000000000000000"
+             }
+            }
+           ],
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "Home",
+           "id": "pag_HOME000000000000000000000",
+           "path": "/"
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "ledger": {
+        "schemaVersion": 1,
+        "entries": {
+         "orb_TASK000000000000000000000": {
+          "id": "orb_TASK000000000000000000000",
+          "kind": "orbital",
+          "bakedName": "TaskOrbital",
+          "curName": "TaskOrbital",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "ent_TASK000000000000000000000": {
+          "id": "ent_TASK000000000000000000000",
+          "kind": "entity",
+          "bakedName": "Other",
+          "curName": "Other",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "trt_LIST000000000000000000000": {
+          "id": "trt_LIST000000000000000000000",
+          "kind": "trait",
+          "bakedName": "TaskList",
+          "curName": "TaskList",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "evt_REFRESH0000000000000000": {
+          "id": "evt_REFRESH0000000000000000",
+          "kind": "event",
+          "bakedName": "REFRESH",
+          "curName": "REFRESH",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_LIST000000000000000000000"
+         },
+         "evt_PING0000000000000000000": {
+          "id": "evt_PING0000000000000000000",
+          "kind": "event",
+          "bakedName": "PING",
+          "curName": "PING",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_LIST000000000000000000000"
+         },
+         "pag_HOME000000000000000000000": {
+          "id": "pag_HOME000000000000000000000",
+          "kind": "page",
+          "bakedName": "Home",
+          "curName": "Home",
+          "renames": [],
+          "owner": "workspace"
+         }
+        }
+       }
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintIdRefs",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "id-refs",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-orbital-source-resolves",
+   "steps": [
+    {
+     "trait": "OrbLintIdRefs",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "name": "TestApp",
+       "orbitals": [
+        {
+         "name": "TaskOrbital",
+         "id": "orb_TASK000000000000000000000",
+         "entity": {
+          "name": "Task",
+          "id": "ent_TASK000000000000000000000",
+          "fields": [
+           {
+            "name": "title",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "TaskList",
+           "id": "trt_LIST000000000000000000000",
+           "linkedEntity": "Task",
+           "linkedEntityId": "ent_TASK000000000000000000000",
+           "emits": [
+            {
+             "event": "REFRESH",
+             "eventId": "evt_REFRESH0000000000000000"
+            }
+           ],
+           "listens": [
+            {
+             "event": "PING",
+             "eventId": "evt_PING0000000000000000000",
+             "triggers": "REFRESH",
+             "triggersId": "evt_REFRESH0000000000000000",
+             "source": {
+              "kind": "orbital",
+              "orbital": "TaskOrbital",
+              "orbitalId": "orb_TASK000000000000000000000",
+              "trait": "TaskList",
+              "traitId": "trt_LIST000000000000000000000"
+             }
+            }
+           ],
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "Home",
+           "id": "pag_HOME000000000000000000000",
+           "path": "/"
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "ledger": {
+        "schemaVersion": 1,
+        "entries": {
+         "orb_TASK000000000000000000000": {
+          "id": "orb_TASK000000000000000000000",
+          "kind": "orbital",
+          "bakedName": "TaskOrbital",
+          "curName": "TaskOrbital",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "ent_TASK000000000000000000000": {
+          "id": "ent_TASK000000000000000000000",
+          "kind": "entity",
+          "bakedName": "Task",
+          "curName": "Task",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "trt_LIST000000000000000000000": {
+          "id": "trt_LIST000000000000000000000",
+          "kind": "trait",
+          "bakedName": "TaskList",
+          "curName": "TaskList",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "evt_REFRESH0000000000000000": {
+          "id": "evt_REFRESH0000000000000000",
+          "kind": "event",
+          "bakedName": "REFRESH",
+          "curName": "REFRESH",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_LIST000000000000000000000"
+         },
+         "evt_PING0000000000000000000": {
+          "id": "evt_PING0000000000000000000",
+          "kind": "event",
+          "bakedName": "PING",
+          "curName": "PING",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_LIST000000000000000000000"
+         },
+         "pag_HOME000000000000000000000": {
+          "id": "pag_HOME000000000000000000000",
+          "kind": "page",
+          "bakedName": "Home",
+          "curName": "Home",
+          "renames": [],
+          "owner": "workspace"
+         }
+        }
+       }
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintIdRefs",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "id-refs",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "unknown-ref-orbital-source",
+   "steps": [
+    {
+     "trait": "OrbLintIdRefs",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "name": "TestApp",
+       "orbitals": [
+        {
+         "name": "TaskOrbital",
+         "id": "orb_TASK000000000000000000000",
+         "entity": {
+          "name": "Task",
+          "id": "ent_TASK000000000000000000000",
+          "fields": [
+           {
+            "name": "title",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "TaskList",
+           "id": "trt_LIST000000000000000000000",
+           "linkedEntity": "Task",
+           "linkedEntityId": "ent_TASK000000000000000000000",
+           "emits": [
+            {
+             "event": "REFRESH",
+             "eventId": "evt_REFRESH0000000000000000"
+            }
+           ],
+           "listens": [
+            {
+             "event": "PING",
+             "eventId": "evt_PING0000000000000000000",
+             "triggers": "REFRESH",
+             "triggersId": "evt_REFRESH0000000000000000",
+             "source": {
+              "kind": "orbital",
+              "orbital": "TaskOrbital",
+              "orbitalId": "orb_GHOST0000000000000000000",
+              "trait": "TaskList",
+              "traitId": "trt_LIST000000000000000000000"
+             }
+            }
+           ],
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "Home",
+           "id": "pag_HOME000000000000000000000",
+           "path": "/"
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "ledger": {
+        "schemaVersion": 1,
+        "entries": {
+         "orb_TASK000000000000000000000": {
+          "id": "orb_TASK000000000000000000000",
+          "kind": "orbital",
+          "bakedName": "TaskOrbital",
+          "curName": "TaskOrbital",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "ent_TASK000000000000000000000": {
+          "id": "ent_TASK000000000000000000000",
+          "kind": "entity",
+          "bakedName": "Task",
+          "curName": "Task",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "trt_LIST000000000000000000000": {
+          "id": "trt_LIST000000000000000000000",
+          "kind": "trait",
+          "bakedName": "TaskList",
+          "curName": "TaskList",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "evt_REFRESH0000000000000000": {
+          "id": "evt_REFRESH0000000000000000",
+          "kind": "event",
+          "bakedName": "REFRESH",
+          "curName": "REFRESH",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_LIST000000000000000000000"
+         },
+         "evt_PING0000000000000000000": {
+          "id": "evt_PING0000000000000000000",
+          "kind": "event",
+          "bakedName": "PING",
+          "curName": "PING",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_LIST000000000000000000000"
+         },
+         "pag_HOME000000000000000000000": {
+          "id": "pag_HOME000000000000000000000",
+          "kind": "page",
+          "bakedName": "Home",
+          "curName": "Home",
+          "renames": [],
+          "owner": "workspace"
+         }
+        }
+       }
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintIdRefs",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "id-refs",
+         "findings": [
+          {
+           "code": "ORB_ID_UNKNOWN_REF",
+           "path": "orbitals[0 (TaskOrbital)].traits[0].listens[0].source.orbital",
+           "message": "id `orb_GHOST0000000000000000000` matches no arena node nor ledger entry.",
+           "suggestion": "",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "unknown-ref-extends",
+   "steps": [
+    {
+     "trait": "OrbLintIdRefs",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "name": "TestApp",
+       "orbitals": [
+        {
+         "name": "TaskOrbital",
+         "id": "orb_TASK000000000000000000000",
+         "entity": {
+          "name": "Task2",
+          "extends": "Task",
+          "extendsId": "ent_GHOST00000000000000000000"
+         },
+         "traits": [
+          {
+           "name": "TaskList",
+           "id": "trt_LIST000000000000000000000",
+           "linkedEntity": "Task",
+           "linkedEntityId": "ent_TASK000000000000000000000",
+           "emits": [
+            {
+             "event": "REFRESH",
+             "eventId": "evt_REFRESH0000000000000000"
+            }
+           ],
+           "listens": [
+            {
+             "event": "PING",
+             "eventId": "evt_PING0000000000000000000",
+             "triggers": "REFRESH",
+             "triggersId": "evt_REFRESH0000000000000000",
+             "source": {
+              "kind": "trait",
+              "trait": "TaskList",
+              "traitId": "trt_LIST000000000000000000000"
+             }
+            }
+           ],
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "Home",
+           "id": "pag_HOME000000000000000000000",
+           "path": "/"
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "ledger": {
+        "schemaVersion": 1,
+        "entries": {
+         "orb_TASK000000000000000000000": {
+          "id": "orb_TASK000000000000000000000",
+          "kind": "orbital",
+          "bakedName": "TaskOrbital",
+          "curName": "TaskOrbital",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "ent_TASK000000000000000000000": {
+          "id": "ent_TASK000000000000000000000",
+          "kind": "entity",
+          "bakedName": "Task",
+          "curName": "Task",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "trt_LIST000000000000000000000": {
+          "id": "trt_LIST000000000000000000000",
+          "kind": "trait",
+          "bakedName": "TaskList",
+          "curName": "TaskList",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "evt_REFRESH0000000000000000": {
+          "id": "evt_REFRESH0000000000000000",
+          "kind": "event",
+          "bakedName": "REFRESH",
+          "curName": "REFRESH",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_LIST000000000000000000000"
+         },
+         "evt_PING0000000000000000000": {
+          "id": "evt_PING0000000000000000000",
+          "kind": "event",
+          "bakedName": "PING",
+          "curName": "PING",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_LIST000000000000000000000"
+         },
+         "pag_HOME000000000000000000000": {
+          "id": "pag_HOME000000000000000000000",
+          "kind": "page",
+          "bakedName": "Home",
+          "curName": "Home",
+          "renames": [],
+          "owner": "workspace"
+         }
+        }
+       }
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintIdRefs",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "id-refs",
+         "findings": [
+          {
+           "code": "ORB_ID_UNKNOWN_REF",
+           "path": "orbitals[0 (TaskOrbital)].entity.extends",
+           "message": "id `ent_GHOST00000000000000000000` matches no arena node nor ledger entry.",
+           "suggestion": "",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "unknown-ref-field-relation",
+   "steps": [
+    {
+     "trait": "OrbLintIdRefs",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "name": "TestApp",
+       "orbitals": [
+        {
+         "name": "TaskOrbital",
+         "id": "orb_TASK000000000000000000000",
+         "entity": {
+          "name": "Task",
+          "id": "ent_TASK000000000000000000000",
+          "fields": [
+           {
+            "name": "owner",
+            "type": "relation",
+            "relation": {
+             "entity": "Task",
+             "entityId": "ent_GHOST00000000000000000000"
+            }
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "TaskList",
+           "id": "trt_LIST000000000000000000000",
+           "linkedEntity": "Task",
+           "linkedEntityId": "ent_TASK000000000000000000000",
+           "emits": [
+            {
+             "event": "REFRESH",
+             "eventId": "evt_REFRESH0000000000000000"
+            }
+           ],
+           "listens": [
+            {
+             "event": "PING",
+             "eventId": "evt_PING0000000000000000000",
+             "triggers": "REFRESH",
+             "triggersId": "evt_REFRESH0000000000000000",
+             "source": {
+              "kind": "trait",
+              "trait": "TaskList",
+              "traitId": "trt_LIST000000000000000000000"
+             }
+            }
+           ],
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "Home",
+           "id": "pag_HOME000000000000000000000",
+           "path": "/"
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "ledger": {
+        "schemaVersion": 1,
+        "entries": {
+         "orb_TASK000000000000000000000": {
+          "id": "orb_TASK000000000000000000000",
+          "kind": "orbital",
+          "bakedName": "TaskOrbital",
+          "curName": "TaskOrbital",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "ent_TASK000000000000000000000": {
+          "id": "ent_TASK000000000000000000000",
+          "kind": "entity",
+          "bakedName": "Task",
+          "curName": "Task",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "trt_LIST000000000000000000000": {
+          "id": "trt_LIST000000000000000000000",
+          "kind": "trait",
+          "bakedName": "TaskList",
+          "curName": "TaskList",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "evt_REFRESH0000000000000000": {
+          "id": "evt_REFRESH0000000000000000",
+          "kind": "event",
+          "bakedName": "REFRESH",
+          "curName": "REFRESH",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_LIST000000000000000000000"
+         },
+         "evt_PING0000000000000000000": {
+          "id": "evt_PING0000000000000000000",
+          "kind": "event",
+          "bakedName": "PING",
+          "curName": "PING",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_LIST000000000000000000000"
+         },
+         "pag_HOME000000000000000000000": {
+          "id": "pag_HOME000000000000000000000",
+          "kind": "page",
+          "bakedName": "Home",
+          "curName": "Home",
+          "renames": [],
+          "owner": "workspace"
+         }
+        }
+       }
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintIdRefs",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "id-refs",
+         "findings": [
+          {
+           "code": "ORB_ID_UNKNOWN_REF",
+           "path": "orbitals[0 (TaskOrbital)].entity.fields[0].relation",
+           "message": "id `ent_GHOST00000000000000000000` matches no arena node nor ledger entry.",
+           "suggestion": "",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-field-relation-resolves",
+   "steps": [
+    {
+     "trait": "OrbLintIdRefs",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "name": "TestApp",
+       "orbitals": [
+        {
+         "name": "TaskOrbital",
+         "id": "orb_TASK000000000000000000000",
+         "entity": {
+          "name": "Task",
+          "id": "ent_TASK000000000000000000000",
+          "fields": [
+           {
+            "name": "owner",
+            "type": "relation",
+            "relation": {
+             "entity": "Task",
+             "entityId": "ent_TASK000000000000000000000"
+            }
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "TaskList",
+           "id": "trt_LIST000000000000000000000",
+           "linkedEntity": "Task",
+           "linkedEntityId": "ent_TASK000000000000000000000",
+           "emits": [
+            {
+             "event": "REFRESH",
+             "eventId": "evt_REFRESH0000000000000000"
+            }
+           ],
+           "listens": [
+            {
+             "event": "PING",
+             "eventId": "evt_PING0000000000000000000",
+             "triggers": "REFRESH",
+             "triggersId": "evt_REFRESH0000000000000000",
+             "source": {
+              "kind": "trait",
+              "trait": "TaskList",
+              "traitId": "trt_LIST000000000000000000000"
+             }
+            }
+           ],
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "Home",
+           "id": "pag_HOME000000000000000000000",
+           "path": "/"
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "ledger": {
+        "schemaVersion": 1,
+        "entries": {
+         "orb_TASK000000000000000000000": {
+          "id": "orb_TASK000000000000000000000",
+          "kind": "orbital",
+          "bakedName": "TaskOrbital",
+          "curName": "TaskOrbital",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "ent_TASK000000000000000000000": {
+          "id": "ent_TASK000000000000000000000",
+          "kind": "entity",
+          "bakedName": "Task",
+          "curName": "Task",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "trt_LIST000000000000000000000": {
+          "id": "trt_LIST000000000000000000000",
+          "kind": "trait",
+          "bakedName": "TaskList",
+          "curName": "TaskList",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "evt_REFRESH0000000000000000": {
+          "id": "evt_REFRESH0000000000000000",
+          "kind": "event",
+          "bakedName": "REFRESH",
+          "curName": "REFRESH",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_LIST000000000000000000000"
+         },
+         "evt_PING0000000000000000000": {
+          "id": "evt_PING0000000000000000000",
+          "kind": "event",
+          "bakedName": "PING",
+          "curName": "PING",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_LIST000000000000000000000"
+         },
+         "pag_HOME000000000000000000000": {
+          "id": "pag_HOME000000000000000000000",
+          "kind": "page",
+          "bakedName": "Home",
+          "curName": "Home",
+          "renames": [],
+          "owner": "workspace"
+         }
+        }
+       }
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintIdRefs",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "id-refs",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

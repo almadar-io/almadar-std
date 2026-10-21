@@ -5,7 +5,7 @@ app std-behavior-catalog [
 ]
 ;; @capabilities "browse installed behaviors, search behaviors by meaning, describe a behavior's knobs and events, pick a behavior to bind"
 
-type CatalogHit = {
+type BehaviorCatalogHit = {
   behavior : string!
   description : string!
   topic : string!
@@ -15,30 +15,30 @@ type CatalogHit = {
   value : behavior!
   vectors : Map string [number]
 }
-type CatalogRow = {
+type BehaviorCatalogRow = {
   behavior : string!
   description : string!
   topic : string!
   level : string!
   score : number!
 }
-type KnobField = {
+type BehaviorCatalogKnobField = {
   name : string!
   type : string!
   label : string
   description : string
 }
-type DescribedTrait = {
+type BehaviorCatalogDescribedTrait = {
   trait : string!
-  knobs : [KnobField]!
+  knobs : [BehaviorCatalogKnobField]!
 }
-type DescribedOrbital = {
-  traits : [DescribedTrait]!
+type BehaviorCatalogDescribedOrbital = {
+  traits : [BehaviorCatalogDescribedTrait]!
 }
-type BehaviorDescription = {
+type BehaviorCatalogDescription = {
   behavior : string!
-  knobs : [KnobField]!
-  orbitals : [DescribedOrbital]!
+  knobs : [BehaviorCatalogKnobField]!
+  orbitals : [BehaviorCatalogDescribedOrbital]!
 }
 
 uses Llm from "std/behaviors/std-llm"
@@ -48,10 +48,10 @@ orbital BehaviorCatalogOrbital {
   entity BehaviorCatalogView [runtime] {
     id : string!
     query : string = ""
-    entries : [CatalogHit] = []
-    rows : [CatalogRow] = []
+    entries : [BehaviorCatalogHit] = []
+    rows : [BehaviorCatalogRow] = []
     detail : string = ""
-    knobs : [KnobField] = []
+    knobs : [BehaviorCatalogKnobField] = []
     error : string = ""
     selected : [string] = []
     status : "loading" | "ready" | "searching" | "describing" | "failed" = loading
@@ -323,7 +323,7 @@ orbital BehaviorCatalogOrbital {
       }
       CATALOG_SHOWN
       LISTED {
-        result : [CatalogHit]!
+        result : [BehaviorCatalogHit]!
       }
       LIST_FAILED {
         error : string!
@@ -334,7 +334,7 @@ orbital BehaviorCatalogOrbital {
         @description "Ask std-llm to embed the search query."
         @tier "internal"
       DESCRIBED {
-        result : BehaviorDescription!
+        result : BehaviorCatalogDescription!
       }
       DESCRIBE_FAILED {
         error : string!

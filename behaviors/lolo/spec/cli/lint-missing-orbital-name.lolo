@@ -1,0 +1,22 @@
+app lint-missing-orbital-name-spec [
+  version: "1.0.0",
+  description: "Design contract for the `orb lint missing-orbital-name <file>` command, the port of ORB_X_MISSING_ORBITAL_NAME (cross_orbital/mod.rs validate_cross_orbital). It lowers the file with program/read and reports every orbital whose name is empty at `orbitals[i].name` (status 500, exit 1). Clean answers `lint missing-orbital-name: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintMissingOrbitalNameSpec {
+  expects trait OrbLintMissingOrbitalName {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+      LINT_UNREAD { rule : string! }
+    }
+  }
+  expects trait OrbLintMissingOrbitalNameCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page "/orb-lint-missing-orbital-name" -> OrbLintMissingOrbitalName, OrbLintMissingOrbitalNameCli
+}

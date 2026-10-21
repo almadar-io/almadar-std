@@ -2,12 +2,13 @@ app lint-entity-field-type-spec [
   version: "1.0.0",
   description: "Design contract for `orb lint entity-field-type <file>`. It lowers the file with program/read and reports each top-level field with an empty name (ORB_E_INVALID_FIELD_NAME), a type outside the valid field types (ORB_E_INVALID_FIELD_TYPE) or a relation type with no relation configuration (ORB_E_INVALID_RELATION), the validate_field checks, with the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint entity-field-type: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
 orbital LintEntityFieldTypeSpec {
   expects trait OrbLintEntityFieldType {
     state ready
     emits {
-      LINT_FOUND { rule : string!  findings : [string]! }
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
       LINT_UNREAD { rule : string! }
     }
   }

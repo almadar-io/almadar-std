@@ -1,0 +1,453 @@
+{
+ "atom": "cli/atoms/std-args.lolo",
+ "trait": "ArgsParser",
+ "cases": [
+  {
+   "id": "bare-optional-flag-takes-its-default",
+   "steps": [
+    {
+     "event": "ARGS_PARSE",
+     "payload": {
+      "stage": "t",
+      "argv": [
+       "--dry-run",
+       "--release-orbital-rust"
+      ],
+      "flags": [
+       {
+        "name": "dry-run",
+        "aliases": [],
+        "takesValue": false,
+        "repeatable": false
+       },
+       {
+        "name": "scope",
+        "aliases": [],
+        "takesValue": true,
+        "repeatable": false
+       },
+       {
+        "name": "release-orbital-rust",
+        "aliases": [],
+        "takesValue": true,
+        "repeatable": false,
+        "defaultValue": "minor",
+        "choices": [
+         "patch",
+         "minor",
+         "major"
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ARGS_PARSED",
+        "payload": {
+         "stage": "t",
+         "flags": {
+          "dry-run": [
+           "true"
+          ],
+          "release-orbital-rust": [
+           "minor"
+          ]
+         },
+         "positionals": [],
+         "errors": [],
+         "words": [
+          "--dry-run",
+          "--release-orbital-rust",
+          "minor"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "optional-flag-takes-a-following-choice",
+   "steps": [
+    {
+     "event": "ARGS_PARSE",
+     "payload": {
+      "stage": "t",
+      "argv": [
+       "--release-orbital-rust",
+       "patch",
+       "--dry-run"
+      ],
+      "flags": [
+       {
+        "name": "dry-run",
+        "aliases": [],
+        "takesValue": false,
+        "repeatable": false
+       },
+       {
+        "name": "scope",
+        "aliases": [],
+        "takesValue": true,
+        "repeatable": false
+       },
+       {
+        "name": "release-orbital-rust",
+        "aliases": [],
+        "takesValue": true,
+        "repeatable": false,
+        "defaultValue": "minor",
+        "choices": [
+         "patch",
+         "minor",
+         "major"
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ARGS_PARSED",
+        "payload": {
+         "stage": "t",
+         "flags": {
+          "release-orbital-rust": [
+           "patch"
+          ],
+          "dry-run": [
+           "true"
+          ]
+         },
+         "positionals": [],
+         "errors": [],
+         "words": [
+          "--release-orbital-rust",
+          "patch",
+          "--dry-run"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "optional-flag-before-another-flag-takes-its-default",
+   "steps": [
+    {
+     "event": "ARGS_PARSE",
+     "payload": {
+      "stage": "t",
+      "argv": [
+       "--release-orbital-rust",
+       "--dry-run"
+      ],
+      "flags": [
+       {
+        "name": "dry-run",
+        "aliases": [],
+        "takesValue": false,
+        "repeatable": false
+       },
+       {
+        "name": "scope",
+        "aliases": [],
+        "takesValue": true,
+        "repeatable": false
+       },
+       {
+        "name": "release-orbital-rust",
+        "aliases": [],
+        "takesValue": true,
+        "repeatable": false,
+        "defaultValue": "minor",
+        "choices": [
+         "patch",
+         "minor",
+         "major"
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ARGS_PARSED",
+        "payload": {
+         "stage": "t",
+         "flags": {
+          "release-orbital-rust": [
+           "minor"
+          ],
+          "dry-run": [
+           "true"
+          ]
+         },
+         "positionals": [],
+         "errors": [],
+         "words": [
+          "--release-orbital-rust",
+          "minor",
+          "--dry-run"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "optional-flag-leaves-a-non-choice-word-alone",
+   "steps": [
+    {
+     "event": "ARGS_PARSE",
+     "payload": {
+      "stage": "t",
+      "argv": [
+       "--release-orbital-rust",
+       "core"
+      ],
+      "flags": [
+       {
+        "name": "dry-run",
+        "aliases": [],
+        "takesValue": false,
+        "repeatable": false
+       },
+       {
+        "name": "scope",
+        "aliases": [],
+        "takesValue": true,
+        "repeatable": false
+       },
+       {
+        "name": "release-orbital-rust",
+        "aliases": [],
+        "takesValue": true,
+        "repeatable": false,
+        "defaultValue": "minor",
+        "choices": [
+         "patch",
+         "minor",
+         "major"
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ARGS_PARSED",
+        "payload": {
+         "stage": "t",
+         "flags": {
+          "release-orbital-rust": [
+           "minor"
+          ]
+         },
+         "positionals": [
+          "core"
+         ],
+         "errors": [],
+         "words": [
+          "--release-orbital-rust",
+          "minor",
+          "core"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "optional-flag-equals-form-wins",
+   "steps": [
+    {
+     "event": "ARGS_PARSE",
+     "payload": {
+      "stage": "t",
+      "argv": [
+       "--release-orbital-rust=1.2.3"
+      ],
+      "flags": [
+       {
+        "name": "dry-run",
+        "aliases": [],
+        "takesValue": false,
+        "repeatable": false
+       },
+       {
+        "name": "scope",
+        "aliases": [],
+        "takesValue": true,
+        "repeatable": false
+       },
+       {
+        "name": "release-orbital-rust",
+        "aliases": [],
+        "takesValue": true,
+        "repeatable": false,
+        "defaultValue": "minor",
+        "choices": [
+         "patch",
+         "minor",
+         "major"
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ARGS_PARSED",
+        "payload": {
+         "stage": "t",
+         "flags": {
+          "release-orbital-rust": [
+           "1.2.3"
+          ]
+         },
+         "positionals": [],
+         "errors": [],
+         "words": [
+          "--release-orbital-rust",
+          "1.2.3"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-flag-without-default-still-reports-missing-value",
+   "steps": [
+    {
+     "event": "ARGS_PARSE",
+     "payload": {
+      "stage": "t",
+      "argv": [
+       "--scope"
+      ],
+      "flags": [
+       {
+        "name": "dry-run",
+        "aliases": [],
+        "takesValue": false,
+        "repeatable": false
+       },
+       {
+        "name": "scope",
+        "aliases": [],
+        "takesValue": true,
+        "repeatable": false
+       },
+       {
+        "name": "release-orbital-rust",
+        "aliases": [],
+        "takesValue": true,
+        "repeatable": false,
+        "defaultValue": "minor",
+        "choices": [
+         "patch",
+         "minor",
+         "major"
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ARGS_PARSED",
+        "payload": {
+         "stage": "t",
+         "flags": {
+          "scope": []
+         },
+         "positionals": [],
+         "errors": [
+          "missing value for --scope"
+         ],
+         "words": [
+          "--scope"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-flag-without-default-takes-the-next-word-whatever-it-is",
+   "steps": [
+    {
+     "event": "ARGS_PARSE",
+     "payload": {
+      "stage": "t",
+      "argv": [
+       "--scope",
+       "patch"
+      ],
+      "flags": [
+       {
+        "name": "dry-run",
+        "aliases": [],
+        "takesValue": false,
+        "repeatable": false
+       },
+       {
+        "name": "scope",
+        "aliases": [],
+        "takesValue": true,
+        "repeatable": false
+       },
+       {
+        "name": "release-orbital-rust",
+        "aliases": [],
+        "takesValue": true,
+        "repeatable": false,
+        "defaultValue": "minor",
+        "choices": [
+         "patch",
+         "minor",
+         "major"
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ARGS_PARSED",
+        "payload": {
+         "stage": "t",
+         "flags": {
+          "scope": [
+           "patch"
+          ]
+         },
+         "positionals": [],
+         "errors": [],
+         "words": [
+          "--scope",
+          "patch"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

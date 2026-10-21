@@ -1,0 +1,20 @@
+app theme-resolve-spec [
+  version: "1.0.0",
+  description: "Design contract for theme preset lookup and precedence (twin of orbital-core base theme.rs: theme_keys, carry_theme_definitions, resolve_theme). THEME_KEYS lists the data-theme keys a preset set defines; THEME_RESOLVE picks the orbital theme over the app theme over the minimalist default, splits a base-light or base-dark key, lets a requested mode override the key suffix, and says whether the base was found and whether the dark variant merges; THEME_CARRY names the presets a program carries (every referenced base, every switched-to base and the default, each once, sorted, only those the presets hold)."
+]
+
+orbital ThemeResolveSpec {
+  expects entity ThemeResolveRun [runtime] {
+    id : string!
+    key : string
+    base : string
+    mode : string
+    found : boolean
+  }
+  expects trait ThemeResolve {
+    state ready
+    state ready { THEME_KEYS -> ready  THEME_RESOLVE -> ready  THEME_CARRY -> ready }
+    emits { THEME_KEYS_RESULT  THEME_RESOLVED  THEME_CARRIED }
+  }
+  expects page "/theme-resolve" -> ThemeResolve
+}

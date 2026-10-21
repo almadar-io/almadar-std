@@ -1,0 +1,22 @@
+app lint-asset-inline-url-spec [
+  version: "1.0.0",
+  description: "Design contract for the `orb lint asset-inline-url <file>` command, the prevention rung of G-BEHAVIORS-101. It lowers the file with program/read and, for every orbital that composes std-asset-pack (a trait whose ref names an alias that the orbital's uses binds to std/behaviors/std-asset-pack, or any trait declaring the pack's assetPack config knob), reports each literal http:// or https:// string in the config defaults of its other traits and in its entity seed rows (instances), walked at any depth with tree/fold. The trait composed from the atom is skipped, the origin knob of a trait that declares assetPack is exempt, and the app egress entries are never read. One finding per url with its path (status 500, exit 1). Clean answers `lint asset-inline-url: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintAssetInlineUrlSpec {
+  expects trait OrbLintAssetInlineUrl {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+      LINT_UNREAD { rule : string! }
+    }
+  }
+  expects trait OrbLintAssetInlineUrlCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page "/orb-lint-asset-inline-url" -> OrbLintAssetInlineUrl, OrbLintAssetInlineUrlCli
+}

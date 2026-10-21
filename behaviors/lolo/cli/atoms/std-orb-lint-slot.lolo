@@ -1,0 +1,201 @@
+app std-orb-lint-slot [
+  version: "1.0.0",
+  inbound: ["cli-lint-slot"],
+  fs: { cwd: "**": [read] },
+  description: "std-orb-lint-slot — the `orb lint slot <file>` command, the port of the page slot checks ORB_SLOT_MAIN_NOT_COVERED, ORB_SLOT_CONTENTION, ORB_SLOT_CONTENTION_RUNTIME, ORB_SLOT_HUD_NON_GAME and ORB_SLOT_INVALID_NESTING (slot.rs validate_page_slots and validate_slot_nesting). It lowers the file with program/read and walks every page's traits, resolving by-ref page traits to their declarations (wider than Rust by owner ruling), and reports each slot finding with the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint slot: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-slot"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital OrbLintSlotOrbital {
+  entity OrbLintSlotRun [runtime] {
+    id : string!
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintSlot -> OrbLintSlotRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_RUN -> reading
+        (set @entity.findings [])
+        (os/read-file { anchor: "cwd" path: @payload.file } { key: "file" emit: { success: LINT_FILE_READ, failure: LINT_FILE_UNREAD } })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "slot", findings: @entity.findings })
+    }
+
+    state reading {
+      INIT -> reading
+      LINT_FILE_READ -> reading
+        (program/read (bytes/to-string @payload.data) { emit: { success: LINT_PROGRAM_READ, failure: LINT_FILE_UNREAD } })
+      LINT_PROGRAM_READ -> ready
+        (set @entity.findings (let ((orbitals (object/get @payload.result "orbitals" [])))
+          (let ((isGame (str/includes (str/lower (object/get (object/get (array/first @orbitals) "domainContext" {}) "category" "")) @config.gameWord)))
+          (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+            (let ((pgList (object/get (array/nth @orbitals @oi) "pages" [])) (orbTraits (object/get (array/nth @orbitals @oi) "traits" [])))
+              (array/flatten (array/map (array/range 0 (array/len @pgList)) (fn pj
+                (let ((where (str/concat "orbitals[" @oi "].pages[" @pj "]"))
+                      (trs (array/flatten (array/map (object/get (array/nth @pgList @pj) "traits" []) (fn r
+                        (if (not (validate/object @r)) []
+                          (if (object/has @r "stateMachine") (array/map [0] (fn z @r))
+                            (array/filter @orbTraits (fn t (= (object/get @t "name" "") (object/get @r "name" (object/get @r "ref" ""))))))))))))
+                  (let ((facts (array/map @trs (fn t
+                          (let ((sm (object/get @t "stateMachine" {})))
+                            (let ((init (object/get (array/find (object/get @sm "states" []) (fn s (= (object/get @s "isInitial" false) true))) "name" null))
+                                  (arms (array/map (object/get @sm "transitions" []) (fn a
+                                    { froms: (let ((raw (object/get @a "from" ""))) (if (validate/array @raw) @raw (array/map [0] (fn z @raw))))
+                                      to: (object/get @a "to" "")
+                                      dead: (and (object/has @a "guard") (= (let ((g4 (object/get @a "guard" null))) (if (validate/array @g4) (if (validate/string (array/nth @g4 0)) (let ((op4 (array/nth @g4 0)) (cl (array/filter (array/map (array/range 1 9) (fn i4 (if (= (array/nth @g4 @i4) null) "N" (let ((a4 (array/nth @g4 @i4))) (let ((g3 @a4)) (if (validate/array @g3) (if (validate/string (array/nth @g3 0)) (let ((op3 (array/nth @g3 0)) (cl (array/filter (array/map (array/range 1 9) (fn i3 (if (= (array/nth @g3 @i3) null) "N" (let ((a3 (array/nth @g3 @i3))) (let ((g2 @a3)) (if (validate/array @g2) (if (validate/string (array/nth @g2 0)) (let ((op2 (array/nth @g2 0)) (cl (array/filter (array/map (array/range 1 9) (fn i2 (if (= (array/nth @g2 @i2) null) "N" (let ((a2 (array/nth @g2 @i2))) (let ((g1 @a2)) (if (validate/array @g1) (if (validate/string (array/nth @g1 0)) (let ((op1 (array/nth @g1 0)) (cl (array/filter (array/map (array/range 1 9) (fn i1 (if (= (array/nth @g1 @i1) null) "N" (let ((a1 (array/nth @g1 @i1))) (let ((g0 @a1)) (if (validate/array @g0) "U" (if (validate/boolean @g0) (if @g0 "T" "F") (if (= @g0 null) "F" (if (validate/number @g0) (if (= @g0 0) "F" "T") (if (validate/string @g0) (if (= @g0 "") "F" (if (str/startsWith @g0 (quote "@")) "U" "T")) (if (validate/object @g0) (if (= (array/len (object/keys @g0)) 0) "F" "T") "U"))))))))))) (fn c (!= @c "N"))))) (if (= @op1 "and") (if (array/includes @cl "F") "F" (if (and (> (array/len @cl) 0) (= (array/len (array/filter @cl (fn c (= @c "T")))) (array/len @cl))) "T" "U")) (if (= @op1 "or") (if (array/includes @cl "T") "T" (if (and (> (array/len @cl) 0) (= (array/len (array/filter @cl (fn c (= @c "F")))) (array/len @cl))) "F" "U")) (if (= @op1 "not") (if (= (array/len @cl) 1) (if (= (array/nth @cl 0) "T") "F" (if (= (array/nth @cl 0) "F") "T" "U")) "U") (if (or (= @op1 "=") (= @op1 "==") (= @op1 "!=")) (if (and (= (array/len @cl) 2) (or (validate/boolean (array/nth @g1 1)) (validate/number (array/nth @g1 1)) (= (array/nth @g1 1) null) (and (validate/string (array/nth @g1 1)) (not (str/startsWith (array/nth @g1 1) (quote "@"))))) (or (validate/boolean (array/nth @g1 2)) (validate/number (array/nth @g1 2)) (= (array/nth @g1 2) null) (and (validate/string (array/nth @g1 2)) (not (str/startsWith (array/nth @g1 2) (quote "@")))))) (let ((eq (= (json/stringify (array/nth @g1 1)) (json/stringify (array/nth @g1 2))))) (if (= @eq (!= @op1 "!=")) "T" "F")) "U") "U"))))) (if (= (array/nth @g1 0) null) "F" "T")) (if (validate/boolean @g1) (if @g1 "T" "F") (if (= @g1 null) "F" (if (validate/number @g1) (if (= @g1 0) "F" "T") (if (validate/string @g1) (if (= @g1 "") "F" (if (str/startsWith @g1 (quote "@")) "U" "T")) (if (validate/object @g1) (if (= (array/len (object/keys @g1)) 0) "F" "T") "U"))))))))))) (fn c (!= @c "N"))))) (if (= @op2 "and") (if (array/includes @cl "F") "F" (if (and (> (array/len @cl) 0) (= (array/len (array/filter @cl (fn c (= @c "T")))) (array/len @cl))) "T" "U")) (if (= @op2 "or") (if (array/includes @cl "T") "T" (if (and (> (array/len @cl) 0) (= (array/len (array/filter @cl (fn c (= @c "F")))) (array/len @cl))) "F" "U")) (if (= @op2 "not") (if (= (array/len @cl) 1) (if (= (array/nth @cl 0) "T") "F" (if (= (array/nth @cl 0) "F") "T" "U")) "U") (if (or (= @op2 "=") (= @op2 "==") (= @op2 "!=")) (if (and (= (array/len @cl) 2) (or (validate/boolean (array/nth @g2 1)) (validate/number (array/nth @g2 1)) (= (array/nth @g2 1) null) (and (validate/string (array/nth @g2 1)) (not (str/startsWith (array/nth @g2 1) (quote "@"))))) (or (validate/boolean (array/nth @g2 2)) (validate/number (array/nth @g2 2)) (= (array/nth @g2 2) null) (and (validate/string (array/nth @g2 2)) (not (str/startsWith (array/nth @g2 2) (quote "@")))))) (let ((eq (= (json/stringify (array/nth @g2 1)) (json/stringify (array/nth @g2 2))))) (if (= @eq (!= @op2 "!=")) "T" "F")) "U") "U"))))) (if (= (array/nth @g2 0) null) "F" "T")) (if (validate/boolean @g2) (if @g2 "T" "F") (if (= @g2 null) "F" (if (validate/number @g2) (if (= @g2 0) "F" "T") (if (validate/string @g2) (if (= @g2 "") "F" (if (str/startsWith @g2 (quote "@")) "U" "T")) (if (validate/object @g2) (if (= (array/len (object/keys @g2)) 0) "F" "T") "U"))))))))))) (fn c (!= @c "N"))))) (if (= @op3 "and") (if (array/includes @cl "F") "F" (if (and (> (array/len @cl) 0) (= (array/len (array/filter @cl (fn c (= @c "T")))) (array/len @cl))) "T" "U")) (if (= @op3 "or") (if (array/includes @cl "T") "T" (if (and (> (array/len @cl) 0) (= (array/len (array/filter @cl (fn c (= @c "F")))) (array/len @cl))) "F" "U")) (if (= @op3 "not") (if (= (array/len @cl) 1) (if (= (array/nth @cl 0) "T") "F" (if (= (array/nth @cl 0) "F") "T" "U")) "U") (if (or (= @op3 "=") (= @op3 "==") (= @op3 "!=")) (if (and (= (array/len @cl) 2) (or (validate/boolean (array/nth @g3 1)) (validate/number (array/nth @g3 1)) (= (array/nth @g3 1) null) (and (validate/string (array/nth @g3 1)) (not (str/startsWith (array/nth @g3 1) (quote "@"))))) (or (validate/boolean (array/nth @g3 2)) (validate/number (array/nth @g3 2)) (= (array/nth @g3 2) null) (and (validate/string (array/nth @g3 2)) (not (str/startsWith (array/nth @g3 2) (quote "@")))))) (let ((eq (= (json/stringify (array/nth @g3 1)) (json/stringify (array/nth @g3 2))))) (if (= @eq (!= @op3 "!=")) "T" "F")) "U") "U"))))) (if (= (array/nth @g3 0) null) "F" "T")) (if (validate/boolean @g3) (if @g3 "T" "F") (if (= @g3 null) "F" (if (validate/number @g3) (if (= @g3 0) "F" "T") (if (validate/string @g3) (if (= @g3 "") "F" (if (str/startsWith @g3 (quote "@")) "U" "T")) (if (validate/object @g3) (if (= (array/len (object/keys @g3)) 0) "F" "T") "U"))))))))))) (fn c (!= @c "N"))))) (if (= @op4 "and") (if (array/includes @cl "F") "F" (if (and (> (array/len @cl) 0) (= (array/len (array/filter @cl (fn c (= @c "T")))) (array/len @cl))) "T" "U")) (if (= @op4 "or") (if (array/includes @cl "T") "T" (if (and (> (array/len @cl) 0) (= (array/len (array/filter @cl (fn c (= @c "F")))) (array/len @cl))) "F" "U")) (if (= @op4 "not") (if (= (array/len @cl) 1) (if (= (array/nth @cl 0) "T") "F" (if (= (array/nth @cl 0) "F") "T" "U")) "U") (if (or (= @op4 "=") (= @op4 "==") (= @op4 "!=")) (if (and (= (array/len @cl) 2) (or (validate/boolean (array/nth @g4 1)) (validate/number (array/nth @g4 1)) (= (array/nth @g4 1) null) (and (validate/string (array/nth @g4 1)) (not (str/startsWith (array/nth @g4 1) (quote "@"))))) (or (validate/boolean (array/nth @g4 2)) (validate/number (array/nth @g4 2)) (= (array/nth @g4 2) null) (and (validate/string (array/nth @g4 2)) (not (str/startsWith (array/nth @g4 2) (quote "@")))))) (let ((eq (= (json/stringify (array/nth @g4 1)) (json/stringify (array/nth @g4 2))))) (if (= @eq (!= @op4 "!=")) "T" "F")) "U") "U"))))) (if (= (array/nth @g4 0) null) "F" "T")) (if (validate/boolean @g4) (if @g4 "T" "F") (if (= @g4 null) "F" (if (validate/number @g4) (if (= @g4 0) "F" "T") (if (validate/string @g4) (if (= @g4 "") "F" (if (str/startsWith @g4 (quote "@")) "U" "T")) (if (validate/object @g4) (if (= (array/len (object/keys @g4)) 0) "F" "T") "U"))))))) "F"))
+                                      slots: (array/filter (array/map (object/get @a "effects" []) (fn e
+                                        (if (validate/array @e)
+                                          (if (and (array/includes @config.renderOps (array/nth @e 0)) (validate/string (array/nth @e 1))) (array/nth @e 1) null)
+                                          (if (and (validate/object @e) (array/some @config.renderOps (fn k (object/has @e @k))))
+                                            (let ((rk (array/find @config.renderOps (fn k (object/has @e @k)))))
+                                              (let ((sl (object/get (object/get @e @rk) "slot" null))) (if (validate/string @sl) @sl null)))
+                                            null)))) (fn x (!= @x null)))
+                                      event: (object/get @a "event" "") }))))
+                              (let ((reach (if (= @init null) [] (array/reduce (object/get @sm "states" []) (array/map [0] (fn z @init))
+                                  (fn (cur s) (array/unique (array/concat @cur (array/map (array/filter @arms (fn a (and (not (object/get @a "dead")) (array/some (object/get @a "froms") (fn f (or (= @f "*") (array/includes @cur @f))))))) (fn a (object/get @a "to"))))))))))
+                                { tn: (object/get @t "name" ""), init: @init, arms: @arms, reach: @reach }))))))
+                        )
+                    (let ((initR (array/flatten (array/map @facts (fn f
+                              (array/flatten (array/map (array/filter (object/get @f "arms") (fn a (and (= (object/get @a "event") "INIT") (!= (object/get @f "init") null) (array/some (object/get @a "froms") (fn x (or (= @x (object/get @f "init")) (= @x "*"))))))) (fn a
+                                (array/map (object/get @a "slots") (fn s { slot: @s, tn: (object/get @f "tn") })))))))))
+                          (allSlots (array/sort (array/unique (array/flatten (array/map @facts (fn f (array/flatten (array/map (object/get @f "arms") (fn a (object/get @a "slots"))))))))) ))
+                      (let ((initSlots (array/sort (array/unique (array/map @initR (fn r (object/get @r "slot")))))))
+                        (let ((runR (array/flatten (array/map @facts (fn f
+                                (if (= (object/get @f "init") null) []
+                                  (array/flatten (array/map (object/get @f "arms") (fn a
+                                    (array/flatten (array/map (object/get @a "froms") (fn fr
+                                      (let ((states (if (= @fr "*") (array/filter (object/get @f "reach") (fn st (!= @st (object/get @f "init")))) (if (and (!= @fr (object/get @f "init")) (array/includes (object/get @f "reach") @fr)) [@fr] []))))
+                                        (array/flatten (array/map @states (fn st (array/map (object/get @a "slots") (fn s { state: @st, slot: @s, tn: (object/get @f "tn") }))))))))))))))))))
+                          (let ((keys (array/sort (array/unique (array/map @runR (fn r (str/concat (object/get @r "state") "|" (object/get @r "slot"))))))))
+                            (array/flatten [
+                              (if (and (not (array/includes @initSlots @config.mainSlot)) (> (array/len @trs) 0))
+                                [{ code: "ORB_SLOT_MAIN_NOT_COVERED", path: @where, message: "Main slot is not covered by any trait on page load", suggestion: "Ensure at least one trait renders to 'main' slot in INIT transition", severity: "error" }] [])
+                              (array/flatten (array/map @initSlots (fn sl
+                                (let ((names (array/map (array/filter @initR (fn r (= (object/get @r "slot") @sl))) (fn r (object/get @r "tn")))))
+                                  (if (> (array/len @names) 1)
+                                    [{ code: "ORB_SLOT_CONTENTION", path: @where, message: (str/concat "Slot '" @sl "' has contention: multiple traits render to it: [" (str/join (array/map @names (fn n (json/stringify @n))) ", ") "]"), suggestion: "Each slot should be owned by exactly one trait", severity: "error" }]
+                                    [])))))
+                              (array/flatten (array/map @keys (fn k
+                                (let ((hits (array/filter @runR (fn r (= (str/concat (object/get @r "state") "|" (object/get @r "slot")) @k)))))
+                                  (let ((names (array/sort (array/unique (array/map @hits (fn r (object/get @r "tn")))))))
+                                    (if (> (array/len @names) 1)
+                                      [{ code: "ORB_SLOT_CONTENTION_RUNTIME", path: @where, message: (str/concat "Slot '" (object/get (array/nth @hits 0) "slot") "' in state '" (object/get (array/nth @hits 0) "state") "' has contention: traits [" (str/join (array/map @names (fn n (json/stringify @n))) ", ") "] all render to it."), suggestion: "Each slot should be owned by exactly one trait per state", severity: "error" }]
+                                      []))))))
+                              (if @isGame [] (array/map (array/filter @allSlots (fn sl (array/includes @config.hudSlots @sl))) (fn sl
+                                { code: "ORB_SLOT_HUD_NON_GAME", path: @where, message: (str/concat "Slot '" @sl "' is typically used in game context"), suggestion: "HUD slots are intended for game UIs", severity: "error" })))
+                              (let ((ov (array/filter @allSlots (fn sl (array/includes @config.overlaySlots @sl)))))
+                                (if (> (array/len @ov) 1)
+                                  [{ code: "ORB_SLOT_INVALID_NESTING", path: @where, message: (str/concat "Multiple overlay-type slots used: [" (str/join (array/map @ov (fn n (json/stringify @n))) ", ") "]. Consider if nesting is intended."), suggestion: "Avoid nesting modals within modals", severity: "error" }]
+                                  []))
+                            ])))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FILE_UNREAD -> ready
+        (emit LINT_UNREAD { rule: "slot" })
+    }
+
+    emits {
+      LINT_UNREAD -> external { rule : string! }
+        @description "This rule could not read or lower the file."
+        @tier "internal"
+      LINT_RUN -> external { file : string! }
+        @description "The lint request this trait answers, from the cli trait or the umbrella."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FILE_READ { data : bytes! }
+        @description "The file read."
+        @tier "internal"
+      LINT_FILE_UNREAD { error : string }
+        @description "The file could not be read or lowered."
+        @tier "internal"
+      LINT_PROGRAM_READ { result : string }
+        @description "The file lowered by program/read."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+
+    config {
+      mainSlot : string = "main"
+        @label "Main slot"
+        @description "The slot a page must cover on load."
+      hudSlots : [string] = ["hud-top", "hud-bottom"]
+        @label "Game-only slots"
+        @description "Slots meant for game pages only."
+      overlaySlots : [string] = ["modal", "drawer", "overlay"]
+        @label "Overlay slots"
+        @description "Slots of which a page should use at most one."
+      gameWord : string = "game"
+        @label "Game category word"
+        @description "The first orbital is a game when its domainContext.category contains this word."
+      renderOps : [string] = ["render_ui", "render-ui"]
+        @label "Render operators"
+        @description "The effect operators that paint a slot."
+    }
+
+    listens {
+      OrbLintSlotCli.LINT_RUN -> LINT_RUN
+    }
+  }
+
+  trait OrbLintSlotCli -> OrbLintSlotRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint slot <file>" })
+      LINT_CALLED -> waiting when (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (emit LINT_RUN { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "slot") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint slot: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "slot") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_UNREAD -> ready when (= @payload.rule "slot")
+        (emit LINT_ANSWERED { status: 500, body: "lint slot: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_RUN -> external { file : string! }
+        @description "Ask the rule trait to lint this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_UNREAD -> external { rule : string! }
+        @description "The rule trait could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-slot" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint slot` with its arguments and working directory."
+        @synonyms "orb lint slot, seed source"
+      OrbLintSlot.LINT_FOUND -> LINT_FOUND
+      OrbLintSlot.LINT_UNREAD -> LINT_UNREAD
+    }
+  }
+
+  page "/orb-lint-slot" as OrbLintSlotPage -> OrbLintSlot, OrbLintSlotCli
+}

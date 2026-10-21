@@ -6,11 +6,12 @@ app std-orb-lint-orbital-missing-pages [
 ]
 uses Spec from "almadar-std/lint-orbital-missing-pages"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
 orbital OrbLintOrbitalMissingPagesOrbital {
   entity OrbLintOrbitalMissingPagesRun [runtime] {
     id : string!
-    findings : [string] = []
+    findings : [OrbFinding] = []
   }
 
   trait OrbLintOrbitalMissingPages -> OrbLintOrbitalMissingPagesRun [integration] {
@@ -35,7 +36,7 @@ orbital OrbLintOrbitalMissingPagesOrbital {
             (let ((ob (array/nth @orbitals @oi)))
               (if (or (object/get @ob "spec" false) (object/has @ob "reference") (> (array/len (object/get @ob "pages" [])) 0))
                 []
-                [(str/concat "[ORB_O_MISSING_PAGES] orbitals[" @oi "]: Orbital '" (object/get @ob "name" "") "' has no pages defined - traits won't be accessible\n  suggestion: Add a pages array with at least one page to expose the orbital's traits")])))))))
+                [{ code: "ORB_O_MISSING_PAGES", path: (str/concat "orbitals[" @oi "]"), message: (str/concat "Orbital '" (object/get @ob "name" "") "' has no pages defined - traits won't be accessible"), suggestion: "Add a pages array with at least one page to expose the orbital's traits", severity: "error" }])))))))
         (emit LINT_FINISH { })
       LINT_FILE_UNREAD -> ready
         (emit LINT_UNREAD { rule: "orbital-missing-pages" })
@@ -48,7 +49,7 @@ orbital OrbLintOrbitalMissingPagesOrbital {
       LINT_RUN -> external { file : string! }
         @description "The lint request this trait answers, from the cli trait or the umbrella."
         @tier "internal"
-      LINT_FOUND -> external { rule : string!  findings : [string]! }
+      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
         @description "This rule's findings for the file, offered to the lint-all umbrella."
         @tier "internal"
       LINT_FILE_READ { data : bytes! }
@@ -86,7 +87,7 @@ orbital OrbLintOrbitalMissingPagesOrbital {
       LINT_FOUND -> ready when (and (= @payload.rule "orbital-missing-pages") (= (array/len @payload.findings) 0))
         (emit LINT_ANSWERED { status: 200, body: "lint orbital-missing-pages: clean" })
       LINT_FOUND -> ready when (and (= @payload.rule "orbital-missing-pages") (> (array/len @payload.findings) 0))
-        (emit LINT_ANSWERED { status: 500, body: (str/join @payload.findings "\n") })
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
       LINT_UNREAD -> ready when (= @payload.rule "orbital-missing-pages")
         (emit LINT_ANSWERED { status: 500, body: "lint orbital-missing-pages: the file could not be read or lowered" })
     }
@@ -101,7 +102,7 @@ orbital OrbLintOrbitalMissingPagesOrbital {
       LINT_RUN -> external { file : string! }
         @description "Ask the rule trait to lint this file."
         @tier "internal"
-      LINT_FOUND -> external { rule : string!  findings : [string]! }
+      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
         @description "The rule trait's findings for the file."
         @tier "internal"
       LINT_UNREAD -> external { rule : string! }

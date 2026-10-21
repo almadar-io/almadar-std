@@ -1,0 +1,40 @@
+app ml-vector-snapshot-spec [
+  version: "1.0.0",
+  description: "Design contract for writing a package's vector snapshot (dist/vectors.vec). A snapshot request names the texts to cover (each with the caller's key), the user vectors directory, the model the configured provider produces (empty when none is), the output path and the package's locked snapshot path (empty when none). The existing output and the locked snapshot are read only when the file exists, the locked one only when it is not the output. Every wanted text is resolved snapshots first, then the user store, and a text no store holds is embedded and persisted (or refuses when no provider is configured). The snapshot then holds exactly one record per distinct wanted text, each the stored quantized record itself, never a re-quantized one, sorted strictly ascending by key bytes, in the ORBVEC layout, written beside the output and renamed over it. An empty wanted list refuses ORB_VECTOR_EMPTY and writes nothing; a refusal anywhere leaves the output as it was. The same inputs give the same bytes."
+]
+
+orbital MlVectorSnapshotSpec {
+  expects entity SnapshotRun [runtime] {
+    id : string
+    out : string
+    model : string
+  }
+  expects trait Snapshot {
+    state idle {
+      SNAPSHOT -> outReading
+    }
+    state outReading {
+      SN_OUT_READ -> lockCheck
+    }
+    state lockCheck {
+      SN_NEXT -> resolving
+    }
+    state resolving {
+      VECTORS_ANSWERED -> rawReading
+    }
+    state rawReading {
+      SN_RAW_READ -> rawLookup
+    }
+    state rawLookup {
+      VECTOR_RESOLVED -> writing
+    }
+    state writing {
+      SN_RENAMED -> idle
+    }
+    emits {
+      SNAPSHOT_DONE { model : string!  records : number!  out : string! }
+      SNAPSHOT_REFUSED { code : string!  detail : string! }
+    }
+  }
+  expects page "/vector-snapshot" -> Snapshot
+}

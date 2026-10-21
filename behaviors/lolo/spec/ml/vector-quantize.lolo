@@ -1,0 +1,28 @@
+app ml-vector-quantize-spec [
+  version: "1.0.0",
+  description: "Design contract for quantizing embedding vectors into ORBVEC records (quantize in orbital-core vector_store.rs). Each component is first cast to binary32 (the embedder parse is a Rust f64 to f32 cast). A record has scale = the largest absolute component, 1 when all components are zero; each byte is floor(component / scale * 127 + 0.5) clamped to -128..127 in double arithmetic; the stored scale is the scale rounded to 6 significant digits by exact decimal rounding with ties to even, then cast to binary32, for every binary32 scale from the smallest subnormal to the largest finite value (see the sig6 contract); the key is sha256(model, NUL, text). The answer is one record per input in input order: key[32], the scale as 4 little-endian binary32 bytes, then one byte per component. A model that is empty, no records or no components, or more than 65535 components, refuses ORB_VECTOR_BAD_MODEL; a vector whose length differs from the first refuses ORB_VECTOR_BAD_RECORD with both lengths."
+]
+
+orbital MlVectorQuantizeSpec {
+  expects entity QuantizeRun [runtime] {
+    id : string
+    model : string
+    dims : number
+  }
+  expects trait VectorQuantize {
+    state idle {
+      QUANTIZE -> casting
+    }
+    state casting {
+      F32_ENCODED -> scaling
+    }
+    state scaling {
+      SIG6_DONE -> idle
+    }
+    emits {
+      QUANTIZED { dims : number!  rows : [bytes]! }
+      QUANTIZE_REFUSED { code : string!  detail : string! }
+    }
+  }
+  expects page "/vector-quantize" -> VectorQuantize
+}

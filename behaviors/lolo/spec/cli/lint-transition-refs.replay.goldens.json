@@ -1,0 +1,942 @@
+{
+ "atom": "cli/atoms/std-orb-lint-transition-refs.lolo",
+ "trait": "OrbLintTransitionRefs",
+ "cases": [
+  {
+   "id": "nonexistent-target",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "active"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "nonexistent",
+              "event": "GO"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "transition-refs",
+         "findings": [
+          {
+           "code": "ORB_T_INVALID_TRANSITION",
+           "path": "orbitals[0].traits[0].stateMachine.transitions[0].to",
+           "message": "Target state 'nonexistent' does not exist",
+           "suggestion": "",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-valid-transition",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "active"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "active",
+              "event": "GO"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "transition-refs",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nonexistent-source",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "active"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "ghost",
+              "to": "active",
+              "event": "GO"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "transition-refs",
+         "findings": [
+          {
+           "code": "ORB_T_INVALID_TRANSITION",
+           "path": "orbitals[0].traits[0].stateMachine.transitions[0].from",
+           "message": "Source state 'ghost' does not exist",
+           "suggestion": "",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-wildcard-source",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "active"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "*",
+              "to": "active",
+              "event": "GO"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "transition-refs",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "list-source-checked-one-by-one",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "active"
+             }
+            ],
+            "transitions": [
+             {
+              "from": [
+               "idle",
+               "ghost",
+               "phantom"
+              ],
+              "to": "active",
+              "event": "GO"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "transition-refs",
+         "findings": [
+          {
+           "code": "ORB_T_INVALID_TRANSITION",
+           "path": "orbitals[0].traits[0].stateMachine.transitions[0].from",
+           "message": "Source state 'ghost' does not exist",
+           "suggestion": "",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_INVALID_TRANSITION",
+           "path": "orbitals[0].traits[0].stateMachine.transitions[0].from",
+           "message": "Source state 'phantom' does not exist",
+           "suggestion": "",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-list-source-all-declared",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "active"
+             }
+            ],
+            "transitions": [
+             {
+              "from": [
+               "idle",
+               "active"
+              ],
+              "to": "active",
+              "event": "GO"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "transition-refs",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bad-source-and-target-in-order",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "active"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "ghost",
+              "to": "nowhere",
+              "event": "GO"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "transition-refs",
+         "findings": [
+          {
+           "code": "ORB_T_INVALID_TRANSITION",
+           "path": "orbitals[0].traits[0].stateMachine.transitions[0].from",
+           "message": "Source state 'ghost' does not exist",
+           "suggestion": "",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_INVALID_TRANSITION",
+           "path": "orbitals[0].traits[0].stateMachine.transitions[0].to",
+           "message": "Target state 'nowhere' does not exist",
+           "suggestion": "",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "undefined-event",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "active"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "active",
+              "event": "STOP"
+             }
+            ],
+            "events": [
+             {
+              "key": "GO"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "transition-refs",
+         "findings": [
+          {
+           "code": "ORB_T_UNDEFINED_EVENT",
+           "path": "orbitals[0].traits[0].stateMachine.transitions[0].event",
+           "message": "Event 'STOP' is not defined in events array",
+           "suggestion": "Add the event to the stateMachine.events array",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-declared-event",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "active"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "active",
+              "event": "GO"
+             }
+            ],
+            "events": [
+             {
+              "key": "GO"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "transition-refs",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-init-exempt-from-event-list",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "active"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             }
+            ],
+            "events": [
+             {
+              "key": "GO"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "transition-refs",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-no-events-declared-no-event-check",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "active"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "active",
+              "event": "STOP"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "transition-refs",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-empty-events-list",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "active"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "active",
+              "event": "STOP"
+             }
+            ],
+            "events": []
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "transition-refs",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "second-transition-index",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "active"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "active",
+              "event": "GO"
+             },
+             {
+              "from": "idle",
+              "to": "gone",
+              "event": "GO"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "transition-refs",
+         "findings": [
+          {
+           "code": "ORB_T_INVALID_TRANSITION",
+           "path": "orbitals[0].traits[0].stateMachine.transitions[1].to",
+           "message": "Target state 'gone' does not exist",
+           "suggestion": "",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-empty-states-stop-early",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "active",
+              "event": "GO"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "transition-refs",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

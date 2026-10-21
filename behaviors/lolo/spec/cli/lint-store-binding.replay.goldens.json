@@ -1,0 +1,695 @@
+{
+ "atom": "cli/atoms/std-orb-lint-store-binding.lolo",
+ "trait": "OrbLintStoreBinding",
+ "note": "Expected findings are the code, path, message and suggestion `orb validate` (the Rust validator) reports for the same program.",
+ "cases": [
+  {
+   "id": "store-naming-no-orbital",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "Tickets",
+         "entity": {
+          "name": "Ticket",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ],
+          "collection": "tickets",
+          "store": "Nope"
+         },
+         "traits": [
+          {
+           "name": "Desk",
+           "linkedEntity": "Ticket",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        },
+        {
+         "name": "Rows",
+         "pages": [],
+         "entity": {
+          "name": "RowsRow",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "RowsDriver",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "ready",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "ready",
+              "to": "ready",
+              "event": "ROW_READ"
+             },
+             {
+              "from": "ready",
+              "to": "ready",
+              "event": "ROW_LIST"
+             },
+             {
+              "from": "ready",
+              "to": "ready",
+              "event": "ROWS_QUERY"
+             },
+             {
+              "from": "ready",
+              "to": "ready",
+              "event": "ROWS_WRITE"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintStoreBinding"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "store-binding",
+         "findings": [
+          {
+           "code": "ORB_STORE_UNKNOWN_ORBITAL",
+           "path": "orbitals[0].entity.Ticket",
+           "message": "store Nope names no orbital of this program",
+           "suggestion": "",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintStoreBinding"
+    }
+   ]
+  },
+  {
+   "id": "driver-missing-a-row-verb",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "Tickets",
+         "entity": {
+          "name": "Ticket",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ],
+          "collection": "tickets",
+          "store": "Rows"
+         },
+         "traits": [
+          {
+           "name": "Desk",
+           "linkedEntity": "Ticket",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        },
+        {
+         "name": "Rows",
+         "pages": [],
+         "entity": {
+          "name": "RowsRow",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "RowsDriver",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "ready",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "ready",
+              "to": "ready",
+              "event": "ROW_READ"
+             },
+             {
+              "from": "ready",
+              "to": "ready",
+              "event": "ROWS_WRITE"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintStoreBinding"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "store-binding",
+         "findings": [
+          {
+           "code": "ORB_STORE_DRIVER_CONTRACT",
+           "path": "orbitals[0].entity.Ticket",
+           "message": "store driver Rows has no trait handling [\"ROW_LIST\", \"ROWS_QUERY\"] (spec/store/row-store.lolo RowStoreDriver)",
+           "suggestion": "Compose a std store driver atom, or give the driver a trait that answers every row verb",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintStoreBinding"
+    }
+   ]
+  },
+  {
+   "id": "store-on-a-runtime-entity",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "Tickets",
+         "entity": {
+          "name": "Ticket",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ],
+          "collection": "tickets",
+          "store": "Rows"
+         },
+         "traits": [
+          {
+           "name": "Desk",
+           "linkedEntity": "Ticket",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        },
+        {
+         "name": "Rows",
+         "pages": [],
+         "entity": {
+          "name": "RowsRow",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "RowsDriver",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "ready",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "ready",
+              "to": "ready",
+              "event": "ROW_READ"
+             },
+             {
+              "from": "ready",
+              "to": "ready",
+              "event": "ROW_LIST"
+             },
+             {
+              "from": "ready",
+              "to": "ready",
+              "event": "ROWS_QUERY"
+             },
+             {
+              "from": "ready",
+              "to": "ready",
+              "event": "ROWS_WRITE"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintStoreBinding"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "store-binding",
+         "findings": [
+          {
+           "code": "ORB_STORE_ON_NON_PERSISTENT",
+           "path": "orbitals[0].entity.Ticket",
+           "message": "entity Ticket binds store Rows but its rows live in no store (runtime or browser-local)",
+           "suggestion": "Drop `store:`, or declare the entity [persistent: <collection>]",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintStoreBinding"
+    }
+   ]
+  },
+  {
+   "id": "store-on-a-browser-local-entity",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "Tickets",
+         "entity": {
+          "name": "Ticket",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ],
+          "collection": "tickets",
+          "store": "Rows",
+          "local": true
+         },
+         "traits": [
+          {
+           "name": "Desk",
+           "linkedEntity": "Ticket",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        },
+        {
+         "name": "Rows",
+         "pages": [],
+         "entity": {
+          "name": "RowsRow",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "RowsDriver",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "ready",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "ready",
+              "to": "ready",
+              "event": "ROW_READ"
+             },
+             {
+              "from": "ready",
+              "to": "ready",
+              "event": "ROW_LIST"
+             },
+             {
+              "from": "ready",
+              "to": "ready",
+              "event": "ROWS_QUERY"
+             },
+             {
+              "from": "ready",
+              "to": "ready",
+              "event": "ROWS_WRITE"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintStoreBinding"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "store-binding",
+         "findings": [
+          {
+           "code": "ORB_STORE_ON_NON_PERSISTENT",
+           "path": "orbitals[0].entity.Ticket",
+           "message": "entity Ticket binds store Rows but its rows live in no store (runtime or browser-local)",
+           "suggestion": "Drop `store:`, or declare the entity [persistent: <collection>]",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintStoreBinding"
+    }
+   ]
+  },
+  {
+   "id": "control-store-with-a-complete-driver",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "Tickets",
+         "entity": {
+          "name": "Ticket",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ],
+          "collection": "tickets",
+          "store": "Rows"
+         },
+         "traits": [
+          {
+           "name": "Desk",
+           "linkedEntity": "Ticket",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        },
+        {
+         "name": "Rows",
+         "pages": [],
+         "entity": {
+          "name": "RowsRow",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "RowsDriver",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "ready",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "ready",
+              "to": "ready",
+              "event": "ROW_READ"
+             },
+             {
+              "from": "ready",
+              "to": "ready",
+              "event": "ROW_LIST"
+             },
+             {
+              "from": "ready",
+              "to": "ready",
+              "event": "ROWS_QUERY"
+             },
+             {
+              "from": "ready",
+              "to": "ready",
+              "event": "ROWS_WRITE"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintStoreBinding"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "store-binding",
+         "findings": []
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintStoreBinding"
+    }
+   ]
+  }
+ ]
+}

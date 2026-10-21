@@ -1,0 +1,4084 @@
+{
+ "source": "Expected bytes come from a scratch python model of VectorStore::from_records + write: records key[32] | stored record, sorted ascending by key bytes, header ORBVEC | 1 | model | dims | count. The 200-text case proves the hex-string array/sort orders bytewise. The file reads, resolve and persist steps are stubbed by feeding the events they would answer; real file effects run in the byte-parity test against the Rust command.",
+ "atom": "ml/atoms/std-vector-snapshot.lolo",
+ "trait": "Snapshot",
+ "cases": [
+  {
+   "id": "a handful of texts sorted by key bytes",
+   "entity": {
+    "id": "s",
+    "wanted": [
+     {
+      "key": "a",
+      "text": "alpha"
+     },
+     {
+      "key": "b",
+      "text": "beta"
+     },
+     {
+      "key": "c",
+      "text": "gamma"
+     },
+     {
+      "key": "d",
+      "text": "delta"
+     }
+    ],
+    "texts": [
+     "alpha",
+     "beta",
+     "gamma",
+     "delta"
+    ],
+    "model": "baai/bge-base-en-v1.5",
+    "out": "/tmp/x/dist/vectors.vec",
+    "snapshots": []
+   },
+   "steps": [
+    {
+     "from": "rawLookup",
+     "event": "VECTOR_RESOLVED",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "entries": [
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACgP7cO7n8=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAPlA5vvA=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAP8I0fwY=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAP9CPXcc=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SN_BUILT",
+        "payload": {
+         "count": 4,
+         "bytes": "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQABAAAAB1C8c0/bN7A/yxwUdneAsh39rPp9TPyo4cUhu7Oo3ULAACAP9CPXcdllV5bt77U+KUhDhBxnCvJ3CS9nwlavsH+oAuwcLX7AgAAgD/CNH8GkKACutbc4tRwAtoNhgDwb7qpDSzdPmU2u/oEouc30kIAAIA+UDm+8JVa15vOM46ASfgJ/0qHymUfSv6pIS0JlOvYoLJVwc1rAACgP7cO7n8="
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "duplicate texts share one record",
+   "entity": {
+    "id": "s",
+    "wanted": [
+     {
+      "key": "a",
+      "text": "same"
+     },
+     {
+      "key": "b",
+      "text": "same"
+     },
+     {
+      "key": "c",
+      "text": "other"
+     }
+    ],
+    "texts": [
+     "same",
+     "other"
+    ],
+    "model": "baai/bge-base-en-v1.5",
+    "out": "/tmp/x/dist/vectors.vec",
+    "snapshots": []
+   },
+   "steps": [
+    {
+     "from": "rawLookup",
+     "event": "VECTOR_RESOLVED",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "entries": [
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AABAPyRH40A=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AABAPwACa24=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SN_BUILT",
+        "payload": {
+         "count": 2,
+         "bytes": "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAgAAAI/MkCUcZSIBEGzBByulxXSSs6V0TrlZkwNw8mThP2moAABAPyRH40D7O8nx18blFDgtUEXkizn+oOT2c6Y+cvIoJxB8Km2PswAAQD8AAmtu"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "two hundred random texts come out in strict bytewise key order",
+   "entity": {
+    "id": "s",
+    "wanted": [
+     {
+      "key": "k0",
+      "text": "text-0"
+     },
+     {
+      "key": "k1",
+      "text": "text-1"
+     },
+     {
+      "key": "k2",
+      "text": "text-2"
+     },
+     {
+      "key": "k3",
+      "text": "text-3"
+     },
+     {
+      "key": "k4",
+      "text": "text-4"
+     },
+     {
+      "key": "k5",
+      "text": "text-5"
+     },
+     {
+      "key": "k6",
+      "text": "text-6"
+     },
+     {
+      "key": "k7",
+      "text": "text-7"
+     },
+     {
+      "key": "k8",
+      "text": "text-8"
+     },
+     {
+      "key": "k9",
+      "text": "text-9"
+     },
+     {
+      "key": "k10",
+      "text": "text-10"
+     },
+     {
+      "key": "k11",
+      "text": "text-11"
+     },
+     {
+      "key": "k12",
+      "text": "text-12"
+     },
+     {
+      "key": "k13",
+      "text": "text-13"
+     },
+     {
+      "key": "k14",
+      "text": "text-14"
+     },
+     {
+      "key": "k15",
+      "text": "text-15"
+     },
+     {
+      "key": "k16",
+      "text": "text-16"
+     },
+     {
+      "key": "k17",
+      "text": "text-17"
+     },
+     {
+      "key": "k18",
+      "text": "text-18"
+     },
+     {
+      "key": "k19",
+      "text": "text-19"
+     },
+     {
+      "key": "k20",
+      "text": "text-20"
+     },
+     {
+      "key": "k21",
+      "text": "text-21"
+     },
+     {
+      "key": "k22",
+      "text": "text-22"
+     },
+     {
+      "key": "k23",
+      "text": "text-23"
+     },
+     {
+      "key": "k24",
+      "text": "text-24"
+     },
+     {
+      "key": "k25",
+      "text": "text-25"
+     },
+     {
+      "key": "k26",
+      "text": "text-26"
+     },
+     {
+      "key": "k27",
+      "text": "text-27"
+     },
+     {
+      "key": "k28",
+      "text": "text-28"
+     },
+     {
+      "key": "k29",
+      "text": "text-29"
+     },
+     {
+      "key": "k30",
+      "text": "text-30"
+     },
+     {
+      "key": "k31",
+      "text": "text-31"
+     },
+     {
+      "key": "k32",
+      "text": "text-32"
+     },
+     {
+      "key": "k33",
+      "text": "text-33"
+     },
+     {
+      "key": "k34",
+      "text": "text-34"
+     },
+     {
+      "key": "k35",
+      "text": "text-35"
+     },
+     {
+      "key": "k36",
+      "text": "text-36"
+     },
+     {
+      "key": "k37",
+      "text": "text-37"
+     },
+     {
+      "key": "k38",
+      "text": "text-38"
+     },
+     {
+      "key": "k39",
+      "text": "text-39"
+     },
+     {
+      "key": "k40",
+      "text": "text-40"
+     },
+     {
+      "key": "k41",
+      "text": "text-41"
+     },
+     {
+      "key": "k42",
+      "text": "text-42"
+     },
+     {
+      "key": "k43",
+      "text": "text-43"
+     },
+     {
+      "key": "k44",
+      "text": "text-44"
+     },
+     {
+      "key": "k45",
+      "text": "text-45"
+     },
+     {
+      "key": "k46",
+      "text": "text-46"
+     },
+     {
+      "key": "k47",
+      "text": "text-47"
+     },
+     {
+      "key": "k48",
+      "text": "text-48"
+     },
+     {
+      "key": "k49",
+      "text": "text-49"
+     },
+     {
+      "key": "k50",
+      "text": "text-50"
+     },
+     {
+      "key": "k51",
+      "text": "text-51"
+     },
+     {
+      "key": "k52",
+      "text": "text-52"
+     },
+     {
+      "key": "k53",
+      "text": "text-53"
+     },
+     {
+      "key": "k54",
+      "text": "text-54"
+     },
+     {
+      "key": "k55",
+      "text": "text-55"
+     },
+     {
+      "key": "k56",
+      "text": "text-56"
+     },
+     {
+      "key": "k57",
+      "text": "text-57"
+     },
+     {
+      "key": "k58",
+      "text": "text-58"
+     },
+     {
+      "key": "k59",
+      "text": "text-59"
+     },
+     {
+      "key": "k60",
+      "text": "text-60"
+     },
+     {
+      "key": "k61",
+      "text": "text-61"
+     },
+     {
+      "key": "k62",
+      "text": "text-62"
+     },
+     {
+      "key": "k63",
+      "text": "text-63"
+     },
+     {
+      "key": "k64",
+      "text": "text-64"
+     },
+     {
+      "key": "k65",
+      "text": "text-65"
+     },
+     {
+      "key": "k66",
+      "text": "text-66"
+     },
+     {
+      "key": "k67",
+      "text": "text-67"
+     },
+     {
+      "key": "k68",
+      "text": "text-68"
+     },
+     {
+      "key": "k69",
+      "text": "text-69"
+     },
+     {
+      "key": "k70",
+      "text": "text-70"
+     },
+     {
+      "key": "k71",
+      "text": "text-71"
+     },
+     {
+      "key": "k72",
+      "text": "text-72"
+     },
+     {
+      "key": "k73",
+      "text": "text-73"
+     },
+     {
+      "key": "k74",
+      "text": "text-74"
+     },
+     {
+      "key": "k75",
+      "text": "text-75"
+     },
+     {
+      "key": "k76",
+      "text": "text-76"
+     },
+     {
+      "key": "k77",
+      "text": "text-77"
+     },
+     {
+      "key": "k78",
+      "text": "text-78"
+     },
+     {
+      "key": "k79",
+      "text": "text-79"
+     },
+     {
+      "key": "k80",
+      "text": "text-80"
+     },
+     {
+      "key": "k81",
+      "text": "text-81"
+     },
+     {
+      "key": "k82",
+      "text": "text-82"
+     },
+     {
+      "key": "k83",
+      "text": "text-83"
+     },
+     {
+      "key": "k84",
+      "text": "text-84"
+     },
+     {
+      "key": "k85",
+      "text": "text-85"
+     },
+     {
+      "key": "k86",
+      "text": "text-86"
+     },
+     {
+      "key": "k87",
+      "text": "text-87"
+     },
+     {
+      "key": "k88",
+      "text": "text-88"
+     },
+     {
+      "key": "k89",
+      "text": "text-89"
+     },
+     {
+      "key": "k90",
+      "text": "text-90"
+     },
+     {
+      "key": "k91",
+      "text": "text-91"
+     },
+     {
+      "key": "k92",
+      "text": "text-92"
+     },
+     {
+      "key": "k93",
+      "text": "text-93"
+     },
+     {
+      "key": "k94",
+      "text": "text-94"
+     },
+     {
+      "key": "k95",
+      "text": "text-95"
+     },
+     {
+      "key": "k96",
+      "text": "text-96"
+     },
+     {
+      "key": "k97",
+      "text": "text-97"
+     },
+     {
+      "key": "k98",
+      "text": "text-98"
+     },
+     {
+      "key": "k99",
+      "text": "text-99"
+     },
+     {
+      "key": "k100",
+      "text": "text-100"
+     },
+     {
+      "key": "k101",
+      "text": "text-101"
+     },
+     {
+      "key": "k102",
+      "text": "text-102"
+     },
+     {
+      "key": "k103",
+      "text": "text-103"
+     },
+     {
+      "key": "k104",
+      "text": "text-104"
+     },
+     {
+      "key": "k105",
+      "text": "text-105"
+     },
+     {
+      "key": "k106",
+      "text": "text-106"
+     },
+     {
+      "key": "k107",
+      "text": "text-107"
+     },
+     {
+      "key": "k108",
+      "text": "text-108"
+     },
+     {
+      "key": "k109",
+      "text": "text-109"
+     },
+     {
+      "key": "k110",
+      "text": "text-110"
+     },
+     {
+      "key": "k111",
+      "text": "text-111"
+     },
+     {
+      "key": "k112",
+      "text": "text-112"
+     },
+     {
+      "key": "k113",
+      "text": "text-113"
+     },
+     {
+      "key": "k114",
+      "text": "text-114"
+     },
+     {
+      "key": "k115",
+      "text": "text-115"
+     },
+     {
+      "key": "k116",
+      "text": "text-116"
+     },
+     {
+      "key": "k117",
+      "text": "text-117"
+     },
+     {
+      "key": "k118",
+      "text": "text-118"
+     },
+     {
+      "key": "k119",
+      "text": "text-119"
+     },
+     {
+      "key": "k120",
+      "text": "text-120"
+     },
+     {
+      "key": "k121",
+      "text": "text-121"
+     },
+     {
+      "key": "k122",
+      "text": "text-122"
+     },
+     {
+      "key": "k123",
+      "text": "text-123"
+     },
+     {
+      "key": "k124",
+      "text": "text-124"
+     },
+     {
+      "key": "k125",
+      "text": "text-125"
+     },
+     {
+      "key": "k126",
+      "text": "text-126"
+     },
+     {
+      "key": "k127",
+      "text": "text-127"
+     },
+     {
+      "key": "k128",
+      "text": "text-128"
+     },
+     {
+      "key": "k129",
+      "text": "text-129"
+     },
+     {
+      "key": "k130",
+      "text": "text-130"
+     },
+     {
+      "key": "k131",
+      "text": "text-131"
+     },
+     {
+      "key": "k132",
+      "text": "text-132"
+     },
+     {
+      "key": "k133",
+      "text": "text-133"
+     },
+     {
+      "key": "k134",
+      "text": "text-134"
+     },
+     {
+      "key": "k135",
+      "text": "text-135"
+     },
+     {
+      "key": "k136",
+      "text": "text-136"
+     },
+     {
+      "key": "k137",
+      "text": "text-137"
+     },
+     {
+      "key": "k138",
+      "text": "text-138"
+     },
+     {
+      "key": "k139",
+      "text": "text-139"
+     },
+     {
+      "key": "k140",
+      "text": "text-140"
+     },
+     {
+      "key": "k141",
+      "text": "text-141"
+     },
+     {
+      "key": "k142",
+      "text": "text-142"
+     },
+     {
+      "key": "k143",
+      "text": "text-143"
+     },
+     {
+      "key": "k144",
+      "text": "text-144"
+     },
+     {
+      "key": "k145",
+      "text": "text-145"
+     },
+     {
+      "key": "k146",
+      "text": "text-146"
+     },
+     {
+      "key": "k147",
+      "text": "text-147"
+     },
+     {
+      "key": "k148",
+      "text": "text-148"
+     },
+     {
+      "key": "k149",
+      "text": "text-149"
+     },
+     {
+      "key": "k150",
+      "text": "text-150"
+     },
+     {
+      "key": "k151",
+      "text": "text-151"
+     },
+     {
+      "key": "k152",
+      "text": "text-152"
+     },
+     {
+      "key": "k153",
+      "text": "text-153"
+     },
+     {
+      "key": "k154",
+      "text": "text-154"
+     },
+     {
+      "key": "k155",
+      "text": "text-155"
+     },
+     {
+      "key": "k156",
+      "text": "text-156"
+     },
+     {
+      "key": "k157",
+      "text": "text-157"
+     },
+     {
+      "key": "k158",
+      "text": "text-158"
+     },
+     {
+      "key": "k159",
+      "text": "text-159"
+     },
+     {
+      "key": "k160",
+      "text": "text-160"
+     },
+     {
+      "key": "k161",
+      "text": "text-161"
+     },
+     {
+      "key": "k162",
+      "text": "text-162"
+     },
+     {
+      "key": "k163",
+      "text": "text-163"
+     },
+     {
+      "key": "k164",
+      "text": "text-164"
+     },
+     {
+      "key": "k165",
+      "text": "text-165"
+     },
+     {
+      "key": "k166",
+      "text": "text-166"
+     },
+     {
+      "key": "k167",
+      "text": "text-167"
+     },
+     {
+      "key": "k168",
+      "text": "text-168"
+     },
+     {
+      "key": "k169",
+      "text": "text-169"
+     },
+     {
+      "key": "k170",
+      "text": "text-170"
+     },
+     {
+      "key": "k171",
+      "text": "text-171"
+     },
+     {
+      "key": "k172",
+      "text": "text-172"
+     },
+     {
+      "key": "k173",
+      "text": "text-173"
+     },
+     {
+      "key": "k174",
+      "text": "text-174"
+     },
+     {
+      "key": "k175",
+      "text": "text-175"
+     },
+     {
+      "key": "k176",
+      "text": "text-176"
+     },
+     {
+      "key": "k177",
+      "text": "text-177"
+     },
+     {
+      "key": "k178",
+      "text": "text-178"
+     },
+     {
+      "key": "k179",
+      "text": "text-179"
+     },
+     {
+      "key": "k180",
+      "text": "text-180"
+     },
+     {
+      "key": "k181",
+      "text": "text-181"
+     },
+     {
+      "key": "k182",
+      "text": "text-182"
+     },
+     {
+      "key": "k183",
+      "text": "text-183"
+     },
+     {
+      "key": "k184",
+      "text": "text-184"
+     },
+     {
+      "key": "k185",
+      "text": "text-185"
+     },
+     {
+      "key": "k186",
+      "text": "text-186"
+     },
+     {
+      "key": "k187",
+      "text": "text-187"
+     },
+     {
+      "key": "k188",
+      "text": "text-188"
+     },
+     {
+      "key": "k189",
+      "text": "text-189"
+     },
+     {
+      "key": "k190",
+      "text": "text-190"
+     },
+     {
+      "key": "k191",
+      "text": "text-191"
+     },
+     {
+      "key": "k192",
+      "text": "text-192"
+     },
+     {
+      "key": "k193",
+      "text": "text-193"
+     },
+     {
+      "key": "k194",
+      "text": "text-194"
+     },
+     {
+      "key": "k195",
+      "text": "text-195"
+     },
+     {
+      "key": "k196",
+      "text": "text-196"
+     },
+     {
+      "key": "k197",
+      "text": "text-197"
+     },
+     {
+      "key": "k198",
+      "text": "text-198"
+     },
+     {
+      "key": "k199",
+      "text": "text-199"
+     }
+    ],
+    "texts": [
+     "text-0",
+     "text-1",
+     "text-2",
+     "text-3",
+     "text-4",
+     "text-5",
+     "text-6",
+     "text-7",
+     "text-8",
+     "text-9",
+     "text-10",
+     "text-11",
+     "text-12",
+     "text-13",
+     "text-14",
+     "text-15",
+     "text-16",
+     "text-17",
+     "text-18",
+     "text-19",
+     "text-20",
+     "text-21",
+     "text-22",
+     "text-23",
+     "text-24",
+     "text-25",
+     "text-26",
+     "text-27",
+     "text-28",
+     "text-29",
+     "text-30",
+     "text-31",
+     "text-32",
+     "text-33",
+     "text-34",
+     "text-35",
+     "text-36",
+     "text-37",
+     "text-38",
+     "text-39",
+     "text-40",
+     "text-41",
+     "text-42",
+     "text-43",
+     "text-44",
+     "text-45",
+     "text-46",
+     "text-47",
+     "text-48",
+     "text-49",
+     "text-50",
+     "text-51",
+     "text-52",
+     "text-53",
+     "text-54",
+     "text-55",
+     "text-56",
+     "text-57",
+     "text-58",
+     "text-59",
+     "text-60",
+     "text-61",
+     "text-62",
+     "text-63",
+     "text-64",
+     "text-65",
+     "text-66",
+     "text-67",
+     "text-68",
+     "text-69",
+     "text-70",
+     "text-71",
+     "text-72",
+     "text-73",
+     "text-74",
+     "text-75",
+     "text-76",
+     "text-77",
+     "text-78",
+     "text-79",
+     "text-80",
+     "text-81",
+     "text-82",
+     "text-83",
+     "text-84",
+     "text-85",
+     "text-86",
+     "text-87",
+     "text-88",
+     "text-89",
+     "text-90",
+     "text-91",
+     "text-92",
+     "text-93",
+     "text-94",
+     "text-95",
+     "text-96",
+     "text-97",
+     "text-98",
+     "text-99",
+     "text-100",
+     "text-101",
+     "text-102",
+     "text-103",
+     "text-104",
+     "text-105",
+     "text-106",
+     "text-107",
+     "text-108",
+     "text-109",
+     "text-110",
+     "text-111",
+     "text-112",
+     "text-113",
+     "text-114",
+     "text-115",
+     "text-116",
+     "text-117",
+     "text-118",
+     "text-119",
+     "text-120",
+     "text-121",
+     "text-122",
+     "text-123",
+     "text-124",
+     "text-125",
+     "text-126",
+     "text-127",
+     "text-128",
+     "text-129",
+     "text-130",
+     "text-131",
+     "text-132",
+     "text-133",
+     "text-134",
+     "text-135",
+     "text-136",
+     "text-137",
+     "text-138",
+     "text-139",
+     "text-140",
+     "text-141",
+     "text-142",
+     "text-143",
+     "text-144",
+     "text-145",
+     "text-146",
+     "text-147",
+     "text-148",
+     "text-149",
+     "text-150",
+     "text-151",
+     "text-152",
+     "text-153",
+     "text-154",
+     "text-155",
+     "text-156",
+     "text-157",
+     "text-158",
+     "text-159",
+     "text-160",
+     "text-161",
+     "text-162",
+     "text-163",
+     "text-164",
+     "text-165",
+     "text-166",
+     "text-167",
+     "text-168",
+     "text-169",
+     "text-170",
+     "text-171",
+     "text-172",
+     "text-173",
+     "text-174",
+     "text-175",
+     "text-176",
+     "text-177",
+     "text-178",
+     "text-179",
+     "text-180",
+     "text-181",
+     "text-182",
+     "text-183",
+     "text-184",
+     "text-185",
+     "text-186",
+     "text-187",
+     "text-188",
+     "text-189",
+     "text-190",
+     "text-191",
+     "text-192",
+     "text-193",
+     "text-194",
+     "text-195",
+     "text-196",
+     "text-197",
+     "text-198",
+     "text-199"
+    ],
+    "model": "baai/bge-base-en-v1.5",
+    "out": "/tmp/x/dist/vectors.vec",
+    "snapshots": []
+   },
+   "steps": [
+    {
+     "from": "rawLookup",
+     "event": "VECTOR_RESOLVED",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "entries": [
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AABAP1WUoGU=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAQQGhdZMQ=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACgPwu41FQ=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AABAP4chqZo=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAPq0hnrU=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACgP/ahXvY=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAQFodgws=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADAP84J1rs=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADgPwTnF1w=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAPzx97LA=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAQQLWA7Dc=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADAP5cS3S4=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAP665S64=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACgPy+fopw=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AABAPyhMnvc=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AABAPxgpzxA=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAP7CA6dc=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AABAPxwQ/Ks=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAP0JD0zY=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AABAP96+TB4=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADgP5ZI6FY=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAQQOj5ovU=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACgP5Xwzks=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAP8Fb/60=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AABAPy37i7g=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAP7YRnLo=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAQQI/4h5Y=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADAP1sF8oA=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADAP4ztk7Y=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADAP4yw0bM=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AABAP+a6q0g=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAQQFVlufQ=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACgPyjVV9c=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACgP4oOZFE=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAQFxwXBU=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAQHNUG0Q=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAP6Jc92M=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAQQBLU7rM=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADgPyRoeb8=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAPrPPjtE=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAP78SmjA=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACgP62WtEI=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADgP9G970g=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AABAP8P0ZUQ=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAP7MAwzc=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADAP0imwNs=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADgP3P8lfU=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADgP8RRhZo=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAQIDUCqM=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACgP/uSSfQ=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAPj7jfZY=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAPkXIBvU=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAQQIx88hI=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAP/qJT5I=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACgP/zzPAg=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AABAP5mQrJc=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAQQA3ts7g=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AABAPxIBgek=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAP2EH29o=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAQMXzyGQ=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACgP+4hmwE=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADgP5Lxn0k=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AABAP/T+qU4=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADgPxgjdYg=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAPyANqts=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAP8/5GT8=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAP3A4RJU=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAQExdXtM=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AABAPyJtFjc=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADgPySPHTw=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADgP0QF3S4=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADAP/r6tL8=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAPkaWTZQ=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAQQHCGIHg=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACgP5FEeL4=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAQMdbQwk=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADAPysSLj8=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAQQOh6x+w=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAQKU3D8Q=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAPk3bcjs=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAP/tsR8A=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADAP3iUqrI=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADgP8FFt5c=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADgP7kSblw=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADgPyAxEhA=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AABAP2dkFPo=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAQLIA2vA=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACgP9ul7uw=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAP2JPUSQ=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADAP8XwTYI=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAP45Skng=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAPvYQsLw=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADAPx4L6fE=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AABAPzymleg=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAP1MRZgw=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAPyjNup8=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AABAP++5kCI=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAQFN7WWo=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAPtyKA+w=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAPufSVhc=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAPrMwJHk=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAQC/xG3w=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAPv7LHhg=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACgP9DknBo=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAPmNbzmA=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAQQHcroDc=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAP1ImbQg=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAQLf52MA=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAQQEMGneU=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAPztHn/c=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAP4bOoEM=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AABAPynxfSs=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADgP32NH/w=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAPxhmkr8=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAPyTXoMI=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAQQACSQw4=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAQEkJGNo=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACgPzbDQqQ=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAP5xWRoY=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAQKWSESA=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAQQA4OPhk=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AABAP7bfhAg=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAP9tAuWc=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADAP7cGU1M=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAP4lXSeQ=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADgP9s8qqI=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAQHTs3lc=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAQBhS8vs=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAPjVA1ho=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAPwAQePY=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADAP8ntbmc=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACgP2abtns=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADAP7R/H/0=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADgP7JJSXo=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAQMMTMFY=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADgPzKQZqU=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAQPAuZcA=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAPjVexws=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADAPw2fxPM=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAQQMzmH0s=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADgP7kKaZE=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACgPycNLLY=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADgP50HjHg=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAPxMtmbM=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAQQGr3Lz0=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAP6/YyQE=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADgP8FbaqQ=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADgP6U3v38=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAP2yWnIk=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAP1Un014=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAPyDQ1XY=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADgP/d9mtY=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACgPyupX9c=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAPkw7l14=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADgP2GmNKk=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAPx/4RiU=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADAP2DvxHU=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAQDMAY1A=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAPy+rTbw=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAP+GlXTQ=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADAPzQhZGk=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADAP79Y6io=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAP87uwAI=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAP79DAf0=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADgP68k+5c=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAPjv1tWQ=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADAP8NIlP8=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAPziX0Kw=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAP90ZcNc=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAP4olSoo=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAP/TdXMU=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAPy/ntkI=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAPwJIuAg=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAPoDqxCg=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAPm9j4gY=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAQCuO8As=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAPlHJ3hI=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAPwzX090=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADgPwdVrUs=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACgP2HYJ70=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAP8nXYYo=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AABAP/C6kgE=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAP1bqJyU=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADgPxLRTGQ=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAPvyi6kU=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAQHknug8=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAPl7bK4g=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AABAP76rbU0=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACgPy6RODY=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADgP7+bvPQ=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAQQON7R4Y=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAPgbFRHk=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAQBwEB2w=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADgP3d4nRw=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAQQHoTxbE=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAPpjh5jQ=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAP72Nx8E=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACgP1Un5Rw=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AACAP8cymb8=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AADgP0bpsyA=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SN_BUILT",
+        "payload": {
+         "count": 200,
+         "bytes": "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"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a long model name and wider vectors",
+   "entity": {
+    "id": "s",
+    "wanted": [
+     {
+      "key": "x",
+      "text": "one"
+     },
+     {
+      "key": "y",
+      "text": "two"
+     },
+     {
+      "key": "z",
+      "text": "three"
+     }
+    ],
+    "texts": [
+     "one",
+     "two",
+     "three"
+    ],
+    "model": "vendor/some-very-long-embedding-model-name-v2.5",
+    "out": "/tmp/x/dist/vectors.vec",
+    "snapshots": []
+   },
+   "steps": [
+    {
+     "from": "rawLookup",
+     "event": "VECTOR_RESOLVED",
+     "payload": {
+      "model": "vendor/some-very-long-embedding-model-name-v2.5",
+      "entries": [
+       {
+        "found": true,
+        "dims": 16,
+        "scale": 0.5,
+        "record": "AAAAQAFq6BUeLTuvSb+uho33ST8=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 16,
+        "scale": 0.5,
+        "record": "AACgP4AMgcZVfYbgWkYatT8E6RY=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 16,
+        "scale": 0.5,
+        "record": "AAAAQBQN0jzT4nE4IC8VIuubI4s=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SN_BUILT",
+        "payload": {
+         "count": 3,
+         "bytes": "T1JCVkVDAQAvAHZlbmRvci9zb21lLXZlcnktbG9uZy1lbWJlZGRpbmctbW9kZWwtbmFtZS12Mi41EAADAAAAHmXzwQPkzUSJFJq5tllcIa4UdmItBYEpBB7vdnaAoM4AAABAFA3SPNPicTggLxUi65sjizxknlgy1Urz+XdNu4Z/xBo4RS6rl4/UBx/PNCJYVDc8AACgP4AMgcZVfYbgWkYatT8E6Rbl0LveUZde490oxAQUZlHq0LNvhtGa9FKKmCAhEejo/AAAAEABaugVHi07r0m/roaN90k/"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a missing record refuses naming the first wanted key for that text",
+   "entity": {
+    "id": "s",
+    "wanted": [
+     {
+      "key": "a",
+      "text": "alpha"
+     },
+     {
+      "key": "b",
+      "text": "beta"
+     },
+     {
+      "key": "c",
+      "text": "beta"
+     }
+    ],
+    "texts": [
+     "alpha",
+     "beta"
+    ],
+    "model": "baai/bge-base-en-v1.5",
+    "out": "/tmp/x/dist/vectors.vec",
+    "snapshots": []
+   },
+   "steps": [
+    {
+     "from": "rawLookup",
+     "event": "VECTOR_RESOLVED",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "entries": [
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAP8+chOg=",
+        "vector": [
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SNAPSHOT_REFUSED",
+        "payload": {
+         "code": "ORB_VECTOR_MISSING",
+         "detail": "no vector for `b` after embedding"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nothing wanted refuses and reads nothing",
+   "steps": [
+    {
+     "event": "SNAPSHOT",
+     "payload": {
+      "wanted": [],
+      "userDir": "/u",
+      "providerModel": "",
+      "out": "/o/v.vec",
+      "locked": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SNAPSHOT_REFUSED",
+        "payload": {
+         "code": "ORB_VECTOR_EMPTY",
+         "detail": "the package has no organism or capability text to snapshot"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a missing output file moves on to the locked snapshot",
+   "entity": {
+    "id": "s",
+    "wanted": [
+     {
+      "key": "a",
+      "text": "alpha"
+     }
+    ],
+    "userDir": "/u",
+    "providerModel": "",
+    "out": "/o/v.vec",
+    "locked": "/c/locked.vec",
+    "snapshots": []
+   },
+   "steps": [
+    {
+     "from": "outReading",
+     "event": "SN_OUT_ABSENT",
+     "payload": {
+      "error": "gone",
+      "kind": "not-found"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SN_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "another read failure refuses",
+   "entity": {
+    "id": "s",
+    "out": "/o/v.vec"
+   },
+   "steps": [
+    {
+     "from": "outReading",
+     "event": "SN_OUT_ABSENT",
+     "payload": {
+      "error": "denied",
+      "kind": "denied"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SNAPSHOT_REFUSED",
+        "payload": {
+         "code": "ORB_VECTOR_IO",
+         "detail": "/o/v.vec: denied"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "with no locked snapshot the resolve starts at once with the output as the only snapshot",
+   "entity": {
+    "id": "s",
+    "wanted": [
+     {
+      "key": "a",
+      "text": "alpha"
+     }
+    ],
+    "userDir": "/u",
+    "providerModel": "p",
+    "out": "/o/v.vec",
+    "locked": "",
+    "snapshots": [
+     "T1VU"
+    ],
+    "snapPaths": [
+     "/o/v.vec"
+    ]
+   },
+   "steps": [
+    {
+     "from": "lockCheck",
+     "event": "SN_NEXT",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "RESOLVE",
+        "payload": {
+         "wanted": [
+          {
+           "key": "a",
+           "text": "alpha"
+          }
+         ],
+         "snapshots": [
+          "T1VU"
+         ],
+         "snapshotPaths": [
+          "/o/v.vec"
+         ],
+         "userDir": "/u",
+         "providerModel": "p"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a locked snapshot equal to the output is not read twice",
+   "entity": {
+    "id": "s",
+    "wanted": [
+     {
+      "key": "a",
+      "text": "alpha"
+     }
+    ],
+    "userDir": "/u",
+    "providerModel": "",
+    "out": "/o/v.vec",
+    "locked": "/o/v.vec",
+    "snapshots": [
+     "T1VU"
+    ],
+    "snapPaths": [
+     "/o/v.vec"
+    ]
+   },
+   "steps": [
+    {
+     "from": "lockCheck",
+     "event": "SN_NEXT",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "RESOLVE",
+        "payload": {
+         "wanted": [
+          {
+           "key": "a",
+           "text": "alpha"
+          }
+         ],
+         "snapshots": [
+          "T1VU"
+         ],
+         "snapshotPaths": [
+          "/o/v.vec"
+         ],
+         "userDir": "/u",
+         "providerModel": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the locked snapshot is appended after the output",
+   "entity": {
+    "id": "s",
+    "wanted": [
+     {
+      "key": "a",
+      "text": "alpha"
+     }
+    ],
+    "userDir": "/u",
+    "providerModel": "",
+    "out": "/o/v.vec",
+    "locked": "/c/l.vec",
+    "snapshots": [
+     "T1VU"
+    ],
+    "snapPaths": [
+     "/o/v.vec"
+    ]
+   },
+   "steps": [
+    {
+     "from": "lockedReading",
+     "event": "SN_LOCKED_READ",
+     "payload": {
+      "data": "TE9DSw=="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESOLVE",
+        "payload": {
+         "wanted": [
+          {
+           "key": "a",
+           "text": "alpha"
+          }
+         ],
+         "snapshots": [
+          "T1VU",
+          "TE9DSw=="
+         ],
+         "snapshotPaths": [
+          "/o/v.vec",
+          "/c/l.vec"
+         ],
+         "userDir": "/u",
+         "providerModel": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a resolve refusal passes through",
+   "entity": {
+    "id": "s"
+   },
+   "steps": [
+    {
+     "from": "resolving",
+     "event": "VECTORS_REFUSED",
+     "payload": {
+      "code": "ORB_VECTOR_PROVIDER_MISSING",
+      "detail": "x"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SNAPSHOT_REFUSED",
+        "payload": {
+         "code": "ORB_VECTOR_PROVIDER_MISSING",
+         "detail": "x"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

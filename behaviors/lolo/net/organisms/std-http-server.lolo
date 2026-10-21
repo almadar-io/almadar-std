@@ -1,14 +1,17 @@
 app std-http-server [
   version: "1.0.0",
-  env: ["CORS_ORIGIN", "VAPID_PUBLIC_KEY", "ORB_TICK_INVOKER", "ALMADAR_API_KEY_SALT", "FIREBASE_AUTH_EMULATOR_HOST"],
+  env: ["CORS_ORIGIN", "VAPID_PUBLIC_KEY", "ORB_TICK_INVOKER", "ALMADAR_API_KEY_SALT", "NODE_ENV", "AUTH_PROVIDER", "OIDC_ISSUER_URL", "OIDC_AUDIENCE", "FIREBASE_PROJECT_ID", "FIREBASE_SERVICE_ACCOUNT_PATH", "FIREBASE_AUTH_EMULATOR_HOST", "FIRESTORE_EMULATOR_HOST", "ALMADAR_INTEGRATIONS_MODE", "USE_MOCK_DATA"],
   egress: ["https://www.googleapis.com"],
   fs: { cwd: "dist/client/**": [read] },
   net: { "127.0.0.1:3000": [listen] },
-  description: "std-http-server — the HTTP server program that replaces orbital-server, first slice, composed from atoms and owning no topology of its own. std-http-policy reads CORS_ORIGIN at boot (a comma list, trimmed, blanks dropped) and answers CORS_CONFIGURED, which tells std-http1 to bind the host and port knobs. std-http1 reads each connection and delivers one typed request; std-http-router asks std-http-policy to decide it (a preflight and a 413 are answered at once), counts an /api request in std-rate-limiter unless the rateLimit knob is false (ADMITTED or THROTTLED, a throttled one is 429 with ratelimit-* headers), routes it by method and path (GET /api/health answers 200 { status, version }, every other path 404 { error, code }) and hands the answer back to std-http1 as RESPOND. Requests are correlated by requestId, so any number are in flight at once. Bound to spec/net/server.lolo. GET /api/events?ticket=<t> is the live stream: the router asks std-stream-ticket to spend the ticket, TICKET_TAKEN opens the stream through std-sse and std-http1 (RESPOND_HEAD/RESPOND_CHUNK/RESPOND_END, heartbeats, close on client disconnect), a missing or bad ticket is 401 { error, code }. POST /api/events/ticket mints a ticket for the anonymous viewer and answers 200 { ticket } (503 if the mint fails). The stream is opened, held and closed with only the retry frame and heartbeats; pushing the kernel broadcast feed is a later item. A bearer starting with the API key prefix goes only to std-api-key-verifier (prefix-exclusive, as the Rust WithApiKeys), anything else only to the JWT path; neither falls back. POST/GET under /api/orbitals (events, entity events, inputs, resolve-rows 501) are left by the router (externalPrefix) to std-http-dispatch, which dispatches through program/dispatch and answers the EventResponse wire; /api/hooks is 501 there until an inbound-delivery operator exists."
+  description: "std-http-server — the HTTP server program that replaces orbital-server, first slice, composed from atoms and owning no topology of its own. std-http-boot-gate reads the declared environment at boot and asks std-boot-env-check what keeps it from working in production: under NODE_ENV=production a problem refuses the boot (BOOT_REFUSED, the listener never starts), elsewhere it only warns (BOOT_WARNED); the missing-credential lines of the host's boot check are not asked yet, no operator hands the credential catalog or store to a program. std-http-policy reads CORS_ORIGIN at boot (a comma list, trimmed, blanks dropped) and answers CORS_CONFIGURED; once the gate has heard that and a cleared check it answers BOOT_CLEARED, which tells std-http1 to bind the host and port knobs. std-http1 reads each connection and delivers one typed request; std-http-router asks std-http-policy to decide it (a preflight and a 413 are answered at once), counts an /api request in std-rate-limiter unless the rateLimit knob is false (ADMITTED or THROTTLED, a throttled one is 429 with ratelimit-* headers), routes it by method and path (GET /api/health answers 200 { status, version }, every other path 404 { error, code }) and hands the answer back to std-http1 as RESPOND. Requests are correlated by requestId, so any number are in flight at once. Bound to spec/net/server.lolo. GET /api/events?ticket=<t> is the live stream: the router asks std-stream-ticket to spend the ticket, TICKET_TAKEN opens the stream through std-sse and std-http1 (RESPOND_HEAD/RESPOND_CHUNK/RESPOND_END, heartbeats, close on client disconnect), a missing or bad ticket is 401 { error, code }. POST /api/events/ticket mints a ticket for the anonymous viewer and answers 200 { ticket } (503 if the mint fails). The stream is opened, held and closed with only the retry frame and heartbeats; pushing the kernel broadcast feed is a later item. A bearer starting with the API key prefix goes only to std-api-key-verifier (prefix-exclusive, as the Rust WithApiKeys), anything else only to the JWT path; neither falls back. POST/GET under /api/orbitals (events, entity events, inputs, resolve-rows 501) are left by the router (externalPrefix) to std-http-dispatch, which dispatches through program/dispatch and answers the EventResponse wire; /api/hooks is 501 there until an inbound-delivery operator exists."
 ]
 uses Spec from "almadar-std/server"
 uses H1 from "std/behaviors/std-http1"
 uses Policy from "std/behaviors/std-http-policy"
+uses Gate from "std/behaviors/std-http-boot-gate"
+uses CredAdmin from "std/behaviors/std-credential-admin"
+uses EnvCheck from "std/behaviors/std-boot-env-check"
 uses Rate from "std/behaviors/std-rate-limiter-ip"
 uses Router from "std/behaviors/std-http-router"
 uses Dispatch from "std/behaviors/std-http-dispatch"
@@ -48,17 +51,49 @@ orbital HttpServerOrbital {
       @description "Whether /api requests are counted against the per-client window and throttled; off takes the limiter out of the request path (replaces ORB_DISABLE_RATE_LIMIT)."
       @synonyms "throttle, disable rate limit, request cap"
       @tier "policy"
+    calledServices : [string] = []
+      @label "Called services"
+      @description "The services the hosted program calls; the boot check asks for each one's required credentials unless integrations are mocked. Empty asks for none."
+      @tier "domain"
+    mock : boolean = false
+      @label "Mock integrations"
+      @description "Whether integrations are mocked regardless of the environment (the --mock flag); a mocked deployment is not asked for its integration credentials."
+      @tier "policy"
   }
 
   trait Http1 = H1.traits.Http1 {
     listens {
-      ServerPolicy.CORS_CONFIGURED -> LISTEN
+      BootGuard.BOOT_CLEARED -> LISTEN
       ServerRouter.RESPOND -> RESPOND
       ServerStatic.RESPOND -> RESPOND
       ServerDispatch.RESPOND -> RESPOND
       ServerSse.RESPOND_HEAD -> RESPOND_HEAD
       ServerSse.RESPOND_CHUNK -> RESPOND_CHUNK
       ServerSse.RESPOND_END -> RESPOND_END
+    }
+  }
+
+  trait BootGuard = Gate.traits.BootGate {
+    config {
+      mock: @config.mock
+      calledServices: @config.calledServices
+    }
+    listens {
+      BootCheck.ENV_CHECKED -> ENV_CHECKED
+      BootCreds.CRED_ADMIN_OWED -> CRED_ADMIN_OWED
+      ServerPolicy.CORS_CONFIGURED -> CORS_CONFIGURED
+    }
+  }
+
+  trait BootCreds = CredAdmin.traits.CredentialAdmin {
+    listens {
+      BootGuard.CRED_ADMIN_BOOT_CHECK -> CRED_ADMIN_BOOT_CHECK
+    }
+  }
+
+  trait BootCheck = EnvCheck.traits.BootEnvCheck {
+    listens {
+      BootGuard.ENV_CHECK -> ENV_CHECK
     }
   }
 
@@ -212,5 +247,5 @@ orbital HttpServerOrbital {
     }
   }
 
-  page "/server" as HttpServerPage -> Http1, ServerPolicy, ServerRateLimiter, ServerRouter, ServerDispatch, ServerStatic, StreamTicketer, ServerSse, ServerBearer, ApiKeys, BearerJws, BearerX509, BearerRsa, BearerBig, BearerEc, BearerEcBig
+  page "/server" as HttpServerPage -> BootGuard, BootCreds, BootCheck, Http1, ServerPolicy, ServerRateLimiter, ServerRouter, ServerDispatch, ServerStatic, StreamTicketer, ServerSse, ServerBearer, ApiKeys, BearerJws, BearerX509, BearerRsa, BearerBig, BearerEc, BearerEcBig
 }

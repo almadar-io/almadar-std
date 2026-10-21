@@ -1,0 +1,217 @@
+{
+ "atom": "cli/atoms/std-orb-lint-literal-default.lolo",
+ "trait": "OrbLintLiteralDefault",
+ "note": "Expected findings are the code, path, message and suggestion `orb validate` (the Rust validator) reports for the same program.",
+ "cases": [
+  {
+   "id": "default-outside-the-values",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "status",
+            "type": "string",
+            "values": [
+             "a",
+             "b"
+            ],
+            "default": "c"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintLiteralDefault"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "literal-default",
+         "findings": [
+          {
+           "code": "ORB_E_LITERAL_UNION_DEFAULT_MISMATCH",
+           "path": "orbitals[0].entity(E).fields[1](status)",
+           "message": "Field 'status' default 'c' is not one of the declared values [a, b]",
+           "suggestion": "Pick a default from [a, b] or add 'c' to the values list",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintLiteralDefault"
+    }
+   ]
+  },
+  {
+   "id": "control-default-inside-the-values",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "status",
+            "type": "string",
+            "values": [
+             "a",
+             "b"
+            ],
+            "default": "a"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintLiteralDefault"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "literal-default",
+         "findings": []
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintLiteralDefault"
+    }
+   ]
+  }
+ ]
+}

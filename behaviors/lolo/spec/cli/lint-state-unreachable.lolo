@@ -1,0 +1,22 @@
+app lint-state-unreachable-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint state-unreachable <file>`; see the atom."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintStateUnreachableSpec {
+  expects trait OrbLintStateUnreachable {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+      LINT_UNREAD { rule : string! }
+    }
+  }
+  expects trait OrbLintStateUnreachableCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page "/orb-lint-state-unreachable" -> OrbLintStateUnreachable, OrbLintStateUnreachableCli
+}

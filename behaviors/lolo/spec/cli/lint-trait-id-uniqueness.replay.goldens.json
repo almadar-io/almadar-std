@@ -1,0 +1,467 @@
+{
+ "atom": "cli/atoms/std-orb-lint-trait-id-uniqueness.lolo",
+ "trait": "OrbLintTraitIdUniqueness",
+ "note": "Programs and the expected finding are those of the Rust unit tests two_traits_sharing_an_id_are_rejected and control_distinct_ids_pass (trait_id_uniqueness.rs). `orb validate` reports the same code for these programs when the `.orb` carries a `ledger`; a ledger-less `.orb` is re-stamped by name at parse, which replaces the authored ids. Added cases copy trait_id_uniqueness.rs control_traits_without_ids_are_not_compared and extend two_traits_sharing_an_id_are_rejected to three.",
+ "cases": [
+  {
+   "id": "two-traits-share-an-id",
+   "steps": [
+    {
+     "trait": "OrbLintTraitIdUniqueness",
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "P",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "A",
+           "linkedEntity": "E",
+           "id": "trt_D3MHYC8PV7BDKNT20E3SN8RFSA",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "INIT",
+              "name": "INIT"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             }
+            ]
+           }
+          },
+          {
+           "name": "B",
+           "linkedEntity": "E",
+           "id": "trt_D3MHYC8PV7BDKNT20E3SN8RFSA",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "INIT",
+              "name": "INIT"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "trait": "OrbLintTraitIdUniqueness",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "trait-id-uniqueness",
+         "findings": [
+          {
+           "code": "ORB_X_DUPLICATE_TRAIT_ID",
+           "path": "orbitals",
+           "message": "trait id trt_D3MHYC8PV7BDKNT20E3SN8RFSA is carried by O.A, O.B; listens match sources by id, so each of these hears the others' emits",
+           "suggestion": "",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-distinct-ids-pass",
+   "steps": [
+    {
+     "trait": "OrbLintTraitIdUniqueness",
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "P",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "A",
+           "linkedEntity": "E",
+           "id": "trt_D3MHYC8PV7BDKNT20E3SN8RFSA",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "INIT",
+              "name": "INIT"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             }
+            ]
+           }
+          },
+          {
+           "name": "B",
+           "linkedEntity": "E",
+           "id": "trt_ZSKW13TYGSF8CQNE490K961PEB",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "INIT",
+              "name": "INIT"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "trait": "OrbLintTraitIdUniqueness",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "trait-id-uniqueness",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-traits-without-ids-are-not-compared",
+   "steps": [
+    {
+     "trait": "OrbLintTraitIdUniqueness",
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "P",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "A",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "INIT",
+              "name": "INIT"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             }
+            ]
+           }
+          },
+          {
+           "name": "B",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "INIT",
+              "name": "INIT"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "trait": "OrbLintTraitIdUniqueness",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "trait-id-uniqueness",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "three-traits-sharing-an-id-are-listed-in-order",
+   "steps": [
+    {
+     "trait": "OrbLintTraitIdUniqueness",
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "P",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "A",
+           "linkedEntity": "E",
+           "id": "trt_D3MHYC8PV7BDKNT20E3SN8RFSA",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "INIT",
+              "name": "INIT"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             }
+            ]
+           }
+          },
+          {
+           "name": "B",
+           "linkedEntity": "E",
+           "id": "trt_D3MHYC8PV7BDKNT20E3SN8RFSA",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "INIT",
+              "name": "INIT"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             }
+            ]
+           }
+          },
+          {
+           "name": "C",
+           "linkedEntity": "E",
+           "id": "trt_D3MHYC8PV7BDKNT20E3SN8RFSA",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "INIT",
+              "name": "INIT"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "trait": "OrbLintTraitIdUniqueness",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "trait-id-uniqueness",
+         "findings": [
+          {
+           "code": "ORB_X_DUPLICATE_TRAIT_ID",
+           "path": "orbitals",
+           "message": "trait id trt_D3MHYC8PV7BDKNT20E3SN8RFSA is carried by O.A, O.B, O.C; listens match sources by id, so each of these hears the others' emits",
+           "suggestion": "",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

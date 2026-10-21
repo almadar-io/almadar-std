@@ -1,0 +1,22 @@
+app lint-entity-mock-member-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint entity-mock-member <file>`, the port of ORB_E_MOCK_NOT_IN_ENUM. It lowers the file with program/read and, for every non-union field with declared values and a @mock, reports the comma-separated trimmed candidates that are not among the values, with the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint entity-mock-member: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintEntityMockMemberSpec {
+  expects trait OrbLintEntityMockMember {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+      LINT_UNREAD { rule : string! }
+    }
+  }
+  expects trait OrbLintEntityMockMemberCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page "/orb-lint-entity-mock-member" -> OrbLintEntityMockMember, OrbLintEntityMockMemberCli
+}

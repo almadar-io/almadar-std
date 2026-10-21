@@ -1235,6 +1235,37 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     example: '["credential-forget", "@config.googleToken", { "emit": { "success": "DISCONNECTED" } }]',
     effect: { kind: 'credential-forget', produces: shape({ connected: BOOLEAN, label: STRING }) },
   },
+  'access-check': {
+    module: 'core',
+    category: 'effect',
+    minArity: 1,
+    maxArity: 2,
+    description:
+      'Ask the kernel for the verdict of an entity access policy: whether viewer may create, read, update or delete row of entity, evaluated by the same evaluator fetch and persist enforce. The success payload is { allowed }; an entity with no policy for the action allows every viewer, a null viewer is nobody. An entity the program does not declare, an unknown action or a request missing a key fails with { error }.',
+    hasSideEffects: true,
+    runsOn: 'server',
+    returnType: 'void',
+    params: [
+      {
+        name: 'request',
+        type: shape({
+          entity: STRING,
+          action: union(lit('create'), lit('read'), lit('update'), lit('delete')),
+          row: ENTITY_REF,
+          viewer: nullable(ENTITY_REF),
+        }),
+        description: 'The entity name, the action, the candidate row (the incoming data for create, the existing row otherwise) and the viewer (null for nobody)',
+      },
+      {
+        name: 'options',
+        type: HOST_CALL_ENVELOPE,
+        description: 'Optional trailing options: { emit: { success, failure } } routes the { allowed } payload and the { error } failure',
+        optional: true,
+      },
+    ],
+    example: '["access-check", { "entity": "Task", "action": "create", "row": { "ownerId": "u1" }, "viewer": { "id": "u1" } }, { "emit": { "success": "CHECKED", "failure": "CHECK_FAILED" } }]',
+    effect: { kind: 'access-check', produces: shape({ allowed: BOOLEAN }) },
+  },
   'credential-list': {
     module: 'core',
     category: 'effect',

@@ -1,0 +1,96 @@
+app std-render-report [
+  version: "1.0.0",
+  description: "std-render-report — the Layer 2 client render report and the declared answer for a pattern a renderer does not implement. RENDER_VERDICT counts the offenders and lists each distinct one, sorted; RENDER_HEADLINE reads PASS or FAIL with checks passed, slots rendered, the trait scope and the stubbed count; UNSUPPORTED_MESSAGE names the pattern, the renderer and its version; UNSUPPORTED_PATTERNS lists the registry patterns a renderer's coverage list lacks, sorted once."
+]
+uses Spec from "almadar-std/render-report"
+
+type RenderVerdict = { name : string!, passed : boolean!, detail : string! }
+
+orbital RenderReportOrbital {
+  entity RenderReportRun [runtime] {
+    id : string!
+    name : string @description "The last verdict's name." = ""
+    passed : boolean @description "Whether the last verdict had no offenders." = false
+    detail : string @description "The last verdict's offender summary." = ""
+    ok : boolean @description "Whether every verdict of the last report passed." = false
+    headline : string @description "The last report's one-line headline." = ""
+    message : string @description "The last unsupported-pattern message." = ""
+    patterns : [string] @description "The last list of uncovered registry patterns." = []
+  }
+
+  trait RenderReporter -> RenderReportRun [lifecycle, instance] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      RENDER_VERDICT -> ready
+        (set @entity.name ?name)
+        (set @entity.passed (= (array/len ?offenders) 0))
+        (set @entity.detail (if (= (array/len ?offenders) 0) "" (str/concat (array/len ?offenders) " offender(s): " (str/join (array/sort (array/unique ?offenders)) ", "))))
+        (set @entity.ok false)
+        (set @entity.headline "")
+        (set @entity.message "")
+        (set @entity.patterns [])
+        (emit REPORT_RESULT { name: @entity.name, passed: @entity.passed, detail: @entity.detail, ok: @entity.ok, headline: @entity.headline, message: @entity.message, patterns: @entity.patterns })
+      RENDER_HEADLINE -> ready
+        (set @entity.name "")
+        (set @entity.passed false)
+        (set @entity.detail "")
+        (set @entity.ok (= (array/len (array/filter ?verdicts (fn v (not (object/get @v "passed"))))) 0))
+        (set @entity.headline (str/concat (if ?hasTraits (str/concat "[trait " (str/join ?traits ", ") "] ") "") "[" (if (= (array/len (array/filter ?verdicts (fn v (not (object/get @v "passed"))))) 0) "PASS" "FAIL") "] " ?item " (client render) — " (array/len (array/filter ?verdicts (fn v (object/get @v "passed")))) "/" (array/len ?verdicts) " checks, " ?slotsRendered " slots" (if (> (array/len ?stubbed) 0) (str/concat ", " (array/len ?stubbed) " stubbed") "")))
+        (set @entity.message "")
+        (set @entity.patterns [])
+        (emit REPORT_RESULT { name: @entity.name, passed: @entity.passed, detail: @entity.detail, ok: @entity.ok, headline: @entity.headline, message: @entity.message, patterns: @entity.patterns })
+      UNSUPPORTED_MESSAGE -> ready
+        (set @entity.name "")
+        (set @entity.passed false)
+        (set @entity.detail "")
+        (set @entity.ok false)
+        (set @entity.headline "")
+        (set @entity.message (str/concat "pattern `" (if (= ?pattern "") "(no type)" ?pattern) "` is not supported by renderer " ?renderer " " ?version))
+        (set @entity.patterns [])
+        (emit REPORT_RESULT { name: @entity.name, passed: @entity.passed, detail: @entity.detail, ok: @entity.ok, headline: @entity.headline, message: @entity.message, patterns: @entity.patterns })
+      UNSUPPORTED_PATTERNS -> ready
+        (set @entity.name "")
+        (set @entity.passed false)
+        (set @entity.detail "")
+        (set @entity.ok false)
+        (set @entity.headline "")
+        (set @entity.message "")
+        (set @entity.patterns (array/sort (array/unique (array/filter ?registry (fn p (not (array/includes ?covered @p)))))))
+        (emit REPORT_RESULT { name: @entity.name, passed: @entity.passed, detail: @entity.detail, ok: @entity.ok, headline: @entity.headline, message: @entity.message, patterns: @entity.patterns })
+    }
+
+    emits {
+      REPORT_RESULT -> external {
+        name : string
+        passed : boolean
+        detail : string
+        ok : boolean
+        headline : string
+        message : string
+        patterns : [string]
+      }
+        @description "A verdict, headline, unsupported-pattern message or coverage list was produced."
+        @synonyms "render verdict, render report, renderer coverage"
+        @tier "primary"
+    }
+
+    listens {
+      RENDER_VERDICT { name : string!  offenders : [string]! }
+        @description "Judge one check: passed with no offenders, else the count and the sorted distinct offenders."
+        @synonyms "render verdict"
+      RENDER_HEADLINE { item : string!  verdicts : [RenderVerdict]!  slotsRendered : number!  hasTraits : boolean!  traits : [string]!  stubbed : [string]! }
+        @description "The report headline: trait scope, PASS or FAIL, checks passed over total, slots rendered and the stubbed count."
+        @synonyms "report headline"
+      UNSUPPORTED_MESSAGE { pattern : string!  renderer : string!  version : string! }
+        @description "The declared answer for a pattern a renderer does not implement."
+        @synonyms "unsupported pattern"
+      UNSUPPORTED_PATTERNS { registry : [string]!  covered : [string]! }
+        @description "The registry patterns a renderer does not cover, sorted and listed once."
+        @synonyms "coverage gaps"
+    }
+  }
+
+  page "/render-report" as RenderReportPage -> RenderReporter
+}

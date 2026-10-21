@@ -1,0 +1,204 @@
+{
+ "atom": "cli/atoms/std-orb-lint-emit-config-ref.lolo",
+ "trait": "OrbLintEmitConfigRef",
+ "note": "Expected findings are the code, path, message and suggestion `orb validate` (the Rust validator) reports for the same program.",
+ "cases": [
+  {
+   "id": "config-knob-not-declared",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "emits": [
+            {
+             "event": "@config.target"
+            }
+           ]
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintEmitConfigRef"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "emit-config-ref",
+         "findings": [
+          {
+           "code": "ORB_EMIT_CONFIG_REF_INVALID",
+           "path": "orbitals[0 (A)].traits[0 (T)].emits(@config.target)",
+           "message": "emits references `@config.target` but `target` is not a declared config field on this trait.",
+           "suggestion": "Declare `config { target : string = \"...\" }` on this trait, or reference an existing string-typed knob with a default.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintEmitConfigRef"
+    }
+   ]
+  },
+  {
+   "id": "control-no-config-ref-emit",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintEmitConfigRef"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "emit-config-ref",
+         "findings": []
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintEmitConfigRef"
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,24 @@
+app ml-vector-store-spec [
+  version: "1.0.0",
+  description: "Design contract for reading the orb embedding store. A store is an ORBVEC file: the magic ORBVEC, a u16 format version (1), a u16 model length and the model name, a u16 dims, a u32 record count, then count records of key[32], an f32 scale and dims int8s, all little-endian and sorted strictly ascending by key, where key = sha256(model, NUL, text). A lookup takes the layered store files in order (package snapshots first, the user store last; an empty file is a missing store and skipped) and the text, requires every non-empty store to share one model and dims, and answers the vector of the first store holding the key, decoded as int8 * scale / 127 where the scale is what Rust reads a stored binary32 back as (its decimal text parsed as a double), exact over the whole binary32 range; a text no store holds is a miss, never an empty vector (the caller embeds it through the configured provider, or fails ORB_VECTOR_PROVIDER_MISSING). A store that is not an ORBVEC file, has another format version, is truncated or has the wrong length, is not strictly sorted, or disagrees on model or dims refuses with ORB_VECTOR_BAD_MAGIC, BAD_VERSION, CORRUPT, MODEL_MISMATCH or DIMS_MISMATCH, naming the first failure."
+]
+
+orbital MlVectorStoreSpec {
+  expects entity VectorRun [runtime] {
+    id : string
+    stores : [bytes]
+    model : string
+    texts : [string]
+  }
+  expects trait VectorLookup {
+    state idle {
+      VECTOR_LOOKUP -> idle
+    }
+    emits {
+      VECTOR_FOUND { model : string!  dims : number!  scale : number!  vector : [number]! }
+      VECTOR_MISSED { model : string! }
+      VECTOR_REFUSED { code : string!  detail : string! }
+    }
+  }
+  expects page "/vector-store" -> VectorLookup
+}

@@ -1,0 +1,18 @@
+app theme-boot-spec [
+  version: "1.0.0",
+  description: "Design contract for the theme substrate program a native shell boots on its second kernel handle. THEME_BOOT { key, definitions, hasMode, mode } resolves the theme key against the carried preset definitions and answers ONE THEME_APPLIED { theme, canvasTheme, motion } with the kernel snapshot field names: theme { key, base, mode, tokens } (the merged tokens, typed color axis included), canvasTheme (ground, surfaces, tones, series, strokes, lineCap, lineJoin, dash, dot, fillStyle, fillOpacity, marker, label, text, corner) and motion (entryDefault, staggerMs, shapes). THEME_TOGGLE { mode } re-answers for the booted key in the requested mode."
+]
+
+orbital ThemeBootSpec {
+  expects entity ThemeBootRun [runtime] {
+    id : string!
+    key : string
+    mode : string
+  }
+  expects trait ThemeBoot {
+    state ready
+    state ready { THEME_BOOT -> ready  THEME_TOGGLE -> ready }
+    emits { THEME_APPLIED }
+  }
+  expects page "/theme-boot" -> ThemeBoot
+}

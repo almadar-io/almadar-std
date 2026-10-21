@@ -3,8 +3,8 @@ app std-board [
   description: "std-board — generic N-column board primitive. `config.columns` is an array of column definitions ({ key, label, icon, variant }); the trait `array/map`s them on `BoardItemsLoaded` into `@entity.boards` where each board carries its filtered items + a count. The render is a `data-grid` over `@entity.boards` (one card per column) whose `renderItem` lambda nests a `data-list` over `@col.items` (the cards in that stage). N is config-driven — pass any number of columns; the outer `data-grid`'s `cols` is bound to `@config.gridCols` so the grid wraps if you exceed it. Topology = loading / viewing_board / viewing_card / adding / error — distinct from the cookie-cutter `loading/browsing/viewing_single/error` CRUD shape. App-level atoms (e.g. std-pipeline) compose std-board via `uses` and add a sibling persistor + extended source entity. `config.boardLook` switches the board body between the default N-column grid ('columns') and a Trello-style wide-column kanban ('kanban-classic'). `viewing_board` listens for REFETCH_QUERY/REFETCH_FILTER/REFETCH_PAGE (the std-search/std-filter/std-pagination wiring targets, no render on refetch — @entity.boards is bound reactively) and can optionally render its own search box (config.bodySearch, default false) and filter bar (config.filters, default []); no pagination control is rendered — a board's columns are not a paged list."
 ]
 type ObjectSpec = { id : string, label : string, value : string }
-type ColumnSpec = { key : string!, label : string!, icon : string, variant : string }
-type ItemAction = { label : string!, event : event, variant : primary | secondary | ghost | danger, icon : string, roles : [string] }
+type BoardColumnSpec = { key : string!, label : string!, icon : string, variant : string }
+type ItemAction = { label : string!, event : event, navigatesTo : string, variant : primary | secondary | ghost | danger, icon : string, roles : [string], when : SExpr }
 type FilterSpec = { field : string!, label : string, options : [string] }
 orbital BoardOrbital {
     type BoardItem = { id : string!, title : string, description : string, stage : string, notes : string, position : number }
@@ -541,7 +541,7 @@ orbital BoardOrbital {
         @description "Name the field on this entity the search box's str/includes filter matches against. Declared, never inferred: an entity with no `title` column must set this to a real field (e.g. name, summary) or the search box can never match a card."
         @synonyms "search column, search on field, match field, search key"
         @tier "policy"
-      columns : [ColumnSpec] = [{
+      columns : [BoardColumnSpec] = [{
         icon: circle
         key: todo
         label: "To Do"

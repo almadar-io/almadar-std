@@ -1,0 +1,16 @@
+app orb-complete-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb complete <file.lolo> --offset <n>`: what is valid at a character offset in a .lolo file, against the installed language tables. COMPLETE_RUN { source, offset, effects, types, rows } answers COMPLETE_CTX { context, prefix, candidates }, where prefix is the partial word at the cursor (letters, digits, _ and -), every candidate starts with it (case-insensitively), candidates are unique by label and sorted by label, and each is { label, kind, detail? }. The contexts, tried in this order: (1) inside `uses X from \"…` the import path (pending: needs installed behavior contracts); (2) inside an open `app` or `page` bracket: modifier-key (the table's keys not yet written, kind keyword) or, after `key:`, modifier-value (access: public, authenticated; indexing: index, noindex); (3) after `.traits.` or `.orbitals.` the used behavior's names (pending); (4) after `@entity.` the fields of the enclosing orbital's entity (kind entity-field, detail the type); (5) after `<trait.` the traits declared in the file (kind trait); (6) inside an open `<` tag with no space: pattern-tag (the PascalCase tag, kind pattern, detail the pattern name), with a space: pattern-prop (the pattern's props not already written, kind prop, detail the pattern) unless the cursor is in a value; (7) a key inside a reference's `config {}` (pending); (8) after an open `(`: effect (the vocabulary's effects, kind operator); (9) after `name :` in an entity body: field-type (the vocabulary's types, kind keyword, detail type); (10) at the start of a line: keyword, the statement keywords of the enclosing block (top level: app type uses orbital theme config; orbital body, orbital reference body, trait body, trait reference body, entity body); otherwise none with no candidates. Control: a source with nothing to complete answers context none."
+]
+
+type Cand = { label : string!, kind : string!, detail : string? }
+
+orbital OrbCompleteSpec {
+  expects trait CompleteEngine {
+    state loading
+    emits {
+      COMPLETE_CTX { context : string!  prefix : string!  candidates : [Cand]! }
+    }
+  }
+  expects page "/orb-complete" -> CompleteEngine
+}

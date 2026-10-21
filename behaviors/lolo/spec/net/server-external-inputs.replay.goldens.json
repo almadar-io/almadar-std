@@ -71,54 +71,23 @@
      "expect": {
       "emits": [
        {
-        "event": "RESPOND"
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 1,
+         "status": 200
+        }
        }
       ]
-     },
-     "expectedResponse": {
-      "requestId": 1,
-      "status": 200,
-      "bodyJson": {
-       "success": true,
-       "inputs": [
-        {
-         "orbital": "TaskOrbital",
-         "trait": "TaskPersistor",
-         "event": "DO_CREATE",
-         "description": "Create a task",
-         "payloadSchema": [
-          {
-           "name": "title",
-           "type": "string",
-           "required": true
-          }
-         ]
-        }
-       ]
-      }
      }
     }
    ],
-   "note": "lists_the_declared_inputs: 200 { success: true, inputs: [{ orbital, trait, event, description, payloadSchema }] }; the body is the json of success+inputs"
+   "note": "lists_the_declared_inputs: 200 { success: true, inputs: [{ orbital, trait, event, description, payloadSchema }] }; the body is the json of success+inputs | RESPOND body is bytes and not asserted; intended bodyJson: {\"inputs\": [{\"description\": \"Create a task\", \"event\": \"DO_CREATE\", \"orbital\": \"TaskOrbital\", \"payloadSchema\": [{\"name\": \"title\", \"required\": true, \"type\": \"string\"}], \"trait\": \"TaskPersistor\"}], \"success\": true}"
   },
   {
    "id": "control-orbital-detail-route-still-matches",
    "skip": "pending: GET /api/orbitals/:orbital (the schema detail route) has no std route; the dispatch atom answers kind none as 404 NOT_FOUND",
-   "pending": "pending: GET /api/orbitals/:orbital (the schema detail route) has no std route; the dispatch atom answers kind none as 404 NOT_FOUND",
-   "fixture": {
-    "schema": "InputsApp"
-   },
-   "request": {
-    "method": "GET",
-    "path": "/api/orbitals/TaskOrbital"
-   },
-   "expected": {
-    "status": 200,
-    "bodyFields": {
-     "name": "TaskOrbital"
-    }
-   },
-   "steps": []
+   "steps": [],
+   "note": "pending spec: {\"expected\": {\"bodyFields\": {\"name\": \"TaskOrbital\"}, \"status\": 200}, \"fixture\": {\"schema\": \"InputsApp\"}, \"request\": {\"method\": \"GET\", \"path\": \"/api/orbitals/TaskOrbital\"}}"
   },
   {
    "id": "dispatches-a-declared-input",
@@ -164,16 +133,23 @@
      "payload": {
       "requestId": 2
      },
-     "preparedExpect": {
-      "address": "TaskOrbital.TaskPersistor.DO_CREATE",
-      "options": {
-       "wire": true,
-       "input": true,
-       "orbital": "TaskOrbital",
-       "targetTrait": "TaskPersistor",
-       "entityId": "",
-       "event": "DO_CREATE"
-      }
+     "expect": {
+      "emits": [
+       {
+        "event": "DISPATCH_PREPARED",
+        "payload": {
+         "address": "TaskOrbital.TaskPersistor.DO_CREATE",
+         "options": {
+          "wire": true,
+          "input": true,
+          "orbital": "TaskOrbital",
+          "targetTrait": "TaskPersistor",
+          "entityId": "",
+          "event": "DO_CREATE"
+         }
+        }
+       }
+      ]
      }
     },
     {
@@ -211,14 +187,13 @@
      "expect": {
       "emits": [
        {
-        "event": "RESPOND"
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 2,
+         "status": 200
+        }
        }
       ]
-     },
-     "expectedResponse": {
-      "requestId": 2,
-      "status": 200,
-      "note": "RESPOND payload (requestId, status) is not asserted: the replay runner does not match it here, see the file note"
      }
     }
    ],
@@ -268,16 +243,23 @@
      "payload": {
       "requestId": 3
      },
-     "preparedExpect": {
-      "address": "TaskOrbital.TaskPersistor.OPEN",
-      "options": {
-       "wire": true,
-       "input": true,
-       "orbital": "TaskOrbital",
-       "targetTrait": "TaskPersistor",
-       "entityId": "",
-       "event": "OPEN"
-      }
+     "expect": {
+      "emits": [
+       {
+        "event": "DISPATCH_PREPARED",
+        "payload": {
+         "address": "TaskOrbital.TaskPersistor.OPEN",
+         "options": {
+          "wire": true,
+          "input": true,
+          "orbital": "TaskOrbital",
+          "targetTrait": "TaskPersistor",
+          "entityId": "",
+          "event": "OPEN"
+         }
+        }
+       }
+      ]
      }
     },
     {
@@ -318,14 +300,13 @@
      "expect": {
       "emits": [
        {
-        "event": "RESPOND"
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 3,
+         "status": 403
+        }
        }
       ]
-     },
-     "expectedResponse": {
-      "requestId": 3,
-      "status": 403,
-      "note": "RESPOND payload (requestId, status) is not asserted: the replay runner does not match it here, see the file note"
      }
     }
    ],
@@ -375,16 +356,23 @@
      "payload": {
       "requestId": 4
      },
-     "preparedExpect": {
-      "address": "OtherOrbital.TaskPersistor.DO_CREATE",
-      "options": {
-       "wire": true,
-       "input": true,
-       "orbital": "OtherOrbital",
-       "targetTrait": "TaskPersistor",
-       "entityId": "",
-       "event": "DO_CREATE"
-      }
+     "expect": {
+      "emits": [
+       {
+        "event": "DISPATCH_PREPARED",
+        "payload": {
+         "address": "OtherOrbital.TaskPersistor.DO_CREATE",
+         "options": {
+          "wire": true,
+          "input": true,
+          "orbital": "OtherOrbital",
+          "targetTrait": "TaskPersistor",
+          "entityId": "",
+          "event": "DO_CREATE"
+         }
+        }
+       }
+      ]
      }
     },
     {
@@ -427,14 +415,13 @@
      "expect": {
       "emits": [
        {
-        "event": "RESPOND"
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 4,
+         "status": 403
+        }
        }
       ]
-     },
-     "expectedResponse": {
-      "requestId": 4,
-      "status": 403,
-      "note": "RESPOND payload (requestId, status) is not asserted: the replay runner does not match it here, see the file note"
      }
     }
    ],
@@ -484,16 +471,23 @@
      "payload": {
       "requestId": 5
      },
-     "preparedExpect": {
-      "address": "TaskOrbital.TaskPersistor.OPEN",
-      "options": {
-       "wire": true,
-       "input": false,
-       "orbital": "TaskOrbital",
-       "targetTrait": "TaskPersistor",
-       "entityId": "",
-       "event": "OPEN"
-      }
+     "expect": {
+      "emits": [
+       {
+        "event": "DISPATCH_PREPARED",
+        "payload": {
+         "address": "TaskOrbital.TaskPersistor.OPEN",
+         "options": {
+          "wire": true,
+          "input": false,
+          "orbital": "TaskOrbital",
+          "targetTrait": "TaskPersistor",
+          "entityId": "",
+          "event": "OPEN"
+         }
+        }
+       }
+      ]
      }
     },
     {
@@ -529,14 +523,13 @@
      "expect": {
       "emits": [
        {
-        "event": "RESPOND"
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 5,
+         "status": 200
+        }
        }
       ]
-     },
-     "expectedResponse": {
-      "requestId": 5,
-      "status": 200,
-      "note": "RESPOND payload (requestId, status) is not asserted: the replay runner does not match it here, see the file note"
      }
     }
    ],
@@ -545,135 +538,38 @@
   {
    "id": "inbound-hook-unset-credential-leaves-channel-unchecked",
    "skip": "pending: no operator delivers an inbound hook yet (HOOK_DELIVERED); the dispatch atom answers /api/hooks/:name as 501 NOT_IMPLEMENTED",
-   "pending": "pending: no operator delivers an inbound hook yet (HOOK_DELIVERED); the dispatch atom answers /api/hooks/:name as 501 NOT_IMPLEMENTED",
-   "fixture": {
-    "schema": "HooksApp inbound [google-calendar]; orbital CalOrbital trait Push, event PUSH inbound { name google-calendar, answers PUSH_ANSWERED, verifies header x-goog-channel-token against credential env }"
-   },
-   "request": {
-    "method": "POST",
-    "path": "/api/hooks/google-calendar",
-    "headers": {
-     "x-goog-resource-state": "sync"
-    },
-    "env": {
-     "ORB_TEST_INBOUND_CHANNEL_TOKEN": null
-    }
-   },
-   "expected": {
-    "status": 200,
-    "body": "{\"ok\":true,\"dispatched\":false}",
-    "headers": {
-     "content-type": "application/json"
-    }
-   },
-   "steps": []
+   "steps": [],
+   "note": "pending spec: {\"expected\": {\"body\": \"{\\\"ok\\\":true,\\\"dispatched\\\":false}\", \"headers\": {\"content-type\": \"application/json\"}, \"status\": 200}, \"fixture\": {\"schema\": \"HooksApp inbound [google-calendar]; orbital CalOrbital trait Push, event PUSH inbound { name google-calendar, answers PUSH_ANSWERED, verifies header x-goog-channel-token against credential env }\"}, \"request\": {\"env\": {\"ORB_TEST_INBOUND_CHANNEL_TOKEN\": null}, \"headers\": {\"x-goog-resource-state\": \"sync\"}, \"method\": \"POST\", \"path\": \"/api/hooks/google-calendar\"}}"
   },
   {
    "id": "inbound-hook-valid-token-is-answered",
    "skip": "pending: no operator delivers an inbound hook yet (HOOK_DELIVERED); the dispatch atom answers /api/hooks/:name as 501 NOT_IMPLEMENTED",
-   "pending": "pending: no operator delivers an inbound hook yet (HOOK_DELIVERED); the dispatch atom answers /api/hooks/:name as 501 NOT_IMPLEMENTED",
-   "fixture": {
-    "schema": "HooksApp inbound [google-calendar]; orbital CalOrbital trait Push, event PUSH inbound { name google-calendar, answers PUSH_ANSWERED, verifies header x-goog-channel-token against credential env }"
-   },
-   "request": {
-    "method": "POST",
-    "path": "/api/hooks/google-calendar",
-    "headers": {
-     "x-goog-resource-state": "sync",
-     "x-goog-channel-token": "s3cret"
-    },
-    "env": {
-     "ORB_TEST_INBOUND_CHANNEL_TOKEN": "s3cret"
-    }
-   },
-   "expected": {
-    "status": 200,
-    "body": "{\"ok\":true,\"dispatched\":false}"
-   },
-   "steps": []
+   "steps": [],
+   "note": "pending spec: {\"expected\": {\"body\": \"{\\\"ok\\\":true,\\\"dispatched\\\":false}\", \"status\": 200}, \"fixture\": {\"schema\": \"HooksApp inbound [google-calendar]; orbital CalOrbital trait Push, event PUSH inbound { name google-calendar, answers PUSH_ANSWERED, verifies header x-goog-channel-token against credential env }\"}, \"request\": {\"env\": {\"ORB_TEST_INBOUND_CHANNEL_TOKEN\": \"s3cret\"}, \"headers\": {\"x-goog-channel-token\": \"s3cret\", \"x-goog-resource-state\": \"sync\"}, \"method\": \"POST\", \"path\": \"/api/hooks/google-calendar\"}}"
   },
   {
    "id": "inbound-hook-wrong-token-is-400",
    "skip": "pending: no operator delivers an inbound hook yet (HOOK_DELIVERED); the dispatch atom answers /api/hooks/:name as 501 NOT_IMPLEMENTED",
-   "pending": "pending: no operator delivers an inbound hook yet (HOOK_DELIVERED); the dispatch atom answers /api/hooks/:name as 501 NOT_IMPLEMENTED",
-   "fixture": {
-    "schema": "HooksApp inbound [google-calendar]; orbital CalOrbital trait Push, event PUSH inbound { name google-calendar, answers PUSH_ANSWERED, verifies header x-goog-channel-token against credential env }"
-   },
-   "request": {
-    "method": "POST",
-    "path": "/api/hooks/google-calendar",
-    "headers": {
-     "x-goog-resource-state": "sync",
-     "x-goog-channel-token": "guess"
-    },
-    "env": {
-     "ORB_TEST_INBOUND_CHANNEL_TOKEN": "s3cret"
-    }
-   },
-   "expected": {
-    "status": 400,
-    "body": "{\"error\":\"bad-token\"}"
-   },
-   "steps": []
+   "steps": [],
+   "note": "pending spec: {\"expected\": {\"body\": \"{\\\"error\\\":\\\"bad-token\\\"}\", \"status\": 400}, \"fixture\": {\"schema\": \"HooksApp inbound [google-calendar]; orbital CalOrbital trait Push, event PUSH inbound { name google-calendar, answers PUSH_ANSWERED, verifies header x-goog-channel-token against credential env }\"}, \"request\": {\"env\": {\"ORB_TEST_INBOUND_CHANNEL_TOKEN\": \"s3cret\"}, \"headers\": {\"x-goog-channel-token\": \"guess\", \"x-goog-resource-state\": \"sync\"}, \"method\": \"POST\", \"path\": \"/api/hooks/google-calendar\"}}"
   },
   {
    "id": "inbound-hook-missing-token-is-400",
    "skip": "pending: no operator delivers an inbound hook yet (HOOK_DELIVERED); the dispatch atom answers /api/hooks/:name as 501 NOT_IMPLEMENTED",
-   "pending": "pending: no operator delivers an inbound hook yet (HOOK_DELIVERED); the dispatch atom answers /api/hooks/:name as 501 NOT_IMPLEMENTED",
-   "fixture": {
-    "schema": "HooksApp inbound [google-calendar]; orbital CalOrbital trait Push, event PUSH inbound { name google-calendar, answers PUSH_ANSWERED, verifies header x-goog-channel-token against credential env }"
-   },
-   "request": {
-    "method": "POST",
-    "path": "/api/hooks/google-calendar",
-    "headers": {
-     "x-goog-resource-state": "sync"
-    },
-    "env": {
-     "ORB_TEST_INBOUND_CHANNEL_TOKEN": "s3cret"
-    }
-   },
-   "expected": {
-    "status": 400
-   },
-   "steps": []
+   "steps": [],
+   "note": "pending spec: {\"expected\": {\"status\": 400}, \"fixture\": {\"schema\": \"HooksApp inbound [google-calendar]; orbital CalOrbital trait Push, event PUSH inbound { name google-calendar, answers PUSH_ANSWERED, verifies header x-goog-channel-token against credential env }\"}, \"request\": {\"env\": {\"ORB_TEST_INBOUND_CHANNEL_TOKEN\": \"s3cret\"}, \"headers\": {\"x-goog-resource-state\": \"sync\"}, \"method\": \"POST\", \"path\": \"/api/hooks/google-calendar\"}}"
   },
   {
    "id": "control-undeclared-hook-name-is-404",
    "skip": "pending: no operator delivers an inbound hook yet (HOOK_DELIVERED); the dispatch atom answers /api/hooks/:name as 501 NOT_IMPLEMENTED",
-   "pending": "pending: no operator delivers an inbound hook yet (HOOK_DELIVERED); the dispatch atom answers /api/hooks/:name as 501 NOT_IMPLEMENTED",
-   "fixture": {
-    "schema": "HooksApp inbound []"
-   },
-   "request": {
-    "method": "POST",
-    "path": "/api/hooks/google-calendar"
-   },
-   "expected": {
-    "status": 404,
-    "body": "{\"error\":\"Unknown hook provider: google-calendar\"}"
-   },
-   "steps": []
+   "steps": [],
+   "note": "pending spec: {\"expected\": {\"body\": \"{\\\"error\\\":\\\"Unknown hook provider: google-calendar\\\"}\", \"status\": 404}, \"fixture\": {\"schema\": \"HooksApp inbound []\"}, \"request\": {\"method\": \"POST\", \"path\": \"/api/hooks/google-calendar\"}}"
   },
   {
    "id": "control-arm-that-does-not-fire-is-500-inbound-unanswered",
    "skip": "pending: no operator delivers an inbound hook yet (HOOK_DELIVERED); the dispatch atom answers /api/hooks/:name as 501 NOT_IMPLEMENTED",
-   "pending": "pending: no operator delivers an inbound hook yet (HOOK_DELIVERED); the dispatch atom answers /api/hooks/:name as 501 NOT_IMPLEMENTED",
-   "fixture": {
-    "schema": "HooksApp inbound [google-calendar]; orbital CalOrbital trait Push, event PUSH inbound { name google-calendar, answers PUSH_ANSWERED, verifies header x-goog-channel-token against credential env }"
-   },
-   "request": {
-    "method": "POST",
-    "path": "/api/hooks/google-calendar",
-    "headers": {
-     "x-goog-resource-state": "exists"
-    }
-   },
-   "expected": {
-    "status": 500,
-    "body": "{\"error\":\"inbound-unanswered\"}"
-   },
-   "steps": []
+   "steps": [],
+   "note": "pending spec: {\"expected\": {\"body\": \"{\\\"error\\\":\\\"inbound-unanswered\\\"}\", \"status\": 500}, \"fixture\": {\"schema\": \"HooksApp inbound [google-calendar]; orbital CalOrbital trait Push, event PUSH inbound { name google-calendar, answers PUSH_ANSWERED, verifies header x-goog-channel-token against credential env }\"}, \"request\": {\"headers\": {\"x-goog-resource-state\": \"exists\"}, \"method\": \"POST\", \"path\": \"/api/hooks/google-calendar\"}}"
   },
   {
    "id": "inbound-event-refused-targeted-events",
@@ -719,16 +615,23 @@
      "payload": {
       "requestId": 10
      },
-     "preparedExpect": {
-      "address": "CalOrbital.Push.PUSH",
-      "options": {
-       "wire": true,
-       "input": false,
-       "orbital": "CalOrbital",
-       "targetTrait": "Push",
-       "entityId": "",
-       "event": "PUSH"
-      }
+     "expect": {
+      "emits": [
+       {
+        "event": "DISPATCH_PREPARED",
+        "payload": {
+         "address": "CalOrbital.Push.PUSH",
+         "options": {
+          "wire": true,
+          "input": false,
+          "orbital": "CalOrbital",
+          "targetTrait": "Push",
+          "entityId": "",
+          "event": "PUSH"
+         }
+        }
+       }
+      ]
      }
     },
     {
@@ -769,14 +672,13 @@
      "expect": {
       "emits": [
        {
-        "event": "RESPOND"
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 10,
+         "status": 403
+        }
        }
       ]
-     },
-     "expectedResponse": {
-      "requestId": 10,
-      "status": 403,
-      "note": "RESPOND payload (requestId, status) is not asserted: the replay runner does not match it here, see the file note"
      }
     }
    ],
@@ -826,16 +728,23 @@
      "payload": {
       "requestId": 11
      },
-     "preparedExpect": {
-      "address": "CalOrbital..PUSH",
-      "options": {
-       "wire": true,
-       "input": false,
-       "orbital": "CalOrbital",
-       "targetTrait": "",
-       "entityId": "",
-       "event": "PUSH"
-      }
+     "expect": {
+      "emits": [
+       {
+        "event": "DISPATCH_PREPARED",
+        "payload": {
+         "address": "CalOrbital..PUSH",
+         "options": {
+          "wire": true,
+          "input": false,
+          "orbital": "CalOrbital",
+          "targetTrait": "",
+          "entityId": "",
+          "event": "PUSH"
+         }
+        }
+       }
+      ]
      }
     },
     {
@@ -876,14 +785,13 @@
      "expect": {
       "emits": [
        {
-        "event": "RESPOND"
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 11,
+         "status": 403
+        }
        }
       ]
-     },
-     "expectedResponse": {
-      "requestId": 11,
-      "status": 403,
-      "note": "RESPOND payload (requestId, status) is not asserted: the replay runner does not match it here, see the file note"
      }
     }
    ],
@@ -933,16 +841,23 @@
      "payload": {
       "requestId": 12
      },
-     "preparedExpect": {
-      "address": "CalOrbital.Push.PUSH",
-      "options": {
-       "wire": true,
-       "input": false,
-       "orbital": "CalOrbital",
-       "targetTrait": "Push",
-       "entityId": "e1",
-       "event": "PUSH"
-      }
+     "expect": {
+      "emits": [
+       {
+        "event": "DISPATCH_PREPARED",
+        "payload": {
+         "address": "CalOrbital.Push.PUSH",
+         "options": {
+          "wire": true,
+          "input": false,
+          "orbital": "CalOrbital",
+          "targetTrait": "Push",
+          "entityId": "e1",
+          "event": "PUSH"
+         }
+        }
+       }
+      ]
      }
     },
     {
@@ -983,14 +898,13 @@
      "expect": {
       "emits": [
        {
-        "event": "RESPOND"
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 12,
+         "status": 403
+        }
        }
       ]
-     },
-     "expectedResponse": {
-      "requestId": 12,
-      "status": 403,
-      "note": "RESPOND payload (requestId, status) is not asserted: the replay runner does not match it here, see the file note"
      }
     }
    ],
@@ -1040,16 +954,23 @@
      "payload": {
       "requestId": 13
      },
-     "preparedExpect": {
-      "address": "CalOrbital.Push.INIT",
-      "options": {
-       "wire": true,
-       "input": false,
-       "orbital": "CalOrbital",
-       "targetTrait": "Push",
-       "entityId": "",
-       "event": "INIT"
-      }
+     "expect": {
+      "emits": [
+       {
+        "event": "DISPATCH_PREPARED",
+        "payload": {
+         "address": "CalOrbital.Push.INIT",
+         "options": {
+          "wire": true,
+          "input": false,
+          "orbital": "CalOrbital",
+          "targetTrait": "Push",
+          "entityId": "",
+          "event": "INIT"
+         }
+        }
+       }
+      ]
      }
     },
     {
@@ -1083,14 +1004,13 @@
      "expect": {
       "emits": [
        {
-        "event": "RESPOND"
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 13,
+         "status": 200
+        }
        }
       ]
-     },
-     "expectedResponse": {
-      "requestId": 13,
-      "status": 200,
-      "note": "RESPOND payload (requestId, status) is not asserted: the replay runner does not match it here, see the file note"
      }
     }
    ],

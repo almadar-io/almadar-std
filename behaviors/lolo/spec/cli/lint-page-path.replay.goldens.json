@@ -1,0 +1,1057 @@
+{
+ "atom": "cli/atoms/std-orb-lint-page-path.lolo",
+ "trait": "OrbLintPagePath",
+ "note": "Expected findings are the code, path, message and suggestion `orb validate` (the Rust validator) reports for the same program.",
+ "cases": [
+  {
+   "id": "page-with-an-empty-path",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintPagePath"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "page-path",
+         "findings": [
+          {
+           "code": "ORB_P_MISSING_PATH",
+           "path": "orbitals[0].pages[0].path",
+           "message": "Page path is required",
+           "suggestion": "Add a path starting with / (e.g., '/tasks', '/users/:id')",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintPagePath"
+    }
+   ]
+  },
+  {
+   "id": "page-path-without-a-leading-slash",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintPagePath"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "page-path",
+         "findings": [
+          {
+           "code": "ORB_P_INVALID_PATH",
+           "path": "orbitals[0].pages[0].path",
+           "message": "Page path must start with '/': 'a'",
+           "suggestion": "Prefix the path with / (e.g., '/tasks' instead of 'tasks')",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_P_INVALID_PATH",
+           "path": "orbitals[0].pages[0].path",
+           "message": "Invalid page path format: 'a'",
+           "suggestion": "Use valid path characters: letters, numbers, hyphens, underscores, and colons for params",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintPagePath"
+    }
+   ]
+  },
+  {
+   "id": "page-path-under-api",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/api/x",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintPagePath"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "page-path",
+         "findings": [
+          {
+           "code": "ORB_P_INVALID_PATH",
+           "path": "orbitals[0].pages[0].path",
+           "message": "Page path '/api/x' starts with '/api' which collides with the API server proxy",
+           "suggestion": "Choose a different path that doesn't start with '/api' (e.g., '/requests' instead of '/apirequests')",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintPagePath"
+    }
+   ]
+  },
+  {
+   "id": "control-valid-page-path",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintPagePath"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "page-path",
+         "findings": []
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintPagePath"
+    }
+   ]
+  },
+  {
+   "id": "lolo-arabic-first-token-is-not-english",
+   "entity": {
+    "raw": "تطبيق x [\n]\n",
+    "packs": [
+     {
+      "name": "@almadar/lolo-ar",
+      "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"تطبيق\", \"uses\": \"يستخدم\", \"expects\": \"يتوقع\", \"type\": \"نوع\", \"theme\": \"مظهر\", \"orbital\": \"مدار\"}, \"orb\": {\"orbitals\": \"مدارات\"}}"
+     },
+     {
+      "name": "@almadar/lolo-sl",
+      "text": "{\"meta\": {\"code\": \"sl\"}, \"keywords\": {\"app\": \"aplikacija\", \"uses\": \"uporablja\", \"expects\": \"pricakuje\", \"type\": \"tip\", \"theme\": \"tema\", \"orbital\": \"orbitala\"}, \"orb\": {\"orbitals\": \"orbitale\"}}"
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "OrbLintPagePath",
+     "from": "reading",
+     "event": "LANGUAGE_PACKS_DONE_HEARD",
+     "payload": {
+      "problem": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_LANGUAGE",
+        "payload": {
+         "latin": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-lolo-english-first-token-is-english",
+   "entity": {
+    "raw": "app x [\n]\n",
+    "packs": [
+     {
+      "name": "@almadar/lolo-ar",
+      "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"تطبيق\", \"uses\": \"يستخدم\", \"expects\": \"يتوقع\", \"type\": \"نوع\", \"theme\": \"مظهر\", \"orbital\": \"مدار\"}, \"orb\": {\"orbitals\": \"مدارات\"}}"
+     },
+     {
+      "name": "@almadar/lolo-sl",
+      "text": "{\"meta\": {\"code\": \"sl\"}, \"keywords\": {\"app\": \"aplikacija\", \"uses\": \"uporablja\", \"expects\": \"pricakuje\", \"type\": \"tip\", \"theme\": \"tema\", \"orbital\": \"orbitala\"}, \"orb\": {\"orbitals\": \"orbitale\"}}"
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "OrbLintPagePath",
+     "from": "reading",
+     "event": "LANGUAGE_PACKS_DONE_HEARD",
+     "payload": {
+      "problem": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_LANGUAGE",
+        "payload": {
+         "latin": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "lolo-slovenian-first-token-is-not-english",
+   "entity": {
+    "raw": "aplikacija x [\n]\n",
+    "packs": [
+     {
+      "name": "@almadar/lolo-ar",
+      "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"تطبيق\", \"uses\": \"يستخدم\", \"expects\": \"يتوقع\", \"type\": \"نوع\", \"theme\": \"مظهر\", \"orbital\": \"مدار\"}, \"orb\": {\"orbitals\": \"مدارات\"}}"
+     },
+     {
+      "name": "@almadar/lolo-sl",
+      "text": "{\"meta\": {\"code\": \"sl\"}, \"keywords\": {\"app\": \"aplikacija\", \"uses\": \"uporablja\", \"expects\": \"pricakuje\", \"type\": \"tip\", \"theme\": \"tema\", \"orbital\": \"orbitala\"}, \"orb\": {\"orbitals\": \"orbitale\"}}"
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "OrbLintPagePath",
+     "from": "reading",
+     "event": "LANGUAGE_PACKS_DONE_HEARD",
+     "payload": {
+      "problem": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_LANGUAGE",
+        "payload": {
+         "latin": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-lolo-slovenian-word-with-no-slovenian-pack-is-english",
+   "entity": {
+    "raw": "aplikacija x [\n]\n",
+    "packs": [
+     {
+      "name": "@almadar/lolo-ar",
+      "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"تطبيق\", \"uses\": \"يستخدم\", \"expects\": \"يتوقع\", \"type\": \"نوع\", \"theme\": \"مظهر\", \"orbital\": \"مدار\"}, \"orb\": {\"orbitals\": \"مدارات\"}}"
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "OrbLintPagePath",
+     "from": "reading",
+     "event": "LANGUAGE_PACKS_DONE_HEARD",
+     "payload": {
+      "problem": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_LANGUAGE",
+        "payload": {
+         "latin": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "lolo-first-token-skips-comment-lines",
+   "entity": {
+    "raw": ";; note\n\nيستخدم A from \"b\"\n",
+    "packs": [
+     {
+      "name": "@almadar/lolo-ar",
+      "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"تطبيق\", \"uses\": \"يستخدم\", \"expects\": \"يتوقع\", \"type\": \"نوع\", \"theme\": \"مظهر\", \"orbital\": \"مدار\"}, \"orb\": {\"orbitals\": \"مدارات\"}}"
+     },
+     {
+      "name": "@almadar/lolo-sl",
+      "text": "{\"meta\": {\"code\": \"sl\"}, \"keywords\": {\"app\": \"aplikacija\", \"uses\": \"uporablja\", \"expects\": \"pricakuje\", \"type\": \"tip\", \"theme\": \"tema\", \"orbital\": \"orbitala\"}, \"orb\": {\"orbitals\": \"orbitale\"}}"
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "OrbLintPagePath",
+     "from": "reading",
+     "event": "LANGUAGE_PACKS_DONE_HEARD",
+     "payload": {
+      "problem": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_LANGUAGE",
+        "payload": {
+         "latin": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-lolo-unknown-first-token-is-english",
+   "entity": {
+    "raw": "foo x [\n]\n",
+    "packs": [
+     {
+      "name": "@almadar/lolo-ar",
+      "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"تطبيق\", \"uses\": \"يستخدم\", \"expects\": \"يتوقع\", \"type\": \"نوع\", \"theme\": \"مظهر\", \"orbital\": \"مدار\"}, \"orb\": {\"orbitals\": \"مدارات\"}}"
+     },
+     {
+      "name": "@almadar/lolo-sl",
+      "text": "{\"meta\": {\"code\": \"sl\"}, \"keywords\": {\"app\": \"aplikacija\", \"uses\": \"uporablja\", \"expects\": \"pricakuje\", \"type\": \"tip\", \"theme\": \"tema\", \"orbital\": \"orbitala\"}, \"orb\": {\"orbitals\": \"orbitale\"}}"
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "OrbLintPagePath",
+     "from": "reading",
+     "event": "LANGUAGE_PACKS_DONE_HEARD",
+     "payload": {
+      "problem": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_LANGUAGE",
+        "payload": {
+         "latin": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-lolo-english-keyword-wins-even-when-other-text-is-arabic",
+   "entity": {
+    "raw": "app تطبيق [\n]\n",
+    "packs": [
+     {
+      "name": "@almadar/lolo-ar",
+      "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"تطبيق\", \"uses\": \"يستخدم\", \"expects\": \"يتوقع\", \"type\": \"نوع\", \"theme\": \"مظهر\", \"orbital\": \"مدار\"}, \"orb\": {\"orbitals\": \"مدارات\"}}"
+     },
+     {
+      "name": "@almadar/lolo-sl",
+      "text": "{\"meta\": {\"code\": \"sl\"}, \"keywords\": {\"app\": \"aplikacija\", \"uses\": \"uporablja\", \"expects\": \"pricakuje\", \"type\": \"tip\", \"theme\": \"tema\", \"orbital\": \"orbitala\"}, \"orb\": {\"orbitals\": \"orbitale\"}}"
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "OrbLintPagePath",
+     "from": "reading",
+     "event": "LANGUAGE_PACKS_DONE_HEARD",
+     "payload": {
+      "problem": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_LANGUAGE",
+        "payload": {
+         "latin": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "orb-json-arabic-orbitals-key-is-not-english",
+   "entity": {
+    "raw": "{\"مدارات\": []}",
+    "packs": [
+     {
+      "name": "@almadar/lolo-ar",
+      "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"تطبيق\", \"uses\": \"يستخدم\", \"expects\": \"يتوقع\", \"type\": \"نوع\", \"theme\": \"مظهر\", \"orbital\": \"مدار\"}, \"orb\": {\"orbitals\": \"مدارات\"}}"
+     },
+     {
+      "name": "@almadar/lolo-sl",
+      "text": "{\"meta\": {\"code\": \"sl\"}, \"keywords\": {\"app\": \"aplikacija\", \"uses\": \"uporablja\", \"expects\": \"pricakuje\", \"type\": \"tip\", \"theme\": \"tema\", \"orbital\": \"orbitala\"}, \"orb\": {\"orbitals\": \"orbitale\"}}"
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "OrbLintPagePath",
+     "from": "reading",
+     "event": "LANGUAGE_PACKS_DONE_HEARD",
+     "payload": {
+      "problem": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_LANGUAGE",
+        "payload": {
+         "latin": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-orb-json-english-orbitals-key-is-english",
+   "entity": {
+    "raw": "{\"name\": \"p\", \"orbitals\": []}",
+    "packs": [
+     {
+      "name": "@almadar/lolo-ar",
+      "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"تطبيق\", \"uses\": \"يستخدم\", \"expects\": \"يتوقع\", \"type\": \"نوع\", \"theme\": \"مظهر\", \"orbital\": \"مدار\"}, \"orb\": {\"orbitals\": \"مدارات\"}}"
+     },
+     {
+      "name": "@almadar/lolo-sl",
+      "text": "{\"meta\": {\"code\": \"sl\"}, \"keywords\": {\"app\": \"aplikacija\", \"uses\": \"uporablja\", \"expects\": \"pricakuje\", \"type\": \"tip\", \"theme\": \"tema\", \"orbital\": \"orbitala\"}, \"orb\": {\"orbitals\": \"orbitale\"}}"
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "OrbLintPagePath",
+     "from": "reading",
+     "event": "LANGUAGE_PACKS_DONE_HEARD",
+     "payload": {
+      "problem": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_LANGUAGE",
+        "payload": {
+         "latin": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "orb-json-slovenian-orbitals-key-is-not-english",
+   "entity": {
+    "raw": "{\"orbitale\": []}",
+    "packs": [
+     {
+      "name": "@almadar/lolo-ar",
+      "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"تطبيق\", \"uses\": \"يستخدم\", \"expects\": \"يتوقع\", \"type\": \"نوع\", \"theme\": \"مظهر\", \"orbital\": \"مدار\"}, \"orb\": {\"orbitals\": \"مدارات\"}}"
+     },
+     {
+      "name": "@almadar/lolo-sl",
+      "text": "{\"meta\": {\"code\": \"sl\"}, \"keywords\": {\"app\": \"aplikacija\", \"uses\": \"uporablja\", \"expects\": \"pricakuje\", \"type\": \"tip\", \"theme\": \"tema\", \"orbital\": \"orbitala\"}, \"orb\": {\"orbitals\": \"orbitale\"}}"
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "OrbLintPagePath",
+     "from": "reading",
+     "event": "LANGUAGE_PACKS_DONE_HEARD",
+     "payload": {
+      "problem": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_LANGUAGE",
+        "payload": {
+         "latin": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-orb-json-nested-arabic-word-is-not-a-top-level-key",
+   "entity": {
+    "raw": "{\"name\": \"p\", \"x\": {\"مدارات\": 1}}",
+    "packs": [
+     {
+      "name": "@almadar/lolo-ar",
+      "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"تطبيق\", \"uses\": \"يستخدم\", \"expects\": \"يتوقع\", \"type\": \"نوع\", \"theme\": \"مظهر\", \"orbital\": \"مدار\"}, \"orb\": {\"orbitals\": \"مدارات\"}}"
+     },
+     {
+      "name": "@almadar/lolo-sl",
+      "text": "{\"meta\": {\"code\": \"sl\"}, \"keywords\": {\"app\": \"aplikacija\", \"uses\": \"uporablja\", \"expects\": \"pricakuje\", \"type\": \"tip\", \"theme\": \"tema\", \"orbital\": \"orbitala\"}, \"orb\": {\"orbitals\": \"orbitale\"}}"
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "OrbLintPagePath",
+     "from": "reading",
+     "event": "LANGUAGE_PACKS_DONE_HEARD",
+     "payload": {
+      "problem": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_LANGUAGE",
+        "payload": {
+         "latin": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-orb-json-with-no-matching-pack-is-english",
+   "entity": {
+    "raw": "{\"مدارات\": []}",
+    "packs": []
+   },
+   "steps": [
+    {
+     "trait": "OrbLintPagePath",
+     "from": "reading",
+     "event": "LANGUAGE_PACKS_DONE_HEARD",
+     "payload": {
+      "problem": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_LANGUAGE",
+        "payload": {
+         "latin": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-pack-scan-problem-leaves-the-language-undecided",
+   "entity": {
+    "raw": "app x [\n]\n",
+    "packs": []
+   },
+   "steps": [
+    {
+     "trait": "OrbLintPagePath",
+     "from": "reading",
+     "event": "LANGUAGE_PACKS_DONE_HEARD",
+     "payload": {
+      "problem": "two packs claim ar"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_UNREAD",
+        "payload": {
+         "rule": "page-path"
+        }
+       }
+      ],
+      "neverEmits": [
+       "LINT_LANGUAGE"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-clean-scan-decides-the-language",
+   "entity": {
+    "raw": "app x [\n]\n",
+    "packs": []
+   },
+   "steps": [
+    {
+     "trait": "OrbLintPagePath",
+     "from": "reading",
+     "event": "LANGUAGE_PACKS_DONE_HEARD",
+     "payload": {
+      "problem": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_LANGUAGE",
+        "payload": {
+         "latin": true
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "program/read is not hosted in a step, so the run then ends unread; only the decision is asserted"
+  },
+  {
+   "id": "vocab-answers-are-collected-per-pack",
+   "entity": {
+    "packs": []
+   },
+   "steps": [
+    {
+     "trait": "OrbLintPagePath",
+     "from": "reading",
+     "event": "LANGUAGE_PACK_VOCAB_HEARD",
+     "payload": {
+      "name": "@almadar/lolo-ar",
+      "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"تطبيق\", \"uses\": \"يستخدم\", \"expects\": \"يتوقع\", \"type\": \"نوع\", \"theme\": \"مظهر\", \"orbital\": \"مدار\"}, \"orb\": {\"orbitals\": \"مدارات\"}}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "reading"
+     }
+    }
+   ]
+  },
+  {
+   "id": "non-english-program-keeps-an-arabic-path",
+   "entity": {
+    "latin": false
+   },
+   "steps": [
+    {
+     "trait": "OrbLintPagePath",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "name": "A",
+         "pages": [
+          {
+           "name": "P",
+           "path": "/لوحة"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "trait": "OrbLintPagePath",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "page-path",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-english-program-refuses-an-arabic-path",
+   "entity": {
+    "latin": true
+   },
+   "steps": [
+    {
+     "trait": "OrbLintPagePath",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "name": "A",
+         "pages": [
+          {
+           "name": "P",
+           "path": "/لوحة"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "trait": "OrbLintPagePath",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "page-path",
+         "findings": [
+          {
+           "code": "ORB_P_INVALID_PATH",
+           "path": "orbitals[0].pages[0].path",
+           "message": "Invalid page path format: '/لوحة'",
+           "suggestion": "Use valid path characters: letters, numbers, hyphens, underscores, and colons for params",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-failed-language-scan-leaves-the-file-unread",
+   "entity": {},
+   "steps": [
+    {
+     "trait": "OrbLintPagePath",
+     "from": "reading",
+     "event": "LANG_SCAN_ANSWERED",
+     "payload": {
+      "status": 500,
+      "body": "",
+      "stderr": "x"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_UNREAD",
+        "payload": {
+         "rule": "page-path"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-successful-scan-answer-changes-nothing",
+   "entity": {},
+   "steps": [
+    {
+     "trait": "OrbLintPagePath",
+     "from": "reading",
+     "event": "LANG_SCAN_ANSWERED",
+     "payload": {
+      "status": 200,
+      "body": "",
+      "stderr": ""
+     },
+     "expect": {
+      "neverEmits": [
+       "LINT_UNREAD"
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

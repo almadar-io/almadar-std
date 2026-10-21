@@ -14,7 +14,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
-import { BOOLEAN, DESCRIPTION, EMIT_ENVELOPE, EVENT_KEY, list, openShape, rec, STRING, tv, union } from '../signature.js';
+import { BOOLEAN, DESCRIPTION, EMIT_ENVELOPE, EVENT_KEY, list, nullable, openShape, rec, shape, STRING, tv, union } from '../signature.js';
 
 export const BEHAVIOR_OPERATORS: Record<string, StdOperatorMeta> = {
   'behavior/apply': {
@@ -82,14 +82,19 @@ export const BEHAVIOR_OPERATORS: Record<string, StdOperatorMeta> = {
   'behavior/source': {
     module: 'behavior', category: 'std-behavior',
     minArity: 1, maxArity: 2,
-    description: 'The behavior a trait value, an orbital value or `{ behavior }` names, as a quoted program.',
+    description: 'The behavior a trait value, an orbital value or `{ behavior }` names, as a quoted program. With `options.file: true` it answers the source file instead, `{ path, source }`: the resolved file path and its text, as `orb mcp`\'s `read_behavior` does.',
     hasSideEffects: true,
     runsOn: 'server',
     host: 'program',
-    returnType: 'sexpr',
+    returnType: union('sexpr', shape({ path: STRING, source: STRING })),
     params: [
       { name: 'value', type: union('trait', 'orbital', 'behavior'), description: 'A trait value, an orbital value, or { behavior }' },
-      { name: 'options', type: EMIT_ENVELOPE, description: 'Emit configuration ({ emit: { success, failure } })', optional: true },
+      {
+        name: 'options',
+        type: openShape({ key: STRING, file: BOOLEAN, emit: openShape({ success: EVENT_KEY, failure: EVENT_KEY, cancelled: EVENT_KEY }) }),
+        description: 'Emit configuration ({ emit: { success, failure } }); `file: true` answers `{ path, source }`',
+        optional: true,
+      },
     ],
     example: '["behavior/source", "@entity.widget", { "emit": { "success": "SOURCED", "failure": "SOURCE_FAILED" } }]',
   },
@@ -120,6 +125,33 @@ export const BEHAVIOR_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'options', type: EMIT_ENVELOPE, description: 'Emit configuration ({ emit: { success, failure } })', optional: true },
     ],
     example: '["behavior/dependencies", "@entity.program", { "emit": { "success": "DEPENDENCIES", "failure": "DEPENDENCIES_FAILED" } }]',
+  },
+  'behavior/texts': {
+    module: 'behavior', category: 'std-behavior',
+    minArity: 1, maxArity: 2,
+    description: 'The embedding texts of the installed behaviors under registry folders (`<prefix>/<topic>[/<tier>]`), in embed order: each organism text, then each `<name>#capabilities` text, then every knob text (`<name>/<orbital>/<trait>/<knob>`), each `{ key, text, hash }` with `hash` the SHA-256 of the text, as `orb behaviors texts --json` prints them. `kind` (`organism`, `capability` or `knob`) keeps one kind.',
+    hasSideEffects: true,
+    runsOn: 'server',
+    host: 'program',
+    returnType: list(shape({ key: STRING, text: STRING, hash: STRING })),
+    params: [
+      { name: 'scope', type: { kind: 'object', fields: { paths: { kind: 'array', of: 'string' }, kind: 'string' } }, description: 'Registry folders and an optional text kind' },
+      { name: 'options', type: EMIT_ENVELOPE, description: 'Emit configuration ({ emit: { success, failure } })', optional: true },
+    ],
+    example: '["behavior/texts", { "paths": ["almadar-std/ui/core/molecules"], "kind": "knob" }, { "emit": { "success": "TEXTS", "failure": "TEXTS_FAILED" } }]',
+  },
+  'behavior/packages': {
+    module: 'behavior', category: 'std-behavior',
+    minArity: 0, maxArity: 1,
+    description: 'The installed behavior packages, each `{ root, prefix, vectors }`: its directory, its behavior prefix, and the path of its `orb.vectors` snapshot as the sidecar lock resolves it (the cached sidecar when locked), `null` when the package declares none.',
+    hasSideEffects: true,
+    runsOn: 'server',
+    host: 'program',
+    returnType: list(shape({ root: STRING, prefix: STRING, vectors: nullable(STRING) })),
+    params: [
+      { name: 'options', type: EMIT_ENVELOPE, description: 'Emit configuration ({ emit: { success, failure } })', optional: true },
+    ],
+    example: '["behavior/packages", { "emit": { "success": "PACKAGES", "failure": "PACKAGES_FAILED" } }]',
   },
 };
 

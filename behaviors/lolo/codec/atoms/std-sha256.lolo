@@ -1,0 +1,46 @@
+app std-sha256 [
+  version: "1.0.0",
+  description: "std-sha256 — SHA-256 as an event: a thin wrapper over the one hash/sha256 operator. SHA256_DIGEST { data, encoding, requestId? } answers SHA256_DIGESTED { requestId, digest } (lowercase hex or standard base64) or SHA256_REFUSED { requestId, reason: encoding } for any other encoding. The input is bytes: until hash/sha256 accepts bytes (lane HB1) a binary input is hashed by the operator as its string, so the byte-input goldens stay red.",
+  egress: []
+]
+uses Spec from "almadar-std/sha256"
+
+orbital Sha256Orbital {
+  entity Sha256Run [runtime] {
+    id : string!
+    requestId : string = ""
+    digest : string = ""
+  }
+
+  trait Sha256 -> Sha256Run [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      SHA256_DIGEST -> idle when (not (array/includes ["hex", "base64"] ?encoding))
+        (emit SHA256_REFUSED { requestId: (str/default ?requestId ""), reason: "encoding" })
+      SHA256_DIGEST -> idle when (array/includes ["hex", "base64"] ?encoding)
+        (set @entity.requestId (str/default ?requestId ""))
+        (set @entity.digest (hash/sha256 ?data ?encoding))
+        (emit SHA256_DIGESTED { requestId: (str/default ?requestId ""), digest: @entity.digest })
+    }
+
+    emits {
+      SHA256_DIGESTED -> external { requestId : string  digest : string! }
+        @description "The SHA-256 digest of the bytes, lowercase hex or standard base64."
+        @synonyms "hash, checksum, integrity, digest"
+        @tier "primary"
+      SHA256_REFUSED -> external { requestId : string  reason : string! }
+        @description "The request was refused: the encoding is not hex or base64."
+        @tier "primary"
+    }
+
+    listens {
+      SHA256_DIGEST { data : bytes!  encoding : string!  requestId : string }
+        @description "Hash the bytes with SHA-256."
+        @synonyms "sha256, hash bytes, checksum, integrity digest"
+    }
+  }
+
+  page "/sha256" as Sha256Page -> Sha256
+}

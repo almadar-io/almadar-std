@@ -1,0 +1,877 @@
+{
+ "atom": "cli/atoms/std-orb-mcp.lolo",
+ "trait": "McpServer",
+ "cases": [
+  {
+   "id": "blank-line-is-skipped",
+   "steps": [
+    {
+     "trait": "McpServer",
+     "from": "serving",
+     "event": "MCP_LINE_IN",
+     "payload": {
+      "line": "   "
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MCP_PUMP",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "notification-gets-no-reply",
+   "steps": [
+    {
+     "trait": "McpServer",
+     "from": "serving",
+     "event": "MCP_LINE_IN",
+     "payload": {
+      "line": "{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MCP_PUMP",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "parse-error-has-null-id",
+   "steps": [
+    {
+     "trait": "McpServer",
+     "from": "serving",
+     "event": "MCP_LINE_IN",
+     "payload": {
+      "line": "not json"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MCP_LINE_OUT",
+        "payload": {
+         "line": "{\"error\":{\"code\":-32700,\"message\":\"parse error: invalid JSON\"},\"id\":null,\"jsonrpc\":\"2.0\"}"
+        }
+       },
+       {
+        "event": "MCP_PUMP",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "ping-answers-empty",
+   "steps": [
+    {
+     "trait": "McpServer",
+     "from": "serving",
+     "event": "MCP_LINE_IN",
+     "payload": {
+      "line": "{\"jsonrpc\":\"2.0\",\"id\":7,\"method\":\"ping\",\"params\":{}}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MCP_LINE_OUT",
+        "payload": {
+         "line": "{\"id\":7,\"jsonrpc\":\"2.0\",\"result\":{}}"
+        }
+       },
+       {
+        "event": "MCP_PUMP",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "unknown-method-is-method-not-found",
+   "steps": [
+    {
+     "trait": "McpServer",
+     "from": "serving",
+     "event": "MCP_LINE_IN",
+     "payload": {
+      "line": "{\"jsonrpc\":\"2.0\",\"id\":7,\"method\":\"resources/subscribe\",\"params\":{}}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MCP_LINE_OUT",
+        "payload": {
+         "line": "{\"error\":{\"code\":-32601,\"message\":\"method not found: resources/subscribe\"},\"id\":7,\"jsonrpc\":\"2.0\"}"
+        }
+       },
+       {
+        "event": "MCP_PUMP",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "prompts-get-unknown-name-is-invalid-params",
+   "steps": [
+    {
+     "trait": "McpServer",
+     "from": "serving",
+     "event": "MCP_LINE_IN",
+     "payload": {
+      "line": "{\"jsonrpc\":\"2.0\",\"id\":7,\"method\":\"prompts/get\",\"params\":{\"name\":\"nope\"}}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MCP_LINE_OUT",
+        "payload": {
+         "line": "{\"error\":{\"code\":-32602,\"message\":\"unknown prompt \\\"nope\\\"\"},\"id\":7,\"jsonrpc\":\"2.0\"}"
+        }
+       },
+       {
+        "event": "MCP_PUMP",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "prompts-list-offers-build",
+   "steps": [
+    {
+     "trait": "McpServer",
+     "from": "serving",
+     "event": "MCP_LINE_IN",
+     "payload": {
+      "line": "{\"jsonrpc\":\"2.0\",\"id\":7,\"method\":\"prompts/list\",\"params\":{}}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MCP_LINE_OUT",
+        "payload": {
+         "line": "{\"id\":7,\"jsonrpc\":\"2.0\",\"result\":{\"prompts\":[{\"arguments\":[{\"description\":\"What to build\",\"name\":\"app\",\"required\":false}],\"description\":\"Build an app in Orb, from finding behaviors to a program that validates 0/0\",\"name\":\"build\"}]}}"
+        }
+       },
+       {
+        "event": "MCP_PUMP",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "unknown-tool-is-a-tool-error-not-a-protocol-error",
+   "steps": [
+    {
+     "trait": "McpServer",
+     "from": "serving",
+     "event": "MCP_LINE_IN",
+     "payload": {
+      "line": "{\"jsonrpc\":\"2.0\",\"id\":7,\"method\":\"tools/call\",\"params\":{\"name\":\"make_coffee\",\"arguments\":{}}}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MCP_LINE_OUT",
+        "payload": {
+         "line": "{\"id\":7,\"jsonrpc\":\"2.0\",\"result\":{\"content\":[{\"text\":\"orb has no tool `make_coffee`\",\"type\":\"text\"}],\"isError\":true}}"
+        }
+       },
+       {
+        "event": "MCP_PUMP",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-id-is-echoed-as-given",
+   "steps": [
+    {
+     "trait": "McpServer",
+     "from": "serving",
+     "event": "MCP_LINE_IN",
+     "payload": {
+      "line": "{\"jsonrpc\":\"2.0\",\"id\":\"abc\",\"method\":\"ping\",\"params\":{}}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MCP_LINE_OUT",
+        "payload": {
+         "line": "{\"id\":\"abc\",\"jsonrpc\":\"2.0\",\"result\":{}}"
+        }
+       },
+       {
+        "event": "MCP_PUMP",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "initialize-names-orb-and-echoes-a-known-protocol-version",
+   "steps": [
+    {
+     "trait": "McpServer",
+     "from": "versioning",
+     "event": "MCP_VERSIONED",
+     "payload": {
+      "version": "18.0.5"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MCP_LISTEN",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "McpServer",
+     "from": "serving",
+     "event": "MCP_LINE_IN",
+     "payload": {
+      "line": "{\"jsonrpc\":\"2.0\",\"id\":7,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-06-18\"}}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MCP_LINE_OUT",
+        "payload": {
+         "line": "{\"id\":7,\"jsonrpc\":\"2.0\",\"result\":{\"capabilities\":{\"prompts\":{},\"tools\":{}},\"instructions\":\"Orb is a programming language. A program is a finite graph of states and events: written as .lolo text, held as .orb data, compiled to a full-stack app. You build by composing installed behaviors (atoms own their state machine; you override data, event names and config), not by writing every state machine from scratch.\\nLoop: (1) `behaviors` with no scopes lists the installed packages and topics; list a topic, then `describe_behavior` and `read_behavior` the ones that fit. (2) Write the .lolo file, importing them with `uses`. `reference` is the language reference; `operators`, `patterns` and `complete` tell you what the language accepts. (3) `validate` until it reports 0 errors and 0 warnings; every finding carries a code, a path and a fix. (4) `play` events through the machine to check it does what was asked. (5) Run it with `npx -y @almadar/orb serve <file>`.\",\"protocolVersion\":\"2025-06-18\",\"serverInfo\":{\"name\":\"orb\",\"version\":\"18.0.5\"}}}"
+        }
+       },
+       {
+        "event": "MCP_PUMP",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "initialize-answers-an-unknown-protocol-version-with-its-own",
+   "steps": [
+    {
+     "trait": "McpServer",
+     "from": "versioning",
+     "event": "MCP_VERSIONED",
+     "payload": {
+      "version": "18.0.5"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MCP_LISTEN",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "McpServer",
+     "from": "serving",
+     "event": "MCP_LINE_IN",
+     "payload": {
+      "line": "{\"jsonrpc\":\"2.0\",\"id\":7,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"1999-01-01\"}}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MCP_LINE_OUT",
+        "payload": {
+         "line": "{\"id\":7,\"jsonrpc\":\"2.0\",\"result\":{\"capabilities\":{\"prompts\":{},\"tools\":{}},\"instructions\":\"Orb is a programming language. A program is a finite graph of states and events: written as .lolo text, held as .orb data, compiled to a full-stack app. You build by composing installed behaviors (atoms own their state machine; you override data, event names and config), not by writing every state machine from scratch.\\nLoop: (1) `behaviors` with no scopes lists the installed packages and topics; list a topic, then `describe_behavior` and `read_behavior` the ones that fit. (2) Write the .lolo file, importing them with `uses`. `reference` is the language reference; `operators`, `patterns` and `complete` tell you what the language accepts. (3) `validate` until it reports 0 errors and 0 warnings; every finding carries a code, a path and a fix. (4) `play` events through the machine to check it does what was asked. (5) Run it with `npx -y @almadar/orb serve <file>`.\",\"protocolVersion\":\"2025-06-18\",\"serverInfo\":{\"name\":\"orb\",\"version\":\"18.0.5\"}}}"
+        }
+       },
+       {
+        "event": "MCP_PUMP",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "tools-list-carries-every-language-tool",
+   "steps": [
+    {
+     "trait": "McpServer",
+     "from": "versioning",
+     "event": "MCP_VERSIONED",
+     "payload": {
+      "version": "18.0.5"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MCP_LISTEN",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "McpServer",
+     "from": "serving",
+     "event": "MCP_LINE_IN",
+     "payload": {
+      "line": "{\"jsonrpc\":\"2.0\",\"id\":7,\"method\":\"tools/list\",\"params\":{}}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MCP_LINE_OUT",
+        "payload": {
+         "line": "{\"id\":7,\"jsonrpc\":\"2.0\",\"result\":{\"tools\":[{\"description\":\"Validate a .lolo or .orb program with the full compiler pipeline. The bar is 0 errors and 0 warnings; each finding has a code, a path and a suggested fix.\",\"inputSchema\":{\"properties\":{\"final\":{\"description\":\"Also run the finished-app checks\",\"type\":\"boolean\"},\"path\":{\"description\":\"The .lolo or .orb file\",\"type\":\"string\"}},\"required\":[\"path\"],\"type\":\"object\"},\"name\":\"validate\"},{\"description\":\"What is valid at a character offset in a .lolo file: keywords, effect operators, pattern tags and props, installed behaviors' import paths, traits, orbitals and typed config keys.\",\"inputSchema\":{\"properties\":{\"offset\":{\"description\":\"Byte offset of the cursor\",\"minimum\":0,\"type\":\"integer\"},\"path\":{\"description\":\"The .lolo file\",\"type\":\"string\"}},\"required\":[\"path\",\"offset\"],\"type\":\"object\"},\"name\":\"complete\"},{\"description\":\"Pretty-print a .lolo or .orb file in the syntax it is written in. Returns the text; `write: true` also rewrites the file.\",\"inputSchema\":{\"properties\":{\"path\":{\"type\":\"string\"},\"write\":{\"description\":\"Rewrite the file in place\",\"type\":\"boolean\"}},\"required\":[\"path\"],\"type\":\"object\"},\"name\":\"format\"},{\"description\":\"The language's operators (the only functions and effects a program can call). With `name`: that operator's full entry (params, return type, examples). Without: every operator's name, category and description, optionally for one `category`.\",\"inputSchema\":{\"properties\":{\"category\":{\"type\":\"string\"},\"name\":{\"type\":\"string\"}},\"required\":[],\"type\":\"object\"},\"name\":\"operators\"},{\"description\":\"The UI patterns `render-ui` accepts. With `name`: that pattern's full entry (every prop with its types and enum values). Without: every pattern's name, category and description, optionally for one `category`.\",\"inputSchema\":{\"properties\":{\"category\":{\"type\":\"string\"},\"name\":{\"type\":\"string\"}},\"required\":[],\"type\":\"object\"},\"name\":\"patterns\"},{\"description\":\"The installed behaviors you compose with `uses`. With no `scopes`: each installed package's prefix and its topics with a count. With `scopes` (e.g. `almadar-std/ui/core` or a `<prefix>/<topic>`): every behavior there with its description, capabilities, level and traits.\",\"inputSchema\":{\"properties\":{\"exposure\":{\"items\":{\"enum\":[\"app\",\"experience\",\"palette\",\"both\",\"internal\"],\"type\":\"string\"},\"type\":\"array\"},\"scopes\":{\"items\":{\"type\":\"string\"},\"type\":\"array\"}},\"required\":[],\"type\":\"object\"},\"name\":\"behaviors\"},{\"description\":\"One behavior's contract: its knobs (typed config), events, transitions and pages. `spec` is `<prefix>/<name>`, `<prefix>/<name>.traits.<Trait>` or `<prefix>/<name>.orbitals.<Orbital>`.\",\"inputSchema\":{\"properties\":{\"spec\":{\"type\":\"string\"}},\"required\":[\"spec\"],\"type\":\"object\"},\"name\":\"describe_behavior\"},{\"description\":\"A behavior's source file, to read as a worked example of the language. `spec` as in `describe_behavior`.\",\"inputSchema\":{\"properties\":{\"spec\":{\"type\":\"string\"}},\"required\":[\"spec\"],\"type\":\"object\"},\"name\":\"read_behavior\"},{\"description\":\"Fire events through a program's state machines in the real kernel, in order. Each step names a `trait` and an `event`, with an optional `payload` and an optional `from` state to start that trait in. Returns, per step, every trait that moved: the transition, the guards tried, the effects run and the events emitted, plus each trait's state after the step.\",\"inputSchema\":{\"properties\":{\"path\":{\"type\":\"string\"},\"steps\":{\"items\":{\"properties\":{\"event\":{\"type\":\"string\"},\"from\":{\"type\":\"string\"},\"payload\":{\"type\":\"object\"},\"trait\":{\"type\":\"string\"}},\"required\":[\"trait\",\"event\"],\"type\":\"object\"},\"type\":\"array\"}},\"required\":[\"path\",\"steps\"],\"type\":\"object\"},\"name\":\"play\"},{\"description\":\"The exhaustive walk: every transition of every trait, generated from the graph and played headlessly from the initial state. Returns passed/failed/skipped counts and each case's outcome; a failure names the state it expected and the one it got.\",\"inputSchema\":{\"properties\":{\"path\":{\"type\":\"string\"}},\"required\":[\"path\"],\"type\":\"object\"},\"name\":\"test\"},{\"description\":\"The language reference, generated from the compiler. With no `topic`: every construct, the vocabulary (keywords, tags, sigils, effects, types) and the validation-code topics. With a construct `topic` (e.g. `Trait`, `Entity`, `Listen`, `Page`): its description, its fields and real examples from the installed std. Also `vocabulary` and `codes/<category>` (every code with what it rejects).\",\"inputSchema\":{\"properties\":{\"topic\":{\"type\":\"string\"}},\"required\":[],\"type\":\"object\"},\"name\":\"reference\"},{\"description\":\"Evaluate one S-expression (as JSON, e.g. ['+', 2, 3]) with the language's evaluator, with optional `entity` and `payload` bindings for @entity and @payload.\",\"inputSchema\":{\"properties\":{\"entity\":{\"type\":\"object\"},\"expr\":{\"description\":\"The S-expression as JSON\"},\"payload\":{\"type\":\"object\"}},\"required\":[\"expr\"],\"type\":\"object\"},\"name\":\"evaluate\"}]}}"
+        }
+       },
+       {
+        "event": "MCP_PUMP",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "chunk-appends-complete-lines-to-the-queue",
+   "steps": [
+    {
+     "trait": "McpServer",
+     "from": "serving",
+     "event": "MCP_CHUNK",
+     "payload": {
+      "data": "a\nb\nc"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MCP_PUMP",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pump-takes-the-head-of-the-queue",
+   "steps": [
+    {
+     "trait": "McpServer",
+     "from": "serving",
+     "event": "MCP_PUMP",
+     "payload": {},
+     "entity": {
+      "queue": [
+       "abc"
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MCP_LINE_IN",
+        "payload": {
+         "line": "abc"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-pump-with-an-empty-queue-does-nothing",
+   "steps": [
+    {
+     "trait": "McpServer",
+     "from": "serving",
+     "event": "MCP_PUMP",
+     "payload": {},
+     "entity": {
+      "queue": []
+     },
+     "expect": {
+      "fired": false
+     }
+    }
+   ]
+  },
+  {
+   "id": "evaluate-answer-is-the-emitted-value-of-the-played-expression",
+   "steps": [
+    {
+     "trait": "McpServer",
+     "from": "working",
+     "event": "MCP_STEPPED",
+     "payload": {
+      "result": [
+       {
+        "result": {
+         "emitted": [
+          {
+           "payload": {
+            "value": 5
+           }
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "entity": {
+      "tool": "evaluate"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MCP_TOOL_DONE",
+        "payload": {
+         "result": {
+          "value": 5
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "version-is-parsed-from-orb-x-y-z",
+   "steps": [
+    {
+     "trait": "McpServer",
+     "from": "versioning",
+     "event": "MCP_WAITED",
+     "payload": {
+      "code": 0
+     },
+     "entity": {
+      "reply": "orb 18.0.5"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MCP_VERSIONED",
+        "payload": {
+         "version": "18.0.5"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-version-answer-not-shaped-orb-x-y-z-refuses",
+   "steps": [
+    {
+     "trait": "McpServer",
+     "from": "versioning",
+     "event": "MCP_WAITED",
+     "payload": {
+      "code": 0
+     },
+     "entity": {
+      "reply": "something else"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MCP_ANSWERED",
+        "payload": {
+         "status": 500
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "complete-tool-starts-std-orb-complete-with-the-file-and-offset",
+   "steps": [
+    {
+     "trait": "McpServer",
+     "from": "working",
+     "event": "MCP_RUN",
+     "payload": {},
+     "entity": {
+      "tool": "complete",
+      "args": {
+       "path": "a.lolo",
+       "offset": 17
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MCP_COMPLETE_START",
+        "payload": {
+         "file": "a.lolo",
+         "offset": 17
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "complete-tool-answer-200-is-the-structured-completion",
+   "steps": [
+    {
+     "trait": "McpServer",
+     "from": "working",
+     "event": "MCP_COMPLETE_ANSWERED",
+     "payload": {
+      "status": 200,
+      "body": "{\"candidates\":[],\"context\":\"none\",\"prefix\":\"\"}"
+     },
+     "entity": {
+      "tool": "complete"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MCP_TOOL_DONE",
+        "payload": {
+         "result": {
+          "candidates": [],
+          "context": "none",
+          "prefix": ""
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-complete-tool-answer-500-is-a-tool-error",
+   "steps": [
+    {
+     "trait": "McpServer",
+     "from": "working",
+     "event": "MCP_COMPLETE_ANSWERED",
+     "payload": {
+      "status": 500,
+      "body": "boom"
+     },
+     "entity": {
+      "tool": "complete"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MCP_TOOL_FAILED",
+        "payload": {
+         "error": "boom"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "reference-tool-starts-std-orb-reference-with-the-topic",
+   "steps": [
+    {
+     "trait": "McpServer",
+     "from": "working",
+     "event": "MCP_RUN",
+     "payload": {},
+     "entity": {
+      "tool": "reference",
+      "args": {
+       "topic": "Trait"
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MCP_REFERENCE_START",
+        "payload": {
+         "topic": "Trait"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-reference-tool-without-a-topic-starts-with-the-empty-topic",
+   "steps": [
+    {
+     "trait": "McpServer",
+     "from": "working",
+     "event": "MCP_RUN",
+     "payload": {},
+     "entity": {
+      "tool": "reference",
+      "args": {}
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MCP_REFERENCE_START",
+        "payload": {
+         "topic": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "reference-tool-answer-200-is-the-structured-reference",
+   "steps": [
+    {
+     "trait": "McpServer",
+     "from": "working",
+     "event": "MCP_REFERENCE_ANSWERED",
+     "payload": {
+      "status": 200,
+      "body": "{\"category\":\"circuit\",\"codes\":[]}"
+     },
+     "entity": {
+      "tool": "reference"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MCP_TOOL_DONE",
+        "payload": {
+         "result": {
+          "category": "circuit",
+          "codes": []
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "reference-tool-answer-500-is-a-tool-error",
+   "steps": [
+    {
+     "trait": "McpServer",
+     "from": "working",
+     "event": "MCP_REFERENCE_ANSWERED",
+     "payload": {
+      "status": 500,
+      "body": "Error: no reference topic `x`; `orb reference` lists them"
+     },
+     "entity": {
+      "tool": "reference"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MCP_TOOL_FAILED",
+        "payload": {
+         "error": "Error: no reference topic `x`; `orb reference` lists them"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "test-tool-starts-std-orb-test-with-the-json-report",
+   "steps": [
+    {
+     "trait": "McpServer",
+     "from": "working",
+     "event": "MCP_RUN",
+     "payload": {},
+     "entity": {
+      "tool": "test",
+      "cwd": "/w",
+      "args": {
+       "path": "a.lolo"
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MCP_TEST_START",
+        "payload": {
+         "cwd": "/w",
+         "file": "a.lolo",
+         "traitFilter": "",
+         "report": "json",
+         "verbose": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "test-tool-answer-200-is-the-structured-report",
+   "steps": [
+    {
+     "trait": "McpServer",
+     "from": "working",
+     "event": "MCP_TEST_ANSWERED",
+     "payload": {
+      "status": 200,
+      "body": "{\"failed\":0,\"outcomes\":[],\"passed\":3,\"skipped\":0}"
+     },
+     "entity": {
+      "tool": "test"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MCP_TOOL_DONE",
+        "payload": {
+         "result": {
+          "failed": 0,
+          "outcomes": [],
+          "passed": 3,
+          "skipped": 0
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "test-tool-answer-500-with-failed-cases-is-still-the-structured-report",
+   "steps": [
+    {
+     "trait": "McpServer",
+     "from": "working",
+     "event": "MCP_TEST_ANSWERED",
+     "payload": {
+      "status": 500,
+      "body": "{\"failed\":1,\"outcomes\":[{\"status\":\"failed\",\"test\":\"idle + GO\",\"traitName\":\"T\"}],\"passed\":2,\"skipped\":0}"
+     },
+     "entity": {
+      "tool": "test"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MCP_TOOL_DONE",
+        "payload": {
+         "result": {
+          "failed": 1,
+          "outcomes": [
+           {
+            "status": "failed",
+            "test": "idle + GO",
+            "traitName": "T"
+           }
+          ],
+          "passed": 2,
+          "skipped": 0
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "test-tool-answer-500-with-text-is-a-tool-error",
+   "steps": [
+    {
+     "trait": "McpServer",
+     "from": "working",
+     "event": "MCP_TEST_ANSWERED",
+     "payload": {
+      "status": 500,
+      "body": "verify-walk: f.lolo: unreadable"
+     },
+     "entity": {
+      "tool": "test"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MCP_TOOL_FAILED",
+        "payload": {
+         "error": "verify-walk: f.lolo: unreadable"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "read-behavior-answers-the-path-and-the-source-text",
+   "steps": [
+    {
+     "trait": "McpServer",
+     "from": "working",
+     "event": "MCP_TOOL_DONE",
+     "payload": {
+      "result": {
+       "path": "/p/std-x.lolo",
+       "source": "app std-x [ version: \"1.0.0\" ]"
+      }
+     },
+     "entity": {
+      "tool": "read_behavior",
+      "rid": 7
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MCP_LINE_OUT",
+        "payload": {
+         "line": "{\"id\":7,\"jsonrpc\":\"2.0\",\"result\":{\"content\":[{\"text\":\"{\\\"path\\\":\\\"/p/std-x.lolo\\\",\\\"source\\\":\\\"app std-x [ version: \\\\\\\"1.0.0\\\\\\\" ]\\\"}\",\"type\":\"text\"}],\"isError\":false,\"structuredContent\":{\"path\":\"/p/std-x.lolo\",\"source\":\"app std-x [ version: \\\"1.0.0\\\" ]\"}}}"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

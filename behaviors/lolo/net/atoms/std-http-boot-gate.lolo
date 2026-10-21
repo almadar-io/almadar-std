@@ -1,0 +1,330 @@
+app std-http-boot-gate [
+  version: "1.0.0",
+  env: ["NODE_ENV", "AUTH_PROVIDER", "OIDC_ISSUER_URL", "OIDC_AUDIENCE", "FIREBASE_PROJECT_ID", "FIREBASE_SERVICE_ACCOUNT_PATH", "FIREBASE_AUTH_EMULATOR_HOST", "FIRESTORE_EMULATOR_HOST", "ALMADAR_INTEGRATIONS_MODE", "USE_MOCK_DATA"],
+  description: "std-http-boot-gate — the boot gate of the HTTP server program: what the orbital-server boot path does with boot_env_problems. At INIT it reads the declared variables one at a time with os/getenv (an unset one reads as blank) and, when the last is read, asks std-boot-env-check ENV_CHECK { env, production, mock }: production is NODE_ENV equal to production, mock is the mock knob or ALMADAR_INTEGRATIONS_MODE equal to mock or USE_MOCK_DATA equal to true. It hears ENV_CHECKED { problems, ok } and CORS_CONFIGURED; when it has heard both and the deployment is cleared it emits BOOT_CLEARED, which tells std-http1 to bind. Under production a non-empty problems list emits BOOT_REFUSED { problems } and the boot never clears; outside production it emits BOOT_WARNED { problems } and clears. A variable the grant does not let the gate read emits BOOT_REFUSED with the reason. The missing-credential lines of boot_env_problems need the credential catalog and store, which no operator hands to a program yet, so no missingCredentials is sent. Bound to spec/net/http-boot-gate.lolo and spec/net/http-boot-gate.replay.goldens.json."
+]
+uses Spec from "almadar-std/http-boot-gate"
+type GateVar = { name : string!, value : string! }
+type GateDeclared = { envVar : string!, required : boolean!, description : string!, oneOf : string! }
+type GateGroup = { service : string!, backend : string!, listed : boolean!, credentials : [GateDeclared]! }
+type GateEntry = { service : string!, envVar : string!, required : boolean!, description : string!, configured : boolean! }
+type GateListed = { entries : [GateEntry]! }
+type GateEnv = { authProvider : string, oidcIssuerUrl : string, oidcAudience : string, firebaseProjectId : string, firebaseServiceAccountPath : string, firebaseAuthEmulatorHost : string, firestoreEmulatorHost : string, integrationsMock : boolean }
+
+orbital HttpBootGateOrbital {
+  entity BootRun [runtime] {
+    id : string!
+    read : [GateVar] @description "The environment variables read so far, in the order they are read." = []
+    production : boolean @description "Whether NODE_ENV named production when the check was asked." = false
+    services : [string] @description "The services the program calls, whose required credentials the boot check asks for." = []
+    corsReady : boolean @description "Whether the policy has read its origins." = false
+    checked : string @description "The environment check so far: pending, clear or refused." = "pending"
+  }
+
+  trait BootGate -> BootRun [integration, instance] {
+    initial: reading
+
+    config {
+      calledServices : [string] = []
+        @label "Called services"
+        @description "The services the hosted program calls; the boot check asks for each one's required credentials unless integrations are mocked. Empty asks for none."
+        @tier "domain"
+      mock : boolean = false
+        @label "Mock integrations"
+        @description "Whether integrations are mocked regardless of the environment (the --mock flag)."
+        @tier "policy"
+    }
+
+    state reading {
+      INIT -> reading
+        (set @entity.read [])
+        (os/getenv "NODE_ENV" { emit: { success: READ_NODE_ENV failure: ENV_UNREAD } })
+
+      READ_NODE_ENV -> reading
+        (set @entity.read (array/append @entity.read { name: "NODE_ENV", value: (or @payload.value "") }))
+        (os/getenv "AUTH_PROVIDER" { emit: { success: READ_AUTH_PROVIDER failure: ENV_UNREAD } })
+
+      READ_AUTH_PROVIDER -> reading
+        (set @entity.read (array/append @entity.read { name: "AUTH_PROVIDER", value: (or @payload.value "") }))
+        (os/getenv "OIDC_ISSUER_URL" { emit: { success: READ_OIDC_ISSUER_URL failure: ENV_UNREAD } })
+
+      READ_OIDC_ISSUER_URL -> reading
+        (set @entity.read (array/append @entity.read { name: "OIDC_ISSUER_URL", value: (or @payload.value "") }))
+        (os/getenv "OIDC_AUDIENCE" { emit: { success: READ_OIDC_AUDIENCE failure: ENV_UNREAD } })
+
+      READ_OIDC_AUDIENCE -> reading
+        (set @entity.read (array/append @entity.read { name: "OIDC_AUDIENCE", value: (or @payload.value "") }))
+        (os/getenv "FIREBASE_PROJECT_ID" { emit: { success: READ_FIREBASE_PROJECT_ID failure: ENV_UNREAD } })
+
+      READ_FIREBASE_PROJECT_ID -> reading
+        (set @entity.read (array/append @entity.read { name: "FIREBASE_PROJECT_ID", value: (or @payload.value "") }))
+        (os/getenv "FIREBASE_SERVICE_ACCOUNT_PATH" { emit: { success: READ_FIREBASE_SERVICE_ACCOUNT_PATH failure: ENV_UNREAD } })
+
+      READ_FIREBASE_SERVICE_ACCOUNT_PATH -> reading
+        (set @entity.read (array/append @entity.read { name: "FIREBASE_SERVICE_ACCOUNT_PATH", value: (or @payload.value "") }))
+        (os/getenv "FIREBASE_AUTH_EMULATOR_HOST" { emit: { success: READ_FIREBASE_AUTH_EMULATOR_HOST failure: ENV_UNREAD } })
+
+      READ_FIREBASE_AUTH_EMULATOR_HOST -> reading
+        (set @entity.read (array/append @entity.read { name: "FIREBASE_AUTH_EMULATOR_HOST", value: (or @payload.value "") }))
+        (os/getenv "FIRESTORE_EMULATOR_HOST" { emit: { success: READ_FIRESTORE_EMULATOR_HOST failure: ENV_UNREAD } })
+
+      READ_FIRESTORE_EMULATOR_HOST -> reading
+        (set @entity.read (array/append @entity.read { name: "FIRESTORE_EMULATOR_HOST", value: (or @payload.value "") }))
+        (os/getenv "ALMADAR_INTEGRATIONS_MODE" { emit: { success: READ_ALMADAR_INTEGRATIONS_MODE failure: ENV_UNREAD } })
+
+      READ_ALMADAR_INTEGRATIONS_MODE -> reading
+        (set @entity.read (array/append @entity.read { name: "ALMADAR_INTEGRATIONS_MODE", value: (or @payload.value "") }))
+        (os/getenv "USE_MOCK_DATA" { emit: { success: READ_USE_MOCK_DATA failure: ENV_UNREAD } })
+
+      READ_USE_MOCK_DATA -> reading
+        (emit ENV_COLLECTED { vars: (array/append @entity.read { name: "USE_MOCK_DATA", value: (or @payload.value "") }), services: @config.calledServices })
+
+      ENV_COLLECTED -> reading when (or (= (array/len @payload.services) 0) (or @config.mock (= (object/get (array/find @payload.vars (fn v (= @v.name "ALMADAR_INTEGRATIONS_MODE"))) "value") "mock") (= (object/get (array/find @payload.vars (fn v (= @v.name "USE_MOCK_DATA"))) "value") "true")))
+        (set @entity.read @payload.vars)
+        (set @entity.services @payload.services)
+        (set @entity.production (= (object/get (array/find @payload.vars (fn v (= @v.name "NODE_ENV"))) "value") "production"))
+        (emit ENV_ASK { missing: [], error: "" })
+      ENV_COLLECTED -> reading when (and (> (array/len @payload.services) 0) (not (or @config.mock (= (object/get (array/find @payload.vars (fn v (= @v.name "ALMADAR_INTEGRATIONS_MODE"))) "value") "mock") (= (object/get (array/find @payload.vars (fn v (= @v.name "USE_MOCK_DATA"))) "value") "true"))))
+        (set @entity.read @payload.vars)
+        (set @entity.services @payload.services)
+        (set @entity.production (= (object/get (array/find @payload.vars (fn v (= @v.name "NODE_ENV"))) "value") "production"))
+        (credential-list {} { emit: { success: CRED_LISTED failure: CRED_UNLISTED } })
+
+      CRED_LISTED -> reading
+        (emit CRED_ADMIN_BOOT_CHECK {
+          catalog: (array/map (array/unique (array/map @payload.entries (fn e @e.service))) (fn sv { service: @sv, backend: "", listed: true, credentials: (array/map (array/filter @payload.entries (fn e (= @e.service @sv))) (fn e { envVar: @e.envVar, required: @e.required, description: @e.description, oneOf: "" })) })),
+          services: @entity.services,
+          held: (array/map (array/filter @payload.entries (fn e @e.configured)) (fn e @e.envVar))
+        })
+      CRED_UNLISTED -> reading
+        (notify error (str/concat "Couldn't read the credential catalog — " ?error))
+        (emit ENV_ASK { missing: [], error: @payload.error })
+      CRED_ADMIN_OWED -> reading
+        (emit ENV_ASK { missing: @payload.owed, error: "" })
+
+      ENV_ASK -> reading
+        (emit ENV_CHECK {
+          env: {
+            authProvider: (object/get (array/find @entity.read (fn v (= @v.name "AUTH_PROVIDER"))) "value"),
+            oidcIssuerUrl: (object/get (array/find @entity.read (fn v (= @v.name "OIDC_ISSUER_URL"))) "value"),
+            oidcAudience: (object/get (array/find @entity.read (fn v (= @v.name "OIDC_AUDIENCE"))) "value"),
+            firebaseProjectId: (object/get (array/find @entity.read (fn v (= @v.name "FIREBASE_PROJECT_ID"))) "value"),
+            firebaseServiceAccountPath: (object/get (array/find @entity.read (fn v (= @v.name "FIREBASE_SERVICE_ACCOUNT_PATH"))) "value"),
+            firebaseAuthEmulatorHost: (object/get (array/find @entity.read (fn v (= @v.name "FIREBASE_AUTH_EMULATOR_HOST"))) "value"),
+            firestoreEmulatorHost: (object/get (array/find @entity.read (fn v (= @v.name "FIRESTORE_EMULATOR_HOST"))) "value")
+          },
+          production: @entity.production,
+          mock: (or @config.mock (= (object/get (array/find @entity.read (fn v (= @v.name "ALMADAR_INTEGRATIONS_MODE"))) "value") "mock") (= (object/get (array/find @entity.read (fn v (= @v.name "USE_MOCK_DATA"))) "value") "true")),
+          missingCredentials: @payload.missing,
+          catalogError: @payload.error
+        })
+
+      ENV_UNREAD -> refused
+        (set @entity.checked "refused")
+        (emit BOOT_REFUSED { problems: [@payload.error] })
+
+      ENV_CHECKED -> reading when (and @payload.ok @entity.corsReady)
+        (set @entity.checked "clear")
+        (emit BOOT_CLEARED {})
+      ENV_CHECKED -> reading when (and @payload.ok (not @entity.corsReady))
+        (set @entity.checked "clear")
+      ENV_CHECKED -> reading when (and (not @payload.ok) (not @entity.production) @entity.corsReady)
+        (set @entity.checked "clear")
+        (emit BOOT_WARNED { problems: @payload.problems })
+        (emit BOOT_CLEARED {})
+      ENV_CHECKED -> reading when (and (not @payload.ok) (not @entity.production) (not @entity.corsReady))
+        (set @entity.checked "clear")
+        (emit BOOT_WARNED { problems: @payload.problems })
+      ENV_CHECKED -> refused when (and (not @payload.ok) @entity.production)
+        (set @entity.checked "refused")
+        (emit BOOT_REFUSED { problems: @payload.problems })
+
+      CORS_CONFIGURED -> reading when (= @entity.checked "clear")
+        (set @entity.corsReady true)
+        (emit BOOT_CLEARED {})
+      CORS_CONFIGURED -> reading when (!= @entity.checked "clear")
+        (set @entity.corsReady true)
+    }
+
+    state refused {
+      INIT -> refused
+      ENV_CHECKED -> refused
+      CORS_CONFIGURED -> refused
+    }
+
+    emits {
+      READ_NODE_ENV {
+        value : string
+      }
+        @description "Internal: the os/getenv answer for NODE_ENV."
+        @tier "internal"
+      READ_AUTH_PROVIDER {
+        value : string
+      }
+        @description "Internal: the os/getenv answer for AUTH_PROVIDER."
+        @tier "internal"
+      READ_OIDC_ISSUER_URL {
+        value : string
+      }
+        @description "Internal: the os/getenv answer for OIDC_ISSUER_URL."
+        @tier "internal"
+      READ_OIDC_AUDIENCE {
+        value : string
+      }
+        @description "Internal: the os/getenv answer for OIDC_AUDIENCE."
+        @tier "internal"
+      READ_FIREBASE_PROJECT_ID {
+        value : string
+      }
+        @description "Internal: the os/getenv answer for FIREBASE_PROJECT_ID."
+        @tier "internal"
+      READ_FIREBASE_SERVICE_ACCOUNT_PATH {
+        value : string
+      }
+        @description "Internal: the os/getenv answer for FIREBASE_SERVICE_ACCOUNT_PATH."
+        @tier "internal"
+      READ_FIREBASE_AUTH_EMULATOR_HOST {
+        value : string
+      }
+        @description "Internal: the os/getenv answer for FIREBASE_AUTH_EMULATOR_HOST."
+        @tier "internal"
+      READ_FIRESTORE_EMULATOR_HOST {
+        value : string
+      }
+        @description "Internal: the os/getenv answer for FIRESTORE_EMULATOR_HOST."
+        @tier "internal"
+      READ_ALMADAR_INTEGRATIONS_MODE {
+        value : string
+      }
+        @description "Internal: the os/getenv answer for ALMADAR_INTEGRATIONS_MODE."
+        @tier "internal"
+      READ_USE_MOCK_DATA {
+        value : string
+      }
+        @description "Internal: the os/getenv answer for USE_MOCK_DATA."
+        @tier "internal"
+      ENV_COLLECTED {
+        vars : [GateVar]!
+        services : [string]!
+      }
+        @description "Internal: every declared variable has been read, with the services the program calls."
+        @tier "internal"
+      CRED_LISTED {
+        entries : [GateEntry]!
+      }
+        @description "Internal: the credential-list answer."
+        @tier "internal"
+      CRED_UNLISTED {
+        error : string
+      }
+        @description "Internal: the credential-list failed."
+        @tier "internal"
+      ENV_ASK -> external {
+        missing : [string]!
+        error : string!
+      }
+        @description "The credential facts are in (or none were asked for); the gate asks the environment check next."
+        @tier "primary"
+      ENV_UNREAD {
+        error : string
+        kind : string
+      }
+        @description "Internal: an os/getenv failed."
+        @tier "internal"
+      ENV_CHECK -> external {
+        env : GateEnv!
+        production : boolean!
+        mock : boolean!
+        missingCredentials : [string]
+        catalogError : string
+      }
+        @description "Asks std-boot-env-check what keeps the declared environment from working in production."
+        @tier "primary"
+      CRED_ADMIN_BOOT_CHECK -> external {
+        catalog : [GateGroup]!
+        services : [string]!
+        held : [string]!
+      }
+        @description "Asks std-credential-admin which required credentials of the called services are not held."
+        @tier "primary"
+      BOOT_CLEARED -> external {
+      }
+        @description "The deployment is cleared to serve: the environment check and the origins are both in and no production problem stands; std-http1 binds on it."
+        @tier "primary"
+      BOOT_WARNED -> external {
+        problems : [string]!
+      }
+        @description "Outside production the environment check found problems; the boot goes on."
+        @tier "primary"
+      BOOT_REFUSED -> external {
+        problems : [string]!
+      }
+        @description "The boot is refused: under production the environment check found problems, or a variable could not be read."
+        @tier "primary"
+    }
+
+    listens {
+      READ_NODE_ENV {
+        value : string
+      }
+      READ_AUTH_PROVIDER {
+        value : string
+      }
+      READ_OIDC_ISSUER_URL {
+        value : string
+      }
+      READ_OIDC_AUDIENCE {
+        value : string
+      }
+      READ_FIREBASE_PROJECT_ID {
+        value : string
+      }
+      READ_FIREBASE_SERVICE_ACCOUNT_PATH {
+        value : string
+      }
+      READ_FIREBASE_AUTH_EMULATOR_HOST {
+        value : string
+      }
+      READ_FIRESTORE_EMULATOR_HOST {
+        value : string
+      }
+      READ_ALMADAR_INTEGRATIONS_MODE {
+        value : string
+      }
+      READ_USE_MOCK_DATA {
+        value : string
+      }
+      ENV_COLLECTED {
+        vars : [GateVar]!
+        services : [string]!
+      }
+      CRED_LISTED {
+        entries : [GateEntry]!
+      }
+      CRED_UNLISTED {
+        error : string
+      }
+      CRED_ADMIN_OWED {
+        owed : [string]!
+      }
+      ENV_ASK {
+        missing : [string]!
+        error : string!
+      }
+      ENV_UNREAD {
+        error : string!
+        kind : string
+      }
+      ENV_CHECKED {
+        requestId : number
+        problems : [string]!
+        ok : boolean!
+      }
+      CORS_CONFIGURED {
+        corsOrigins : [string]!
+      }
+    }
+  }
+
+  page "/boot-gate" as HttpBootGatePage -> BootGate
+}

@@ -1,0 +1,305 @@
+{
+  "atom": "dev/atoms/std-render-report.lolo",
+  "trait": "RenderReporter",
+  "cases": [
+    {
+      "id": "offenders-counted-and-listed-once-sorted (render_report.rs:89)",
+      "steps": [
+        {
+          "event": "RENDER_VERDICT",
+          "payload": {
+            "name": "renderer_coverage",
+            "offenders": [
+              "b",
+              "a",
+              "b"
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "REPORT_RESULT",
+                "payload": {
+                  "name": "renderer_coverage",
+                  "passed": false,
+                  "detail": "3 offender(s): a, b"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-no-offenders-passes-with-no-detail (render_report.rs:96)",
+      "steps": [
+        {
+          "event": "RENDER_VERDICT",
+          "payload": {
+            "name": "renderer_coverage",
+            "offenders": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "REPORT_RESULT",
+                "payload": {
+                  "passed": true,
+                  "detail": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "headline-pass-report-round-trip (render_report.rs:102)",
+      "steps": [
+        {
+          "event": "RENDER_HEADLINE",
+          "payload": {
+            "item": "x",
+            "verdicts": [
+              {
+                "name": "a",
+                "passed": true,
+                "detail": ""
+              }
+            ],
+            "slotsRendered": 2,
+            "hasTraits": false,
+            "traits": [],
+            "stubbed": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "REPORT_RESULT",
+                "payload": {
+                  "ok": true,
+                  "headline": "[PASS] x (client render) \u2014 1/1 checks, 2 slots"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "headline-fail-counts-passed-over-total",
+      "steps": [
+        {
+          "event": "RENDER_HEADLINE",
+          "payload": {
+            "item": "y",
+            "verdicts": [
+              {
+                "name": "a",
+                "passed": true,
+                "detail": ""
+              },
+              {
+                "name": "b",
+                "passed": false,
+                "detail": ""
+              },
+              {
+                "name": "c",
+                "passed": true,
+                "detail": ""
+              }
+            ],
+            "slotsRendered": 5,
+            "hasTraits": false,
+            "traits": [],
+            "stubbed": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "REPORT_RESULT",
+                "payload": {
+                  "ok": false,
+                  "headline": "[FAIL] y (client render) \u2014 2/3 checks, 5 slots"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "headline-trait-scope-and-stubbed-suffix (render_report.rs:55)",
+      "steps": [
+        {
+          "event": "RENDER_HEADLINE",
+          "payload": {
+            "item": "z",
+            "verdicts": [
+              {
+                "name": "a",
+                "passed": true,
+                "detail": ""
+              }
+            ],
+            "slotsRendered": 0,
+            "hasTraits": true,
+            "traits": [
+              "t1",
+              "t2"
+            ],
+            "stubbed": [
+              "p1",
+              "p2"
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "REPORT_RESULT",
+                "payload": {
+                  "ok": true,
+                  "headline": "[trait t1, t2] [PASS] z (client render) \u2014 1/1 checks, 0 slots, 2 stubbed"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "headline-control-empty-stubbed-adds-nothing-and-no-verdicts-is-ok",
+      "steps": [
+        {
+          "event": "RENDER_HEADLINE",
+          "payload": {
+            "item": "w",
+            "verdicts": [],
+            "slotsRendered": 1,
+            "hasTraits": false,
+            "traits": [],
+            "stubbed": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "REPORT_RESULT",
+                "payload": {
+                  "ok": true,
+                  "headline": "[PASS] w (client render) \u2014 0/0 checks, 1 slots"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "unsupported-message-names-pattern-renderer-version (renderer_coverage.rs:75)",
+      "steps": [
+        {
+          "event": "UNSUPPORTED_MESSAGE",
+          "payload": {
+            "pattern": "zz-sprite",
+            "renderer": "rust-test",
+            "version": "1.2.3"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "REPORT_RESULT",
+                "payload": {
+                  "message": "pattern `zz-sprite` is not supported by renderer rust-test 1.2.3"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "edge-a-node-without-a-type-still-says-what-is-missing (renderer_coverage.rs:84)",
+      "steps": [
+        {
+          "event": "UNSUPPORTED_MESSAGE",
+          "payload": {
+            "pattern": "",
+            "renderer": "rust-test",
+            "version": "1.2.3"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "REPORT_RESULT",
+                "payload": {
+                  "message": "pattern `(no type)` is not supported by renderer rust-test 1.2.3"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "coverage-lists-only-uncovered-patterns-sorted-once (renderer_coverage.rs:90)",
+      "steps": [
+        {
+          "event": "UNSUPPORTED_PATTERNS",
+          "payload": {
+            "registry": [
+              "card",
+              "zz-b",
+              "button",
+              "zz-a",
+              "zz-a"
+            ],
+            "covered": [
+              "button",
+              "card"
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "REPORT_RESULT",
+                "payload": {
+                  "patterns": [
+                    "zz-a",
+                    "zz-b"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-full-coverage-reports-nothing (renderer_coverage.rs:99)",
+      "steps": [
+        {
+          "event": "UNSUPPORTED_PATTERNS",
+          "payload": {
+            "registry": [
+              "button"
+            ],
+            "covered": [
+              "button"
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "REPORT_RESULT",
+                "payload": {
+                  "patterns": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

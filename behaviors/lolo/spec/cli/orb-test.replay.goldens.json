@@ -1,0 +1,509 @@
+{
+ "atom": "cli/atoms/std-orb-test.lolo",
+ "trait": "OrbTest",
+ "cases": [
+  {
+   "id": "a clean walk reports every transition passed (Rust: 3 passed, same text)",
+   "entity": {
+    "file": "tools/verify-efficacy/fixtures/nav/good.lolo",
+    "traitFilter": "",
+    "report": "text",
+    "verbose": false
+   },
+   "steps": [
+    {
+     "trait": "TestEngine",
+     "from": "walking",
+     "event": "TEST_WALK_ANSWERED",
+     "payload": {
+      "status": 200,
+      "body": "pass  AppLayout ready --INIT--> ready\npass  HomeBody ready --INIT--> ready\npass  AboutBody ready --INIT--> ready\n3 passed, 0 failed, 0 unplanned, 0 guard-blocked"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TEST_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "Loading schema: tools/verify-efficacy/fixtures/nav/good.lolo\n\n============================================================\nHeadless Execution Results\n============================================================\n  \u2713 AppLayout \u2014 1/1 passed\n  \u2713 HomeBody \u2014 1/1 passed\n  \u2713 AboutBody \u2014 1/1 passed\n------------------------------------------------------------\nTotal: 3 passed, 0 failed, 0 skipped\n============================================================"
+        }
+       }
+      ],
+      "state": "idle"
+     }
+    }
+   ]
+  },
+  {
+   "id": "the same walk as the json report",
+   "entity": {
+    "file": "tools/verify-efficacy/fixtures/nav/good.lolo",
+    "traitFilter": "",
+    "report": "json",
+    "verbose": false
+   },
+   "steps": [
+    {
+     "trait": "TestEngine",
+     "from": "walking",
+     "event": "TEST_WALK_ANSWERED",
+     "payload": {
+      "status": 200,
+      "body": "pass  AppLayout ready --INIT--> ready\npass  HomeBody ready --INIT--> ready\npass  AboutBody ready --INIT--> ready\n3 passed, 0 failed, 0 unplanned, 0 guard-blocked"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TEST_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "{\"failed\":0,\"outcomes\":[{\"status\":\"passed\",\"test\":\"ready + INIT \u2192 ready\",\"traitName\":\"AppLayout\"},{\"status\":\"passed\",\"test\":\"ready + INIT \u2192 ready\",\"traitName\":\"HomeBody\"},{\"status\":\"passed\",\"test\":\"ready + INIT \u2192 ready\",\"traitName\":\"AboutBody\"}],\"passed\":3,\"skipped\":0}"
+        }
+       }
+      ],
+      "state": "idle"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a walk finding is a failed outcome (Rust generator passes this program: parity finding)",
+   "entity": {
+    "file": "tools/verify-efficacy/fixtures/nav/bad-page-unreachable.lolo",
+    "traitFilter": "",
+    "report": "text",
+    "verbose": false
+   },
+   "steps": [
+    {
+     "trait": "TestEngine",
+     "from": "walking",
+     "event": "TEST_WALK_ANSWERED",
+     "payload": {
+      "status": 500,
+      "body": "fail  validate [ORB_PAGE_UNREACHABLE] page '/about' is declared but appears in no link, navItems entry or navigate effect\n0 passed, 1 failed, 0 unplanned, 0 guard-blocked"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TEST_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "Loading schema: tools/verify-efficacy/fixtures/nav/bad-page-unreachable.lolo\n  \u2717 validate \u2014 [ORB_PAGE_UNREACHABLE] page '/about' is declared but appears in no link, navItems entry or navigate effect\n\n============================================================\nHeadless Execution Results\n============================================================\n  \u2717 (program) \u2014 0/1 passed (1 failed)\n------------------------------------------------------------\nTotal: 0 passed, 1 failed, 0 skipped\n============================================================"
+        }
+       }
+      ],
+      "state": "idle"
+     }
+    }
+   ]
+  },
+  {
+   "id": "two findings as json (Rust generator: 26 passed 0 failed: parity finding)",
+   "entity": {
+    "file": "f.lolo",
+    "traitFilter": "",
+    "report": "json",
+    "verbose": false
+   },
+   "steps": [
+    {
+     "trait": "TestEngine",
+     "from": "walking",
+     "event": "TEST_WALK_ANSWERED",
+     "payload": {
+      "status": 500,
+      "body": "fail  validate [ORB_CIRCUIT_MODAL_SHELL_CLOSE_DEAF] state 'open' mounts an overlay-slot pattern but has no `CLOSE`/`CANCEL` arm \u2014 the shell's own X/Escape/overlay-click control fires into nothing\nfail  validate [ORB_CIRCUIT_INIT_UNCOVERED_STATE] Page trait 'ModalRecordModal' handles INIT in 'closed' but not in reachable state 'open': revisiting the page from there does nothing\n0 passed, 2 failed, 0 unplanned, 0 guard-blocked"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TEST_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "{\"failed\":2,\"outcomes\":[{\"detail\":\"[ORB_CIRCUIT_MODAL_SHELL_CLOSE_DEAF] state 'open' mounts an overlay-slot pattern but has no `CLOSE`/`CANCEL` arm \u2014 the shell's own X/Escape/overlay-click control fires into nothing\",\"status\":\"failed\",\"test\":\"validate\",\"traitName\":\"(program)\"},{\"detail\":\"[ORB_CIRCUIT_INIT_UNCOVERED_STATE] Page trait 'ModalRecordModal' handles INIT in 'closed' but not in reachable state 'open': revisiting the page from there does nothing\",\"status\":\"failed\",\"test\":\"validate\",\"traitName\":\"(program)\"}],\"passed\":0,\"skipped\":0}"
+        }
+       }
+      ],
+      "state": "idle"
+     }
+    }
+   ]
+  },
+  {
+   "id": "passed, failed and skipped outcomes (verbose lists them)",
+   "entity": {
+    "file": "f.lolo",
+    "traitFilter": "",
+    "report": "text",
+    "verbose": true
+   },
+   "steps": [
+    {
+     "trait": "TestEngine",
+     "from": "walking",
+     "event": "TEST_WALK_ANSWERED",
+     "payload": {
+      "status": 500,
+      "body": "pass  A s --E--> t\nfail  A s --F--> u  state stayed s\nunplanned  B x --G--> y  missing: id\nguard-blocked  B x --H--> z\n1 passed, 1 failed, 1 unplanned, 1 guard-blocked"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TEST_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "Loading schema: f.lolo\n  \u2713 s + E \u2192 t\n  \u2717 s + F \u2192 u \u2014 state stayed s\n  \u2298 x + G \u2192 y (unplanned: missing: id)\n  \u2298 x + H \u2192 z (guard-blocked)\n\n============================================================\nHeadless Execution Results\n============================================================\n  \u2717 A \u2014 1/2 passed (1 failed)\n  \u2713 B \u2014 0/0 passed\n------------------------------------------------------------\nTotal: 1 passed, 1 failed, 2 skipped\n============================================================"
+        }
+       }
+      ],
+      "state": "idle"
+     }
+    }
+   ]
+  },
+  {
+   "id": "the same rows as json: skipped carry the verdict as reason",
+   "entity": {
+    "file": "f.lolo",
+    "traitFilter": "",
+    "report": "json",
+    "verbose": false
+   },
+   "steps": [
+    {
+     "trait": "TestEngine",
+     "from": "walking",
+     "event": "TEST_WALK_ANSWERED",
+     "payload": {
+      "status": 500,
+      "body": "pass  A s --E--> t\nfail  A s --F--> u  state stayed s\nunplanned  B x --G--> y  missing: id\nguard-blocked  B x --H--> z\n1 passed, 1 failed, 1 unplanned, 1 guard-blocked"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TEST_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "{\"failed\":1,\"outcomes\":[{\"status\":\"passed\",\"test\":\"s + E \u2192 t\",\"traitName\":\"A\"},{\"detail\":\"state stayed s\",\"status\":\"failed\",\"test\":\"s + F \u2192 u\",\"traitName\":\"A\"},{\"reason\":\"unplanned: missing: id\",\"status\":\"skipped\",\"test\":\"x + G \u2192 y\",\"traitName\":\"B\"},{\"reason\":\"guard-blocked\",\"status\":\"skipped\",\"test\":\"x + H \u2192 z\",\"traitName\":\"B\"}],\"passed\":1,\"skipped\":2}"
+        }
+       }
+      ],
+      "state": "idle"
+     }
+    }
+   ]
+  },
+  {
+   "id": "--trait keeps the traits containing the word, case-insensitively",
+   "entity": {
+    "file": "tools/verify-efficacy/fixtures/nav/good.lolo",
+    "traitFilter": "HOME",
+    "report": "text",
+    "verbose": false
+   },
+   "steps": [
+    {
+     "trait": "TestEngine",
+     "from": "walking",
+     "event": "TEST_WALK_ANSWERED",
+     "payload": {
+      "status": 200,
+      "body": "pass  AppLayout ready --INIT--> ready\npass  HomeBody ready --INIT--> ready\npass  AboutBody ready --INIT--> ready\n3 passed, 0 failed, 0 unplanned, 0 guard-blocked"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TEST_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "Loading schema: tools/verify-efficacy/fixtures/nav/good.lolo\n\n============================================================\nHeadless Execution Results\n============================================================\n  \u2713 HomeBody \u2014 1/1 passed\n------------------------------------------------------------\nTotal: 1 passed, 0 failed, 0 skipped\n============================================================"
+        }
+       }
+      ],
+      "state": "idle"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a filter matching no trait (control)",
+   "entity": {
+    "file": "tools/verify-efficacy/fixtures/nav/good.lolo",
+    "traitFilter": "zzz",
+    "report": "text",
+    "verbose": false
+   },
+   "steps": [
+    {
+     "trait": "TestEngine",
+     "from": "walking",
+     "event": "TEST_WALK_ANSWERED",
+     "payload": {
+      "status": 200,
+      "body": "pass  AppLayout ready --INIT--> ready\npass  HomeBody ready --INIT--> ready\npass  AboutBody ready --INIT--> ready\n3 passed, 0 failed, 0 unplanned, 0 guard-blocked"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TEST_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "No traits found matching the filter criteria."
+        }
+       }
+      ],
+      "state": "idle"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a walk that errors with no row is an error (Rust generator: 28 passed 2 skipped: parity finding)",
+   "entity": {
+    "file": "f.lolo",
+    "traitFilter": "",
+    "report": "text",
+    "verbose": false
+   },
+   "steps": [
+    {
+     "trait": "TestEngine",
+     "from": "walking",
+     "event": "TEST_WALK_ANSWERED",
+     "payload": {
+      "status": 500,
+      "body": "verify-walk: program/step: step 8 dispatch failed: Payload validation failed for event 'SAVE': data (wrong-type, expected object)"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TEST_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "orb test: verify-walk: program/step: step 8 dispatch failed: Payload validation failed for event 'SAVE': data (wrong-type, expected object)"
+        }
+       }
+      ],
+      "state": "idle"
+     }
+    }
+   ]
+  },
+  {
+   "id": "one program walks",
+   "steps": [
+    {
+     "trait": "OrbTest",
+     "from": "parsing",
+     "event": "TEST_ARGS_DONE",
+     "payload": {
+      "stage": "test",
+      "flags": {},
+      "positionals": [
+       "f.lolo"
+      ],
+      "errors": [],
+      "words": [
+       "f.lolo"
+      ]
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "TEST_START",
+        "payload": {
+         "file": "f.lolo",
+         "traitFilter": "",
+         "report": "text",
+         "verbose": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "no program is a usage error",
+   "steps": [
+    {
+     "trait": "OrbTest",
+     "from": "parsing",
+     "event": "TEST_ARGS_DONE",
+     "payload": {
+      "stage": "test",
+      "flags": {},
+      "positionals": [],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "TEST_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "usage: orb test <program.lolo> [--trait <name>] [--orbital <name>] [--report text|json] [--execute] [--verbose]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "two words are a usage error",
+   "steps": [
+    {
+     "trait": "OrbTest",
+     "from": "parsing",
+     "event": "TEST_ARGS_DONE",
+     "payload": {
+      "stage": "test",
+      "flags": {},
+      "positionals": [
+       "a",
+       "b"
+      ],
+      "errors": [],
+      "words": [
+       "a",
+       "b"
+      ]
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "TEST_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "usage: orb test <program.lolo> [--trait <name>] [--orbital <name>] [--report text|json] [--execute] [--verbose]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an unknown flag is a usage error",
+   "steps": [
+    {
+     "trait": "OrbTest",
+     "from": "parsing",
+     "event": "TEST_ARGS_DONE",
+     "payload": {
+      "stage": "test",
+      "flags": {},
+      "positionals": [
+       "f"
+      ],
+      "errors": [
+       "unknown flag: --x"
+      ],
+      "words": [
+       "f",
+       "--x"
+      ]
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "TEST_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "usage: orb test <program.lolo> [--trait <name>] [--orbital <name>] [--report text|json] [--execute] [--verbose]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "--report outside text|json is a usage error",
+   "steps": [
+    {
+     "trait": "OrbTest",
+     "from": "parsing",
+     "event": "TEST_ARGS_DONE",
+     "payload": {
+      "stage": "test",
+      "flags": {
+       "report": [
+        "xml"
+       ]
+      },
+      "positionals": [
+       "f"
+      ],
+      "errors": [],
+      "words": [
+       "f",
+       "--report",
+       "xml"
+      ]
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "TEST_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "usage: orb test <program.lolo> [--trait <name>] [--orbital <name>] [--report text|json] [--execute] [--verbose]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "--report json walks (control)",
+   "steps": [
+    {
+     "trait": "OrbTest",
+     "from": "parsing",
+     "event": "TEST_ARGS_DONE",
+     "payload": {
+      "stage": "test",
+      "flags": {
+       "report": [
+        "json"
+       ]
+      },
+      "positionals": [
+       "f"
+      ],
+      "errors": [],
+      "words": [
+       "f",
+       "--report",
+       "json"
+      ]
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "TEST_START",
+        "payload": {
+         "file": "f",
+         "traitFilter": "",
+         "report": "json",
+         "verbose": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

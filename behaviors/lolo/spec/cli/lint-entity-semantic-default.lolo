@@ -1,0 +1,22 @@
+app lint-entity-semantic-default-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint entity-semantic-default <file>`, the port of ORB_E_SEMANTIC_VALUE_INVALID. It lowers the file with program/read and, for every top-level field of the primary entity typed email, url, phone, uuid or image with a string literal default, reports an empty default and a default the matching validate operator rejects, with the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint entity-semantic-default: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintEntitySemanticDefaultSpec {
+  expects trait OrbLintEntitySemanticDefault {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+      LINT_UNREAD { rule : string! }
+    }
+  }
+  expects trait OrbLintEntitySemanticDefaultCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page "/orb-lint-entity-semantic-default" -> OrbLintEntitySemanticDefault, OrbLintEntitySemanticDefaultCli
+}

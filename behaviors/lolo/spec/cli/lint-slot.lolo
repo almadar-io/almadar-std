@@ -1,0 +1,22 @@
+app lint-slot-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint slot <file>`; see the atom."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintSlotSpec {
+  expects trait OrbLintSlot {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+      LINT_UNREAD { rule : string! }
+    }
+  }
+  expects trait OrbLintSlotCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page "/orb-lint-slot" -> OrbLintSlot, OrbLintSlotCli
+}

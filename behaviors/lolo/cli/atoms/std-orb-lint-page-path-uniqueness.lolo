@@ -6,11 +6,12 @@ app std-orb-lint-page-path-uniqueness [
 ]
 uses Spec from "almadar-std/lint-page-path-uniqueness"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
 orbital OrbLintPagePathUniquenessOrbital {
   entity OrbLintPagePathUniquenessRun [runtime] {
     id : string!
-    findings : [string] = []
+    findings : [OrbFinding] = []
   }
 
   trait OrbLintPagePathUniqueness -> OrbLintPagePathUniquenessRun [integration] {
@@ -46,7 +47,7 @@ orbital OrbLintPagePathUniquenessOrbital {
                   (let ((at (array/filter (array/range 0 (array/len @keys)) (fn j (= (array/nth @keys @j) @key)))))
                     (if (or (< (array/len @at) 2) (!= (array/first @at) @ki))
                       []
-                      [(str/concat "[ORB_P_DUPLICATE_PATH] " (array/nth @locs @ki) ": Duplicate page path (normalized to '" @key "'): [" (str/join (array/map @at (fn j (json/stringify (array/nth @rts @j)))) ", ") "] found at: [" (str/join (array/map @at (fn j (json/stringify (array/nth @locs @j)))) ", ") "]\n  suggestion: Each page must have a unique path — two routes that only differ by a param NAME still collide at dispatch")]))))))))))
+                      [{ code: "ORB_P_DUPLICATE_PATH", path: (array/nth @locs @ki), message: (str/concat "Duplicate page path (normalized to '" @key "'): [" (str/join (array/map @at (fn j (json/stringify (array/nth @rts @j)))) ", ") "] found at: [" (str/join (array/map @at (fn j (json/stringify (array/nth @locs @j)))) ", ") "]"), suggestion: "Each page must have a unique path — two routes that only differ by a param NAME still collide at dispatch", severity: "error" }]))))))))))
         (emit LINT_FINISH { })
       LINT_FILE_UNREAD -> ready
         (emit LINT_UNREAD { rule: "page-path-uniqueness" })
@@ -56,7 +57,7 @@ orbital OrbLintPagePathUniquenessOrbital {
       LINT_UNREAD -> external { rule : string! }
         @description "This rule could not read or lower the file."
         @tier "internal"
-      LINT_FOUND -> external { rule : string!  findings : [string]! }
+      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
         @description "This rule's findings for the file, offered to the lint-all umbrella."
         @tier "internal"
       LINT_RUN -> external { file : string! }
@@ -97,7 +98,7 @@ orbital OrbLintPagePathUniquenessOrbital {
       LINT_FOUND -> ready when (and (= @payload.rule "page-path-uniqueness") (= (array/len @payload.findings) 0))
         (emit LINT_ANSWERED { status: 200, body: "lint page-path-uniqueness: clean" })
       LINT_FOUND -> ready when (and (= @payload.rule "page-path-uniqueness") (> (array/len @payload.findings) 0))
-        (emit LINT_ANSWERED { status: 500, body: (str/join @payload.findings "\n") })
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
       LINT_UNREAD -> ready when (= @payload.rule "page-path-uniqueness")
         (emit LINT_ANSWERED { status: 500, body: "lint page-path-uniqueness: the file could not be read or lowered" })
     }
@@ -112,7 +113,7 @@ orbital OrbLintPagePathUniquenessOrbital {
       LINT_RUN -> external { file : string! }
         @description "Ask the rule trait to lint this file."
         @tier "internal"
-      LINT_FOUND -> external { rule : string!  findings : [string]! }
+      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
         @description "The rule trait's findings for the file."
         @tier "internal"
       LINT_UNREAD -> external { rule : string! }

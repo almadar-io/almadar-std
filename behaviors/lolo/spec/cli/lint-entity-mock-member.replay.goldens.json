@@ -1,0 +1,485 @@
+{
+ "atom": "cli/atoms/std-orb-lint-entity-mock-member.lolo",
+ "trait": "OrbLintEntityMockMember",
+ "cases": [
+  {
+   "id": "candidate-outside-enum",
+   "steps": [
+    {
+     "trait": "OrbLintEntityMockMember",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Inv",
+          "fields": [
+           {
+            "name": "status",
+            "type": "string",
+            "values": [
+             "draft",
+             "paid"
+            ],
+            "mock": "paid, refunded"
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEntityMockMember",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-mock-member",
+         "findings": [
+          {
+           "code": "ORB_E_MOCK_NOT_IN_ENUM",
+           "path": "orbitals[0].entity.fields[0].mock",
+           "message": "@mock candidate(s) refunded are not values of this field",
+           "suggestion": "Use only the field's declared values as @mock candidates",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "two-outside-candidates-listed-in-order",
+   "steps": [
+    {
+     "trait": "OrbLintEntityMockMember",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Inv",
+          "fields": [
+           {
+            "name": "status",
+            "type": "string",
+            "values": [
+             "draft",
+             "paid"
+            ],
+            "mock": "x, paid, y"
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEntityMockMember",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-mock-member",
+         "findings": [
+          {
+           "code": "ORB_E_MOCK_NOT_IN_ENUM",
+           "path": "orbitals[0].entity.fields[0].mock",
+           "message": "@mock candidate(s) x, y are not values of this field",
+           "suggestion": "Use only the field's declared values as @mock candidates",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "second-field-indexed",
+   "steps": [
+    {
+     "trait": "OrbLintEntityMockMember",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Inv",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "status",
+            "type": "string",
+            "values": [
+             "draft",
+             "paid"
+            ],
+            "mock": "gone"
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEntityMockMember",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-mock-member",
+         "findings": [
+          {
+           "code": "ORB_E_MOCK_NOT_IN_ENUM",
+           "path": "orbitals[0].entity.fields[1].mock",
+           "message": "@mock candidate(s) gone are not values of this field",
+           "suggestion": "Use only the field's declared values as @mock candidates",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-member-candidates",
+   "steps": [
+    {
+     "trait": "OrbLintEntityMockMember",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Inv",
+          "fields": [
+           {
+            "name": "status",
+            "type": "string",
+            "values": [
+             "draft",
+             "paid"
+            ],
+            "mock": "paid, paid, draft"
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEntityMockMember",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-mock-member",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-non-enum-free-form-mock",
+   "steps": [
+    {
+     "trait": "OrbLintEntityMockMember",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Inv",
+          "fields": [
+           {
+            "name": "client",
+            "type": "string",
+            "mock": "Acme Corp, Globex"
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEntityMockMember",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-mock-member",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-union-type-skipped",
+   "steps": [
+    {
+     "trait": "OrbLintEntityMockMember",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Inv",
+          "fields": [
+           {
+            "name": "status",
+            "type": "union",
+            "values": [
+             "draft",
+             "paid"
+            ],
+            "mock": "other"
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEntityMockMember",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-mock-member",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-empty-candidates-dropped",
+   "steps": [
+    {
+     "trait": "OrbLintEntityMockMember",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Inv",
+          "fields": [
+           {
+            "name": "status",
+            "type": "string",
+            "values": [
+             "draft",
+             "paid"
+            ],
+            "mock": " , paid ,"
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEntityMockMember",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-mock-member",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-enum-without-mock",
+   "steps": [
+    {
+     "trait": "OrbLintEntityMockMember",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Inv",
+          "fields": [
+           {
+            "name": "status",
+            "type": "string",
+            "values": [
+             "draft",
+             "paid"
+            ]
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEntityMockMember",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-mock-member",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

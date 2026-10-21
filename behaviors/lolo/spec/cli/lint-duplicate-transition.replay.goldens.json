@@ -1,0 +1,931 @@
+{
+ "atom": "cli/atoms/std-orb-lint-duplicate-transition.lolo",
+ "trait": "OrbLintDuplicateTransition",
+ "cases": [
+  {
+   "id": "identical-guarded-arms",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "paused",
+              "to": "paused",
+              "event": "INIT",
+              "guard": [
+               "not",
+               "@config.autoStart"
+              ]
+             },
+             {
+              "from": "paused",
+              "to": "paused",
+              "event": "INIT",
+              "guard": [
+               "not",
+               "@config.autoStart"
+              ]
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "duplicate-transition",
+         "findings": [
+          {
+           "code": "ORB_T_DUPLICATE_TRANSITION",
+           "path": "orbitals[0].traits[0].stateMachine.transitions",
+           "message": "Duplicate transitions from 'paused' on event 'INIT' with the same guard",
+           "suggestion": "Remove the repeated arm, or give each arm its own guard",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-different-guards",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "paused",
+              "to": "paused",
+              "event": "INIT",
+              "guard": [
+               "not",
+               "@config.autoStart"
+              ]
+             },
+             {
+              "from": "paused",
+              "to": "running",
+              "event": "INIT",
+              "guard": "@config.autoStart"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "duplicate-transition",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-guarded-plus-fallback",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "paused",
+              "to": "paused",
+              "event": "INIT",
+              "guard": [
+               "not",
+               "@config.autoStart"
+              ]
+             },
+             {
+              "from": "paused",
+              "to": "running",
+              "event": "INIT"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "duplicate-transition",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "two-unguarded",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "paused",
+              "to": "paused",
+              "event": "GO"
+             },
+             {
+              "from": "paused",
+              "to": "running",
+              "event": "GO"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "duplicate-transition",
+         "findings": [
+          {
+           "code": "ORB_T_DUPLICATE_TRANSITION",
+           "path": "orbitals[0].traits[0].stateMachine.transitions",
+           "message": "Duplicate transitions from 'paused' on event 'GO' without guards",
+           "suggestion": "Add guard conditions to distinguish transitions",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-different-events",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "paused",
+              "to": "paused",
+              "event": "GO"
+             },
+             {
+              "from": "paused",
+              "to": "paused",
+              "event": "STOP"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "duplicate-transition",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-different-sources",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "paused",
+              "to": "paused",
+              "event": "GO"
+             },
+             {
+              "from": "running",
+              "to": "paused",
+              "event": "GO"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "duplicate-transition",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "two-unguarded-plus-one-guarded",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "paused",
+              "to": "paused",
+              "event": "GO"
+             },
+             {
+              "from": "paused",
+              "to": "paused",
+              "event": "GO"
+             },
+             {
+              "from": "paused",
+              "to": "paused",
+              "event": "GO",
+              "guard": [
+               "not",
+               "@config.autoStart"
+              ]
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "duplicate-transition",
+         "findings": [
+          {
+           "code": "ORB_T_DUPLICATE_TRANSITION",
+           "path": "orbitals[0].traits[0].stateMachine.transitions",
+           "message": "Duplicate transitions from 'paused' on event 'GO' without guards",
+           "suggestion": "Add guard conditions to distinguish transitions",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-two-guarded-one-fallback",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "paused",
+              "to": "paused",
+              "event": "GO",
+              "guard": [
+               "not",
+               "@config.autoStart"
+              ]
+             },
+             {
+              "from": "paused",
+              "to": "paused",
+              "event": "GO",
+              "guard": "@config.autoStart"
+             },
+             {
+              "from": "paused",
+              "to": "paused",
+              "event": "GO"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "duplicate-transition",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "same-guard-among-three",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "paused",
+              "to": "paused",
+              "event": "GO",
+              "guard": [
+               "not",
+               "@config.autoStart"
+              ]
+             },
+             {
+              "from": "paused",
+              "to": "paused",
+              "event": "GO",
+              "guard": "@config.autoStart"
+             },
+             {
+              "from": "paused",
+              "to": "paused",
+              "event": "GO",
+              "guard": [
+               "not",
+               "@config.autoStart"
+              ]
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "duplicate-transition",
+         "findings": [
+          {
+           "code": "ORB_T_DUPLICATE_TRANSITION",
+           "path": "orbitals[0].traits[0].stateMachine.transitions",
+           "message": "Duplicate transitions from 'paused' on event 'GO' with the same guard",
+           "suggestion": "Remove the repeated arm, or give each arm its own guard",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-list-sources-not-tracked",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": [
+               "paused",
+               "running"
+              ],
+              "to": "paused",
+              "event": "GO"
+             },
+             {
+              "from": [
+               "paused",
+               "running"
+              ],
+              "to": "paused",
+              "event": "GO"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "duplicate-transition",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "wildcard-source-counts-as-a-state",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "*",
+              "to": "paused",
+              "event": "GO"
+             },
+             {
+              "from": "*",
+              "to": "paused",
+              "event": "GO"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "duplicate-transition",
+         "findings": [
+          {
+           "code": "ORB_T_DUPLICATE_TRANSITION",
+           "path": "orbitals[0].traits[0].stateMachine.transitions",
+           "message": "Duplicate transitions from '*' on event 'GO' without guards",
+           "suggestion": "Add guard conditions to distinguish transitions",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "second-trait-path",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "paused",
+              "to": "paused",
+              "event": "GO"
+             }
+            ]
+           }
+          },
+          {
+           "name": "T",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "paused",
+              "to": "paused",
+              "event": "GO"
+             },
+             {
+              "from": "paused",
+              "to": "paused",
+              "event": "GO"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "duplicate-transition",
+         "findings": [
+          {
+           "code": "ORB_T_DUPLICATE_TRANSITION",
+           "path": "orbitals[0].traits[1].stateMachine.transitions",
+           "message": "Duplicate transitions from 'paused' on event 'GO' without guards",
+           "suggestion": "Add guard conditions to distinguish transitions",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-trait-without-state-machine",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "Ext"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "duplicate-transition",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "two-groups-in-first-arm-order",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "a",
+              "to": "paused",
+              "event": "X"
+             },
+             {
+              "from": "b",
+              "to": "paused",
+              "event": "Y"
+             },
+             {
+              "from": "b",
+              "to": "paused",
+              "event": "Y"
+             },
+             {
+              "from": "a",
+              "to": "paused",
+              "event": "X"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "duplicate-transition",
+         "findings": [
+          {
+           "code": "ORB_T_DUPLICATE_TRANSITION",
+           "path": "orbitals[0].traits[0].stateMachine.transitions",
+           "message": "Duplicate transitions from 'a' on event 'X' without guards",
+           "suggestion": "Add guard conditions to distinguish transitions",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_DUPLICATE_TRANSITION",
+           "path": "orbitals[0].traits[0].stateMachine.transitions",
+           "message": "Duplicate transitions from 'b' on event 'Y' without guards",
+           "suggestion": "Add guard conditions to distinguish transitions",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,112 @@
+app std-key-chord [
+  version: "1.0.0",
+  description: "std-key-chord — key-chord matching for keyboard routing. KEY_CHORD spells Control+Alt+Shift+Meta+key; KEY_MAP_CODE spells Mod+Shift+Alt+code; RESOLVE_KEY_MAP finds the event a keyMap declares for a key event (a modified entry wins over the bare code, a bare entry still fires under undeclared modifiers, an editable target never routes); IS_EDITABLE says whether an element swallows keystrokes; MERGE_CAPTURE unions capture tables (keys union per target, mode any wins, distinct modes sorted and joined with a bar); ROUTE_KEY routes one keydown to the focused editor or the shell and says whether the key is captured, and skips a composition keydown."
+]
+uses Spec from "almadar-std/key-chord"
+
+type KeyCaptureEntry = { mode : string!, keys : [string]! }
+
+orbital KeyChordOrbital {
+  entity KeyChordRun [runtime] {
+    id : string!
+    value : string @description "The last chord, keyMap event or empty." = ""
+    hit : boolean @description "Whether the last question was answered yes or found." = false
+    skipped : boolean @description "Whether the last keydown was ignored for an IME composition." = false
+    editorId : string @description "The capture target of the last route." = ""
+    captured : boolean @description "Whether the last routed key is in the target's capture entry." = false
+    table : Map string KeyCaptureEntry @description "The last merged capture table." = {}
+  }
+
+  trait KeyChord -> KeyChordRun [lifecycle, instance] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      KEY_CHORD -> ready
+        (set @entity.value (str/concat (if ?ctrl "Control+" "") (if ?alt "Alt+" "") (if ?shift "Shift+" "") (if ?meta "Meta+" "") ?key))
+        (set @entity.hit true)
+        (set @entity.skipped false)
+        (set @entity.editorId "")
+        (set @entity.captured false)
+        (set @entity.table {})
+        (emit KEY_RESULT { value: @entity.value, hit: @entity.hit, skipped: @entity.skipped, editorId: @entity.editorId, captured: @entity.captured, table: @entity.table })
+      KEY_MAP_CODE -> ready
+        (set @entity.value (str/concat (if (or ?meta ?ctrl) "Mod+" "") (if ?shift "Shift+" "") (if ?alt "Alt+" "") ?code))
+        (set @entity.hit true)
+        (set @entity.skipped false)
+        (set @entity.editorId "")
+        (set @entity.captured false)
+        (set @entity.table {})
+        (emit KEY_RESULT { value: @entity.value, hit: @entity.hit, skipped: @entity.skipped, editorId: @entity.editorId, captured: @entity.captured, table: @entity.table })
+      RESOLVE_KEY_MAP -> ready
+        (set @entity.value (if (not (and ?hasMap (not ?targetEditable))) "" (if (object/has ?map (str/concat (if (or ?meta ?ctrl) "Mod+" "") (if ?shift "Shift+" "") (if ?alt "Alt+" "") ?code)) (object/get ?map (str/concat (if (or ?meta ?ctrl) "Mod+" "") (if ?shift "Shift+" "") (if ?alt "Alt+" "") ?code)) (if (object/has ?map ?code) (object/get ?map ?code) ""))))
+        (set @entity.hit (and (and ?hasMap (not ?targetEditable)) (or (object/has ?map (str/concat (if (or ?meta ?ctrl) "Mod+" "") (if ?shift "Shift+" "") (if ?alt "Alt+" "") ?code)) (object/has ?map ?code))))
+        (set @entity.skipped false)
+        (set @entity.editorId "")
+        (set @entity.captured false)
+        (set @entity.table {})
+        (emit KEY_RESULT { value: @entity.value, hit: @entity.hit, skipped: @entity.skipped, editorId: @entity.editorId, captured: @entity.captured, table: @entity.table })
+      IS_EDITABLE -> ready
+        (set @entity.value "")
+        (set @entity.hit (or (array/includes ["INPUT", "TEXTAREA", "SELECT"] ?tagName) (and ?hasAttr (array/includes ["", "true", "plaintext-only"] ?attr))))
+        (set @entity.skipped false)
+        (set @entity.editorId "")
+        (set @entity.captured false)
+        (set @entity.table {})
+        (emit KEY_RESULT { value: @entity.value, hit: @entity.hit, skipped: @entity.skipped, editorId: @entity.editorId, captured: @entity.captured, table: @entity.table })
+      MERGE_CAPTURE -> ready
+        (set @entity.value "")
+        (set @entity.hit false)
+        (set @entity.skipped false)
+        (set @entity.editorId "")
+        (set @entity.captured false)
+        (set @entity.table (array/reduce ?tables {} (fn acc t (array/reduce (object/keys @t) @acc (fn a target (if (not (object/has @a @target)) (object/set @a @target { mode: (object/get (object/get @t @target) "mode"), keys: (array/sort (array/unique (object/get (object/get @t @target) "keys"))) }) (object/set @a @target { mode: (if (or (= (object/get (object/get @a @target) "mode") "any") (= (object/get (object/get @t @target) "mode") "any")) "any" (if (= (object/get (object/get @a @target) "mode") (object/get (object/get @t @target) "mode")) (object/get (object/get @a @target) "mode") (str/join (array/sort (array/unique (array/append (str/split (object/get (object/get @a @target) "mode") "|") (object/get (object/get @t @target) "mode")))) "|"))), keys: (array/sort (array/unique (array/concat (object/get (object/get @a @target) "keys") (object/get (object/get @t @target) "keys")))) })))))))
+        (emit KEY_RESULT { value: @entity.value, hit: @entity.hit, skipped: @entity.skipped, editorId: @entity.editorId, captured: @entity.captured, table: @entity.table })
+      ROUTE_KEY -> ready
+        (set @entity.value "")
+        (set @entity.hit false)
+        (set @entity.skipped ?composing)
+        (set @entity.editorId (if ?composing "" (if ?hasFocus ?focusedEditor "shell")))
+        (set @entity.captured (and (not ?composing) (object/has ?table (if ?hasFocus ?focusedEditor "shell")) (or (array/includes (object/get (object/get ?table (if ?hasFocus ?focusedEditor "shell")) "keys") ?key) (array/includes (object/get (object/get ?table (if ?hasFocus ?focusedEditor "shell")) "keys") (str/concat (if ?ctrl "Control+" "") (if ?alt "Alt+" "") (if ?shift "Shift+" "") (if ?meta "Meta+" "") ?key)))))
+        (set @entity.table {})
+        (emit KEY_RESULT { value: @entity.value, hit: @entity.hit, skipped: @entity.skipped, editorId: @entity.editorId, captured: @entity.captured, table: @entity.table })
+    }
+
+    emits {
+      KEY_RESULT -> external {
+        value : string
+        hit : boolean
+        skipped : boolean
+        editorId : string
+        captured : boolean
+        table : Map string KeyCaptureEntry
+      }
+        @description "A key chord was spelled, resolved, merged or routed."
+        @synonyms "key route, chord"
+        @tier "primary"
+    }
+
+    listens {
+      KEY_CHORD { key : string!  ctrl : boolean!  alt : boolean!  shift : boolean!  meta : boolean! }
+        @description "Spell the key-based chord: Control, Alt, Shift, Meta in that order, then the key."
+        @synonyms "key chord"
+      KEY_MAP_CODE { code : string!  ctrl : boolean!  alt : boolean!  shift : boolean!  meta : boolean! }
+        @description "Spell the code-based chord: Mod (meta or ctrl), Shift, Alt, then the code."
+        @synonyms "keymap code"
+      RESOLVE_KEY_MAP { map : Map string string!  hasMap : boolean!  code : string!  ctrl : boolean!  alt : boolean!  shift : boolean!  meta : boolean!  targetEditable : boolean! }
+        @description "Find the event a keyMap declares for a key event; a modified entry wins over the bare code and an editable target never routes."
+        @synonyms "keymap lookup"
+      IS_EDITABLE { tagName : string!  hasAttr : boolean!  attr : string! }
+        @description "Whether an element swallows keystrokes: an input, textarea or select, or a contenteditable of empty, true or plaintext-only."
+        @synonyms "editable target"
+      MERGE_CAPTURE { tables : [Map string KeyCaptureEntry]! }
+        @description "Merge capture tables: keys union per target, mode any wins, else the shared mode, else the distinct modes sorted and bar-joined."
+        @synonyms "merge capture tables"
+      ROUTE_KEY { table : Map string KeyCaptureEntry!  hasFocus : boolean!  focusedEditor : string!  key : string!  ctrl : boolean!  alt : boolean!  shift : boolean!  meta : boolean!  composing : boolean! }
+        @description "Route one keydown to the focused editor or the shell and say whether the key or its chord is captured; a composition keydown is skipped."
+        @synonyms "route keydown"
+    }
+  }
+
+  page "/key-chord" as KeyChordPage -> KeyChord
+}

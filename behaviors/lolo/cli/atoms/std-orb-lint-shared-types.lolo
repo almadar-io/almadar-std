@@ -8,6 +8,7 @@ uses Spec from "almadar-std/orb-lint-shared-types"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type LintTypeCopy = { name : string!, file : string!, definition : string!, fields : [string]! }
 type LintTypeDrift = { name : string!, variants : number!, files : [string]! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 type LintEntry = { name : string!, kind : string! }
 type LintFile = { root : number!, rel : string! }
 
@@ -39,17 +40,18 @@ orbital OrbLintSharedTypesOrbital {
       LINT_FINISH -> ready when (and (= (array/len @entity.drift) 0) (= (array/len @entity.unread) 0))
         (emit LINT_ANSWERED { status: 200, body: "shared-types: consistent" })
       LINT_FINISH -> ready when (or (> (array/len @entity.drift) 0) (> (array/len @entity.unread) 0))
-        (emit LINT_ANSWERED { status: 500, body: (str/join (array/concat
-          (array/map @entity.drift (fn n (let ((copies (array/filter @entity.copies (fn c (= (object/get @c "name") @n)))))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map (let ((msgs (array/map @entity.drift (fn n (let ((copies (array/filter @entity.copies (fn c (= (object/get @c "name") @n)))))
             (let ((variants (array/sort (array/map (array/unique (array/map @copies (fn c (object/get @c "definition")))) (fn d { definition: @d, files: (array/map (array/filter @copies (fn c (= (object/get @c "definition") @d))) (fn c (object/get @c "file"))), fields: (object/get (array/find @copies (fn c (= (object/get @c "definition") @d))) "fields"), count: (array/len (array/filter @copies (fn c (= (object/get @c "definition") @d)))) })) "count" "desc")))
               (str/join (array/concat
-                [(str/concat @n ": " (array/len @variants) " definitions differ")]
+                [(str/concat (array/len @variants) " definitions differ")]
                 (array/map (array/range 0 (array/len @variants)) (fn i (str/concat "  variant " (+ @i 1) " (" (object/get (array/nth @variants @i) "count") " file(s)): " (str/join (object/get (array/nth @variants @i) "files") ", "))))
                 (array/flatten (array/map (array/range 1 (array/len @variants)) (fn i (array/concat
                   (array/map (array/filter (object/get (array/first @variants) "fields") (fn f (not (array/includes (object/get (array/nth @variants @i) "fields") @f)))) (fn f (str/concat "  variant " (+ @i 1) " lacks " @f)))
                   (array/map (array/filter (object/get (array/nth @variants @i) "fields") (fn f (not (array/includes (object/get (array/first @variants) "fields") @f)))) (fn f (str/concat "  variant " (+ @i 1) " adds  " @f))))))))
-              "\n")))))
-          (array/map @entity.unread (fn u (str/concat "UNREAD " @u)))) "\n") })
+              "\n")))))))
+          (array/concat
+            (array/map (array/range 0 (array/len @msgs)) (fn i { code: "shared-type-drift", path: (array/nth @entity.drift @i), message: (array/nth @msgs @i), suggestion: "keep the declared copies identical in every file", severity: "error" }))
+            (array/map @entity.unread (fn u { code: "unread", path: @u, message: "the file could not be read or listed", suggestion: "", severity: "error" })))) (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
     }
 
     state walking {
@@ -74,12 +76,14 @@ orbital OrbLintSharedTypesOrbital {
     state reading {
       INIT -> reading
       LINT_READ -> reading when (and (< @entity.cursor (array/len @entity.paths)) (= (object/get (array/nth @entity.paths @entity.cursor) "root") 0))
-        (os/read-file (str/concat "./packages/almadar-std/behaviors/lolo/" (object/get (array/nth @entity.paths @entity.cursor) "rel")) { key: "file" emit: { success: LINT_FILE_READ, failure: LINT_FILE_UNREAD } })
+        (os/open (str/concat "./packages/almadar-std/behaviors/lolo/" (object/get (array/nth @entity.paths @entity.cursor) "rel")) "r" { key: "open" emit: { success: LINT_OPENED, failure: LINT_FILE_UNREAD } })
       LINT_READ -> reading when (and (< @entity.cursor (array/len @entity.paths)) (= (object/get (array/nth @entity.paths @entity.cursor) "root") 1))
-        (os/read-file (str/concat "./packages/almadar-behaviors/behaviors/lolo/" (object/get (array/nth @entity.paths @entity.cursor) "rel")) { key: "file" emit: { success: LINT_FILE_READ, failure: LINT_FILE_UNREAD } })
+        (os/open (str/concat "./packages/almadar-behaviors/behaviors/lolo/" (object/get (array/nth @entity.paths @entity.cursor) "rel")) "r" { key: "open" emit: { success: LINT_OPENED, failure: LINT_FILE_UNREAD } })
       LINT_READ -> ready when (>= @entity.cursor (array/len @entity.paths))
         (set @entity.drift (array/filter (array/unique (array/map @entity.copies (fn c (object/get @c "name")))) (fn n (> (array/len (array/unique (array/map (array/filter @entity.copies (fn c (= (object/get @c "name") @n))) (fn c (object/get @c "definition"))))) 1))))
         (emit LINT_FINISH { })
+      LINT_OPENED -> reading
+        (os/read @payload.fd 4194304 { key: "chunk" emit: { success: LINT_FILE_READ, failure: LINT_FILE_UNREAD } })
       LINT_FILE_READ -> reading when (str/includes (str/concat "\n" (bytes/to-string @payload.data)) "\ntype ")
         (program/read (bytes/to-string @payload.data) { emit: { success: LINT_PROGRAM_READ, failure: LINT_FILE_UNREAD } })
       LINT_FILE_READ -> reading when (not (str/includes (str/concat "\n" (bytes/to-string @payload.data)) "\ntype "))
@@ -108,7 +112,10 @@ orbital OrbLintSharedTypesOrbital {
       LINT_LIST_FAILED { error : string }
         @description "A directory that could not be listed."
         @tier "internal"
-      LINT_FILE_READ { data : bytes! }
+      LINT_OPENED { fd : number! }
+        @description "A file opened."
+        @tier "internal"
+      LINT_FILE_READ { data : bytes!, eof : boolean }
         @description "A file read."
         @tier "internal"
       LINT_FILE_UNREAD { error : string }

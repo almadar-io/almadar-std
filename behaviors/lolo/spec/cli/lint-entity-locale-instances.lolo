@@ -1,0 +1,22 @@
+app lint-entity-locale-instances-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint entity-locale-instances <file>`, the port of ORB_E_LOCALE_INSTANCES_NOT_LOCAL, ORB_E_LOCALE_INSTANCES_UNKNOWN_LOCALE and ORB_E_LOCALE_INSTANCES_INCOMPLETE. It lowers the file with program/read and, for every inline primary and auxiliary entity writing per-locale rows, reports a non-browser-stored entity, a block for an undeclared or default locale, a missing default instances block and a missing block for a declared non-default locale, with the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint entity-locale-instances: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintEntityLocaleInstancesSpec {
+  expects trait OrbLintEntityLocaleInstances {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+      LINT_UNREAD { rule : string! }
+    }
+  }
+  expects trait OrbLintEntityLocaleInstancesCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page "/orb-lint-entity-locale-instances" -> OrbLintEntityLocaleInstances, OrbLintEntityLocaleInstancesCli
+}

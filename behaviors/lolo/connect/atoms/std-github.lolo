@@ -21,6 +21,9 @@ type GithubRun = { id : number, name : string, status : string, conclusion : str
 type GithubRunList = { workflow_runs : [GithubRun] }
 type GithubJob = { id : number, name : string, status : string, conclusion : string, html_url : string }
 type GithubJobList = { jobs : [GithubJob] }
+type GithubRunner = { id : number, name : string, status : string, busy : boolean }
+type GithubRunnerList = { runners : [GithubRunner] }
+type GithubRunnersKey = { scope : string }
 type GithubRunsKey = { owner : string, repo : string }
 type GithubJobsKey = { owner : string, repo : string, runId : number }
 type GithubUsageItem = { product : string, sku : string, quantity : number, unitType : string, grossAmount : number, discountAmount : number, netAmount : number, repositoryName : string }
@@ -199,6 +202,26 @@ orbital GithubOrbital {
         (emit GITHUB_GRAPHQL_FAILED { status: 0, code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) })
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "GitHub unavailable: " @payload.error) })
 
+      GITHUB_LIST_RUNNERS -> idle
+        (http GET @config.origin (str/concat "/" @payload.scope "/actions/runners") {
+          headers: { Accept: "application/vnd.github+json", X-GitHub-Api-Version: @config.apiVersion },
+          auth: { scheme: bearer, credential: @config.token },
+          timeoutMs: @config.timeoutMs
+        } { key: (json/stringify { scope: @payload.scope }), emit: { success: GITHUB_LIST_RUNNERS_REPLIED, failure: GITHUB_LIST_RUNNERS_UNREACHABLE } })
+      GITHUB_LIST_RUNNERS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (json/valid @payload.body))
+        (let ((at (json/parse @payload.key GithubRunnersKey)))
+          (emit GITHUB_RUNNERS { scope: @at.scope, runners: (array/map (object/get (json/parse @payload.body GithubRunnerList) runners []) (fn r { id: @r.id, name: @r.name, status: @r.status, busy: @r.busy })) }))
+      GITHUB_LIST_RUNNERS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (not (json/valid @payload.body)))
+        (let ((at (json/parse @payload.key GithubRunnersKey)))
+          (emit GITHUB_LIST_RUNNERS_FAILED { scope: @at.scope, status: @payload.status, code: "PARSE_ERROR", message: "GitHub answered a runner list body that is not JSON" }))
+      GITHUB_LIST_RUNNERS_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
+        (let ((at (json/parse @payload.key GithubRunnersKey)))
+          (emit GITHUB_LIST_RUNNERS_FAILED { scope: @at.scope, status: @payload.status, code: (if (= @payload.status 429) "RATE_LIMIT_ERROR" (if (or (= @payload.status 401) (= @payload.status 403)) "AUTH_ERROR" "SERVICE_ERROR")), message: (if (= @payload.status 429) "GitHub API rate limit exceeded" (str/concat (if (or (= @payload.status 401) (= @payload.status 403)) "GitHub API authentication failed: " "GitHub API request failed: ") (if (and (json/valid @payload.body) (!= (object/get (json/parse @payload.body GithubError) message "") "")) (object/get (json/parse @payload.body GithubError) message "") (object/get @config.statusText (str/concat @payload.status) "")))) }))
+      GITHUB_LIST_RUNNERS_UNREACHABLE -> idle
+        (let ((at (json/parse @payload.key GithubRunnersKey)))
+          (emit GITHUB_LIST_RUNNERS_FAILED { scope: @at.scope, status: 0, code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) }))
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "GitHub unavailable: " @payload.error) })
+
       GITHUB_LIST_RUNS -> idle
         (http GET @config.origin (str/concat "/repos/" @payload.owner "/" @payload.repo "/actions/runs") {
           query: { per_page: (if (== @payload.per_page null) null (str/concat @payload.per_page)) },
@@ -319,6 +342,37 @@ orbital GithubOrbital {
         kind : string!
       }
         @description "Internal: the GraphQL call never produced a reply."
+        @tier "secondary"
+      GITHUB_RUNNERS -> external {
+        scope : string!
+        runners : [GithubRunner]!
+      }
+        @description "The self-hosted runners registered at an organization or repository scope: id, name, status (online or offline) and whether a job is running on it."
+        @synonyms "self-hosted runners, ci runners, runner fleet"
+        @tier "primary"
+      GITHUB_LIST_RUNNERS_FAILED -> external {
+        scope : string!
+        status : number!
+        code : string
+        message : string!
+      }
+        @description "Listing the scope's self-hosted runners failed: the HTTP status (0 when unreachable), GitHub's code and message."
+        @synonyms "listing runners failed, github error"
+        @tier "primary"
+      GITHUB_LIST_RUNNERS_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+        key : string!
+      }
+        @description "Internal: the runner list's HTTP reply; key carries the scope."
+        @tier "secondary"
+      GITHUB_LIST_RUNNERS_UNREACHABLE {
+        error : string!
+        kind : string!
+        key : string!
+      }
+        @description "Internal: the runner list never produced a reply."
         @tier "secondary"
       GITHUB_RUNS -> external {
         owner : string!
@@ -634,6 +688,22 @@ orbital GithubOrbital {
       GITHUB_GRAPHQL_UNREACHABLE {
         error : string!
         kind : string!
+      }
+      GITHUB_LIST_RUNNERS -> external {
+        scope : string!
+      }
+        @description "List the self-hosted runners of a scope (orgs/<org> or repos/<owner>/<repo>)."
+        @synonyms "list runners, runner status"
+      GITHUB_LIST_RUNNERS_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+        key : string!
+      }
+      GITHUB_LIST_RUNNERS_UNREACHABLE {
+        error : string!
+        kind : string!
+        key : string!
       }
       GITHUB_LIST_RUNS -> external {
         owner : string!

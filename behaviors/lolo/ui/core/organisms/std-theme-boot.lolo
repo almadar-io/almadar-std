@@ -1,0 +1,218 @@
+app std-theme-boot [
+  version: "1.0.0",
+  description: "std-theme-boot — the theme substrate program a native shell boots on its second kernel handle. THEME_BOOT { key, definitions, hasMode, mode } resolves the key against the carried preset definitions (std-theme-resolve), merges the dark variant, resolves the canvas theme (std-canvas-theme) and the motion (std-motion), and answers ONE THEME_APPLIED { theme, canvasTheme, motion } carrying the kernel snapshot fields of those names: theme is { key, base, mode, tokens } with the merged tokens, canvasTheme and motion the wire shapes the shells pass through. THEME_TOGGLE { mode } re-answers for the booted key in the requested mode. An unknown key answers its key as given with empty tokens, unresolved colours and the base motion."
+]
+uses Spec from "almadar-std/theme-boot"
+
+type ThemePresetInfo = { name : string!, declaresTokens : boolean!, hasDark : boolean! }
+type TokDensitySpacing = { space0 : string?, space1 : string?, space2 : string?, space3 : string?, space4 : string?, space5 : string?, space6 : string?, space7 : string?, space8 : string?, space9 : string?, space10 : string?, space11 : string?, space12 : string? }
+type TokDensity = { spacing : TokDensitySpacing?, buttonHeightSm : string?, buttonHeightMd : string?, buttonHeightLg : string?, inputHeightSm : string?, inputHeightMd : string?, inputHeightLg : string?, rowHeightCompact : string?, rowHeightNormal : string?, rowHeightSpacious : string?, cardPaddingSm : string?, cardPaddingMd : string?, cardPaddingLg : string?, dialogPadding : string?, sectionGap : string? }
+type TokTypeScaleScaleXs = { size : string?, lineHeight : string? }
+type TokTypeScaleScaleSm = { size : string?, lineHeight : string? }
+type TokTypeScaleScaleBase = { size : string?, lineHeight : string? }
+type TokTypeScaleScaleLg = { size : string?, lineHeight : string? }
+type TokTypeScaleScaleXl = { size : string?, lineHeight : string? }
+type TokTypeScaleScaleN2xl = { size : string?, lineHeight : string? }
+type TokTypeScaleScaleN3xl = { size : string?, lineHeight : string? }
+type TokTypeScaleScaleN4xl = { size : string?, lineHeight : string? }
+type TokTypeScaleScaleDisplay1 = { size : string?, lineHeight : string? }
+type TokTypeScaleScaleDisplay2 = { size : string?, lineHeight : string? }
+type TokTypeScaleScale = { xs : TokTypeScaleScaleXs?, sm : TokTypeScaleScaleSm?, base : TokTypeScaleScaleBase?, lg : TokTypeScaleScaleLg?, xl : TokTypeScaleScaleXl?, "2xl" : TokTypeScaleScaleN2xl?, "3xl" : TokTypeScaleScaleN3xl?, "4xl" : TokTypeScaleScaleN4xl?, display-1 : TokTypeScaleScaleDisplay1?, display-2 : TokTypeScaleScaleDisplay2? }
+type TokTypeScaleIntentsHeadingMajor = { size : string?, weight : string?, slot : string? }
+type TokTypeScaleIntentsHeadingMinor = { size : string?, weight : string?, slot : string? }
+type TokTypeScaleIntentsBodyEmphasis = { size : string?, weight : string?, slot : string? }
+type TokTypeScaleIntentsBodyDefault = { size : string?, weight : string?, slot : string? }
+type TokTypeScaleIntentsBodyQuiet = { size : string?, weight : string?, slot : string? }
+type TokTypeScaleIntentsCaption = { size : string?, weight : string?, slot : string? }
+type TokTypeScaleIntentsNumeric = { size : string?, weight : string?, slot : string? }
+type TokTypeScaleIntents = { headingMajor : TokTypeScaleIntentsHeadingMajor?, headingMinor : TokTypeScaleIntentsHeadingMinor?, bodyEmphasis : TokTypeScaleIntentsBodyEmphasis?, bodyDefault : TokTypeScaleIntentsBodyDefault?, bodyQuiet : TokTypeScaleIntentsBodyQuiet?, caption : TokTypeScaleIntentsCaption?, numeric : TokTypeScaleIntentsNumeric? }
+type TokTypeScale = { displayFamily : string?, bodyFamily : string?, monoFamily : string?, headingWeight : string?, headingTransform : string?, headingTracking : string?, headingStyle : string?, headingShadow : string?, scale : TokTypeScaleScale?, intents : TokTypeScaleIntents?, fontImport : string? }
+type TokMotionDurations = { instant : string?, fast : string?, normal : string?, slow : string?, dramatic : string? }
+type TokMotionEasings = { linear : string?, standard : string?, emphasized : string?, spring : string? }
+type TokMotionIntentsEnter = { duration : string?, easing : string? }
+type TokMotionIntentsExit = { duration : string?, easing : string? }
+type TokMotionIntentsHover = { duration : string?, easing : string? }
+type TokMotionIntentsPress = { duration : string?, easing : string? }
+type TokMotionIntentsExpand = { duration : string?, easing : string? }
+type TokMotionIntentsTransition = { duration : string?, easing : string? }
+type TokMotionIntents = { enter : TokMotionIntentsEnter?, exit : TokMotionIntentsExit?, hover : TokMotionIntentsHover?, press : TokMotionIntentsPress?, expand : TokMotionIntentsExpand?, transition : TokMotionIntentsTransition? }
+type TokMotionShapes = { modalEnter : string?, modalExit : string?, popoverEnter : string?, popoverExit : string?, toastEnter : string?, toastExit : string?, pageEnter : string?, enterRise : string?, enterScale : string?, enterSlide : string? }
+type TokMotionEntry = { default : string?, stagger : string? }
+type TokMotion = { durations : TokMotionDurations?, easings : TokMotionEasings?, intents : TokMotionIntents?, shapes : TokMotionShapes?, entry : TokMotionEntry?, busyDelay : string?, awaitingSkeleton : boolean? }
+type TokIconography = { family : string?, strokeWidth : string?, defaultSize : string? }
+type TokElevation = { cardElevation : string?, popoverElevation : string?, dialogElevation : string?, toastElevation : string?, interactiveElevation : string?, pressedElevation : string? }
+type TokGeometry = { radiusContainer : string?, radiusInteractive : string?, radiusPill : string?, borderHairline : string?, borderStandard : string?, borderHeavy : string?, cornerShape : string?, cornerShapePill : string?, cornerShapeInteractive : string?, borderStyle : string?, borderStyleInteractive : string? }
+type TokIllustration = { loadingAsset : string?, style : string? }
+type TokSurface = { backdrop : string?, cardImage : string?, pageImage : string?, pageImageSize : string?, diagram : string?, edgeMask : string?, edgeHeight : string?, textureMask : string?, textureSize : string?, accentImage : string?, scrim : string? }
+type TokDiagram = { strokeThin : string?, strokeNormal : string?, strokeBold : string?, lineCap : string?, lineJoin : string?, dash : string?, dot : string?, fillStyle : string?, fillOpacity : string?, roughness : string?, glow : string?, shadow : string?, marker : string?, labelFont : string?, labelSize : string?, labelWeight : string?, labelCase : string?, corner : string? }
+type TokScene = { materialRoughness : string?, materialMetalness : string?, materialFlat : string?, materialOutline : string?, lightAmbient : string?, lightKey : string?, lightKeyColor : string?, fog : string? }
+type ThemeTokens = { color : Map string string?, colors : Map string string?, radii : Map string string?, spacing : Map string string?, typography : Map string string?, shadows : Map string string?, density : TokDensity?, typeScale : TokTypeScale?, motion : TokMotion?, iconography : TokIconography?, elevation : TokElevation?, geometry : TokGeometry?, illustration : TokIllustration?, surface : TokSurface?, diagram : TokDiagram?, scene : TokScene? }
+type ThemeUse = { name : string!, theme : string! }
+type ThemeVariants = { dark : ThemeTokens }
+type ThemeDefinition = { name : string!, tokens : ThemeTokens!, variants : ThemeVariants }
+type ResolvedThemeWire = { key : string!, base : string!, mode : string!, tokens : ThemeTokens! }
+type MotionShape = { scale : number!, translateX : number!, translateY : number!, inlineSigned : boolean! }
+type CanvasSurfaces = { muted : string!, card : string!, onPrimary : string! }
+type CanvasStrokes = { thin : number!, normal : number!, bold : number! }
+type CanvasLabel = { size : string!, weight : string!, uppercase : boolean! }
+type CanvasThemeWire = { ground : string!, surfaces : CanvasSurfaces!, tones : Map string string!, series : [string]!, strokes : CanvasStrokes!, lineCap : string!, lineJoin : string!, dash : [number]!, dot : [number]!, fillStyle : string!, fillOpacity : number!, marker : string!, label : CanvasLabel!, text : Map string number!, corner : number! }
+type MotionWire = { entryDefault : string!, staggerMs : number!, shapes : Map string MotionShape! }
+
+orbital ThemeBootOrbital {
+  uses Theme from "std/behaviors/std-theme-resolve"
+  uses Canvas from "std/behaviors/std-canvas-theme"
+  uses Motion from "std/behaviors/std-motion"
+
+  entity ThemeBootRun [runtime] {
+    id : string!
+    definitions : [ThemeDefinition] = []
+    reqKey : string = ""
+    key : string = ""
+    base : string = ""
+    mode : string = ""
+    found : boolean = false
+    gotCanvas : boolean = false
+    gotMotion : boolean = false
+    gotTokens : boolean = false
+    tokens : ThemeTokens
+    canvasTheme : CanvasThemeWire
+    motion : MotionWire
+  }
+
+  trait BootTheme = Theme.traits.ThemeResolve {
+    listens {
+      ThemeBoot.THEME_RESOLVE -> THEME_RESOLVE
+      BootCanvas.THEME_MERGE -> THEME_MERGE
+    }
+  }
+
+  trait BootCanvas = Canvas.traits.CanvasTheme {
+    listens {
+      ThemeBoot.CANVAS_THEME_PRESET -> CANVAS_THEME_PRESET
+      BootTheme.THEME_MERGED -> THEME_MERGED
+    }
+  }
+
+  trait BootMotion = Motion.traits.Motion {
+    listens {
+      ThemeBoot.RESOLVE_MOTION -> RESOLVE_MOTION
+    }
+  }
+
+  trait ThemeBoot -> ThemeBootRun [lifecycle, instance] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      THEME_BOOT -> ready
+        (set @entity.definitions ?definitions)
+        (set @entity.reqKey ?key)
+        (set @entity.gotCanvas false)
+        (set @entity.gotMotion false)
+        (set @entity.gotTokens false)
+        (emit THEME_RESOLVE { presets: (array/map ?definitions (fn d { name: @d.name, declaresTokens: true, hasDark: (object/has @d "variants.dark") })), orbitals: [], orbital: "", appTheme: ?key, hasMode: ?hasMode, requestedMode: ?mode })
+      THEME_TOGGLE -> ready
+        (set @entity.gotCanvas false)
+        (set @entity.gotMotion false)
+        (set @entity.gotTokens false)
+        (emit THEME_RESOLVE { presets: (array/map @entity.definitions (fn d { name: @d.name, declaresTokens: true, hasDark: (object/has @d "variants.dark") })), orbitals: [], orbital: "", appTheme: @entity.reqKey, hasMode: true, requestedMode: ?mode })
+      THEME_RESOLVED -> ready
+        (set @entity.key ?key)
+        (set @entity.base ?base)
+        (set @entity.mode ?mode)
+        (set @entity.found ?found)
+        (emit CANVAS_THEME_PRESET { key: ?key, base: (let ((m (array/filter @entity.definitions (fn d (== @d.name ?base))))) (if (> (array/len @m) 0) (object/get (array/nth @m 0) "tokens") {})), variant: (let ((m (array/filter @entity.definitions (fn d (== @d.name ?base))))) (if (> (array/len @m) 0) (object/get (array/nth @m 0) "variants.dark") null)) })
+      THEME_MERGED -> ready
+        (set @entity.tokens ?tokens)
+        (set @entity.gotTokens true)
+        (emit RESOLVE_MOTION { motion: (object/get ?tokens "motion" {}) })
+      CANVAS_THEME_RESULT -> ready
+        (set @entity.canvasTheme { ground: ?ground, surfaces: { muted: ?surfaceMuted, card: ?surfaceCard, onPrimary: ?surfaceOnPrimary }, tones: ?tones, series: ?series, strokes: { thin: ?strokeThin, normal: ?strokeNormal, bold: ?strokeBold }, lineCap: ?lineCap, lineJoin: ?lineJoin, dash: ?dash, dot: ?dot, fillStyle: ?fillStyle, fillOpacity: ?fillOpacity, marker: ?marker, label: { size: ?labelSize, weight: ?labelWeight, uppercase: ?labelUppercase }, text: ?text, corner: ?corner })
+        (set @entity.gotCanvas true)
+        (emit THEME_PART { })
+      MOTION_RESOLVED -> ready
+        (set @entity.motion { entryDefault: ?entryDefault, staggerMs: ?staggerMs, shapes: ?shapes })
+        (set @entity.gotMotion true)
+        (emit THEME_PART { })
+      THEME_PART -> ready when (and @entity.gotCanvas (and @entity.gotMotion @entity.gotTokens))
+        (emit THEME_APPLIED { theme: { key: @entity.key, base: @entity.base, mode: @entity.mode, tokens: @entity.tokens }, canvasTheme: @entity.canvasTheme, motion: @entity.motion })
+      THEME_PART -> ready when (not (and @entity.gotCanvas (and @entity.gotMotion @entity.gotTokens)))
+    }
+
+    emits {
+      THEME_RESOLVE -> internal {
+        presets : [ThemePresetInfo]
+        orbitals : [ThemeUse]
+        orbital : string
+        appTheme : string
+        hasMode : boolean
+        requestedMode : string
+      }
+      CANVAS_THEME_PRESET -> internal {
+        key : string
+        base : ThemeTokens
+        variant : ThemeTokens
+      }
+      RESOLVE_MOTION -> internal {
+        motion : TokMotion
+      }
+      THEME_PART -> internal {
+      }
+      THEME_APPLIED -> external {
+        theme : ResolvedThemeWire
+        canvasTheme : CanvasThemeWire
+        motion : MotionWire
+      }
+        @description "The theme answered: the snapshot theme (key, base, mode, merged tokens), canvasTheme and motion."
+        @synonyms "theme applied, theme snapshot"
+        @tier "primary"
+    }
+
+    listens {
+      THEME_BOOT { key : string!  definitions : [ThemeDefinition]!  hasMode : boolean!  mode : string! }
+        @description "Boot the theme: resolve the key against the carried definitions."
+        @synonyms "boot theme"
+      THEME_TOGGLE { mode : string! }
+        @description "Re-answer for the booted key in the requested mode."
+        @synonyms "toggle theme mode"
+      BootTheme.THEME_RESOLVED -> THEME_RESOLVED
+      THEME_RESOLVED { key : string!  base : string!  mode : string!  found : boolean!  mergesVariant : boolean! }
+        @description "The key was resolved."
+      BootTheme.THEME_MERGED -> THEME_MERGED
+      THEME_MERGED { tokens : ThemeTokens! }
+        @description "The tokens merged for the mode."
+      BootCanvas.CANVAS_THEME_RESULT -> CANVAS_THEME_RESULT
+      CANVAS_THEME_RESULT {
+        ground : string!  
+        surfaceMuted : string!  
+        surfaceCard : string!  
+        surfaceOnPrimary : string!  
+        tones : Map string string!  
+        series : [string]!  
+        strokeThin : number!  
+        strokeNormal : number!  
+        strokeBold : number!  
+        lineCap : string!  
+        lineJoin : string!  
+        dash : [number]!  
+        dot : [number]!  
+        fillStyle : string!  
+        fillOpacity : number!  
+        marker : string!  
+        labelSize : string!  
+        labelWeight : string!  
+        labelUppercase : boolean!  
+        text : Map string number!  
+        corner : number!  
+      }
+        @description "The canvas theme resolved."
+      BootMotion.MOTION_RESOLVED -> MOTION_RESOLVED
+      MOTION_RESOLVED { entryDefault : string!  staggerMs : number!  shapes : Map string MotionShape! }
+        @description "The motion resolved."
+      THEME_PART { }
+        @description "One part of the answer arrived."
+    }
+  }
+
+  page "/theme-boot" as ThemeBootPage -> ThemeBoot, BootTheme, BootCanvas, BootMotion
+}

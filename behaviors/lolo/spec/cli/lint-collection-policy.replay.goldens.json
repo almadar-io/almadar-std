@@ -1,0 +1,247 @@
+{
+ "atom": "cli/atoms/std-orb-lint-collection-policy.lolo",
+ "trait": "OrbLintCollectionPolicy",
+ "note": "Expected findings are the code, path, message and suggestion `orb validate` (the Rust validator) reports for the same program.",
+ "cases": [
+  {
+   "id": "two-entities-one-collection-different-read",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E1",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ],
+          "collection": "tasks",
+          "read_policy": [
+           "=",
+           "@entity.id",
+           "a"
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E1",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ],
+         "auxiliaryEntities": [
+          {
+           "name": "E2",
+           "persistence": "persistent",
+           "fields": [
+            {
+             "name": "id",
+             "type": "string"
+            }
+           ],
+           "collection": "tasks",
+           "read_policy": [
+            "=",
+            "@entity.id",
+            "b"
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintCollectionPolicy"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "collection-policy",
+         "findings": [
+          {
+           "code": "ORB_S_COLLECTION_POLICY_CONFLICT",
+           "path": "E2.@access",
+           "message": "entities `E1` and `E2` both bind collection `tasks` but declare different access directives. One collection is one table and cannot have two visibility rules — give them identical directives, or bind one of them to its own collection.",
+           "suggestion": "",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintCollectionPolicy"
+    }
+   ]
+  },
+  {
+   "id": "control-same-collection-same-read",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E1",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ],
+          "collection": "tasks",
+          "read_policy": [
+           "=",
+           "@entity.id",
+           "a"
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E1",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ],
+         "auxiliaryEntities": [
+          {
+           "name": "E2",
+           "persistence": "persistent",
+           "fields": [
+            {
+             "name": "id",
+             "type": "string"
+            }
+           ],
+           "collection": "tasks",
+           "read_policy": [
+            "=",
+            "@entity.id",
+            "a"
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintCollectionPolicy"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "collection-policy",
+         "findings": []
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintCollectionPolicy"
+    }
+   ]
+  }
+ ]
+}

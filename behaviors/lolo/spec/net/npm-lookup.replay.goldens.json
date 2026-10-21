@@ -1,0 +1,615 @@
+{
+ "atom": "net/atoms/std-npm-lookup.lolo",
+ "trait": "NpmLookup",
+ "cases": [
+  {
+   "id": "lookup-lists-ascending-with-dist-tags-and-latest",
+   "steps": [
+    {
+     "event": "NPM_LOOKUP",
+     "payload": {
+      "requestId": "r1",
+      "name": "@almadar/core"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_LOOKUP_GET",
+        "payload": {
+         "requestId": "r1"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "NPM_LOOKUP_PACKUMENT",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "{\"name\": \"@almadar/core\", \"versions\": {\"1.10.0\": {\"dist\": {\"tarball\": \"https://registry.npmjs.org/@almadar/core/-/core-1.10.0.tgz\"}}, \"1.2.0\": {\"dist\": {\"tarball\": \"https://registry.npmjs.org/@almadar/core/-/core-1.2.0.tgz\"}}, \"1.9.3\": {\"dist\": {\"tarball\": \"https://registry.npmjs.org/@almadar/core/-/core-1.9.3.tgz\"}}, \"0.9.0\": {\"dist\": {\"tarball\": \"https://registry.npmjs.org/@almadar/core/-/core-0.9.0.tgz\"}}}, \"dist-tags\": {\"latest\": \"1.10.0\"}}",
+      "key": "lookup"
+     },
+     "from": "looking",
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_LOOKED",
+        "payload": {
+         "requestId": "r1",
+         "name": "@almadar/core",
+         "versions": [
+          "0.9.0",
+          "1.2.0",
+          "1.9.3",
+          "1.10.0"
+         ],
+         "distTags": {
+          "latest": "1.10.0"
+         },
+         "version": "1.10.0",
+         "tarballs": {
+          "0.9.0": "https://registry.npmjs.org/@almadar/core/-/core-0.9.0.tgz",
+          "1.2.0": "https://registry.npmjs.org/@almadar/core/-/core-1.2.0.tgz",
+          "1.9.3": "https://registry.npmjs.org/@almadar/core/-/core-1.9.3.tgz",
+          "1.10.0": "https://registry.npmjs.org/@almadar/core/-/core-1.10.0.tgz"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "lookup-named-tag-resolves-its-version",
+   "steps": [
+    {
+     "event": "NPM_LOOKUP",
+     "payload": {
+      "requestId": "r1",
+      "name": "@almadar/core",
+      "tag": "next"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_LOOKUP_GET",
+        "payload": {
+         "requestId": "r1"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "NPM_LOOKUP_PACKUMENT",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "{\"versions\":{\"1.0.0\":{},\"2.0.0-rc.1\":{}},\"dist-tags\":{\"latest\":\"1.0.0\",\"next\":\"2.0.0-rc.1\"}}",
+      "key": "lookup"
+     },
+     "from": "looking",
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_LOOKED",
+        "payload": {
+         "requestId": "r1",
+         "version": "2.0.0-rc.1",
+         "versions": [
+          "1.0.0",
+          "2.0.0-rc.1"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-lookup-version-without-dist-has-empty-tarball",
+   "steps": [
+    {
+     "event": "NPM_LOOKUP",
+     "payload": {
+      "requestId": "r1",
+      "name": "@almadar/core"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_LOOKUP_GET",
+        "payload": {
+         "requestId": "r1"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "NPM_LOOKUP_PACKUMENT",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "{\"versions\":{\"1.0.0\":{}},\"dist-tags\":{\"latest\":\"1.0.0\"}}",
+      "key": "lookup"
+     },
+     "from": "looking",
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_LOOKED",
+        "payload": {
+         "requestId": "r1",
+         "tarballs": {
+          "1.0.0": ""
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-lookup-tarball-outside-the-registry-origin-is-empty",
+   "steps": [
+    {
+     "event": "NPM_LOOKUP",
+     "payload": {
+      "requestId": "r1",
+      "name": "@almadar/core"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_LOOKUP_GET",
+        "payload": {
+         "requestId": "r1"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "NPM_LOOKUP_PACKUMENT",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "{\"versions\":{\"1.0.0\":{\"dist\":{\"tarball\":\"https://evil.example/core-1.0.0.tgz\"}},\"1.1.0\":{\"dist\":{\"tarball\":\"https://registry.npmjs.org/@almadar/core/-/core-1.1.0.tgz\"}}},\"dist-tags\":{\"latest\":\"1.1.0\"}}",
+      "key": "lookup"
+     },
+     "from": "looking",
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_LOOKED",
+        "payload": {
+         "requestId": "r1",
+         "tarballs": {
+          "1.0.0": "",
+          "1.1.0": "https://registry.npmjs.org/@almadar/core/-/core-1.1.0.tgz"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-lookup-missing-tag-answers-empty-version",
+   "steps": [
+    {
+     "event": "NPM_LOOKUP",
+     "payload": {
+      "requestId": "r1",
+      "name": "@almadar/core",
+      "tag": "beta"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_LOOKUP_GET",
+        "payload": {
+         "requestId": "r1"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "NPM_LOOKUP_PACKUMENT",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "{\"name\": \"@almadar/core\", \"versions\": {\"1.10.0\": {\"dist\": {\"tarball\": \"https://registry.npmjs.org/@almadar/core/-/core-1.10.0.tgz\"}}, \"1.2.0\": {\"dist\": {\"tarball\": \"https://registry.npmjs.org/@almadar/core/-/core-1.2.0.tgz\"}}, \"1.9.3\": {\"dist\": {\"tarball\": \"https://registry.npmjs.org/@almadar/core/-/core-1.9.3.tgz\"}}, \"0.9.0\": {\"dist\": {\"tarball\": \"https://registry.npmjs.org/@almadar/core/-/core-0.9.0.tgz\"}}}, \"dist-tags\": {\"latest\": \"1.10.0\"}}",
+      "key": "lookup"
+     },
+     "from": "looking",
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_LOOKED",
+        "payload": {
+         "requestId": "r1",
+         "version": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-lookup-404-is-absent-not-an-empty-list",
+   "steps": [
+    {
+     "event": "NPM_LOOKUP",
+     "payload": {
+      "requestId": "r1",
+      "name": "@almadar/core"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_LOOKUP_GET",
+        "payload": {
+         "requestId": "r1"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "NPM_LOOKUP_PACKUMENT",
+     "payload": {
+      "status": 404,
+      "headers": {},
+      "body": "{}",
+      "key": "lookup"
+     },
+     "from": "looking",
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_LOOKUP_REFUSED",
+        "payload": {
+         "requestId": "r1",
+         "name": "@almadar/core",
+         "code": "absent",
+         "status": 404
+        }
+       }
+      ],
+      "neverEmits": [
+       "NPM_LOOKED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "lookup-401-classified-auth",
+   "steps": [
+    {
+     "event": "NPM_LOOKUP",
+     "payload": {
+      "requestId": "r1",
+      "name": "@almadar/core"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_LOOKUP_GET",
+        "payload": {
+         "requestId": "r1"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "NPM_LOOKUP_PACKUMENT",
+     "payload": {
+      "status": 401,
+      "headers": {},
+      "body": "{}",
+      "key": "lookup"
+     },
+     "from": "looking",
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_LOOKUP_REFUSED",
+        "payload": {
+         "requestId": "r1",
+         "name": "@almadar/core",
+         "code": "auth",
+         "status": 401
+        }
+       }
+      ],
+      "neverEmits": [
+       "NPM_LOOKED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "lookup-403-classified-auth",
+   "steps": [
+    {
+     "event": "NPM_LOOKUP",
+     "payload": {
+      "requestId": "r1",
+      "name": "@almadar/core"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_LOOKUP_GET",
+        "payload": {
+         "requestId": "r1"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "NPM_LOOKUP_PACKUMENT",
+     "payload": {
+      "status": 403,
+      "headers": {},
+      "body": "{}",
+      "key": "lookup"
+     },
+     "from": "looking",
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_LOOKUP_REFUSED",
+        "payload": {
+         "requestId": "r1",
+         "name": "@almadar/core",
+         "code": "auth",
+         "status": 403
+        }
+       }
+      ],
+      "neverEmits": [
+       "NPM_LOOKED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "lookup-500-classified-unreachable",
+   "steps": [
+    {
+     "event": "NPM_LOOKUP",
+     "payload": {
+      "requestId": "r1",
+      "name": "@almadar/core"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_LOOKUP_GET",
+        "payload": {
+         "requestId": "r1"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "NPM_LOOKUP_PACKUMENT",
+     "payload": {
+      "status": 500,
+      "headers": {},
+      "body": "{}",
+      "key": "lookup"
+     },
+     "from": "looking",
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_LOOKUP_REFUSED",
+        "payload": {
+         "requestId": "r1",
+         "name": "@almadar/core",
+         "code": "unreachable",
+         "status": 500
+        }
+       }
+      ],
+      "neverEmits": [
+       "NPM_LOOKED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "lookup-418-classified-unexpected",
+   "steps": [
+    {
+     "event": "NPM_LOOKUP",
+     "payload": {
+      "requestId": "r1",
+      "name": "@almadar/core"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_LOOKUP_GET",
+        "payload": {
+         "requestId": "r1"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "NPM_LOOKUP_PACKUMENT",
+     "payload": {
+      "status": 418,
+      "headers": {},
+      "body": "{}",
+      "key": "lookup"
+     },
+     "from": "looking",
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_LOOKUP_REFUSED",
+        "payload": {
+         "requestId": "r1",
+         "name": "@almadar/core",
+         "code": "unexpected",
+         "status": 418
+        }
+       }
+      ],
+      "neverEmits": [
+       "NPM_LOOKED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "transport-failure-is-unreachable",
+   "steps": [
+    {
+     "event": "NPM_LOOKUP",
+     "payload": {
+      "requestId": "r1",
+      "name": "@almadar/core"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_LOOKUP_GET",
+        "payload": {
+         "requestId": "r1"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "NPM_LOOKUP_UNREACHABLE",
+     "payload": {
+      "error": "timed out",
+      "kind": "timeout"
+     },
+     "from": "looking",
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_LOOKUP_REFUSED",
+        "payload": {
+         "requestId": "r1",
+         "code": "unreachable",
+         "error": "timed out"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-unset-credential-is-unconfigured",
+   "steps": [
+    {
+     "event": "NPM_LOOKUP",
+     "payload": {
+      "requestId": "r1",
+      "name": "@almadar/core"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_LOOKUP_GET",
+        "payload": {
+         "requestId": "r1"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "NPM_LOOKUP_UNREACHABLE",
+     "payload": {
+      "error": "credential NPM_REGISTRY_TOKEN is not set",
+      "kind": "unconfigured"
+     },
+     "from": "looking",
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_LOOKUP_REFUSED",
+        "payload": {
+         "code": "unconfigured"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "ask-during-an-ask-is-busy",
+   "steps": [
+    {
+     "event": "NPM_LOOKUP",
+     "payload": {
+      "requestId": "r1",
+      "name": "@almadar/core"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_LOOKUP_GET",
+        "payload": {
+         "requestId": "r1"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "NPM_LOOKUP",
+     "payload": {
+      "requestId": "r2",
+      "name": "@almadar/std"
+     },
+     "from": "looking",
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_LOOKUP_REFUSED",
+        "payload": {
+         "requestId": "r2",
+         "name": "@almadar/std",
+         "code": "npm_busy"
+        }
+       }
+      ],
+      "neverEmits": [
+       "NPM_LOOKUP_GET"
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

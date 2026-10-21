@@ -1,0 +1,855 @@
+{
+ "atom": "cli/atoms/std-orb-lint-relation-targets.lolo",
+ "trait": "OrbLintRelationTargets",
+ "note": "Expected findings are the code, path, message and suggestion `orb validate` (the Rust validator) reports for the same program. The nested cases copy cross_orbital/relations.rs test_relation_targets_nested_in_array_items and entity.rs a_map_value_relation_without_a_definition_is_a_coded_error (paths .items.properties.byKey.items.items.relation.entity and .items.relation.entity); the order case pins the check_relation_targets walk (field, items, properties sorted by name). Every case folds the entity fields with tree/fold, so all of them await the orb reinstall.",
+ "cases": [
+  {
+   "id": "relation-to-an-undeclared-entity",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "owner",
+            "type": "relation",
+            "relation": {
+             "entity": "Missing",
+             "cardinality": "one"
+            }
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintRelationTargets"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "relation-targets",
+         "findings": [
+          {
+           "code": "ORB_E_INVALID_RELATION",
+           "path": "orbitals[0].entity.fields[1].relation.entity",
+           "message": "Relation target entity 'Missing' does not exist",
+           "suggestion": "Ensure the related entity is defined in the schema",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_X_UNRESOLVED_RELATION_TARGET",
+           "path": "orbitals[0].entity.fields[1].relation.entity",
+           "message": "Relation field 'owner' on 'E' points at 'Missing', which is not declared in this schema",
+           "suggestion": "Declare the target entity in one of the schema's orbitals, or correct the relation.entity name.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintRelationTargets"
+    }
+   ]
+  },
+  {
+   "id": "control-relation-to-a-declared-entity",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "owner",
+            "type": "relation",
+            "relation": {
+             "entity": "E",
+             "cardinality": "one"
+            }
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintRelationTargets"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "relation-targets",
+         "findings": []
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintRelationTargets"
+    }
+   ]
+  },
+  {
+   "id": "relation-nested-in-array-items-is-found",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "patientList",
+            "type": "array",
+            "items": {
+             "type": "relation",
+             "relation": {
+              "entity": "Patient",
+              "cardinality": "one"
+             }
+            }
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintRelationTargets"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "relation-targets",
+         "findings": [
+          {
+           "code": "ORB_E_INVALID_RELATION",
+           "path": "orbitals[0].entity.fields[1].items.relation.entity",
+           "message": "Relation target entity 'Patient' does not exist",
+           "suggestion": "Ensure the related entity is defined in the schema",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_X_UNRESOLVED_RELATION_TARGET",
+           "path": "orbitals[0].entity.fields[1].items.relation.entity",
+           "message": "Relation field '<anonymous>' on 'E' points at 'Patient', which is not declared in this schema",
+           "suggestion": "Declare the target entity in one of the schema's orbitals, or correct the relation.entity name.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintRelationTargets"
+    }
+   ]
+  },
+  {
+   "id": "relation-nested-through-properties-and-map-values-is-found",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "packs",
+            "type": "array",
+            "items": {
+             "type": "object",
+             "properties": {
+              "byKey": {
+               "name": "byKey",
+               "type": "object",
+               "items": {
+                "type": "object",
+                "items": {
+                 "type": "relation",
+                 "relation": {
+                  "entity": "Ghost",
+                  "cardinality": "one"
+                 }
+                }
+               }
+              }
+             }
+            }
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintRelationTargets"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "relation-targets",
+         "findings": [
+          {
+           "code": "ORB_E_INVALID_RELATION",
+           "path": "orbitals[0].entity.fields[1].items.properties.byKey.items.items.relation.entity",
+           "message": "Relation target entity 'Ghost' does not exist",
+           "suggestion": "Ensure the related entity is defined in the schema",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_X_UNRESOLVED_RELATION_TARGET",
+           "path": "orbitals[0].entity.fields[1].items.properties.byKey.items.items.relation.entity",
+           "message": "Relation field '<anonymous>' on 'E' points at 'Ghost', which is not declared in this schema",
+           "suggestion": "Declare the target entity in one of the schema's orbitals, or correct the relation.entity name.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintRelationTargets"
+    }
+   ]
+  },
+  {
+   "id": "relation-in-a-map-value-is-found",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "byKey",
+            "type": "object",
+            "items": {
+             "type": "relation",
+             "relation": {
+              "entity": "Nope",
+              "cardinality": "one"
+             }
+            }
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintRelationTargets"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "relation-targets",
+         "findings": [
+          {
+           "code": "ORB_E_INVALID_RELATION",
+           "path": "orbitals[0].entity.fields[1].items.relation.entity",
+           "message": "Relation target entity 'Nope' does not exist",
+           "suggestion": "Ensure the related entity is defined in the schema",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_X_UNRESOLVED_RELATION_TARGET",
+           "path": "orbitals[0].entity.fields[1].items.relation.entity",
+           "message": "Relation field '<anonymous>' on 'E' points at 'Nope', which is not declared in this schema",
+           "suggestion": "Declare the target entity in one of the schema's orbitals, or correct the relation.entity name.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintRelationTargets"
+    }
+   ]
+  },
+  {
+   "id": "nested-relations-are-reported-in-order-field-items-properties-by-name",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "g",
+            "type": "object",
+            "items": {
+             "type": "relation",
+             "relation": {
+              "entity": "A1",
+              "cardinality": "one"
+             }
+            },
+            "properties": {
+             "zed": {
+              "name": "zed",
+              "type": "relation",
+              "relation": {
+               "entity": "Z1",
+               "cardinality": "one"
+              }
+             },
+             "alpha": {
+              "name": "alpha",
+              "type": "relation",
+              "relation": {
+               "entity": "B1",
+               "cardinality": "one"
+              }
+             }
+            }
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintRelationTargets"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "relation-targets",
+         "findings": [
+          {
+           "code": "ORB_E_INVALID_RELATION",
+           "path": "orbitals[0].entity.fields[1].items.relation.entity",
+           "message": "Relation target entity 'A1' does not exist",
+           "suggestion": "Ensure the related entity is defined in the schema",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_X_UNRESOLVED_RELATION_TARGET",
+           "path": "orbitals[0].entity.fields[1].items.relation.entity",
+           "message": "Relation field '<anonymous>' on 'E' points at 'A1', which is not declared in this schema",
+           "suggestion": "Declare the target entity in one of the schema's orbitals, or correct the relation.entity name.",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_E_INVALID_RELATION",
+           "path": "orbitals[0].entity.fields[1].properties.alpha.relation.entity",
+           "message": "Relation target entity 'B1' does not exist",
+           "suggestion": "Ensure the related entity is defined in the schema",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_X_UNRESOLVED_RELATION_TARGET",
+           "path": "orbitals[0].entity.fields[1].properties.alpha.relation.entity",
+           "message": "Relation field 'alpha' on 'E' points at 'B1', which is not declared in this schema",
+           "suggestion": "Declare the target entity in one of the schema's orbitals, or correct the relation.entity name.",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_E_INVALID_RELATION",
+           "path": "orbitals[0].entity.fields[1].properties.zed.relation.entity",
+           "message": "Relation target entity 'Z1' does not exist",
+           "suggestion": "Ensure the related entity is defined in the schema",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_X_UNRESOLVED_RELATION_TARGET",
+           "path": "orbitals[0].entity.fields[1].properties.zed.relation.entity",
+           "message": "Relation field 'zed' on 'E' points at 'Z1', which is not declared in this schema",
+           "suggestion": "Declare the target entity in one of the schema's orbitals, or correct the relation.entity name.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintRelationTargets"
+    }
+   ]
+  },
+  {
+   "id": "control-nested-relation-to-a-declared-entity",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "self",
+            "type": "array",
+            "items": {
+             "type": "relation",
+             "relation": {
+              "entity": "E",
+              "cardinality": "one"
+             }
+            }
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintRelationTargets"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "relation-targets",
+         "findings": []
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintRelationTargets"
+    }
+   ]
+  }
+ ]
+}

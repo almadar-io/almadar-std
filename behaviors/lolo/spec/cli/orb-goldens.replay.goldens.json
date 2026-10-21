@@ -1,0 +1,1426 @@
+{
+ "atom": "cli/atoms/std-orb-goldens.lolo",
+ "trait": "OrbGoldens",
+ "note": "Meta-golden for the runner itself. Each case seeds the running state with one case of a fake golden and the runner's own preflight answers; os/read-file and the nested program/step are not hosted inside a step, so a control proves the case reached the step by the host-gap error it then raises.",
+ "cases": [
+  {
+   "id": "unknown-expect-key-fails",
+   "entity": {
+    "golden": "{\"atom\": \"cli/atoms/std-orb-goldens.lolo\", \"trait\": \"G\", \"orbital\": \"Gating\", \"cases\": [{\"id\": \"c\", \"steps\": [{\"from\": \"ready\", \"event\": \"OPEN\", \"expect\": {\"fired\": true, \"bogus\": 1}}]}]}",
+    "program": "{\"name\": \"GateApp\", \"orbitals\": [{\"name\": \"Gating\", \"entity\": {\"name\": \"Gate\", \"persistence\": \"runtime\", \"fields\": [{\"name\": \"id\", \"type\": \"string\"}, {\"name\": \"owner\", \"type\": \"string\", \"default\": \"\"}]}, \"pages\": [], \"traits\": [{\"name\": \"G\", \"linkedEntity\": \"Gate\", \"stateMachine\": {\"states\": [{\"name\": \"ready\", \"isInitial\": true}, {\"name\": \"open\"}], \"transitions\": [{\"from\": \"ready\", \"to\": \"open\", \"event\": \"OPEN\", \"guard\": [\"=\", \"@entity.owner\", \"ann\"]}]}}]}]}",
+    "files": [],
+    "fileCursor": 0,
+    "cursor": 0,
+    "lines": []
+   },
+   "steps": [
+    {
+     "from": "running",
+     "event": "GOLDENS_NEXT",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "GOLDENS_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "fail  c\n  step 0: unknown expect key: bogus\n0 passed, 1 failed, 0 skipped in 0 file(s)"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-known-expect-keys-reach-the-step",
+   "entity": {
+    "golden": "{\"atom\": \"cli/atoms/std-orb-goldens.lolo\", \"trait\": \"G\", \"orbital\": \"Gating\", \"cases\": [{\"id\": \"c\", \"steps\": [{\"from\": \"ready\", \"event\": \"OPEN\", \"expect\": {\"fired\": true, \"state\": \"open\", \"emits\": [], \"neverEmits\": []}}]}]}",
+    "program": "{\"name\": \"GateApp\", \"orbitals\": [{\"name\": \"Gating\", \"entity\": {\"name\": \"Gate\", \"persistence\": \"runtime\", \"fields\": [{\"name\": \"id\", \"type\": \"string\"}, {\"name\": \"owner\", \"type\": \"string\", \"default\": \"\"}]}, \"pages\": [], \"traits\": [{\"name\": \"G\", \"linkedEntity\": \"Gate\", \"stateMachine\": {\"states\": [{\"name\": \"ready\", \"isInitial\": true}, {\"name\": \"open\"}], \"transitions\": [{\"from\": \"ready\", \"to\": \"open\", \"event\": \"OPEN\", \"guard\": [\"=\", \"@entity.owner\", \"ann\"]}]}}]}]}",
+    "files": [],
+    "fileCursor": 0,
+    "cursor": 0,
+    "lines": []
+   },
+   "steps": [
+    {
+     "from": "running",
+     "event": "GOLDENS_NEXT",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "GOLDENS_PREFLIGHT",
+        "payload": {}
+       },
+       {
+        "event": "GOLDENS_CASE_FAILED",
+        "payload": {
+         "error": "no substrate host configured for program/step"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "unknown-step-key-fails",
+   "entity": {
+    "golden": "{\"atom\": \"cli/atoms/std-orb-goldens.lolo\", \"trait\": \"G\", \"orbital\": \"Gating\", \"cases\": [{\"id\": \"c\", \"steps\": [{\"from\": \"ready\", \"event\": \"OPEN\", \"expect\": {\"fired\": true, \"state\": \"open\"}, \"expct\": {}}]}]}",
+    "program": "{\"name\": \"GateApp\", \"orbitals\": [{\"name\": \"Gating\", \"entity\": {\"name\": \"Gate\", \"persistence\": \"runtime\", \"fields\": [{\"name\": \"id\", \"type\": \"string\"}, {\"name\": \"owner\", \"type\": \"string\", \"default\": \"\"}]}, \"pages\": [], \"traits\": [{\"name\": \"G\", \"linkedEntity\": \"Gate\", \"stateMachine\": {\"states\": [{\"name\": \"ready\", \"isInitial\": true}, {\"name\": \"open\"}], \"transitions\": [{\"from\": \"ready\", \"to\": \"open\", \"event\": \"OPEN\", \"guard\": [\"=\", \"@entity.owner\", \"ann\"]}]}}]}]}",
+    "files": [],
+    "fileCursor": 0,
+    "cursor": 0,
+    "lines": []
+   },
+   "steps": [
+    {
+     "from": "running",
+     "event": "GOLDENS_NEXT",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "GOLDENS_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "fail  c\n  step 0: unknown step key: expct\n0 passed, 1 failed, 0 skipped in 0 file(s)"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-known-step-keys-reach-the-step",
+   "entity": {
+    "golden": "{\"atom\": \"cli/atoms/std-orb-goldens.lolo\", \"trait\": \"G\", \"orbital\": \"Gating\", \"cases\": [{\"id\": \"c\", \"steps\": [{\"from\": \"ready\", \"event\": \"OPEN\", \"expect\": {\"fired\": true, \"state\": \"open\"}, \"now\": 1, \"entity\": {\"owner\": \"ann\"}, \"payload\": {}, \"trait\": \"G\", \"orbital\": \"Gating\"}]}]}",
+    "program": "{\"name\": \"GateApp\", \"orbitals\": [{\"name\": \"Gating\", \"entity\": {\"name\": \"Gate\", \"persistence\": \"runtime\", \"fields\": [{\"name\": \"id\", \"type\": \"string\"}, {\"name\": \"owner\", \"type\": \"string\", \"default\": \"\"}]}, \"pages\": [], \"traits\": [{\"name\": \"G\", \"linkedEntity\": \"Gate\", \"stateMachine\": {\"states\": [{\"name\": \"ready\", \"isInitial\": true}, {\"name\": \"open\"}], \"transitions\": [{\"from\": \"ready\", \"to\": \"open\", \"event\": \"OPEN\", \"guard\": [\"=\", \"@entity.owner\", \"ann\"]}]}}]}]}",
+    "files": [],
+    "fileCursor": 0,
+    "cursor": 0,
+    "lines": []
+   },
+   "steps": [
+    {
+     "from": "running",
+     "event": "GOLDENS_NEXT",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "GOLDENS_PREFLIGHT",
+        "payload": {}
+       },
+       {
+        "event": "GOLDENS_CASE_FAILED",
+        "payload": {
+         "error": "no substrate host configured for program/step"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "unknown-case-key-fails",
+   "entity": {
+    "golden": "{\"atom\": \"cli/atoms/std-orb-goldens.lolo\", \"trait\": \"G\", \"orbital\": \"Gating\", \"cases\": [{\"id\": \"c\", \"steps\": [{\"from\": \"ready\", \"event\": \"OPEN\", \"expect\": {\"fired\": true, \"state\": \"open\"}}], \"bogus\": \"x\"}]}",
+    "program": "{\"name\": \"GateApp\", \"orbitals\": [{\"name\": \"Gating\", \"entity\": {\"name\": \"Gate\", \"persistence\": \"runtime\", \"fields\": [{\"name\": \"id\", \"type\": \"string\"}, {\"name\": \"owner\", \"type\": \"string\", \"default\": \"\"}]}, \"pages\": [], \"traits\": [{\"name\": \"G\", \"linkedEntity\": \"Gate\", \"stateMachine\": {\"states\": [{\"name\": \"ready\", \"isInitial\": true}, {\"name\": \"open\"}], \"transitions\": [{\"from\": \"ready\", \"to\": \"open\", \"event\": \"OPEN\", \"guard\": [\"=\", \"@entity.owner\", \"ann\"]}]}}]}]}",
+    "files": [],
+    "fileCursor": 0,
+    "cursor": 0,
+    "lines": []
+   },
+   "steps": [
+    {
+     "from": "running",
+     "event": "GOLDENS_NEXT",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "GOLDENS_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "fail  c\n  unknown case key: bogus\n0 passed, 1 failed, 0 skipped in 0 file(s)"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-known-case-keys-reach-the-step",
+   "entity": {
+    "golden": "{\"atom\": \"cli/atoms/std-orb-goldens.lolo\", \"trait\": \"G\", \"orbital\": \"Gating\", \"cases\": [{\"id\": \"c\", \"now\": 1, \"entity\": {\"owner\": \"ann\"}, \"steps\": [{\"from\": \"ready\", \"event\": \"OPEN\", \"expect\": {\"fired\": true, \"state\": \"open\"}}], \"note\": \"doc\", \"golden\": \"doc\"}]}",
+    "program": "{\"name\": \"GateApp\", \"orbitals\": [{\"name\": \"Gating\", \"entity\": {\"name\": \"Gate\", \"persistence\": \"runtime\", \"fields\": [{\"name\": \"id\", \"type\": \"string\"}, {\"name\": \"owner\", \"type\": \"string\", \"default\": \"\"}]}, \"pages\": [], \"traits\": [{\"name\": \"G\", \"linkedEntity\": \"Gate\", \"stateMachine\": {\"states\": [{\"name\": \"ready\", \"isInitial\": true}, {\"name\": \"open\"}], \"transitions\": [{\"from\": \"ready\", \"to\": \"open\", \"event\": \"OPEN\", \"guard\": [\"=\", \"@entity.owner\", \"ann\"]}]}}]}]}",
+    "files": [],
+    "fileCursor": 0,
+    "cursor": 0,
+    "lines": []
+   },
+   "steps": [
+    {
+     "from": "running",
+     "event": "GOLDENS_NEXT",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "GOLDENS_PREFLIGHT",
+        "payload": {}
+       },
+       {
+        "event": "GOLDENS_CASE_FAILED",
+        "payload": {
+         "error": "no substrate host configured for program/step"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "skipped-case-is-not-key-checked",
+   "entity": {
+    "golden": "{\"atom\": \"cli/atoms/std-orb-goldens.lolo\", \"trait\": \"G\", \"orbital\": \"Gating\", \"cases\": [{\"id\": \"c\", \"skip\": \"why\", \"note\": \"x\", \"steps\": [{\"from\": \"ready\", \"event\": \"OPEN\", \"expect\": {\"fired\": true, \"state\": \"open\"}}]}]}",
+    "program": "{\"name\": \"GateApp\", \"orbitals\": [{\"name\": \"Gating\", \"entity\": {\"name\": \"Gate\", \"persistence\": \"runtime\", \"fields\": [{\"name\": \"id\", \"type\": \"string\"}, {\"name\": \"owner\", \"type\": \"string\", \"default\": \"\"}]}, \"pages\": [], \"traits\": [{\"name\": \"G\", \"linkedEntity\": \"Gate\", \"stateMachine\": {\"states\": [{\"name\": \"ready\", \"isInitial\": true}, {\"name\": \"open\"}], \"transitions\": [{\"from\": \"ready\", \"to\": \"open\", \"event\": \"OPEN\", \"guard\": [\"=\", \"@entity.owner\", \"ann\"]}]}}]}]}",
+    "files": [],
+    "fileCursor": 0,
+    "cursor": 0,
+    "lines": []
+   },
+   "steps": [
+    {
+     "from": "running",
+     "event": "GOLDENS_NEXT",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "GOLDENS_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "skip  c  (why)\n0 passed, 0 failed, 1 skipped in 0 file(s)"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "case-config-fails-as-unsupported",
+   "entity": {
+    "golden": "{\"atom\": \"cli/atoms/std-orb-goldens.lolo\", \"trait\": \"G\", \"orbital\": \"Gating\", \"cases\": [{\"id\": \"c\", \"config\": {\"k\": 1}, \"steps\": [{\"from\": \"ready\", \"event\": \"OPEN\", \"expect\": {\"fired\": true, \"state\": \"open\"}}]}]}",
+    "program": "{\"name\": \"GateApp\", \"orbitals\": [{\"name\": \"Gating\", \"entity\": {\"name\": \"Gate\", \"persistence\": \"runtime\", \"fields\": [{\"name\": \"id\", \"type\": \"string\"}, {\"name\": \"owner\", \"type\": \"string\", \"default\": \"\"}]}, \"pages\": [], \"traits\": [{\"name\": \"G\", \"linkedEntity\": \"Gate\", \"stateMachine\": {\"states\": [{\"name\": \"ready\", \"isInitial\": true}, {\"name\": \"open\"}], \"transitions\": [{\"from\": \"ready\", \"to\": \"open\", \"event\": \"OPEN\", \"guard\": [\"=\", \"@entity.owner\", \"ann\"]}]}}]}]}",
+    "files": [],
+    "fileCursor": 0,
+    "cursor": 0,
+    "lines": []
+   },
+   "steps": [
+    {
+     "from": "running",
+     "event": "GOLDENS_NEXT",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "GOLDENS_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "fail  c\n  case config is unsupported until G-ORB-460 lands: the case cannot be played\n0 passed, 1 failed, 0 skipped in 0 file(s)"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "expect-entity-fails-as-uncheckable",
+   "entity": {
+    "golden": "{\"atom\": \"cli/atoms/std-orb-goldens.lolo\", \"trait\": \"G\", \"orbital\": \"Gating\", \"cases\": [{\"id\": \"c\", \"steps\": [{\"from\": \"ready\", \"event\": \"OPEN\", \"expect\": {\"entity\": {\"owner\": \"ann\"}}}]}]}",
+    "program": "{\"name\": \"GateApp\", \"orbitals\": [{\"name\": \"Gating\", \"entity\": {\"name\": \"Gate\", \"persistence\": \"runtime\", \"fields\": [{\"name\": \"id\", \"type\": \"string\"}, {\"name\": \"owner\", \"type\": \"string\", \"default\": \"\"}]}, \"pages\": [], \"traits\": [{\"name\": \"G\", \"linkedEntity\": \"Gate\", \"stateMachine\": {\"states\": [{\"name\": \"ready\", \"isInitial\": true}, {\"name\": \"open\"}], \"transitions\": [{\"from\": \"ready\", \"to\": \"open\", \"event\": \"OPEN\", \"guard\": [\"=\", \"@entity.owner\", \"ann\"]}]}}]}]}",
+    "files": [],
+    "fileCursor": 0,
+    "cursor": 0,
+    "lines": []
+   },
+   "steps": [
+    {
+     "from": "running",
+     "event": "GOLDENS_NEXT",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "GOLDENS_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "fail  c\n  step 0: expect.entity cannot be checked: program/step answers no post-step entity row\n0 passed, 1 failed, 0 skipped in 0 file(s)"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "exact-emits-match-passes",
+   "entity": {
+    "golden": "{\"atom\": \"x\", \"trait\": \"T\", \"orbital\": \"O\", \"cases\": [{\"id\": \"c\", \"steps\": [{\"event\": \"E\", \"payload\": {}, \"expect\": {\"exactEmits\": [{\"event\": \"A\", \"payload\": {\"x\": 1}}, {\"event\": \"B\", \"payload\": {}}]}}]}]}",
+    "curCase": "{\"id\": \"c\", \"steps\": [{\"event\": \"E\", \"payload\": {}, \"expect\": {\"exactEmits\": [{\"event\": \"A\", \"payload\": {\"x\": 1}}, {\"event\": \"B\", \"payload\": {}}]}}]}",
+    "files": [],
+    "fileCursor": 0,
+    "cursor": 0,
+    "upto": 0,
+    "vars": {},
+    "lines": []
+   },
+   "steps": [
+    {
+     "from": "running",
+     "event": "GOLDENS_STEPPED",
+     "payload": {
+      "result": [
+       {
+        "orbital": "O",
+        "trait": "T",
+        "event": "E",
+        "payload": {},
+        "result": {
+         "transitionFired": true,
+         "state": {
+          "before": "a",
+          "after": "b"
+         },
+         "emitted": [
+          {
+           "type": "A",
+           "payload": {
+            "x": 1,
+            "y": 2
+           }
+          },
+          {
+           "type": "B",
+           "payload": {}
+          }
+         ],
+         "outcomes": [
+          {
+           "orbital": "O",
+           "trait": "T",
+           "fired": true,
+           "state": {
+            "before": "a",
+            "after": "b"
+           },
+           "emitted": [
+            {
+             "type": "A",
+             "payload": {
+              "x": 1,
+              "y": 2
+             }
+            },
+            {
+             "type": "B",
+             "payload": {}
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "GOLDENS_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "pass  c\n1 passed, 0 failed, 0 skipped in 0 file(s)"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "exact-emits-payload-mismatch-fails",
+   "entity": {
+    "golden": "{\"atom\": \"x\", \"trait\": \"T\", \"orbital\": \"O\", \"cases\": [{\"id\": \"c\", \"steps\": [{\"event\": \"E\", \"payload\": {}, \"expect\": {\"exactEmits\": [{\"event\": \"A\", \"payload\": {\"x\": 1}}, {\"event\": \"B\", \"payload\": {}}]}}]}]}",
+    "curCase": "{\"id\": \"c\", \"steps\": [{\"event\": \"E\", \"payload\": {}, \"expect\": {\"exactEmits\": [{\"event\": \"A\", \"payload\": {\"x\": 1}}, {\"event\": \"B\", \"payload\": {}}]}}]}",
+    "files": [],
+    "fileCursor": 0,
+    "cursor": 0,
+    "upto": 0,
+    "vars": {},
+    "lines": []
+   },
+   "steps": [
+    {
+     "from": "running",
+     "event": "GOLDENS_STEPPED",
+     "payload": {
+      "result": [
+       {
+        "orbital": "O",
+        "trait": "T",
+        "event": "E",
+        "payload": {},
+        "result": {
+         "transitionFired": true,
+         "state": {
+          "before": "a",
+          "after": "b"
+         },
+         "emitted": [
+          {
+           "type": "A",
+           "payload": {
+            "x": 2
+           }
+          },
+          {
+           "type": "B",
+           "payload": {}
+          }
+         ],
+         "outcomes": [
+          {
+           "orbital": "O",
+           "trait": "T",
+           "fired": true,
+           "state": {
+            "before": "a",
+            "after": "b"
+           },
+           "emitted": [
+            {
+             "type": "A",
+             "payload": {
+              "x": 2
+             }
+            },
+            {
+             "type": "B",
+             "payload": {}
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "GOLDENS_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "fail  c\n  step 0: exactEmits entry 0 expected A {\"x\":1} got A {\"x\":2}\n0 passed, 1 failed, 0 skipped in 0 file(s)"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "exact-emits-extra-emit-fails",
+   "entity": {
+    "golden": "{\"atom\": \"x\", \"trait\": \"T\", \"orbital\": \"O\", \"cases\": [{\"id\": \"c\", \"steps\": [{\"event\": \"E\", \"payload\": {}, \"expect\": {\"exactEmits\": [{\"event\": \"A\", \"payload\": {}}, {\"event\": \"B\", \"payload\": {}}]}}]}]}",
+    "curCase": "{\"id\": \"c\", \"steps\": [{\"event\": \"E\", \"payload\": {}, \"expect\": {\"exactEmits\": [{\"event\": \"A\", \"payload\": {}}, {\"event\": \"B\", \"payload\": {}}]}}]}",
+    "files": [],
+    "fileCursor": 0,
+    "cursor": 0,
+    "upto": 0,
+    "vars": {},
+    "lines": []
+   },
+   "steps": [
+    {
+     "from": "running",
+     "event": "GOLDENS_STEPPED",
+     "payload": {
+      "result": [
+       {
+        "orbital": "O",
+        "trait": "T",
+        "event": "E",
+        "payload": {},
+        "result": {
+         "transitionFired": true,
+         "state": {
+          "before": "a",
+          "after": "b"
+         },
+         "emitted": [
+          {
+           "type": "A",
+           "payload": {}
+          },
+          {
+           "type": "B",
+           "payload": {}
+          },
+          {
+           "type": "C",
+           "payload": {
+            "z": 1
+           }
+          }
+         ],
+         "outcomes": [
+          {
+           "orbital": "O",
+           "trait": "T",
+           "fired": true,
+           "state": {
+            "before": "a",
+            "after": "b"
+           },
+           "emitted": [
+            {
+             "type": "A",
+             "payload": {}
+            },
+            {
+             "type": "B",
+             "payload": {}
+            },
+            {
+             "type": "C",
+             "payload": {
+              "z": 1
+             }
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "GOLDENS_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "fail  c\n  step 0: exactEmits expected 2 emit(s), got 3: A {}; B {}; C {\"z\":1}\n0 passed, 1 failed, 0 skipped in 0 file(s)"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-emits-subsequence-still-passes-with-the-extra-emit",
+   "entity": {
+    "golden": "{\"atom\": \"x\", \"trait\": \"T\", \"orbital\": \"O\", \"cases\": [{\"id\": \"c\", \"steps\": [{\"event\": \"E\", \"payload\": {}, \"expect\": {\"emits\": [{\"event\": \"A\", \"payload\": {}}, {\"event\": \"B\", \"payload\": {}}]}}]}]}",
+    "curCase": "{\"id\": \"c\", \"steps\": [{\"event\": \"E\", \"payload\": {}, \"expect\": {\"emits\": [{\"event\": \"A\", \"payload\": {}}, {\"event\": \"B\", \"payload\": {}}]}}]}",
+    "files": [],
+    "fileCursor": 0,
+    "cursor": 0,
+    "upto": 0,
+    "vars": {},
+    "lines": []
+   },
+   "steps": [
+    {
+     "from": "running",
+     "event": "GOLDENS_STEPPED",
+     "payload": {
+      "result": [
+       {
+        "orbital": "O",
+        "trait": "T",
+        "event": "E",
+        "payload": {},
+        "result": {
+         "transitionFired": true,
+         "state": {
+          "before": "a",
+          "after": "b"
+         },
+         "emitted": [
+          {
+           "type": "A",
+           "payload": {}
+          },
+          {
+           "type": "B",
+           "payload": {}
+          },
+          {
+           "type": "C",
+           "payload": {
+            "z": 1
+           }
+          }
+         ],
+         "outcomes": [
+          {
+           "orbital": "O",
+           "trait": "T",
+           "fired": true,
+           "state": {
+            "before": "a",
+            "after": "b"
+           },
+           "emitted": [
+            {
+             "type": "A",
+             "payload": {}
+            },
+            {
+             "type": "B",
+             "payload": {}
+            },
+            {
+             "type": "C",
+             "payload": {
+              "z": 1
+             }
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "GOLDENS_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "pass  c\n1 passed, 0 failed, 0 skipped in 0 file(s)"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "exact-emits-order-mismatch-fails",
+   "entity": {
+    "golden": "{\"atom\": \"x\", \"trait\": \"T\", \"orbital\": \"O\", \"cases\": [{\"id\": \"c\", \"steps\": [{\"event\": \"E\", \"payload\": {}, \"expect\": {\"exactEmits\": [{\"event\": \"A\", \"payload\": {}}, {\"event\": \"B\", \"payload\": {}}]}}]}]}",
+    "curCase": "{\"id\": \"c\", \"steps\": [{\"event\": \"E\", \"payload\": {}, \"expect\": {\"exactEmits\": [{\"event\": \"A\", \"payload\": {}}, {\"event\": \"B\", \"payload\": {}}]}}]}",
+    "files": [],
+    "fileCursor": 0,
+    "cursor": 0,
+    "upto": 0,
+    "vars": {},
+    "lines": []
+   },
+   "steps": [
+    {
+     "from": "running",
+     "event": "GOLDENS_STEPPED",
+     "payload": {
+      "result": [
+       {
+        "orbital": "O",
+        "trait": "T",
+        "event": "E",
+        "payload": {},
+        "result": {
+         "transitionFired": true,
+         "state": {
+          "before": "a",
+          "after": "b"
+         },
+         "emitted": [
+          {
+           "type": "B",
+           "payload": {}
+          },
+          {
+           "type": "A",
+           "payload": {}
+          }
+         ],
+         "outcomes": [
+          {
+           "orbital": "O",
+           "trait": "T",
+           "fired": true,
+           "state": {
+            "before": "a",
+            "after": "b"
+           },
+           "emitted": [
+            {
+             "type": "B",
+             "payload": {}
+            },
+            {
+             "type": "A",
+             "payload": {}
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "GOLDENS_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "fail  c\n  step 0: exactEmits entry 0 expected A {} got B {}\n  step 0: exactEmits entry 1 expected B {} got A {}\n0 passed, 1 failed, 0 skipped in 0 file(s)"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "exact-emits-missing-emit-fails",
+   "entity": {
+    "golden": "{\"atom\": \"x\", \"trait\": \"T\", \"orbital\": \"O\", \"cases\": [{\"id\": \"c\", \"steps\": [{\"event\": \"E\", \"payload\": {}, \"expect\": {\"exactEmits\": [{\"event\": \"A\", \"payload\": {}}, {\"event\": \"B\", \"payload\": {}}]}}]}]}",
+    "curCase": "{\"id\": \"c\", \"steps\": [{\"event\": \"E\", \"payload\": {}, \"expect\": {\"exactEmits\": [{\"event\": \"A\", \"payload\": {}}, {\"event\": \"B\", \"payload\": {}}]}}]}",
+    "files": [],
+    "fileCursor": 0,
+    "cursor": 0,
+    "upto": 0,
+    "vars": {},
+    "lines": []
+   },
+   "steps": [
+    {
+     "from": "running",
+     "event": "GOLDENS_STEPPED",
+     "payload": {
+      "result": [
+       {
+        "orbital": "O",
+        "trait": "T",
+        "event": "E",
+        "payload": {},
+        "result": {
+         "transitionFired": true,
+         "state": {
+          "before": "a",
+          "after": "b"
+         },
+         "emitted": [
+          {
+           "type": "A",
+           "payload": {}
+          }
+         ],
+         "outcomes": [
+          {
+           "orbital": "O",
+           "trait": "T",
+           "fired": true,
+           "state": {
+            "before": "a",
+            "after": "b"
+           },
+           "emitted": [
+            {
+             "type": "A",
+             "payload": {}
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "GOLDENS_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "fail  c\n  step 0: exactEmits expected 2 emit(s), got 1: A {}\n  step 0: exactEmits entry 1 expected B {} got nothing\n0 passed, 1 failed, 0 skipped in 0 file(s)"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "early-incomplete-emit-is-masked-by-emits-but-caught-by-exact-emits",
+   "entity": {
+    "golden": "{\"atom\": \"x\", \"trait\": \"T\", \"orbital\": \"O\", \"cases\": [{\"id\": \"c\", \"steps\": [{\"event\": \"E\", \"payload\": {}, \"expect\": {\"exactEmits\": [{\"event\": \"APPLIED\", \"payload\": {\"full\": true}}]}}]}]}",
+    "curCase": "{\"id\": \"c\", \"steps\": [{\"event\": \"E\", \"payload\": {}, \"expect\": {\"exactEmits\": [{\"event\": \"APPLIED\", \"payload\": {\"full\": true}}]}}]}",
+    "files": [],
+    "fileCursor": 0,
+    "cursor": 0,
+    "upto": 0,
+    "vars": {},
+    "lines": []
+   },
+   "steps": [
+    {
+     "from": "running",
+     "event": "GOLDENS_STEPPED",
+     "payload": {
+      "result": [
+       {
+        "orbital": "O",
+        "trait": "T",
+        "event": "E",
+        "payload": {},
+        "result": {
+         "transitionFired": true,
+         "state": {
+          "before": "a",
+          "after": "b"
+         },
+         "emitted": [
+          {
+           "type": "APPLIED",
+           "payload": {
+            "full": false
+           }
+          },
+          {
+           "type": "APPLIED",
+           "payload": {
+            "full": true
+           }
+          }
+         ],
+         "outcomes": [
+          {
+           "orbital": "O",
+           "trait": "T",
+           "fired": true,
+           "state": {
+            "before": "a",
+            "after": "b"
+           },
+           "emitted": [
+            {
+             "type": "APPLIED",
+             "payload": {
+              "full": false
+             }
+            },
+            {
+             "type": "APPLIED",
+             "payload": {
+              "full": true
+             }
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "GOLDENS_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "fail  c\n  step 0: exactEmits expected 1 emit(s), got 2: APPLIED {\"full\":false}; APPLIED {\"full\":true}\n  step 0: exactEmits entry 0 expected APPLIED {\"full\":true} got APPLIED {\"full\":false}\n0 passed, 1 failed, 0 skipped in 0 file(s)"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-the-same-output-passes-under-a-plain-emits-expectation",
+   "entity": {
+    "golden": "{\"atom\": \"x\", \"trait\": \"T\", \"orbital\": \"O\", \"cases\": [{\"id\": \"c\", \"steps\": [{\"event\": \"E\", \"payload\": {}, \"expect\": {\"emits\": [{\"event\": \"APPLIED\", \"payload\": {\"full\": true}}]}}]}]}",
+    "curCase": "{\"id\": \"c\", \"steps\": [{\"event\": \"E\", \"payload\": {}, \"expect\": {\"emits\": [{\"event\": \"APPLIED\", \"payload\": {\"full\": true}}]}}]}",
+    "files": [],
+    "fileCursor": 0,
+    "cursor": 0,
+    "upto": 0,
+    "vars": {},
+    "lines": []
+   },
+   "steps": [
+    {
+     "from": "running",
+     "event": "GOLDENS_STEPPED",
+     "payload": {
+      "result": [
+       {
+        "orbital": "O",
+        "trait": "T",
+        "event": "E",
+        "payload": {},
+        "result": {
+         "transitionFired": true,
+         "state": {
+          "before": "a",
+          "after": "b"
+         },
+         "emitted": [
+          {
+           "type": "APPLIED",
+           "payload": {
+            "full": false
+           }
+          },
+          {
+           "type": "APPLIED",
+           "payload": {
+            "full": true
+           }
+          }
+         ],
+         "outcomes": [
+          {
+           "orbital": "O",
+           "trait": "T",
+           "fired": true,
+           "state": {
+            "before": "a",
+            "after": "b"
+           },
+           "emitted": [
+            {
+             "type": "APPLIED",
+             "payload": {
+              "full": false
+             }
+            },
+            {
+             "type": "APPLIED",
+             "payload": {
+              "full": true
+             }
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "GOLDENS_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "pass  c\n1 passed, 0 failed, 0 skipped in 0 file(s)"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "emit-counts-exactly-once-passes",
+   "entity": {
+    "golden": "{\"atom\": \"x\", \"trait\": \"T\", \"orbital\": \"O\", \"cases\": [{\"id\": \"c\", \"steps\": [{\"event\": \"E\", \"payload\": {}, \"expect\": {\"emitCounts\": {\"A\": 1}}}]}]}",
+    "curCase": "{\"id\": \"c\", \"steps\": [{\"event\": \"E\", \"payload\": {}, \"expect\": {\"emitCounts\": {\"A\": 1}}}]}",
+    "files": [],
+    "fileCursor": 0,
+    "cursor": 0,
+    "upto": 0,
+    "vars": {},
+    "lines": []
+   },
+   "steps": [
+    {
+     "from": "running",
+     "event": "GOLDENS_STEPPED",
+     "payload": {
+      "result": [
+       {
+        "orbital": "O",
+        "trait": "T",
+        "event": "E",
+        "payload": {},
+        "result": {
+         "transitionFired": true,
+         "state": {
+          "before": "a",
+          "after": "b"
+         },
+         "emitted": [
+          {
+           "type": "A",
+           "payload": {}
+          },
+          {
+           "type": "B",
+           "payload": {}
+          }
+         ],
+         "outcomes": [
+          {
+           "orbital": "O",
+           "trait": "T",
+           "fired": true,
+           "state": {
+            "before": "a",
+            "after": "b"
+           },
+           "emitted": [
+            {
+             "type": "A",
+             "payload": {}
+            },
+            {
+             "type": "B",
+             "payload": {}
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "GOLDENS_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "pass  c\n1 passed, 0 failed, 0 skipped in 0 file(s)"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "emit-counts-twice-fails-where-emits-would-pass",
+   "entity": {
+    "golden": "{\"atom\": \"x\", \"trait\": \"T\", \"orbital\": \"O\", \"cases\": [{\"id\": \"c\", \"steps\": [{\"event\": \"E\", \"payload\": {}, \"expect\": {\"emitCounts\": {\"A\": 1}}}]}]}",
+    "curCase": "{\"id\": \"c\", \"steps\": [{\"event\": \"E\", \"payload\": {}, \"expect\": {\"emitCounts\": {\"A\": 1}}}]}",
+    "files": [],
+    "fileCursor": 0,
+    "cursor": 0,
+    "upto": 0,
+    "vars": {},
+    "lines": []
+   },
+   "steps": [
+    {
+     "from": "running",
+     "event": "GOLDENS_STEPPED",
+     "payload": {
+      "result": [
+       {
+        "orbital": "O",
+        "trait": "T",
+        "event": "E",
+        "payload": {},
+        "result": {
+         "transitionFired": true,
+         "state": {
+          "before": "a",
+          "after": "b"
+         },
+         "emitted": [
+          {
+           "type": "A",
+           "payload": {
+            "n": 1
+           }
+          },
+          {
+           "type": "A",
+           "payload": {
+            "n": 2
+           }
+          }
+         ],
+         "outcomes": [
+          {
+           "orbital": "O",
+           "trait": "T",
+           "fired": true,
+           "state": {
+            "before": "a",
+            "after": "b"
+           },
+           "emitted": [
+            {
+             "type": "A",
+             "payload": {
+              "n": 1
+             }
+            },
+            {
+             "type": "A",
+             "payload": {
+              "n": 2
+             }
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "GOLDENS_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "fail  c\n  step 0: emitCounts A expected 1 got 2\n0 passed, 1 failed, 0 skipped in 0 file(s)"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "emit-counts-missing-event-fails",
+   "entity": {
+    "golden": "{\"atom\": \"x\", \"trait\": \"T\", \"orbital\": \"O\", \"cases\": [{\"id\": \"c\", \"steps\": [{\"event\": \"E\", \"payload\": {}, \"expect\": {\"emitCounts\": {\"A\": 1}}}]}]}",
+    "curCase": "{\"id\": \"c\", \"steps\": [{\"event\": \"E\", \"payload\": {}, \"expect\": {\"emitCounts\": {\"A\": 1}}}]}",
+    "files": [],
+    "fileCursor": 0,
+    "cursor": 0,
+    "upto": 0,
+    "vars": {},
+    "lines": []
+   },
+   "steps": [
+    {
+     "from": "running",
+     "event": "GOLDENS_STEPPED",
+     "payload": {
+      "result": [
+       {
+        "orbital": "O",
+        "trait": "T",
+        "event": "E",
+        "payload": {},
+        "result": {
+         "transitionFired": true,
+         "state": {
+          "before": "a",
+          "after": "b"
+         },
+         "emitted": [
+          {
+           "type": "B",
+           "payload": {}
+          }
+         ],
+         "outcomes": [
+          {
+           "orbital": "O",
+           "trait": "T",
+           "fired": true,
+           "state": {
+            "before": "a",
+            "after": "b"
+           },
+           "emitted": [
+            {
+             "type": "B",
+             "payload": {}
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "GOLDENS_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "fail  c\n  step 0: emitCounts A expected 1 got 0\n0 passed, 1 failed, 0 skipped in 0 file(s)"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-emit-counts-zero-asserts-the-event-never-fires",
+   "entity": {
+    "golden": "{\"atom\": \"x\", \"trait\": \"T\", \"orbital\": \"O\", \"cases\": [{\"id\": \"c\", \"steps\": [{\"event\": \"E\", \"payload\": {}, \"expect\": {\"emitCounts\": {\"C\": 0}}}]}]}",
+    "curCase": "{\"id\": \"c\", \"steps\": [{\"event\": \"E\", \"payload\": {}, \"expect\": {\"emitCounts\": {\"C\": 0}}}]}",
+    "files": [],
+    "fileCursor": 0,
+    "cursor": 0,
+    "upto": 0,
+    "vars": {},
+    "lines": []
+   },
+   "steps": [
+    {
+     "from": "running",
+     "event": "GOLDENS_STEPPED",
+     "payload": {
+      "result": [
+       {
+        "orbital": "O",
+        "trait": "T",
+        "event": "E",
+        "payload": {},
+        "result": {
+         "transitionFired": true,
+         "state": {
+          "before": "a",
+          "after": "b"
+         },
+         "emitted": [
+          {
+           "type": "A",
+           "payload": {}
+          }
+         ],
+         "outcomes": [
+          {
+           "orbital": "O",
+           "trait": "T",
+           "fired": true,
+           "state": {
+            "before": "a",
+            "after": "b"
+           },
+           "emitted": [
+            {
+             "type": "A",
+             "payload": {}
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "GOLDENS_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "pass  c\n1 passed, 0 failed, 0 skipped in 0 file(s)"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "emit-counts-zero-fails-when-the-event-fires",
+   "entity": {
+    "golden": "{\"atom\": \"x\", \"trait\": \"T\", \"orbital\": \"O\", \"cases\": [{\"id\": \"c\", \"steps\": [{\"event\": \"E\", \"payload\": {}, \"expect\": {\"emitCounts\": {\"A\": 0}}}]}]}",
+    "curCase": "{\"id\": \"c\", \"steps\": [{\"event\": \"E\", \"payload\": {}, \"expect\": {\"emitCounts\": {\"A\": 0}}}]}",
+    "files": [],
+    "fileCursor": 0,
+    "cursor": 0,
+    "upto": 0,
+    "vars": {},
+    "lines": []
+   },
+   "steps": [
+    {
+     "from": "running",
+     "event": "GOLDENS_STEPPED",
+     "payload": {
+      "result": [
+       {
+        "orbital": "O",
+        "trait": "T",
+        "event": "E",
+        "payload": {},
+        "result": {
+         "transitionFired": true,
+         "state": {
+          "before": "a",
+          "after": "b"
+         },
+         "emitted": [
+          {
+           "type": "A",
+           "payload": {}
+          }
+         ],
+         "outcomes": [
+          {
+           "orbital": "O",
+           "trait": "T",
+           "fired": true,
+           "state": {
+            "before": "a",
+            "after": "b"
+           },
+           "emitted": [
+            {
+             "type": "A",
+             "payload": {}
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "GOLDENS_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "fail  c\n  step 0: emitCounts A expected 0 got 1\n0 passed, 1 failed, 0 skipped in 0 file(s)"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-plain-emits-passes-the-twice-emitted-event",
+   "entity": {
+    "golden": "{\"atom\": \"x\", \"trait\": \"T\", \"orbital\": \"O\", \"cases\": [{\"id\": \"c\", \"steps\": [{\"event\": \"E\", \"payload\": {}, \"expect\": {\"emits\": [{\"event\": \"A\", \"payload\": {}}]}}]}]}",
+    "curCase": "{\"id\": \"c\", \"steps\": [{\"event\": \"E\", \"payload\": {}, \"expect\": {\"emits\": [{\"event\": \"A\", \"payload\": {}}]}}]}",
+    "files": [],
+    "fileCursor": 0,
+    "cursor": 0,
+    "upto": 0,
+    "vars": {},
+    "lines": []
+   },
+   "steps": [
+    {
+     "from": "running",
+     "event": "GOLDENS_STEPPED",
+     "payload": {
+      "result": [
+       {
+        "orbital": "O",
+        "trait": "T",
+        "event": "E",
+        "payload": {},
+        "result": {
+         "transitionFired": true,
+         "state": {
+          "before": "a",
+          "after": "b"
+         },
+         "emitted": [
+          {
+           "type": "A",
+           "payload": {
+            "n": 1
+           }
+          },
+          {
+           "type": "A",
+           "payload": {
+            "n": 2
+           }
+          }
+         ],
+         "outcomes": [
+          {
+           "orbital": "O",
+           "trait": "T",
+           "fired": true,
+           "state": {
+            "before": "a",
+            "after": "b"
+           },
+           "emitted": [
+            {
+             "type": "A",
+             "payload": {
+              "n": 1
+             }
+            },
+            {
+             "type": "A",
+             "payload": {
+              "n": 2
+             }
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "GOLDENS_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "pass  c\n1 passed, 0 failed, 0 skipped in 0 file(s)"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

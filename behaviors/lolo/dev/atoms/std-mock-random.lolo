@@ -22,6 +22,8 @@ orbital MockRandomOrbital {
     state ready {
       INIT -> ready
         (set @entity.state @entity.seed)
+      CORPUS_ASK -> ready
+        (emit CORPUS_IS { words: @config.words })
       SEED -> ready
         (set @entity.seed (math/mod ?seed 4294967296))
         (set @entity.state @entity.seed)
@@ -73,6 +75,11 @@ orbital MockRandomOrbital {
         (emit MOCK_DRAWN { text: @entity.text, int: @entity.int, ms: @entity.ms })
     }
     emits {
+      CORPUS_IS -> external {
+        words : [string]
+      }
+        @description "The word corpus the stream draws text from."
+        @tier "domain"
       MOCK_DRAWN -> external {
         text : string
         int : number
@@ -84,6 +91,9 @@ orbital MockRandomOrbital {
     }
 
     listens {
+      CORPUS_ASK { }
+        @description "Ask for the word corpus."
+        @synonyms "corpus"
       SEED { seed : number!  nowMs : number! }
         @description "Reset the stream to a seed, with the clock relative dates are drawn against."
         @synonyms "reseed, reset"

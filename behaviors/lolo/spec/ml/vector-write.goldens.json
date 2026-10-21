@@ -1,0 +1,928 @@
+{
+ "source": "Merge expectations come from a scratch python model of insert_many: records keyed by sha256(model NUL text), incoming wins a shared key, later incoming wins an earlier one, output sorted strictly ascending by key in the ORBVEC layout (header model/dims/count then key[32] | scale f32 | int8 x dims). Each step starts from a given state and entity, so the lock, directory and file effects are not exercised here (they need the os host); the validation and merge logic is.",
+ "atom": "ml/atoms/std-vector-write.lolo",
+ "trait": "VectorWrite",
+ "cases": [
+  {
+   "id": "no store yet: the incoming records are sorted into a fresh store",
+   "entity": {
+    "id": "w",
+    "path": "/u/m.vec",
+    "model": "baai/bge-base-en-v1.5",
+    "dims": 4,
+    "rows": [
+     "291JL3owMSqgK6flCB55EJJoCJ6pJiN/7Wk/iTupJs0AAEA/6+hZyQ==",
+     "9xuuT0oPX6AHB2OgKr6I60yiZkcXtM3TIovDnmkMdy4AAIA/t+8YbQ==",
+     "HOCf0y8eflY8J9Y/HzAsBsIrV0IvZOXR24XfSOkYeDQAAEA/t1ZdxA==",
+     "hSA3unghoVjnCvrGJTZKMtrNQ7cY9md1KyOJiUJrGecAAABAbic+ww==",
+     "0cXnQC9YiCNfiQcmo5rcxAMWnzfYF4rszUesgYXDIewAAIA+ZXTIqQ=="
+    ],
+    "existing": ""
+   },
+   "steps": [
+    {
+     "from": "validating",
+     "event": "VECTOR_RESOLVED",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "entries": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CHECKED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "from": "merging",
+     "event": "CHECKED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "MERGED",
+        "payload": {
+         "total": 5,
+         "bytes": "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQABQAAABzgn9MvHn5WPCfWPx8wLAbCK1dCL2Tl0duF30jpGHg0AABAP7dWXcSFIDe6eCGhWOcK+sYlNkoy2s1Dtxj2Z3UrI4mJQmsZ5wAAAEBuJz7D0cXnQC9YiCNfiQcmo5rcxAMWnzfYF4rszUesgYXDIewAAIA+ZXTIqdvdSS96MDEqoCun5QgeeRCSaAieqSYjf+1pP4k7qSbNAABAP+voWcn3G65PSg9foAcHY6AqvojrTKJmRxe0zdMii8OeaQx3LgAAgD+37xht"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "incoming records interleave with existing ones in key order",
+   "entity": {
+    "id": "w",
+    "path": "/u/m.vec",
+    "model": "baai/bge-base-en-v1.5",
+    "dims": 4,
+    "rows": [
+     "k64e4u/N8NZJBtpyPzHXi5HJg/9nkcy4wfyxrw0QwcYAAEA/6+hZyQ==",
+     "J/3/9wGssQ69T9QIPS+UehFYwv1hIIn/pRlO/LH9PjgAAIA/t+8YbQ==",
+     "F/i4o+LdwckNvp3IFphjG+SjkgKbmmhFjvnpsaYwpLAAAEA/t1ZdxA==",
+     "Z49UDVb1Urhha5an+mZ9dHzzwW/FvzDTfqp39CPAW5kAAABAbic+ww==",
+     "ANcYC7R6OsrVfsTG95pKJb0OkM91AlwlmKKftb1e9H4AAIA+ZXTIqQ==",
+     "WzLhT+1PGiDjKod9oB4Z0iuU0CmoHYsWf1Vw8gRtShIAAMA/NwGfqw==",
+     "f8R4IGvPLWA7OhwF6gGWGeD0YoJm+LN1KgdUM4phqJIAAABACPMdhA==",
+     "GTktZx81opzaoo3+bF+dHrzJUHj1cAABY0bJx1k4qe8AAIA/2feeRg=="
+    ],
+    "existing": "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQABwAAAB2ba6DbQjOEKaooTyp9pNIo14yP5wB1xY2vyfUt/j1UAACgP7cO7n8nlDqT2JWJW+59BD4dGlQ7Mc6z2NZZW4rFH6bGZSGntAAA4D/XFIT4WP23T+Jj3lesZofW+dkNxGZnxEltbLaOBhChzzEFEVIAAEA/III8/WC2NOcPOtbLpmyS0CnyQ0iR/IH++hDs+oWkpbs/EG57AACAP5s0yvWZdN654H+Bkzwzjia5ewC4gJzCg4bEhxHFVCBcRPdO4gAAgD4uK7hWwlI4Q1HQamBNNG+xp8foG5q363Ou0oWK9hXpE+Jm08QAAAA/+IUSAOjuv/H1RivTdLKBWiJu5kRpYxUOD9vSOf4eIeu0URlKAACAP0K98iE="
+   },
+   "steps": [
+    {
+     "from": "validating",
+     "event": "VECTOR_RESOLVED",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "entries": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CHECKED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "from": "merging",
+     "event": "CHECKED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "MERGED",
+        "payload": {
+         "total": 15,
+         "bytes": "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQADwAAAADXGAu0ejrK1X7ExveaSiW9DpDPdQJcJZiin7W9XvR+AACAPmV0yKkX+Lij4t3ByQ2+ncgWmGMb5KOSApuaaEWO+emxpjCksAAAQD+3Vl3EGTktZx81opzaoo3+bF+dHrzJUHj1cAABY0bJx1k4qe8AAIA/2feeRh2ba6DbQjOEKaooTyp9pNIo14yP5wB1xY2vyfUt/j1UAACgP7cO7n8nlDqT2JWJW+59BD4dGlQ7Mc6z2NZZW4rFH6bGZSGntAAA4D/XFIT4J/3/9wGssQ69T9QIPS+UehFYwv1hIIn/pRlO/LH9PjgAAIA/t+8YbVj9t0/iY95XrGaH1vnZDcRmZ8RJbWy2jgYQoc8xBRFSAABAPyCCPP1bMuFP7U8aIOMqh32gHhnSK5TQKagdixZ/VXDyBG1KEgAAwD83AZ+rYLY05w861sumbJLQKfJDSJH8gf76EOz6haSluz8QbnsAAIA/mzTK9WePVA1W9VK4YWuWp/pmfXR888Fvxb8w036qd/QjwFuZAAAAQG4nPsN/xHgga88tYDs6HAXqAZYZ4PRigmb4s3UqB1QzimGokgAAAEAI8x2Ek64e4u/N8NZJBtpyPzHXi5HJg/9nkcy4wfyxrw0QwcYAAEA/6+hZyZl03rngf4GTPDOOJrl7ALiAnMKDhsSHEcVUIFxE907iAACAPi4ruFbCUjhDUdBqYE00b7Gnx+gbmrfrc67ShYr2FekT4mbTxAAAAD/4hRIA6O6/8fVGK9N0soFaIm7mRGljFQ4P29I5/h4h67RRGUoAAIA/Qr3yIQ=="
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an incoming record replaces the stored one under the same key",
+   "entity": {
+    "id": "w",
+    "path": "/u/m.vec",
+    "model": "baai/bge-base-en-v1.5",
+    "dims": 4,
+    "rows": [
+     "mXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAIA/vzAqfA==",
+     "jgnQUxipGTBwiUMjx8AHE3M8BIM6roGIMVdMlFLxQUUAAOA/ljpPxQ=="
+    ],
+    "existing": "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQABwAAAB2ba6DbQjOEKaooTyp9pNIo14yP5wB1xY2vyfUt/j1UAACgP7cO7n8nlDqT2JWJW+59BD4dGlQ7Mc6z2NZZW4rFH6bGZSGntAAA4D/XFIT4WP23T+Jj3lesZofW+dkNxGZnxEltbLaOBhChzzEFEVIAAEA/III8/WC2NOcPOtbLpmyS0CnyQ0iR/IH++hDs+oWkpbs/EG57AACAP5s0yvWZdN654H+Bkzwzjia5ewC4gJzCg4bEhxHFVCBcRPdO4gAAgD4uK7hWwlI4Q1HQamBNNG+xp8foG5q363Ou0oWK9hXpE+Jm08QAAAA/+IUSAOjuv/H1RivTdLKBWiJu5kRpYxUOD9vSOf4eIeu0URlKAACAP0K98iE="
+   },
+   "steps": [
+    {
+     "from": "validating",
+     "event": "VECTOR_RESOLVED",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "entries": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CHECKED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "from": "merging",
+     "event": "CHECKED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "MERGED",
+        "payload": {
+         "total": 8,
+         "bytes": "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQACAAAAB2ba6DbQjOEKaooTyp9pNIo14yP5wB1xY2vyfUt/j1UAACgP7cO7n8nlDqT2JWJW+59BD4dGlQ7Mc6z2NZZW4rFH6bGZSGntAAA4D/XFIT4WP23T+Jj3lesZofW+dkNxGZnxEltbLaOBhChzzEFEVIAAEA/III8/WC2NOcPOtbLpmyS0CnyQ0iR/IH++hDs+oWkpbs/EG57AACAP5s0yvWOCdBTGKkZMHCJQyPHwAcTczwEgzqugYgxV0yUUvFBRQAA4D+WOk/FmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAIA/vzAqfMJSOENR0GpgTTRvsafH6Buat+tzrtKFivYV6RPiZtPEAAAAP/iFEgDo7r/x9UYr03SygVoibuZEaWMVDg/b0jn+HiHrtFEZSgAAgD9CvfIh"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a later incoming duplicate wins over an earlier one",
+   "entity": {
+    "id": "w",
+    "path": "/u/m.vec",
+    "model": "baai/bge-base-en-v1.5",
+    "dims": 4,
+    "rows": [
+     "kWh+RS9VhD8VtXdjwXdrwdWTkXawnW7oC/zAaFyisHYAAABALIufPg==",
+     "kWh+RS9VhD8VtXdjwXdrwdWTkXawnW7oC/zAaFyisHYAAABAx8pDWQ==",
+     "WP23T+Jj3lesZofW+dkNxGZnxEltbLaOBhChzzEFEVIAABBAn2DTUg==",
+     "WP23T+Jj3lesZofW+dkNxGZnxEltbLaOBhChzzEFEVIAAAA/CPSoqg=="
+    ],
+    "existing": "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQABwAAAB2ba6DbQjOEKaooTyp9pNIo14yP5wB1xY2vyfUt/j1UAACgP7cO7n8nlDqT2JWJW+59BD4dGlQ7Mc6z2NZZW4rFH6bGZSGntAAA4D/XFIT4WP23T+Jj3lesZofW+dkNxGZnxEltbLaOBhChzzEFEVIAAEA/III8/WC2NOcPOtbLpmyS0CnyQ0iR/IH++hDs+oWkpbs/EG57AACAP5s0yvWZdN654H+Bkzwzjia5ewC4gJzCg4bEhxHFVCBcRPdO4gAAgD4uK7hWwlI4Q1HQamBNNG+xp8foG5q363Ou0oWK9hXpE+Jm08QAAAA/+IUSAOjuv/H1RivTdLKBWiJu5kRpYxUOD9vSOf4eIeu0URlKAACAP0K98iE="
+   },
+   "steps": [
+    {
+     "from": "validating",
+     "event": "VECTOR_RESOLVED",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "entries": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CHECKED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "from": "merging",
+     "event": "CHECKED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "MERGED",
+        "payload": {
+         "total": 8,
+         "bytes": "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQACAAAAB2ba6DbQjOEKaooTyp9pNIo14yP5wB1xY2vyfUt/j1UAACgP7cO7n8nlDqT2JWJW+59BD4dGlQ7Mc6z2NZZW4rFH6bGZSGntAAA4D/XFIT4WP23T+Jj3lesZofW+dkNxGZnxEltbLaOBhChzzEFEVIAAAA/CPSoqmC2NOcPOtbLpmyS0CnyQ0iR/IH++hDs+oWkpbs/EG57AACAP5s0yvWRaH5FL1WEPxW1d2PBd2vB1ZORdrCdbugL/MBoXKKwdgAAAEDHykNZmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAIA+Liu4VsJSOENR0GpgTTRvsafH6Buat+tzrtKFivYV6RPiZtPEAAAAP/iFEgDo7r/x9UYr03SygVoibuZEaWMVDg/b0jn+HiHrtFEZSgAAgD9CvfIh"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a single incoming record into a one-record store",
+   "entity": {
+    "id": "w",
+    "path": "/u/m.vec",
+    "model": "baai/bge-base-en-v1.5",
+    "dims": 4,
+    "rows": [
+     "2Xqx2700UbJ3lEdm8U2DFYUw0b96RnOIfRD05lyd6RIAAEA/6+hZyQ=="
+    ],
+    "existing": "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAQAAAI/3zUhosS5j7M29G9rtsWVFdUIp7z3GNtU4dI9gZ/wjAACgP7cO7n8="
+   },
+   "steps": [
+    {
+     "from": "validating",
+     "event": "VECTOR_RESOLVED",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "entries": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CHECKED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "from": "merging",
+     "event": "CHECKED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "MERGED",
+        "payload": {
+         "total": 2,
+         "bytes": "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAgAAAI/3zUhosS5j7M29G9rtsWVFdUIp7z3GNtU4dI9gZ/wjAACgP7cO7n/ZerHbvTRRsneUR2bxTYMVhTDRv3pGc4h9EPTmXJ3pEgAAQD/r6FnJ"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "merging nothing new keeps every stored record",
+   "entity": {
+    "id": "w",
+    "path": "/u/m.vec",
+    "model": "baai/bge-base-en-v1.5",
+    "dims": 4,
+    "rows": [
+     "J5Q6k9iViVvufQQ+HRpUOzHOs9jWWVuKxR+mxmUhp7QAAOA/1xSE+A=="
+    ],
+    "existing": "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQABwAAAB2ba6DbQjOEKaooTyp9pNIo14yP5wB1xY2vyfUt/j1UAACgP7cO7n8nlDqT2JWJW+59BD4dGlQ7Mc6z2NZZW4rFH6bGZSGntAAA4D/XFIT4WP23T+Jj3lesZofW+dkNxGZnxEltbLaOBhChzzEFEVIAAEA/III8/WC2NOcPOtbLpmyS0CnyQ0iR/IH++hDs+oWkpbs/EG57AACAP5s0yvWZdN654H+Bkzwzjia5ewC4gJzCg4bEhxHFVCBcRPdO4gAAgD4uK7hWwlI4Q1HQamBNNG+xp8foG5q363Ou0oWK9hXpE+Jm08QAAAA/+IUSAOjuv/H1RivTdLKBWiJu5kRpYxUOD9vSOf4eIeu0URlKAACAP0K98iE="
+   },
+   "steps": [
+    {
+     "from": "validating",
+     "event": "VECTOR_RESOLVED",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "entries": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CHECKED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "from": "merging",
+     "event": "CHECKED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "MERGED",
+        "payload": {
+         "total": 7,
+         "bytes": "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQABwAAAB2ba6DbQjOEKaooTyp9pNIo14yP5wB1xY2vyfUt/j1UAACgP7cO7n8nlDqT2JWJW+59BD4dGlQ7Mc6z2NZZW4rFH6bGZSGntAAA4D/XFIT4WP23T+Jj3lesZofW+dkNxGZnxEltbLaOBhChzzEFEVIAAEA/III8/WC2NOcPOtbLpmyS0CnyQ0iR/IH++hDs+oWkpbs/EG57AACAP5s0yvWZdN654H+Bkzwzjia5ewC4gJzCg4bEhxHFVCBcRPdO4gAAgD4uK7hWwlI4Q1HQamBNNG+xp8foG5q363Ou0oWK9hXpE+Jm08QAAAA/+IUSAOjuv/H1RivTdLKBWiJu5kRpYxUOD9vSOf4eIeu0URlKAACAP0K98iE="
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "many incoming records land before, between and after the stored ones",
+   "entity": {
+    "id": "w",
+    "path": "/u/m.vec",
+    "model": "baai/bge-base-en-v1.5",
+    "dims": 4,
+    "rows": [
+     "00VMMZts409kjMnpwWCQbnAMzkADHINrEW53oUGNzVQAAIA+aA9JiA==",
+     "BwOU5rJ59bBv51pDQvEAqywELOZ2Q0ZWnnyJtvqZ4RYAAAA/ptcBkA==",
+     "+bICuTgDM4Wad2ifSqN2t6a1VCH4jB17wcp2Th4tHBsAAOA/8NFlZA==",
+     "MW3QgJx3teAbDxVgYuyVV3nWSKoWl8RL4U5Ga3K+aoAAAAA/FftsDg==",
+     "gNTHXVo04n+ihkbK87RTBRn/NT/Xg+0uSG2qOoikksIAAOA/K2tD0g==",
+     "uTGRRQExeTDacDUX6tMNgNC0tDZmsrPgPF5xZmb3hpEAAOA/9jL+7w==",
+     "tbSBy3l43G9Bn1W741EA8m2+6f9jqB8u4lLyPUNjkuUAAIA+KJxyQQ==",
+     "hQJLi2l/0F5iX4vkqJrk72DNMpuXBIgpTWzbmI6LeSUAABBAcVEMsQ==",
+     "y+qfDyhh5YXyj7LTZEIlhcZ+bfzFXy6smCEwdQq1J+AAAKA/ZByC6g==",
+     "nPnHFsHvzg0JY+rmtxU/11c7J6jUiqQVNnm0xx1suZ8AABBAC1aSLg==",
+     "eXHyCwZTfS1gABph4Ug5FhmtUalCdBMDL4/+G1aL+v4AAOA/A89WCg==",
+     "ZiMg+zGZTpXz8tfaspbzSjkOu2y6vxMu3W49Wh7Co+IAAMA/ewqgrw==",
+     "ixBnbaZb30IU2R/g7V4OxxpOBz4X7E+q7dj0vv/By3IAAOA/FR6ZQg==",
+     "2EG3H5MDeyaADxu9L5kqLJ5QORgS6mxS+ySxeNW11sQAAEA/0HCRCg==",
+     "vmW9WSC2vy6gY+IqFEHltfhdOOWdAzrFDB/zGIeE/QgAABBAtdSZ4Q==",
+     "3EdVkT4YS/0Fw2Z/9MIXQIvwDfMLNh0G4WXLeYS8jkkAAIA+qDKSeQ==",
+     "BPIodqVVgfOaQivF2XYUKqOSlRgD1i5OjzbGwA4J0P8AAIA/XvbzCQ==",
+     "qtrUasQ+Eu6oG/K8poIPEzQSS9m156+DOhb4Pws9bUAAAKA/eF6Afw==",
+     "PL7xSzYP8Uc0Jq9dUQ2AO2BHUk3T624k+Fhx77UAKM4AAKA/XzeyqA==",
+     "wQK1o+q2ePW4ZmoK33jfO2MkHA/cv0/PN8g7hSu8pqQAAMA/FKg0kg==",
+     "3M6vR/TcBDd6gdhsBJ4+RaLE24QjrNrwaU6NbPGysxIAAIA/f+iNzQ==",
+     "zNyM2i0ZWOiw3oyzTNVfc7RkGQIXr6O5e8nfHuS0XnQAAIA/2S/7jw==",
+     "hFiqtPdjHTVsXqd1G5Cc7yDD3JV+luufPiiXFJK7EIUAAAA/eJGcEA==",
+     "phYMVm3mNREAUVwr93/u76Ltle3VbIyroCOGiKf8q4cAAMA/t+FgyA==",
+     "xWS50mKPkMh3dKkMzSQHZEQgqxGqE6omNkbbK/LbShYAAAA/Ye0ndA==",
+     "Hrd5oA/OdSpiytBpP/RdPCT28HPJuLRLwlotRnsGNucAAIA/W0VhvA==",
+     "FB2qIaO8kuUKUyRo1rOKNHqU2IYCB8VPrjgDzObFb+IAAABAEBlYvA==",
+     "RR6mhlnVNtN4ZTZpky/GYfYYVNdFZToSxs5MOkCh3wAAAOA/vSnkew==",
+     "0/TuflEPiqeX6EyR3XOLPPP0DilF9Pjo0uTIm3f536oAAIA/c3Dv6Q==",
+     "ir0Hy9JgQmiU8PtrFz46UHofS6fS9LzF8DpeXQW/OFcAABBAR3Pchw=="
+    ],
+    "existing": "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQADAAAAAP8womTxVt4VvJv5Yo9e7Fd3h7Dj8Q6u8NkpPHaZRm8AACAP5s0yvUPZIoWldye/wOJ6HjXVFwldzwT8MUXG/TDQoC7G1/JWgAAAEDu52FeFm9BZUeXYYatX3vojTGRq1wAUc4NF0t/SeN6cdfCqc0AAIA+Liu4ViAZZk987qwQRSIVbl9eguB+IH1vDVxQ0zgakhcRp1pLAADgP9cUhPg48orap5uPtN853Wp0/LvIUzU7hopAdDVS4NE0qtm96wAAAEC/iEZfQh8DK7AYxUzAWmKMks1P3SnultIQqvg1ntYmY/zN4XMAAAA/+IUSAG4A4o+97f5/Q09ou80jU4Ar1zoVVdW44J8ll5LL3FmxAACAP0K98iFuoIOWA5bndp5q908b/y1ISjdA6YfC/LmF8NOu/P9T7QAAgD+9wEBidLTGZillnqa2k46WKfSO3q+UrlrsGwyNGvYpdBnNyEYAAIA+2/cHaZke63llGIH1Z+ifX9nzqUmjcRES6QngcLb7d/Kz7LlWAACgP7cO7n+5X9T6P4A6tATCX5WFuR7Ba3TX4rzlj6htkB59cqX7EgAAQD8ggjz908oivdEEaQSQ5ax9WIJzOl+T0vUYP5G+QUN+zepdOqoAAMA/TcoYJQ=="
+   },
+   "steps": [
+    {
+     "from": "validating",
+     "event": "VECTOR_RESOLVED",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "entries": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CHECKED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "from": "merging",
+     "event": "CHECKED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "MERGED",
+        "payload": {
+         "total": 42,
+         "bytes": "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"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a stored model that differs from the incoming one refuses and releases the lock",
+   "entity": {
+    "id": "w",
+    "path": "/u/m.vec",
+    "model": "baai/bge-base-en-v1.5",
+    "dims": 4,
+    "rows": [
+     "f8R4IGvPLWA7OhwF6gGWGeD0YoJm+LN1KgdUM4phqJIAAEA/III8/Q=="
+    ],
+    "existing": "T1JCVkVDAQAJAG9sZC1tb2RlbAQAAQAAAH1Umfaho72BkU1bzYiSaz8pN+I2DkcNxWB/G3LfbXfaAABAPyCCPP0="
+   },
+   "steps": [
+    {
+     "from": "validating",
+     "event": "VECTOR_RESOLVED",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "entries": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CHECKED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "from": "merging",
+     "event": "CHECKED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_WRITE_REFUSED",
+        "payload": {
+         "code": "ORB_VECTOR_MODEL_MISMATCH",
+         "detail": "old-model vs baai/bge-base-en-v1.5 \u2014 vectors from different embedding models are not comparable"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a stored dims that differs from the incoming one refuses",
+   "entity": {
+    "id": "w",
+    "path": "/u/m.vec",
+    "model": "baai/bge-base-en-v1.5",
+    "dims": 4,
+    "rows": [
+     "f8R4IGvPLWA7OhwF6gGWGeD0YoJm+LN1KgdUM4phqJIAAEA/III8/Q=="
+    ],
+    "existing": "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQgAAQAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AABAPyCCPP3m8cJr"
+   },
+   "steps": [
+    {
+     "from": "validating",
+     "event": "VECTOR_RESOLVED",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "entries": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CHECKED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "from": "merging",
+     "event": "CHECKED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_WRITE_REFUSED",
+        "payload": {
+         "code": "ORB_VECTOR_DIMS_MISMATCH",
+         "detail": "model baai/bge-base-en-v1.5 has 8 dims in one store and 4 in the other"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a corrupt stored file refuses with the store code and releases the lock",
+   "entity": {
+    "id": "w",
+    "path": "/u/m.vec",
+    "model": "baai/bge-base-en-v1.5",
+    "dims": 4,
+    "rows": [],
+    "existing": "anVuaw=="
+   },
+   "steps": [
+    {
+     "from": "validating",
+     "event": "VECTOR_REFUSED",
+     "payload": {
+      "code": "ORB_VECTOR_BAD_MAGIC",
+      "detail": "not an ORBVEC file"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_WRITE_REFUSED",
+        "payload": {
+         "code": "ORB_VECTOR_BAD_MAGIC",
+         "detail": "not an ORBVEC file"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a quantize refusal ends the write before any lock",
+   "steps": [
+    {
+     "from": "quantizing",
+     "event": "QUANTIZE_REFUSED",
+     "payload": {
+      "code": "ORB_VECTOR_BAD_RECORD",
+      "detail": "vector has 3 components, store dims is 2"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_WRITE_REFUSED",
+        "payload": {
+         "code": "ORB_VECTOR_BAD_RECORD",
+         "detail": "vector has 3 components, store dims is 2"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a held lock whose stat is unavailable waits 5 ms first",
+   "entity": {
+    "id": "w",
+    "path": "/u/m.vec",
+    "lockStart": 1000000,
+    "wait": 5
+   },
+   "steps": [
+    {
+     "from": "locking",
+     "event": "LOCK_FAILED",
+     "payload": {
+      "error": "exists",
+      "kind": "exists"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LOCK_WAIT",
+        "payload": {
+         "delayMs": 5
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1000100
+  },
+  {
+   "id": "the wait doubles up to 100 ms",
+   "entity": {
+    "id": "w",
+    "path": "/u/m.vec",
+    "lockStart": 1000000,
+    "wait": 80
+   },
+   "steps": [
+    {
+     "from": "backoff",
+     "event": "LOCK_RETRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LOCK_WAIT",
+        "payload": {
+         "delayMs": 80
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1000100
+  },
+  {
+   "id": "the wait after 80 ms is capped at 100",
+   "entity": {
+    "id": "w",
+    "path": "/u/m.vec",
+    "lockStart": 1000000,
+    "wait": 100
+   },
+   "steps": [
+    {
+     "from": "backoff",
+     "event": "LOCK_RETRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LOCK_WAIT",
+        "payload": {
+         "delayMs": 100
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1000100
+  },
+  {
+   "id": "a lock held for 180 s refuses ORB_VECTOR_LOCKED naming the wait",
+   "entity": {
+    "id": "w",
+    "path": "/u/m.vec",
+    "lockStart": 1000000,
+    "wait": 5
+   },
+   "steps": [
+    {
+     "from": "backoff",
+     "event": "LOCK_RETRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_WRITE_REFUSED",
+        "payload": {
+         "code": "ORB_VECTOR_LOCKED",
+         "detail": "/u/m.vec.lock stayed locked for 180000 ms (another session is writing; if none is, delete the lock file)"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1180000
+  },
+  {
+   "id": "a lock held for 179999 ms still waits",
+   "entity": {
+    "id": "w",
+    "path": "/u/m.vec",
+    "lockStart": 1000000,
+    "wait": 5
+   },
+   "steps": [
+    {
+     "from": "backoff",
+     "event": "LOCK_RETRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LOCK_WAIT",
+        "payload": {
+         "delayMs": 5
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1179999
+  },
+  {
+   "id": "a lock whose mtime is 120 s old is stale by age",
+   "entity": {
+    "id": "w",
+    "path": "/u/m.vec",
+    "lockStart": 1000000,
+    "wait": 5
+   },
+   "steps": [
+    {
+     "from": "statting",
+     "event": "LOCK_STATTED",
+     "payload": {
+      "mtime": 880000,
+      "kind": "file"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LOCK_STALE",
+        "payload": {
+         "reason": "age"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1000000
+  },
+  {
+   "id": "a lock one millisecond younger than 120 s is not stale by age (its pid is read next)",
+   "entity": {
+    "id": "w",
+    "path": "/u/m.vec",
+    "lockStart": 1000000,
+    "wait": 5
+   },
+   "steps": [
+    {
+     "from": "statting",
+     "event": "LOCK_STATTED",
+     "payload": {
+      "mtime": 880001,
+      "kind": "file"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LOCK_RETRY",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1000000
+  },
+  {
+   "id": "a lock holder whose pid does not answer kill -0 is stale by pid",
+   "entity": {
+    "id": "w",
+    "path": "/u/m.vec",
+    "lockStart": 1000000,
+    "wait": 5,
+    "lockPid": 4242
+   },
+   "steps": [
+    {
+     "from": "probing",
+     "event": "KILL_EXITED",
+     "payload": {
+      "code": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LOCK_STALE",
+        "payload": {
+         "reason": "pid"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a lock holder whose pid answers kill -0 keeps the lock and waits",
+   "entity": {
+    "id": "w",
+    "path": "/u/m.vec",
+    "lockStart": 1000000,
+    "wait": 5,
+    "lockPid": 4242
+   },
+   "steps": [
+    {
+     "from": "probing",
+     "event": "KILL_EXITED",
+     "payload": {
+      "code": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LOCK_RETRY",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a kill that cannot be spawned counts as alive, like the Rust unwrap_or(true)",
+   "entity": {
+    "id": "w",
+    "path": "/u/m.vec",
+    "lockStart": 1000000,
+    "wait": 5
+   },
+   "steps": [
+    {
+     "from": "probing",
+     "event": "KILL_SPAWN_FAILED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LOCK_RETRY",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a lock file with no readable pid is not stale",
+   "entity": {
+    "id": "w",
+    "path": "/u/m.vec",
+    "lockStart": 1000000,
+    "wait": 5
+   },
+   "steps": [
+    {
+     "from": "checking",
+     "event": "LOCK_PID_READ",
+     "payload": {
+      "data": "Z2FyYmFnZQ=="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LOCK_RETRY",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a stale lock is renamed aside, removed, then the create retried",
+   "entity": {
+    "id": "w",
+    "path": "/u/m.vec",
+    "lockStart": 1000000,
+    "wait": 5
+   },
+   "steps": [
+    {
+     "from": "breaking",
+     "event": "LOCK_STALE",
+     "payload": {
+      "reason": "age"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LOCK_ASIDE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "from": "breaking",
+     "event": "LOCK_ASIDE",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "STALE_REMOVED",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the wait elapsing retries the exclusive create",
+   "entity": {
+    "id": "w",
+    "path": "/u/m.vec",
+    "lockStart": 1000000,
+    "wait": 5
+   },
+   "steps": [
+    {
+     "from": "waiting",
+     "event": "ELAPSED",
+     "payload": {
+      "waitedMs": 5
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LOCK_FAILED",
+        "payload": {
+         "error": "no HTTP host is configured for this kernel",
+         "kind": "unsupported"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a release after a successful rename reports the written count",
+   "entity": {
+    "id": "w",
+    "path": "/u/m.vec",
+    "total": 9,
+    "pendingCode": ""
+   },
+   "steps": [
+    {
+     "from": "releasing",
+     "event": "LOCK_REMOVED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_WRITTEN",
+        "payload": {
+         "path": "/u/m.vec",
+         "count": 9
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

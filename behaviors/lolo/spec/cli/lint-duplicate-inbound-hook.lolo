@@ -1,0 +1,15 @@
+app lint-duplicate-inbound-hook-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint duplicate-inbound-hook`: the cli resolver runs one program per inbound hook, so a hook handled by two programs is refused at run time (`more than one installed program declares <hook>`); this lint finds it before. It walks the std and io behavior trees, lowers each .lolo that names an inbound hook, and collects the hooks handled by the file's OWN traits (an inline trait with a transition whose event is an `inbound` listen). A trait composed from another behavior is a reference in the lowered program and is not counted, so a program that composes a hook-handling trait without owning it is not a second owner. A hook handled by more than one file is reported with its files, sorted, once: `[inbound-hook-duplicate] hook '<hook>' is handled by <n> programs: <files>`, status 500 (exit 1). Two events of one file naming the same hook count once. Every hook with one owner answers `duplicate-inbound-hook: clean` (status 200, exit 0). Any argument is the usage (status 400, exit 2). A file that cannot be read or lowered is listed as UNREAD and fails the run."
+]
+
+orbital LintDuplicateInboundHookSpec {
+  expects trait OrbLintDuplicateInboundHook {
+    state ready
+    state reading
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page "/orb-lint-duplicate-inbound-hook" -> OrbLintDuplicateInboundHook
+}

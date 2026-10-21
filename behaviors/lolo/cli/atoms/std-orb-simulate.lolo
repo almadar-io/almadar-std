@@ -1,0 +1,113 @@
+app std-orb-simulate [
+  version: "1.0.0",
+  inbound: ["cli-simulate"],
+  fs: { cwd: "**": [read] },
+  description: "std-orb-simulate — the `orb simulate <file>` command, the port of `orb validate --simulate` (orbital-cli commands/simulate.rs; spec/cli/orb-simulate.lolo). It lowers the file with program/read and, for every inline page of every orbital, walks each inline trait the page names breadth first from its first initial state, reporting per transition the fetches, the render-ui slots with their pattern type and props, the entity-prop-without-fetch warning and the states never reached; status 200 (exit 0) with the whole report as the body. Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/orb-simulate"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+
+orbital OrbSimulateOrbital {
+  entity OrbSimulateRun [runtime] {
+    id : string!
+    report : [string] = []
+  }
+
+  trait OrbSimulate -> OrbSimulateRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      SIMULATE_CALLED -> ready when (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (emit SIMULATE_ANSWERED { status: 400, body: "usage: orb simulate <file>" })
+      SIMULATE_CALLED -> reading when (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (os/read-file { anchor: "cwd" path: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) } { key: "file" emit: { success: SIMULATE_FILE_READ, failure: SIMULATE_UNREAD } })
+    }
+
+    state reading {
+      INIT -> reading
+      SIMULATE_FILE_READ -> reading
+        (program/read (bytes/to-string @payload.data) { emit: { success: SIMULATE_PROGRAM_READ, failure: SIMULATE_UNREAD } })
+      SIMULATE_PROGRAM_READ -> ready
+        (set @entity.report (array/concat
+          ["", "🔍 Render Simulation", "============================================================"]
+          (array/flatten (array/map (object/get @payload.result "orbitals" []) (fn orb
+            (let ((trList (object/get @orb "traits" [])))
+              (array/flatten (array/map (object/get @orb "pages" []) (fn pg
+                (if (!= (object/get @pg "path" null) null)
+                  (let ((names (array/map (object/get @pg "traits" []) (fn r (or (object/get @r "ref" null) (object/get @r "name" null))))))
+                    (array/concat
+                      (array/concat [""] [(str/concat "Page: " (object/get @pg "name" "?") " (" (object/get @pg "path") ")")])
+                      (array/flatten (array/map (array/filter @trList (fn td (and (validate/object (object/get @td "stateMachine" null)) (array/includes @names (object/get @td "name" ""))))) (fn td
+                        (let ((sts (object/get (object/get @td "stateMachine") "states" [])) (tx (object/get (object/get @td "stateMachine") "transitions" [])))
+                          (let ((initRow (array/find @sts (fn s (= (object/get @s "isInitial" false) true)))))
+                            (let ((initial (if (= @initRow null) "(unknown)" (object/get @initRow "name" ""))))
+                              (let ((order (array/reduce (array/range 0 (+ (array/len @tx) (array/len @sts) 1)) [@initial] (fn (cur i)
+                                  (if (>= @i (array/len @cur))
+                                    @cur
+                                    (let ((st (array/nth @cur @i)))
+                                      (array/concat @cur (array/filter (array/unique (array/map (array/filter @tx (fn t (let ((frm (object/get @t "from" ""))) (if (validate/string @frm) (= @frm @st) (array/includes @frm @st))))) (fn t (object/get @t "to" "")))) (fn n (not (array/includes @cur @n)))))))))))
+                                (array/concat
+                                  (array/flatten (array/map @order (fn st
+                                    (array/concat
+                                      [(str/concat "  State: " @st (if (= @st @initial) " (initial)" ""))]
+                                      (array/flatten (array/map (array/filter @tx (fn t (let ((frm (object/get @t "from" ""))) (if (validate/string @frm) (= @frm @st) (array/includes @frm @st))))) (fn t
+                                        (let ((effs (array/filter (object/get @t "effects" []) (fn e (and (validate/array @e) (validate/string (array/nth @e 0)))))))
+                                          (let ((fetches (array/filter @effs (fn e (= (array/nth @e 0) "fetch"))))
+                                                (rends (array/filter @effs (fn e (or (= (array/nth @e 0) "render-ui") (= (array/nth @e 0) "render_ui"))))))
+                                            (array/concat
+                                              [(str/concat "    " (object/get @t "event" "") " transition" (if (!= (object/get @t "guard" null) null) " (guarded)" "") ":")]
+                                              (array/map (array/filter @fetches (fn e (validate/string (array/nth @e 1)))) (fn e (str/concat "      📦 fetch " (json/stringify (array/nth @e 1)))))
+                                              (array/flatten (array/map @rends (fn e
+                                                (let ((slot (if (validate/string (array/nth @e 1)) (array/nth @e 1) "?"))
+                                                      (pat (array/nth @e 2)))
+                                                  (let ((isObj (validate/object @pat)) (isClear (= @pat null)))
+                                                    (let ((ptype (if @isObj (if (validate/string (object/get @pat "type" null)) (object/get @pat "type") "?") (if @isClear "null (clear)" "?")))
+                                                          (props (if @isObj (array/filter (object/keys @pat) (fn k (!= @k "type"))) [])))
+                                                      (array/concat
+                                                        [(str/concat "      " (if @isClear "🗑️" "✅") " Slot " (json/stringify @slot) " ← [" @ptype "]" (if (> (array/len @props) 0) (str/concat " (" (str/join @props ", ") ")") ""))]
+                                                        (if (and (= (array/len @fetches) 0) (array/includes @props "entity"))
+                                                          ["         ⚠️  WARNING: entity prop present but no fetch in this transition"]
+                                                          []))))))))
+                                              (if (and (= (array/len @rends) 0) (= (array/len @fetches) 0)) ["      (no render-ui effects)"] [])))))))))))
+                                  (let ((lost (array/filter (array/map @sts (fn s (object/get @s "name" ""))) (fn n (not (array/includes @order @n))))))
+                                    (if (> (array/len @lost) 0)
+                                      [(str/concat "  ⚠️  Unreachable states: [" (str/join (array/map @lost (fn n (json/stringify @n))) ", ") "]")]
+                                      []))))))))))))
+                  []))))))))
+          ["", "============================================================", "Simulation complete.", ""]))
+        (emit SIMULATE_ANSWERED { status: 200, body: (str/join @entity.report "\n") })
+      SIMULATE_UNREAD -> ready
+        (emit SIMULATE_ANSWERED { status: 500, body: "simulate: the file could not be read or lowered" })
+    }
+
+    emits {
+      SIMULATE_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      SIMULATE_FILE_READ { data : bytes! }
+        @description "The file read."
+        @tier "internal"
+      SIMULATE_UNREAD { error : string }
+        @description "The file could not be read or lowered."
+        @tier "internal"
+      SIMULATE_PROGRAM_READ { result : string }
+        @description "The file lowered by program/read."
+        @tier "internal"
+    }
+
+    listens {
+      SIMULATE_CALLED -> inbound "cli-simulate" answers SIMULATE_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb simulate` with its arguments and working directory."
+        @synonyms "orb simulate, render simulation, trace reachable states"
+    }
+  }
+
+  page "/orb-simulate" as OrbSimulatePage -> OrbSimulate
+}

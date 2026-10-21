@@ -1,13 +1,23 @@
 app orb-i18n-spec [
   version: "1.0.0",
-  description: "Design contract for `orb i18n vocab [--json]` and `orb i18n check` (port of orbital-cli commands/i18n.rs). Both read the language data as files in the working directory: English is `--en <file>` (default node_modules/@almadar/core/src/i18n/en.json) with its operator names from `--operators <file>` (default node_modules/@almadar/std/canonical-operators.json, the keys of its operators table), and the language packs are every `--pack <file>` (repeatable) or, with none, the glob node_modules/@almadar/lolo-*/vocabulary.json. A vocabulary file holds meta {code, name, rtl} and the sections keywords, shapes, tags, categories, capabilities, annotations, sigils, effects, types, units, literals, reservedEvents, orb, operators, each a map from the English word to the language's spelling. The cases: (1) `vocab` prints one line per section in that order, `<section> (<n>): <word> <word> ...`, the words of English in file order, except orb and operators which are sorted; --json prints the 14 sections as one JSON object of word arrays (same order rule); status 200 (exit 0). (2) `check` answers `orb i18n check: ok — 0 problems` (status 200) when every pack covers exactly English's key set in every section with no empty value, no two keys of a section sharing a spelling, and no first-token keyword selector (app uses expects type theme orbital, and orb.orbitals) spelled the same by two languages. (3) Otherwise `check` answers `orb i18n check: <n> problem(s)`, a blank line, `translation coverage — non-English tables vs en.json (<n>):` and one `  <lang>.<section>.<key>: <Kind>` line per problem, never truncated, status 500 (exit 1); Kind is Missing or Empty (per English key, sorted), then Orphan (a pack key English lacks, sorted), per section in the order above, per language by code; then every Collision (the later key of a shared spelling), then every SelectorNotUnique (grouped by the shared spelling). (4) a missing subcommand, an unknown one, a stray word or an unknown flag answers `usage: orb i18n vocab [--json] | orb i18n check [--en <file>] [--operators <file>] [--pack <file>]...` with status 400 (exit 2); an unreadable file answers `cannot read: <error>` with status 500. Not carried: the two checks that read the Rust parser's own word lists (parser vocabulary vs English, parser coverage) and the parser's declaration order of keywords, tags, effects and types in `vocab`; those wait on a parser vocabulary exported as data (gap). `orb language which` resolves npm packages node-style and stays in Rust."
+  description: "Design contract for `orb i18n vocab [--json]` and `orb i18n check`. The English side is installed data: the 12 parser sections (keywords shapes tags categories capabilities annotations sigils effects types units literals reservedEvents) are the lists in the file @almadar/core declares as orbLanguage.vocabulary; the `orb` section (structural .orb keys) comes from the knob orbSource under @almadar/core (the stand-in src/i18n/en.json until core emits it into the vocabulary file); the operator table is the key set of the file @almadar/std declares as orbLanguage.operators. Every English word maps to itself. The other languages are the installed packs (std-orb-language discovery). vocab prints one line per section `<name> (<count>): <words joined by a space>` in the order above then orb and operators (both sorted), or with --json one document with those 14 arrays (2-space indent). check applies, per non-English language in code order and per section in the same 14-section order: each English key the language lacks (Missing) or maps to an empty value (Empty), in key order, then each key English lacks (Orphan); then, a second pass, each key whose value another earlier key of the same section has (Collision); then each first-token keyword (app uses expects type theme orbital) and orb.orbitals whose translation another language also uses (SelectorNotUnique); then, per language, each parser word that is missing or empty (`<code>.<section>.<word>: missing|empty`). Clean prints `orb i18n check: ok — 0 problems` (status 200); otherwise `orb i18n check: N problem(s)` then the groups with their counts, never truncated (status 500, exit 1). Any other argument is the usage (status 400). Golden = orbital-cli i18n.rs; the parser-vs-English equality gate has no counterpart because the parser lists are the English table."
 ]
 
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+
 orbital OrbI18nSpec {
+  expects entity I18nCall [runtime] {
+    id : string!
+    cmd : string
+    json : boolean
+  }
   expects trait OrbI18n {
     state ready
+    state parsing
+    state loading
+    state checking
     emits {
-      I18N_ANSWERED { status : number!  body : string! }
+      I18N_ANSWERED { status : number!  body : string!  stderr : string }
     }
   }
   expects page "/orb-i18n" -> OrbI18n

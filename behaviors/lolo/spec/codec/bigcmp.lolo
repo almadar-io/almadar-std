@@ -1,0 +1,19 @@
+app bigcmp-spec [
+  version: "1.0.0",
+  description: "Design contract for exact comparison of scaled integers. BIGCMP_BATCH { items } answers BIGCMP_ANSWERED { results } with one of -1, 0 or 1 per item in order: the sign of A * 2^p2 * 10^p10 minus B * 2^q2 * 10^q10, where A and B are non-negative integers given as hi * 2^24 + lo (hi below 2^31, lo below 2^24) and every exponent is a whole number, negative ones included. The comparison is exact, with no rounding anywhere, for magnitudes up to 2^570; it works by moving negative exponents across to the other side and comparing the two integer products limb by limb."
+]
+
+orbital BigCmpSpec {
+  expects entity BigCmpRun [runtime] {
+    id : string
+  }
+  expects trait BigCmp {
+    state idle {
+      BIGCMP_BATCH -> idle
+    }
+    emits {
+      BIGCMP_ANSWERED { results : [number]! }
+    }
+  }
+  expects page "/bigcmp" -> BigCmp
+}

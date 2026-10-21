@@ -5,17 +5,17 @@ app verify-plan-spec [
 
 type JsonValue = string | number | boolean | [JsonValue] | Map string JsonValue
 type PlanPayload = Map string JsonValue
-type PlannedStep = { trait : string!, linkedEntity : string, from : string!, event : string!, to : string!, toStates : [string]!, variant : string!, payload : PlanPayload!, guarded : boolean!, arm : number, solved : boolean!, payloadCase : string!, guardCase : string, unplanned : string }
+type VerifyPlanStepContract = { trait : string!, linkedEntity : string, from : string!, event : string!, to : string!, toStates : [string]!, variant : string!, payload : PlanPayload!, guarded : boolean!, arm : number, solved : boolean!, payloadCase : string!, guardCase : string, unplanned : string }
 
 orbital VerifyPlanSpec {
   expects entity PlanRun [runtime] {
     id : string!
-    steps : [PlannedStep]!
+    steps : [VerifyPlanStepContract]!
   }
   expects trait Plan {
     state ready
     emits {
-      PLAN_ANSWERED { steps : [PlannedStep]! }
+      PLAN_ANSWERED { steps : [VerifyPlanStepContract]! }
     }
   }
   expects page "/verify-plan" -> Plan

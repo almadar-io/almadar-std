@@ -1,0 +1,132 @@
+app std-vector-quantize [
+  version: "1.0.0",
+  description: "std-vector-quantize — turn embedding vectors into ORBVEC records exactly as orbital-core quantize does. QUANTIZE { model, records:[{ text, vector }] } casts every component to binary32 through std-f32 (the embedder parse is an f64 to f32 cast), then per record takes scale = max |v| (1 when all zero), bytes = floor(v / scale * 127 + 0.5) clamped to -128..127 in double arithmetic, stores the scale rounded to 6 significant digits as binary32 through std-sig6 (exact over the whole binary32 range), and keys the record by sha256(model, NUL, text). QUANTIZED { dims, rows } answers one record per input in input order, each key[32] | scale f32 little-endian | int8 x dims as bytes. QUANTIZE_REFUSED { code, detail }: ORB_VECTOR_BAD_MODEL (empty model, no components, or over 65535), ORB_VECTOR_BAD_RECORD (a vector whose length is not the first one's), or the F32 overflow. The scale rounding runs over the whole binary32 range through std-sig6."
+]
+uses Spec from "almadar-std/vector-quantize"
+uses F32 from "std/behaviors/std-f32"
+uses Sig6 from "std/behaviors/std-sig6"
+uses BigCmp from "std/behaviors/std-bigcmp"
+
+type VecRecord = { text : string!, vector : [number]! }
+
+orbital VectorQuantizeOrbital {
+  entity QuantizeRun [runtime] {
+    id : string!
+    model : string = ""
+    texts : [string] = []
+    dims : number = 0
+    ints : [[number]] = []
+    scales : [number] = []
+  }
+
+  trait QuantizeF32 = F32.traits.F32Encode {
+    listens {
+      VectorQuantize.F32_ENCODE -> F32_ENCODE
+      Quantize2Sig6.F32_ENCODE -> F32_ENCODE
+    }
+  }
+
+  trait Quantize2Sig6 = Sig6.traits.Sig6 {
+    listens {
+      VectorQuantize.SIG6 -> SIG6
+      Quantize2BigCmp.BIGCMP_ANSWERED -> BIGCMP_ANSWERED
+      QuantizeF32.F32_ENCODED -> F32_ENCODED
+      QuantizeF32.F32_REFUSED -> F32_REFUSED
+    }
+  }
+
+  trait Quantize2BigCmp = BigCmp.traits.BigCmp {
+    listens {
+      Quantize2Sig6.BIGCMP_BATCH -> BIGCMP_BATCH
+    }
+  }
+
+  trait VectorQuantize -> QuantizeRun [integration, instance] {
+    initial: idle
+
+    state idle {
+      QUANTIZE -> idle when (or (== @payload.model "") (== (array/len @payload.records) 0))
+        (emit QUANTIZE_REFUSED { code: "ORB_VECTOR_BAD_MODEL", detail: "model name must be non-empty and there must be at least one record" })
+      QUANTIZE -> idle when (and (!= @payload.model "") (> (array/len @payload.records) 0) (or (== (array/len (object/get (array/first @payload.records) "vector")) 0) (> (array/len (object/get (array/first @payload.records) "vector")) 65535)))
+        (emit QUANTIZE_REFUSED { code: "ORB_VECTOR_BAD_MODEL", detail: "dims must be between 1 and 65535" })
+      QUANTIZE -> idle when (and (!= @payload.model "") (> (array/len @payload.records) 0) (> (array/len (object/get (array/first @payload.records) "vector")) 0) (<= (array/len (object/get (array/first @payload.records) "vector")) 65535) (array/some @payload.records (fn r (!= (array/len (object/get @r "vector")) (array/len (object/get (array/first @payload.records) "vector"))))))
+        (emit QUANTIZE_REFUSED { code: "ORB_VECTOR_BAD_RECORD", detail: (str/concat "vector has " (array/len (object/get (array/find @payload.records (fn r (!= (array/len (object/get @r "vector")) (array/len (object/get (array/first @payload.records) "vector"))))) "vector")) " components, store dims is " (array/len (object/get (array/first @payload.records) "vector"))) })
+      QUANTIZE -> casting when (and (!= @payload.model "") (> (array/len @payload.records) 0) (> (array/len (object/get (array/first @payload.records) "vector")) 0) (<= (array/len (object/get (array/first @payload.records) "vector")) 65535) (not (array/some @payload.records (fn r (!= (array/len (object/get @r "vector")) (array/len (object/get (array/first @payload.records) "vector")))))))
+        (set @entity.model @payload.model)
+        (set @entity.texts (array/map @payload.records (fn r (object/get @r "text"))))
+        (set @entity.dims (array/len (object/get (array/first @payload.records) "vector")))
+        (emit F32_ENCODE { tag: "cast", values: (array/flatten (array/map @payload.records (fn r (object/get @r "vector")))) })
+    }
+
+    state casting {
+      F32_ENCODED -> scaling
+        (set @entity.ints (array/map (array/range 0 (array/len @entity.texts)) (fn ri (let ((cs (array/slice @payload.rounded (* @ri @entity.dims) (* (+ @ri 1) @entity.dims)))) (let ((sc (let ((mx (array/reduce @cs 0 (fn ma c (let ((ab (math/abs @c))) (if (> @ab @ma) @ab @ma)))))) (if (<= @mx 0) 1 @mx)))) (array/map @cs (fn c (math/clamp (math/floor (+ (* (/ @c @sc) 127) 0.5)) -128 127))))))))
+        (set @entity.scales (array/map (array/range 0 (array/len @entity.texts)) (fn ri (let ((cs (array/slice @payload.rounded (* @ri @entity.dims) (* (+ @ri 1) @entity.dims)))) (let ((mx (array/reduce @cs 0 (fn ma c (let ((ab (math/abs @c))) (if (> @ab @ma) @ab @ma)))))) (if (<= @mx 0) 1 @mx))))))
+        (emit SIG6 { scales: @entity.scales })
+      F32_REFUSED -> idle
+        (emit QUANTIZE_REFUSED { code: "ORB_VECTOR_BAD_RECORD", detail: (str/concat "component " @payload.index " does not fit binary32") })
+    }
+
+    state scaling {
+      SIG6_DONE -> idle
+        (emit QUANTIZED { dims: @entity.dims, rows: (array/map (array/range 0 (array/len @entity.texts)) (fn ri (bytes/concat [(hash/sha256 (str/concat @entity.model "\u{0}" (array/nth @entity.texts @ri)) "base64") (bytes/write-uint (array/nth @payload.bits @ri) 4 "le") (bytes/concat (array/map (array/nth @entity.ints @ri) (fn q (bytes/write-uint (math/mod (+ @q 256) 256) 1 "le"))))]))) })
+      SIG6_REFUSED -> idle
+        (emit QUANTIZE_REFUSED { code: "ORB_VECTOR_BAD_RECORD", detail: @payload.reason })
+    }
+
+    emits {
+      F32_ENCODE -> external {
+        tag : string
+        values : [number]!
+      }
+      SIG6 -> external {
+        scales : [number]!
+      }
+        @tier "secondary"
+      QUANTIZED -> external {
+        dims : number!
+        rows : [bytes]!
+      }
+        @description "One ORBVEC record per input in order: key[32] | scale f32 LE | int8 x dims."
+        @tier "primary"
+      QUANTIZE_REFUSED -> external {
+        code : string!
+        detail : string!
+      }
+        @description "ORB_VECTOR_BAD_MODEL, or ORB_VECTOR_BAD_RECORD."
+        @tier "primary"
+    }
+
+    listens {
+      QuantizeF32.F32_ENCODED -> F32_ENCODED
+      QuantizeF32.F32_REFUSED -> F32_REFUSED
+      Quantize2Sig6.SIG6_DONE -> SIG6_DONE
+      Quantize2Sig6.SIG6_REFUSED -> SIG6_REFUSED
+      SIG6_DONE {
+        bits : [number]!
+        rounded : [number]!
+      }
+      SIG6_REFUSED {
+        reason : string!
+      }
+      F32_ENCODED {
+        bits : [number]!
+        rounded : [number]!
+        tag : string
+      }
+      F32_REFUSED {
+        index : number!
+        reason : string!
+        tag : string
+      }
+      QUANTIZE -> external {
+        model : string!
+        records : [VecRecord]!
+      }
+        @description "Quantize these vectors into ORBVEC records keyed by sha256(model, NUL, text)."
+        @synonyms "int8 quantize, embedding compress, orbvec records"
+    }
+  }
+
+  page "/vector-quantize" as VectorQuantizePage -> VectorQuantize, QuantizeF32, Quantize2Sig6, Quantize2BigCmp
+}

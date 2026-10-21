@@ -1,0 +1,1299 @@
+{
+ "source": "Built from orbital-core runtime vector_store.rs semantics (tests/vector_store.rs: quantize_matches_ts_math, round_trip_lookup_and_size, layering_precedence_and_subset, model_and_dims_mismatch_refused, truncated_and_garbage_refused). Stores are generated with the documented ORBVEC layout, keys sha256(model NUL text), and the quantized values of the Rust quantize math; the expected vectors are int8*scale/127 computed independently of the atom. Scales are exactly representable so the 6-significant-digit read is exact; a 0.123457 scale (the Rust quantize golden) is not golden-tested here because the float noise of the reconstruction is not pinned.",
+ "atom": "ml/atoms/std-vector-store.lolo",
+ "trait": "VectorLookup",
+ "cases": [
+  {
+   "id": "quantize golden from Rust quantize_matches_ts_math: scale 0.5, bytes 127 -63 25 0",
+   "steps": [
+    {
+     "event": "VECTOR_LOOKUP",
+     "payload": {
+      "stores": [
+       "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw=="
+      ],
+      "origins": [
+       "/v/store0.vec"
+      ],
+      "model": "baai/bge-base-en-v1.5",
+      "text": "a"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_PARSED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_PARSED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_SEARCHED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_SEARCHED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_LOOKED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_LOOKED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_FOUND",
+        "payload": {
+         "model": "baai/bge-base-en-v1.5",
+         "dims": 4,
+         "scale": 0.5,
+         "vector": [
+          0.5,
+          -0.24803149606299213,
+          0.0984251968503937,
+          0.0
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a text in the user store only is found past the snapshot",
+   "steps": [
+    {
+     "event": "VECTOR_LOOKUP",
+     "payload": {
+      "stores": [
+       "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw==",
+       "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAgAAAJl03rngf4GTPDOOJrl7ALiAnMKDhsSHEcVUIFxE907iAAAAQIAF+3/o7r/x9UYr03SygVoibuZEaWMVDg/b0jn+HiHrtFEZSgAAgD4K9hTs"
+      ],
+      "origins": [
+       "/v/store0.vec",
+       "/v/store1.vec"
+      ],
+      "model": "baai/bge-base-en-v1.5",
+      "text": "d"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_PARSED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_PARSED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_SEARCHED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_SEARCHED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_LOOKED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_LOOKED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_FOUND",
+        "payload": {
+         "model": "baai/bge-base-en-v1.5",
+         "dims": 4,
+         "scale": 0.25,
+         "vector": [
+          0.01968503937007874,
+          -0.01968503937007874,
+          0.03937007874015748,
+          -0.03937007874015748
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the snapshot wins over the user store for a shared key",
+   "steps": [
+    {
+     "event": "VECTOR_LOOKUP",
+     "payload": {
+      "stores": [
+       "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw==",
+       "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAgAAAJl03rngf4GTPDOOJrl7ALiAnMKDhsSHEcVUIFxE907iAAAAQIAF+3/o7r/x9UYr03SygVoibuZEaWMVDg/b0jn+HiHrtFEZSgAAgD4K9hTs"
+      ],
+      "origins": [
+       "/v/store0.vec",
+       "/v/store1.vec"
+      ],
+      "model": "baai/bge-base-en-v1.5",
+      "text": "c"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_PARSED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_PARSED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_SEARCHED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_SEARCHED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_LOOKED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_LOOKED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_FOUND",
+        "payload": {
+         "model": "baai/bge-base-en-v1.5",
+         "dims": 4,
+         "scale": 2.0,
+         "vector": [
+          -2.015748031496063,
+          0.07874015748031496,
+          -0.07874015748031496,
+          2.0
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a text no store holds is a miss, never an empty vector",
+   "steps": [
+    {
+     "event": "VECTOR_LOOKUP",
+     "payload": {
+      "stores": [
+       "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw==",
+       "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAgAAAJl03rngf4GTPDOOJrl7ALiAnMKDhsSHEcVUIFxE907iAAAAQIAF+3/o7r/x9UYr03SygVoibuZEaWMVDg/b0jn+HiHrtFEZSgAAgD4K9hTs"
+      ],
+      "origins": [
+       "/v/store0.vec",
+       "/v/store1.vec"
+      ],
+      "model": "baai/bge-base-en-v1.5",
+      "text": "zzz"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_PARSED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_PARSED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_SEARCHED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_SEARCHED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_LOOKED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_LOOKED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MISSED",
+        "payload": {
+         "model": "baai/bge-base-en-v1.5"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a missing store (empty bytes) is skipped",
+   "steps": [
+    {
+     "event": "VECTOR_LOOKUP",
+     "payload": {
+      "stores": [
+       "",
+       "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAgAAAJl03rngf4GTPDOOJrl7ALiAnMKDhsSHEcVUIFxE907iAAAAQIAF+3/o7r/x9UYr03SygVoibuZEaWMVDg/b0jn+HiHrtFEZSgAAgD4K9hTs"
+      ],
+      "origins": [
+       "/v/store0.vec",
+       "/v/store1.vec"
+      ],
+      "model": "baai/bge-base-en-v1.5",
+      "text": "d"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_PARSED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_PARSED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_SEARCHED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_SEARCHED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_LOOKED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_LOOKED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_FOUND",
+        "payload": {
+         "model": "baai/bge-base-en-v1.5",
+         "dims": 4,
+         "scale": 0.25,
+         "vector": [
+          0.01968503937007874,
+          -0.01968503937007874,
+          0.03937007874015748,
+          -0.03937007874015748
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "no stores at all is a miss",
+   "steps": [
+    {
+     "event": "VECTOR_LOOKUP",
+     "payload": {
+      "stores": [],
+      "origins": [],
+      "model": "baai/bge-base-en-v1.5",
+      "text": "a"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_PARSED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_PARSED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_SEARCHED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_SEARCHED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_LOOKED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_LOOKED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MISSED",
+        "payload": {
+         "model": "baai/bge-base-en-v1.5"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "another model across layers is refused",
+   "steps": [
+    {
+     "event": "VECTOR_LOOKUP",
+     "payload": {
+      "stores": [
+       "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw==",
+       "T1JCVkVDAQALAG90aGVyLW1vZGVsBAABAAAA8gkrxw3po4f30HiQ/5F1r52hyLcZzplGA7L8x9tZpksAAAA/f8EZAA=="
+      ],
+      "origins": [
+       "/v/store0.vec",
+       "/v/store1.vec"
+      ],
+      "model": "baai/bge-base-en-v1.5",
+      "text": "a"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_PARSED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_PARSED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_REFUSED",
+        "payload": {
+         "code": "ORB_VECTOR_MODEL_MISMATCH",
+         "detail": "baai/bge-base-en-v1.5 vs other-model \u2014 vectors from different embedding models are not comparable"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "another dims across layers is refused",
+   "steps": [
+    {
+     "event": "VECTOR_LOOKUP",
+     "payload": {
+      "stores": [
+       "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw==",
+       "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQgAAQAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AACAPwEBAQEBAQEB"
+      ],
+      "origins": [
+       "/v/store0.vec",
+       "/v/store1.vec"
+      ],
+      "model": "baai/bge-base-en-v1.5",
+      "text": "a"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_PARSED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_PARSED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_REFUSED",
+        "payload": {
+         "code": "ORB_VECTOR_DIMS_MISMATCH",
+         "detail": "model baai/bge-base-en-v1.5 has 4 dims in one store and 8 in the other"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "garbage magic is refused",
+   "steps": [
+    {
+     "event": "VECTOR_LOOKUP",
+     "payload": {
+      "stores": [
+       "WFJCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw=="
+      ],
+      "origins": [
+       "/v/store0.vec"
+      ],
+      "model": "baai/bge-base-en-v1.5",
+      "text": "a"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_PARSED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_PARSED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_REFUSED",
+        "payload": {
+         "code": "ORB_VECTOR_BAD_MAGIC",
+         "detail": "/v/store0.vec is not an ORBVEC file"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a truncated store is refused (Rust truncated_and_garbage_refused)",
+   "steps": [
+    {
+     "event": "VECTOR_LOOKUP",
+     "payload": {
+      "stores": [
+       "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7"
+      ],
+      "origins": [
+       "/v/store0.vec"
+      ],
+      "model": "baai/bge-base-en-v1.5",
+      "text": "a"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_PARSED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_PARSED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_REFUSED",
+        "payload": {
+         "code": "ORB_VECTOR_CORRUPT",
+         "detail": "/v/store0.vec: expected 157 bytes for 3 records, found 156"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a trailing byte is refused",
+   "steps": [
+    {
+     "event": "VECTOR_LOOKUP",
+     "payload": {
+      "stores": [
+       "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fwA="
+      ],
+      "origins": [
+       "/v/store0.vec"
+      ],
+      "model": "baai/bge-base-en-v1.5",
+      "text": "a"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_PARSED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_PARSED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_REFUSED",
+        "payload": {
+         "code": "ORB_VECTOR_CORRUPT",
+         "detail": "/v/store0.vec: expected 157 bytes for 3 records, found 158"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a short header is refused",
+   "steps": [
+    {
+     "event": "VECTOR_LOOKUP",
+     "payload": {
+      "stores": [
+       "T1JCVkVDAQAVAA=="
+      ],
+      "origins": [
+       "/v/store0.vec"
+      ],
+      "model": "baai/bge-base-en-v1.5",
+      "text": "a"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_PARSED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_PARSED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_REFUSED",
+        "payload": {
+         "code": "ORB_VECTOR_CORRUPT",
+         "detail": "/v/store0.vec: truncated header"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "another format version is refused",
+   "steps": [
+    {
+     "event": "VECTOR_LOOKUP",
+     "payload": {
+      "stores": [
+       "T1JCVkVDAgAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw=="
+      ],
+      "origins": [
+       "/v/store0.vec"
+      ],
+      "model": "baai/bge-base-en-v1.5",
+      "text": "a"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_PARSED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_PARSED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_REFUSED",
+        "payload": {
+         "code": "ORB_VECTOR_BAD_VERSION",
+         "detail": "/v/store0.vec has format version 2, this build reads 1"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "records out of key order are refused",
+   "steps": [
+    {
+     "event": "VECTOR_LOOKUP",
+     "payload": {
+      "stores": [
+       "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAgAAAFj9t0/iY95XrGaH1vnZDcRmZ8RJbWy2jgYQoc8xBRFSAACAPwAAAAAnlDqT2JWJW+59BD4dGlQ7Mc6z2NZZW4rFH6bGZSGntAAAAD9/wRkA"
+      ],
+      "origins": [
+       "/v/store0.vec"
+      ],
+      "model": "baai/bge-base-en-v1.5",
+      "text": "a"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_PARSED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_PARSED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_REFUSED",
+        "payload": {
+         "code": "ORB_VECTOR_CORRUPT",
+         "detail": "/v/store0.vec: records are not strictly sorted by key"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "many texts resolve in order across layers, a miss keeps its slot",
+   "steps": [
+    {
+     "event": "VECTOR_LOOKUP_MANY",
+     "payload": {
+      "stores": [
+       "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw==",
+       "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAgAAAJl03rngf4GTPDOOJrl7ALiAnMKDhsSHEcVUIFxE907iAAAAQIAF+3/o7r/x9UYr03SygVoibuZEaWMVDg/b0jn+HiHrtFEZSgAAgD4K9hTs"
+      ],
+      "origins": [
+       "/v/store0.vec",
+       "/v/store1.vec"
+      ],
+      "model": "baai/bge-base-en-v1.5",
+      "texts": [
+       "a",
+       "d",
+       "zzz",
+       "c"
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_PARSED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_PARSED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_SEARCHED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_SEARCHED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_LOOKED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_LOOKED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_RESOLVED",
+        "payload": {
+         "model": "baai/bge-base-en-v1.5",
+         "entries": [
+          {
+           "found": true,
+           "dims": 4,
+           "scale": 0.5,
+           "record": "AAAAP3/BGQA=",
+           "vector": [
+            0.5,
+            -0.24803149606299213,
+            0.0984251968503937,
+            0.0
+           ]
+          },
+          {
+           "found": true,
+           "dims": 4,
+           "scale": 0.25,
+           "record": "AACAPgr2FOw=",
+           "vector": [
+            0.01968503937007874,
+            -0.01968503937007874,
+            0.03937007874015748,
+            -0.03937007874015748
+           ]
+          },
+          {
+           "found": false,
+           "dims": 4,
+           "scale": 0,
+           "record": "",
+           "vector": []
+          },
+          {
+           "found": true,
+           "dims": 4,
+           "scale": 2.0,
+           "record": "AAAAQIAF+38=",
+           "vector": [
+            -2.015748031496063,
+            0.07874015748031496,
+            -0.07874015748031496,
+            2.0
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "many texts over a corrupt store refuse with the store error",
+   "steps": [
+    {
+     "event": "VECTOR_LOOKUP_MANY",
+     "payload": {
+      "stores": [
+       "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7"
+      ],
+      "origins": [
+       "/v/store0.vec"
+      ],
+      "model": "baai/bge-base-en-v1.5",
+      "texts": [
+       "a",
+       "b"
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_PARSED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_PARSED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_REFUSED",
+        "payload": {
+         "code": "ORB_VECTOR_CORRUPT",
+         "detail": "/v/store0.vec: expected 157 bytes for 3 records, found 156"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "no texts resolve to no entries",
+   "steps": [
+    {
+     "event": "VECTOR_LOOKUP_MANY",
+     "payload": {
+      "stores": [
+       "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw=="
+      ],
+      "origins": [
+       "/v/store0.vec"
+      ],
+      "model": "baai/bge-base-en-v1.5",
+      "texts": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_PARSED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_PARSED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_SEARCHED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_SEARCHED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_LOOKED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_LOOKED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_RESOLVED",
+        "payload": {
+         "model": "baai/bge-base-en-v1.5",
+         "entries": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "range edges: smallest subnormal, largest finite, 2e6, 1e-18, subnormals and the smallest normal decode exactly",
+   "steps": [
+    {
+     "event": "VECTOR_LOOKUP_MANY",
+     "payload": {
+      "stores": [
+       "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQACAAAAAP8womTxVt4VvJv5Yo9e7Fd3h7Dj8Q6u8NkpPHaZRm875KTIQoUHigWb0FlR5dhhq1fe+iNMZGrXABRzg0XS39J43px18Kpzf//f39/gQEAQh8DK7AYxUzAWmKMks1P3SnultIQqvg1ntYmY/zN4XMAAIAAfwAAgG4A4o+97f5/Q09ou80jU4Ar1zoVVdW44J8ll5LL3FmxACT0ScFAZJxuoIOWA5bndp5q908b/y1ISjdA6YfC/LmF8NOu/P9T7ehSljMDAgEAmR7reWUYgfVn6J9f2fOpSaNxERLpCeBwtvt38rPsuVbCFgEAAf8C/rlf1Po/gDq0BMJflYW5HsFrdNfivOWPqG2QHn1ypfsSAQAAAH+ABfvTyiK90QRpBJDlrH1YgnM6X5PS9Rg/kb5BQ37N6l06qkAg8UcHCAkK"
+      ],
+      "origins": [
+       "/v/store0.vec"
+      ],
+      "model": "baai/bge-base-en-v1.5",
+      "texts": [
+       "e1",
+       "e2",
+       "e3",
+       "e4",
+       "e5",
+       "e6",
+       "e7",
+       "e8"
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_PARSED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_PARSED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_SEARCHED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_SEARCHED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_LOOKED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_LOOKED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_RESOLVED",
+        "payload": {
+         "model": "baai/bge-base-en-v1.5",
+         "entries": [
+          {
+           "found": true,
+           "dims": 4,
+           "scale": 1.4013e-45,
+           "record": "AQAAAH+ABfs=",
+           "vector": [
+            1.4013e-45,
+            -1.4123338582677166e-45,
+            5.516929133858268e-47,
+            -5.516929133858268e-47
+           ]
+          },
+          {
+           "found": true,
+           "dims": 4,
+           "scale": 3.40282e+38,
+           "record": "//9/f3+BAQA=",
+           "vector": [
+            3.40282e+38,
+            -3.40282e+38,
+            2.6793858267716536e+36,
+            0.0
+           ]
+          },
+          {
+           "found": true,
+           "dims": 4,
+           "scale": 2000000.0,
+           "record": "ACT0ScFAZJw=",
+           "vector": [
+            -992125.9842519684,
+            1007874.0157480316,
+            1574803.1496062991,
+            -1574803.1496062991
+           ]
+          },
+          {
+           "found": true,
+           "dims": 4,
+           "scale": 1e-18,
+           "record": "75KTIQoUHig=",
+           "vector": [
+            7.874015748031496e-20,
+            1.5748031496062993e-19,
+            2.362204724409449e-19,
+            3.1496062992125986e-19
+           ]
+          },
+          {
+           "found": true,
+           "dims": 4,
+           "scale": 9.99995e-41,
+           "record": "whYBAAH/Av4=",
+           "vector": [
+            7.873976377952755e-43,
+            -7.873976377952755e-43,
+            1.574795275590551e-42,
+            -1.574795275590551e-42
+           ]
+          },
+          {
+           "found": true,
+           "dims": 4,
+           "scale": 1.17549e-38,
+           "record": "AACAAH8AAIA=",
+           "vector": [
+            1.17549e-38,
+            0.0,
+            0.0,
+            -1.1847458267716534e-38
+           ]
+          },
+          {
+           "found": true,
+           "dims": 4,
+           "scale": 123456.0,
+           "record": "QCDxRwcICQo=",
+           "vector": [
+            6804.6614173228345,
+            7776.755905511811,
+            8748.850393700788,
+            9720.944881889764
+           ]
+          },
+          {
+           "found": true,
+           "dims": 4,
+           "scale": 7e-08,
+           "record": "6FKWMwMCAQA=",
+           "vector": [
+            1.6535433070866142e-09,
+            1.1023622047244096e-09,
+            5.511811023622048e-10,
+            0.0
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a single lookup decodes an extreme scale exactly",
+   "steps": [
+    {
+     "event": "VECTOR_LOOKUP",
+     "payload": {
+      "stores": [
+       "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQACAAAAAP8womTxVt4VvJv5Yo9e7Fd3h7Dj8Q6u8NkpPHaZRm875KTIQoUHigWb0FlR5dhhq1fe+iNMZGrXABRzg0XS39J43px18Kpzf//f39/gQEAQh8DK7AYxUzAWmKMks1P3SnultIQqvg1ntYmY/zN4XMAAIAAfwAAgG4A4o+97f5/Q09ou80jU4Ar1zoVVdW44J8ll5LL3FmxACT0ScFAZJxuoIOWA5bndp5q908b/y1ISjdA6YfC/LmF8NOu/P9T7ehSljMDAgEAmR7reWUYgfVn6J9f2fOpSaNxERLpCeBwtvt38rPsuVbCFgEAAf8C/rlf1Po/gDq0BMJflYW5HsFrdNfivOWPqG2QHn1ypfsSAQAAAH+ABfvTyiK90QRpBJDlrH1YgnM6X5PS9Rg/kb5BQ37N6l06qkAg8UcHCAkK"
+      ],
+      "origins": [
+       "/v/store0.vec"
+      ],
+      "model": "baai/bge-base-en-v1.5",
+      "text": "e2"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_PARSED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_PARSED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_SEARCHED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_SEARCHED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_LOOKED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_LOOKED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_FOUND",
+        "payload": {
+         "model": "baai/bge-base-en-v1.5",
+         "dims": 4,
+         "scale": 3.40282e+38,
+         "vector": [
+          3.40282e+38,
+          -3.40282e+38,
+          2.6793858267716536e+36,
+          0.0
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a single lookup of the smallest subnormal scale",
+   "steps": [
+    {
+     "event": "VECTOR_LOOKUP",
+     "payload": {
+      "stores": [
+       "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQACAAAAAP8womTxVt4VvJv5Yo9e7Fd3h7Dj8Q6u8NkpPHaZRm875KTIQoUHigWb0FlR5dhhq1fe+iNMZGrXABRzg0XS39J43px18Kpzf//f39/gQEAQh8DK7AYxUzAWmKMks1P3SnultIQqvg1ntYmY/zN4XMAAIAAfwAAgG4A4o+97f5/Q09ou80jU4Ar1zoVVdW44J8ll5LL3FmxACT0ScFAZJxuoIOWA5bndp5q908b/y1ISjdA6YfC/LmF8NOu/P9T7ehSljMDAgEAmR7reWUYgfVn6J9f2fOpSaNxERLpCeBwtvt38rPsuVbCFgEAAf8C/rlf1Po/gDq0BMJflYW5HsFrdNfivOWPqG2QHn1ypfsSAQAAAH+ABfvTyiK90QRpBJDlrH1YgnM6X5PS9Rg/kb5BQ37N6l06qkAg8UcHCAkK"
+      ],
+      "origins": [
+       "/v/store0.vec"
+      ],
+      "model": "baai/bge-base-en-v1.5",
+      "text": "e1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_PARSED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_PARSED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_SEARCHED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_SEARCHED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_LOOKED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_LOOKED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_FOUND",
+        "payload": {
+         "model": "baai/bge-base-en-v1.5",
+         "dims": 4,
+         "scale": 1.4013e-45,
+         "vector": [
+          1.4013e-45,
+          -1.4123338582677166e-45,
+          5.516929133858268e-47,
+          -5.516929133858268e-47
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

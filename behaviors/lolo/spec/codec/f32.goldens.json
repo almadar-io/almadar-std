@@ -1,0 +1,1056 @@
+{
+ "source": "Expected bits come from IEEE 754 binary32 round-to-nearest-even as Rust's f64 to f32 cast does it, generated with the python struct pack/unpack of a float32 (same rounding). Covers ties both ways, just above and below ties, the carry into the next exponent, subnormals with ties, the smallest-normal carry, the half-unit tie to zero, the largest finite value and the overflow tie.",
+ "atom": "codec/atoms/std-f32.lolo",
+ "trait": "F32Encode",
+ "cases": [
+  {
+   "id": "exact values and zero",
+   "steps": [
+    {
+     "event": "F32_ENCODE",
+     "payload": {
+      "values": [
+       0,
+       1,
+       0.5,
+       -2,
+       1.5,
+       255.5,
+       -0.25
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "F32_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "F32_DONE",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "F32_ENCODED",
+        "payload": {
+         "bits": [
+          0,
+          1065353216,
+          1056964608,
+          3221225472,
+          1069547520,
+          1132429312,
+          3196059648
+         ],
+         "rounded": [
+          0.0,
+          1.0,
+          0.5,
+          -2.0,
+          1.5,
+          255.5,
+          -0.25
+         ],
+         "tag": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "decimals round to the nearest binary32",
+   "steps": [
+    {
+     "event": "F32_ENCODE",
+     "payload": {
+      "values": [
+       0.1,
+       0.123457,
+       -0.123457,
+       3.14159265358979,
+       0.001,
+       10000000000.0,
+       16777216.0,
+       0.3
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "F32_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "F32_DONE",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "F32_ENCODED",
+        "payload": {
+         "bits": [
+          1036831949,
+          1039980294,
+          3187463942,
+          1078530011,
+          981668463,
+          1343554297,
+          1266679808,
+          1050253722
+         ],
+         "rounded": [
+          0.10000000149011612,
+          0.12345699965953827,
+          -0.12345699965953827,
+          3.1415927410125732,
+          0.0010000000474974513,
+          10000000000.0,
+          16777216.0,
+          0.30000001192092896
+         ],
+         "tag": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "rust quantize golden: the f32 with bits 3dfcd6ea read back",
+   "steps": [
+    {
+     "event": "F32_ENCODE",
+     "payload": {
+      "values": [
+       0.12345679104328156
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "F32_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "F32_DONE",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "F32_ENCODED",
+        "payload": {
+         "bits": [
+          1039980266
+         ],
+         "rounded": [
+          0.12345679104328156
+         ],
+         "tag": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "tie 1+2^-24 goes to the even mantissa 1.0",
+   "steps": [
+    {
+     "event": "F32_ENCODE",
+     "payload": {
+      "values": [
+       1.0000000596046448
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "F32_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "F32_DONE",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "F32_ENCODED",
+        "payload": {
+         "bits": [
+          1065353216
+         ],
+         "rounded": [
+          1.0
+         ],
+         "tag": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "tie 1+3*2^-24 goes to the even mantissa 1+2^-22",
+   "steps": [
+    {
+     "event": "F32_ENCODE",
+     "payload": {
+      "values": [
+       1.0000001788139343
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "F32_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "F32_DONE",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "F32_ENCODED",
+        "payload": {
+         "bits": [
+          1065353218
+         ],
+         "rounded": [
+          1.000000238418579
+         ],
+         "tag": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "just above a tie rounds up",
+   "steps": [
+    {
+     "event": "F32_ENCODE",
+     "payload": {
+      "values": [
+       1.000000059604645,
+       1.0000001788139345
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "F32_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "F32_DONE",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "F32_ENCODED",
+        "payload": {
+         "bits": [
+          1065353217,
+          1065353218
+         ],
+         "rounded": [
+          1.0000001192092896,
+          1.000000238418579
+         ],
+         "tag": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "just below a tie rounds down",
+   "steps": [
+    {
+     "event": "F32_ENCODE",
+     "payload": {
+      "values": [
+       1.0000000596046448,
+       1.000000178813934
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "F32_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "F32_DONE",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "F32_ENCODED",
+        "payload": {
+         "bits": [
+          1065353216,
+          1065353217
+         ],
+         "rounded": [
+          1.0,
+          1.0000001192092896
+         ],
+         "tag": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "integers above 2^24 tie to even",
+   "steps": [
+    {
+     "event": "F32_ENCODE",
+     "payload": {
+      "values": [
+       16777217.0,
+       16777219.0,
+       16777221.0,
+       33554434.0
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "F32_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "F32_DONE",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "F32_ENCODED",
+        "payload": {
+         "bits": [
+          1266679808,
+          1266679810,
+          1266679810,
+          1275068416
+         ],
+         "rounded": [
+          16777216.0,
+          16777220.0,
+          16777220.0,
+          33554432.0
+         ],
+         "tag": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "carry into the next exponent",
+   "steps": [
+    {
+     "event": "F32_ENCODE",
+     "payload": {
+      "values": [
+       1.9999999701976776,
+       3.9999999403953552,
+       1023.9999694824219,
+       0.4999999850988388
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "F32_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "F32_DONE",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "F32_ENCODED",
+        "payload": {
+         "bits": [
+          1073741824,
+          1082130432,
+          1149239296,
+          1056964608
+         ],
+         "rounded": [
+          2.0,
+          4.0,
+          1024.0,
+          0.5
+         ],
+         "tag": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "negative ties and carry",
+   "steps": [
+    {
+     "event": "F32_ENCODE",
+     "payload": {
+      "values": [
+       -1.0000000596046448,
+       -1.0000001788139343,
+       -1.9999999701976776
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "F32_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "F32_DONE",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "F32_ENCODED",
+        "payload": {
+         "bits": [
+          3212836864,
+          3212836866,
+          3221225472
+         ],
+         "rounded": [
+          -1.0,
+          -1.000000238418579,
+          -2.0
+         ],
+         "tag": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "smallest subnormal and neighbours",
+   "steps": [
+    {
+     "event": "F32_ENCODE",
+     "payload": {
+      "values": [
+       1.401298464324817e-45,
+       2.802596928649634e-45,
+       4.203895392974451e-45,
+       1.1754942106924411e-38
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "F32_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "F32_DONE",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "F32_ENCODED",
+        "payload": {
+         "bits": [
+          1,
+          2,
+          3,
+          8388607
+         ],
+         "rounded": [
+          1.401298464324817e-45,
+          2.802596928649634e-45,
+          4.203895392974451e-45,
+          1.1754942106924411e-38
+         ],
+         "tag": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "subnormal tie 1.5 units goes to even 2 units",
+   "steps": [
+    {
+     "event": "F32_ENCODE",
+     "payload": {
+      "values": [
+       2.1019476964872256e-45,
+       3.5032461608120427e-45,
+       4.90454462513686e-45
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "F32_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "F32_DONE",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "F32_ENCODED",
+        "payload": {
+         "bits": [
+          2,
+          2,
+          4
+         ],
+         "rounded": [
+          2.802596928649634e-45,
+          2.802596928649634e-45,
+          5.605193857299268e-45
+         ],
+         "tag": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "half a unit ties to zero and just above rounds to the smallest subnormal",
+   "steps": [
+    {
+     "event": "F32_ENCODE",
+     "payload": {
+      "values": [
+       7.006492321624085e-46,
+       7.00649232814939e-46,
+       -7.006492321624085e-46,
+       7.006492315098781e-46
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "F32_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "F32_DONE",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "F32_ENCODED",
+        "payload": {
+         "bits": [
+          0,
+          1,
+          2147483648,
+          0
+         ],
+         "rounded": [
+          0.0,
+          1.401298464324817e-45,
+          -0.0,
+          0.0
+         ],
+         "tag": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a hair above a subnormal tie rounds up and a hair below rounds down, finer than any equality tolerance",
+   "steps": [
+    {
+     "event": "F32_ENCODE",
+     "payload": {
+      "values": [
+       7.006492321624092e-46,
+       7.006492321624079e-46,
+       2.1019476964872262e-45,
+       2.101947696487225e-45,
+       3.503246160812043e-45
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "F32_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "F32_DONE",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "F32_ENCODED",
+        "payload": {
+         "bits": [
+          1,
+          0,
+          2,
+          1,
+          3
+         ],
+         "rounded": [
+          1.401298464324817e-45,
+          0.0,
+          2.802596928649634e-45,
+          1.401298464324817e-45,
+          4.203895392974451e-45
+         ],
+         "tag": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "far below the grid rounds to zero",
+   "steps": [
+    {
+     "event": "F32_ENCODE",
+     "payload": {
+      "values": [
+       1e-46,
+       1e-300,
+       5e-324
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "F32_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "F32_DONE",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "F32_ENCODED",
+        "payload": {
+         "bits": [
+          0,
+          0,
+          0
+         ],
+         "rounded": [
+          0.0,
+          0.0,
+          0.0
+         ],
+         "tag": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "subnormal decimals",
+   "steps": [
+    {
+     "event": "F32_ENCODE",
+     "payload": {
+      "values": [
+       1e-40,
+       1.4e-45,
+       -1e-42,
+       9.99999e-39
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "F32_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "F32_DONE",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "F32_ENCODED",
+        "payload": {
+         "bits": [
+          71362,
+          1,
+          2147484362,
+          7136231
+         ],
+         "rounded": [
+          9.99994610111476e-41,
+          1.401298464324817e-45,
+          -1.0005271035279194e-42,
+          9.999989541367154e-39
+         ],
+         "tag": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "subnormal that rounds up into the smallest normal",
+   "steps": [
+    {
+     "event": "F32_ENCODE",
+     "payload": {
+      "values": [
+       1.1754942807573643e-38,
+       1.1754943508222875e-38,
+       1.1754944208872107e-38,
+       1.1754942106924411e-38
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "F32_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "F32_DONE",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "F32_ENCODED",
+        "payload": {
+         "bits": [
+          8388608,
+          8388608,
+          8388608,
+          8388607
+         ],
+         "rounded": [
+          1.1754943508222875e-38,
+          1.1754943508222875e-38,
+          1.1754943508222875e-38,
+          1.1754942106924411e-38
+         ],
+         "tag": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "largest finite binary32 and its neighbours",
+   "steps": [
+    {
+     "event": "F32_ENCODE",
+     "payload": {
+      "values": [
+       3.4028234663852886e+38,
+       3.4028233751144455e+38,
+       -3.4028234663852886e+38
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "F32_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "F32_DONE",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "F32_ENCODED",
+        "payload": {
+         "bits": [
+          2139095039,
+          2139095039,
+          4286578687
+         ],
+         "rounded": [
+          3.4028234663852886e+38,
+          3.4028234663852886e+38,
+          -3.4028234663852886e+38
+         ],
+         "tag": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "below the overflow tie rounds to the largest finite",
+   "steps": [
+    {
+     "event": "F32_ENCODE",
+     "payload": {
+      "values": [
+       3.4028235677973362e+38
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "F32_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "F32_DONE",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "F32_ENCODED",
+        "payload": {
+         "bits": [
+          2139095039
+         ],
+         "rounded": [
+          3.4028234663852886e+38
+         ],
+         "tag": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the overflow tie is refused",
+   "steps": [
+    {
+     "event": "F32_ENCODE",
+     "payload": {
+      "values": [
+       1.0,
+       3.4028235677973366e+38,
+       5.0
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "F32_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "F32_DONE",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "F32_REFUSED",
+        "payload": {
+         "index": 1,
+         "reason": "overflow",
+         "tag": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "past the largest value is refused naming the first index",
+   "steps": [
+    {
+     "event": "F32_ENCODE",
+     "payload": {
+      "values": [
+       1.0,
+       2.0,
+       1e+39,
+       1e+40
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "F32_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "F32_DONE",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "F32_REFUSED",
+        "payload": {
+         "index": 2,
+         "reason": "overflow",
+         "tag": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a mixed batch keeps order",
+   "steps": [
+    {
+     "event": "F32_ENCODE",
+     "payload": {
+      "values": [
+       1e-40,
+       -1.5,
+       1.9999999701976776,
+       0,
+       1.0000000596046448,
+       16777217.0
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "F32_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "F32_DONE",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "F32_ENCODED",
+        "payload": {
+         "bits": [
+          71362,
+          3217031168,
+          1073741824,
+          0,
+          1065353216,
+          1266679808
+         ],
+         "rounded": [
+          9.99994610111476e-41,
+          -1.5,
+          2.0,
+          0.0,
+          1.0,
+          16777216.0
+         ],
+         "tag": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

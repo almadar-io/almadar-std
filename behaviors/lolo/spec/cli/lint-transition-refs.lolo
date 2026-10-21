@@ -1,0 +1,22 @@
+app lint-transition-refs-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint transition-refs <file>`; see the atom."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintTransitionRefsSpec {
+  expects trait OrbLintTransitionRefs {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+      LINT_UNREAD { rule : string! }
+    }
+  }
+  expects trait OrbLintTransitionRefsCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page "/orb-lint-transition-refs" -> OrbLintTransitionRefs, OrbLintTransitionRefsCli
+}

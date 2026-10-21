@@ -54,13 +54,15 @@ export const HASH_OPERATORS: Record<string, StdOperatorMeta> = {
     module: 'hash',
     category: 'std-codec',
     minArity: 2,
-    maxArity: 2,
-    description: 'SHA-256 digest of a string (its UTF-8 bytes), as lower-case hex or standard base64 (FIPS 180-2)',
+    maxArity: 3,
+    description:
+      'SHA-256 digest (FIPS 180-2) as lower-case hex or standard base64. Input "text" (the default) hashes a string\'s UTF-8 bytes; "bytes" hashes a bytes value (standard padded base64, decoded once, as hash/md5 reads it). Invalid base64 or another input kind fails with kind invalid',
     hasSideEffects: false,
     returnType: 'string',
     params: [
-      { name: 's', type: STRING, description: 'The string to hash' },
+      { name: 'data', type: union(STRING, BYTES), description: 'The string to hash, or a bytes value when input is "bytes"' },
       { name: 'encoding', type: DIGEST_ENCODING, description: 'Digest encoding: "hex" or "base64"' },
+      { name: 'input', type: union(lit('text'), lit('bytes')), description: 'Input kind: "text" (default) or "bytes"', optional: true, defaultValue: 'text' },
     ],
     example: '["hash/sha256", "abc", "hex"] // => "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"',
   },

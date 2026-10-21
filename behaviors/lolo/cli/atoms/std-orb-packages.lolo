@@ -3,7 +3,7 @@ app std-orb-packages [
   inbound: ["cli-packages"],
   fs: { cwd: "**": [read, write, remove], "~/.orb/**": [read, write, create, remove], "~/.orb": [create] },
   egress: ["https://registry.npmjs.org"],
-  description: "std-orb-packages — the `orb list|add|update|remove [--global]` client of the package registry (spec/cli/orb-packages.lolo; golden: orbital-cli packages.rs), bun-free. Packages live in <dir>/node_modules (dir = the working directory, or ~/.orb with --global) and the lockfile <dir>/<lockfile> holds { packages: [{ name, version, url, integrity }] }. Every command first reads the lockfile (absent = empty) and scans node_modules (scoped names included; the entry kind symlink is the workspace link), reading each package.json: a package is an orb package when it declares orbLanguage, orb, orbVocabulary or orbProgram.kind shell|desktop, and its kinds are those. list prints one row per orb package sorted by name (package 34, version 12, kinds 26, `ok`, ` (linked)`, ` [<prefix>/]`) or --json rows. remove refuses a behavior package whose prefix a .lolo or .orb file under the working directory still imports, deletes the package (a link is unlinked, never its target) and drops its lock entry. add parses name@exact-version (a range is refused ORB_PACKAGE_RANGE; a workspace-linked package is refused ORB_PACKAGE_LINKED) or a direct tarball URL, resolves name@version through GET <registry>/packages/<name>/<version> and downloads the tarball over http. update seeds the missing baseline entries and moves each non-linked package to the highest non-yanked stable version of GET <registry>/packages/<name>. INTEGRITY IS PENDING: sha256 over the tarball bytes needs std-sha256 (the bit/* operators), so after the download every target stops at the verifying step and is refused `integrity-unavailable`; nothing is unpacked, written to node_modules or recorded in the lockfile, and the check is never skipped. Not yet ported: unpack and install after a verified tarball, the kind-loads-for-this-orb problem column, the behaviors count, the update-check record and the engines subcommands. Tarballs come only from the registry knob or a sourceOrigins entry; any other host is refused ORB_PACKAGE_SOURCE."
+  description: "std-orb-packages — the `orb list|add|update|remove [--global]` client of the package registry (spec/cli/orb-packages.lolo; golden: orbital-cli packages.rs), bun-free. Packages live in <dir>/node_modules (dir = the working directory, or ~/.orb with --global) and the lockfile <dir>/<lockfile> holds { packages: [{ name, version, url, integrity }] }. Every command first reads the lockfile (absent = empty) and scans node_modules (scoped names included; the entry kind symlink is the workspace link), reading each package.json: a package is an orb package when it declares orbLanguage, orb, orbVocabulary or orbProgram.kind shell|desktop, and its kinds are those. list prints one row per orb package sorted by name (package 34, version 12, kinds 26, `ok`, ` (linked)`, ` [<prefix>/]`) or --json rows. remove refuses a behavior package whose prefix a .lolo or .orb file under the working directory still imports, deletes the package (a link is unlinked, never its target) and drops its lock entry. add parses name@exact-version (a range is refused ORB_PACKAGE_RANGE; a workspace-linked package is refused ORB_PACKAGE_LINKED) or a direct tarball URL, resolves name@version through GET <registry>/packages/<name>/<version> and downloads the tarball over http. update seeds the missing baseline entries and moves each non-linked package to the highest non-yanked stable version of GET <registry>/packages/<name>. After the download the tarball bytes are hashed by std-sha256 (hex) and compared with the registry integrity: equal goes on to the unpack step, a different digest is refused `integrity-mismatch`, an unhashable one `integrity-unavailable`; nothing is unpacked, written to node_modules or recorded in the lockfile on a refusal, and the check is never skipped. The hash is interpreted, so it fits packages of tens of kilobytes. Not yet ported: unpack and install after a verified tarball, the kind-loads-for-this-orb problem column, the behaviors count, the update-check record and the engines subcommands. Tarballs come only from the registry knob or a sourceOrigins entry; any other host is refused ORB_PACKAGE_SOURCE."
 ]
 uses Spec from "almadar-std/orb-packages"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -15,9 +15,9 @@ type BaselineEntry = { name : string!, version : string!, registry : string! }
 type LockFile = { packages : [LockEntry]! }
 type PackageTarget = { name : string!, version : string!, url : string!, integrity : string! }
 type Marker = { x : string? }
-type OrbBlock = { prefix : string? }
+type OrbPackagesBlock = { prefix : string? }
 type ProgramBlock = { kind : string?, name : string? }
-type Manifest = { name : string?, version : string?, orbLanguage : Marker?, orb : OrbBlock?, orbVocabulary : Marker?, orbProgram : ProgramBlock? }
+type OrbPackagesManifest = { name : string?, version : string?, orbLanguage : Marker?, orb : OrbPackagesBlock?, orbVocabulary : Marker?, orbProgram : ProgramBlock? }
 type Resolved = { name : string!, version : string!, url : string!, integrity : string!, yanked : boolean? }
 type VersionRow = { version : string!, yanked : boolean? }
 type VersionList = { name : string!, versions : [VersionRow]! }
@@ -25,6 +25,7 @@ type Scanned = { name : string!, kind : string! }
 
 orbital OrbPackagesOrbital {
   uses Args from "std/behaviors/std-args"
+  uses Sha from "std/behaviors/std-sha256"
 
   entity PackageCall [runtime] {
     id : string!
@@ -52,6 +53,12 @@ orbital OrbPackagesOrbital {
     tarballSize : number = 0
     digest : string = ""
     unpacked : boolean = false
+  }
+
+  trait Digest = Sha.traits.Sha256 {
+    listens {
+      OrbPackages.PKG_HASH -> SHA256_DIGEST
+    }
   }
 
   trait ArgsCli = Args.traits.ArgsParser {
@@ -154,11 +161,11 @@ orbital OrbPackagesOrbital {
       PKG_READ -> dispatching when (>= @entity.cursor (array/len @entity.pkgs))
         (set @entity.rows (array/sort @entity.rows "package" "asc"))
         (emit PKG_DISPATCH { })
-      PKG_MANIFEST -> reading when (or (= (json/parse (bytes/to-string @payload.data) Manifest) null) (and (= (object/get (json/parse (bytes/to-string @payload.data) Manifest) "orbLanguage") null) (= (object/get (json/parse (bytes/to-string @payload.data) Manifest) "orb") null) (= (object/get (json/parse (bytes/to-string @payload.data) Manifest) "orbVocabulary") null) (not (array/includes ["shell", "desktop"] (object/get (object/get (json/parse (bytes/to-string @payload.data) Manifest) "orbProgram") "kind")))))
+      PKG_MANIFEST -> reading when (or (= (json/parse (bytes/to-string @payload.data) OrbPackagesManifest) null) (and (= (object/get (json/parse (bytes/to-string @payload.data) OrbPackagesManifest) "orbLanguage") null) (= (object/get (json/parse (bytes/to-string @payload.data) OrbPackagesManifest) "orb") null) (= (object/get (json/parse (bytes/to-string @payload.data) OrbPackagesManifest) "orbVocabulary") null) (not (array/includes ["shell", "desktop"] (object/get (object/get (json/parse (bytes/to-string @payload.data) OrbPackagesManifest) "orbProgram") "kind")))))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit PKG_READ { })
-      PKG_MANIFEST -> reading when (and (!= (json/parse (bytes/to-string @payload.data) Manifest) null) (or (!= (object/get (json/parse (bytes/to-string @payload.data) Manifest) "orbLanguage") null) (!= (object/get (json/parse (bytes/to-string @payload.data) Manifest) "orb") null) (!= (object/get (json/parse (bytes/to-string @payload.data) Manifest) "orbVocabulary") null) (array/includes ["shell", "desktop"] (object/get (object/get (json/parse (bytes/to-string @payload.data) Manifest) "orbProgram") "kind"))))
-        (set @entity.rows (array/append @entity.rows (let ((m (json/parse (bytes/to-string @payload.data) Manifest)) (p (array/nth @entity.pkgs @entity.cursor))) (let ((row { package: (object/get @p "name"), kinds: (array/concat (if (!= (object/get @m "orbLanguage") null) ["language"] []) (if (!= (object/get @m "orb") null) ["behaviors"] []) (if (!= (object/get @m "orbVocabulary") null) ["language pack"] []) (if (= (object/get (object/get @m "orbProgram") "kind") "shell") ["shell"] []) (if (= (object/get (object/get @m "orbProgram") "kind") "desktop") ["desktop"] [])), version: (or (object/get @m "version") ""), path: (str/concat @entity.dir "/node_modules/" (object/get @p "name")), link: (= (object/get @p "kind") "symlink") })) (if (and (!= (object/get @m "orb") null) (!= (object/get (object/get @m "orb") "prefix") null)) (object/merge @row { prefix: (object/get (object/get @m "orb") "prefix") }) @row)))))
+      PKG_MANIFEST -> reading when (and (!= (json/parse (bytes/to-string @payload.data) OrbPackagesManifest) null) (or (!= (object/get (json/parse (bytes/to-string @payload.data) OrbPackagesManifest) "orbLanguage") null) (!= (object/get (json/parse (bytes/to-string @payload.data) OrbPackagesManifest) "orb") null) (!= (object/get (json/parse (bytes/to-string @payload.data) OrbPackagesManifest) "orbVocabulary") null) (array/includes ["shell", "desktop"] (object/get (object/get (json/parse (bytes/to-string @payload.data) OrbPackagesManifest) "orbProgram") "kind"))))
+        (set @entity.rows (array/append @entity.rows (let ((m (json/parse (bytes/to-string @payload.data) OrbPackagesManifest)) (p (array/nth @entity.pkgs @entity.cursor))) (let ((row { package: (object/get @p "name"), kinds: (array/concat (if (!= (object/get @m "orbLanguage") null) ["language"] []) (if (!= (object/get @m "orb") null) ["behaviors"] []) (if (!= (object/get @m "orbVocabulary") null) ["language pack"] []) (if (= (object/get (object/get @m "orbProgram") "kind") "shell") ["shell"] []) (if (= (object/get (object/get @m "orbProgram") "kind") "desktop") ["desktop"] [])), version: (or (object/get @m "version") ""), path: (str/concat @entity.dir "/node_modules/" (object/get @p "name")), link: (= (object/get @p "kind") "symlink") })) (if (and (!= (object/get @m "orb") null) (!= (object/get (object/get @m "orb") "prefix") null)) (object/merge @row { prefix: (object/get (object/get @m "orb") "prefix") }) @row)))))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit PKG_READ { })
       PKG_MANIFEST_FAILED -> reading
@@ -335,7 +342,7 @@ orbital OrbPackagesOrbital {
         (set @entity.tarballSize (bytes/length @payload.body))
         (set @entity.digest "")
         (set @entity.unpacked false)
-        (emit PKG_VERIFY { })
+        (emit PKG_HASH { requestId: "tarball", data: @payload.body, encoding: "hex" })
       PKG_DOWNLOADED -> resolving when (!= @payload.status 200)
         (set @entity.refused (array/append @entity.refused (str/concat (object/get (array/nth @entity.targets @entity.cursor) "name") ": ORB_PACKAGE_DOWNLOAD (the tarball url answered " @payload.status ")")))
         (emit PACKAGE_REFUSED { name: (object/get (array/nth @entity.targets @entity.cursor) "name"), problem: "ORB_PACKAGE_DOWNLOAD" })
@@ -347,11 +354,17 @@ orbital OrbPackagesOrbital {
 
     state verifying {
       INIT -> verifying
+      PKG_DIGESTED -> verifying
+        (set @entity.digest @payload.digest)
+        (emit PKG_VERIFY { })
+      PKG_HASH_FAILED -> verifying
+        (set @entity.digest "")
+        (emit PKG_VERIFY { })
       PKG_VERIFY -> installing when (and (!= @entity.digest "") (= @entity.digest (object/get (array/nth @entity.targets @entity.cursor) "integrity")))
         (emit PKG_INSTALL { })
       PKG_VERIFY -> resolving when (or (= @entity.digest "") (!= @entity.digest (object/get (array/nth @entity.targets @entity.cursor) "integrity")))
-        (emit PACKAGE_REFUSED { name: (object/get (array/nth @entity.targets @entity.cursor) "name"), problem: "integrity-unavailable" })
-        (set @entity.refused (array/append @entity.refused (str/concat (if (!= (object/get (array/nth @entity.targets @entity.cursor) "name") "") (object/get (array/nth @entity.targets @entity.cursor) "name") (object/get (array/nth @entity.targets @entity.cursor) "url")) ": integrity-unavailable (sha256 over the " @entity.tarballSize "-byte tarball needs std-sha256; nothing was installed or recorded)")))
+        (emit PACKAGE_REFUSED { name: (object/get (array/nth @entity.targets @entity.cursor) "name"), problem: (if (= @entity.digest "") "integrity-unavailable" "integrity-mismatch") })
+        (set @entity.refused (array/append @entity.refused (str/concat (if (!= (object/get (array/nth @entity.targets @entity.cursor) "name") "") (object/get (array/nth @entity.targets @entity.cursor) "name") (object/get (array/nth @entity.targets @entity.cursor) "url")) ": " (if (= @entity.digest "") "integrity-unavailable (the tarball could not be hashed" "integrity-mismatch (the tarball hashed to a different sha256 than the registry integrity") "; " @entity.tarballSize " bytes; nothing was installed or recorded)")))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit PKG_TARGET_NEXT { })
     }
@@ -517,6 +530,9 @@ orbital OrbPackagesOrbital {
       PKG_DOWNLOAD_FAILED { error : string  kind : string }
         @description "Internal: the download failed."
         @tier "internal"
+      PKG_HASH { requestId : string!  data : bytes!  encoding : string! }
+        @description "Internal: hash the downloaded tarball bytes."
+        @tier "internal"
       PKG_VERIFY { }
         @description "Internal: the integrity step, pending std-sha256: always refuses integrity-unavailable."
         @tier "internal"
@@ -558,9 +574,15 @@ orbital OrbPackagesOrbital {
         words : [string]!
       }
         @description "std-args's ARGS_PARSED: the call's words, parsed."
+      PKG_DIGESTED { requestId : string  digest : string! }
+        @description "Internal: the tarball's SHA-256 (hex)."
+      PKG_HASH_FAILED { requestId : string  reason : string! }
+        @description "Internal: the tarball could not be hashed."
+      Digest.SHA256_DIGESTED -> PKG_DIGESTED
+      Digest.SHA256_REFUSED -> PKG_HASH_FAILED
       ArgsCli.ARGS_PARSED -> PKG_ARGS_DONE
     }
   }
 
-  page "/orb-packages" as OrbPackagesPage -> OrbPackages, ArgsCli
+  page "/orb-packages" as OrbPackagesPage -> OrbPackages, ArgsCli, Digest
 }

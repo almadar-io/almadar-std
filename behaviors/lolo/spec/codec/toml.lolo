@@ -1,0 +1,22 @@
+app toml-spec [
+  version: "1.0.0",
+  description: "Design contract for reading TOML 1.0 text into a value, enough to read real Cargo.toml and package.toml files exactly. TOML_PARSE { requestId?, text } answers TOML_PARSED { requestId, value } where value is the document as a table (a Map of string to value): [table], [a.b] and [[array-of-tables]] headers; bare, quoted and dotted keys; basic strings with their escapes, literal strings, and multi-line basic and literal strings (the first newline dropped, a line-ending backslash trimming the whitespace after it); integers in decimal, hex 0x, octal 0o and binary 0b with underscores, floats with fraction and exponent, booleans; arrays (multi-line, trailing comma, mixed element types) and inline tables; comments. Offset date-times, local date-times (the date and time may be separated by T or by one space), local dates and local times, with the month and the days of that month (leap years included) checked, are returned as the string exactly as written, because the value type has no date and a string loses nothing the caller could not re-parse; integers and floats are both numbers, so 1 and 1.0 read the same. TOML_REFUSED { requestId, code, line, detail } answers anything else, never a partial value and never a guess: line is the 1-based line of the offending token; code is closed: unexpected-char (a character that starts no token), unterminated-string, unterminated-array (an array or inline table still open at the end of the text; line is the line where the outermost unclosed bracket opened), inline-newline (a newline inside an inline table), control-char (a forbidden control character in a string), bad-escape (an escape outside the TOML list, a lone surrogate, a code point above U+10FFFF), syntax (a token where the grammar does not allow it, a missing = or value, a second statement on one line), bad-value (a bare word that is not a boolean, number or date-time), integer-range (an integer beyond 2^53-1 in magnitude, which a number cannot carry), special-float (inf and nan, which the value type has no number for), duplicate-key (a key defined twice, or a key whose parent is a value), table-conflict (a table defined twice, extended through a dotted key or an inline table, or an array-of-tables used as a plain table or the reverse), reserved-key (a key named __proto__). Goldens: spec/codec/toml.replay.goldens.json."
+]
+
+type TomlValue = string | number | boolean | [TomlValue] | Map string TomlValue
+
+orbital TomlSpec {
+  expects entity TomlRun [runtime] {
+    id : string!
+  }
+  expects trait Toml {
+    state idle {
+      TOML_PARSE -> idle
+    }
+    emits {
+      TOML_PARSED { requestId : string!  value : TomlValue! }
+      TOML_REFUSED { requestId : string!  code : string!  line : number!  detail : string! }
+    }
+  }
+  expects page "/toml" -> Toml
+}

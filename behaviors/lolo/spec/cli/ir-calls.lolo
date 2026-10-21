@@ -1,0 +1,17 @@
+app ir-calls-spec [
+  version: "1.0.0",
+  description: "Design contract for the shared IR call finder. IR_CALLS_FIND { requestId, program, heads } answers IR_CALLS_FOUND { requestId, calls }: one { head, args, path } for every call, in pre-order, whose head (the first element of a list, a string) is in heads, found in the guard and every effect of each transition and each tick of each inline trait of the program, at any depth of nested do, if, when, let, fn, lists and maps. path starts orbitals[i].traits[j].stateMachine.transitions[k] or .ticks[k], then .guard or .effects[m], and continues below the effect as the Rust validator does: .do[i-1] under do, .then and .else under if, .then[i-2] under when, .body[i-2] under let, a bare [i] under any other list and .key under a map. args are the list's elements after the head. A quote form is data and is not entered; a lambda's parameter list and a let binding name are not calls; a string equal to a head that is not the head of a list is data. A head that does not occur answers no calls. The lints that look for http, emit, call-service and persist calls compose this contract instead of walking the tree again."
+]
+
+type IrExpr = string | number | boolean | [IrExpr] | Map string IrExpr
+type IrCall = { head : string!, args : [IrExpr]!, path : string! }
+
+orbital IrCallsSpec {
+  expects trait IrCalls {
+    state ready
+    emits {
+      IR_CALLS_FOUND { requestId : string!  calls : [IrCall]! }
+    }
+  }
+  expects page "/orb-ir-calls" -> IrCalls
+}

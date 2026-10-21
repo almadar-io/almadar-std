@@ -2,12 +2,13 @@ app lint-sign-in-route-spec [
   version: "1.0.0",
   description: "Design contract for `orb lint sign-in-route <file>`. It lowers the file with program/read and reports ORB_P_HOST_RESERVED_ROUTE for any page declared on the host's own `/login` route, and ORB_P_SIGN_IN_UNKNOWN_ROUTE when the app's `signIn:` route (other than `/login`) is no page of the program or is itself `access: authenticated` (route params compare as one `:` segment), each with its path and suggestion (status 500, exit 1). Pages recorded by `uses lazy` are not visible to this port. Clean answers `lint sign-in-route: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
 orbital LintSignInRouteSpec {
   expects trait OrbLintSignInRoute {
     state ready
     emits {
-      LINT_FOUND { rule : string!  findings : [string]! }
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
       LINT_UNREAD { rule : string! }
     }
   }

@@ -1,0 +1,808 @@
+{
+ "atom": "cli/atoms/std-orb-lint-state-unreachable.lolo",
+ "trait": "OrbLintStateUnreachable",
+ "cases": [
+  {
+   "id": "orphan-state",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "active"
+             },
+             {
+              "name": "orphan"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "active",
+              "event": "START"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "state-unreachable",
+         "findings": [
+          {
+           "code": "ORB_T_STATE_UNREACHABLE",
+           "path": "orbitals[0].traits[0].stateMachine.states",
+           "message": "State 'orphan' is unreachable from the initial state 'idle' via any transition path",
+           "suggestion": "Add a transition that reaches this state, or remove the dead state",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-all-reachable",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "active"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "active",
+              "event": "START"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "state-unreachable",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "multi-hop-chain-reached",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "a",
+              "isInitial": true
+             },
+             {
+              "name": "b"
+             },
+             {
+              "name": "c"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "a",
+              "to": "b",
+              "event": "X"
+             },
+             {
+              "from": "b",
+              "to": "c",
+              "event": "Y"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "state-unreachable",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "chain-broken-reports-tail",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "a",
+              "isInitial": true
+             },
+             {
+              "name": "b"
+             },
+             {
+              "name": "c"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "b",
+              "to": "c",
+              "event": "Y"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "state-unreachable",
+         "findings": [
+          {
+           "code": "ORB_T_STATE_UNREACHABLE",
+           "path": "orbitals[0].traits[0].stateMachine.states",
+           "message": "State 'b' is unreachable from the initial state 'a' via any transition path",
+           "suggestion": "Add a transition that reaches this state, or remove the dead state",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_STATE_UNREACHABLE",
+           "path": "orbitals[0].traits[0].stateMachine.states",
+           "message": "State 'c' is unreachable from the initial state 'a' via any transition path",
+           "suggestion": "Add a transition that reaches this state, or remove the dead state",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "wildcard-source-adds-no-edge",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "active"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "*",
+              "to": "active",
+              "event": "GO"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "state-unreachable",
+         "findings": [
+          {
+           "code": "ORB_T_STATE_UNREACHABLE",
+           "path": "orbitals[0].traits[0].stateMachine.states",
+           "message": "State 'active' is unreachable from the initial state 'idle' via any transition path",
+           "suggestion": "Add a transition that reaches this state, or remove the dead state",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "init-self-loop-reaches-nothing",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "active"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "state-unreachable",
+         "findings": [
+          {
+           "code": "ORB_T_STATE_UNREACHABLE",
+           "path": "orbitals[0].traits[0].stateMachine.states",
+           "message": "State 'active' is unreachable from the initial state 'idle' via any transition path",
+           "suggestion": "Add a transition that reaches this state, or remove the dead state",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-init-to-other-state-is-an-edge",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "loading",
+              "isInitial": true
+             },
+             {
+              "name": "loaded"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "loading",
+              "to": "loaded",
+              "event": "INIT"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "state-unreachable",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "list-source-edge",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "a",
+              "isInitial": true
+             },
+             {
+              "name": "b"
+             },
+             {
+              "name": "c"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "a",
+              "to": "b",
+              "event": "X"
+             },
+             {
+              "from": [
+               "b",
+               "zzz"
+              ],
+              "to": "c",
+              "event": "Y"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "state-unreachable",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "unreached-cycle-reports-both",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "a",
+              "isInitial": true
+             },
+             {
+              "name": "b"
+             },
+             {
+              "name": "c"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "b",
+              "to": "c",
+              "event": "X"
+             },
+             {
+              "from": "c",
+              "to": "b",
+              "event": "Y"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "state-unreachable",
+         "findings": [
+          {
+           "code": "ORB_T_STATE_UNREACHABLE",
+           "path": "orbitals[0].traits[0].stateMachine.states",
+           "message": "State 'b' is unreachable from the initial state 'a' via any transition path",
+           "suggestion": "Add a transition that reaches this state, or remove the dead state",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_STATE_UNREACHABLE",
+           "path": "orbitals[0].traits[0].stateMachine.states",
+           "message": "State 'c' is unreachable from the initial state 'a' via any transition path",
+           "suggestion": "Add a transition that reaches this state, or remove the dead state",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-wildcard-init-self-loop-still-skipped",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "active"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "*",
+              "to": "idle",
+              "event": "INIT"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "state-unreachable",
+         "findings": [
+          {
+           "code": "ORB_T_STATE_UNREACHABLE",
+           "path": "orbitals[0].traits[0].stateMachine.states",
+           "message": "State 'active' is unreachable from the initial state 'idle' via any transition path",
+           "suggestion": "Add a transition that reaches this state, or remove the dead state",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-no-initial-state-no-check",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "a"
+             },
+             {
+              "name": "b"
+             }
+            ],
+            "transitions": []
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "state-unreachable",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-trait-without-state-machine",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "Ext"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "state-unreachable",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

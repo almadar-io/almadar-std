@@ -1,0 +1,811 @@
+{
+ "source": "Expected rows come from the documented Rust quantize/round_sig6/f32 semantics reimplemented in a scratch python script: components cast to float32, scale = max abs (1 when zero), bytes floor((v/scale)*127+0.5) clamped, scale rounded to 6 significant digits with the decimal module (exact, ties to even, what format {:.5e} does for exact ties), then float32; key sha256(model NUL text). The Rust goldens quantize_matches_ts_math and the 0.123457f32 case are included. The F32 stage is stubbed by feeding F32_ENCODED with the binary32 values the std-f32 goldens pin.",
+ "atom": "ml/atoms/std-vector-quantize.lolo",
+ "trait": "VectorQuantize",
+ "cases": [
+  {
+   "id": "rust quantize_matches_ts_math: scale 0.5 bytes 127 -63 25 0",
+   "steps": [
+    {
+     "event": "QUANTIZE",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "records": [
+       {
+        "text": "a",
+        "vector": [
+         0.5,
+         -0.25,
+         0.1,
+         0.0
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "QUANTIZED",
+        "payload": {
+         "dims": 4,
+         "rows": [
+          "J5Q6k9iViVvufQQ+HRpUOzHOs9jWWVuKxR+mxmUhp7QAAAA/f8EZAA=="
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "rust: scale rounded to 6 significant digits reads back 0.123457f32",
+   "steps": [
+    {
+     "event": "QUANTIZE",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "records": [
+       {
+        "text": "a",
+        "vector": [
+         0.12345679104328156,
+         -0.01
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "QUANTIZED",
+        "payload": {
+         "dims": 2,
+         "rows": [
+          "J5Q6k9iViVvufQQ+HRpUOzHOs9jWWVuKxR+mxmUhp7QG1/w9f/Y="
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "all zero vector has scale 1 and zero bytes",
+   "steps": [
+    {
+     "event": "QUANTIZE",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "records": [
+       {
+        "text": "z",
+        "vector": [
+         0.0,
+         0.0,
+         0.0
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "QUANTIZED",
+        "payload": {
+         "dims": 3,
+         "rows": [
+          "HOCf0y8eflY8J9Y/HzAsBsIrV0IvZOXR24XfSOkYeDQAAIA/AAAA"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "several records keep input order, each with its own scale",
+   "steps": [
+    {
+     "event": "QUANTIZE",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "records": [
+       {
+        "text": "a",
+        "vector": [
+         0.5,
+         -0.25,
+         0.1,
+         0.0
+        ]
+       },
+       {
+        "text": "b",
+        "vector": [
+         3.0,
+         -1.5,
+         0.001,
+         2.9999
+        ]
+       },
+       {
+        "text": "c",
+        "vector": [
+         -0.04,
+         0.02,
+         0.0003,
+         0.04
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "QUANTIZED",
+        "payload": {
+         "dims": 4,
+         "rows": [
+          "J5Q6k9iViVvufQQ+HRpUOzHOs9jWWVuKxR+mxmUhp7QAAAA/f8EZAA==",
+          "WP23T+Jj3lesZofW+dkNxGZnxEltbLaOBhChzzEFEVIAAEBAf8EAfw==",
+          "mXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIK1yM9gUABfw=="
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "clamp and half-up rounding at -63.5 and 127",
+   "steps": [
+    {
+     "event": "QUANTIZE",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "records": [
+       {
+        "text": "a",
+        "vector": [
+         0.5,
+         -0.25,
+         -0.5,
+         0.5,
+         0.126
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "QUANTIZED",
+        "payload": {
+         "dims": 5,
+         "rows": [
+          "J5Q6k9iViVvufQQ+HRpUOzHOs9jWWVuKxR+mxmUhp7QAAAA/f8GBfyA="
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "decimal tie 123456.5 rounds to the even 123456",
+   "steps": [
+    {
+     "event": "QUANTIZE",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "records": [
+       {
+        "text": "t",
+        "vector": [
+         123456.5,
+         1.0
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "QUANTIZED",
+        "payload": {
+         "dims": 2,
+         "rows": [
+          "cm5V4f1fDpYLGrfJzdc4lHHrkOJV45fB2/GsU4lICtIAIPFHfwA="
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "decimal tie 123457.5 rounds to the even 123458",
+   "steps": [
+    {
+     "event": "QUANTIZE",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "records": [
+       {
+        "text": "t",
+        "vector": [
+         123457.5,
+         1.0
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "QUANTIZED",
+        "payload": {
+         "dims": 2,
+         "rows": [
+          "cm5V4f1fDpYLGrfJzdc4lHHrkOJV45fB2/GsU4lICtIAIfFHfwA="
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "999999.875 rounds up to 1000000 across the digit boundary",
+   "steps": [
+    {
+     "event": "QUANTIZE",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "records": [
+       {
+        "text": "t",
+        "vector": [
+         999999.875,
+         1.0
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "QUANTIZED",
+        "payload": {
+         "dims": 2,
+         "rows": [
+          "cm5V4f1fDpYLGrfJzdc4lHHrkOJV45fB2/GsU4lICtIAJHRJfwA="
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "scale one and powers of ten neighbours",
+   "steps": [
+    {
+     "event": "QUANTIZE",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "records": [
+       {
+        "text": "a",
+        "vector": [
+         1.0
+        ]
+       },
+       {
+        "text": "b",
+        "vector": [
+         0.1
+        ]
+       },
+       {
+        "text": "c",
+        "vector": [
+         0.01
+        ]
+       },
+       {
+        "text": "d",
+        "vector": [
+         10.0
+        ]
+       },
+       {
+        "text": "e",
+        "vector": [
+         100.0
+        ]
+       },
+       {
+        "text": "f",
+        "vector": [
+         0.99999994
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "QUANTIZED",
+        "payload": {
+         "dims": 1,
+         "rows": [
+          "J5Q6k9iViVvufQQ+HRpUOzHOs9jWWVuKxR+mxmUhp7QAAIA/fw==",
+          "WP23T+Jj3lesZofW+dkNxGZnxEltbLaOBhChzzEFEVLNzMw9fw==",
+          "mXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIK1yM8fw==",
+          "6O6/8fVGK9N0soFaIm7mRGljFQ4P29I5/h4h67RRGUoAACBBfw==",
+          "YLY05w861sumbJLQKfJDSJH8gf76EOz6haSluz8QbnsAAMhCfw==",
+          "HZtroNtCM4QpqihPKn2k0ijXjI/nAHXFja/J9S3+PVQAAIA/fw=="
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "small scales down to 1e-17",
+   "steps": [
+    {
+     "event": "QUANTIZE",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "records": [
+       {
+        "text": "a",
+        "vector": [
+         3e-05,
+         1e-05
+        ]
+       },
+       {
+        "text": "b",
+        "vector": [
+         1.2345678e-09,
+         -3e-10
+        ]
+       },
+       {
+        "text": "c",
+        "vector": [
+         1.0000001e-17,
+         5e-18
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "QUANTIZED",
+        "payload": {
+         "dims": 2,
+         "rows": [
+          "J5Q6k9iViVvufQQ+HRpUOzHOs9jWWVuKxR+mxmUhp7SCqPs3fyo=",
+          "WP23T+Jj3lesZofW+dkNxGZnxEltbLaOBhChzzEFEVKSrakwf+E=",
+          "mXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuKqdzgjfz8="
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "one bit under a six-digit decimal and one over",
+   "steps": [
+    {
+     "event": "QUANTIZE",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "records": [
+       {
+        "text": "a",
+        "vector": [
+         0.9999995
+        ]
+       },
+       {
+        "text": "b",
+        "vector": [
+         1.0000005
+        ]
+       },
+       {
+        "text": "c",
+        "vector": [
+         0.123456749
+        ]
+       },
+       {
+        "text": "d",
+        "vector": [
+         0.123456751
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "QUANTIZED",
+        "payload": {
+         "dims": 1,
+         "rows": [
+          "J5Q6k9iViVvufQQ+HRpUOzHOs9jWWVuKxR+mxmUhp7QAAIA/fw==",
+          "WP23T+Jj3lesZofW+dkNxGZnxEltbLaOBhChzzEFEVIAAIA/fw==",
+          "mXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIG1/w9fw==",
+          "6O6/8fVGK9N0soFaIm7mRGljFQ4P29I5/h4h67RRGUoG1/w9fw=="
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "empty model is refused",
+   "steps": [
+    {
+     "event": "QUANTIZE",
+     "payload": {
+      "model": "",
+      "records": [
+       {
+        "text": "a",
+        "vector": [
+         1.0
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "QUANTIZE_REFUSED",
+        "payload": {
+         "code": "ORB_VECTOR_BAD_MODEL",
+         "detail": "model name must be non-empty and there must be at least one record"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "no records is refused",
+   "steps": [
+    {
+     "event": "QUANTIZE",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "records": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "QUANTIZE_REFUSED",
+        "payload": {
+         "code": "ORB_VECTOR_BAD_MODEL",
+         "detail": "model name must be non-empty and there must be at least one record"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "zero components is refused",
+   "steps": [
+    {
+     "event": "QUANTIZE",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "records": [
+       {
+        "text": "a",
+        "vector": []
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "QUANTIZE_REFUSED",
+        "payload": {
+         "code": "ORB_VECTOR_BAD_MODEL",
+         "detail": "dims must be between 1 and 65535"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a vector of another length is refused with both lengths",
+   "steps": [
+    {
+     "event": "QUANTIZE",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "records": [
+       {
+        "text": "a",
+        "vector": [
+         1.0,
+         2.0
+        ]
+       },
+       {
+        "text": "b",
+        "vector": [
+         1.0,
+         2.0,
+         3.0
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "QUANTIZE_REFUSED",
+        "payload": {
+         "code": "ORB_VECTOR_BAD_RECORD",
+         "detail": "vector has 3 components, store dims is 2"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "scale 2e6 is now exact (was out of range)",
+   "steps": [
+    {
+     "event": "QUANTIZE",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "records": [
+       {
+        "text": "a",
+        "vector": [
+         2000000.0,
+         0.0
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "QUANTIZED",
+        "payload": {
+         "dims": 2,
+         "rows": [
+          "J5Q6k9iViVvufQQ+HRpUOzHOs9jWWVuKxR+mxmUhp7QAJPRJfwA="
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "scale 1e-18 is now exact",
+   "steps": [
+    {
+     "event": "QUANTIZE",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "records": [
+       {
+        "text": "a",
+        "vector": [
+         1e-18,
+         -5e-19
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "QUANTIZED",
+        "payload": {
+         "dims": 2,
+         "rows": [
+          "J5Q6k9iViVvufQQ+HRpUOzHOs9jWWVuKxR+mxmUhp7TvkpMhf8E="
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the smallest subnormal scale",
+   "steps": [
+    {
+     "event": "QUANTIZE",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "records": [
+       {
+        "text": "a",
+        "vector": [
+         1.401298464324817e-45,
+         0.0
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "QUANTIZED",
+        "payload": {
+         "dims": 2,
+         "rows": [
+          "J5Q6k9iViVvufQQ+HRpUOzHOs9jWWVuKxR+mxmUhp7QBAAAAfwA="
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a subnormal scale with a negative component",
+   "steps": [
+    {
+     "event": "QUANTIZE",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "records": [
+       {
+        "text": "a",
+        "vector": [
+         -9.9e-40,
+         1e-40,
+         0.0
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "QUANTIZED",
+        "payload": {
+         "dims": 3,
+         "rows": [
+          "J5Q6k9iViVvufQQ+HRpUOzHOs9jWWVuKxR+mxmUhp7S4xwoAgQ0A"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the largest finite scale",
+   "steps": [
+    {
+     "event": "QUANTIZE",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "records": [
+       {
+        "text": "a",
+        "vector": [
+         3.4028234663852886e+38,
+         -1e+38
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "QUANTIZED",
+        "payload": {
+         "dims": 2,
+         "rows": [
+          "J5Q6k9iViVvufQQ+HRpUOzHOs9jWWVuKxR+mxmUhp7Tu/39/f9s="
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "scales across the range in one batch",
+   "steps": [
+    {
+     "event": "QUANTIZE",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "records": [
+       {
+        "text": "a",
+        "vector": [
+         1e-30,
+         2e-30
+        ]
+       },
+       {
+        "text": "b",
+        "vector": [
+         3e+20,
+         -1e+20
+        ]
+       },
+       {
+        "text": "c",
+        "vector": [
+         7e-08,
+         1e-08
+        ]
+       },
+       {
+        "text": "d",
+        "vector": [
+         123456.5,
+         0.5
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "QUANTIZED",
+        "payload": {
+         "dims": 2,
+         "rows": [
+          "J5Q6k9iViVvufQQ+HRpUOzHOs9jWWVuKxR+mxmUhp7RgQiIOQH8=",
+          "WP23T+Jj3lesZofW+dkNxGZnxEltbLaOBhChzzEFEVKxGoJhf9Y=",
+          "mXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuLoUpYzfxI=",
+          "6O6/8fVGK9N0soFaIm7mRGljFQ4P29I5/h4h67RRGUoAIPFHfwA="
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,26 @@
+app sig6-spec [
+  version: "1.0.0",
+  description: "Design contract for rounding binary32 scales to 6 significant decimal digits the way the orb vector store writes them (Rust: format the f64 with {:.5e}, parse the text as an f64, cast to f32). SIG6 { scales } takes positive finite binary32 values and answers SIG6_DONE { bits, rounded }: per scale in order, the bit pattern of that result and the number it stands for. The decimal rounding is on the exact value, to nearest with ties to the even digit; the decimal is converted to a double (nearest, ties to even) and that double to binary32 (nearest, ties to even), so a decimal that sits within half a double ulp of a midpoint between two binary32 values takes the even neighbour. The whole positive range works, from the smallest subnormal 2^-149 to the largest finite value, with no refusal for a scale being too small or too large."
+]
+
+orbital Sig6Spec {
+  expects entity Sig6Run [runtime] {
+    id : string
+  }
+  expects trait Sig6 {
+    state idle {
+      SIG6 -> s1
+    }
+    state s1 {
+      BIGCMP_ANSWERED -> s2
+    }
+    state encoding {
+      F32_ENCODED -> idle
+    }
+    emits {
+      SIG6_DONE { bits : [number]!  rounded : [number]! }
+      SIG6_REFUSED { reason : string! }
+    }
+  }
+  expects page "/sig6" -> Sig6
+}

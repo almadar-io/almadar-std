@@ -1,0 +1,22 @@
+app lint-duplicate-use-alias-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint duplicate-use-alias <file>`; see the atom."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintDuplicateUseAliasSpec {
+  expects trait OrbLintDuplicateUseAlias {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+      LINT_UNREAD { rule : string! }
+    }
+  }
+  expects trait OrbLintDuplicateUseAliasCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page "/orb-lint-duplicate-use-alias" -> OrbLintDuplicateUseAlias, OrbLintDuplicateUseAliasCli
+}

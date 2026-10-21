@@ -2,12 +2,13 @@ app lint-generic-types-spec [
   version: "1.0.0",
   description: "Design contract for `orb lint generic-types <file>`, the port of the compiler rule ORB_T_GENERIC_TYPE_DEPRECATED. The file is lowered with program/read. Every inline trait config knob typed json, any or scalar and every emit payload, event payload and types-map field typed json, any, scalar or shapeless object, and every shapeless object entity field, is reported as `[ORB_T_GENERIC_TYPE_DEPRECATED] <path>: <message>` with the Rust message and suggestion, status 500 (exit 1). A clean program answers `lint generic-types: clean` (status 200, exit 0). Anything but exactly one file argument is the usage (status 400, exit 2). A file that cannot be read or lowered fails the run (status 500)."
 ]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
 orbital LintGenericTypesSpec {
   expects trait OrbLintGenericTypes {
     state ready
     emits {
-      LINT_FOUND { rule : string!  findings : [string]! }
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
       LINT_UNREAD { rule : string! }
     }
   }

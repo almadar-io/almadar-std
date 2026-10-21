@@ -1,0 +1,1204 @@
+{
+ "atom": "net/atoms/std-http-boot-gate.lolo",
+ "trait": "BootGate",
+ "source": "orbital-rust/crates/orbital-shell-rust/src/host/boot.rs (boot_env_problems and the production refusal) and orbital-server lib.rs boot_env_tests",
+ "note": "Twin of the host boot path: production with a problem refuses the boot, elsewhere the problem only warns. The os/getenv effects of INIT and of each READ_<NAME> step are not played (the replay would run them with no grant); READ_USE_MOCK_DATA, the last read, has no effect and is played, and ENV_COLLECTED stands for the ten answers. The replay ignores a case-level entity. The credential-list effect (ENV_COLLECTED with services and no mock) is not played; its answer is stubbed as CRED_LISTED / CRED_UNLISTED, and the services reach the replay in the ENV_COLLECTED payload because the replay ignores case-level config. The Rust twin is boot_env_tests (missing credential and unreadable catalog lines); the line texts come from std-boot-env-check and std-credential-admin, whose own goldens pin them.",
+ "cases": [
+  {
+   "id": "last-variable-collects-all-reads",
+   "steps": [
+    {
+     "event": "READ_USE_MOCK_DATA",
+     "payload": {
+      "value": "true"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ENV_COLLECTED",
+        "payload": {
+         "vars": [
+          {
+           "name": "USE_MOCK_DATA",
+           "value": "true"
+          }
+         ],
+         "services": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "unset-last-variable-reads-blank",
+   "steps": [
+    {
+     "event": "READ_USE_MOCK_DATA",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "ENV_COLLECTED",
+        "payload": {
+         "vars": [
+          {
+           "name": "USE_MOCK_DATA",
+           "value": ""
+          }
+         ],
+         "services": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "production-with-mock-data-asks-the-check",
+   "steps": [
+    {
+     "event": "ENV_COLLECTED",
+     "payload": {
+      "vars": [
+       {
+        "name": "NODE_ENV",
+        "value": "production"
+       },
+       {
+        "name": "AUTH_PROVIDER",
+        "value": "oidc"
+       },
+       {
+        "name": "OIDC_ISSUER_URL",
+        "value": "https://i"
+       },
+       {
+        "name": "OIDC_AUDIENCE",
+        "value": "a"
+       },
+       {
+        "name": "FIREBASE_PROJECT_ID",
+        "value": ""
+       },
+       {
+        "name": "FIREBASE_SERVICE_ACCOUNT_PATH",
+        "value": ""
+       },
+       {
+        "name": "FIREBASE_AUTH_EMULATOR_HOST",
+        "value": ""
+       },
+       {
+        "name": "FIRESTORE_EMULATOR_HOST",
+        "value": "h:1"
+       },
+       {
+        "name": "ALMADAR_INTEGRATIONS_MODE",
+        "value": ""
+       },
+       {
+        "name": "USE_MOCK_DATA",
+        "value": "true"
+       }
+      ],
+      "services": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ENV_ASK",
+        "payload": {
+         "missing": [],
+         "error": ""
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "ENV_ASK",
+     "payload": {
+      "missing": [],
+      "error": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ENV_CHECK",
+        "payload": {
+         "env": {
+          "authProvider": "oidc",
+          "oidcIssuerUrl": "https://i",
+          "oidcAudience": "a",
+          "firebaseProjectId": "",
+          "firebaseServiceAccountPath": "",
+          "firebaseAuthEmulatorHost": "",
+          "firestoreEmulatorHost": "h:1"
+         },
+         "production": true,
+         "mock": true,
+         "missingCredentials": [],
+         "catalogError": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-real-mode-development-is-neither",
+   "steps": [
+    {
+     "event": "ENV_COLLECTED",
+     "payload": {
+      "vars": [
+       {
+        "name": "NODE_ENV",
+        "value": "development"
+       },
+       {
+        "name": "AUTH_PROVIDER",
+        "value": "firebase"
+       },
+       {
+        "name": "OIDC_ISSUER_URL",
+        "value": ""
+       },
+       {
+        "name": "OIDC_AUDIENCE",
+        "value": ""
+       },
+       {
+        "name": "FIREBASE_PROJECT_ID",
+        "value": "p"
+       },
+       {
+        "name": "FIREBASE_SERVICE_ACCOUNT_PATH",
+        "value": ""
+       },
+       {
+        "name": "FIREBASE_AUTH_EMULATOR_HOST",
+        "value": ""
+       },
+       {
+        "name": "FIRESTORE_EMULATOR_HOST",
+        "value": ""
+       },
+       {
+        "name": "ALMADAR_INTEGRATIONS_MODE",
+        "value": "real"
+       },
+       {
+        "name": "USE_MOCK_DATA",
+        "value": "false"
+       }
+      ],
+      "services": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ENV_ASK",
+        "payload": {
+         "missing": [],
+         "error": ""
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "ENV_ASK",
+     "payload": {
+      "missing": [],
+      "error": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ENV_CHECK",
+        "payload": {
+         "env": {
+          "authProvider": "firebase",
+          "oidcIssuerUrl": "",
+          "oidcAudience": "",
+          "firebaseProjectId": "p",
+          "firebaseServiceAccountPath": "",
+          "firebaseAuthEmulatorHost": "",
+          "firestoreEmulatorHost": ""
+         },
+         "production": false,
+         "mock": false,
+         "missingCredentials": [],
+         "catalogError": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "integrations-mode-mock-is-mock",
+   "steps": [
+    {
+     "event": "ENV_COLLECTED",
+     "payload": {
+      "vars": [
+       {
+        "name": "NODE_ENV",
+        "value": "development"
+       },
+       {
+        "name": "AUTH_PROVIDER",
+        "value": ""
+       },
+       {
+        "name": "OIDC_ISSUER_URL",
+        "value": ""
+       },
+       {
+        "name": "OIDC_AUDIENCE",
+        "value": ""
+       },
+       {
+        "name": "FIREBASE_PROJECT_ID",
+        "value": ""
+       },
+       {
+        "name": "FIREBASE_SERVICE_ACCOUNT_PATH",
+        "value": ""
+       },
+       {
+        "name": "FIREBASE_AUTH_EMULATOR_HOST",
+        "value": ""
+       },
+       {
+        "name": "FIRESTORE_EMULATOR_HOST",
+        "value": ""
+       },
+       {
+        "name": "ALMADAR_INTEGRATIONS_MODE",
+        "value": "mock"
+       },
+       {
+        "name": "USE_MOCK_DATA",
+        "value": ""
+       }
+      ],
+      "services": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ENV_ASK",
+        "payload": {
+         "missing": [],
+         "error": ""
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "ENV_ASK",
+     "payload": {
+      "missing": [],
+      "error": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ENV_CHECK",
+        "payload": {
+         "env": {
+          "authProvider": "",
+          "oidcIssuerUrl": "",
+          "oidcAudience": "",
+          "firebaseProjectId": "",
+          "firebaseServiceAccountPath": "",
+          "firebaseAuthEmulatorHost": "",
+          "firestoreEmulatorHost": ""
+         },
+         "production": false,
+         "mock": true,
+         "missingCredentials": [],
+         "catalogError": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "clean-check-then-origins-clears",
+   "steps": [
+    {
+     "event": "ENV_CHECKED",
+     "payload": {
+      "problems": [],
+      "ok": true
+     },
+     "expect": {
+      "neverEmits": [
+       "BOOT_CLEARED"
+      ]
+     }
+    },
+    {
+     "event": "CORS_CONFIGURED",
+     "payload": {
+      "corsOrigins": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "BOOT_CLEARED"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "origins-first-then-check-clears",
+   "steps": [
+    {
+     "event": "CORS_CONFIGURED",
+     "payload": {
+      "corsOrigins": [
+       "https://a.app"
+      ]
+     },
+     "expect": {
+      "neverEmits": [
+       "BOOT_CLEARED"
+      ]
+     }
+    },
+    {
+     "event": "ENV_CHECKED",
+     "payload": {
+      "problems": [],
+      "ok": true
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "BOOT_CLEARED"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "production-problem-refuses-and-never-clears",
+   "steps": [
+    {
+     "event": "ENV_COLLECTED",
+     "payload": {
+      "vars": [
+       {
+        "name": "NODE_ENV",
+        "value": "production"
+       },
+       {
+        "name": "AUTH_PROVIDER",
+        "value": "oidc"
+       },
+       {
+        "name": "OIDC_ISSUER_URL",
+        "value": "https://i"
+       },
+       {
+        "name": "OIDC_AUDIENCE",
+        "value": "a"
+       },
+       {
+        "name": "FIREBASE_PROJECT_ID",
+        "value": ""
+       },
+       {
+        "name": "FIREBASE_SERVICE_ACCOUNT_PATH",
+        "value": ""
+       },
+       {
+        "name": "FIREBASE_AUTH_EMULATOR_HOST",
+        "value": ""
+       },
+       {
+        "name": "FIRESTORE_EMULATOR_HOST",
+        "value": "h:1"
+       },
+       {
+        "name": "ALMADAR_INTEGRATIONS_MODE",
+        "value": ""
+       },
+       {
+        "name": "USE_MOCK_DATA",
+        "value": "true"
+       }
+      ],
+      "services": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ENV_ASK",
+        "payload": {
+         "missing": [],
+         "error": ""
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "ENV_ASK",
+     "payload": {
+      "missing": [],
+      "error": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ENV_CHECK",
+        "payload": {
+         "env": {
+          "authProvider": "oidc",
+          "oidcIssuerUrl": "https://i",
+          "oidcAudience": "a",
+          "firebaseProjectId": "",
+          "firebaseServiceAccountPath": "",
+          "firebaseAuthEmulatorHost": "",
+          "firestoreEmulatorHost": "h:1"
+         },
+         "production": true,
+         "mock": true,
+         "missingCredentials": [],
+         "catalogError": ""
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "ENV_CHECKED",
+     "payload": {
+      "problems": [
+       "FIRESTORE_EMULATOR_HOST is set: the Firestore emulator is for local dev only"
+      ],
+      "ok": false
+     },
+     "expect": {
+      "state": "refused",
+      "emits": [
+       {
+        "event": "BOOT_REFUSED",
+        "payload": {
+         "problems": [
+          "FIRESTORE_EMULATOR_HOST is set: the Firestore emulator is for local dev only"
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "BOOT_CLEARED",
+       "BOOT_WARNED"
+      ]
+     }
+    },
+    {
+     "event": "CORS_CONFIGURED",
+     "payload": {
+      "corsOrigins": []
+     },
+     "expect": {
+      "neverEmits": [
+       "BOOT_CLEARED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "development-problem-warns-and-clears",
+   "steps": [
+    {
+     "event": "ENV_COLLECTED",
+     "payload": {
+      "vars": [
+       {
+        "name": "NODE_ENV",
+        "value": "development"
+       },
+       {
+        "name": "AUTH_PROVIDER",
+        "value": "firebase"
+       },
+       {
+        "name": "OIDC_ISSUER_URL",
+        "value": ""
+       },
+       {
+        "name": "OIDC_AUDIENCE",
+        "value": ""
+       },
+       {
+        "name": "FIREBASE_PROJECT_ID",
+        "value": "p"
+       },
+       {
+        "name": "FIREBASE_SERVICE_ACCOUNT_PATH",
+        "value": ""
+       },
+       {
+        "name": "FIREBASE_AUTH_EMULATOR_HOST",
+        "value": ""
+       },
+       {
+        "name": "FIRESTORE_EMULATOR_HOST",
+        "value": ""
+       },
+       {
+        "name": "ALMADAR_INTEGRATIONS_MODE",
+        "value": "real"
+       },
+       {
+        "name": "USE_MOCK_DATA",
+        "value": "false"
+       }
+      ],
+      "services": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ENV_ASK",
+        "payload": {
+         "missing": [],
+         "error": ""
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "ENV_ASK",
+     "payload": {
+      "missing": [],
+      "error": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ENV_CHECK",
+        "payload": {
+         "env": {
+          "authProvider": "firebase",
+          "oidcIssuerUrl": "",
+          "oidcAudience": "",
+          "firebaseProjectId": "p",
+          "firebaseServiceAccountPath": "",
+          "firebaseAuthEmulatorHost": "",
+          "firestoreEmulatorHost": ""
+         },
+         "production": false,
+         "mock": false,
+         "missingCredentials": [],
+         "catalogError": ""
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "CORS_CONFIGURED",
+     "payload": {
+      "corsOrigins": []
+     },
+     "expect": {
+      "neverEmits": [
+       "BOOT_CLEARED"
+      ]
+     }
+    },
+    {
+     "event": "ENV_CHECKED",
+     "payload": {
+      "problems": [
+       "FIRESTORE_EMULATOR_HOST is set: the Firestore emulator is for local dev only"
+      ],
+      "ok": false
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "BOOT_WARNED",
+        "payload": {
+         "problems": [
+          "FIRESTORE_EMULATOR_HOST is set: the Firestore emulator is for local dev only"
+         ]
+        }
+       },
+       {
+        "event": "BOOT_CLEARED"
+       }
+      ],
+      "neverEmits": [
+       "BOOT_REFUSED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "development-problem-then-origins-warns-then-clears",
+   "steps": [
+    {
+     "event": "ENV_COLLECTED",
+     "payload": {
+      "vars": [
+       {
+        "name": "NODE_ENV",
+        "value": "development"
+       },
+       {
+        "name": "AUTH_PROVIDER",
+        "value": "firebase"
+       },
+       {
+        "name": "OIDC_ISSUER_URL",
+        "value": ""
+       },
+       {
+        "name": "OIDC_AUDIENCE",
+        "value": ""
+       },
+       {
+        "name": "FIREBASE_PROJECT_ID",
+        "value": "p"
+       },
+       {
+        "name": "FIREBASE_SERVICE_ACCOUNT_PATH",
+        "value": ""
+       },
+       {
+        "name": "FIREBASE_AUTH_EMULATOR_HOST",
+        "value": ""
+       },
+       {
+        "name": "FIRESTORE_EMULATOR_HOST",
+        "value": ""
+       },
+       {
+        "name": "ALMADAR_INTEGRATIONS_MODE",
+        "value": "real"
+       },
+       {
+        "name": "USE_MOCK_DATA",
+        "value": "false"
+       }
+      ],
+      "services": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ENV_ASK",
+        "payload": {
+         "missing": [],
+         "error": ""
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "ENV_ASK",
+     "payload": {
+      "missing": [],
+      "error": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ENV_CHECK",
+        "payload": {
+         "env": {
+          "authProvider": "firebase",
+          "oidcIssuerUrl": "",
+          "oidcAudience": "",
+          "firebaseProjectId": "p",
+          "firebaseServiceAccountPath": "",
+          "firebaseAuthEmulatorHost": "",
+          "firestoreEmulatorHost": ""
+         },
+         "production": false,
+         "mock": false,
+         "missingCredentials": [],
+         "catalogError": ""
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "ENV_CHECKED",
+     "payload": {
+      "problems": [
+       "FIRESTORE_EMULATOR_HOST is set: the Firestore emulator is for local dev only"
+      ],
+      "ok": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "BOOT_WARNED"
+       }
+      ],
+      "neverEmits": [
+       "BOOT_CLEARED",
+       "BOOT_REFUSED"
+      ]
+     }
+    },
+    {
+     "event": "CORS_CONFIGURED",
+     "payload": {
+      "corsOrigins": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "BOOT_CLEARED"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "unreadable-variable-refuses",
+   "steps": [
+    {
+     "event": "ENV_UNREAD",
+     "payload": {
+      "error": "env USE_MOCK_DATA is not granted",
+      "kind": "grant"
+     },
+     "expect": {
+      "state": "refused",
+      "emits": [
+       {
+        "event": "BOOT_REFUSED",
+        "payload": {
+         "problems": [
+          "env USE_MOCK_DATA is not granted"
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "BOOT_CLEARED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "services-are-kept-and-a-mocked-deployment-skips-the-credentials",
+   "steps": [
+    {
+     "event": "ENV_COLLECTED",
+     "payload": {
+      "vars": [
+       {
+        "name": "NODE_ENV",
+        "value": "production"
+       },
+       {
+        "name": "AUTH_PROVIDER",
+        "value": ""
+       },
+       {
+        "name": "OIDC_ISSUER_URL",
+        "value": ""
+       },
+       {
+        "name": "OIDC_AUDIENCE",
+        "value": ""
+       },
+       {
+        "name": "FIREBASE_PROJECT_ID",
+        "value": ""
+       },
+       {
+        "name": "FIREBASE_SERVICE_ACCOUNT_PATH",
+        "value": ""
+       },
+       {
+        "name": "FIREBASE_AUTH_EMULATOR_HOST",
+        "value": ""
+       },
+       {
+        "name": "FIRESTORE_EMULATOR_HOST",
+        "value": ""
+       },
+       {
+        "name": "ALMADAR_INTEGRATIONS_MODE",
+        "value": ""
+       },
+       {
+        "name": "USE_MOCK_DATA",
+        "value": "true"
+       }
+      ],
+      "services": [
+       "stripe"
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ENV_ASK",
+        "payload": {
+         "missing": [],
+         "error": ""
+        }
+       }
+      ],
+      "neverEmits": [
+       "CRED_ADMIN_BOOT_CHECK"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "listed-credentials-ask-the-boot-check-for-the-called-services",
+   "steps": [
+    {
+     "event": "ENV_COLLECTED",
+     "payload": {
+      "vars": [
+       {
+        "name": "NODE_ENV",
+        "value": "production"
+       },
+       {
+        "name": "AUTH_PROVIDER",
+        "value": ""
+       },
+       {
+        "name": "OIDC_ISSUER_URL",
+        "value": ""
+       },
+       {
+        "name": "OIDC_AUDIENCE",
+        "value": ""
+       },
+       {
+        "name": "FIREBASE_PROJECT_ID",
+        "value": ""
+       },
+       {
+        "name": "FIREBASE_SERVICE_ACCOUNT_PATH",
+        "value": ""
+       },
+       {
+        "name": "FIREBASE_AUTH_EMULATOR_HOST",
+        "value": ""
+       },
+       {
+        "name": "FIRESTORE_EMULATOR_HOST",
+        "value": ""
+       },
+       {
+        "name": "ALMADAR_INTEGRATIONS_MODE",
+        "value": ""
+       },
+       {
+        "name": "USE_MOCK_DATA",
+        "value": "true"
+       }
+      ],
+      "services": [
+       "stripe"
+      ]
+     }
+    },
+    {
+     "event": "CRED_LISTED",
+     "payload": {
+      "entries": [
+       {
+        "service": "stripe",
+        "envVar": "STRIPE_SECRET_KEY",
+        "required": true,
+        "description": "API key",
+        "configured": false
+       },
+       {
+        "service": "stripe",
+        "envVar": "STRIPE_WEBHOOK",
+        "required": false,
+        "description": "hook",
+        "configured": false
+       },
+       {
+        "service": "llm",
+        "envVar": "LLM_KEY",
+        "required": true,
+        "description": "key",
+        "configured": true
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CRED_ADMIN_BOOT_CHECK",
+        "payload": {
+         "services": [
+          "stripe"
+         ],
+         "held": [
+          "LLM_KEY"
+         ],
+         "catalog": [
+          {
+           "service": "stripe",
+           "backend": "",
+           "listed": true,
+           "credentials": [
+            {
+             "envVar": "STRIPE_SECRET_KEY",
+             "required": true,
+             "description": "API key",
+             "oneOf": ""
+            },
+            {
+             "envVar": "STRIPE_WEBHOOK",
+             "required": false,
+             "description": "hook",
+             "oneOf": ""
+            }
+           ]
+          },
+          {
+           "service": "llm",
+           "backend": "",
+           "listed": true,
+           "credentials": [
+            {
+             "envVar": "LLM_KEY",
+             "required": true,
+             "description": "key",
+             "oneOf": ""
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "owed-credentials-become-missingCredentials",
+   "steps": [
+    {
+     "event": "ENV_COLLECTED",
+     "payload": {
+      "vars": [
+       {
+        "name": "NODE_ENV",
+        "value": "production"
+       },
+       {
+        "name": "AUTH_PROVIDER",
+        "value": "oidc"
+       },
+       {
+        "name": "OIDC_ISSUER_URL",
+        "value": "https://i"
+       },
+       {
+        "name": "OIDC_AUDIENCE",
+        "value": "a"
+       },
+       {
+        "name": "FIREBASE_PROJECT_ID",
+        "value": ""
+       },
+       {
+        "name": "FIREBASE_SERVICE_ACCOUNT_PATH",
+        "value": ""
+       },
+       {
+        "name": "FIREBASE_AUTH_EMULATOR_HOST",
+        "value": ""
+       },
+       {
+        "name": "FIRESTORE_EMULATOR_HOST",
+        "value": ""
+       },
+       {
+        "name": "ALMADAR_INTEGRATIONS_MODE",
+        "value": ""
+       },
+       {
+        "name": "USE_MOCK_DATA",
+        "value": ""
+       }
+      ],
+      "services": []
+     }
+    },
+    {
+     "event": "CRED_ADMIN_OWED",
+     "payload": {
+      "owed": [
+       "stripe: STRIPE_SECRET_KEY (API key)"
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ENV_ASK",
+        "payload": {
+         "missing": [
+          "stripe: STRIPE_SECRET_KEY (API key)"
+         ],
+         "error": ""
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "ENV_ASK",
+     "payload": {
+      "missing": [
+       "stripe: STRIPE_SECRET_KEY (API key)"
+      ],
+      "error": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ENV_CHECK",
+        "payload": {
+         "production": true,
+         "mock": false,
+         "missingCredentials": [
+          "stripe: STRIPE_SECRET_KEY (API key)"
+         ],
+         "catalogError": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "unreadable-catalog-becomes-catalogError",
+   "steps": [
+    {
+     "event": "ENV_COLLECTED",
+     "payload": {
+      "vars": [
+       {
+        "name": "NODE_ENV",
+        "value": "production"
+       },
+       {
+        "name": "AUTH_PROVIDER",
+        "value": "oidc"
+       },
+       {
+        "name": "OIDC_ISSUER_URL",
+        "value": "https://i"
+       },
+       {
+        "name": "OIDC_AUDIENCE",
+        "value": "a"
+       },
+       {
+        "name": "FIREBASE_PROJECT_ID",
+        "value": ""
+       },
+       {
+        "name": "FIREBASE_SERVICE_ACCOUNT_PATH",
+        "value": ""
+       },
+       {
+        "name": "FIREBASE_AUTH_EMULATOR_HOST",
+        "value": ""
+       },
+       {
+        "name": "FIRESTORE_EMULATOR_HOST",
+        "value": ""
+       },
+       {
+        "name": "ALMADAR_INTEGRATIONS_MODE",
+        "value": ""
+       },
+       {
+        "name": "USE_MOCK_DATA",
+        "value": ""
+       }
+      ],
+      "services": []
+     }
+    },
+    {
+     "event": "CRED_UNLISTED",
+     "payload": {
+      "error": "no registry"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ENV_ASK",
+        "payload": {
+         "missing": [],
+         "error": "no registry"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "ENV_ASK",
+     "payload": {
+      "missing": [],
+      "error": "no registry"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ENV_CHECK",
+        "payload": {
+         "missingCredentials": [],
+         "catalogError": "no registry"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

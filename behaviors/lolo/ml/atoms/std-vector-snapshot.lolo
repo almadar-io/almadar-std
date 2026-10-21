@@ -1,0 +1,461 @@
+app std-vector-snapshot [
+  version: "1.0.0",
+  description: "std-vector-snapshot — write a package's vector snapshot (dist/vectors.vec) the way `orb behaviors vectors snapshot` does. SNAPSHOT { wanted, userDir, providerModel, out, locked } reads the existing snapshot at out and the package's locked snapshot (each only when the file exists, the locked one only when it is not out), resolves every wanted text through std-vector-resolve (snapshots first, then the user store, embedding and persisting misses through the provider), then re-reads the user store and takes the stored quantized record of each distinct text from std-vector-store, so the written bytes are the stored ones, never re-quantized. The records, one per distinct text, are sorted strictly ascending by key (the key as 64 lower-case hex digits through array/sort, which orders bytewise), written in the ORBVEC layout to out.tmp and renamed over out. An empty wanted list refuses ORB_VECTOR_EMPTY. SNAPSHOT_DONE { model, records, out } on success; SNAPSHOT_REFUSED { code, detail } otherwise, with the resolve and store refusals passed through. Same inputs, same bytes."
+  egress: ["https://api.openai.com", "https://openrouter.ai", "http://127.0.0.1:1234"],
+  fs: { cwd: "**": [read, write, remove, create] },
+  exec: ["kill"]
+]
+uses Spec from "almadar-std/vector-snapshot"
+uses Resolve from "std/behaviors/std-vector-resolve"
+uses Store from "std/behaviors/std-vector-store"
+uses Llm from "std/behaviors/std-llm"
+uses Write from "std/behaviors/std-vector-write"
+uses Quantize from "std/behaviors/std-vector-quantize"
+uses F32 from "std/behaviors/std-f32"
+uses Delay from "std/behaviors/std-delay"
+uses Sig6 from "std/behaviors/std-sig6"
+uses BigCmp from "std/behaviors/std-bigcmp"
+
+type WantedText = { key : string!, text : string! }
+type StoreEntry = { found : boolean!, dims : number!, scale : number!, record : bytes!, vector : [number]! }
+type SortRow = { hk : string!, row : bytes! }
+
+orbital VectorSnapshotOrbital {
+  entity SnapshotRun [runtime] {
+    id : string!
+    wanted : [WantedText] = []
+    userDir : string = ""
+    providerModel : string = ""
+    providerKind : string = ""
+    embedModel : string = ""
+    out : string = ""
+    locked : string = ""
+    snapshots : [bytes] = []
+    snapPaths : [string] = []
+    rawStores : [bytes] = []
+    userPath : string = ""
+    model : string = ""
+    texts : [string] = []
+    dims : number = 0
+    sorted : [SortRow] = []
+    merged : bytes = ""
+    count : number = 0
+  }
+
+  trait SnapStore = Store.traits.VectorLookup {
+    listens {
+      SnapResolve.VECTOR_LOOKUP_MANY -> VECTOR_LOOKUP_MANY
+      Snapshot.VECTOR_LOOKUP_MANY -> VECTOR_LOOKUP_MANY
+      SnapWrite.VECTOR_LOOKUP_MANY -> VECTOR_LOOKUP_MANY
+      SnapSig6.SIG6_DONE -> SIG6_DONE
+      SnapSig6.SIG6_REFUSED -> SIG6_REFUSED
+    }
+  }
+
+  trait SnapWrite = Write.traits.VectorWrite {
+    listens {
+      SnapResolve.VECTOR_WRITE -> VECTOR_WRITE
+      SnapQuantize.QUANTIZED -> QUANTIZED
+      SnapQuantize.QUANTIZE_REFUSED -> QUANTIZE_REFUSED
+      SnapStore.VECTOR_RESOLVED -> VECTOR_RESOLVED
+      SnapStore.VECTOR_REFUSED -> VECTOR_REFUSED
+      SnapDelay.ELAPSED -> ELAPSED
+    }
+  }
+
+  trait SnapQuantize = Quantize.traits.VectorQuantize {
+    listens {
+      SnapWrite.QUANTIZE -> QUANTIZE
+      SnapF32.F32_ENCODED -> F32_ENCODED
+      SnapF32.F32_REFUSED -> F32_REFUSED
+      SnapSig6.SIG6_DONE -> SIG6_DONE
+      SnapSig6.SIG6_REFUSED -> SIG6_REFUSED
+    }
+  }
+
+  trait SnapF32 = F32.traits.F32Encode {
+    listens {
+      SnapQuantize.F32_ENCODE -> F32_ENCODE
+      SnapSig6.F32_ENCODE -> F32_ENCODE
+    }
+  }
+
+  trait SnapSig6 = Sig6.traits.Sig6 {
+    listens {
+      SnapQuantize.SIG6 -> SIG6
+      SnapStore.SIG6 -> SIG6
+      SnapBigCmp.BIGCMP_ANSWERED -> BIGCMP_ANSWERED
+      SnapF32.F32_ENCODED -> F32_ENCODED
+      SnapF32.F32_REFUSED -> F32_REFUSED
+    }
+  }
+
+  trait SnapBigCmp = BigCmp.traits.BigCmp {
+    listens {
+      SnapSig6.BIGCMP_BATCH -> BIGCMP_BATCH
+    }
+  }
+
+  trait SnapDelay = Delay.traits.Delay {
+    listens {
+      SnapWrite.LOCK_WAIT -> START
+    }
+  }
+
+  trait SnapLlmOrShared = Llm.traits.LlmClient {
+    events {
+      LLM_EMBED: LLM_EMBED_ORS
+    }
+    config {
+      embedProvider: openrouter
+      embedOrigin: "https://openrouter.ai"
+      embedBasePath: "/api/v1"
+      embedModel: "baai/bge-base-en-v1.5"
+      embedApiKey: "EMBEDDING_API_KEY"
+    }
+    listens {
+      SnapResolve.LLM_EMBED_ORS -> LLM_EMBED_ORS
+    }
+  }
+
+  trait SnapLlmOrOwn = Llm.traits.LlmClient {
+    events {
+      LLM_EMBED: LLM_EMBED_ORO
+    }
+    config {
+      embedProvider: openrouter
+      embedOrigin: "https://openrouter.ai"
+      embedBasePath: "/api/v1"
+      embedModel: "baai/bge-base-en-v1.5"
+      embedApiKey: "OPEN_ROUTER_API_KEY"
+    }
+    listens {
+      SnapResolve.LLM_EMBED_ORO -> LLM_EMBED_ORO
+    }
+  }
+
+  trait SnapLlmOaShared = Llm.traits.LlmClient {
+    events {
+      LLM_EMBED: LLM_EMBED_OAS
+    }
+    config {
+      embedProvider: openai
+      embedOrigin: "https://api.openai.com"
+      embedBasePath: "/v1"
+      embedModel: "baai/bge-base-en-v1.5"
+      embedApiKey: "EMBEDDING_API_KEY"
+    }
+    listens {
+      SnapResolve.LLM_EMBED_OAS -> LLM_EMBED_OAS
+    }
+  }
+
+  trait SnapLlmOaOwn = Llm.traits.LlmClient {
+    events {
+      LLM_EMBED: LLM_EMBED_OAO
+    }
+    config {
+      embedProvider: openai
+      embedOrigin: "https://api.openai.com"
+      embedBasePath: "/v1"
+      embedModel: "baai/bge-base-en-v1.5"
+      embedApiKey: "OPENAI_API_KEY"
+    }
+    listens {
+      SnapResolve.LLM_EMBED_OAO -> LLM_EMBED_OAO
+    }
+  }
+
+  trait SnapLlmLm = Llm.traits.LlmClient {
+    events {
+      LLM_EMBED: LLM_EMBED_LM
+    }
+    config {
+      embedProvider: lmstudio
+      embedOrigin: "http://127.0.0.1:1234"
+      embedBasePath: "/v1"
+      embedModel: "text-embedding-bge-base-en-v1.5"
+      embedApiKey: "EMBEDDING_API_KEY"
+    }
+    listens {
+      SnapResolve.LLM_EMBED_LM -> LLM_EMBED_LM
+    }
+  }
+
+
+  trait SnapResolve = Resolve.traits.VectorResolve {
+    listens {
+      Snapshot.RESOLVE -> RESOLVE
+      Snapshot.USER_STORE_READ -> USER_STORE_READ
+      SnapStore.VECTOR_RESOLVED -> VECTOR_RESOLVED
+      SnapStore.VECTOR_REFUSED -> VECTOR_REFUSED
+      SnapLlmOrShared.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      SnapLlmOrShared.LLM_FAILED -> LLM_FAILED
+      SnapLlmOrOwn.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      SnapLlmOrOwn.LLM_FAILED -> LLM_FAILED
+      SnapLlmOaShared.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      SnapLlmOaShared.LLM_FAILED -> LLM_FAILED
+      SnapLlmOaOwn.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      SnapLlmOaOwn.LLM_FAILED -> LLM_FAILED
+      SnapLlmLm.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      SnapLlmLm.LLM_FAILED -> LLM_FAILED
+      SnapWrite.VECTOR_WRITTEN -> VECTOR_WRITTEN
+      SnapWrite.VECTOR_WRITE_REFUSED -> VECTOR_WRITE_REFUSED
+      RESOLVE {
+        wanted : [WantedText]!
+        snapshots : [bytes]!
+        snapshotPaths : [string]
+        userDir : string!
+        providerModel : string!
+        providerKind : string
+        embedModel : string
+      }
+      USER_STORE_READ {
+        data : bytes!
+      }
+      VECTOR_RESOLVED {
+        model : string!
+        entries : [StoreEntry]!
+      }
+      VECTOR_REFUSED {
+        code : string!
+        detail : string!
+      }
+      LLM_EMBED_RESULT {
+        embeddings : [[number]]!
+      }
+      LLM_FAILED {
+        code : string
+        message : string!
+      }
+      VECTOR_WRITTEN {
+        path : string!
+        count : number!
+      }
+      VECTOR_WRITE_REFUSED {
+        code : string!
+        detail : string!
+      }
+    }
+  }
+
+  trait Snapshot -> SnapshotRun [integration, instance] {
+    initial: idle
+
+    state idle {
+      SNAPSHOT -> idle when (== (array/len @payload.wanted) 0)
+        (emit SNAPSHOT_REFUSED { code: "ORB_VECTOR_EMPTY", detail: "the package has no organism or capability text to snapshot" })
+      SNAPSHOT -> outReading when (> (array/len @payload.wanted) 0)
+        (set @entity.wanted @payload.wanted)
+        (set @entity.userDir @payload.userDir)
+        (set @entity.providerModel @payload.providerModel)
+        (set @entity.providerKind (str/default @payload.providerKind ""))
+        (set @entity.embedModel (str/default @payload.embedModel ""))
+        (set @entity.out @payload.out)
+        (set @entity.locked @payload.locked)
+        (set @entity.snapshots [])
+        (set @entity.snapPaths [])
+        (set @entity.texts (array/unique (array/map @payload.wanted (fn wt @wt.text))))
+        (os/read-file { anchor: "cwd" path: @payload.out } { emit: { success: SN_OUT_READ, failure: SN_OUT_ABSENT } })
+    }
+
+    state outReading {
+      SN_OUT_READ -> lockCheck
+        (set @entity.snapshots [@payload.data])
+        (set @entity.snapPaths [@entity.out])
+        (emit SN_NEXT { })
+      SN_OUT_ABSENT -> lockCheck when (== @payload.kind "not-found")
+        (emit SN_NEXT { })
+      SN_OUT_ABSENT -> idle when (!= @payload.kind "not-found")
+        (emit SNAPSHOT_REFUSED { code: "ORB_VECTOR_IO", detail: (str/concat @entity.out ": " @payload.error) })
+    }
+
+    state lockCheck {
+      SN_NEXT -> lockedReading when (and (!= @entity.locked "") (!= @entity.locked @entity.out))
+        (os/read-file { anchor: "cwd" path: @entity.locked } { emit: { success: SN_LOCKED_READ, failure: SN_LOCKED_ABSENT } })
+      SN_NEXT -> resolving when (or (== @entity.locked "") (== @entity.locked @entity.out))
+        (emit RESOLVE { wanted: @entity.wanted, snapshots: @entity.snapshots, snapshotPaths: @entity.snapPaths, userDir: @entity.userDir, providerModel: @entity.providerModel, providerKind: @entity.providerKind, embedModel: @entity.embedModel })
+    }
+
+    state lockedReading {
+      SN_LOCKED_READ -> resolving
+        (set @entity.snapshots (array/append @entity.snapshots @payload.data))
+        (set @entity.snapPaths (array/append @entity.snapPaths @entity.locked))
+        (emit RESOLVE { wanted: @entity.wanted, snapshots: @entity.snapshots, snapshotPaths: @entity.snapPaths, userDir: @entity.userDir, providerModel: @entity.providerModel, providerKind: @entity.providerKind, embedModel: @entity.embedModel })
+      SN_LOCKED_ABSENT -> resolving when (== @payload.kind "not-found")
+        (emit RESOLVE { wanted: @entity.wanted, snapshots: @entity.snapshots, snapshotPaths: @entity.snapPaths, userDir: @entity.userDir, providerModel: @entity.providerModel, providerKind: @entity.providerKind, embedModel: @entity.embedModel })
+      SN_LOCKED_ABSENT -> idle when (!= @payload.kind "not-found")
+        (emit SNAPSHOT_REFUSED { code: "ORB_VECTOR_IO", detail: (str/concat @entity.locked ": " @payload.error) })
+    }
+
+    state resolving {
+      USER_STORE_NEEDED -> resolving
+        (set @entity.userPath @payload.path)
+        (os/read-file { anchor: "cwd" path: @payload.path } { emit: { success: SN_USER_READ, failure: SN_USER_ABSENT } })
+      SN_USER_READ -> resolving
+        (emit USER_STORE_READ { data: @payload.data })
+      SN_USER_ABSENT -> resolving when (== @payload.kind "not-found")
+        (emit USER_STORE_READ { data: (bytes/from-string "") })
+      SN_USER_ABSENT -> idle when (!= @payload.kind "not-found")
+        (emit SNAPSHOT_REFUSED { code: "ORB_VECTOR_IO", detail: (str/concat @entity.userPath ": " @payload.error) })
+      VECTORS_ANSWERED -> rawReading
+        (set @entity.model @payload.model)
+        (os/read-file { anchor: "cwd" path: @entity.userPath } { emit: { success: SN_RAW_READ, failure: SN_RAW_ABSENT } })
+      VECTORS_REFUSED -> idle
+        (emit SNAPSHOT_REFUSED { code: @payload.code, detail: @payload.detail })
+    }
+
+    state rawReading {
+      SN_RAW_READ -> rawLookup
+        (set @entity.rawStores (array/append @entity.snapshots @payload.data))
+        (emit VECTOR_LOOKUP_MANY { stores: @entity.rawStores, origins: (array/append @entity.snapPaths @entity.userPath), model: @entity.model, texts: @entity.texts })
+      SN_RAW_ABSENT -> rawLookup when (== @payload.kind "not-found")
+        (set @entity.rawStores (array/append @entity.snapshots (bytes/from-string "")))
+        (emit VECTOR_LOOKUP_MANY { stores: @entity.rawStores, origins: (array/append @entity.snapPaths @entity.userPath), model: @entity.model, texts: @entity.texts })
+      SN_RAW_ABSENT -> idle when (!= @payload.kind "not-found")
+        (emit SNAPSHOT_REFUSED { code: "ORB_VECTOR_IO", detail: (str/concat @entity.userPath ": " @payload.error) })
+    }
+
+    state rawLookup {
+      VECTOR_RESOLVED -> idle when (array/some @payload.entries (fn en (not @en.found)))
+        (emit SNAPSHOT_REFUSED { code: "ORB_VECTOR_MISSING", detail: (str/concat "no vector for `" (object/get (array/find @entity.wanted (fn w (== @w.text (array/nth @entity.texts (array/findIndex @payload.entries (fn en (not @en.found))))))) "key") "` after embedding") })
+      VECTOR_RESOLVED -> writing when (not (array/some @payload.entries (fn en (not @en.found))))
+        (set @entity.dims (object/get (array/first @payload.entries) "dims"))
+        (set @entity.count (array/len @payload.entries))
+        (set @entity.sorted (array/sort (array/map (array/range 0 (array/len @payload.entries)) (fn ei (let ((row (bytes/concat [(hash/sha256 (str/concat @entity.model "\u{0}" (array/nth @entity.texts @ei)) "base64") (object/get (array/nth @payload.entries @ei) "record")]))) { hk: (str/join (array/map (array/range 0 8) (fn w (let ((x (bytes/read-uint @row (* 4 @w) 4 "be"))) (str/join (array/map (array/range 0 8) (fn d (let ((dg (math/mod (math/floor (/ @x (math/pow 16 (- 7 @d)))) 16))) (str/slice "0123456789abcdef" @dg (+ @dg 1))))) "")))) ""), row: @row }))) "hk" "asc"))
+        (set @entity.merged (bytes/concat (array/concat [(bytes/from-string "ORBVEC") (bytes/write-uint 1 2 "le") (bytes/write-uint (bytes/length (bytes/from-string @entity.model)) 2 "le") (bytes/from-string @entity.model) (bytes/write-uint @entity.dims 2 "le") (bytes/write-uint @entity.count 4 "le")] (array/map @entity.sorted (fn sr @sr.row)))))
+        (emit SN_BUILT { count: @entity.count, bytes: @entity.merged })
+        (os/mkdir { anchor: "cwd" path: (os/path-dir @entity.out) } true { emit: { success: SN_DIR_OK, failure: SN_IO_FAILED } })
+      VECTOR_REFUSED -> idle
+        (emit SNAPSHOT_REFUSED { code: @payload.code, detail: @payload.detail })
+    }
+
+    state writing {
+      SN_DIR_OK -> writing
+        (os/write-file { anchor: "cwd" path: (str/concat @entity.out ".tmp") } @entity.merged { emit: { success: SN_TMP_OK, failure: SN_IO_FAILED } })
+      SN_TMP_OK -> writing
+        (os/rename { anchor: "cwd" path: (str/concat @entity.out ".tmp") } { anchor: "cwd" path: @entity.out } { emit: { success: SN_RENAMED, failure: SN_IO_FAILED } })
+      SN_RENAMED -> idle
+        (emit SNAPSHOT_DONE { model: @entity.model, records: @entity.count, out: @entity.out })
+      SN_IO_FAILED -> idle
+        (emit SNAPSHOT_REFUSED { code: "ORB_VECTOR_IO", detail: (str/concat @entity.out ": " @payload.error) })
+    }
+
+    emits {
+      RESOLVE -> external {
+        wanted : [WantedText]!
+        snapshots : [bytes]!
+        snapshotPaths : [string]
+        userDir : string!
+        providerModel : string!
+        providerKind : string
+        embedModel : string
+      }
+        @tier "secondary"
+      USER_STORE_READ -> external {
+        data : bytes!
+      }
+        @tier "secondary"
+      VECTOR_LOOKUP_MANY -> external {
+        stores : [bytes]!
+        origins : [string]
+        model : string!
+        texts : [string]!
+      }
+        @tier "secondary"
+      SN_OUT_READ -> internal {
+        data : bytes!
+      }
+      SN_OUT_ABSENT -> internal {
+        error : string!
+        kind : string!
+      }
+      SN_NEXT -> internal { }
+      SN_LOCKED_READ -> internal {
+        data : bytes!
+      }
+      SN_LOCKED_ABSENT -> internal {
+        error : string!
+        kind : string!
+      }
+      SN_USER_READ -> internal {
+        data : bytes!
+      }
+      SN_USER_ABSENT -> internal {
+        error : string!
+        kind : string!
+      }
+      SN_RAW_READ -> internal {
+        data : bytes!
+      }
+      SN_RAW_ABSENT -> internal {
+        error : string!
+        kind : string!
+      }
+      SN_BUILT -> internal {
+        count : number!
+        bytes : bytes!
+      }
+      SN_DIR_OK -> internal { }
+      SN_TMP_OK -> internal { }
+      SN_RENAMED -> internal { }
+      SN_IO_FAILED -> internal {
+        error : string!
+      }
+      SNAPSHOT_DONE -> external {
+        model : string!
+        records : number!
+        out : string!
+      }
+        @description "The snapshot was written: its model, the number of records and where."
+        @tier "primary"
+      SNAPSHOT_REFUSED -> external {
+        code : string!
+        detail : string!
+      }
+        @description "ORB_VECTOR_EMPTY, ORB_VECTOR_MISSING, ORB_VECTOR_IO, ORB_VECTOR_PROVIDER_MISSING, ORB_VECTOR_MODEL_MISMATCH or a store or write refusal."
+        @tier "primary"
+    }
+
+    listens {
+      SnapResolve.USER_STORE_NEEDED -> USER_STORE_NEEDED
+      SnapResolve.VECTORS_ANSWERED -> VECTORS_ANSWERED
+      SnapResolve.VECTORS_REFUSED -> VECTORS_REFUSED
+      SnapStore.VECTOR_RESOLVED -> VECTOR_RESOLVED
+      SnapStore.VECTOR_REFUSED -> VECTOR_REFUSED
+      USER_STORE_NEEDED {
+        model : string!
+        path : string!
+      }
+      VECTORS_ANSWERED {
+        model : string!
+        vectors : [{ key : string!, vector : [number]! }]!
+      }
+      VECTORS_REFUSED {
+        code : string!
+        detail : string!
+      }
+      VECTOR_RESOLVED {
+        model : string!
+        entries : [StoreEntry]!
+      }
+      VECTOR_REFUSED {
+        code : string!
+        detail : string!
+      }
+      SNAPSHOT -> external {
+        wanted : [WantedText]!
+        userDir : string!
+        providerModel : string!
+        providerKind : string
+        embedModel : string
+        out : string!
+        locked : string!
+      }
+        @description "Write the snapshot of these texts to out."
+        @synonyms "vector snapshot, dist vectors.vec, package embeddings"
+    }
+  }
+
+  page "/vector-snapshot" as VectorSnapshotPage -> Snapshot, SnapResolve, SnapStore, SnapWrite, SnapQuantize, SnapF32, SnapSig6, SnapBigCmp, SnapDelay, SnapLlmOrShared, SnapLlmOrOwn, SnapLlmOaShared, SnapLlmOaOwn, SnapLlmLm
+}

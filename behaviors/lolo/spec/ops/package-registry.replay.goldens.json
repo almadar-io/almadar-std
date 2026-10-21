@@ -1,0 +1,327 @@
+{
+ "atom": "ops/atoms/std-package-registry.lolo",
+ "trait": "PackageRegistry",
+ "source": "python3 hashlib.sha256",
+ "note": "Only the publish integrity path is pinned here. Digests are fed as steps, so these cases do not depend on hash/sha256 accepting bytes (lane HB1).",
+ "cases": [
+  {
+   "id": "new-version-is-hashed-stored-and-published",
+   "steps": [
+    {
+     "event": "REGISTRY_MISSING",
+     "payload": {
+      "error": "x",
+      "code": "not-found"
+     },
+     "from": "serving",
+     "entity": {
+      "id": "r",
+      "busy": true,
+      "queue": [],
+      "tarball": "YWJj",
+      "current": {
+       "requestId": 7,
+       "op": "publish",
+       "name": "pkg-a",
+       "version": "1.0.0",
+       "integrity": ""
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "REG_HASH",
+        "payload": {
+         "requestId": "7",
+         "data": "YWJj",
+         "encoding": "hex"
+        }
+       },
+       {
+        "event": "PACKAGE_PUBLISHED",
+        "payload": {
+         "requestId": 7,
+         "name": "pkg-a",
+         "version": "1.0.0"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PACKAGE_REFUSED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "missing-version-on-fetch-is-404-and-hashes-nothing",
+   "steps": [
+    {
+     "event": "REGISTRY_MISSING",
+     "payload": {
+      "error": "x",
+      "code": "not-found"
+     },
+     "from": "serving",
+     "entity": {
+      "id": "r",
+      "busy": true,
+      "queue": [],
+      "tarball": "YWJj",
+      "current": {
+       "requestId": 7,
+       "op": "fetch",
+       "name": "pkg-a",
+       "version": "1.0.0",
+       "integrity": ""
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PACKAGE_REFUSED",
+        "payload": {
+         "requestId": 7,
+         "status": 404,
+         "code": "NOT_FOUND"
+        }
+       }
+      ],
+      "neverEmits": [
+       "REG_HASH"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "existing-version-is-409-and-hashes-nothing",
+   "steps": [
+    {
+     "event": "REGISTRY_FOUND",
+     "payload": {
+      "data": {
+       "id": "pkg-a@1.0.0",
+       "name": "pkg-a",
+       "version": "1.0.0",
+       "integrity": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+       "tarball": "YWJj",
+       "yanked": false,
+       "publishedAt": 1
+      }
+     },
+     "from": "serving",
+     "entity": {
+      "id": "r",
+      "busy": true,
+      "queue": [],
+      "tarball": "YWJj",
+      "current": {
+       "requestId": 7,
+       "op": "publish",
+       "name": "pkg-a",
+       "version": "1.0.0",
+       "integrity": ""
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PACKAGE_REFUSED",
+        "payload": {
+         "requestId": 7,
+         "status": 409,
+         "code": "VERSION_EXISTS"
+        }
+       }
+      ],
+      "neverEmits": [
+       "REG_HASH",
+       "PACKAGE_PUBLISHED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "digest-is-stored-with-the-version",
+   "steps": [
+    {
+     "event": "REG_DIGESTED",
+     "payload": {
+      "requestId": "7",
+      "digest": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+     },
+     "from": "serving",
+     "entity": {
+      "id": "r",
+      "busy": true,
+      "queue": [],
+      "tarball": "YWJj",
+      "current": {
+       "requestId": 7,
+       "op": "publish",
+       "name": "pkg-a",
+       "version": "1.0.0",
+       "integrity": ""
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "REGISTRY_PUBLISHED",
+        "payload": {
+         "id": "pkg-a@1.0.0",
+         "integrity": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+        }
+       },
+       {
+        "event": "PACKAGE_PUBLISHED",
+        "payload": {
+         "requestId": 7,
+         "integrity": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PACKAGE_REFUSED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "stored-version-is-answered-201-with-its-integrity",
+   "steps": [
+    {
+     "event": "REGISTRY_PUBLISHED",
+     "payload": {
+      "id": "pkg-a@1.0.0",
+      "integrity": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+     },
+     "from": "serving",
+     "entity": {
+      "id": "r",
+      "busy": true,
+      "queue": [],
+      "tarball": "YWJj",
+      "current": {
+       "requestId": 7,
+       "op": "publish",
+       "name": "pkg-a",
+       "version": "1.0.0",
+       "integrity": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 7,
+         "status": 201
+        }
+       },
+       {
+        "event": "PACKAGE_PUBLISHED",
+        "payload": {
+         "requestId": 7,
+         "name": "pkg-a",
+         "version": "1.0.0",
+         "url": "/api/packages/pkg-a/1.0.0/tarball",
+         "integrity": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PACKAGE_REFUSED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "store-failure-is-503-and-not-published",
+   "steps": [
+    {
+     "event": "REGISTRY_STORE_REFUSED",
+     "payload": {
+      "error": "x",
+      "code": "store"
+     },
+     "from": "serving",
+     "entity": {
+      "id": "r",
+      "busy": true,
+      "queue": [],
+      "tarball": "YWJj",
+      "current": {
+       "requestId": 7,
+       "op": "publish",
+       "name": "pkg-a",
+       "version": "1.0.0",
+       "integrity": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PACKAGE_REFUSED",
+        "payload": {
+         "requestId": 7,
+         "status": 503,
+         "code": "STORE_UNAVAILABLE"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PACKAGE_PUBLISHED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "unhashable-tarball-is-501-and-not-published",
+   "steps": [
+    {
+     "event": "REG_HASH_REFUSED",
+     "payload": {
+      "requestId": "7",
+      "reason": "encoding"
+     },
+     "from": "serving",
+     "entity": {
+      "id": "r",
+      "busy": true,
+      "queue": [],
+      "tarball": "YWJj",
+      "current": {
+       "requestId": 7,
+       "op": "publish",
+       "name": "pkg-a",
+       "version": "1.0.0",
+       "integrity": ""
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PACKAGE_REFUSED",
+        "payload": {
+         "requestId": 7,
+         "status": 501,
+         "code": "INTEGRITY_UNAVAILABLE"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PACKAGE_PUBLISHED",
+       "REGISTRY_PUBLISHED"
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

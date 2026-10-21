@@ -1,0 +1,759 @@
+{
+ "atom": "cli/atoms/std-orb-lint-state-shape.lolo",
+ "trait": "OrbLintStateShape",
+ "cases": [
+  {
+   "id": "no-initial-state",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle"
+             },
+             {
+              "name": "active"
+             }
+            ],
+            "transitions": [],
+            "events": []
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "state-shape",
+         "findings": [
+          {
+           "code": "ORB_T_NO_INITIAL_STATE",
+           "path": "orbitals[0].traits[0].stateMachine.states",
+           "message": "State machine must have an initial state",
+           "suggestion": "Mark one state with isInitial: true",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-one-initial",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "active"
+             }
+            ],
+            "transitions": [],
+            "events": []
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "state-shape",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "initial-false-is-not-initial",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": false
+             },
+             {
+              "name": "active",
+              "isInitial": false
+             }
+            ],
+            "transitions": [],
+            "events": []
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "state-shape",
+         "findings": [
+          {
+           "code": "ORB_T_NO_INITIAL_STATE",
+           "path": "orbitals[0].traits[0].stateMachine.states",
+           "message": "State machine must have an initial state",
+           "suggestion": "Mark one state with isInitial: true",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "multiple-initial-states",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "active",
+              "isInitial": true
+             }
+            ],
+            "transitions": [],
+            "events": []
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "state-shape",
+         "findings": [
+          {
+           "code": "ORB_T_MULTIPLE_INITIAL_STATES",
+           "path": "orbitals[0].traits[0].stateMachine.states",
+           "message": "Multiple initial states found: [\"idle\", \"active\"]",
+           "suggestion": "Only one state should be marked as initial",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-single-initial-among-three",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "a"
+             },
+             {
+              "name": "b",
+              "isInitial": true
+             },
+             {
+              "name": "c",
+              "isInitial": false
+             }
+            ],
+            "transitions": [],
+            "events": []
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "state-shape",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "duplicate-state",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "active"
+             },
+             {
+              "name": "idle"
+             }
+            ],
+            "transitions": [],
+            "events": []
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "state-shape",
+         "findings": [
+          {
+           "code": "ORB_T_DUPLICATE_STATE",
+           "path": "orbitals[0].traits[0].stateMachine.states[2]",
+           "message": "Duplicate state name: 'idle'",
+           "suggestion": "Each state must have a unique name",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-distinct-names",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "active"
+             },
+             {
+              "name": "done"
+             }
+            ],
+            "transitions": [],
+            "events": []
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "state-shape",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "triple-name-reports-each-repeat",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "a",
+              "isInitial": true
+             },
+             {
+              "name": "a"
+             },
+             {
+              "name": "a"
+             }
+            ],
+            "transitions": [],
+            "events": []
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "state-shape",
+         "findings": [
+          {
+           "code": "ORB_T_DUPLICATE_STATE",
+           "path": "orbitals[0].traits[0].stateMachine.states[1]",
+           "message": "Duplicate state name: 'a'",
+           "suggestion": "Each state must have a unique name",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_DUPLICATE_STATE",
+           "path": "orbitals[0].traits[0].stateMachine.states[2]",
+           "message": "Duplicate state name: 'a'",
+           "suggestion": "Each state must have a unique name",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "duplicate-and-multiple-initial-in-order",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "a",
+              "isInitial": true
+             },
+             {
+              "name": "a",
+              "isInitial": true
+             }
+            ],
+            "transitions": [],
+            "events": []
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "state-shape",
+         "findings": [
+          {
+           "code": "ORB_T_DUPLICATE_STATE",
+           "path": "orbitals[0].traits[0].stateMachine.states[1]",
+           "message": "Duplicate state name: 'a'",
+           "suggestion": "Each state must have a unique name",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_MULTIPLE_INITIAL_STATES",
+           "path": "orbitals[0].traits[0].stateMachine.states",
+           "message": "Multiple initial states found: [\"a\", \"a\"]",
+           "suggestion": "Only one state should be marked as initial",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "empty-states-stop-early",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [],
+            "transitions": [],
+            "events": []
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "state-shape",
+         "findings": [
+          {
+           "code": "ORB_T_NO_INITIAL_STATE",
+           "path": "orbitals[0].traits[0].stateMachine.states",
+           "message": "State machine must have at least one state",
+           "suggestion": "Add at least one state to the state machine",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "second-trait-path",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "a",
+              "isInitial": true
+             }
+            ],
+            "transitions": [],
+            "events": []
+           }
+          },
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "a"
+             }
+            ],
+            "transitions": [],
+            "events": []
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "state-shape",
+         "findings": [
+          {
+           "code": "ORB_T_NO_INITIAL_STATE",
+           "path": "orbitals[0].traits[1].stateMachine.states",
+           "message": "State machine must have an initial state",
+           "suggestion": "Mark one state with isInitial: true",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-trait-without-state-machine",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "Ext"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "state-shape",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -6,11 +6,12 @@ app std-orb-lint-entity-shape [
 ]
 uses Spec from "almadar-std/lint-entity-shape"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
 orbital OrbLintEntityShapeOrbital {
   entity OrbLintEntityShapeRun [runtime] {
     id : string!
-    findings : [string] = []
+    findings : [OrbFinding] = []
   }
 
   trait OrbLintEntityShape -> OrbLintEntityShapeRun [integration] {
@@ -35,10 +36,10 @@ orbital OrbLintEntityShapeOrbital {
             (let ((ent (object/get (array/nth @orbitals @oi) "entity" {})))
               (if (validate/object @ent) (array/concat
                 (if (= (object/get @ent "name" "") "")
-                  [(str/concat "[ORB_E_MISSING_NAME] orbitals[" @oi "].entity.name: Entity name is required\n  suggestion: Add a name for your entity using PascalCase (e.g., 'Task', 'User')")]
+                  [{ code: "ORB_E_MISSING_NAME", path: (str/concat "orbitals[" @oi "].entity.name"), message: "Entity name is required", suggestion: "Add a name for your entity using PascalCase (e.g., 'Task', 'User')", severity: "error" }]
                   [])
                 (if (= (array/len (object/get @ent "fields" [])) 0)
-                  [(str/concat "[ORB_E_NO_FIELDS] orbitals[" @oi "].entity.fields: Entity must have at least one field\n  suggestion: Add at least one field to define the entity's data structure")]
+                  [{ code: "ORB_E_NO_FIELDS", path: (str/concat "orbitals[" @oi "].entity.fields"), message: "Entity must have at least one field", suggestion: "Add at least one field to define the entity's data structure", severity: "error" }]
                   [])) [])))))))
         (emit LINT_FINISH { })
       LINT_FILE_UNREAD -> ready
@@ -52,7 +53,7 @@ orbital OrbLintEntityShapeOrbital {
       LINT_RUN -> external { file : string! }
         @description "The lint request this trait answers, from the cli trait or the umbrella."
         @tier "internal"
-      LINT_FOUND -> external { rule : string!  findings : [string]! }
+      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
         @description "This rule's findings for the file, offered to the lint-all umbrella."
         @tier "internal"
       LINT_FILE_READ { data : bytes! }
@@ -90,7 +91,7 @@ orbital OrbLintEntityShapeOrbital {
       LINT_FOUND -> ready when (and (= @payload.rule "entity-shape") (= (array/len @payload.findings) 0))
         (emit LINT_ANSWERED { status: 200, body: "lint entity-shape: clean" })
       LINT_FOUND -> ready when (and (= @payload.rule "entity-shape") (> (array/len @payload.findings) 0))
-        (emit LINT_ANSWERED { status: 500, body: (str/join @payload.findings "\n") })
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
       LINT_UNREAD -> ready when (= @payload.rule "entity-shape")
         (emit LINT_ANSWERED { status: 500, body: "lint entity-shape: the file could not be read or lowered" })
     }
@@ -105,7 +106,7 @@ orbital OrbLintEntityShapeOrbital {
       LINT_RUN -> external { file : string! }
         @description "Ask the rule trait to lint this file."
         @tier "internal"
-      LINT_FOUND -> external { rule : string!  findings : [string]! }
+      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
         @description "The rule trait's findings for the file."
         @tier "internal"
       LINT_UNREAD -> external { rule : string! }

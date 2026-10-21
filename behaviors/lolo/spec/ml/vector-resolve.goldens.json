@@ -1,0 +1,5240 @@
+{
+ "source": "Built from orbital-cli behaviors_vectors.rs lookup_with_model and user_store_path (model choice, snapshot-then-user layering, miss dedup, batches of 64, ORB_VECTOR_PROVIDER_MISSING message with the first 5 keys, ORB_VECTOR_MODEL_MISMATCH message, store file slug). The store and provider answers are stubbed by feeding VECTOR_RESOLVED, USER_STORE_READ, LLM_EMBED_RESULT and LLM_FAILED; nothing reaches a network. Each internal event replays as its own step.",
+ "atom": "ml/atoms/std-vector-resolve.lolo",
+ "trait": "VectorResolve",
+ "cases": [
+  {
+   "id": "an empty wanted list answers at once with the snapshot model",
+   "steps": [
+    {
+     "event": "RESOLVE",
+     "payload": {
+      "wanted": [],
+      "snapshots": [
+       "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw=="
+      ],
+      "userDir": "/u",
+      "providerModel": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTORS_ANSWERED",
+        "payload": {
+         "model": "baai/bge-base-en-v1.5",
+         "vectors": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an empty wanted list with neither snapshot nor provider answers an empty model",
+   "steps": [
+    {
+     "event": "RESOLVE",
+     "payload": {
+      "wanted": [],
+      "snapshots": [],
+      "userDir": "/u",
+      "providerModel": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTORS_ANSWERED",
+        "payload": {
+         "model": "",
+         "vectors": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "every text stored: snapshot then user store, no provider needed",
+   "steps": [
+    {
+     "event": "RESOLVE",
+     "payload": {
+      "wanted": [
+       {
+        "key": "k1",
+        "text": "a"
+       },
+       {
+        "key": "k2",
+        "text": "d"
+       },
+       {
+        "key": "k3",
+        "text": "a"
+       }
+      ],
+      "snapshots": [
+       "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw=="
+      ],
+      "userDir": "/u",
+      "providerModel": "",
+      "providerKind": "",
+      "embedModel": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "USER_STORE_NEEDED",
+        "payload": {
+         "model": "baai/bge-base-en-v1.5",
+         "path": "/u/baai_bge-base-en-v1.5.vec"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "USER_STORE_READ",
+     "payload": {
+      "data": "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAgAAAJl03rngf4GTPDOOJrl7ALiAnMKDhsSHEcVUIFxE907iAAAAQIAF+3/o7r/x9UYr03SygVoibuZEaWMVDg/b0jn+HiHrtFEZSgAAgD4K9hTs"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_LOOKUP_MANY",
+        "payload": {
+         "stores": [
+          "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw==",
+          "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAgAAAJl03rngf4GTPDOOJrl7ALiAnMKDhsSHEcVUIFxE907iAAAAQIAF+3/o7r/x9UYr03SygVoibuZEaWMVDg/b0jn+HiHrtFEZSgAAgD4K9hTs"
+         ],
+         "origins": [
+          "snapshot 0",
+          "/u/baai_bge-base-en-v1.5.vec"
+         ],
+         "model": "baai/bge-base-en-v1.5",
+         "texts": [
+          "a",
+          "d"
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "looking",
+     "event": "VECTOR_RESOLVED",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "entries": [
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAP3/BGQA=",
+        "vector": [
+         0.5,
+         -0.24803149606299213,
+         0.0984251968503937,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.25,
+        "record": "AACAPgr2FOw=",
+        "vector": [
+         0.01968503937007874,
+         -0.01968503937007874,
+         0.03937007874015748,
+         -0.03937007874015748
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MISSES_COMPUTED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "from": "looking",
+     "event": "MISSES_COMPUTED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "FINISHED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "from": "idle",
+     "event": "FINISHED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTORS_ANSWERED",
+        "payload": {
+         "model": "baai/bge-base-en-v1.5",
+         "vectors": [
+          {
+           "key": "k1",
+           "vector": [
+            0.5,
+            -0.24803149606299213,
+            0.0984251968503937,
+            0.0
+           ]
+          },
+          {
+           "key": "k2",
+           "vector": [
+            0.01968503937007874,
+            -0.01968503937007874,
+            0.03937007874015748,
+            -0.03937007874015748
+           ]
+          },
+          {
+           "key": "k3",
+           "vector": [
+            0.5,
+            -0.24803149606299213,
+            0.0984251968503937,
+            0.0
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "seven misses and no provider refuse naming the count and the first five keys",
+   "steps": [
+    {
+     "event": "RESOLVE",
+     "payload": {
+      "wanted": [
+       {
+        "key": "k1",
+        "text": "zk1"
+       },
+       {
+        "key": "k2",
+        "text": "zk2"
+       },
+       {
+        "key": "k3",
+        "text": "zk3"
+       },
+       {
+        "key": "k4",
+        "text": "zk4"
+       },
+       {
+        "key": "k5",
+        "text": "zk5"
+       },
+       {
+        "key": "k6",
+        "text": "zk6"
+       },
+       {
+        "key": "k7",
+        "text": "zk7"
+       }
+      ],
+      "snapshots": [
+       "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw=="
+      ],
+      "userDir": "/u",
+      "providerModel": "",
+      "providerKind": "",
+      "embedModel": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "USER_STORE_NEEDED",
+        "payload": {
+         "model": "baai/bge-base-en-v1.5",
+         "path": "/u/baai_bge-base-en-v1.5.vec"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "USER_STORE_READ",
+     "payload": {
+      "data": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_LOOKUP_MANY",
+        "payload": {
+         "stores": [
+          "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw==",
+          ""
+         ],
+         "origins": [
+          "snapshot 0",
+          "/u/baai_bge-base-en-v1.5.vec"
+         ],
+         "model": "baai/bge-base-en-v1.5",
+         "texts": [
+          "zk1",
+          "zk2",
+          "zk3",
+          "zk4",
+          "zk5",
+          "zk6",
+          "zk7"
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "looking",
+     "event": "VECTOR_RESOLVED",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "entries": [
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MISSES_COMPUTED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "from": "looking",
+     "event": "MISSES_COMPUTED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTORS_REFUSED",
+        "payload": {
+         "code": "ORB_VECTOR_PROVIDER_MISSING",
+         "detail": "7 embedding text(s) have no stored vector (first: k1, k2, k3, k4, k5) and no embedding provider is configured; set EMBEDDING_PROVIDER (openrouter|openai|lmstudio) with OPEN_ROUTER_API_KEY, OPENAI_API_KEY or EMBEDDING_API_KEY (lmstudio: LMSTUDIO_URL), or import vectors with `orb behaviors vectors import`"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a provider producing another model than the stored one refuses",
+   "steps": [
+    {
+     "event": "RESOLVE",
+     "payload": {
+      "wanted": [
+       {
+        "key": "k1",
+        "text": "zz"
+       }
+      ],
+      "snapshots": [
+       "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw=="
+      ],
+      "userDir": "/u",
+      "providerModel": "other-embedder",
+      "providerKind": "openrouter-shared",
+      "embedModel": "other-embedder"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "USER_STORE_NEEDED",
+        "payload": {
+         "model": "baai/bge-base-en-v1.5",
+         "path": "/u/baai_bge-base-en-v1.5.vec"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "USER_STORE_READ",
+     "payload": {
+      "data": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_LOOKUP_MANY",
+        "payload": {
+         "stores": [
+          "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw==",
+          ""
+         ],
+         "origins": [
+          "snapshot 0",
+          "/u/baai_bge-base-en-v1.5.vec"
+         ],
+         "model": "baai/bge-base-en-v1.5",
+         "texts": [
+          "zz"
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "looking",
+     "event": "VECTOR_RESOLVED",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "entries": [
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MISSES_COMPUTED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "from": "looking",
+     "event": "MISSES_COMPUTED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTORS_REFUSED",
+        "payload": {
+         "code": "ORB_VECTOR_MODEL_MISMATCH",
+         "detail": "the stored vectors are `baai/bge-base-en-v1.5` but the configured embedder produces `other-embedder`"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "seventy distinct misses embed in batches of 64 then 6, are persisted, re-read, and answer int8-rounded like Rust",
+   "steps": [
+    {
+     "event": "RESOLVE",
+     "payload": {
+      "wanted": [
+       {
+        "key": "ka",
+        "text": "a"
+       },
+       {
+        "key": "k0",
+        "text": "m0"
+       },
+       {
+        "key": "k1",
+        "text": "m1"
+       },
+       {
+        "key": "k2",
+        "text": "m2"
+       },
+       {
+        "key": "k3",
+        "text": "m3"
+       },
+       {
+        "key": "k4",
+        "text": "m4"
+       },
+       {
+        "key": "k5",
+        "text": "m5"
+       },
+       {
+        "key": "k6",
+        "text": "m6"
+       },
+       {
+        "key": "k7",
+        "text": "m7"
+       },
+       {
+        "key": "k8",
+        "text": "m8"
+       },
+       {
+        "key": "k9",
+        "text": "m9"
+       },
+       {
+        "key": "k10",
+        "text": "m10"
+       },
+       {
+        "key": "k11",
+        "text": "m11"
+       },
+       {
+        "key": "k12",
+        "text": "m12"
+       },
+       {
+        "key": "k13",
+        "text": "m13"
+       },
+       {
+        "key": "k14",
+        "text": "m14"
+       },
+       {
+        "key": "k15",
+        "text": "m15"
+       },
+       {
+        "key": "k16",
+        "text": "m16"
+       },
+       {
+        "key": "k17",
+        "text": "m17"
+       },
+       {
+        "key": "k18",
+        "text": "m18"
+       },
+       {
+        "key": "k19",
+        "text": "m19"
+       },
+       {
+        "key": "k20",
+        "text": "m20"
+       },
+       {
+        "key": "k21",
+        "text": "m21"
+       },
+       {
+        "key": "k22",
+        "text": "m22"
+       },
+       {
+        "key": "k23",
+        "text": "m23"
+       },
+       {
+        "key": "k24",
+        "text": "m24"
+       },
+       {
+        "key": "k25",
+        "text": "m25"
+       },
+       {
+        "key": "k26",
+        "text": "m26"
+       },
+       {
+        "key": "k27",
+        "text": "m27"
+       },
+       {
+        "key": "k28",
+        "text": "m28"
+       },
+       {
+        "key": "k29",
+        "text": "m29"
+       },
+       {
+        "key": "k30",
+        "text": "m30"
+       },
+       {
+        "key": "k31",
+        "text": "m31"
+       },
+       {
+        "key": "k32",
+        "text": "m32"
+       },
+       {
+        "key": "k33",
+        "text": "m33"
+       },
+       {
+        "key": "k34",
+        "text": "m34"
+       },
+       {
+        "key": "k35",
+        "text": "m35"
+       },
+       {
+        "key": "k36",
+        "text": "m36"
+       },
+       {
+        "key": "k37",
+        "text": "m37"
+       },
+       {
+        "key": "k38",
+        "text": "m38"
+       },
+       {
+        "key": "k39",
+        "text": "m39"
+       },
+       {
+        "key": "k40",
+        "text": "m40"
+       },
+       {
+        "key": "k41",
+        "text": "m41"
+       },
+       {
+        "key": "k42",
+        "text": "m42"
+       },
+       {
+        "key": "k43",
+        "text": "m43"
+       },
+       {
+        "key": "k44",
+        "text": "m44"
+       },
+       {
+        "key": "k45",
+        "text": "m45"
+       },
+       {
+        "key": "k46",
+        "text": "m46"
+       },
+       {
+        "key": "k47",
+        "text": "m47"
+       },
+       {
+        "key": "k48",
+        "text": "m48"
+       },
+       {
+        "key": "k49",
+        "text": "m49"
+       },
+       {
+        "key": "k50",
+        "text": "m50"
+       },
+       {
+        "key": "k51",
+        "text": "m51"
+       },
+       {
+        "key": "k52",
+        "text": "m52"
+       },
+       {
+        "key": "k53",
+        "text": "m53"
+       },
+       {
+        "key": "k54",
+        "text": "m54"
+       },
+       {
+        "key": "k55",
+        "text": "m55"
+       },
+       {
+        "key": "k56",
+        "text": "m56"
+       },
+       {
+        "key": "k57",
+        "text": "m57"
+       },
+       {
+        "key": "k58",
+        "text": "m58"
+       },
+       {
+        "key": "k59",
+        "text": "m59"
+       },
+       {
+        "key": "k60",
+        "text": "m60"
+       },
+       {
+        "key": "k61",
+        "text": "m61"
+       },
+       {
+        "key": "k62",
+        "text": "m62"
+       },
+       {
+        "key": "k63",
+        "text": "m63"
+       },
+       {
+        "key": "k64",
+        "text": "m64"
+       },
+       {
+        "key": "k65",
+        "text": "m65"
+       },
+       {
+        "key": "k66",
+        "text": "m66"
+       },
+       {
+        "key": "k67",
+        "text": "m67"
+       },
+       {
+        "key": "k68",
+        "text": "m68"
+       },
+       {
+        "key": "k69",
+        "text": "m69"
+       },
+       {
+        "key": "kdup",
+        "text": "m0"
+       }
+      ],
+      "snapshots": [
+       "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw=="
+      ],
+      "userDir": "/u",
+      "providerModel": "baai/bge-base-en-v1.5",
+      "providerKind": "openrouter-shared",
+      "embedModel": "baai/bge-base-en-v1.5"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "USER_STORE_NEEDED",
+        "payload": {
+         "model": "baai/bge-base-en-v1.5",
+         "path": "/u/baai_bge-base-en-v1.5.vec"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "USER_STORE_READ",
+     "payload": {
+      "data": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_LOOKUP_MANY",
+        "payload": {
+         "stores": [
+          "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw==",
+          ""
+         ],
+         "origins": [
+          "snapshot 0",
+          "/u/baai_bge-base-en-v1.5.vec"
+         ],
+         "model": "baai/bge-base-en-v1.5",
+         "texts": [
+          "a",
+          "m0",
+          "m1",
+          "m2",
+          "m3",
+          "m4",
+          "m5",
+          "m6",
+          "m7",
+          "m8",
+          "m9",
+          "m10",
+          "m11",
+          "m12",
+          "m13",
+          "m14",
+          "m15",
+          "m16",
+          "m17",
+          "m18",
+          "m19",
+          "m20",
+          "m21",
+          "m22",
+          "m23",
+          "m24",
+          "m25",
+          "m26",
+          "m27",
+          "m28",
+          "m29",
+          "m30",
+          "m31",
+          "m32",
+          "m33",
+          "m34",
+          "m35",
+          "m36",
+          "m37",
+          "m38",
+          "m39",
+          "m40",
+          "m41",
+          "m42",
+          "m43",
+          "m44",
+          "m45",
+          "m46",
+          "m47",
+          "m48",
+          "m49",
+          "m50",
+          "m51",
+          "m52",
+          "m53",
+          "m54",
+          "m55",
+          "m56",
+          "m57",
+          "m58",
+          "m59",
+          "m60",
+          "m61",
+          "m62",
+          "m63",
+          "m64",
+          "m65",
+          "m66",
+          "m67",
+          "m68",
+          "m69"
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "looking",
+     "event": "VECTOR_RESOLVED",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "entries": [
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAP3/BGQA=",
+        "vector": [
+         0.5,
+         -0.24803149606299213,
+         0.0984251968503937,
+         0.0
+        ]
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       },
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MISSES_COMPUTED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "from": "looking",
+     "event": "MISSES_COMPUTED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_EMBED_ORS",
+        "payload": {
+         "texts": [
+          "m0",
+          "m1",
+          "m2",
+          "m3",
+          "m4",
+          "m5",
+          "m6",
+          "m7",
+          "m8",
+          "m9",
+          "m10",
+          "m11",
+          "m12",
+          "m13",
+          "m14",
+          "m15",
+          "m16",
+          "m17",
+          "m18",
+          "m19",
+          "m20",
+          "m21",
+          "m22",
+          "m23",
+          "m24",
+          "m25",
+          "m26",
+          "m27",
+          "m28",
+          "m29",
+          "m30",
+          "m31",
+          "m32",
+          "m33",
+          "m34",
+          "m35",
+          "m36",
+          "m37",
+          "m38",
+          "m39",
+          "m40",
+          "m41",
+          "m42",
+          "m43",
+          "m44",
+          "m45",
+          "m46",
+          "m47",
+          "m48",
+          "m49",
+          "m50",
+          "m51",
+          "m52",
+          "m53",
+          "m54",
+          "m55",
+          "m56",
+          "m57",
+          "m58",
+          "m59",
+          "m60",
+          "m61",
+          "m62",
+          "m63"
+         ],
+         "model": "baai/bge-base-en-v1.5"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "embedding",
+     "event": "LLM_EMBED_RESULT",
+     "payload": {
+      "embeddings": [
+       [
+        0.0,
+        0.5
+       ],
+       [
+        1.0,
+        1.5
+       ],
+       [
+        2.0,
+        2.5
+       ],
+       [
+        3.0,
+        3.5
+       ],
+       [
+        4.0,
+        4.5
+       ],
+       [
+        5.0,
+        5.5
+       ],
+       [
+        6.0,
+        6.5
+       ],
+       [
+        7.0,
+        7.5
+       ],
+       [
+        8.0,
+        8.5
+       ],
+       [
+        9.0,
+        9.5
+       ],
+       [
+        10.0,
+        10.5
+       ],
+       [
+        11.0,
+        11.5
+       ],
+       [
+        12.0,
+        12.5
+       ],
+       [
+        13.0,
+        13.5
+       ],
+       [
+        14.0,
+        14.5
+       ],
+       [
+        15.0,
+        15.5
+       ],
+       [
+        16.0,
+        16.5
+       ],
+       [
+        17.0,
+        17.5
+       ],
+       [
+        18.0,
+        18.5
+       ],
+       [
+        19.0,
+        19.5
+       ],
+       [
+        20.0,
+        20.5
+       ],
+       [
+        21.0,
+        21.5
+       ],
+       [
+        22.0,
+        22.5
+       ],
+       [
+        23.0,
+        23.5
+       ],
+       [
+        24.0,
+        24.5
+       ],
+       [
+        25.0,
+        25.5
+       ],
+       [
+        26.0,
+        26.5
+       ],
+       [
+        27.0,
+        27.5
+       ],
+       [
+        28.0,
+        28.5
+       ],
+       [
+        29.0,
+        29.5
+       ],
+       [
+        30.0,
+        30.5
+       ],
+       [
+        31.0,
+        31.5
+       ],
+       [
+        32.0,
+        32.5
+       ],
+       [
+        33.0,
+        33.5
+       ],
+       [
+        34.0,
+        34.5
+       ],
+       [
+        35.0,
+        35.5
+       ],
+       [
+        36.0,
+        36.5
+       ],
+       [
+        37.0,
+        37.5
+       ],
+       [
+        38.0,
+        38.5
+       ],
+       [
+        39.0,
+        39.5
+       ],
+       [
+        40.0,
+        40.5
+       ],
+       [
+        41.0,
+        41.5
+       ],
+       [
+        42.0,
+        42.5
+       ],
+       [
+        43.0,
+        43.5
+       ],
+       [
+        44.0,
+        44.5
+       ],
+       [
+        45.0,
+        45.5
+       ],
+       [
+        46.0,
+        46.5
+       ],
+       [
+        47.0,
+        47.5
+       ],
+       [
+        48.0,
+        48.5
+       ],
+       [
+        49.0,
+        49.5
+       ],
+       [
+        50.0,
+        50.5
+       ],
+       [
+        51.0,
+        51.5
+       ],
+       [
+        52.0,
+        52.5
+       ],
+       [
+        53.0,
+        53.5
+       ],
+       [
+        54.0,
+        54.5
+       ],
+       [
+        55.0,
+        55.5
+       ],
+       [
+        56.0,
+        56.5
+       ],
+       [
+        57.0,
+        57.5
+       ],
+       [
+        58.0,
+        58.5
+       ],
+       [
+        59.0,
+        59.5
+       ],
+       [
+        60.0,
+        60.5
+       ],
+       [
+        61.0,
+        61.5
+       ],
+       [
+        62.0,
+        62.5
+       ],
+       [
+        63.0,
+        63.5
+       ]
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_EMBED_ORS",
+        "payload": {
+         "texts": [
+          "m64",
+          "m65",
+          "m66",
+          "m67",
+          "m68",
+          "m69"
+         ],
+         "model": "baai/bge-base-en-v1.5"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "embedding",
+     "event": "LLM_EMBED_RESULT",
+     "payload": {
+      "embeddings": [
+       [
+        64.0,
+        64.5
+       ],
+       [
+        65.0,
+        65.5
+       ],
+       [
+        66.0,
+        66.5
+       ],
+       [
+        67.0,
+        67.5
+       ],
+       [
+        68.0,
+        68.5
+       ],
+       [
+        69.0,
+        69.5
+       ]
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTORS_EMBEDDED",
+        "payload": {
+         "model": "baai/bge-base-en-v1.5",
+         "texts": [
+          "m0",
+          "m1",
+          "m2",
+          "m3",
+          "m4",
+          "m5",
+          "m6",
+          "m7",
+          "m8",
+          "m9",
+          "m10",
+          "m11",
+          "m12",
+          "m13",
+          "m14",
+          "m15",
+          "m16",
+          "m17",
+          "m18",
+          "m19",
+          "m20",
+          "m21",
+          "m22",
+          "m23",
+          "m24",
+          "m25",
+          "m26",
+          "m27",
+          "m28",
+          "m29",
+          "m30",
+          "m31",
+          "m32",
+          "m33",
+          "m34",
+          "m35",
+          "m36",
+          "m37",
+          "m38",
+          "m39",
+          "m40",
+          "m41",
+          "m42",
+          "m43",
+          "m44",
+          "m45",
+          "m46",
+          "m47",
+          "m48",
+          "m49",
+          "m50",
+          "m51",
+          "m52",
+          "m53",
+          "m54",
+          "m55",
+          "m56",
+          "m57",
+          "m58",
+          "m59",
+          "m60",
+          "m61",
+          "m62",
+          "m63",
+          "m64",
+          "m65",
+          "m66",
+          "m67",
+          "m68",
+          "m69"
+         ],
+         "vectors": [
+          [
+           0.0,
+           0.5
+          ],
+          [
+           1.0,
+           1.5
+          ],
+          [
+           2.0,
+           2.5
+          ],
+          [
+           3.0,
+           3.5
+          ],
+          [
+           4.0,
+           4.5
+          ],
+          [
+           5.0,
+           5.5
+          ],
+          [
+           6.0,
+           6.5
+          ],
+          [
+           7.0,
+           7.5
+          ],
+          [
+           8.0,
+           8.5
+          ],
+          [
+           9.0,
+           9.5
+          ],
+          [
+           10.0,
+           10.5
+          ],
+          [
+           11.0,
+           11.5
+          ],
+          [
+           12.0,
+           12.5
+          ],
+          [
+           13.0,
+           13.5
+          ],
+          [
+           14.0,
+           14.5
+          ],
+          [
+           15.0,
+           15.5
+          ],
+          [
+           16.0,
+           16.5
+          ],
+          [
+           17.0,
+           17.5
+          ],
+          [
+           18.0,
+           18.5
+          ],
+          [
+           19.0,
+           19.5
+          ],
+          [
+           20.0,
+           20.5
+          ],
+          [
+           21.0,
+           21.5
+          ],
+          [
+           22.0,
+           22.5
+          ],
+          [
+           23.0,
+           23.5
+          ],
+          [
+           24.0,
+           24.5
+          ],
+          [
+           25.0,
+           25.5
+          ],
+          [
+           26.0,
+           26.5
+          ],
+          [
+           27.0,
+           27.5
+          ],
+          [
+           28.0,
+           28.5
+          ],
+          [
+           29.0,
+           29.5
+          ],
+          [
+           30.0,
+           30.5
+          ],
+          [
+           31.0,
+           31.5
+          ],
+          [
+           32.0,
+           32.5
+          ],
+          [
+           33.0,
+           33.5
+          ],
+          [
+           34.0,
+           34.5
+          ],
+          [
+           35.0,
+           35.5
+          ],
+          [
+           36.0,
+           36.5
+          ],
+          [
+           37.0,
+           37.5
+          ],
+          [
+           38.0,
+           38.5
+          ],
+          [
+           39.0,
+           39.5
+          ],
+          [
+           40.0,
+           40.5
+          ],
+          [
+           41.0,
+           41.5
+          ],
+          [
+           42.0,
+           42.5
+          ],
+          [
+           43.0,
+           43.5
+          ],
+          [
+           44.0,
+           44.5
+          ],
+          [
+           45.0,
+           45.5
+          ],
+          [
+           46.0,
+           46.5
+          ],
+          [
+           47.0,
+           47.5
+          ],
+          [
+           48.0,
+           48.5
+          ],
+          [
+           49.0,
+           49.5
+          ],
+          [
+           50.0,
+           50.5
+          ],
+          [
+           51.0,
+           51.5
+          ],
+          [
+           52.0,
+           52.5
+          ],
+          [
+           53.0,
+           53.5
+          ],
+          [
+           54.0,
+           54.5
+          ],
+          [
+           55.0,
+           55.5
+          ],
+          [
+           56.0,
+           56.5
+          ],
+          [
+           57.0,
+           57.5
+          ],
+          [
+           58.0,
+           58.5
+          ],
+          [
+           59.0,
+           59.5
+          ],
+          [
+           60.0,
+           60.5
+          ],
+          [
+           61.0,
+           61.5
+          ],
+          [
+           62.0,
+           62.5
+          ],
+          [
+           63.0,
+           63.5
+          ],
+          [
+           64.0,
+           64.5
+          ],
+          [
+           65.0,
+           65.5
+          ],
+          [
+           66.0,
+           66.5
+          ],
+          [
+           67.0,
+           67.5
+          ],
+          [
+           68.0,
+           68.5
+          ],
+          [
+           69.0,
+           69.5
+          ]
+         ]
+        }
+       },
+       {
+        "event": "VECTOR_WRITE",
+        "payload": {
+         "path": "/u/baai_bge-base-en-v1.5.vec",
+         "model": "baai/bge-base-en-v1.5",
+         "records": [
+          {
+           "text": "m0",
+           "vector": [
+            0.0,
+            0.5
+           ]
+          },
+          {
+           "text": "m1",
+           "vector": [
+            1.0,
+            1.5
+           ]
+          },
+          {
+           "text": "m2",
+           "vector": [
+            2.0,
+            2.5
+           ]
+          },
+          {
+           "text": "m3",
+           "vector": [
+            3.0,
+            3.5
+           ]
+          },
+          {
+           "text": "m4",
+           "vector": [
+            4.0,
+            4.5
+           ]
+          },
+          {
+           "text": "m5",
+           "vector": [
+            5.0,
+            5.5
+           ]
+          },
+          {
+           "text": "m6",
+           "vector": [
+            6.0,
+            6.5
+           ]
+          },
+          {
+           "text": "m7",
+           "vector": [
+            7.0,
+            7.5
+           ]
+          },
+          {
+           "text": "m8",
+           "vector": [
+            8.0,
+            8.5
+           ]
+          },
+          {
+           "text": "m9",
+           "vector": [
+            9.0,
+            9.5
+           ]
+          },
+          {
+           "text": "m10",
+           "vector": [
+            10.0,
+            10.5
+           ]
+          },
+          {
+           "text": "m11",
+           "vector": [
+            11.0,
+            11.5
+           ]
+          },
+          {
+           "text": "m12",
+           "vector": [
+            12.0,
+            12.5
+           ]
+          },
+          {
+           "text": "m13",
+           "vector": [
+            13.0,
+            13.5
+           ]
+          },
+          {
+           "text": "m14",
+           "vector": [
+            14.0,
+            14.5
+           ]
+          },
+          {
+           "text": "m15",
+           "vector": [
+            15.0,
+            15.5
+           ]
+          },
+          {
+           "text": "m16",
+           "vector": [
+            16.0,
+            16.5
+           ]
+          },
+          {
+           "text": "m17",
+           "vector": [
+            17.0,
+            17.5
+           ]
+          },
+          {
+           "text": "m18",
+           "vector": [
+            18.0,
+            18.5
+           ]
+          },
+          {
+           "text": "m19",
+           "vector": [
+            19.0,
+            19.5
+           ]
+          },
+          {
+           "text": "m20",
+           "vector": [
+            20.0,
+            20.5
+           ]
+          },
+          {
+           "text": "m21",
+           "vector": [
+            21.0,
+            21.5
+           ]
+          },
+          {
+           "text": "m22",
+           "vector": [
+            22.0,
+            22.5
+           ]
+          },
+          {
+           "text": "m23",
+           "vector": [
+            23.0,
+            23.5
+           ]
+          },
+          {
+           "text": "m24",
+           "vector": [
+            24.0,
+            24.5
+           ]
+          },
+          {
+           "text": "m25",
+           "vector": [
+            25.0,
+            25.5
+           ]
+          },
+          {
+           "text": "m26",
+           "vector": [
+            26.0,
+            26.5
+           ]
+          },
+          {
+           "text": "m27",
+           "vector": [
+            27.0,
+            27.5
+           ]
+          },
+          {
+           "text": "m28",
+           "vector": [
+            28.0,
+            28.5
+           ]
+          },
+          {
+           "text": "m29",
+           "vector": [
+            29.0,
+            29.5
+           ]
+          },
+          {
+           "text": "m30",
+           "vector": [
+            30.0,
+            30.5
+           ]
+          },
+          {
+           "text": "m31",
+           "vector": [
+            31.0,
+            31.5
+           ]
+          },
+          {
+           "text": "m32",
+           "vector": [
+            32.0,
+            32.5
+           ]
+          },
+          {
+           "text": "m33",
+           "vector": [
+            33.0,
+            33.5
+           ]
+          },
+          {
+           "text": "m34",
+           "vector": [
+            34.0,
+            34.5
+           ]
+          },
+          {
+           "text": "m35",
+           "vector": [
+            35.0,
+            35.5
+           ]
+          },
+          {
+           "text": "m36",
+           "vector": [
+            36.0,
+            36.5
+           ]
+          },
+          {
+           "text": "m37",
+           "vector": [
+            37.0,
+            37.5
+           ]
+          },
+          {
+           "text": "m38",
+           "vector": [
+            38.0,
+            38.5
+           ]
+          },
+          {
+           "text": "m39",
+           "vector": [
+            39.0,
+            39.5
+           ]
+          },
+          {
+           "text": "m40",
+           "vector": [
+            40.0,
+            40.5
+           ]
+          },
+          {
+           "text": "m41",
+           "vector": [
+            41.0,
+            41.5
+           ]
+          },
+          {
+           "text": "m42",
+           "vector": [
+            42.0,
+            42.5
+           ]
+          },
+          {
+           "text": "m43",
+           "vector": [
+            43.0,
+            43.5
+           ]
+          },
+          {
+           "text": "m44",
+           "vector": [
+            44.0,
+            44.5
+           ]
+          },
+          {
+           "text": "m45",
+           "vector": [
+            45.0,
+            45.5
+           ]
+          },
+          {
+           "text": "m46",
+           "vector": [
+            46.0,
+            46.5
+           ]
+          },
+          {
+           "text": "m47",
+           "vector": [
+            47.0,
+            47.5
+           ]
+          },
+          {
+           "text": "m48",
+           "vector": [
+            48.0,
+            48.5
+           ]
+          },
+          {
+           "text": "m49",
+           "vector": [
+            49.0,
+            49.5
+           ]
+          },
+          {
+           "text": "m50",
+           "vector": [
+            50.0,
+            50.5
+           ]
+          },
+          {
+           "text": "m51",
+           "vector": [
+            51.0,
+            51.5
+           ]
+          },
+          {
+           "text": "m52",
+           "vector": [
+            52.0,
+            52.5
+           ]
+          },
+          {
+           "text": "m53",
+           "vector": [
+            53.0,
+            53.5
+           ]
+          },
+          {
+           "text": "m54",
+           "vector": [
+            54.0,
+            54.5
+           ]
+          },
+          {
+           "text": "m55",
+           "vector": [
+            55.0,
+            55.5
+           ]
+          },
+          {
+           "text": "m56",
+           "vector": [
+            56.0,
+            56.5
+           ]
+          },
+          {
+           "text": "m57",
+           "vector": [
+            57.0,
+            57.5
+           ]
+          },
+          {
+           "text": "m58",
+           "vector": [
+            58.0,
+            58.5
+           ]
+          },
+          {
+           "text": "m59",
+           "vector": [
+            59.0,
+            59.5
+           ]
+          },
+          {
+           "text": "m60",
+           "vector": [
+            60.0,
+            60.5
+           ]
+          },
+          {
+           "text": "m61",
+           "vector": [
+            61.0,
+            61.5
+           ]
+          },
+          {
+           "text": "m62",
+           "vector": [
+            62.0,
+            62.5
+           ]
+          },
+          {
+           "text": "m63",
+           "vector": [
+            63.0,
+            63.5
+           ]
+          },
+          {
+           "text": "m64",
+           "vector": [
+            64.0,
+            64.5
+           ]
+          },
+          {
+           "text": "m65",
+           "vector": [
+            65.0,
+            65.5
+           ]
+          },
+          {
+           "text": "m66",
+           "vector": [
+            66.0,
+            66.5
+           ]
+          },
+          {
+           "text": "m67",
+           "vector": [
+            67.0,
+            67.5
+           ]
+          },
+          {
+           "text": "m68",
+           "vector": [
+            68.0,
+            68.5
+           ]
+          },
+          {
+           "text": "m69",
+           "vector": [
+            69.0,
+            69.5
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "persisting",
+     "event": "VECTOR_WRITTEN",
+     "payload": {
+      "path": "/u/baai_bge-base-en-v1.5.vec",
+      "count": 70
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "USER_STORE_NEEDED",
+        "payload": {
+         "model": "baai/bge-base-en-v1.5",
+         "path": "/u/baai_bge-base-en-v1.5.vec"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "USER_STORE_READ",
+     "payload": {
+      "data": "cGVyc2lzdGVk"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_LOOKUP_MANY",
+        "payload": {
+         "stores": [
+          "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw==",
+          "cGVyc2lzdGVk"
+         ],
+         "origins": [
+          "snapshot 0",
+          "/u/baai_bge-base-en-v1.5.vec"
+         ],
+         "model": "baai/bge-base-en-v1.5",
+         "texts": [
+          "a",
+          "m0",
+          "m1",
+          "m2",
+          "m3",
+          "m4",
+          "m5",
+          "m6",
+          "m7",
+          "m8",
+          "m9",
+          "m10",
+          "m11",
+          "m12",
+          "m13",
+          "m14",
+          "m15",
+          "m16",
+          "m17",
+          "m18",
+          "m19",
+          "m20",
+          "m21",
+          "m22",
+          "m23",
+          "m24",
+          "m25",
+          "m26",
+          "m27",
+          "m28",
+          "m29",
+          "m30",
+          "m31",
+          "m32",
+          "m33",
+          "m34",
+          "m35",
+          "m36",
+          "m37",
+          "m38",
+          "m39",
+          "m40",
+          "m41",
+          "m42",
+          "m43",
+          "m44",
+          "m45",
+          "m46",
+          "m47",
+          "m48",
+          "m49",
+          "m50",
+          "m51",
+          "m52",
+          "m53",
+          "m54",
+          "m55",
+          "m56",
+          "m57",
+          "m58",
+          "m59",
+          "m60",
+          "m61",
+          "m62",
+          "m63",
+          "m64",
+          "m65",
+          "m66",
+          "m67",
+          "m68",
+          "m69"
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "looking",
+     "event": "VECTOR_RESOLVED",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "entries": [
+       {
+        "found": true,
+        "dims": 4,
+        "scale": 0.5,
+        "record": "AAAAP3/BGQA=",
+        "vector": [
+         0.5,
+         -0.24803149606299213,
+         0.0984251968503937,
+         0.0
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 0.5,
+        "record": "AAAAPwB/",
+        "vector": [
+         0.0,
+         0.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 1.5,
+        "record": "AADAP1V/",
+        "vector": [
+         1.0039370078740157,
+         1.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 2.5,
+        "record": "AAAgQGZ/",
+        "vector": [
+         2.0078740157480315,
+         2.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 3.5,
+        "record": "AABgQG1/",
+        "vector": [
+         3.0039370078740157,
+         3.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 4.5,
+        "record": "AACQQHF/",
+        "vector": [
+         4.003937007874016,
+         4.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 5.5,
+        "record": "AACwQHN/",
+        "vector": [
+         4.980314960629921,
+         5.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 6.5,
+        "record": "AADQQHV/",
+        "vector": [
+         5.988188976377953,
+         6.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 7.5,
+        "record": "AADwQHd/",
+        "vector": [
+         7.02755905511811,
+         7.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 8.5,
+        "record": "AAAIQXh/",
+        "vector": [
+         8.031496062992126,
+         8.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 9.5,
+        "record": "AAAYQXh/",
+        "vector": [
+         8.976377952755906,
+         9.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 10.5,
+        "record": "AAAoQXl/",
+        "vector": [
+         10.003937007874017,
+         10.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 11.5,
+        "record": "AAA4QXl/",
+        "vector": [
+         10.956692913385826,
+         11.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 12.5,
+        "record": "AABIQXp/",
+        "vector": [
+         12.007874015748031,
+         12.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 13.5,
+        "record": "AABYQXp/",
+        "vector": [
+         12.968503937007874,
+         13.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 14.5,
+        "record": "AABoQXt/",
+        "vector": [
+         14.043307086614174,
+         14.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 15.5,
+        "record": "AAB4QXt/",
+        "vector": [
+         15.011811023622048,
+         15.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 16.5,
+        "record": "AACEQXt/",
+        "vector": [
+         15.98031496062992,
+         16.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 17.5,
+        "record": "AACMQXt/",
+        "vector": [
+         16.948818897637796,
+         17.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 18.5,
+        "record": "AACUQXx/",
+        "vector": [
+         18.062992125984252,
+         18.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 19.5,
+        "record": "AACcQXx/",
+        "vector": [
+         19.03937007874016,
+         19.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 20.5,
+        "record": "AACkQXx/",
+        "vector": [
+         20.015748031496063,
+         20.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 21.5,
+        "record": "AACsQXx/",
+        "vector": [
+         20.992125984251967,
+         21.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 22.5,
+        "record": "AAC0QXx/",
+        "vector": [
+         21.968503937007874,
+         22.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 23.5,
+        "record": "AAC8QXx/",
+        "vector": [
+         22.944881889763778,
+         23.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 24.5,
+        "record": "AADEQXx/",
+        "vector": [
+         23.921259842519685,
+         24.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 25.5,
+        "record": "AADMQX1/",
+        "vector": [
+         25.098425196850393,
+         25.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 26.5,
+        "record": "AADUQX1/",
+        "vector": [
+         26.08267716535433,
+         26.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 27.5,
+        "record": "AADcQX1/",
+        "vector": [
+         27.066929133858267,
+         27.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 28.5,
+        "record": "AADkQX1/",
+        "vector": [
+         28.051181102362204,
+         28.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 29.5,
+        "record": "AADsQX1/",
+        "vector": [
+         29.03543307086614,
+         29.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 30.5,
+        "record": "AAD0QX1/",
+        "vector": [
+         30.019685039370078,
+         30.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 31.5,
+        "record": "AAD8QX1/",
+        "vector": [
+         31.003937007874015,
+         31.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 32.5,
+        "record": "AAACQn1/",
+        "vector": [
+         31.988188976377952,
+         32.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 33.5,
+        "record": "AAAGQn1/",
+        "vector": [
+         32.97244094488189,
+         33.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 34.5,
+        "record": "AAAKQn1/",
+        "vector": [
+         33.95669291338583,
+         34.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 35.5,
+        "record": "AAAOQn1/",
+        "vector": [
+         34.94094488188976,
+         35.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 36.5,
+        "record": "AAASQn1/",
+        "vector": [
+         35.925196850393704,
+         36.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 37.5,
+        "record": "AAAWQn1/",
+        "vector": [
+         36.90944881889764,
+         37.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 38.5,
+        "record": "AAAaQn1/",
+        "vector": [
+         37.89370078740158,
+         38.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 39.5,
+        "record": "AAAeQn1/",
+        "vector": [
+         38.87795275590551,
+         39.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 40.5,
+        "record": "AAAiQn1/",
+        "vector": [
+         39.86220472440945,
+         40.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 41.5,
+        "record": "AAAmQn1/",
+        "vector": [
+         40.846456692913385,
+         41.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 42.5,
+        "record": "AAAqQn5/",
+        "vector": [
+         42.16535433070866,
+         42.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 43.5,
+        "record": "AAAuQn5/",
+        "vector": [
+         43.15748031496063,
+         43.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 44.5,
+        "record": "AAAyQn5/",
+        "vector": [
+         44.1496062992126,
+         44.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 45.5,
+        "record": "AAA2Qn5/",
+        "vector": [
+         45.14173228346457,
+         45.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 46.5,
+        "record": "AAA6Qn5/",
+        "vector": [
+         46.13385826771653,
+         46.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 47.5,
+        "record": "AAA+Qn5/",
+        "vector": [
+         47.125984251968504,
+         47.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 48.5,
+        "record": "AABCQn5/",
+        "vector": [
+         48.118110236220474,
+         48.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 49.5,
+        "record": "AABGQn5/",
+        "vector": [
+         49.110236220472444,
+         49.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 50.5,
+        "record": "AABKQn5/",
+        "vector": [
+         50.10236220472441,
+         50.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 51.5,
+        "record": "AABOQn5/",
+        "vector": [
+         51.09448818897638,
+         51.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 52.5,
+        "record": "AABSQn5/",
+        "vector": [
+         52.08661417322835,
+         52.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 53.5,
+        "record": "AABWQn5/",
+        "vector": [
+         53.07874015748032,
+         53.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 54.5,
+        "record": "AABaQn5/",
+        "vector": [
+         54.07086614173228,
+         54.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 55.5,
+        "record": "AABeQn5/",
+        "vector": [
+         55.06299212598425,
+         55.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 56.5,
+        "record": "AABiQn5/",
+        "vector": [
+         56.05511811023622,
+         56.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 57.5,
+        "record": "AABmQn5/",
+        "vector": [
+         57.04724409448819,
+         57.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 58.5,
+        "record": "AABqQn5/",
+        "vector": [
+         58.039370078740156,
+         58.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 59.5,
+        "record": "AABuQn5/",
+        "vector": [
+         59.031496062992126,
+         59.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 60.5,
+        "record": "AAByQn5/",
+        "vector": [
+         60.023622047244096,
+         60.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 61.5,
+        "record": "AAB2Qn5/",
+        "vector": [
+         61.01574803149607,
+         61.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 62.5,
+        "record": "AAB6Qn5/",
+        "vector": [
+         62.00787401574803,
+         62.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 63.5,
+        "record": "AAB+Qn5/",
+        "vector": [
+         63.0,
+         63.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 64.5,
+        "record": "AACBQn5/",
+        "vector": [
+         63.99212598425197,
+         64.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 65.5,
+        "record": "AACDQn5/",
+        "vector": [
+         64.98425196850394,
+         65.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 66.5,
+        "record": "AACFQn5/",
+        "vector": [
+         65.97637795275591,
+         66.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 67.5,
+        "record": "AACHQn5/",
+        "vector": [
+         66.96850393700787,
+         67.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 68.5,
+        "record": "AACJQn5/",
+        "vector": [
+         67.96062992125984,
+         68.5
+        ]
+       },
+       {
+        "found": true,
+        "dims": 2,
+        "scale": 69.5,
+        "record": "AACLQn5/",
+        "vector": [
+         68.95275590551181,
+         69.5
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MISSES_COMPUTED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "from": "looking",
+     "event": "MISSES_COMPUTED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "FINISHED",
+        "payload": {}
+       },
+       {
+        "event": "VECTORS_ANSWERED",
+        "payload": {
+         "model": "baai/bge-base-en-v1.5",
+         "vectors": [
+          {
+           "key": "ka",
+           "vector": [
+            0.5,
+            -0.24803149606299213,
+            0.0984251968503937,
+            0.0
+           ]
+          },
+          {
+           "key": "k0",
+           "vector": [
+            0.0,
+            0.5
+           ]
+          },
+          {
+           "key": "k1",
+           "vector": [
+            1.0039370078740157,
+            1.5
+           ]
+          },
+          {
+           "key": "k2",
+           "vector": [
+            2.0078740157480315,
+            2.5
+           ]
+          },
+          {
+           "key": "k3",
+           "vector": [
+            3.0039370078740157,
+            3.5
+           ]
+          },
+          {
+           "key": "k4",
+           "vector": [
+            4.003937007874016,
+            4.5
+           ]
+          },
+          {
+           "key": "k5",
+           "vector": [
+            4.980314960629921,
+            5.5
+           ]
+          },
+          {
+           "key": "k6",
+           "vector": [
+            5.988188976377953,
+            6.5
+           ]
+          },
+          {
+           "key": "k7",
+           "vector": [
+            7.02755905511811,
+            7.5
+           ]
+          },
+          {
+           "key": "k8",
+           "vector": [
+            8.031496062992126,
+            8.5
+           ]
+          },
+          {
+           "key": "k9",
+           "vector": [
+            8.976377952755906,
+            9.5
+           ]
+          },
+          {
+           "key": "k10",
+           "vector": [
+            10.003937007874017,
+            10.5
+           ]
+          },
+          {
+           "key": "k11",
+           "vector": [
+            10.956692913385826,
+            11.5
+           ]
+          },
+          {
+           "key": "k12",
+           "vector": [
+            12.007874015748031,
+            12.5
+           ]
+          },
+          {
+           "key": "k13",
+           "vector": [
+            12.968503937007874,
+            13.5
+           ]
+          },
+          {
+           "key": "k14",
+           "vector": [
+            14.043307086614174,
+            14.5
+           ]
+          },
+          {
+           "key": "k15",
+           "vector": [
+            15.011811023622048,
+            15.5
+           ]
+          },
+          {
+           "key": "k16",
+           "vector": [
+            15.98031496062992,
+            16.5
+           ]
+          },
+          {
+           "key": "k17",
+           "vector": [
+            16.948818897637796,
+            17.5
+           ]
+          },
+          {
+           "key": "k18",
+           "vector": [
+            18.062992125984252,
+            18.5
+           ]
+          },
+          {
+           "key": "k19",
+           "vector": [
+            19.03937007874016,
+            19.5
+           ]
+          },
+          {
+           "key": "k20",
+           "vector": [
+            20.015748031496063,
+            20.5
+           ]
+          },
+          {
+           "key": "k21",
+           "vector": [
+            20.992125984251967,
+            21.5
+           ]
+          },
+          {
+           "key": "k22",
+           "vector": [
+            21.968503937007874,
+            22.5
+           ]
+          },
+          {
+           "key": "k23",
+           "vector": [
+            22.944881889763778,
+            23.5
+           ]
+          },
+          {
+           "key": "k24",
+           "vector": [
+            23.921259842519685,
+            24.5
+           ]
+          },
+          {
+           "key": "k25",
+           "vector": [
+            25.098425196850393,
+            25.5
+           ]
+          },
+          {
+           "key": "k26",
+           "vector": [
+            26.08267716535433,
+            26.5
+           ]
+          },
+          {
+           "key": "k27",
+           "vector": [
+            27.066929133858267,
+            27.5
+           ]
+          },
+          {
+           "key": "k28",
+           "vector": [
+            28.051181102362204,
+            28.5
+           ]
+          },
+          {
+           "key": "k29",
+           "vector": [
+            29.03543307086614,
+            29.5
+           ]
+          },
+          {
+           "key": "k30",
+           "vector": [
+            30.019685039370078,
+            30.5
+           ]
+          },
+          {
+           "key": "k31",
+           "vector": [
+            31.003937007874015,
+            31.5
+           ]
+          },
+          {
+           "key": "k32",
+           "vector": [
+            31.988188976377952,
+            32.5
+           ]
+          },
+          {
+           "key": "k33",
+           "vector": [
+            32.97244094488189,
+            33.5
+           ]
+          },
+          {
+           "key": "k34",
+           "vector": [
+            33.95669291338583,
+            34.5
+           ]
+          },
+          {
+           "key": "k35",
+           "vector": [
+            34.94094488188976,
+            35.5
+           ]
+          },
+          {
+           "key": "k36",
+           "vector": [
+            35.925196850393704,
+            36.5
+           ]
+          },
+          {
+           "key": "k37",
+           "vector": [
+            36.90944881889764,
+            37.5
+           ]
+          },
+          {
+           "key": "k38",
+           "vector": [
+            37.89370078740158,
+            38.5
+           ]
+          },
+          {
+           "key": "k39",
+           "vector": [
+            38.87795275590551,
+            39.5
+           ]
+          },
+          {
+           "key": "k40",
+           "vector": [
+            39.86220472440945,
+            40.5
+           ]
+          },
+          {
+           "key": "k41",
+           "vector": [
+            40.846456692913385,
+            41.5
+           ]
+          },
+          {
+           "key": "k42",
+           "vector": [
+            42.16535433070866,
+            42.5
+           ]
+          },
+          {
+           "key": "k43",
+           "vector": [
+            43.15748031496063,
+            43.5
+           ]
+          },
+          {
+           "key": "k44",
+           "vector": [
+            44.1496062992126,
+            44.5
+           ]
+          },
+          {
+           "key": "k45",
+           "vector": [
+            45.14173228346457,
+            45.5
+           ]
+          },
+          {
+           "key": "k46",
+           "vector": [
+            46.13385826771653,
+            46.5
+           ]
+          },
+          {
+           "key": "k47",
+           "vector": [
+            47.125984251968504,
+            47.5
+           ]
+          },
+          {
+           "key": "k48",
+           "vector": [
+            48.118110236220474,
+            48.5
+           ]
+          },
+          {
+           "key": "k49",
+           "vector": [
+            49.110236220472444,
+            49.5
+           ]
+          },
+          {
+           "key": "k50",
+           "vector": [
+            50.10236220472441,
+            50.5
+           ]
+          },
+          {
+           "key": "k51",
+           "vector": [
+            51.09448818897638,
+            51.5
+           ]
+          },
+          {
+           "key": "k52",
+           "vector": [
+            52.08661417322835,
+            52.5
+           ]
+          },
+          {
+           "key": "k53",
+           "vector": [
+            53.07874015748032,
+            53.5
+           ]
+          },
+          {
+           "key": "k54",
+           "vector": [
+            54.07086614173228,
+            54.5
+           ]
+          },
+          {
+           "key": "k55",
+           "vector": [
+            55.06299212598425,
+            55.5
+           ]
+          },
+          {
+           "key": "k56",
+           "vector": [
+            56.05511811023622,
+            56.5
+           ]
+          },
+          {
+           "key": "k57",
+           "vector": [
+            57.04724409448819,
+            57.5
+           ]
+          },
+          {
+           "key": "k58",
+           "vector": [
+            58.039370078740156,
+            58.5
+           ]
+          },
+          {
+           "key": "k59",
+           "vector": [
+            59.031496062992126,
+            59.5
+           ]
+          },
+          {
+           "key": "k60",
+           "vector": [
+            60.023622047244096,
+            60.5
+           ]
+          },
+          {
+           "key": "k61",
+           "vector": [
+            61.01574803149607,
+            61.5
+           ]
+          },
+          {
+           "key": "k62",
+           "vector": [
+            62.00787401574803,
+            62.5
+           ]
+          },
+          {
+           "key": "k63",
+           "vector": [
+            63.0,
+            63.5
+           ]
+          },
+          {
+           "key": "k64",
+           "vector": [
+            63.99212598425197,
+            64.5
+           ]
+          },
+          {
+           "key": "k65",
+           "vector": [
+            64.98425196850394,
+            65.5
+           ]
+          },
+          {
+           "key": "k66",
+           "vector": [
+            65.97637795275591,
+            66.5
+           ]
+          },
+          {
+           "key": "k67",
+           "vector": [
+            66.96850393700787,
+            67.5
+           ]
+          },
+          {
+           "key": "k68",
+           "vector": [
+            67.96062992125984,
+            68.5
+           ]
+          },
+          {
+           "key": "k69",
+           "vector": [
+            68.95275590551181,
+            69.5
+           ]
+          },
+          {
+           "key": "kdup",
+           "vector": [
+            0.0,
+            0.5
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a failed persist refuses with the write code",
+   "steps": [
+    {
+     "event": "RESOLVE",
+     "payload": {
+      "wanted": [
+       {
+        "key": "k1",
+        "text": "zz"
+       }
+      ],
+      "snapshots": [
+       "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw=="
+      ],
+      "userDir": "/u",
+      "providerModel": "baai/bge-base-en-v1.5",
+      "providerKind": "openrouter-shared",
+      "embedModel": "baai/bge-base-en-v1.5"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "USER_STORE_NEEDED",
+        "payload": {
+         "model": "baai/bge-base-en-v1.5",
+         "path": "/u/baai_bge-base-en-v1.5.vec"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "USER_STORE_READ",
+     "payload": {
+      "data": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_LOOKUP_MANY",
+        "payload": {
+         "stores": [
+          "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw==",
+          ""
+         ],
+         "origins": [
+          "snapshot 0",
+          "/u/baai_bge-base-en-v1.5.vec"
+         ],
+         "model": "baai/bge-base-en-v1.5",
+         "texts": [
+          "zz"
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "looking",
+     "event": "VECTOR_RESOLVED",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "entries": [
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MISSES_COMPUTED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "from": "looking",
+     "event": "MISSES_COMPUTED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_EMBED_ORS",
+        "payload": {
+         "texts": [
+          "zz"
+         ],
+         "model": "baai/bge-base-en-v1.5"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "embedding",
+     "event": "LLM_EMBED_RESULT",
+     "payload": {
+      "embeddings": [
+       [
+        1.0,
+        2.0
+       ]
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_WRITE",
+        "payload": {
+         "path": "/u/baai_bge-base-en-v1.5.vec",
+         "model": "baai/bge-base-en-v1.5",
+         "records": [
+          {
+           "text": "zz",
+           "vector": [
+            1.0,
+            2.0
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "persisting",
+     "event": "VECTOR_WRITE_REFUSED",
+     "payload": {
+      "code": "ORB_VECTOR_LOCKED",
+      "detail": "x"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTORS_REFUSED",
+        "payload": {
+         "code": "ORB_VECTOR_LOCKED",
+         "detail": "x"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a provider failure refuses with its message",
+   "steps": [
+    {
+     "event": "RESOLVE",
+     "payload": {
+      "wanted": [
+       {
+        "key": "k1",
+        "text": "zz"
+       }
+      ],
+      "snapshots": [
+       "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw=="
+      ],
+      "userDir": "/u",
+      "providerModel": "baai/bge-base-en-v1.5",
+      "providerKind": "openrouter-shared",
+      "embedModel": "baai/bge-base-en-v1.5"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "USER_STORE_NEEDED",
+        "payload": {
+         "model": "baai/bge-base-en-v1.5",
+         "path": "/u/baai_bge-base-en-v1.5.vec"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "USER_STORE_READ",
+     "payload": {
+      "data": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_LOOKUP_MANY",
+        "payload": {
+         "stores": [
+          "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw==",
+          ""
+         ],
+         "origins": [
+          "snapshot 0",
+          "/u/baai_bge-base-en-v1.5.vec"
+         ],
+         "model": "baai/bge-base-en-v1.5",
+         "texts": [
+          "zz"
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "looking",
+     "event": "VECTOR_RESOLVED",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "entries": [
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MISSES_COMPUTED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "from": "looking",
+     "event": "MISSES_COMPUTED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_EMBED_ORS",
+        "payload": {
+         "texts": [
+          "zz"
+         ],
+         "model": "baai/bge-base-en-v1.5"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "embedding",
+     "event": "LLM_FAILED",
+     "payload": {
+      "code": "http",
+      "message": "boom"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTORS_REFUSED",
+        "payload": {
+         "code": "ORB_VECTOR_EMBED_FAILED",
+         "detail": "embedding failed: boom"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a provider returning the wrong vector count refuses",
+   "steps": [
+    {
+     "event": "RESOLVE",
+     "payload": {
+      "wanted": [
+       {
+        "key": "k1",
+        "text": "zz"
+       }
+      ],
+      "snapshots": [
+       "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw=="
+      ],
+      "userDir": "/u",
+      "providerModel": "baai/bge-base-en-v1.5",
+      "providerKind": "openrouter-shared",
+      "embedModel": "baai/bge-base-en-v1.5"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "USER_STORE_NEEDED",
+        "payload": {
+         "model": "baai/bge-base-en-v1.5",
+         "path": "/u/baai_bge-base-en-v1.5.vec"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "USER_STORE_READ",
+     "payload": {
+      "data": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_LOOKUP_MANY",
+        "payload": {
+         "stores": [
+          "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw==",
+          ""
+         ],
+         "origins": [
+          "snapshot 0",
+          "/u/baai_bge-base-en-v1.5.vec"
+         ],
+         "model": "baai/bge-base-en-v1.5",
+         "texts": [
+          "zz"
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "looking",
+     "event": "VECTOR_RESOLVED",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "entries": [
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MISSES_COMPUTED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "from": "looking",
+     "event": "MISSES_COMPUTED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_EMBED_ORS",
+        "payload": {
+         "texts": [
+          "zz"
+         ],
+         "model": "baai/bge-base-en-v1.5"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "embedding",
+     "event": "LLM_EMBED_RESULT",
+     "payload": {
+      "embeddings": [
+       [
+        1.0
+       ],
+       [
+        2.0
+       ]
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTORS_REFUSED",
+        "payload": {
+         "code": "ORB_VECTOR_EMBED_COUNT",
+         "detail": "the embedder returned 2 vectors for 1 texts"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "with no snapshot the provider names the model and the store file slug replaces unsafe characters",
+   "steps": [
+    {
+     "event": "RESOLVE",
+     "payload": {
+      "wanted": [
+       {
+        "key": "k1",
+        "text": "zz"
+       }
+      ],
+      "snapshots": [],
+      "userDir": "/u",
+      "providerModel": "vendor/Model v2",
+      "providerKind": "openrouter-shared",
+      "embedModel": "vendor/Model v2"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "USER_STORE_NEEDED",
+        "payload": {
+         "model": "vendor/Model v2",
+         "path": "/u/vendor_Model_v2.vec"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "with no snapshot and no provider the canonical model is used",
+   "steps": [
+    {
+     "event": "RESOLVE",
+     "payload": {
+      "wanted": [
+       {
+        "key": "k1",
+        "text": "zz"
+       }
+      ],
+      "snapshots": [],
+      "userDir": "/u",
+      "providerModel": "",
+      "providerKind": "",
+      "embedModel": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "USER_STORE_NEEDED",
+        "payload": {
+         "model": "baai/bge-base-en-v1.5",
+         "path": "/u/baai_bge-base-en-v1.5.vec"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a store refusal passes through as a refusal",
+   "steps": [
+    {
+     "event": "RESOLVE",
+     "payload": {
+      "wanted": [
+       {
+        "key": "k1",
+        "text": "a"
+       }
+      ],
+      "snapshots": [
+       "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw=="
+      ],
+      "userDir": "/u",
+      "providerModel": "",
+      "providerKind": "",
+      "embedModel": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "USER_STORE_NEEDED",
+        "payload": {
+         "model": "baai/bge-base-en-v1.5",
+         "path": "/u/baai_bge-base-en-v1.5.vec"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "USER_STORE_READ",
+     "payload": {
+      "data": "anVuaw=="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_LOOKUP_MANY",
+        "payload": {
+         "stores": [
+          "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw==",
+          "anVuaw=="
+         ],
+         "model": "baai/bge-base-en-v1.5",
+         "texts": [
+          "a"
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "looking",
+     "event": "VECTOR_REFUSED",
+     "payload": {
+      "code": "ORB_VECTOR_BAD_MAGIC",
+      "detail": "not an ORBVEC file"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTORS_REFUSED",
+        "payload": {
+         "code": "ORB_VECTOR_BAD_MAGIC",
+         "detail": "not an ORBVEC file"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "provider kind openrouter-shared embeds through its own instance only",
+   "steps": [
+    {
+     "event": "RESOLVE",
+     "payload": {
+      "wanted": [
+       {
+        "key": "k1",
+        "text": "zz"
+       }
+      ],
+      "snapshots": [
+       "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw=="
+      ],
+      "userDir": "/u",
+      "providerModel": "baai/bge-base-en-v1.5",
+      "providerKind": "openrouter-shared",
+      "embedModel": "baai/bge-base-en-v1.5"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "USER_STORE_NEEDED",
+        "payload": {
+         "model": "baai/bge-base-en-v1.5",
+         "path": "/u/baai_bge-base-en-v1.5.vec"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "USER_STORE_READ",
+     "payload": {
+      "data": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_LOOKUP_MANY",
+        "payload": {
+         "stores": [
+          "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw==",
+          ""
+         ],
+         "origins": [
+          "snapshot 0",
+          "/u/baai_bge-base-en-v1.5.vec"
+         ],
+         "model": "baai/bge-base-en-v1.5",
+         "texts": [
+          "zz"
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "looking",
+     "event": "VECTOR_RESOLVED",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "entries": [
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MISSES_COMPUTED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "from": "looking",
+     "event": "MISSES_COMPUTED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_EMBED_ORS",
+        "payload": {
+         "texts": [
+          "zz"
+         ],
+         "model": "baai/bge-base-en-v1.5"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "provider kind openrouter-own embeds through its own instance only",
+   "steps": [
+    {
+     "event": "RESOLVE",
+     "payload": {
+      "wanted": [
+       {
+        "key": "k1",
+        "text": "zz"
+       }
+      ],
+      "snapshots": [
+       "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw=="
+      ],
+      "userDir": "/u",
+      "providerModel": "baai/bge-base-en-v1.5",
+      "providerKind": "openrouter-own",
+      "embedModel": "baai/bge-base-en-v1.5"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "USER_STORE_NEEDED",
+        "payload": {
+         "model": "baai/bge-base-en-v1.5",
+         "path": "/u/baai_bge-base-en-v1.5.vec"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "USER_STORE_READ",
+     "payload": {
+      "data": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_LOOKUP_MANY",
+        "payload": {
+         "stores": [
+          "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw==",
+          ""
+         ],
+         "origins": [
+          "snapshot 0",
+          "/u/baai_bge-base-en-v1.5.vec"
+         ],
+         "model": "baai/bge-base-en-v1.5",
+         "texts": [
+          "zz"
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "looking",
+     "event": "VECTOR_RESOLVED",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "entries": [
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MISSES_COMPUTED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "from": "looking",
+     "event": "MISSES_COMPUTED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_EMBED_ORO",
+        "payload": {
+         "texts": [
+          "zz"
+         ],
+         "model": "baai/bge-base-en-v1.5"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "provider kind openai-shared embeds through its own instance only",
+   "steps": [
+    {
+     "event": "RESOLVE",
+     "payload": {
+      "wanted": [
+       {
+        "key": "k1",
+        "text": "zz"
+       }
+      ],
+      "snapshots": [
+       "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw=="
+      ],
+      "userDir": "/u",
+      "providerModel": "baai/bge-base-en-v1.5",
+      "providerKind": "openai-shared",
+      "embedModel": "baai/bge-base-en-v1.5"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "USER_STORE_NEEDED",
+        "payload": {
+         "model": "baai/bge-base-en-v1.5",
+         "path": "/u/baai_bge-base-en-v1.5.vec"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "USER_STORE_READ",
+     "payload": {
+      "data": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_LOOKUP_MANY",
+        "payload": {
+         "stores": [
+          "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw==",
+          ""
+         ],
+         "origins": [
+          "snapshot 0",
+          "/u/baai_bge-base-en-v1.5.vec"
+         ],
+         "model": "baai/bge-base-en-v1.5",
+         "texts": [
+          "zz"
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "looking",
+     "event": "VECTOR_RESOLVED",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "entries": [
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MISSES_COMPUTED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "from": "looking",
+     "event": "MISSES_COMPUTED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_EMBED_OAS",
+        "payload": {
+         "texts": [
+          "zz"
+         ],
+         "model": "baai/bge-base-en-v1.5"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "provider kind openai-own embeds through its own instance only",
+   "steps": [
+    {
+     "event": "RESOLVE",
+     "payload": {
+      "wanted": [
+       {
+        "key": "k1",
+        "text": "zz"
+       }
+      ],
+      "snapshots": [
+       "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw=="
+      ],
+      "userDir": "/u",
+      "providerModel": "baai/bge-base-en-v1.5",
+      "providerKind": "openai-own",
+      "embedModel": "baai/bge-base-en-v1.5"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "USER_STORE_NEEDED",
+        "payload": {
+         "model": "baai/bge-base-en-v1.5",
+         "path": "/u/baai_bge-base-en-v1.5.vec"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "USER_STORE_READ",
+     "payload": {
+      "data": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_LOOKUP_MANY",
+        "payload": {
+         "stores": [
+          "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw==",
+          ""
+         ],
+         "origins": [
+          "snapshot 0",
+          "/u/baai_bge-base-en-v1.5.vec"
+         ],
+         "model": "baai/bge-base-en-v1.5",
+         "texts": [
+          "zz"
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "looking",
+     "event": "VECTOR_RESOLVED",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "entries": [
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MISSES_COMPUTED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "from": "looking",
+     "event": "MISSES_COMPUTED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_EMBED_OAO",
+        "payload": {
+         "texts": [
+          "zz"
+         ],
+         "model": "baai/bge-base-en-v1.5"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "provider kind lmstudio embeds through its own instance only",
+   "steps": [
+    {
+     "event": "RESOLVE",
+     "payload": {
+      "wanted": [
+       {
+        "key": "k1",
+        "text": "zz"
+       }
+      ],
+      "snapshots": [
+       "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw=="
+      ],
+      "userDir": "/u",
+      "providerModel": "baai/bge-base-en-v1.5",
+      "providerKind": "lmstudio",
+      "embedModel": "text-embedding-bge-base-en-v1.5"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "USER_STORE_NEEDED",
+        "payload": {
+         "model": "baai/bge-base-en-v1.5",
+         "path": "/u/baai_bge-base-en-v1.5.vec"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "USER_STORE_READ",
+     "payload": {
+      "data": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_LOOKUP_MANY",
+        "payload": {
+         "stores": [
+          "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw==",
+          ""
+         ],
+         "origins": [
+          "snapshot 0",
+          "/u/baai_bge-base-en-v1.5.vec"
+         ],
+         "model": "baai/bge-base-en-v1.5",
+         "texts": [
+          "zz"
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "looking",
+     "event": "VECTOR_RESOLVED",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "entries": [
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MISSES_COMPUTED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "from": "looking",
+     "event": "MISSES_COMPUTED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_EMBED_LM",
+        "payload": {
+         "texts": [
+          "zz"
+         ],
+         "model": "text-embedding-bge-base-en-v1.5"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an unknown provider kind with a model refuses instead of stalling",
+   "steps": [
+    {
+     "event": "RESOLVE",
+     "payload": {
+      "wanted": [
+       {
+        "key": "k1",
+        "text": "zz"
+       }
+      ],
+      "snapshots": [
+       "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw=="
+      ],
+      "userDir": "/u",
+      "providerModel": "baai/bge-base-en-v1.5",
+      "providerKind": "nonsense",
+      "embedModel": "baai/bge-base-en-v1.5"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "USER_STORE_NEEDED",
+        "payload": {
+         "model": "baai/bge-base-en-v1.5",
+         "path": "/u/baai_bge-base-en-v1.5.vec"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "USER_STORE_READ",
+     "payload": {
+      "data": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_LOOKUP_MANY",
+        "payload": {
+         "stores": [
+          "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw==",
+          ""
+         ],
+         "origins": [
+          "snapshot 0",
+          "/u/baai_bge-base-en-v1.5.vec"
+         ],
+         "model": "baai/bge-base-en-v1.5",
+         "texts": [
+          "zz"
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "looking",
+     "event": "VECTOR_RESOLVED",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "entries": [
+       {
+        "found": false,
+        "dims": 4,
+        "scale": 0,
+        "record": "",
+        "vector": []
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MISSES_COMPUTED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "from": "looking",
+     "event": "MISSES_COMPUTED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTORS_REFUSED",
+        "payload": {
+         "code": "ORB_VECTOR_PROVIDER_KIND",
+         "detail": "no embedding instance serves the provider kind `nonsense`"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

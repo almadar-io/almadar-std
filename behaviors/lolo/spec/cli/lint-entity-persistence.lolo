@@ -2,12 +2,13 @@ app lint-entity-persistence-spec [
   version: "1.0.0",
   description: "Design contract for `orb lint entity-persistence <file>`, the port of ORB_E_MISSING_COLLECTION. The file is lowered with program/read; each orbital entity whose persistence is persistent and that has no collection is reported as `[ORB_E_MISSING_COLLECTION] <path>: <message>` with the Rust message and suggestion, status 500 (exit 1). A clean program answers `lint entity-persistence: clean` (status 200, exit 0). Anything but exactly one file argument is the usage (status 400, exit 2). A file that cannot be read or lowered fails the run (status 500)."
 ]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
 orbital LintEntityPersistenceSpec {
   expects trait OrbLintEntityPersistence {
     state ready
     emits {
-      LINT_FOUND { rule : string!  findings : [string]! }
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
       LINT_UNREAD { rule : string! }
     }
   }

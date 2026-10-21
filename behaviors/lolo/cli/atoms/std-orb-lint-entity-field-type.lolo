@@ -6,11 +6,12 @@ app std-orb-lint-entity-field-type [
 ]
 uses Spec from "almadar-std/lint-entity-field-type"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
 orbital OrbLintEntityFieldTypeOrbital {
   entity OrbLintEntityFieldTypeRun [runtime] {
     id : string!
-    findings : [string] = []
+    findings : [OrbFinding] = []
   }
 
   trait OrbLintEntityFieldType -> OrbLintEntityFieldTypeRun [integration] {
@@ -38,13 +39,13 @@ orbital OrbLintEntityFieldTypeOrbital {
                   (let ((f (array/nth @fields @fi)))
                     (array/concat
                       (if (and (object/has @f "name") (= (object/get @f "name" "x") ""))
-                        [(str/concat "[ORB_E_INVALID_FIELD_NAME] orbitals[" @oi "].entity.fields[" @fi "].name: Field name cannot be empty\n  suggestion: Provide a valid camelCase field name")]
+                        [{ code: "ORB_E_INVALID_FIELD_NAME", path: (str/concat "orbitals[" @oi "].entity.fields[" @fi "].name"), message: "Field name cannot be empty", suggestion: "Provide a valid camelCase field name", severity: "error" }]
                         [])
                       (if (array/includes ["string" "number" "boolean" "date" "datetime" "timestamp" "email" "url" "phone" "uuid" "image" "money" "file" "bytes" "CallKey" "array" "tuple" "object" "enum" "relation" "trait" "orbital" "behavior" "slot" "pattern" "node" "event" "union"] (object/get @f "type" "string"))
                         []
-                        [(str/concat "[ORB_E_INVALID_FIELD_TYPE] orbitals[" @oi "].entity.fields[" @fi "].type: Invalid field type: '" (object/get @f "type" "") "'\n  suggestion: Use a valid field type")])
+                        [{ code: "ORB_E_INVALID_FIELD_TYPE", path: (str/concat "orbitals[" @oi "].entity.fields[" @fi "].type"), message: (str/concat "Invalid field type: '" (object/get @f "type" "") "'"), suggestion: "Use a valid field type", severity: "error" }])
                       (if (and (= (object/get @f "type" "") "relation") (not (object/has @f "relation")))
-                        [(str/concat "[ORB_E_INVALID_RELATION] orbitals[" @oi "].entity.fields[" @fi "].relation: Relation field requires a 'relation' configuration\n  suggestion: Add relation: { entity: 'EntityName', cardinality: 'one' }")]
+                        [{ code: "ORB_E_INVALID_RELATION", path: (str/concat "orbitals[" @oi "].entity.fields[" @fi "].relation"), message: "Relation field requires a 'relation' configuration", suggestion: "Add relation: { entity: 'EntityName', cardinality: 'one' }", severity: "error" }]
                         []))))))) [])))))))
         (emit LINT_FINISH { })
       LINT_FILE_UNREAD -> ready
@@ -58,7 +59,7 @@ orbital OrbLintEntityFieldTypeOrbital {
       LINT_RUN -> external { file : string! }
         @description "The lint request this trait answers, from the cli trait or the umbrella."
         @tier "internal"
-      LINT_FOUND -> external { rule : string!  findings : [string]! }
+      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
         @description "This rule's findings for the file, offered to the lint-all umbrella."
         @tier "internal"
       LINT_FILE_READ { data : bytes! }
@@ -96,7 +97,7 @@ orbital OrbLintEntityFieldTypeOrbital {
       LINT_FOUND -> ready when (and (= @payload.rule "entity-field-type") (= (array/len @payload.findings) 0))
         (emit LINT_ANSWERED { status: 200, body: "lint entity-field-type: clean" })
       LINT_FOUND -> ready when (and (= @payload.rule "entity-field-type") (> (array/len @payload.findings) 0))
-        (emit LINT_ANSWERED { status: 500, body: (str/join @payload.findings "\n") })
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
       LINT_UNREAD -> ready when (= @payload.rule "entity-field-type")
         (emit LINT_ANSWERED { status: 500, body: "lint entity-field-type: the file could not be read or lowered" })
     }
@@ -111,7 +112,7 @@ orbital OrbLintEntityFieldTypeOrbital {
       LINT_RUN -> external { file : string! }
         @description "Ask the rule trait to lint this file."
         @tier "internal"
-      LINT_FOUND -> external { rule : string!  findings : [string]! }
+      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
         @description "The rule trait's findings for the file."
         @tier "internal"
       LINT_UNREAD -> external { rule : string! }

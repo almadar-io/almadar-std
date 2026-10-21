@@ -1,0 +1,1342 @@
+{
+  "atom": "dev/atoms/std-key-chord.lolo",
+  "trait": "KeyChord",
+  "cases": [
+    {
+      "id": "key-chord-fixed-modifier-order (useKeyboardRouter keyChord, key_chord.rs:302)",
+      "steps": [
+        {
+          "event": "KEY_CHORD",
+          "payload": {
+            "key": "k",
+            "ctrl": true,
+            "alt": false,
+            "shift": true,
+            "meta": true
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "value": "Control+Shift+Meta+k"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "KEY_CHORD",
+          "payload": {
+            "key": "Escape",
+            "ctrl": false,
+            "alt": false,
+            "shift": false,
+            "meta": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "value": "Escape"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "KEY_CHORD",
+          "payload": {
+            "key": "x",
+            "ctrl": true,
+            "alt": true,
+            "shift": true,
+            "meta": true
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "value": "Control+Alt+Shift+Meta+x"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "key-map-code-spellings (key_chord.rs:207)",
+      "steps": [
+        {
+          "event": "KEY_MAP_CODE",
+          "payload": {
+            "code": "KeyZ",
+            "ctrl": false,
+            "alt": false,
+            "shift": false,
+            "meta": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "value": "KeyZ"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "KEY_MAP_CODE",
+          "payload": {
+            "code": "KeyZ",
+            "ctrl": false,
+            "alt": false,
+            "shift": false,
+            "meta": true
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "value": "Mod+KeyZ"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "KEY_MAP_CODE",
+          "payload": {
+            "code": "KeyZ",
+            "ctrl": true,
+            "alt": false,
+            "shift": false,
+            "meta": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "value": "Mod+KeyZ"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "KEY_MAP_CODE",
+          "payload": {
+            "code": "KeyZ",
+            "ctrl": false,
+            "alt": true,
+            "shift": true,
+            "meta": true
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "value": "Mod+Shift+Alt+KeyZ"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "KEY_MAP_CODE",
+          "payload": {
+            "code": "KeyZ",
+            "ctrl": true,
+            "alt": false,
+            "shift": false,
+            "meta": true
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "value": "Mod+KeyZ"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "resolve-none-without-map-or-in-editable-target-with-control (key_chord.rs:239)",
+      "steps": [
+        {
+          "event": "RESOLVE_KEY_MAP",
+          "payload": {
+            "map": {},
+            "hasMap": false,
+            "code": "KeyZ",
+            "targetEditable": false,
+            "ctrl": false,
+            "alt": false,
+            "shift": false,
+            "meta": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "value": "",
+                  "hit": false
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "RESOLVE_KEY_MAP",
+          "payload": {
+            "map": {
+              "KeyZ": "UNDO"
+            },
+            "hasMap": true,
+            "code": "KeyZ",
+            "targetEditable": true,
+            "ctrl": false,
+            "alt": false,
+            "shift": false,
+            "meta": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "value": "",
+                  "hit": false
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "RESOLVE_KEY_MAP",
+          "payload": {
+            "map": {
+              "KeyZ": "UNDO"
+            },
+            "hasMap": true,
+            "code": "KeyZ",
+            "targetEditable": false,
+            "ctrl": false,
+            "alt": false,
+            "shift": false,
+            "meta": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "value": "UNDO",
+                  "hit": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "resolve-mod-entries (key_chord.rs:251)",
+      "steps": [
+        {
+          "event": "RESOLVE_KEY_MAP",
+          "payload": {
+            "map": {
+              "Mod+KeyZ": "UNDO"
+            },
+            "hasMap": true,
+            "code": "KeyZ",
+            "targetEditable": false,
+            "ctrl": false,
+            "alt": false,
+            "shift": false,
+            "meta": true
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "value": "UNDO",
+                  "hit": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "RESOLVE_KEY_MAP",
+          "payload": {
+            "map": {
+              "Mod+KeyZ": "UNDO"
+            },
+            "hasMap": true,
+            "code": "KeyZ",
+            "targetEditable": false,
+            "ctrl": true,
+            "alt": false,
+            "shift": false,
+            "meta": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "value": "UNDO",
+                  "hit": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "RESOLVE_KEY_MAP",
+          "payload": {
+            "map": {
+              "Mod+Shift+KeyZ": "REDO"
+            },
+            "hasMap": true,
+            "code": "KeyZ",
+            "targetEditable": false,
+            "ctrl": false,
+            "alt": false,
+            "shift": true,
+            "meta": true
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "value": "REDO",
+                  "hit": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "resolve-bare-fallback-and-precedence (key_chord.rs:278)",
+      "steps": [
+        {
+          "event": "RESOLVE_KEY_MAP",
+          "payload": {
+            "map": {
+              "KeyZ": "OTHER"
+            },
+            "hasMap": true,
+            "code": "KeyZ",
+            "targetEditable": false,
+            "ctrl": false,
+            "alt": false,
+            "shift": true,
+            "meta": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "value": "OTHER",
+                  "hit": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "RESOLVE_KEY_MAP",
+          "payload": {
+            "map": {
+              "Mod+KeyZ": "UNDO",
+              "KeyZ": "OTHER"
+            },
+            "hasMap": true,
+            "code": "KeyZ",
+            "targetEditable": false,
+            "ctrl": false,
+            "alt": false,
+            "shift": false,
+            "meta": true
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "value": "UNDO",
+                  "hit": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "RESOLVE_KEY_MAP",
+          "payload": {
+            "map": {
+              "Mod+KeyZ": "UNDO",
+              "KeyZ": "OTHER"
+            },
+            "hasMap": true,
+            "code": "KeyZ",
+            "targetEditable": false,
+            "ctrl": false,
+            "alt": false,
+            "shift": false,
+            "meta": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "value": "OTHER",
+                  "hit": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "RESOLVE_KEY_MAP",
+          "payload": {
+            "map": {
+              "KeyA": "MOVE"
+            },
+            "hasMap": true,
+            "code": "KeyZ",
+            "targetEditable": false,
+            "ctrl": false,
+            "alt": false,
+            "shift": false,
+            "meta": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "value": "",
+                  "hit": false
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "editable-elements (key_chord.rs:194)",
+      "steps": [
+        {
+          "event": "IS_EDITABLE",
+          "payload": {
+            "tagName": "INPUT",
+            "hasAttr": false,
+            "attr": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "hit": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "IS_EDITABLE",
+          "payload": {
+            "tagName": "TEXTAREA",
+            "hasAttr": false,
+            "attr": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "hit": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "IS_EDITABLE",
+          "payload": {
+            "tagName": "SELECT",
+            "hasAttr": false,
+            "attr": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "hit": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "IS_EDITABLE",
+          "payload": {
+            "tagName": "DIV",
+            "hasAttr": true,
+            "attr": "true"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "hit": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "IS_EDITABLE",
+          "payload": {
+            "tagName": "DIV",
+            "hasAttr": true,
+            "attr": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "hit": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "IS_EDITABLE",
+          "payload": {
+            "tagName": "DIV",
+            "hasAttr": true,
+            "attr": "plaintext-only"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "hit": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "IS_EDITABLE",
+          "payload": {
+            "tagName": "DIV",
+            "hasAttr": true,
+            "attr": "false"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "hit": false
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "IS_EDITABLE",
+          "payload": {
+            "tagName": "CANVAS",
+            "hasAttr": false,
+            "attr": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "hit": false
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "IS_EDITABLE",
+          "payload": {
+            "tagName": "input",
+            "hasAttr": false,
+            "attr": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "hit": false
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "route-captures-declared-key-for-focused-editor (key_chord.rs:332)",
+      "steps": [
+        {
+          "event": "ROUTE_KEY",
+          "payload": {
+            "table": {
+              "e1": {
+                "mode": "NORMAL",
+                "keys": [
+                  "h"
+                ]
+              }
+            },
+            "hasFocus": true,
+            "focusedEditor": "e1",
+            "key": "h",
+            "composing": false,
+            "ctrl": false,
+            "alt": false,
+            "shift": false,
+            "meta": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "editorId": "e1",
+                  "captured": true,
+                  "skipped": false
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "route-undeclared-key-is-routed-not-captured (key_chord.rs:345)",
+      "steps": [
+        {
+          "event": "ROUTE_KEY",
+          "payload": {
+            "table": {
+              "e1": {
+                "mode": "NORMAL",
+                "keys": [
+                  "h"
+                ]
+              }
+            },
+            "hasFocus": true,
+            "focusedEditor": "e1",
+            "key": "a",
+            "composing": false,
+            "ctrl": false,
+            "alt": false,
+            "shift": false,
+            "meta": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "editorId": "e1",
+                  "captured": false,
+                  "skipped": false
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "route-shell-when-unfocused-mode-any-without-keys (key_chord.rs:358)",
+      "steps": [
+        {
+          "event": "ROUTE_KEY",
+          "payload": {
+            "table": {
+              "shell": {
+                "mode": "any",
+                "keys": []
+              }
+            },
+            "hasFocus": false,
+            "focusedEditor": "",
+            "key": "z",
+            "composing": false,
+            "ctrl": false,
+            "alt": false,
+            "shift": false,
+            "meta": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "editorId": "shell",
+                  "captured": false,
+                  "skipped": false
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "route-chord-entries-capture-only-when-modifiers-match (key_chord.rs:371)",
+      "steps": [
+        {
+          "event": "ROUTE_KEY",
+          "payload": {
+            "table": {
+              "shell": {
+                "mode": "any",
+                "keys": [
+                  "Control+Shift+P",
+                  "Meta+k"
+                ]
+              }
+            },
+            "hasFocus": false,
+            "focusedEditor": "",
+            "key": "k",
+            "composing": false,
+            "ctrl": false,
+            "alt": false,
+            "shift": false,
+            "meta": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "captured": false
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "ROUTE_KEY",
+          "payload": {
+            "table": {
+              "shell": {
+                "mode": "any",
+                "keys": [
+                  "Control+Shift+P",
+                  "Meta+k"
+                ]
+              }
+            },
+            "hasFocus": false,
+            "focusedEditor": "",
+            "key": "k",
+            "composing": false,
+            "ctrl": false,
+            "alt": false,
+            "shift": false,
+            "meta": true
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "captured": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "ROUTE_KEY",
+          "payload": {
+            "table": {
+              "shell": {
+                "mode": "any",
+                "keys": [
+                  "Control+Shift+P",
+                  "Meta+k"
+                ]
+              }
+            },
+            "hasFocus": false,
+            "focusedEditor": "",
+            "key": "P",
+            "composing": false,
+            "ctrl": false,
+            "alt": false,
+            "shift": true,
+            "meta": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "captured": false
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "ROUTE_KEY",
+          "payload": {
+            "table": {
+              "shell": {
+                "mode": "any",
+                "keys": [
+                  "Control+Shift+P",
+                  "Meta+k"
+                ]
+              }
+            },
+            "hasFocus": false,
+            "focusedEditor": "",
+            "key": "P",
+            "composing": false,
+            "ctrl": true,
+            "alt": false,
+            "shift": true,
+            "meta": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "captured": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "route-empty-table-captures-nothing (key_chord.rs:394)",
+      "steps": [
+        {
+          "event": "ROUTE_KEY",
+          "payload": {
+            "table": {},
+            "hasFocus": false,
+            "focusedEditor": "",
+            "key": "z",
+            "composing": false,
+            "ctrl": false,
+            "alt": false,
+            "shift": false,
+            "meta": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "captured": false,
+                  "editorId": "shell"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "route-falls-back-to-shell-after-blur (key_chord.rs:400)",
+      "steps": [
+        {
+          "event": "ROUTE_KEY",
+          "payload": {
+            "table": {
+              "e1": {
+                "mode": "NORMAL",
+                "keys": [
+                  "h"
+                ]
+              },
+              "shell": {
+                "mode": "any",
+                "keys": []
+              }
+            },
+            "hasFocus": false,
+            "focusedEditor": "",
+            "key": "x",
+            "composing": false,
+            "ctrl": false,
+            "alt": false,
+            "shift": false,
+            "meta": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "editorId": "shell"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "route-composition-keydowns-ignored-with-control (key_chord.rs:411)",
+      "steps": [
+        {
+          "event": "ROUTE_KEY",
+          "payload": {
+            "table": {
+              "shell": {
+                "mode": "any",
+                "keys": [
+                  "a"
+                ]
+              }
+            },
+            "hasFocus": false,
+            "focusedEditor": "",
+            "key": "a",
+            "composing": true,
+            "ctrl": false,
+            "alt": false,
+            "shift": false,
+            "meta": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "skipped": true,
+                  "captured": false,
+                  "editorId": ""
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "ROUTE_KEY",
+          "payload": {
+            "table": {
+              "shell": {
+                "mode": "any",
+                "keys": [
+                  "a"
+                ]
+              }
+            },
+            "hasFocus": false,
+            "focusedEditor": "",
+            "key": "a",
+            "composing": false,
+            "ctrl": false,
+            "alt": false,
+            "shift": false,
+            "meta": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "skipped": false,
+                  "captured": true,
+                  "editorId": "shell"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "merge-unions-keys-and-keeps-shared-mode (key_chord.rs:420)",
+      "steps": [
+        {
+          "event": "MERGE_CAPTURE",
+          "payload": {
+            "tables": [
+              {
+                "editor": {
+                  "mode": "NORMAL",
+                  "keys": [
+                    "h",
+                    "j"
+                  ]
+                }
+              },
+              {
+                "editor": {
+                  "mode": "NORMAL",
+                  "keys": [
+                    "j",
+                    "k"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "table": {
+                    "editor": {
+                      "mode": "NORMAL",
+                      "keys": [
+                        "h",
+                        "j",
+                        "k"
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "MERGE_CAPTURE",
+          "payload": {
+            "tables": [
+              {
+                "editor": {
+                  "mode": "NORMAL",
+                  "keys": [
+                    "h"
+                  ]
+                }
+              },
+              {
+                "editor": {
+                  "mode": "NORMAL",
+                  "keys": [
+                    "j"
+                  ]
+                }
+              },
+              {
+                "editor": {
+                  "mode": "NORMAL",
+                  "keys": [
+                    "k"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "table": {
+                    "editor": {
+                      "mode": "NORMAL",
+                      "keys": [
+                        "h",
+                        "j",
+                        "k"
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "merge-any-wins-and-distinct-modes-join-sorted (key_chord.rs:439)",
+      "steps": [
+        {
+          "event": "MERGE_CAPTURE",
+          "payload": {
+            "tables": [
+              {
+                "editor": {
+                  "mode": "NORMAL",
+                  "keys": [
+                    "h"
+                  ]
+                }
+              },
+              {
+                "editor": {
+                  "mode": "any",
+                  "keys": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "table": {
+                    "editor": {
+                      "mode": "any",
+                      "keys": [
+                        "h"
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "MERGE_CAPTURE",
+          "payload": {
+            "tables": [
+              {
+                "editor": {
+                  "mode": "any",
+                  "keys": []
+                }
+              },
+              {
+                "editor": {
+                  "mode": "NORMAL",
+                  "keys": [
+                    "h"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "table": {
+                    "editor": {
+                      "mode": "any",
+                      "keys": [
+                        "h"
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "MERGE_CAPTURE",
+          "payload": {
+            "tables": [
+              {
+                "editor": {
+                  "mode": "VISUAL",
+                  "keys": [
+                    "v"
+                  ]
+                }
+              },
+              {
+                "editor": {
+                  "mode": "NORMAL",
+                  "keys": [
+                    "n"
+                  ]
+                }
+              },
+              {
+                "editor": {
+                  "mode": "INSERT",
+                  "keys": [
+                    "i"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "table": {
+                    "editor": {
+                      "mode": "INSERT|NORMAL|VISUAL",
+                      "keys": [
+                        "i",
+                        "n",
+                        "v"
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "merge-empty-and-disjoint-targets (key_chord.rs:459)",
+      "steps": [
+        {
+          "event": "MERGE_CAPTURE",
+          "payload": {
+            "tables": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "table": {}
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "MERGE_CAPTURE",
+          "payload": {
+            "tables": [
+              {
+                "editor": {
+                  "mode": "NORMAL",
+                  "keys": [
+                    "h"
+                  ]
+                }
+              },
+              {
+                "shell": {
+                  "mode": "any",
+                  "keys": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "table": {
+                    "editor": {
+                      "mode": "NORMAL",
+                      "keys": [
+                        "h"
+                      ]
+                    },
+                    "shell": {
+                      "mode": "any",
+                      "keys": []
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "merge-a-merged-mode-is-split-before-the-new-mode-joins (incremental fold)",
+      "steps": [
+        {
+          "event": "MERGE_CAPTURE",
+          "payload": {
+            "tables": [
+              {
+                "e": {
+                  "mode": "A",
+                  "keys": []
+                }
+              },
+              {
+                "e": {
+                  "mode": "B",
+                  "keys": []
+                }
+              },
+              {
+                "e": {
+                  "mode": "B",
+                  "keys": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEY_RESULT",
+                "payload": {
+                  "table": {
+                    "e": {
+                      "mode": "A|B",
+                      "keys": []
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

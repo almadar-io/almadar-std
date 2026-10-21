@@ -7,137 +7,20 @@
   {
    "id": "fetch-on-capable-adapter-is-one-query-page",
    "skip": "pending: push-down adapter-call counting (queryPage / writeWhere / writeBatch counts from packages/almadar-runtime/test/fixtures/adapter-calls.json) is a store-driver property with no HTTP surface and no std observer yet",
-   "pending": "pending: push-down adapter-call counting (queryPage / writeWhere / writeBatch counts from packages/almadar-runtime/test/fixtures/adapter-calls.json) is a store-driver property with no HTTP surface and no std observer yet",
-   "fixture": {
-    "schema": "CountApp: orbital Notes, entity Note [persistent] (id, status, stock), trait NoteBrowse with LIST_OPEN (fetch filter status=open, orderBy stock:desc, limit 10) and BUMP (persist update n1 stock 7)",
-    "rows": [
-     [
-      "n1",
-      "open",
-      1
-     ],
-     [
-      "n2",
-      "closed",
-      1
-     ],
-     [
-      "n3",
-      "open",
-      1
-     ]
-    ],
-    "adapter": "declares push-down"
-   },
-   "request": {
-    "method": "POST",
-    "path": "/api/orbitals/Notes/events",
-    "body": {
-     "event": "LIST_OPEN",
-     "targetTrait": "NoteBrowse"
-    }
-   },
-   "expected": {
-    "fetchedRows": 2,
-    "adapterCalls": {
-     "queryPage": "oracle fetch.queryPage",
-     "list": "oracle fetch.list"
-    }
-   },
-   "steps": []
+   "steps": [],
+   "note": "pending spec: {\"expected\": {\"adapterCalls\": {\"list\": \"oracle fetch.list\", \"queryPage\": \"oracle fetch.queryPage\"}, \"fetchedRows\": 2}, \"fixture\": {\"adapter\": \"declares push-down\", \"rows\": [[\"n1\", \"open\", 1], [\"n2\", \"closed\", 1], [\"n3\", \"open\", 1]], \"schema\": \"CountApp: orbital Notes, entity Note [persistent] (id, status, stock), trait NoteBrowse with LIST_OPEN (fetch filter status=open, orderBy stock:desc, limit 10) and BUMP (persist update n1 stock 7)\"}, \"request\": {\"body\": {\"event\": \"LIST_OPEN\", \"targetTrait\": \"NoteBrowse\"}, \"method\": \"POST\", \"path\": \"/api/orbitals/Notes/events\"}}"
   },
   {
    "id": "persist-update-on-capable-adapter-is-one-write-batch",
    "skip": "pending: push-down adapter-call counting (queryPage / writeWhere / writeBatch counts from packages/almadar-runtime/test/fixtures/adapter-calls.json) is a store-driver property with no HTTP surface and no std observer yet",
-   "pending": "pending: push-down adapter-call counting (queryPage / writeWhere / writeBatch counts from packages/almadar-runtime/test/fixtures/adapter-calls.json) is a store-driver property with no HTTP surface and no std observer yet",
-   "fixture": {
-    "schema": "CountApp: orbital Notes, entity Note [persistent] (id, status, stock), trait NoteBrowse with LIST_OPEN (fetch filter status=open, orderBy stock:desc, limit 10) and BUMP (persist update n1 stock 7)",
-    "rows": [
-     [
-      "n1",
-      "open",
-      1
-     ],
-     [
-      "n2",
-      "closed",
-      1
-     ],
-     [
-      "n3",
-      "open",
-      1
-     ]
-    ],
-    "adapter": "declares push-down"
-   },
-   "request": {
-    "method": "POST",
-    "path": "/api/orbitals/Notes/events",
-    "body": {
-     "event": "BUMP",
-     "targetTrait": "NoteBrowse"
-    }
-   },
-   "expected": {
-    "effectErrors": 0,
-    "adapterCalls": {
-     "writeWhere": "oracle update.writeWhere",
-     "writeBatch": "oracle update.writeBatch",
-     "rowOps": "oracle update.create+update+list"
-    },
-    "storedRow": {
-     "id": "n1",
-     "stock": 7
-    }
-   },
-   "steps": []
+   "steps": [],
+   "note": "pending spec: {\"expected\": {\"adapterCalls\": {\"rowOps\": \"oracle update.create+update+list\", \"writeBatch\": \"oracle update.writeBatch\", \"writeWhere\": \"oracle update.writeWhere\"}, \"effectErrors\": 0, \"storedRow\": {\"id\": \"n1\", \"stock\": 7}}, \"fixture\": {\"adapter\": \"declares push-down\", \"rows\": [[\"n1\", \"open\", 1], [\"n2\", \"closed\", 1], [\"n3\", \"open\", 1]], \"schema\": \"CountApp: orbital Notes, entity Note [persistent] (id, status, stock), trait NoteBrowse with LIST_OPEN (fetch filter status=open, orderBy stock:desc, limit 10) and BUMP (persist update n1 stock 7)\"}, \"request\": {\"body\": {\"event\": \"BUMP\", \"targetTrait\": \"NoteBrowse\"}, \"method\": \"POST\", \"path\": \"/api/orbitals/Notes/events\"}}"
   },
   {
    "id": "control-undeclaring-adapter-keeps-list-and-row-paths",
    "skip": "pending: push-down adapter-call counting (queryPage / writeWhere / writeBatch counts from packages/almadar-runtime/test/fixtures/adapter-calls.json) is a store-driver property with no HTTP surface and no std observer yet",
-   "pending": "pending: push-down adapter-call counting (queryPage / writeWhere / writeBatch counts from packages/almadar-runtime/test/fixtures/adapter-calls.json) is a store-driver property with no HTTP surface and no std observer yet",
-   "fixture": {
-    "schema": "CountApp: orbital Notes, entity Note [persistent] (id, status, stock), trait NoteBrowse with LIST_OPEN (fetch filter status=open, orderBy stock:desc, limit 10) and BUMP (persist update n1 stock 7)",
-    "rows": [
-     [
-      "n1",
-      "open",
-      1
-     ],
-     [
-      "n2",
-      "closed",
-      1
-     ],
-     [
-      "n3",
-      "open",
-      1
-     ]
-    ],
-    "adapter": "declares nothing"
-   },
-   "request": {
-    "method": "POST",
-    "path": "/api/orbitals/Notes/events",
-    "body": {
-     "event": "LIST_OPEN",
-     "targetTrait": "NoteBrowse"
-    }
-   },
-   "expected": {
-    "fetchedRows": 2,
-    "adapterCalls": {
-     "queryPage": 0,
-     "rowOpsGreaterThan": 0
-    },
-    "thenBUMP": {
-     "writeWhere": 0,
-     "rowOpsGreaterThan": 0
-    }
-   },
-   "steps": []
+   "steps": [],
+   "note": "pending spec: {\"expected\": {\"adapterCalls\": {\"queryPage\": 0, \"rowOpsGreaterThan\": 0}, \"fetchedRows\": 2, \"thenBUMP\": {\"rowOpsGreaterThan\": 0, \"writeWhere\": 0}}, \"fixture\": {\"adapter\": \"declares nothing\", \"rows\": [[\"n1\", \"open\", 1], [\"n2\", \"closed\", 1], [\"n3\", \"open\", 1]], \"schema\": \"CountApp: orbital Notes, entity Note [persistent] (id, status, stock), trait NoteBrowse with LIST_OPEN (fetch filter status=open, orderBy stock:desc, limit 10) and BUMP (persist update n1 stock 7)\"}, \"request\": {\"body\": {\"event\": \"LIST_OPEN\", \"targetTrait\": \"NoteBrowse\"}, \"method\": \"POST\", \"path\": \"/api/orbitals/Notes/events\"}}"
   }
  ]
 }

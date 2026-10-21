@@ -2,12 +2,13 @@ app lint-listen-trigger-spec [
   version: "1.0.0",
   description: "Design contract for `orb lint listen-trigger <file>`, the port of the compiler rule ORB_X_LISTEN_TRIGGER_UNMATCHED. The file is lowered with program/read. Every listen of an inline trait must have a trigger (its `-> TRIGGER`, else the listened event) that is the event of a transition in the same trait; each that does not is reported as `[ORB_X_LISTEN_TRIGGER_UNMATCHED] <path>: <message>` with the Rust message and suggestion, status 500 (exit 1). A clean program answers `lint listen-trigger: clean` (status 200, exit 0). Anything but exactly one file argument is the usage (status 400, exit 2). A file that cannot be read or lowered fails the run (status 500)."
 ]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
 orbital LintListenTriggerSpec {
   expects trait OrbLintListenTrigger {
     state ready
     emits {
-      LINT_FOUND { rule : string!  findings : [string]! }
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
       LINT_UNREAD { rule : string! }
     }
   }

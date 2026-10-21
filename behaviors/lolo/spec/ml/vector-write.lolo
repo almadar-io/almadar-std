@@ -1,0 +1,67 @@
+app ml-vector-write-spec [
+  version: "1.0.0",
+  description: "Design contract for writing embedding vectors into a user store (insert_many in orbital-core vector_store.rs). A write takes the store path, the model and the records { text, vector }. It quantizes each vector (see the quantize contract), creates the directory, takes the writer lock <path>.lock by exclusive create (a held lock is waited on with the Rust backoff, 5 ms doubling to 100 ms, until 180 s, then refuses ORB_VECTOR_LOCKED naming the wait; a lock older than 120 s by its mtime, or whose recorded pid no longer answers kill -0, is renamed aside, removed and the exclusive create retried at once), re-reads the store under the lock and validates it, refuses a model or dims that differ from what is on disk (ORB_VECTOR_MODEL_MISMATCH with the stored and the incoming model, ORB_VECTOR_DIMS_MISMATCH), merges with the incoming record winning a shared key and a later incoming duplicate winning an earlier one, keeps strictly ascending key order, writes a temp file beside the store and renames it over the store, then removes the lock. Every refusal after the lock was taken removes the lock first, so a failed write never leaves it behind. The written bytes are the ORBVEC layout std-vector-store reads and hold every previously stored record that was not replaced. A write ends written with the total record count, or refused with an ORB_VECTOR_* code."
+]
+
+orbital MlVectorWriteSpec {
+  expects entity VectorWriteRun [runtime] {
+    id : string
+    path : string
+    model : string
+  }
+  expects trait VectorWrite {
+    state idle {
+      VECTOR_WRITE -> quantizing
+    }
+    state quantizing {
+      QUANTIZED -> preparing
+    }
+    state preparing {
+      DIR_READY -> locking
+    }
+    state locking {
+      LOCK_TAKEN -> locked
+    }
+    state locked {
+      FD_CLOSED -> pidding
+    }
+    state pidding {
+      PID_READ -> stamping
+    }
+    state stamping {
+      LOCK_STAMPED -> reading
+    }
+    state statting {
+      LOCK_STATTED -> checking
+    }
+    state backoff {
+      LOCK_RETRY -> waiting
+    }
+    state waiting {
+      ELAPSED -> locking
+    }
+    state reading {
+      STORE_READ -> validating
+    }
+    state validating {
+      VECTOR_RESOLVED -> merging
+    }
+    state merging {
+      CHECKED -> writing
+    }
+    state writing {
+      MERGED -> renaming
+    }
+    state renaming {
+      TMP_WRITTEN -> releasing
+    }
+    state releasing {
+      LOCK_REMOVED -> idle
+    }
+    emits {
+      VECTOR_WRITTEN { path : string!  count : number! }
+      VECTOR_WRITE_REFUSED { code : string!  detail : string! }
+    }
+  }
+  expects page "/vector-write" -> VectorWrite
+}

@@ -1,0 +1,473 @@
+{
+ "atom": "cli/atoms/std-orb-lint-empty-event-name.lolo",
+ "trait": "OrbLintEmptyEventName",
+ "cases": [
+  {
+   "id": "empty-key-and-emit-in-order",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [],
+            "events": [
+             {
+              "key": "",
+              "name": "on event click"
+             }
+            ]
+           },
+           "emits": [
+            {
+             "event": "",
+             "scope": "external"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "empty-event-name",
+         "findings": [
+          {
+           "code": "ORB_T_EMPTY_EVENT_NAME",
+           "path": "orbitals[0].traits[0].stateMachine.events[0].key",
+           "message": "Event name is empty",
+           "suggestion": "Name the event, or remove it; an unset optional event knob declares no event",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_EMPTY_EVENT_NAME",
+           "path": "orbitals[0].traits[0].emits[0].event",
+           "message": "Event name is empty",
+           "suggestion": "Name the event, or remove it; an unset optional event knob declares no event",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-named-events",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [],
+            "events": [
+             {
+              "key": "OPEN",
+              "name": "open"
+             }
+            ]
+           },
+           "emits": [
+            {
+             "event": "OPEN",
+             "scope": "external"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "empty-event-name",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "empty-transition-event",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": ""
+             }
+            ],
+            "events": []
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "empty-event-name",
+         "findings": [
+          {
+           "code": "ORB_T_EMPTY_EVENT_NAME",
+           "path": "orbitals[0].traits[0].stateMachine.transitions[0].event",
+           "message": "Event name is empty",
+           "suggestion": "Name the event, or remove it; an unset optional event knob declares no event",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-named-transition",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             }
+            ],
+            "events": []
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "empty-event-name",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "all-three-sections-in-order",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "A"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": ""
+             }
+            ],
+            "events": [
+             {
+              "key": "A"
+             },
+             {
+              "key": ""
+             }
+            ]
+           },
+           "emits": [
+            {
+             "event": ""
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "empty-event-name",
+         "findings": [
+          {
+           "code": "ORB_T_EMPTY_EVENT_NAME",
+           "path": "orbitals[0].traits[0].stateMachine.events[1].key",
+           "message": "Event name is empty",
+           "suggestion": "Name the event, or remove it; an unset optional event knob declares no event",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_EMPTY_EVENT_NAME",
+           "path": "orbitals[0].traits[0].emits[0].event",
+           "message": "Event name is empty",
+           "suggestion": "Name the event, or remove it; an unset optional event knob declares no event",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_EMPTY_EVENT_NAME",
+           "path": "orbitals[0].traits[0].stateMachine.transitions[1].event",
+           "message": "Event name is empty",
+           "suggestion": "Name the event, or remove it; an unset optional event knob declares no event",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-no-states-stops-early",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [],
+            "transitions": [],
+            "events": [
+             {
+              "key": ""
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "empty-event-name",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-trait-without-state-machine",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "Ext",
+           "emits": [
+            {
+             "event": ""
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "empty-event-name",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

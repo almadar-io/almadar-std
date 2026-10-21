@@ -6,11 +6,12 @@ app std-orb-lint-collection-policy [
 ]
 uses Spec from "almadar-std/lint-collection-policy"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
 orbital OrbLintCollectionPolicyOrbital {
   entity OrbLintCollectionPolicyRun [runtime] {
     id : string!
-    findings : [string] = []
+    findings : [OrbFinding] = []
   }
 
   trait OrbLintCollectionPolicy -> OrbLintCollectionPolicyRun [integration] {
@@ -39,7 +40,7 @@ orbital OrbLintCollectionPolicyOrbital {
               (let ((en (array/nth @es @i)))
                 (let ((first (array/find @es (fn x (= (object/get @x "collection") (object/get @en "collection"))))))
                   (if (and (!= (object/get @first "name") (object/get @en "name")) (!= [(object/get @first "read_policy" "") (object/get @first "create_policy" "") (object/get @first "update_policy" "") (object/get @first "delete_policy" "")] [(object/get @en "read_policy" "") (object/get @en "create_policy" "") (object/get @en "update_policy" "") (object/get @en "delete_policy" "")]))
-                    [(str/concat "[ORB_S_COLLECTION_POLICY_CONFLICT] " (object/get @en "name") ".@access: entities `" (object/get @first "name") "` and `" (object/get @en "name") "` both bind collection `" (object/get @en "collection") "` but declare different access directives. One collection is one table and cannot have two visibility rules — give them identical directives, or bind one of them to its own collection.")]
+                    [{ code: "ORB_S_COLLECTION_POLICY_CONFLICT", path: (str/concat (object/get @en "name") ".@access"), message: (str/concat "entities `" (object/get @first "name") "` and `" (object/get @en "name") "` both bind collection `" (object/get @en "collection") "` but declare different access directives. One collection is one table and cannot have two visibility rules — give them identical directives, or bind one of them to its own collection."), suggestion: "", severity: "error" }]
                     [])))))))))
         (emit LINT_FINISH { })
       LINT_FILE_UNREAD -> ready
@@ -53,7 +54,7 @@ orbital OrbLintCollectionPolicyOrbital {
       LINT_RUN -> external { file : string! }
         @description "The lint request this trait answers, from the cli trait or the umbrella."
         @tier "internal"
-      LINT_FOUND -> external { rule : string!  findings : [string]! }
+      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
         @description "This rule's findings for the file, offered to the lint-all umbrella."
         @tier "internal"
       LINT_FILE_READ { data : bytes! }
@@ -91,7 +92,7 @@ orbital OrbLintCollectionPolicyOrbital {
       LINT_FOUND -> ready when (and (= @payload.rule "collection-policy") (= (array/len @payload.findings) 0))
         (emit LINT_ANSWERED { status: 200, body: "lint collection-policy: clean" })
       LINT_FOUND -> ready when (and (= @payload.rule "collection-policy") (> (array/len @payload.findings) 0))
-        (emit LINT_ANSWERED { status: 500, body: (str/join @payload.findings "\n") })
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
       LINT_UNREAD -> ready when (= @payload.rule "collection-policy")
         (emit LINT_ANSWERED { status: 500, body: "lint collection-policy: the file could not be read or lowered" })
     }
@@ -106,7 +107,7 @@ orbital OrbLintCollectionPolicyOrbital {
       LINT_RUN -> external { file : string! }
         @description "Ask the rule trait to lint this file."
         @tier "internal"
-      LINT_FOUND -> external { rule : string!  findings : [string]! }
+      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
         @description "The rule trait's findings for the file."
         @tier "internal"
       LINT_UNREAD -> external { rule : string! }

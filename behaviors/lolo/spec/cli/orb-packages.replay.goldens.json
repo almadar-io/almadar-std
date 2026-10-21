@@ -1,0 +1,175 @@
+{
+ "atom": "cli/atoms/std-orb-packages.lolo",
+ "trait": "OrbPackages",
+ "source": "python3 hashlib.sha256",
+ "note": "Only the integrity step is pinned here; byte payloads are base64.",
+ "cases": [
+  {
+   "id": "matching-sha256-goes-on-to-install",
+   "steps": [
+    {
+     "event": "PKG_DOWNLOADED",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "YWJj",
+      "key": "tarball"
+     },
+     "from": "downloading",
+     "entity": {
+      "id": "p",
+      "cmd": "add",
+      "dir": "/w",
+      "cwd": "/w",
+      "targets": [
+       {
+        "name": "pkg-a",
+        "version": "1.0.0",
+        "url": "https://registry.example/packages/pkg-a/1.0.0.tgz",
+        "integrity": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+       }
+      ],
+      "cursor": 0,
+      "digest": "",
+      "tarballSize": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PKG_HASH",
+        "payload": {
+         "requestId": "tarball",
+         "data": "YWJj",
+         "encoding": "hex"
+        }
+       },
+       {
+        "event": "SHA256_DIGESTED",
+        "payload": {
+         "digest": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+        }
+       },
+       {
+        "event": "PKG_VERIFY",
+        "payload": {}
+       },
+       {
+        "event": "PKG_INSTALL",
+        "payload": {}
+       },
+       {
+        "event": "PACKAGE_REFUSED",
+        "payload": {
+         "name": "pkg-a",
+         "problem": "install-unavailable"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "different-sha256-is-refused-integrity-mismatch",
+   "steps": [
+    {
+     "event": "PKG_DOWNLOADED",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "YWJj",
+      "key": "tarball"
+     },
+     "from": "downloading",
+     "entity": {
+      "id": "p",
+      "cmd": "add",
+      "dir": "/w",
+      "cwd": "/w",
+      "targets": [
+       {
+        "name": "pkg-a",
+        "version": "1.0.0",
+        "url": "https://registry.example/packages/pkg-a/1.0.0.tgz",
+        "integrity": "0000000000000000000000000000000000000000000000000000000000000000"
+       }
+      ],
+      "cursor": 0,
+      "digest": "",
+      "tarballSize": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SHA256_DIGESTED",
+        "payload": {
+         "digest": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+        }
+       },
+       {
+        "event": "PKG_VERIFY",
+        "payload": {}
+       },
+       {
+        "event": "PACKAGE_REFUSED",
+        "payload": {
+         "name": "pkg-a",
+         "problem": "integrity-mismatch"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PKG_INSTALL"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "one-flipped-byte-is-refused",
+   "steps": [
+    {
+     "event": "PKG_DOWNLOADED",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "YWJk",
+      "key": "tarball"
+     },
+     "from": "downloading",
+     "entity": {
+      "id": "p",
+      "cmd": "add",
+      "dir": "/w",
+      "cwd": "/w",
+      "targets": [
+       {
+        "name": "pkg-a",
+        "version": "1.0.0",
+        "url": "https://registry.example/packages/pkg-a/1.0.0.tgz",
+        "integrity": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+       }
+      ],
+      "cursor": 0,
+      "digest": "",
+      "tarballSize": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PACKAGE_REFUSED",
+        "payload": {
+         "name": "pkg-a",
+         "problem": "integrity-mismatch"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PKG_INSTALL"
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

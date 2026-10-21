@@ -1,0 +1,1275 @@
+{
+ "source": "The argument handling, the provider-model selection from the environment (ProviderEmbedder::from_vars), the user-store directory, the default output path and the answer lines are those of behaviors_vectors.rs and behaviors_vectors_snapshot.rs run_snapshot. The package and text operators (behavior/packages, behavior/texts) and the environment reads are stubbed by feeding their answer events; the file effects belong to the byte-parity run against the Rust command.",
+ "atom": "cli/atoms/std-orb-vectors.lolo",
+ "trait": "OrbVectors",
+ "cases": [
+  {
+   "id": "usage: no flags",
+   "steps": [
+    {
+     "event": "SNAPSHOT_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTORS_CMD_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "usage: orb behaviors vectors snapshot --package <dir> [--out <path>]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "usage: a positional",
+   "steps": [
+    {
+     "event": "SNAPSHOT_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"--package\", \"/p\", \"extra\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTORS_CMD_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "usage: orb behaviors vectors snapshot --package <dir> [--out <path>]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "usage: a missing package value",
+   "steps": [
+    {
+     "event": "SNAPSHOT_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"--package\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTORS_CMD_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "usage: orb behaviors vectors snapshot --package <dir> [--out <path>]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "usage: a repeated package",
+   "steps": [
+    {
+     "event": "SNAPSHOT_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"--package\", \"/a\", \"--package\", \"/b\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTORS_CMD_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "usage: orb behaviors vectors snapshot --package <dir> [--out <path>]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "usage: an unknown flag",
+   "steps": [
+    {
+     "event": "SNAPSHOT_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"--package\", \"/p\", \"--bogus\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTORS_CMD_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "usage: orb behaviors vectors snapshot --package <dir> [--out <path>]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "usage: out alone",
+   "steps": [
+    {
+     "event": "SNAPSHOT_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"--out\", \"/o\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTORS_CMD_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "usage: orb behaviors vectors snapshot --package <dir> [--out <path>]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a valid call asks for the package",
+   "steps": [
+    {
+     "event": "SNAPSHOT_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"--package\", \"/p/pkg\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTORS_PACKAGE_NEEDED",
+        "payload": {
+         "dir": "/p/pkg"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "--out is accepted and kept",
+   "steps": [
+    {
+     "event": "SNAPSHOT_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"--package\", \"/p/pkg\", \"--out\", \"/o/v.vec\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTORS_PACKAGE_NEEDED",
+        "payload": {
+         "dir": "/p/pkg"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the package found asks for the organism texts",
+   "steps": [
+    {
+     "event": "VECTORS_PACKAGE_FOUND",
+     "payload": {
+      "root": "/p/pkg",
+      "prefix": "almadar-std",
+      "vectors": "/c/v.vec"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTORS_TEXTS_NEEDED",
+        "payload": {
+         "prefix": "almadar-std",
+         "kind": "organism"
+        }
+       }
+      ]
+     },
+     "from": "packaging"
+    }
+   ]
+  },
+  {
+   "id": "a package that is not installed answers 500",
+   "steps": [
+    {
+     "event": "VECTORS_PACKAGE_FAILED",
+     "payload": {
+      "error": "/x is not an installed behavior package reachable from /w"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTORS_CMD_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "/x is not an installed behavior package reachable from /w"
+        }
+       }
+      ]
+     },
+     "from": "packaging"
+    }
+   ]
+  },
+  {
+   "id": "the organism texts found ask for the capability texts",
+   "entity": {
+    "id": "v",
+    "prefix": "pk"
+   },
+   "steps": [
+    {
+     "event": "ORGANISM_TEXTS_FOUND",
+     "payload": {
+      "texts": [
+       {
+        "key": "a",
+        "text": "alpha",
+        "hash": "h"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTORS_TEXTS_NEEDED",
+        "payload": {
+         "prefix": "pk",
+         "kind": "capability"
+        }
+       }
+      ]
+     },
+     "from": "organism"
+    }
+   ]
+  },
+  {
+   "id": "a texts failure answers 500",
+   "steps": [
+    {
+     "event": "VECTORS_TEXTS_FAILED",
+     "payload": {
+      "error": "boom"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTORS_CMD_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "boom"
+        }
+       }
+      ]
+     },
+     "from": "organism"
+    }
+   ]
+  },
+  {
+   "id": "none: openrouter by default without any key is not configured",
+   "entity": {
+    "id": "v",
+    "root": "/p/pkg",
+    "prefix": "pk",
+    "lockedPath": "/c/v.vec",
+    "outArg": "",
+    "wanted": [
+     {
+      "key": "a",
+      "text": "alpha"
+     },
+     {
+      "key": "a#capabilities",
+      "text": "caps"
+     }
+    ],
+    "envHome": "/h"
+   },
+   "steps": [
+    {
+     "event": "ENV8",
+     "payload": {
+      "value": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SNAPSHOT",
+        "payload": {
+         "wanted": [
+          {
+           "key": "a",
+           "text": "alpha"
+          },
+          {
+           "key": "a#capabilities",
+           "text": "caps"
+          }
+         ],
+         "userDir": "/h/.almadar/vectors",
+         "providerModel": "",
+         "providerKind": "",
+         "embedModel": "",
+         "out": "/p/pkg/dist/vectors.vec",
+         "locked": "/c/v.vec"
+        }
+       }
+      ]
+     },
+     "from": "env8"
+    }
+   ]
+  },
+  {
+   "id": "none (control): openrouter with only an openai key is not configured",
+   "entity": {
+    "id": "v",
+    "root": "/p/pkg",
+    "prefix": "pk",
+    "lockedPath": "/c/v.vec",
+    "outArg": "",
+    "wanted": [
+     {
+      "key": "a",
+      "text": "alpha"
+     },
+     {
+      "key": "a#capabilities",
+      "text": "caps"
+     }
+    ],
+    "envHome": "/h",
+    "envOpenai": "k"
+   },
+   "steps": [
+    {
+     "event": "ENV8",
+     "payload": {
+      "value": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SNAPSHOT",
+        "payload": {
+         "wanted": [
+          {
+           "key": "a",
+           "text": "alpha"
+          },
+          {
+           "key": "a#capabilities",
+           "text": "caps"
+          }
+         ],
+         "userDir": "/h/.almadar/vectors",
+         "providerModel": "",
+         "providerKind": "",
+         "embedModel": "",
+         "out": "/p/pkg/dist/vectors.vec",
+         "locked": "/c/v.vec"
+        }
+       }
+      ]
+     },
+     "from": "env8"
+    }
+   ]
+  },
+  {
+   "id": "none (control): openai with only an openrouter key is not configured",
+   "entity": {
+    "id": "v",
+    "root": "/p/pkg",
+    "prefix": "pk",
+    "lockedPath": "/c/v.vec",
+    "outArg": "",
+    "wanted": [
+     {
+      "key": "a",
+      "text": "alpha"
+     },
+     {
+      "key": "a#capabilities",
+      "text": "caps"
+     }
+    ],
+    "envHome": "/h",
+    "envProv": "openai",
+    "envRouter": "k"
+   },
+   "steps": [
+    {
+     "event": "ENV8",
+     "payload": {
+      "value": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SNAPSHOT",
+        "payload": {
+         "wanted": [
+          {
+           "key": "a",
+           "text": "alpha"
+          },
+          {
+           "key": "a#capabilities",
+           "text": "caps"
+          }
+         ],
+         "userDir": "/h/.almadar/vectors",
+         "providerModel": "",
+         "providerKind": "",
+         "embedModel": "",
+         "out": "/p/pkg/dist/vectors.vec",
+         "locked": "/c/v.vec"
+        }
+       }
+      ]
+     },
+     "from": "env8"
+    }
+   ]
+  },
+  {
+   "id": "ALMADAR_VECTORS_DIR wins over HOME",
+   "entity": {
+    "id": "v",
+    "root": "/p/pkg",
+    "prefix": "pk",
+    "lockedPath": "/c/v.vec",
+    "outArg": "",
+    "wanted": [
+     {
+      "key": "a",
+      "text": "alpha"
+     },
+     {
+      "key": "a#capabilities",
+      "text": "caps"
+     }
+    ],
+    "envDir": "/tmp/vd",
+    "envHome": "/h"
+   },
+   "steps": [
+    {
+     "event": "ENV8",
+     "payload": {
+      "value": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SNAPSHOT",
+        "payload": {
+         "wanted": [
+          {
+           "key": "a",
+           "text": "alpha"
+          },
+          {
+           "key": "a#capabilities",
+           "text": "caps"
+          }
+         ],
+         "userDir": "/tmp/vd",
+         "providerModel": "",
+         "providerKind": "",
+         "embedModel": "",
+         "out": "/p/pkg/dist/vectors.vec",
+         "locked": "/c/v.vec"
+        }
+       }
+      ]
+     },
+     "from": "env8"
+    }
+   ]
+  },
+  {
+   "id": "openrouter with the shared key routes to the shared-key instance",
+   "entity": {
+    "id": "v",
+    "root": "/p/pkg",
+    "prefix": "pk",
+    "lockedPath": "/c/v.vec",
+    "outArg": "",
+    "wanted": [
+     {
+      "key": "a",
+      "text": "alpha"
+     },
+     {
+      "key": "a#capabilities",
+      "text": "caps"
+     }
+    ],
+    "envHome": "/h",
+    "envKey": "k"
+   },
+   "steps": [
+    {
+     "event": "ENV8",
+     "payload": {
+      "value": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SNAPSHOT",
+        "payload": {
+         "wanted": [
+          {
+           "key": "a",
+           "text": "alpha"
+          },
+          {
+           "key": "a#capabilities",
+           "text": "caps"
+          }
+         ],
+         "userDir": "/h/.almadar/vectors",
+         "providerModel": "baai/bge-base-en-v1.5",
+         "providerKind": "openrouter-shared",
+         "embedModel": "baai/bge-base-en-v1.5",
+         "out": "/p/pkg/dist/vectors.vec",
+         "locked": "/c/v.vec"
+        }
+       }
+      ]
+     },
+     "from": "env8"
+    }
+   ]
+  },
+  {
+   "id": "openrouter with only its own key routes to the own-key instance",
+   "entity": {
+    "id": "v",
+    "root": "/p/pkg",
+    "prefix": "pk",
+    "lockedPath": "/c/v.vec",
+    "outArg": "",
+    "wanted": [
+     {
+      "key": "a",
+      "text": "alpha"
+     },
+     {
+      "key": "a#capabilities",
+      "text": "caps"
+     }
+    ],
+    "envHome": "/h",
+    "envRouter": "k"
+   },
+   "steps": [
+    {
+     "event": "ENV8",
+     "payload": {
+      "value": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SNAPSHOT",
+        "payload": {
+         "wanted": [
+          {
+           "key": "a",
+           "text": "alpha"
+          },
+          {
+           "key": "a#capabilities",
+           "text": "caps"
+          }
+         ],
+         "userDir": "/h/.almadar/vectors",
+         "providerModel": "baai/bge-base-en-v1.5",
+         "providerKind": "openrouter-own",
+         "embedModel": "baai/bge-base-en-v1.5",
+         "out": "/p/pkg/dist/vectors.vec",
+         "locked": "/c/v.vec"
+        }
+       }
+      ]
+     },
+     "from": "env8"
+    }
+   ]
+  },
+  {
+   "id": "openrouter with both keys prefers the shared key (control)",
+   "entity": {
+    "id": "v",
+    "root": "/p/pkg",
+    "prefix": "pk",
+    "lockedPath": "/c/v.vec",
+    "outArg": "",
+    "wanted": [
+     {
+      "key": "a",
+      "text": "alpha"
+     },
+     {
+      "key": "a#capabilities",
+      "text": "caps"
+     }
+    ],
+    "envHome": "/h",
+    "envKey": "k",
+    "envRouter": "k2"
+   },
+   "steps": [
+    {
+     "event": "ENV8",
+     "payload": {
+      "value": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SNAPSHOT",
+        "payload": {
+         "wanted": [
+          {
+           "key": "a",
+           "text": "alpha"
+          },
+          {
+           "key": "a#capabilities",
+           "text": "caps"
+          }
+         ],
+         "userDir": "/h/.almadar/vectors",
+         "providerModel": "baai/bge-base-en-v1.5",
+         "providerKind": "openrouter-shared",
+         "embedModel": "baai/bge-base-en-v1.5",
+         "out": "/p/pkg/dist/vectors.vec",
+         "locked": "/c/v.vec"
+        }
+       }
+      ]
+     },
+     "from": "env8"
+    }
+   ]
+  },
+  {
+   "id": "openrouter sends the EMBEDDING_MODEL override per call",
+   "entity": {
+    "id": "v",
+    "root": "/p/pkg",
+    "prefix": "pk",
+    "lockedPath": "/c/v.vec",
+    "outArg": "",
+    "wanted": [
+     {
+      "key": "a",
+      "text": "alpha"
+     },
+     {
+      "key": "a#capabilities",
+      "text": "caps"
+     }
+    ],
+    "envHome": "/h",
+    "envKey": "k",
+    "envModel": "vendor/m"
+   },
+   "steps": [
+    {
+     "event": "ENV8",
+     "payload": {
+      "value": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SNAPSHOT",
+        "payload": {
+         "wanted": [
+          {
+           "key": "a",
+           "text": "alpha"
+          },
+          {
+           "key": "a#capabilities",
+           "text": "caps"
+          }
+         ],
+         "userDir": "/h/.almadar/vectors",
+         "providerModel": "vendor/m",
+         "providerKind": "openrouter-shared",
+         "embedModel": "vendor/m",
+         "out": "/p/pkg/dist/vectors.vec",
+         "locked": "/c/v.vec"
+        }
+       }
+      ]
+     },
+     "from": "env8"
+    }
+   ]
+  },
+  {
+   "id": "openai with the shared key",
+   "entity": {
+    "id": "v",
+    "root": "/p/pkg",
+    "prefix": "pk",
+    "lockedPath": "/c/v.vec",
+    "outArg": "",
+    "wanted": [
+     {
+      "key": "a",
+      "text": "alpha"
+     },
+     {
+      "key": "a#capabilities",
+      "text": "caps"
+     }
+    ],
+    "envHome": "/h",
+    "envProv": "openai",
+    "envKey": "k"
+   },
+   "steps": [
+    {
+     "event": "ENV8",
+     "payload": {
+      "value": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SNAPSHOT",
+        "payload": {
+         "wanted": [
+          {
+           "key": "a",
+           "text": "alpha"
+          },
+          {
+           "key": "a#capabilities",
+           "text": "caps"
+          }
+         ],
+         "userDir": "/h/.almadar/vectors",
+         "providerModel": "baai/bge-base-en-v1.5",
+         "providerKind": "openai-shared",
+         "embedModel": "baai/bge-base-en-v1.5",
+         "out": "/p/pkg/dist/vectors.vec",
+         "locked": "/c/v.vec"
+        }
+       }
+      ]
+     },
+     "from": "env8"
+    }
+   ]
+  },
+  {
+   "id": "openai with only its own key and a model",
+   "entity": {
+    "id": "v",
+    "root": "/p/pkg",
+    "prefix": "pk",
+    "lockedPath": "/c/v.vec",
+    "outArg": "",
+    "wanted": [
+     {
+      "key": "a",
+      "text": "alpha"
+     },
+     {
+      "key": "a#capabilities",
+      "text": "caps"
+     }
+    ],
+    "envHome": "/h",
+    "envProv": "openai",
+    "envOpenai": "k",
+    "envModel": "text-embedding-3-small"
+   },
+   "steps": [
+    {
+     "event": "ENV8",
+     "payload": {
+      "value": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SNAPSHOT",
+        "payload": {
+         "wanted": [
+          {
+           "key": "a",
+           "text": "alpha"
+          },
+          {
+           "key": "a#capabilities",
+           "text": "caps"
+          }
+         ],
+         "userDir": "/h/.almadar/vectors",
+         "providerModel": "text-embedding-3-small",
+         "providerKind": "openai-own",
+         "embedModel": "text-embedding-3-small",
+         "out": "/p/pkg/dist/vectors.vec",
+         "locked": "/c/v.vec"
+        }
+       }
+      ]
+     },
+     "from": "env8"
+    }
+   ]
+  },
+  {
+   "id": "openai with both keys prefers the shared key (control)",
+   "entity": {
+    "id": "v",
+    "root": "/p/pkg",
+    "prefix": "pk",
+    "lockedPath": "/c/v.vec",
+    "outArg": "",
+    "wanted": [
+     {
+      "key": "a",
+      "text": "alpha"
+     },
+     {
+      "key": "a#capabilities",
+      "text": "caps"
+     }
+    ],
+    "envHome": "/h",
+    "envProv": "openai",
+    "envKey": "k",
+    "envOpenai": "k2"
+   },
+   "steps": [
+    {
+     "event": "ENV8",
+     "payload": {
+      "value": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SNAPSHOT",
+        "payload": {
+         "wanted": [
+          {
+           "key": "a",
+           "text": "alpha"
+          },
+          {
+           "key": "a#capabilities",
+           "text": "caps"
+          }
+         ],
+         "userDir": "/h/.almadar/vectors",
+         "providerModel": "baai/bge-base-en-v1.5",
+         "providerKind": "openai-shared",
+         "embedModel": "baai/bge-base-en-v1.5",
+         "out": "/p/pkg/dist/vectors.vec",
+         "locked": "/c/v.vec"
+        }
+       }
+      ]
+     },
+     "from": "env8"
+    }
+   ]
+  },
+  {
+   "id": "lmstudio needs no key, is stored as the canonical model and sends the local default",
+   "entity": {
+    "id": "v",
+    "root": "/p/pkg",
+    "prefix": "pk",
+    "lockedPath": "/c/v.vec",
+    "outArg": "",
+    "wanted": [
+     {
+      "key": "a",
+      "text": "alpha"
+     },
+     {
+      "key": "a#capabilities",
+      "text": "caps"
+     }
+    ],
+    "envHome": "/h",
+    "envProv": "lmstudio",
+    "envModel": "ignored"
+   },
+   "steps": [
+    {
+     "event": "ENV8",
+     "payload": {
+      "value": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SNAPSHOT",
+        "payload": {
+         "wanted": [
+          {
+           "key": "a",
+           "text": "alpha"
+          },
+          {
+           "key": "a#capabilities",
+           "text": "caps"
+          }
+         ],
+         "userDir": "/h/.almadar/vectors",
+         "providerModel": "baai/bge-base-en-v1.5",
+         "providerKind": "lmstudio",
+         "embedModel": "text-embedding-bge-base-en-v1.5",
+         "out": "/p/pkg/dist/vectors.vec",
+         "locked": "/c/v.vec"
+        }
+       }
+      ]
+     },
+     "from": "env8"
+    }
+   ]
+  },
+  {
+   "id": "lmstudio sends LMSTUDIO_EMBEDDING_MODEL when set",
+   "entity": {
+    "id": "v",
+    "root": "/p/pkg",
+    "prefix": "pk",
+    "lockedPath": "/c/v.vec",
+    "outArg": "",
+    "wanted": [
+     {
+      "key": "a",
+      "text": "alpha"
+     },
+     {
+      "key": "a#capabilities",
+      "text": "caps"
+     }
+    ],
+    "envHome": "/h",
+    "envProv": "lmstudio",
+    "envLmModel": "local-m"
+   },
+   "steps": [
+    {
+     "event": "ENV8",
+     "payload": {
+      "value": "local-m"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SNAPSHOT",
+        "payload": {
+         "wanted": [
+          {
+           "key": "a",
+           "text": "alpha"
+          },
+          {
+           "key": "a#capabilities",
+           "text": "caps"
+          }
+         ],
+         "userDir": "/h/.almadar/vectors",
+         "providerModel": "baai/bge-base-en-v1.5",
+         "providerKind": "lmstudio",
+         "embedModel": "local-m",
+         "out": "/p/pkg/dist/vectors.vec",
+         "locked": "/c/v.vec"
+        }
+       }
+      ]
+     },
+     "from": "env8"
+    }
+   ]
+  },
+  {
+   "id": "another provider name routes to the local instance with EMBEDDING_MODEL",
+   "entity": {
+    "id": "v",
+    "root": "/p/pkg",
+    "prefix": "pk",
+    "lockedPath": "/c/v.vec",
+    "outArg": "",
+    "wanted": [
+     {
+      "key": "a",
+      "text": "alpha"
+     },
+     {
+      "key": "a#capabilities",
+      "text": "caps"
+     }
+    ],
+    "envHome": "/h",
+    "envProv": "custom",
+    "envModel": "cm"
+   },
+   "steps": [
+    {
+     "event": "ENV8",
+     "payload": {
+      "value": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SNAPSHOT",
+        "payload": {
+         "wanted": [
+          {
+           "key": "a",
+           "text": "alpha"
+          },
+          {
+           "key": "a#capabilities",
+           "text": "caps"
+          }
+         ],
+         "userDir": "/h/.almadar/vectors",
+         "providerModel": "cm",
+         "providerKind": "lmstudio",
+         "embedModel": "cm",
+         "out": "/p/pkg/dist/vectors.vec",
+         "locked": "/c/v.vec"
+        }
+       }
+      ]
+     },
+     "from": "env8"
+    }
+   ]
+  },
+  {
+   "id": "--out overrides the default path",
+   "entity": {
+    "id": "v",
+    "root": "/p/pkg",
+    "prefix": "pk",
+    "lockedPath": "/c/v.vec",
+    "outArg": "/o/x.vec",
+    "wanted": [
+     {
+      "key": "a",
+      "text": "alpha"
+     },
+     {
+      "key": "a#capabilities",
+      "text": "caps"
+     }
+    ],
+    "envHome": "/h",
+    "envKey": "k"
+   },
+   "steps": [
+    {
+     "event": "ENV8",
+     "payload": {
+      "value": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SNAPSHOT",
+        "payload": {
+         "wanted": [
+          {
+           "key": "a",
+           "text": "alpha"
+          },
+          {
+           "key": "a#capabilities",
+           "text": "caps"
+          }
+         ],
+         "userDir": "/h/.almadar/vectors",
+         "providerModel": "baai/bge-base-en-v1.5",
+         "providerKind": "openrouter-shared",
+         "embedModel": "baai/bge-base-en-v1.5",
+         "out": "/o/x.vec",
+         "locked": "/c/v.vec"
+        }
+       }
+      ]
+     },
+     "from": "env8"
+    }
+   ]
+  },
+  {
+   "id": "a package with no locked snapshot sends an empty locked path",
+   "entity": {
+    "id": "v",
+    "root": "/p/pkg",
+    "prefix": "pk",
+    "lockedPath": "",
+    "outArg": "",
+    "wanted": [
+     {
+      "key": "a",
+      "text": "alpha"
+     },
+     {
+      "key": "a#capabilities",
+      "text": "caps"
+     }
+    ],
+    "envHome": "/h"
+   },
+   "steps": [
+    {
+     "event": "ENV8",
+     "payload": {
+      "value": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SNAPSHOT",
+        "payload": {
+         "wanted": [
+          {
+           "key": "a",
+           "text": "alpha"
+          },
+          {
+           "key": "a#capabilities",
+           "text": "caps"
+          }
+         ],
+         "userDir": "/h/.almadar/vectors",
+         "providerModel": "",
+         "providerKind": "",
+         "embedModel": "",
+         "out": "/p/pkg/dist/vectors.vec",
+         "locked": ""
+        }
+       }
+      ]
+     },
+     "from": "env8"
+    }
+   ]
+  },
+  {
+   "id": "a written snapshot answers the Rust line",
+   "entity": {
+    "id": "v",
+    "prefix": "almadar-std"
+   },
+   "steps": [
+    {
+     "event": "SNAPSHOT_DONE",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "records": 42,
+      "out": "/p/dist/vectors.vec"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTORS_CMD_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "almadar-std: 42 vectors (baai/bge-base-en-v1.5) -> /p/dist/vectors.vec"
+        }
+       }
+      ]
+     },
+     "from": "running"
+    }
+   ]
+  },
+  {
+   "id": "the empty-package refusal answers its detail alone",
+   "steps": [
+    {
+     "event": "SNAPSHOT_REFUSED",
+     "payload": {
+      "code": "ORB_VECTOR_EMPTY",
+      "detail": "the package has no organism or capability text to snapshot"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTORS_CMD_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "the package has no organism or capability text to snapshot"
+        }
+       }
+      ]
+     },
+     "from": "running"
+    }
+   ]
+  },
+  {
+   "id": "other refusals answer code and detail",
+   "steps": [
+    {
+     "event": "SNAPSHOT_REFUSED",
+     "payload": {
+      "code": "ORB_VECTOR_PROVIDER_MISSING",
+      "detail": "3 embedding text(s) have no stored vector"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTORS_CMD_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "ORB_VECTOR_PROVIDER_MISSING: 3 embedding text(s) have no stored vector"
+        }
+       }
+      ]
+     },
+     "from": "running"
+    }
+   ]
+  }
+ ]
+}

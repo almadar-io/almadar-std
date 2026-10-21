@@ -1,0 +1,828 @@
+{
+ "atom": "cli/atoms/std-orb-lint-entity-locale-instances.lolo",
+ "trait": "OrbLintEntityLocaleInstances",
+ "cases": [
+  {
+   "id": "control-every-declared-locale-written",
+   "steps": [
+    {
+     "trait": "OrbLintEntityLocaleInstances",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "locales": [
+        "en",
+        "ar",
+        "sl"
+       ],
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Invoice",
+          "local": true,
+          "instances": [
+           {
+            "id": "A"
+           }
+          ],
+          "localeInstances": {
+           "ar": [
+            {
+             "id": "A"
+            }
+           ],
+           "sl": [
+            {
+             "id": "A"
+            }
+           ]
+          }
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEntityLocaleInstances",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-locale-instances",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "not-local",
+   "steps": [
+    {
+     "trait": "OrbLintEntityLocaleInstances",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "locales": [
+        "en",
+        "ar",
+        "sl"
+       ],
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Invoice",
+          "instances": [
+           {
+            "id": "A"
+           }
+          ],
+          "localeInstances": {
+           "ar": [
+            {
+             "id": "A"
+            }
+           ],
+           "sl": [
+            {
+             "id": "A"
+            }
+           ]
+          }
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEntityLocaleInstances",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-locale-instances",
+         "findings": [
+          {
+           "code": "ORB_E_LOCALE_INSTANCES_NOT_LOCAL",
+           "path": "orbitals[0].entity.localeInstances",
+           "message": "Entity 'Invoice' writes rows per locale but its rows are not browser-stored; a server's rows are shared by every viewer",
+           "suggestion": "Add `local` (`[persistent: <collection>, local]`) or keep one `instances` block.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-local-flag-set-not-reported",
+   "steps": [
+    {
+     "trait": "OrbLintEntityLocaleInstances",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "locales": [
+        "en",
+        "ar"
+       ],
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Invoice",
+          "local": true,
+          "instances": [
+           {
+            "id": "A"
+           }
+          ],
+          "localeInstances": {
+           "ar": [
+            {
+             "id": "A"
+            }
+           ]
+          }
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEntityLocaleInstances",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-locale-instances",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "undeclared-locale",
+   "steps": [
+    {
+     "trait": "OrbLintEntityLocaleInstances",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "locales": [
+        "en",
+        "ar"
+       ],
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Invoice",
+          "local": true,
+          "instances": [
+           {
+            "id": "A"
+           }
+          ],
+          "localeInstances": {
+           "ar": [
+            {
+             "id": "A"
+            }
+           ],
+           "de": [
+            {
+             "id": "A"
+            }
+           ]
+          }
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEntityLocaleInstances",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-locale-instances",
+         "findings": [
+          {
+           "code": "ORB_E_LOCALE_INSTANCES_UNKNOWN_LOCALE",
+           "path": "orbitals[0].entity.localeInstances.de",
+           "message": "Entity 'Invoice' writes `instances de`, but the app declares locales [\"en\", \"ar\"]",
+           "suggestion": "Write one block per declared locale other than the first; declare the locale in the app's `locales [ … ]`.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "default-locale-block",
+   "steps": [
+    {
+     "trait": "OrbLintEntityLocaleInstances",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "locales": [
+        "en",
+        "ar"
+       ],
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Invoice",
+          "local": true,
+          "instances": [
+           {
+            "id": "A"
+           }
+          ],
+          "localeInstances": {
+           "en": [
+            {
+             "id": "A"
+            }
+           ],
+           "ar": [
+            {
+             "id": "A"
+            }
+           ]
+          }
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEntityLocaleInstances",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-locale-instances",
+         "findings": [
+          {
+           "code": "ORB_E_LOCALE_INSTANCES_UNKNOWN_LOCALE",
+           "path": "orbitals[0].entity.localeInstances.en",
+           "message": "Entity 'Invoice' writes `instances en`, but 'en' is the default locale: its rows are the plain `instances` block",
+           "suggestion": "Write one block per declared locale other than the first; declare the locale in the app's `locales [ … ]`.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-no-locales-block-no-findings",
+   "steps": [
+    {
+     "trait": "OrbLintEntityLocaleInstances",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "locales": [
+        "en",
+        "ar"
+       ],
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Invoice",
+          "local": true,
+          "instances": [
+           {
+            "id": "A"
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEntityLocaleInstances",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-locale-instances",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "missing-declared-locale",
+   "steps": [
+    {
+     "trait": "OrbLintEntityLocaleInstances",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "locales": [
+        "en",
+        "ar",
+        "sl"
+       ],
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Invoice",
+          "local": true,
+          "instances": [
+           {
+            "id": "A"
+           }
+          ],
+          "localeInstances": {
+           "ar": [
+            {
+             "id": "A"
+            }
+           ]
+          }
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEntityLocaleInstances",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-locale-instances",
+         "findings": [
+          {
+           "code": "ORB_E_LOCALE_INSTANCES_INCOMPLETE",
+           "path": "orbitals[0].entity.localeInstances",
+           "message": "Entity 'Invoice' writes rows per locale but has no `instances sl` block",
+           "suggestion": "Write a block for every declared locale once any is written.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "missing-default-rows",
+   "steps": [
+    {
+     "trait": "OrbLintEntityLocaleInstances",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "locales": [
+        "en",
+        "ar"
+       ],
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Invoice",
+          "local": true,
+          "localeInstances": {
+           "ar": [
+            {
+             "id": "A"
+            }
+           ]
+          }
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEntityLocaleInstances",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-locale-instances",
+         "findings": [
+          {
+           "code": "ORB_E_LOCALE_INSTANCES_INCOMPLETE",
+           "path": "orbitals[0].entity.instances",
+           "message": "Entity 'Invoice' writes rows per locale but no default `instances` block for its default locale",
+           "suggestion": "Add `instances [ … ]` with the default locale's rows.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "empty-default-rows-count-as-missing",
+   "steps": [
+    {
+     "trait": "OrbLintEntityLocaleInstances",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "locales": [
+        "en",
+        "ar"
+       ],
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Invoice",
+          "local": true,
+          "instances": [],
+          "localeInstances": {
+           "ar": [
+            {
+             "id": "A"
+            }
+           ]
+          }
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEntityLocaleInstances",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-locale-instances",
+         "findings": [
+          {
+           "code": "ORB_E_LOCALE_INSTANCES_INCOMPLETE",
+           "path": "orbitals[0].entity.instances",
+           "message": "Entity 'Invoice' writes rows per locale but no default `instances` block for its default locale",
+           "suggestion": "Add `instances [ … ]` with the default locale's rows.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "no-declared-locales-every-block-unknown",
+   "steps": [
+    {
+     "trait": "OrbLintEntityLocaleInstances",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "locales": [],
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Invoice",
+          "local": true,
+          "instances": [
+           {
+            "id": "A"
+           }
+          ],
+          "localeInstances": {
+           "ar": [
+            {
+             "id": "A"
+            }
+           ]
+          }
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEntityLocaleInstances",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-locale-instances",
+         "findings": [
+          {
+           "code": "ORB_E_LOCALE_INSTANCES_UNKNOWN_LOCALE",
+           "path": "orbitals[0].entity.localeInstances.ar",
+           "message": "Entity 'Invoice' writes `instances ar`, but the app declares locales []",
+           "suggestion": "Write one block per declared locale other than the first; declare the locale in the app's `locales [ … ]`.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "auxiliary-entity-path",
+   "steps": [
+    {
+     "trait": "OrbLintEntityLocaleInstances",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "locales": [
+        "en",
+        "ar"
+       ],
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Invoice"
+         },
+         "auxiliaryEntities": [
+          {
+           "name": "Invoice"
+          },
+          {
+           "name": "Invoice",
+           "localeInstances": {
+            "ar": [
+             {
+              "id": "A"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEntityLocaleInstances",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-locale-instances",
+         "findings": [
+          {
+           "code": "ORB_E_LOCALE_INSTANCES_NOT_LOCAL",
+           "path": "orbitals[0].auxiliaryEntities[1].localeInstances",
+           "message": "Entity 'Invoice' writes rows per locale but its rows are not browser-stored; a server's rows are shared by every viewer",
+           "suggestion": "Add `local` (`[persistent: <collection>, local]`) or keep one `instances` block.",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_E_LOCALE_INSTANCES_INCOMPLETE",
+           "path": "orbitals[0].auxiliaryEntities[1].instances",
+           "message": "Entity 'Invoice' writes rows per locale but no default `instances` block for its default locale",
+           "suggestion": "Add `instances [ … ]` with the default locale's rows.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-reference-string-auxiliary-skipped",
+   "steps": [
+    {
+     "trait": "OrbLintEntityLocaleInstances",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "locales": [
+        "en",
+        "ar"
+       ],
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Invoice"
+         },
+         "auxiliaryEntities": [
+          "Alias.entity"
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEntityLocaleInstances",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-locale-instances",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

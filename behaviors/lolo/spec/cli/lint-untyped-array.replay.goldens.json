@@ -1,0 +1,792 @@
+{
+ "atom": "cli/atoms/std-orb-lint-untyped-array.lolo",
+ "trait": "OrbLintUntypedArray",
+ "note": "Expected findings are the code, path, message and suggestion `orb validate` (the Rust validator) reports for the same program. The cases copy payload_field_name.rs untyped_array_field_errors_typed_array_field_does_not and entity.rs test_entity_untyped_array_field_errors_typed_array_field_does_not; the nested case pins the check_fields recursion. The payload cases fold with tree/fold and await the orb reinstall; the entity cases do not fold payloads.",
+ "cases": [
+  {
+   "id": "emit-payload-array-without-an-element-type",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "emits": [
+            {
+             "event": "DONE",
+             "payloadSchema": [
+              {
+               "name": "items",
+               "type": "array"
+              }
+             ]
+            }
+           ]
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintUntypedArray"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "untyped-array",
+         "findings": [
+          {
+           "code": "ORB_X_UNTYPED_ARRAY",
+           "path": "orbitals[0 (A)].traits[0 (T)].emits(DONE).items",
+           "message": "Field 'items' is typed `array` but its element type is undeclared.",
+           "suggestion": "Declare the element type as `[T]` (e.g. `[string]`) instead of the bare `array`.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintUntypedArray"
+    }
+   ]
+  },
+  {
+   "id": "control-emit-payload-array-with-an-element-type",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "emits": [
+            {
+             "event": "DONE",
+             "payloadSchema": [
+              {
+               "name": "items",
+               "type": "[string]"
+              }
+             ]
+            }
+           ]
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintUntypedArray"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "untyped-array",
+         "findings": []
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintUntypedArray"
+    }
+   ]
+  },
+  {
+   "id": "only-the-bare-array-payload-field-is-flagged",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "emits": [
+            {
+             "event": "DONE",
+             "payloadSchema": [
+              {
+               "name": "photos",
+               "type": "array"
+              },
+              {
+               "name": "tags",
+               "type": "[string]"
+              },
+              {
+               "name": "attachments",
+               "type": "array",
+               "properties": [
+                {
+                 "name": "url",
+                 "type": "string"
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintUntypedArray"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "untyped-array",
+         "findings": [
+          {
+           "code": "ORB_X_UNTYPED_ARRAY",
+           "path": "orbitals[0 (A)].traits[0 (T)].emits(DONE).photos",
+           "message": "Field 'photos' is typed `array` but its element type is undeclared.",
+           "suggestion": "Declare the element type as `[T]` (e.g. `[string]`) instead of the bare `array`.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintUntypedArray"
+    }
+   ]
+  },
+  {
+   "id": "nested-payload-array-without-an-element-type-is-flagged",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "emits": [
+            {
+             "event": "DONE",
+             "payloadSchema": [
+              {
+               "name": "outer",
+               "type": "object",
+               "properties": [
+                {
+                 "name": "inner",
+                 "type": "array"
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintUntypedArray"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "untyped-array",
+         "findings": [
+          {
+           "code": "ORB_X_UNTYPED_ARRAY",
+           "path": "orbitals[0 (A)].traits[0 (T)].emits(DONE).outer.inner",
+           "message": "Field 'inner' is typed `array` but its element type is undeclared.",
+           "suggestion": "Declare the element type as `[T]` (e.g. `[string]`) instead of the bare `array`.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintUntypedArray"
+    }
+   ]
+  },
+  {
+   "id": "event-payload-bare-array-is-flagged",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ],
+            "events": [
+             {
+              "key": "GO",
+              "payloadSchema": [
+               {
+                "name": "xs",
+                "type": "array"
+               }
+              ]
+             }
+            ]
+           },
+           "emits": [
+            {
+             "event": "DONE",
+             "payloadSchema": [
+              {
+               "name": "items",
+               "type": "array"
+              }
+             ]
+            }
+           ]
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintUntypedArray"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "untyped-array",
+         "findings": [
+          {
+           "code": "ORB_X_UNTYPED_ARRAY",
+           "path": "orbitals[0 (A)].traits[0 (T)].events(GO).xs",
+           "message": "Field 'xs' is typed `array` but its element type is undeclared.",
+           "suggestion": "Declare the element type as `[T]` (e.g. `[string]`) instead of the bare `array`.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintUntypedArray"
+    }
+   ]
+  },
+  {
+   "id": "entity-array-field-without-items-is-flagged-typed-one-is-not",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "attachments",
+            "type": "array"
+           },
+           {
+            "name": "tags",
+            "type": "array",
+            "items": {
+             "type": "string"
+            }
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintUntypedArray"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "untyped-array",
+         "findings": [
+          {
+           "code": "ORB_X_UNTYPED_ARRAY",
+           "path": "orbitals[0].entity.fields[1].items",
+           "message": "Field 'attachments' is typed `array` but its element type is undeclared.",
+           "suggestion": "Declare the element type as `[T]` (e.g. `[string]`) instead of the bare `array`.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintUntypedArray"
+    }
+   ]
+  },
+  {
+   "id": "control-entity-without-array-fields",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "title",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     },
+     "trait": "OrbLintUntypedArray"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "untyped-array",
+         "findings": []
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintUntypedArray"
+    }
+   ]
+  }
+ ]
+}

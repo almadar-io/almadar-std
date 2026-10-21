@@ -1,0 +1,225 @@
+app std-orb-test [
+  version: "1.0.0",
+  env: ["ALMADAR_PERSONA_OWNS"],
+  inbound: ["cli-test"],
+  fs: { cwd: "**/*.lolo": [read] },
+  description: "std-orb-test — the `orb test <program.lolo> [--trait <name>] [--orbital <name>] [--report text|json] [--execute] [--verbose]` command (spec/cli/orb-test.lolo; owner ruling G-STD-105: the Rust exhaustive generator retires into the kernel planner). It composes std-verify-walk (the L1 walk over the kernel planner) and reshapes its answer into outcomes { passed, failed, skipped }: pass is passed, fail is failed, every other verdict is skipped with its reason, a validate finding is a failed outcome of the trait (program). The text report is the Rust headless-execution report; the json report is { failed, outcomes, passed, skipped } with the keys alphabetical. --trait and --orbital keep the traits whose name contains the word (as the Rust verb). Status 200, or 500 when an outcome failed or the walk could not run; a usage error is status 400 (exit 2)."
+]
+uses Spec from "almadar-std/orb-test"
+uses Args from "std/behaviors/std-args"
+uses Walk from "std/behaviors/std-verify-walk"
+uses Machine from "std/behaviors/std-machine"
+uses Plan from "std/behaviors/std-verify-plan"
+uses Seed from "std/behaviors/std-mock-seed"
+uses Judge from "std/behaviors/std-verify-judge"
+uses Credit from "std/behaviors/std-verify-credit"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
+type TestOutcome = { status : string!, traitName : string!, test : string!, detail : string, reason : string }
+
+orbital OrbTestOrbital {
+  entity TestRun [runtime] {
+    id : string!
+    cwd : string = ""
+    file : string = ""
+    traitFilter : string = ""
+    report : string = "text"
+    verbose : boolean = false
+    outcomes : [TestOutcome] = []
+    traits : [string] = []
+    passed : number = 0
+    failed : number = 0
+    skipped : number = 0
+  }
+
+  trait ArgsCli = Args.traits.ArgsParser {
+    listens {
+      OrbTest.TEST_ARGS_PARSE -> ARGS_PARSE
+    }
+  }
+
+  trait TestMachine = Machine.traits.Machine {
+    listens {
+      TestWalk.WALK_MACHINE_READ -> MACHINE_READ
+    }
+  }
+
+  trait TestPlan = Plan.traits.Plan {
+    listens {
+      TestWalk.WALK_PLAN_REQUEST -> PLAN_REQUEST
+      MockSeed.ROWS_DONE -> ROWS_DONE
+    }
+  }
+
+  trait MockSeed = Seed.traits.MockSeed {
+    listens {
+      MockStream.CORPUS_IS -> CORPUS_IS
+      TestPlan.SAMPLE_ROWS -> SAMPLE_ROWS
+    }
+  }
+
+  trait MockStream = Seed.traits.MockStream {
+  }
+
+  trait TestJudge = Judge.traits.Judge {
+    listens {
+      TestWalk.WALK_JUDGE_REQUEST -> JUDGE_REQUEST
+    }
+  }
+
+  trait TestCreditor = Credit.traits.Credit {
+    listens {
+      TestWalk.WALK_CREDIT_REQUEST -> CREDIT_REQUEST
+    }
+  }
+
+  trait TestWalk = Walk.traits.VerifyWalk {
+    listens {
+      TestEngine.TEST_WALK_CALL -> VERIFY_WALK_START
+      TestMachine.MACHINE_ANSWERED -> WALK_MACHINE_ANSWERED
+      TestPlan.PLAN_ANSWERED -> WALK_PLAN_ANSWERED
+      TestJudge.JUDGE_ANSWERED -> WALK_JUDGE_ANSWERED
+      TestCreditor.CREDIT_ANSWERED -> WALK_CREDIT_ANSWERED
+    }
+  }
+
+  trait OrbTest -> TestRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      TEST_DONE -> ready
+        (emit TEST_ANSWERED { status: @payload.status, body: @payload.body })
+      TEST_CALLED -> parsing
+        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
+        (emit TEST_ARGS_PARSE { stage: "test" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "trait" aliases: [] takesValue: true repeatable: false }, { name: "orbital" aliases: [] takesValue: true repeatable: false }, { name: "report" aliases: [] takesValue: true repeatable: false }, { name: "execute" aliases: [] takesValue: false repeatable: false }, { name: "verbose" aliases: [] takesValue: false repeatable: false }] })
+    }
+
+    state parsing {
+      INIT -> parsing
+      TEST_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (!= (array/len @payload.positionals) 1) (and (!= (object/get @payload.flags "report") null) (not (array/includes ["text", "json"] (str/default (array/first (object/get @payload.flags "report")) "")))))
+        (emit TEST_ANSWERED { status: 400, body: "usage: orb test <program.lolo> [--trait <name>] [--orbital <name>] [--report text|json] [--execute] [--verbose]" })
+      TEST_ARGS_DONE -> ready when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1) (or (= (object/get @payload.flags "report") null) (array/includes ["text", "json"] (str/default (array/first (object/get @payload.flags "report")) ""))))
+        (emit TEST_START { cwd: @entity.cwd, file: (array/first @payload.positionals), traitFilter: (if (!= (object/get @payload.flags "trait") null) (str/default (array/first (object/get @payload.flags "trait")) "") (if (!= (object/get @payload.flags "orbital") null) (str/default (array/first (object/get @payload.flags "orbital")) "") "")), report: (if (!= (object/get @payload.flags "report") null) (array/first (object/get @payload.flags "report")) "text"), verbose: (!= (object/get @payload.flags "verbose") null) })
+    }
+
+    emits {
+      TEST_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      TEST_ARGS_PARSE {
+        stage : string!
+        argv : [string]!
+        flags : [ArgFlag]!
+      }
+        @description "Internal: parse the call's words."
+        @tier "internal"
+      TEST_START {
+        cwd : string!
+        file : string!
+        traitFilter : string!
+        report : string!
+        verbose : boolean!
+      }
+        @description "Internal: walk the program."
+        @tier "internal"
+    }
+
+    listens {
+      TEST_CALLED -> inbound "cli-test" answers TEST_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb test`."
+        @synonyms "orb test, play every transition of a program, state machine tests"
+      TEST_ARGS_DONE {
+        stage : string!
+        flags : Map string [string]!
+        positionals : [string]!
+        errors : [string]!
+        words : [string]!
+      }
+        @description "std-args's ARGS_PARSED."
+      ArgsCli.ARGS_PARSED -> TEST_ARGS_DONE
+      TestEngine.TEST_ANSWERED -> TEST_DONE
+      TEST_DONE { status : number!  body : string! }
+        @description "Internal: the engine's answer, relayed to the hook by its handler."
+        @tier "internal"
+    }
+  }
+
+  trait TestEngine -> TestRun [integration] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      TEST_START -> walking
+        (set @entity.cwd @payload.cwd)
+        (set @entity.file @payload.file)
+        (set @entity.traitFilter @payload.traitFilter)
+        (set @entity.report @payload.report)
+        (set @entity.verbose @payload.verbose)
+        (emit TEST_WALK_CALL { file: @payload.file })
+    }
+
+    state walking {
+      INIT -> walking
+      TEST_WALK_ANSWERED -> idle
+        (set @entity.outcomes (array/map (array/filter (str/split @payload.body "\n") (fn l (and (str/includes @l "  ") (not (str/startsWith @l "verify-walk:")) (or (str/startsWith @l "pass  ") (str/startsWith @l "fail  ") (str/startsWith @l "unplanned  ") (str/startsWith @l "guard-blocked  ") (str/startsWith @l "gap  "))))) (fn l (let ((parts (str/split @l "  "))) (let ((v (array/first @parts)) (rest (array/nth @parts 1)) (tail (str/join (array/drop @parts 2) "  ")) (all (str/join (array/drop @parts 1) "  "))) (if (not (str/includes @rest "--> "))
+          { status: "failed", traitName: "(program)", test: "validate", detail: (str/replace @all "validate " "") }
+          (let ((tr (array/first (str/split @rest " "))) (from (array/first (str/split (str/join (array/drop (str/split @rest " ") 1) " ") " --"))) (ev (array/first (str/split (array/nth (str/split @rest " --") 1) "--> "))) (to (array/nth (str/split @rest "--> ") 1))) (let ((name (str/concat @from " + " @ev " → " @to))) (if (= @v "pass") { status: "passed", traitName: @tr, test: @name }
+            (if (= @v "fail") (if (= @tail "") { status: "failed", traitName: @tr, test: @name } { status: "failed", traitName: @tr, test: @name, detail: @tail })
+              { status: "skipped", traitName: @tr, test: @name, reason: (if (= @tail "") @v (str/concat @v ": " @tail)) }))))))))))
+        (set @entity.outcomes (array/filter @entity.outcomes (fn o (str/includes (str/lower (object/get @o "traitName")) (str/lower @entity.traitFilter)))))
+        (set @entity.passed (array/len (array/filter @entity.outcomes (fn o (= (object/get @o "status") "passed")))))
+        (set @entity.failed (array/len (array/filter @entity.outcomes (fn o (= (object/get @o "status") "failed")))))
+        (set @entity.skipped (array/len (array/filter @entity.outcomes (fn o (= (object/get @o "status") "skipped")))))
+        (set @entity.traits (array/unique (array/map @entity.outcomes (fn o (object/get @o "traitName")))))
+        (emit TEST_ANSWERED { status: (if (and (> (array/len @entity.outcomes) 0) (> @entity.failed 0)) 500 (if (and (= (array/len @entity.outcomes) 0) (= @payload.status 500) (= @entity.traitFilter "")) 500 200)), body: (if (and (= (array/len @entity.outcomes) 0) (= @payload.status 500) (= @entity.traitFilter "")) (str/concat "orb test: " @payload.body)
+          (if (= (array/len @entity.outcomes) 0) "No traits found matching the filter criteria."
+            (if (= @entity.report "json") (json/stringify { passed: @entity.passed, failed: @entity.failed, skipped: @entity.skipped, outcomes: @entity.outcomes })
+              (str/join (array/concat [(str/concat "Loading schema: " @entity.file)]
+                (array/map (array/filter @entity.outcomes (fn o (or (= (object/get @o "status") "failed") @entity.verbose))) (fn o (if (= (object/get @o "status") "passed") (str/concat "  ✓ " (object/get @o "test")) (if (= (object/get @o "status") "failed") (str/concat "  ✗ " (object/get @o "test") (if (!= (object/get @o "detail" "") "") (str/concat " — " (object/get @o "detail")) "")) (str/concat "  ⊘ " (object/get @o "test") " (" (object/get @o "reason") ")")))))
+                [(str/repeat " " 0), (str/repeat "=" 60), "Headless Execution Results", (str/repeat "=" 60)]
+                (array/map @entity.traits (fn tn (let ((tp (array/len (array/filter @entity.outcomes (fn o (and (= (object/get @o "traitName") @tn) (= (object/get @o "status") "passed")))))) (tf (array/len (array/filter @entity.outcomes (fn o (and (= (object/get @o "traitName") @tn) (= (object/get @o "status") "failed"))))))) (str/concat "  " (if (= @tf 0) "✓" "✗") " " @tn " — " @tp "/" (+ @tp @tf) " passed" (if (> @tf 0) (str/concat " (" @tf " failed)") "")))))
+                [(str/repeat "-" 60), (str/concat "Total: " @entity.passed " passed, " @entity.failed " failed, " @entity.skipped " skipped"), (str/repeat "=" 60)]) "\n")))) })
+    }
+
+    emits {
+      TEST_ANSWERED -> external {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      TEST_WALK_CALL {
+        file : string!
+      }
+        @description "Internal: call the L1 walk on the program."
+        @tier "internal"
+    }
+
+    listens {
+      TEST_START {
+        cwd : string!
+        file : string!
+        traitFilter : string!
+        report : string!
+        verbose : boolean!
+      }
+        @description "Walk a program and report its outcomes."
+      OrbTest.TEST_START -> TEST_START
+      TEST_WALK_ANSWERED {
+        status : number!
+        body : string!
+      }
+        @description "std-verify-walk's answer."
+      TestWalk.VERIFY_WALK_ANSWERED -> TEST_WALK_ANSWERED
+    }
+  }
+
+  page "/orb-test" as OrbTestPage -> OrbTest, ArgsCli, TestEngine, TestWalk, TestMachine, TestPlan, TestJudge, TestCreditor, MockSeed, MockStream
+}

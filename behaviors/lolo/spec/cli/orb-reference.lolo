@@ -1,0 +1,26 @@
+app orb-reference-spec [
+  version: "1.0.0",
+  inbound: ["cli-reference"],
+  description: "Design contract for `orb reference [TOPIC]` (port of orbital-cli commands/reference.rs; `orb signatures` stays in lib.rs). The language reference, served from the installed @almadar/core language tables named by its package.json orbLanguage block (constructs, validationCodes, vocabulary). REFERENCE_RUN { topic, vocabulary, constructs, codes } answers REFERENCE_ANSWERED { status, body } where body is one compact JSON line. No topic: { codes: [{ count, topic: codes/<category> }] by category name, constructs: [{ kind, name }], vocabulary } (the index's own keys alphabetical; values read from the tables keep the table's key order, as Rust prints them). Topic vocabulary: the vocabulary object. Topic codes/<category> (case-sensitive): { category, codes: [{ code, category, description }] }; a category with no code answers 500 `Error: no validation codes in category `<category>``. Any other topic names a construct, matched case-insensitively: { name, kind, doc, fields: [{ name, type, doc }], examples }; no match answers 500 `Error: no reference topic `<topic>`; `orb reference` lists them`. The topics are tried in that order. examples is always [] until program/print can print one node (G-ORB-453). More than one word or an unknown flag answers the usage (status 400, exit 2). Replay goldens: orb-reference.replay.goldens.json."
+]
+
+type RefField = { name : string!, type : string!, doc : string! }
+type RefConstruct = { name : string!, kind : string!, doc : string!, fields : [RefField]! }
+type RefCode = { code : string!, category : string!, description : string! }
+
+orbital OrbReferenceSpec {
+  expects trait OrbReference {
+    state ready
+    state parsing
+    emits {
+      REFERENCE_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects trait ReferenceEngine {
+    state loading
+    emits {
+      REFERENCE_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page "/orb-reference" -> OrbReference
+}

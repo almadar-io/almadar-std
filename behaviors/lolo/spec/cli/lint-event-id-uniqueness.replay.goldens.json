@@ -1,0 +1,739 @@
+{
+ "atom": "cli/atoms/std-orb-lint-event-id-uniqueness.lolo",
+ "trait": "OrbLintEventIdUniqueness",
+ "cases": [
+  {
+   "id": "duplicate-event-id-across-traits",
+   "steps": [
+    {
+     "trait": "OrbLintEventIdUniqueness",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "name": "Tasks",
+         "traits": [
+          {
+           "name": "TaskList",
+           "stateMachine": {
+            "states": [],
+            "transitions": [],
+            "events": []
+           },
+           "emits": [
+            {
+             "event": "E",
+             "eventId": "evt_REFRESH0000000000000000"
+            }
+           ]
+          },
+          {
+           "name": "TaskListCopy",
+           "stateMachine": {
+            "states": [],
+            "transitions": [],
+            "events": []
+           },
+           "emits": [
+            {
+             "event": "E",
+             "eventId": "evt_REFRESH0000000000000000"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventIdUniqueness",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "event-id-uniqueness",
+         "findings": [
+          {
+           "code": "ORB_ID_DUPLICATE_EVENT_ID",
+           "path": "orbitals[0 (Tasks)]",
+           "message": "event id `evt_REFRESH0000000000000000` is declared by 2 different traits (TaskList, TaskListCopy) — ids must be document-unique; every id→name resolution over this schema is ambiguous.",
+           "suggestion": "",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "id-in-events-of-one-and-emits-of-another",
+   "steps": [
+    {
+     "trait": "OrbLintEventIdUniqueness",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "name": "Tasks",
+         "traits": [
+          {
+           "name": "A",
+           "stateMachine": {
+            "states": [],
+            "transitions": [],
+            "events": [
+             {
+              "key": "K",
+              "id": "evt_REFRESH0000000000000000"
+             }
+            ]
+           }
+          },
+          {
+           "name": "B",
+           "stateMachine": {
+            "states": [],
+            "transitions": [],
+            "events": []
+           },
+           "emits": [
+            {
+             "event": "E",
+             "eventId": "evt_REFRESH0000000000000000"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventIdUniqueness",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "event-id-uniqueness",
+         "findings": [
+          {
+           "code": "ORB_ID_DUPLICATE_EVENT_ID",
+           "path": "orbitals[0 (Tasks)]",
+           "message": "event id `evt_REFRESH0000000000000000` is declared by 2 different traits (A, B) — ids must be document-unique; every id→name resolution over this schema is ambiguous.",
+           "suggestion": "",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "three-traits-counted",
+   "steps": [
+    {
+     "trait": "OrbLintEventIdUniqueness",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "name": "Tasks",
+         "traits": [
+          {
+           "name": "A",
+           "stateMachine": {
+            "states": [],
+            "transitions": [],
+            "events": [
+             {
+              "key": "K",
+              "id": "evt_REFRESH0000000000000000"
+             }
+            ]
+           }
+          },
+          {
+           "name": "B",
+           "stateMachine": {
+            "states": [],
+            "transitions": [],
+            "events": [
+             {
+              "key": "K",
+              "id": "evt_REFRESH0000000000000000"
+             }
+            ]
+           }
+          },
+          {
+           "name": "C",
+           "stateMachine": {
+            "states": [],
+            "transitions": [],
+            "events": [
+             {
+              "key": "K",
+              "id": "evt_REFRESH0000000000000000"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventIdUniqueness",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "event-id-uniqueness",
+         "findings": [
+          {
+           "code": "ORB_ID_DUPLICATE_EVENT_ID",
+           "path": "orbitals[0 (Tasks)]",
+           "message": "event id `evt_REFRESH0000000000000000` is declared by 3 different traits (A, B, C) — ids must be document-unique; every id→name resolution over this schema is ambiguous.",
+           "suggestion": "",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "two-duplicate-ids-sorted-by-id",
+   "steps": [
+    {
+     "trait": "OrbLintEventIdUniqueness",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "name": "Tasks",
+         "traits": [
+          {
+           "name": "A",
+           "stateMachine": {
+            "states": [],
+            "transitions": [],
+            "events": [
+             {
+              "key": "K",
+              "id": "evt_REFRESH0000000000000000"
+             },
+             {
+              "key": "K",
+              "id": "evt_PING0000000000000000000"
+             }
+            ]
+           }
+          },
+          {
+           "name": "B",
+           "stateMachine": {
+            "states": [],
+            "transitions": [],
+            "events": [
+             {
+              "key": "K",
+              "id": "evt_REFRESH0000000000000000"
+             },
+             {
+              "key": "K",
+              "id": "evt_PING0000000000000000000"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventIdUniqueness",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "event-id-uniqueness",
+         "findings": [
+          {
+           "code": "ORB_ID_DUPLICATE_EVENT_ID",
+           "path": "orbitals[0 (Tasks)]",
+           "message": "event id `evt_PING0000000000000000000` is declared by 2 different traits (A, B) — ids must be document-unique; every id→name resolution over this schema is ambiguous.",
+           "suggestion": "",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_ID_DUPLICATE_EVENT_ID",
+           "path": "orbitals[0 (Tasks)]",
+           "message": "event id `evt_REFRESH0000000000000000` is declared by 2 different traits (A, B) — ids must be document-unique; every id→name resolution over this schema is ambiguous.",
+           "suggestion": "",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "second-orbital-indexed",
+   "steps": [
+    {
+     "trait": "OrbLintEventIdUniqueness",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "name": "One",
+         "traits": [
+          {
+           "name": "A",
+           "stateMachine": {
+            "states": [],
+            "transitions": [],
+            "events": [
+             {
+              "key": "K",
+              "id": "evt_REFRESH0000000000000000"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "name": "Two",
+         "traits": [
+          {
+           "name": "A",
+           "stateMachine": {
+            "states": [],
+            "transitions": [],
+            "events": [
+             {
+              "key": "K",
+              "id": "evt_REFRESH0000000000000000"
+             }
+            ]
+           }
+          },
+          {
+           "name": "B",
+           "stateMachine": {
+            "states": [],
+            "transitions": [],
+            "events": [
+             {
+              "key": "K",
+              "id": "evt_REFRESH0000000000000000"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventIdUniqueness",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "event-id-uniqueness",
+         "findings": [
+          {
+           "code": "ORB_ID_DUPLICATE_EVENT_ID",
+           "path": "orbitals[1 (Two)]",
+           "message": "event id `evt_REFRESH0000000000000000` is declared by 2 different traits (A, B) — ids must be document-unique; every id→name resolution over this schema is ambiguous.",
+           "suggestion": "",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-same-id-in-events-and-emits-of-one-trait",
+   "steps": [
+    {
+     "trait": "OrbLintEventIdUniqueness",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "name": "Tasks",
+         "traits": [
+          {
+           "name": "TaskList",
+           "stateMachine": {
+            "states": [],
+            "transitions": [],
+            "events": [
+             {
+              "key": "K",
+              "id": "evt_REFRESH0000000000000000"
+             }
+            ]
+           },
+           "emits": [
+            {
+             "event": "E",
+             "eventId": "evt_REFRESH0000000000000000"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventIdUniqueness",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "event-id-uniqueness",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-distinct-ids",
+   "steps": [
+    {
+     "trait": "OrbLintEventIdUniqueness",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "name": "Tasks",
+         "traits": [
+          {
+           "name": "A",
+           "stateMachine": {
+            "states": [],
+            "transitions": [],
+            "events": [
+             {
+              "key": "K",
+              "id": "evt_REFRESH0000000000000000"
+             }
+            ]
+           }
+          },
+          {
+           "name": "B",
+           "stateMachine": {
+            "states": [],
+            "transitions": [],
+            "events": [
+             {
+              "key": "K",
+              "id": "evt_PING0000000000000000000"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventIdUniqueness",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "event-id-uniqueness",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-same-id-in-different-orbitals",
+   "steps": [
+    {
+     "trait": "OrbLintEventIdUniqueness",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "name": "One",
+         "traits": [
+          {
+           "name": "A",
+           "stateMachine": {
+            "states": [],
+            "transitions": [],
+            "events": [
+             {
+              "key": "K",
+              "id": "evt_REFRESH0000000000000000"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "name": "Two",
+         "traits": [
+          {
+           "name": "B",
+           "stateMachine": {
+            "states": [],
+            "transitions": [],
+            "events": [
+             {
+              "key": "K",
+              "id": "evt_REFRESH0000000000000000"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventIdUniqueness",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "event-id-uniqueness",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-id-free-program",
+   "steps": [
+    {
+     "trait": "OrbLintEventIdUniqueness",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "name": "Tasks",
+         "traits": [
+          {
+           "name": "A",
+           "stateMachine": {
+            "states": [],
+            "transitions": [],
+            "events": [
+             {
+              "key": "K"
+             }
+            ]
+           }
+          },
+          {
+           "name": "B",
+           "stateMachine": {
+            "states": [],
+            "transitions": [],
+            "events": [
+             {
+              "key": "K"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventIdUniqueness",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "event-id-uniqueness",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,987 @@
+{
+ "atom": "cli/atoms/std-orb-lint-asset-inline-url.lolo",
+ "trait": "OrbLintAssetInlineUrl",
+ "cases": [
+  {
+   "id": "config-default-url",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "Board",
+         "uses": [
+          {
+           "from": "std/behaviors/std-asset-pack",
+           "as": "Pack"
+          }
+         ],
+         "traits": [
+          {
+           "name": "AssetPack",
+           "ref": "Pack.traits.AssetPackLoader",
+           "config": {
+            "origin": {
+             "type": "unknown",
+             "default": "https://almadar-kflow-assets.web.app"
+            },
+            "assetPack": {
+             "type": "unknown",
+             "default": "kflow/x"
+            }
+           }
+          },
+          {
+           "name": "Render",
+           "config": {
+            "sprite": {
+             "type": "string",
+             "default": "https://cdn.example.com/a.png"
+            }
+           }
+          }
+         ],
+         "entity": {
+          "name": "E"
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "asset-inline-url",
+         "findings": [
+          {
+           "code": "ORB_ASSET_INLINE_URL",
+           "path": "orbitals[0 (Board)].traits[1 (Render)].config.sprite.default",
+           "message": "Orbital 'Board' composes std-asset-pack but carries the literal asset url 'https://cdn.example.com/a.png'",
+           "suggestion": "Add the art to the pack's assets rows and look it up by key; the pack atom's origin is the only place a host belongs",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nested-config-default-url",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "Board",
+         "uses": [
+          {
+           "from": "std/behaviors/std-asset-pack",
+           "as": "Pack"
+          }
+         ],
+         "traits": [
+          {
+           "name": "AssetPack",
+           "ref": "Pack.traits.AssetPackLoader",
+           "config": {
+            "origin": {
+             "type": "unknown",
+             "default": "https://almadar-kflow-assets.web.app"
+            },
+            "assetPack": {
+             "type": "unknown",
+             "default": "kflow/x"
+            }
+           }
+          },
+          {
+           "name": "Render",
+           "config": {
+            "sprite": {
+             "type": "string",
+             "default": {
+              "rows": [
+               {
+                "key": "a",
+                "url": "https://cdn.example.com/a.png"
+               }
+              ]
+             }
+            }
+           }
+          }
+         ],
+         "entity": {
+          "name": "E"
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "asset-inline-url",
+         "findings": [
+          {
+           "code": "ORB_ASSET_INLINE_URL",
+           "path": "orbitals[0 (Board)].traits[1 (Render)].config.sprite.default",
+           "message": "Orbital 'Board' composes std-asset-pack but carries the literal asset url 'https://cdn.example.com/a.png'",
+           "suggestion": "Add the art to the pack's assets rows and look it up by key; the pack atom's origin is the only place a host belongs",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "seed-row-url",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "Board",
+         "uses": [
+          {
+           "from": "std/behaviors/std-asset-pack",
+           "as": "Pack"
+          }
+         ],
+         "traits": [
+          {
+           "name": "AssetPack",
+           "ref": "Pack.traits.AssetPackLoader",
+           "config": {
+            "origin": {
+             "type": "unknown",
+             "default": "https://almadar-kflow-assets.web.app"
+            },
+            "assetPack": {
+             "type": "unknown",
+             "default": "kflow/x"
+            }
+           }
+          }
+         ],
+         "entity": {
+          "name": "E",
+          "instances": [
+           {
+            "id": "1",
+            "tex": {
+             "url": "http://x.test/t.png"
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "asset-inline-url",
+         "findings": [
+          {
+           "code": "ORB_ASSET_INLINE_URL",
+           "path": "orbitals[0 (Board)].entity.instances",
+           "message": "Orbital 'Board' composes std-asset-pack but carries the literal asset url 'http://x.test/t.png'",
+           "suggestion": "Add the art to the pack's assets rows and look it up by key; the pack atom's origin is the only place a host belongs",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "knob-declared-on-render-trait",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "Board",
+         "uses": [
+          {
+           "from": "std/behaviors/std-asset-pack",
+           "as": "Pack"
+          }
+         ],
+         "traits": [
+          {
+           "name": "Render",
+           "config": {
+            "sprite": {
+             "type": "string",
+             "default": "https://cdn.example.com/a.png"
+            },
+            "assetPack": {
+             "type": "string",
+             "default": "kflow/x"
+            }
+           }
+          }
+         ],
+         "entity": {
+          "name": "E"
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "asset-inline-url",
+         "findings": [
+          {
+           "code": "ORB_ASSET_INLINE_URL",
+           "path": "orbitals[0 (Board)].traits[0 (Render)].config.sprite.default",
+           "message": "Orbital 'Board' composes std-asset-pack but carries the literal asset url 'https://cdn.example.com/a.png'",
+           "suggestion": "Add the art to the pack's assets rows and look it up by key; the pack atom's origin is the only place a host belongs",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "frame-pack-trait-origin-exempt-render-url-flagged",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "Board",
+         "uses": [
+          {
+           "from": "std/behaviors/std-worldmap-board-2d",
+           "as": "Frame"
+          }
+         ],
+         "traits": [
+          {
+           "name": "AssetPack",
+           "ref": "Frame.traits.AssetPack",
+           "config": {
+            "origin": {
+             "default": "https://almadar-kflow-assets.web.app"
+            },
+            "assetPack": {
+             "default": "kflow/x"
+            }
+           }
+          },
+          {
+           "name": "Render",
+           "config": {
+            "sprite": {
+             "type": "string",
+             "default": "https://cdn.example.com/a.png"
+            }
+           }
+          }
+         ],
+         "entity": {
+          "name": "E"
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "asset-inline-url",
+         "findings": [
+          {
+           "code": "ORB_ASSET_INLINE_URL",
+           "path": "orbitals[0 (Board)].traits[1 (Render)].config.sprite.default",
+           "message": "Orbital 'Board' composes std-asset-pack but carries the literal asset url 'https://cdn.example.com/a.png'",
+           "suggestion": "Add the art to the pack's assets rows and look it up by key; the pack atom's origin is the only place a host belongs",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-named-AssetPack-but-not-the-atom",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "Board",
+         "uses": [
+          {
+           "from": "std/behaviors/std-other",
+           "as": "Other"
+          }
+         ],
+         "traits": [
+          {
+           "name": "AssetPack",
+           "ref": "Other.traits.AssetPack",
+           "config": {
+            "origin": {
+             "default": "https://cdn.example.com/a.png"
+            }
+           }
+          },
+          {
+           "name": "Render",
+           "config": {
+            "sprite": {
+             "type": "string",
+             "default": "https://cdn.example.com/a.png"
+            }
+           }
+          }
+         ],
+         "entity": {
+          "name": "E"
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "asset-inline-url",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "assetPack-knob-composes-without-uses-entry",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "Board",
+         "uses": [],
+         "traits": [
+          {
+           "name": "AssetPack",
+           "ref": "Pack.traits.AssetPackLoader",
+           "config": {
+            "origin": {
+             "type": "unknown",
+             "default": "https://almadar-kflow-assets.web.app"
+            },
+            "assetPack": {
+             "type": "unknown",
+             "default": "kflow/x"
+            }
+           }
+          },
+          {
+           "name": "Render",
+           "config": {
+            "sprite": {
+             "type": "string",
+             "default": "https://cdn.example.com/a.png"
+            }
+           }
+          }
+         ],
+         "entity": {
+          "name": "E"
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "asset-inline-url",
+         "findings": [
+          {
+           "code": "ORB_ASSET_INLINE_URL",
+           "path": "orbitals[0 (Board)].traits[1 (Render)].config.sprite.default",
+           "message": "Orbital 'Board' composes std-asset-pack but carries the literal asset url 'https://cdn.example.com/a.png'",
+           "suggestion": "Add the art to the pack's assets rows and look it up by key; the pack atom's origin is the only place a host belongs",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "composed-by-ref-alone-without-knob",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "Board",
+         "uses": [
+          {
+           "from": "std/behaviors/std-asset-pack",
+           "as": "Pack"
+          }
+         ],
+         "traits": [
+          {
+           "name": "Whatever",
+           "ref": "Pack.traits.AssetPackLoader",
+           "config": {}
+          },
+          {
+           "name": "Render",
+           "config": {
+            "sprite": {
+             "type": "string",
+             "default": "https://cdn.example.com/a.png"
+            }
+           }
+          }
+         ],
+         "entity": {
+          "name": "E"
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "asset-inline-url",
+         "findings": [
+          {
+           "code": "ORB_ASSET_INLINE_URL",
+           "path": "orbitals[0 (Board)].traits[1 (Render)].config.sprite.default",
+           "message": "Orbital 'Board' composes std-asset-pack but carries the literal asset url 'https://cdn.example.com/a.png'",
+           "suggestion": "Add the art to the pack's assets rows and look it up by key; the pack atom's origin is the only place a host belongs",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-ref-alias-without-uses-entry-is-not-the-atom",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "Board",
+         "uses": [],
+         "traits": [
+          {
+           "name": "AssetPack",
+           "ref": "Pack.traits.AssetPackLoader",
+           "config": {}
+          },
+          {
+           "name": "Render",
+           "config": {
+            "sprite": {
+             "type": "string",
+             "default": "https://cdn.example.com/a.png"
+            }
+           }
+          }
+         ],
+         "entity": {
+          "name": "E"
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "asset-inline-url",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-pack-origin-exempt",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "Board",
+         "uses": [
+          {
+           "from": "std/behaviors/std-asset-pack",
+           "as": "Pack"
+          }
+         ],
+         "traits": [
+          {
+           "name": "AssetPack",
+           "ref": "Pack.traits.AssetPackLoader",
+           "config": {
+            "origin": {
+             "type": "unknown",
+             "default": "https://almadar-kflow-assets.web.app"
+            },
+            "assetPack": {
+             "type": "unknown",
+             "default": "kflow/x"
+            }
+           }
+          },
+          {
+           "name": "Render",
+           "config": {
+            "sprite": {
+             "type": "string",
+             "default": "features/marker"
+            }
+           }
+          }
+         ],
+         "entity": {
+          "name": "E"
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "asset-inline-url",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-key-defaults",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "Board",
+         "uses": [
+          {
+           "from": "std/behaviors/std-asset-pack",
+           "as": "Pack"
+          }
+         ],
+         "traits": [
+          {
+           "name": "AssetPack",
+           "ref": "Pack.traits.AssetPackLoader",
+           "config": {
+            "origin": {
+             "type": "unknown",
+             "default": "https://almadar-kflow-assets.web.app"
+            },
+            "assetPack": {
+             "type": "unknown",
+             "default": "kflow/x"
+            }
+           }
+          },
+          {
+           "name": "Render",
+           "config": {
+            "sprite": {
+             "type": "string",
+             "default": {
+              "rows": [
+               {
+                "key": "a",
+                "url": "terrain/x"
+               }
+              ]
+             }
+            }
+           }
+          }
+         ],
+         "entity": {
+          "name": "E",
+          "instances": [
+           {
+            "id": "1",
+            "tex": "kflow/a"
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "asset-inline-url",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-no-pack-url-allowed",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "Board",
+         "uses": [
+          {
+           "from": "std/behaviors/std-asset-pack",
+           "as": "Pack"
+          }
+         ],
+         "traits": [
+          {
+           "name": "Render",
+           "config": {
+            "sprite": {
+             "type": "string",
+             "default": "https://cdn.example.com/a.png"
+            }
+           }
+          }
+         ],
+         "entity": {
+          "name": "E",
+          "instances": [
+           {
+            "id": "1",
+            "tex": "https://cdn.example.com/a.png"
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "asset-inline-url",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-url-in-orbital-without-pack",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "Board",
+         "uses": [
+          {
+           "from": "std/behaviors/std-asset-pack",
+           "as": "Pack"
+          }
+         ],
+         "traits": [
+          {
+           "name": "AssetPack",
+           "ref": "Pack.traits.AssetPackLoader",
+           "config": {
+            "origin": {
+             "type": "unknown",
+             "default": "https://almadar-kflow-assets.web.app"
+            },
+            "assetPack": {
+             "type": "unknown",
+             "default": "kflow/x"
+            }
+           }
+          },
+          {
+           "name": "Render",
+           "config": {
+            "sprite": {
+             "type": "string",
+             "default": "k"
+            }
+           }
+          }
+         ],
+         "entity": {
+          "name": "E"
+         }
+        },
+        {
+         "name": "Other",
+         "uses": [
+          {
+           "from": "std/behaviors/std-asset-pack",
+           "as": "Pack"
+          }
+         ],
+         "traits": [
+          {
+           "name": "Render",
+           "config": {
+            "sprite": {
+             "type": "string",
+             "default": "https://cdn.example.com/a.png"
+            }
+           }
+          }
+         ],
+         "entity": {
+          "name": "E"
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "asset-inline-url",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

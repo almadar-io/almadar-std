@@ -1,0 +1,131 @@
+app std-orb-lint-theme-pin-contradicts-app [
+  version: "1.0.0",
+  inbound: ["cli-lint-theme-pin-contradicts-app"],
+  fs: { cwd: "**": [read] },
+  description: "std-orb-lint-theme-pin-contradicts-app — the `orb lint theme-pin-contradicts-app <file>` command, the port of ORB_THEME_PIN_CONTRADICTS_APP (theme.rs validate_theme_pin_matches_app). It lowers the file with program/read and, when the app declares a theme (a key, or an inline theme's name), reports each orbital whose traits pin a literal non-empty config.theme default (not an @ binding) that differs from it, listing the distinct pins sorted (status 500, exit 1). Clean answers `lint theme-pin-contradicts-app: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-theme-pin-contradicts-app"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital OrbLintThemePinContradictsAppOrbital {
+  entity OrbLintThemePinContradictsAppRun [runtime] {
+    id : string!
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintThemePinContradictsApp -> OrbLintThemePinContradictsAppRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_RUN -> reading
+        (set @entity.findings [])
+        (os/read-file { anchor: "cwd" path: @payload.file } { key: "file" emit: { success: LINT_FILE_READ, failure: LINT_FILE_UNREAD } })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "theme-pin-contradicts-app", findings: @entity.findings })
+    }
+
+    state reading {
+      INIT -> reading
+      LINT_FILE_READ -> reading
+        (program/read (bytes/to-string @payload.data) { emit: { success: LINT_PROGRAM_READ, failure: LINT_FILE_UNREAD } })
+      LINT_PROGRAM_READ -> ready
+        (set @entity.findings (let ((raw (object/get @payload.result "theme" null)))
+          (let ((dq (str/decode-uri-component "%22")) (appKey (if (validate/string @raw) @raw (if (validate/object @raw) (object/get @raw "name" "") ""))) (orbitals (object/get @payload.result "orbitals" [])))
+            (if (= @appKey "")
+              []
+              (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+                (let ((orb (array/nth @orbitals @oi)))
+                  (let ((pins (array/unique (array/filter (array/map (object/get @orb "traits" []) (fn td (let ((cfg (if (validate/object @td) (object/get @td "config" null) null))) (if (validate/object @cfg) (let ((th (object/get @cfg "theme" null))) (if (validate/object @th) (let ((d (object/get @th "default" null))) (if (and (validate/string @d) (!= @d "") (not (str/startsWith @d (quote "@")))) @d "")) "")) "")))) (fn p (!= @p ""))))))
+                    (let ((divergent (array/sort (array/filter @pins (fn p (!= @p @appKey))))))
+                      (if (= (array/len @divergent) 0)
+                        []
+                        [{ code: "ORB_THEME_PIN_CONTRADICTS_APP", path: (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].theme"), message: (str/concat (object/get @orb "name" "") " pins theme " (str/join (array/map @divergent (fn p (str/concat @dq @p @dq))) ", ") " while the app declares " @dq @appKey @dq " at the app level"), suggestion: (str/concat "remove the config pin so the orbital inherits the app theme via @currentTheme - or, for a deliberate per-orbital override, declare it as the orbital's own `theme " @dq "<key>" @dq "`"), severity: "error" }])))))))))))
+        (emit LINT_FINISH { })
+      LINT_FILE_UNREAD -> ready
+        (emit LINT_UNREAD { rule: "theme-pin-contradicts-app" })
+    }
+
+    emits {
+      LINT_UNREAD -> external { rule : string! }
+        @description "This rule could not read or lower the file."
+        @tier "internal"
+      LINT_RUN -> external { file : string! }
+        @description "The lint request this trait answers, from the cli trait or the umbrella."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FILE_READ { data : bytes! }
+        @description "The file read."
+        @tier "internal"
+      LINT_FILE_UNREAD { error : string }
+        @description "The file could not be read or lowered."
+        @tier "internal"
+      LINT_PROGRAM_READ { result : string }
+        @description "The file lowered by program/read."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      OrbLintThemePinContradictsAppCli.LINT_RUN -> LINT_RUN
+    }
+  }
+
+  trait OrbLintThemePinContradictsAppCli -> OrbLintThemePinContradictsAppRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint theme-pin-contradicts-app <file>" })
+      LINT_CALLED -> waiting when (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (emit LINT_RUN { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "theme-pin-contradicts-app") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint theme-pin-contradicts-app: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "theme-pin-contradicts-app") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_UNREAD -> ready when (= @payload.rule "theme-pin-contradicts-app")
+        (emit LINT_ANSWERED { status: 500, body: "lint theme-pin-contradicts-app: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_RUN -> external { file : string! }
+        @description "Ask the rule trait to lint this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_UNREAD -> external { rule : string! }
+        @description "The rule trait could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-theme-pin-contradicts-app" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint theme-pin-contradicts-app` with its arguments and working directory."
+        @synonyms "orb lint theme-pin-contradicts-app"
+      OrbLintThemePinContradictsApp.LINT_FOUND -> LINT_FOUND
+      OrbLintThemePinContradictsApp.LINT_UNREAD -> LINT_UNREAD
+    }
+  }
+
+  page "/orb-lint-theme-pin-contradicts-app" as OrbLintThemePinContradictsAppPage -> OrbLintThemePinContradictsApp, OrbLintThemePinContradictsAppCli
+}

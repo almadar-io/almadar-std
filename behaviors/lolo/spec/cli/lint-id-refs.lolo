@@ -1,0 +1,22 @@
+app lint-id-refs-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint id-refs <file>`, the port of ORB_ID_UNKNOWN_REF, ORB_ID_KIND_MISMATCH and ORB_ID_NAME_MISMATCH. It lowers the file with program/read and checks every dual-carry id at the primary entity and the orbital traits against its position kind, the declared nodes and ledger, and the ledger curName, with the Rust path and message (status 500, exit 1). Clean answers `lint id-refs: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintIdRefsSpec {
+  expects trait OrbLintIdRefs {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+      LINT_UNREAD { rule : string! }
+    }
+  }
+  expects trait OrbLintIdRefsCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page "/orb-lint-id-refs" -> OrbLintIdRefs, OrbLintIdRefsCli
+}

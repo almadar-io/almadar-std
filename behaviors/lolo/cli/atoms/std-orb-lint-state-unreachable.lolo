@@ -1,0 +1,143 @@
+app std-orb-lint-state-unreachable [
+  version: "1.0.0",
+  inbound: ["cli-lint-state-unreachable"],
+  fs: { cwd: "**": [read] },
+  description: "std-orb-lint-state-unreachable — the `orb lint state-unreachable <file>` command, the port of ORB_T_STATE_UNREACHABLE (trait_validator.rs validate_state_machine). It lowers the file with program/read and, for every inline trait with an initial state, follows the transition edges from the first initial state (a `*` source adds no edge; the INIT self-loop on the initial state is skipped) and reports each declared state not reached, with the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint state-unreachable: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-state-unreachable"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital OrbLintStateUnreachableOrbital {
+  entity OrbLintStateUnreachableRun [runtime] {
+    id : string!
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintStateUnreachable -> OrbLintStateUnreachableRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_RUN -> reading
+        (set @entity.findings [])
+        (os/read-file { anchor: "cwd" path: @payload.file } { key: "file" emit: { success: LINT_FILE_READ, failure: LINT_FILE_UNREAD } })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "state-unreachable", findings: @entity.findings })
+    }
+
+    state reading {
+      INIT -> reading
+      LINT_FILE_READ -> reading
+        (program/read (bytes/to-string @payload.data) { emit: { success: LINT_PROGRAM_READ, failure: LINT_FILE_UNREAD } })
+      LINT_PROGRAM_READ -> ready
+        (set @entity.findings (let ((orbitals (object/get @payload.result "orbitals" [])))
+          (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+            (let ((trList (object/get (array/nth @orbitals @oi) "traits" [])))
+              (array/flatten (array/map (array/range 0 (array/len @trList)) (fn ti
+                (let ((td (array/nth @trList @ti)))
+                  (if (not (validate/object (object/get @td "stateMachine" null)))
+                    []
+                    (let ((sm (object/get @td "stateMachine")) (tpath (str/concat "orbitals[" @oi "].traits[" @ti "]")))
+                      (let ((sts (object/get @sm "states" [])) (where (str/concat @tpath ".stateMachine")))
+                        (if (= (array/len @sts) 0)
+                          []
+                          (let ((initRow (array/find @sts (fn s (= (object/get @s "isInitial" false) true)))) (tx (object/get @sm "transitions" [])))
+                            (if (= @initRow null)
+                              []
+                              (let ((initial (object/get @initRow "name" "")))
+                                (let ((edges (array/flatten (array/map @tx (fn tr
+                                    (let ((frm (object/get @tr "from" "")))
+                                      (let ((froms (if (validate/string @frm) (array/append [] @frm) @frm)))
+                                        (if (and (= (object/get @tr "event" "") "INIT") (or (array/includes @froms "*") (array/includes @froms @initial)) (= (object/get @tr "to" "") @initial))
+                                          []
+                                          (array/map (array/filter @froms (fn f (!= @f "*"))) (fn f { from: @f, to: (object/get @tr "to" "") }))))))))))
+                                  (let ((reached (array/reduce (array/range 0 (array/len @sts)) [@initial] (fn (cur i) (array/unique (array/concat @cur (array/map (array/filter @edges (fn e (array/includes @cur (object/get @e "from")))) (fn e (object/get @e "to")))))))))
+                                    (array/map (array/filter @sts (fn s (not (array/includes @reached (object/get @s "name" ""))))) (fn s { code: "ORB_T_STATE_UNREACHABLE", path: (str/concat @where ".states"), message: (str/concat "State '" (object/get @s "name" "") "' is unreachable from the initial state '" @initial "' via any transition path"), suggestion: "Add a transition that reaches this state, or remove the dead state", severity: "error" })))))))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FILE_UNREAD -> ready
+        (emit LINT_UNREAD { rule: "state-unreachable" })
+    }
+
+    emits {
+      LINT_UNREAD -> external { rule : string! }
+        @description "This rule could not read or lower the file."
+        @tier "internal"
+      LINT_RUN -> external { file : string! }
+        @description "The lint request this trait answers, from the cli trait or the umbrella."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FILE_READ { data : bytes! }
+        @description "The file read."
+        @tier "internal"
+      LINT_FILE_UNREAD { error : string }
+        @description "The file could not be read or lowered."
+        @tier "internal"
+      LINT_PROGRAM_READ { result : string }
+        @description "The file lowered by program/read."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      OrbLintStateUnreachableCli.LINT_RUN -> LINT_RUN
+    }
+  }
+
+  trait OrbLintStateUnreachableCli -> OrbLintStateUnreachableRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint state-unreachable <file>" })
+      LINT_CALLED -> waiting when (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (emit LINT_RUN { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "state-unreachable") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint state-unreachable: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "state-unreachable") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_UNREAD -> ready when (= @payload.rule "state-unreachable")
+        (emit LINT_ANSWERED { status: 500, body: "lint state-unreachable: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_RUN -> external { file : string! }
+        @description "Ask the rule trait to lint this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_UNREAD -> external { rule : string! }
+        @description "The rule trait could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-state-unreachable" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint state-unreachable` with its arguments and working directory."
+        @synonyms "orb lint state-unreachable"
+      OrbLintStateUnreachable.LINT_FOUND -> LINT_FOUND
+      OrbLintStateUnreachable.LINT_UNREAD -> LINT_UNREAD
+    }
+  }
+
+  page "/orb-lint-state-unreachable" as OrbLintStateUnreachablePage -> OrbLintStateUnreachable, OrbLintStateUnreachableCli
+}

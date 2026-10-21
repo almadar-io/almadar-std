@@ -1,16 +1,19 @@
 app std-package-registry [
   version: "1.0.0",
-  description: "std-package-registry — the package registry server as one atom, following spec/ops/package-registry.lolo (not bound with uses: its PackageRegistry @ensures obligations are stated on PackageVersion as the trait's own entity, which this atom keeps separate from its request state). It listens to REQUEST_RECEIVED from std-http1 for paths under apiPrefix/packages/ and answers RESPOND { requestId, status, headers, body }, one request at a time with later ones queued: PUT /packages/:name/:version publishes (bearer token compared to publishToken, else 401 UNAUTHORIZED; empty body 400 EMPTY_TARBALL; a stored name+version 409 VERSION_EXISTS), GET /packages/:name/:version answers the version row (404 NOT_FOUND), GET /packages/:name/:version/tarball streams the stored bytes as application/gzip (410 YANKED when yanked), GET /packages/:name lists versions newest publish first, POST /packages/:name/:version/yank (bearer token) marks the version yanked and is idempotent; every error answers { error, code }, and an unmatched path under the prefix answers 404 NOT_FOUND. PackageVersion rows live in the row store seam (persistent: package_versions); a deployment binds the store. PUBLISH IS NOT LIVE YET: the integrity of a package is sha256 over the tarball BYTES, which needs the approved bit/* operators and a std-sha256 atom that do not exist yet; hashing the base64 text would be wrong, so a publish that passes auth, the empty check and the duplicate check emits PACKAGE_REFUSED { code: INTEGRITY_UNAVAILABLE } (status 501) and stores nothing, until std-sha256 lands. Answers carry no CORS headers (the router owns the policy headers). A server composing it sets std-http-router's `externalPrefix` to apiPrefix/packages/ so the router leaves those paths to this atom (composition pending G-STD-086)."
+  description: "std-package-registry — the package registry server as one atom, following spec/ops/package-registry.lolo (not bound with uses: its PackageRegistry @ensures obligations are stated on PackageVersion as the trait's own entity, which this atom keeps separate from its request state). It listens to REQUEST_RECEIVED from std-http1 for paths under apiPrefix/packages/ and answers RESPOND { requestId, status, headers, body }, one request at a time with later ones queued: PUT /packages/:name/:version publishes (bearer token compared to publishToken, else 401 UNAUTHORIZED; empty body 400 EMPTY_TARBALL; a stored name+version 409 VERSION_EXISTS), GET /packages/:name/:version answers the version row (404 NOT_FOUND), GET /packages/:name/:version/tarball streams the stored bytes as application/gzip (410 YANKED when yanked), GET /packages/:name lists versions newest publish first, POST /packages/:name/:version/yank (bearer token) marks the version yanked and is idempotent; every error answers { error, code }, and an unmatched path under the prefix answers 404 NOT_FOUND. PackageVersion rows live in the row store seam (persistent: package_versions); a deployment binds the store. A publish that passes auth, the empty check and the duplicate check is hashed by std-sha256 (sha256 over the tarball bytes, hex), stored as a PackageVersion with that integrity, and answered 201 { name, version, url, integrity } with PACKAGE_PUBLISHED; a tarball std-sha256 cannot hash answers 501 INTEGRITY_UNAVAILABLE and stores nothing. Answers carry no CORS headers (the router owns the policy headers). A server composing it sets std-http-router's `externalPrefix` to apiPrefix/packages/ so the router leaves those paths to this atom (composition pending G-STD-086)."
 ]
 type RegistryHeader = { name : string!, value : string! }
 type RegistryRequest = { requestId : number!, method : string!, path : string!, authorization : string!, body : bytes! }
 type RegistryCall = { requestId : number!, op : string!, name : string!, version : string!, integrity : string! }
 orbital PackageRegistryOrbital {
+  uses Sha from "std/behaviors/std-sha256"
+
   entity RegistryState [runtime] {
     id : string!
     busy : boolean = false
     current : RegistryCall @description "The request being served."
     queue : [RegistryRequest] @description "Requests received while one is being served." = []
+    tarball : bytes @description "The tarball of the publish being served."
   }
 
   entity PackageVersion [persistent: package_versions] {
@@ -22,6 +25,12 @@ orbital PackageRegistryOrbital {
     yanked : boolean = false
     publishedAt : number!
     @read none "served only through the registry routes"
+  }
+
+  trait Digest = Sha.traits.Sha256 {
+    listens {
+      PackageRegistry.REG_HASH -> SHA256_DIGEST
+    }
   }
 
   trait PackageRegistry -> RegistryState [integration, instance] {
@@ -105,6 +114,7 @@ orbital PackageRegistryOrbital {
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "EMPTY_TARBALL" })
         (emit REGISTRY_DONE {})
       PACKAGE_PUBLISH -> serving when (and (not (or (= @config.publishToken "") (!= @payload.token @config.publishToken))) (> (bytes/length @payload.tarball) 0))
+        (set @entity.tarball @payload.tarball)
         (set @entity.current { requestId: @payload.requestId, op: "publish", name: @payload.name, version: @payload.version, integrity: "" })
         (fetch PackageVersion { id: (str/concat @payload.name (str/slice "a@b" 1 2) @payload.version), emit: { success: REGISTRY_FOUND, failure: REGISTRY_MISSING } })
       PACKAGE_YANK -> serving when (or (= @config.publishToken "") (!= @payload.token @config.publishToken))
@@ -145,8 +155,19 @@ orbital PackageRegistryOrbital {
         (emit RESPOND { requestId: @entity.current.requestId, status: 200, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { name: @entity.current.name, version: @entity.current.version, yanked: true })) })
         (emit REGISTRY_DONE {})
       REGISTRY_MISSING -> serving when (and (= @entity.current.op "publish") (= @payload.code "not-found"))
-        (emit RESPOND { requestId: @entity.current.requestId, status: 501, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { error: "Package integrity needs std-sha256 over bytes, which is not available yet", code: "INTEGRITY_UNAVAILABLE" })) })
-        (emit PACKAGE_REFUSED { requestId: @entity.current.requestId, status: 501, code: "INTEGRITY_UNAVAILABLE", error: "Package integrity needs std-sha256 over bytes, which is not available yet" })
+        (emit REG_HASH { requestId: (str/concat @entity.current.requestId), data: @entity.tarball, encoding: "hex" })
+      REG_DIGESTED -> serving
+        (set @entity.current (object/set @entity.current "integrity" @payload.digest))
+        (persist create PackageVersion { id: (str/concat @entity.current.name (str/slice "a@b" 1 2) @entity.current.version), name: @entity.current.name, version: @entity.current.version, integrity: @payload.digest, tarball: @entity.tarball, yanked: false, publishedAt: (time/now) } { emit: { success: REGISTRY_PUBLISHED, failure: REGISTRY_STORE_REFUSED } })
+      REGISTRY_PUBLISHED -> serving
+        (set @entity.tarball (bytes/from-string ""))
+        (emit RESPOND { requestId: @entity.current.requestId, status: 201, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { name: @entity.current.name, version: @entity.current.version, url: (str/concat @config.baseUrl @config.apiPrefix "/packages/" @entity.current.name "/" @entity.current.version "/tarball"), integrity: @entity.current.integrity })) })
+        (emit PACKAGE_PUBLISHED { requestId: @entity.current.requestId, name: @entity.current.name, version: @entity.current.version, url: (str/concat @config.baseUrl @config.apiPrefix "/packages/" @entity.current.name "/" @entity.current.version "/tarball"), integrity: @entity.current.integrity })
+        (emit REGISTRY_DONE {})
+      REG_HASH_REFUSED -> serving
+        (set @entity.tarball (bytes/from-string ""))
+        (emit RESPOND { requestId: @entity.current.requestId, status: 501, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { error: "The tarball could not be hashed", code: "INTEGRITY_UNAVAILABLE" })) })
+        (emit PACKAGE_REFUSED { requestId: @entity.current.requestId, status: 501, code: "INTEGRITY_UNAVAILABLE", error: "The tarball could not be hashed" })
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "INTEGRITY_UNAVAILABLE" })
         (emit REGISTRY_DONE {})
       REGISTRY_MISSING -> serving when (and (!= @entity.current.op "publish") (= @payload.code "not-found"))
@@ -190,6 +211,28 @@ orbital PackageRegistryOrbital {
         error : string!
       }
         @description "A registry request was refused with this status and code."
+        @tier "primary"
+      REG_HASH {
+        requestId : string!
+        data : bytes!
+        encoding : string!
+      }
+        @description "Internal: hash the publish tarball."
+        @tier "secondary"
+      REGISTRY_PUBLISHED -> internal {
+        id : string!
+        integrity : string!
+      }
+        @description "Internal: the version is stored."
+        @tier "secondary"
+      PACKAGE_PUBLISHED -> external {
+        requestId : number!
+        name : string!
+        version : string!
+        url : string!
+        integrity : string!
+      }
+        @description "A package version was published; integrity is sha256 over its tarball bytes, hex."
         @tier "primary"
       REGISTRY_ENTER -> internal {
         requestId : number!
@@ -271,6 +314,12 @@ orbital PackageRegistryOrbital {
     }
 
     listens {
+      REG_DIGESTED { requestId : string  digest : string! }
+        @description "Internal: the tarball's SHA-256."
+      REG_HASH_REFUSED { requestId : string  reason : string! }
+        @description "Internal: the tarball could not be hashed."
+      Digest.SHA256_DIGESTED -> REG_DIGESTED
+      Digest.SHA256_REFUSED -> REG_HASH_REFUSED
       REQUEST_RECEIVED {
         requestId : number!
         method : string!
@@ -283,5 +332,5 @@ orbital PackageRegistryOrbital {
     }
   }
 
-  page "/packages" as PackageRegistryPage -> PackageRegistry
+  page "/packages" as PackageRegistryPage -> PackageRegistry, Digest
 }

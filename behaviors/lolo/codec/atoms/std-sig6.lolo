@@ -1,0 +1,132 @@
+app std-sig6 [
+  version: "1.0.0",
+  description: "std-sig6 — round positive binary32 scales to 6 significant digits and back to binary32 exactly as Rust does it (format {:.5e}, parse as f64, cast to f32), over the whole binary32 range. SIG6 { scales } answers SIG6_DONE { bits, rounded } with, per scale, the bit pattern and value of f32(f64(round-half-even to 6 significant decimal digits of the scale)). Every decision is an exact comparison of scaled integers through std-bigcmp: the decimal exponent, the integer N nearest to scale * 10^k with ties to even, then the binary32 neighbour nearest to N * 10^-k, where the double rounding Rust's f64 step introduces is reproduced exactly (a value within half a double ulp of a binary32 midpoint takes the even neighbour). The decimal's double (nearest, ties to even) comes out too, as doubles; the last step encodes the binary32 through std-f32. SIG6_REFUSED { reason } when std-f32 refuses."
+]
+uses Spec from "almadar-std/sig6"
+uses BigCmp from "std/behaviors/std-bigcmp"
+uses F32 from "std/behaviors/std-f32"
+
+type Sig6Row = { x : number!, m : number!, e : number!, t0 : number!, t : number!, k : number!, f : number!, n : number!, q0 : number!, q : number!, gexp : number!, f24 : number!, hiC : number!, loC : number!, fres : number! }
+
+orbital Sig6Orbital {
+  entity Sig6Run [runtime] {
+    id : string!
+    rows : [Sig6Row] = []
+  }
+
+  trait Sig6BigCmp = BigCmp.traits.BigCmp {
+    listens {
+      Sig6.BIGCMP_BATCH -> BIGCMP_BATCH
+    }
+  }
+
+  trait Sig6F32 = F32.traits.F32Encode {
+    listens {
+      Sig6.F32_ENCODE -> F32_ENCODE
+    }
+  }
+
+  trait Sig6 -> Sig6Run [integration, instance] {
+    initial: idle
+
+    state idle {
+      SIG6 -> s1
+        (set @entity.rows (array/map @payload.scales (fn x (let ((e0 (let ((ea (math/floor (/ (math/ln @x) 0.6931471805599453)))) (let ((eb (if (> (math/pow 2 @ea) @x) (- @ea 1) @ea))) (if (<= (math/pow 2 (+ @eb 1)) @x) (+ @eb 1) @eb))))) { x: @x, m: (* @x (math/pow 2 (- 23 @e0))), e: (- @e0 23), t0: (math/floor (math/log10 @x)), t: 0, k: 0, f: 0, n: 0, q0: 0, q: 0, gexp: 0, f24: 0, f53: 0, d53: 0, hiC: 0, loC: 0, fres: 0 }))))
+        (emit BIGCMP_BATCH { tag: "s1", items: (array/flatten (array/map @entity.rows (fn r [{ ahi: 0, alo: @r.m, p2: @r.e, p10: 0, bhi: 0, blo: 1, q2: 0, q10: @r.t0 } { ahi: 0, alo: @r.m, p2: @r.e, p10: 0, bhi: 0, blo: 1, q2: 0, q10: (+ @r.t0 1) }]))) })
+    }
+
+    state s1 {
+      BIGCMP_ANSWERED -> s2
+        (set @entity.rows (array/map (array/range 0 (array/len @entity.rows)) (fn i (let ((r (array/nth @entity.rows @i))) (let ((tt (+ @r.t0 (if (< (array/nth @payload.results (+ (* @i 2) 0)) 0) -1 (if (>= (array/nth @payload.results (+ (* @i 2) 1)) 0) 1 0))))) { x: @r.x, m: @r.m, e: @r.e, t0: @r.t0, t: @tt, k: (- 5 @tt), f: (math/floor (* @r.x (math/pow 10 (- 5 @tt)))), n: @r.n, q0: @r.q0, q: @r.q, gexp: @r.gexp, f24: @r.f24, f53: @r.f53, d53: @r.d53, hiC: @r.hiC, loC: @r.loC, fres: @r.fres })))))
+        (emit BIGCMP_BATCH { tag: "s2", items: (array/flatten (array/map @entity.rows (fn r [{ ahi: 0, alo: @r.m, p2: @r.e, p10: @r.k, bhi: (math/floor (/ @r.f 16777216)), blo: (math/mod @r.f 16777216), q2: 0, q10: 0 } { ahi: 0, alo: @r.m, p2: @r.e, p10: @r.k, bhi: (math/floor (/ (+ @r.f 1) 16777216)), blo: (math/mod (+ @r.f 1) 16777216), q2: 0, q10: 0 }]))) })
+    }
+
+    state s2 {
+      BIGCMP_ANSWERED -> s3
+        (set @entity.rows (array/map (array/range 0 (array/len @entity.rows)) (fn i (let ((r (array/nth @entity.rows @i))) { x: @r.x, m: @r.m, e: @r.e, t0: @r.t0, t: @r.t, k: @r.k, f: (+ @r.f (if (< (array/nth @payload.results (+ (* @i 2) 0)) 0) -1 (if (>= (array/nth @payload.results (+ (* @i 2) 1)) 0) 1 0))), n: @r.n, q0: @r.q0, q: @r.q, gexp: @r.gexp, f24: @r.f24, f53: @r.f53, d53: @r.d53, hiC: @r.hiC, loC: @r.loC, fres: @r.fres }))))
+        (emit BIGCMP_BATCH { tag: "s3", items: (array/map @entity.rows (fn r { ahi: 0, alo: @r.m, p2: (+ @r.e 1), p10: @r.k, bhi: (math/floor (/ (+ (* 2 @r.f) 1) 16777216)), blo: (math/mod (+ (* 2 @r.f) 1) 16777216), q2: 0, q10: 0 })) })
+    }
+
+    state s3 {
+      BIGCMP_ANSWERED -> s4
+        (set @entity.rows (array/map (array/range 0 (array/len @entity.rows)) (fn i (let ((r (array/nth @entity.rows @i))) (let ((nn (+ @r.f (if (> (array/nth @payload.results (+ (* @i 1) 0)) 0) 1 (if (< (array/nth @payload.results (+ (* @i 1) 0)) 0) 0 (if (>= (math/mod @r.f 2) 1) 1 0)))))) { x: @r.x, m: @r.m, e: @r.e, t0: @r.t0, t: @r.t, k: @r.k, f: @r.f, n: @nn, q0: (math/floor (/ (math/ln (* @nn (math/pow 10 (- 0 @r.k)))) 0.6931471805599453)), q: @r.q, gexp: @r.gexp, f24: @r.f24, f53: @r.f53, d53: @r.d53, hiC: @r.hiC, loC: @r.loC, fres: @r.fres })))))
+        (emit BIGCMP_BATCH { tag: "s4", items: (array/flatten (array/map @entity.rows (fn r [{ ahi: 0, alo: @r.n, p2: 0, p10: (- 0 @r.k), bhi: 0, blo: 1, q2: @r.q0, q10: 0 } { ahi: 0, alo: @r.n, p2: 0, p10: (- 0 @r.k), bhi: 0, blo: 1, q2: (+ @r.q0 1), q10: 0 }]))) })
+    }
+
+    state s4 {
+      BIGCMP_ANSWERED -> s5
+        (set @entity.rows (array/map (array/range 0 (array/len @entity.rows)) (fn i (let ((r (array/nth @entity.rows @i))) (let ((qq (+ @r.q0 (if (< (array/nth @payload.results (+ (* @i 2) 0)) 0) -1 (if (>= (array/nth @payload.results (+ (* @i 2) 1)) 0) 1 0))))) (let ((gx (- (math/max @qq -126) 23))) { x: @r.x, m: @r.m, e: @r.e, t0: @r.t0, t: @r.t, k: @r.k, f: @r.f, n: @r.n, q0: @r.q0, q: @qq, gexp: @gx, f24: (math/floor (* (* @r.n (math/pow 10 (- 0 @r.k))) (math/pow 2 (- 0 @gx)))), f53: (- (math/floor (* (* @r.n (math/pow 10 (- 0 @r.k))) (math/pow 2 (- 52 @qq)))) 3), d53: @r.d53, hiC: @r.hiC, loC: @r.loC, fres: @r.fres }))))))
+        (emit BIGCMP_BATCH { tag: "s5", items: (array/flatten (array/map @entity.rows (fn r [{ ahi: 0, alo: @r.n, p2: (- 0 @r.gexp), p10: (- 0 @r.k), bhi: (math/floor (/ @r.f24 16777216)), blo: (math/mod @r.f24 16777216), q2: 0, q10: 0 } { ahi: 0, alo: @r.n, p2: (- 0 @r.gexp), p10: (- 0 @r.k), bhi: (math/floor (/ (+ @r.f24 1) 16777216)), blo: (math/mod (+ @r.f24 1) 16777216), q2: 0, q10: 0 } { ahi: 0, alo: @r.n, p2: (- 52 @r.q), p10: (- 0 @r.k), bhi: (+ (math/floor (/ @r.f53 16777216)) (math/floor (/ (+ (math/mod @r.f53 16777216) 0) 16777216))), blo: (math/mod (+ (math/mod @r.f53 16777216) 0) 16777216), q2: 0, q10: 0 } { ahi: 0, alo: @r.n, p2: (- 52 @r.q), p10: (- 0 @r.k), bhi: (+ (math/floor (/ @r.f53 16777216)) (math/floor (/ (+ (math/mod @r.f53 16777216) 1) 16777216))), blo: (math/mod (+ (math/mod @r.f53 16777216) 1) 16777216), q2: 0, q10: 0 } { ahi: 0, alo: @r.n, p2: (- 52 @r.q), p10: (- 0 @r.k), bhi: (+ (math/floor (/ @r.f53 16777216)) (math/floor (/ (+ (math/mod @r.f53 16777216) 2) 16777216))), blo: (math/mod (+ (math/mod @r.f53 16777216) 2) 16777216), q2: 0, q10: 0 } { ahi: 0, alo: @r.n, p2: (- 52 @r.q), p10: (- 0 @r.k), bhi: (+ (math/floor (/ @r.f53 16777216)) (math/floor (/ (+ (math/mod @r.f53 16777216) 3) 16777216))), blo: (math/mod (+ (math/mod @r.f53 16777216) 3) 16777216), q2: 0, q10: 0 } { ahi: 0, alo: @r.n, p2: (- 52 @r.q), p10: (- 0 @r.k), bhi: (+ (math/floor (/ @r.f53 16777216)) (math/floor (/ (+ (math/mod @r.f53 16777216) 4) 16777216))), blo: (math/mod (+ (math/mod @r.f53 16777216) 4) 16777216), q2: 0, q10: 0 } { ahi: 0, alo: @r.n, p2: (- 52 @r.q), p10: (- 0 @r.k), bhi: (+ (math/floor (/ @r.f53 16777216)) (math/floor (/ (+ (math/mod @r.f53 16777216) 5) 16777216))), blo: (math/mod (+ (math/mod @r.f53 16777216) 5) 16777216), q2: 0, q10: 0 } { ahi: 0, alo: @r.n, p2: (- 52 @r.q), p10: (- 0 @r.k), bhi: (+ (math/floor (/ @r.f53 16777216)) (math/floor (/ (+ (math/mod @r.f53 16777216) 6) 16777216))), blo: (math/mod (+ (math/mod @r.f53 16777216) 6) 16777216), q2: 0, q10: 0 } { ahi: 0, alo: @r.n, p2: (- 52 @r.q), p10: (- 0 @r.k), bhi: (+ (math/floor (/ @r.f53 16777216)) (math/floor (/ (+ (math/mod @r.f53 16777216) 7) 16777216))), blo: (math/mod (+ (math/mod @r.f53 16777216) 7) 16777216), q2: 0, q10: 0 }]))) })
+    }
+
+    state s5 {
+      BIGCMP_ANSWERED -> s6
+        (set @entity.rows (array/map (array/range 0 (array/len @entity.rows)) (fn i (let ((r (array/nth @entity.rows @i))) { x: @r.x, m: @r.m, e: @r.e, t0: @r.t0, t: @r.t, k: @r.k, f: @r.f, n: @r.n, q0: @r.q0, q: @r.q, gexp: @r.gexp, f24: (+ @r.f24 (if (< (array/nth @payload.results (+ (* @i 10) 0)) 0) -1 (if (>= (array/nth @payload.results (+ (* @i 10) 1)) 0) 1 0))), f53: (- (+ @r.f53 (array/len (array/filter (array/slice @payload.results (+ (* @i 10) 2) (+ (* @i 10) 10)) (fn z (>= @z 0))))) 1), d53: @r.d53, hiC: @r.hiC, loC: @r.loC, fres: @r.fres }))))
+        (emit BIGCMP_BATCH { tag: "s6", items: (array/flatten (array/map @entity.rows (fn r (let ((va (+ (* 2 @r.f24) 1))) (let ((fl2 (let ((fa (math/floor (/ (math/ln @va) 0.6931471805599453)))) (let ((fb (if (> (math/pow 2 @fa) @va) (- @fa 1) @fa))) (if (<= (math/pow 2 (+ @fb 1)) @va) (+ @fb 1) @fb))))) (let ((bint (* @va (math/pow 2 (- 53 @fl2))))) (let ((bh (/ @bint 16777216))) [{ ahi: 0, alo: @r.n, p2: (- 1 @r.gexp), p10: (- 0 @r.k), bhi: (math/floor (/ @va 16777216)), blo: (math/mod @va 16777216), q2: 0, q10: 0 } { ahi: 0, alo: @r.n, p2: (- (- 54 @r.gexp) @fl2), p10: (- 0 @r.k), bhi: @bh, blo: 1, q2: 0, q10: 0 } { ahi: 0, alo: @r.n, p2: (- (- 54 @r.gexp) @fl2), p10: (- 0 @r.k), bhi: (- @bh 1), blo: 16777215, q2: 0, q10: 0 } { ahi: 0, alo: @r.n, p2: (- 53 @r.q), p10: (- 0 @r.k), bhi: (+ (* 2 (math/floor (/ @r.f53 16777216))) (math/floor (/ (+ (* 2 (math/mod @r.f53 16777216)) 1) 16777216))), blo: (math/mod (+ (* 2 (math/mod @r.f53 16777216)) 1) 16777216), q2: 0, q10: 0 }]))))))) })
+    }
+
+    state s6 {
+      BIGCMP_ANSWERED -> encoding
+        (set @entity.rows (array/map (array/range 0 (array/len @entity.rows)) (fn i (let ((r (array/nth @entity.rows @i))) (let ((cm (array/nth @payload.results (+ (* @i 4) 0))) (ch (array/nth @payload.results (+ (* @i 4) 1))) (cl (array/nth @payload.results (+ (* @i 4) 2))) (c53 (array/nth @payload.results (+ (* @i 4) 3)))) { x: @r.x, m: @r.m, e: @r.e, t0: @r.t0, t: @r.t, k: @r.k, f: @r.f, n: @r.n, q0: @r.q0, q: @r.q, gexp: @r.gexp, f24: @r.f24, f53: @r.f53, d53: (* (+ @r.f53 (if (> @c53 0) 1 (if (< @c53 0) 0 (if (>= (math/mod @r.f53 2) 1) 1 0)))) (math/pow 2 (- @r.q 52))), hiC: @r.hiC, loC: @r.loC, fres: (if (and (<= @ch 0) (>= @cl 0)) (if (>= (math/mod @r.f24 2) 1) (+ @r.f24 1) @r.f24) (if (> @cm 0) (+ @r.f24 1) @r.f24)) })))))
+        (emit F32_ENCODE { tag: "sig6", values: (array/map @entity.rows (fn r (* @r.fres (math/pow 2 @r.gexp)))) })
+    }
+
+    state encoding {
+      F32_ENCODED -> idle
+        (emit SIG6_DONE { bits: @payload.bits, rounded: @payload.rounded, doubles: (array/map @entity.rows (fn r @r.d53)) })
+      F32_REFUSED -> idle
+        (emit SIG6_REFUSED { reason: @payload.reason })
+    }
+
+    emits {
+      BIGCMP_BATCH -> external {
+        tag : string
+        items : [{ ahi : number!, alo : number!, p2 : number!, p10 : number!, bhi : number!, blo : number!, q2 : number!, q10 : number! }]!
+      }
+        @tier "secondary"
+      F32_ENCODE -> external {
+        tag : string
+        values : [number]!
+      }
+        @tier "secondary"
+      SIG6_DONE -> external {
+        bits : [number]!
+        rounded : [number]!
+        doubles : [number]!
+      }
+        @description "Per scale, the binary32 bit pattern and value of its 6-significant-digit rounding, and the double the decimal parses to (what Rust reads a stored scale back as)."
+        @tier "primary"
+      SIG6_REFUSED -> external {
+        reason : string!
+      }
+        @tier "primary"
+    }
+
+    listens {
+      Sig6BigCmp.BIGCMP_ANSWERED -> BIGCMP_ANSWERED
+      Sig6F32.F32_ENCODED -> F32_ENCODED
+      Sig6F32.F32_REFUSED -> F32_REFUSED
+      BIGCMP_ANSWERED {
+        results : [number]!
+        tag : string
+      }
+      F32_ENCODED {
+        bits : [number]!
+        rounded : [number]!
+        tag : string
+      }
+      F32_REFUSED {
+        index : number!
+        reason : string!
+        tag : string
+      }
+      SIG6 -> external {
+        scales : [number]!
+      }
+        @description "Round these positive binary32 values to 6 significant digits, exactly."
+        @synonyms "six significant digits, decimal rounding, scale rounding"
+    }
+  }
+
+  page "/sig6" as Sig6Page -> Sig6, Sig6BigCmp, Sig6F32
+}

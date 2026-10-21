@@ -1,0 +1,301 @@
+app std-orb-complete [
+  version: "1.0.0",
+  inbound: ["cli-complete"],
+  fs: { cwd: "**": [read] },
+  description: "std-orb-complete — the `orb complete <file.lolo> --offset <n>` command (spec/cli/orb-complete.lolo; port of orbital-lolo complete.rs). It answers one compact JSON line { candidates, context, prefix } (keys in alphabetical order). Offsets count characters, which equals the Rust byte offset for ASCII sources. Served from the source and the installed @almadar/core language tables, found through its package.json orbLanguage block (vocabulary: effects and types; patterns: tags and props): modifier-key and modifier-value (app and page brackets), trait-ref, orbital-ref, config-key, entity-field, trait-embed, pattern-tag, pattern-prop, effect, field-type and keyword. trait-ref, orbital-ref and config-key read the behavior a `uses` line names through behavior/describe. Import-path completion and `pages` remap-entry brackets are pending (G-STD-096): import-path answers status 500, a remap bracket is read as no modifier bracket. --stdin answers status 400 (G-STD-094). The statement-keyword and modifier-key tables are literals here because they are Rust constants of the parser, not installed data (G-STD-096)."
+]
+uses Spec from "almadar-std/orb-complete"
+uses Args from "std/behaviors/std-args"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
+type CoreManifest = { orbLanguage : LanguageBlock? }
+type LanguageBlock = { patterns : string?, vocabulary : string? }
+type Vocabulary = { effects : [string]!, types : [string]! }
+type PatternDef = { propsSchema : Map string PatternProp? }
+type PatternProp = { type : string? }
+type PatternProps = Map string PatternProp
+type PatternsRegistry = { patterns : Map string PatternDef! }
+type PatternRow = { pattern : string!, tag : string!, props : [string]! }
+type Cand = { label : string!, kind : string!, detail : string? }
+type DescKnob = { type : string? }
+type DescTrait = { trait : string?, config : Map string DescKnob? }
+type DescValue = { orbital : string? }
+type DescOrbital = { value : DescValue?, config : Map string DescKnob?, traits : [DescTrait]? }
+type DescConfig = Map string DescKnob
+type Described = { orbitals : [DescOrbital]? }
+type Scan = { i : number!, s : boolean!, st : [number]!, k : [number]! }
+
+orbital OrbCompleteOrbital {
+  entity CompleteRun [runtime] {
+    id : string!
+    cwd : string = ""
+    file : string = ""
+    offset : number = 0
+    source : string = ""
+    vocabularyPath : string = ""
+    patternsPath : string = ""
+    effects : [string] = []
+    types : [string] = []
+    rows : [PatternRow] = []
+    before : string = ""
+    line : string = ""
+    word : string = ""
+    lead : string = ""
+    inside : string = ""
+    header : string = ""
+    entry : string = ""
+    scan : Scan = { i: 0, s: false, st: [], k: [] }
+    fImport : boolean = false
+    fMod : string = ""
+    fSuffix : boolean = false
+    fTag : boolean = false
+    fProp : boolean = false
+    fConfig : boolean = false
+    fEffect : boolean = false
+    fType : boolean = false
+    fStart : boolean = false
+    alias : string = ""
+    behavior : string = ""
+    member : string = ""
+    name : string = ""
+    target : string = ""
+    ctx : string = ""
+    cands : [Cand] = []
+  }
+
+  trait ArgsCli = Args.traits.ArgsParser {
+    listens {
+      OrbComplete.COMPLETE_ARGS_PARSE -> ARGS_PARSE
+    }
+  }
+
+  trait OrbComplete -> CompleteRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      COMPLETE_CALLED -> parsing
+        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
+        (emit COMPLETE_ARGS_PARSE { stage: "complete" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "offset" aliases: [] takesValue: true repeatable: false }, { name: "stdin" aliases: [] takesValue: false repeatable: false }] })
+    }
+
+    state parsing {
+      INIT -> parsing
+      COMPLETE_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (and (= (array/len @payload.positionals) 0) (= (object/get @payload.flags "stdin") null)) (> (array/len @payload.positionals) 1) (= (object/get @payload.flags "offset") null))
+        (emit COMPLETE_ANSWERED { status: 400, body: "usage: orb complete <file.lolo> --offset <n>" })
+      COMPLETE_ARGS_DONE -> ready when (and (= (array/len @payload.errors) 0) (!= (object/get @payload.flags "stdin") null))
+        (emit COMPLETE_ANSWERED { status: 400, body: "orb complete --stdin is pending (G-STD-094)" })
+      COMPLETE_ARGS_DONE -> working when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1) (= (object/get @payload.flags "stdin") null) (!= (object/get @payload.flags "offset") null))
+        (emit COMPLETE_START { file: (array/nth @payload.positionals 0), offset: (str/to-int (array/first (object/get @payload.flags "offset"))) })
+    }
+
+    state working {
+      INIT -> working
+      COMPLETE_DONE -> ready
+        (emit COMPLETE_ANSWERED { status: @payload.status, body: @payload.body })
+    }
+
+    emits {
+      COMPLETE_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      COMPLETE_ARGS_PARSE {
+        stage : string!
+        argv : [string]!
+        flags : [ArgFlag]!
+      }
+        @description "Internal: parse the call's words."
+        @tier "internal"
+      COMPLETE_START {
+        file : string!
+        offset : number!
+      }
+        @description "Internal: complete at the offset of the file."
+        @tier "internal"
+    }
+
+    listens {
+      COMPLETE_CALLED -> inbound "cli-complete" answers COMPLETE_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb complete`."
+        @synonyms "orb complete, what is valid at a cursor offset in a lolo file"
+      COMPLETE_ARGS_DONE {
+        stage : string!
+        flags : Map string [string]!
+        positionals : [string]!
+        errors : [string]!
+        words : [string]!
+      }
+        @description "std-args's ARGS_PARSED."
+      ArgsCli.ARGS_PARSED -> COMPLETE_ARGS_DONE
+      CompleteEngine.COMPLETE_ANSWERED -> COMPLETE_DONE
+      COMPLETE_DONE { status : number!  body : string! }
+        @description "Internal: the engine's answer, relayed to the hook by its handler."
+        @tier "internal"
+    }
+  }
+
+  trait CompleteEngine -> CompleteRun [integration] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      COMPLETE_START -> loading
+        (set @entity.file @payload.file)
+        (set @entity.offset @payload.offset)
+        (os/read-file { anchor: "cwd" path: @payload.file } { key: "source" emit: { success: COMPLETE_SOURCE, failure: COMPLETE_FAILED } })
+    }
+
+    state loading {
+      INIT -> loading
+      COMPLETE_FAILED -> idle
+        (emit COMPLETE_ANSWERED { status: 500, body: (str/concat "orb complete: " @payload.error) })
+      COMPLETE_SOURCE -> loading
+        (set @entity.source (bytes/to-string @payload.data))
+        (os/read-file { anchor: "cwd" path: "node_modules/@almadar/core/package.json" } { key: "manifest" emit: { success: COMPLETE_MANIFEST, failure: COMPLETE_FAILED } })
+      COMPLETE_MANIFEST -> idle when (or (= (object/get (json/parse (bytes/to-string @payload.data) CoreManifest) "orbLanguage") null) (= (object/get (object/get (json/parse (bytes/to-string @payload.data) CoreManifest) "orbLanguage") "vocabulary") null) (= (object/get (object/get (json/parse (bytes/to-string @payload.data) CoreManifest) "orbLanguage") "patterns") null))
+        (emit COMPLETE_ANSWERED { status: 500, body: "orb complete: the installed @almadar/core declares no orbLanguage vocabulary and patterns" })
+      COMPLETE_MANIFEST -> loading when (and (!= (object/get (json/parse (bytes/to-string @payload.data) CoreManifest) "orbLanguage") null) (!= (object/get (object/get (json/parse (bytes/to-string @payload.data) CoreManifest) "orbLanguage") "vocabulary") null) (!= (object/get (object/get (json/parse (bytes/to-string @payload.data) CoreManifest) "orbLanguage") "patterns") null))
+        (set @entity.vocabularyPath (object/get (object/get (json/parse (bytes/to-string @payload.data) CoreManifest) "orbLanguage") "vocabulary"))
+        (set @entity.patternsPath (object/get (object/get (json/parse (bytes/to-string @payload.data) CoreManifest) "orbLanguage") "patterns"))
+        (os/read-file { anchor: "cwd" path: (str/concat "node_modules/@almadar/core/" (object/get (object/get (json/parse (bytes/to-string @payload.data) CoreManifest) "orbLanguage") "vocabulary")) } { key: "vocabulary" emit: { success: COMPLETE_VOCABULARY, failure: COMPLETE_FAILED } })
+      COMPLETE_VOCABULARY -> loading
+        (set @entity.effects (object/get (json/parse (bytes/to-string @payload.data) Vocabulary) "effects"))
+        (set @entity.types (object/get (json/parse (bytes/to-string @payload.data) Vocabulary) "types"))
+        (os/read-file { anchor: "cwd" path: (str/concat "node_modules/@almadar/core/" @entity.patternsPath) } { key: "patterns" emit: { success: COMPLETE_PATTERNS, failure: COMPLETE_FAILED } })
+      COMPLETE_PATTERNS -> loading
+        (emit COMPLETE_RUN { source: @entity.source, offset: @entity.offset, effects: @entity.effects, types: @entity.types, rows: (array/map (object/keys (object/get (json/parse (bytes/to-string @payload.data) PatternsRegistry) "patterns")) (fn p { pattern: @p, tag: (str/join (array/map (str/split @p "-") (fn s (str/concat (str/upper (str/slice @s 0 1)) (str/slice @s 1 (str/len @s))))) ""), props: (object/keys (or (object/get (object/get (object/get (json/parse (bytes/to-string @payload.data) PatternsRegistry) "patterns") @p) "propsSchema") (json/parse "{}" PatternProps))) })) })
+      COMPLETE_RUN -> loading
+        (set @entity.source @payload.source)
+        (set @entity.offset @payload.offset)
+        (set @entity.effects @payload.effects)
+        (set @entity.types @payload.types)
+        (set @entity.rows @payload.rows)
+        (set @entity.before (str/slice @payload.source 0 (min @payload.offset (str/len @payload.source))))
+        (set @entity.line (array/last (str/split @entity.before "\n")))
+        (set @entity.word (object/get (array/reduce (array/reverse (str/split @entity.before "")) { done: false, acc: "" } (fn a c (if (or (object/get @a "done") (not (str/includes "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-" @c))) { done: true, acc: (object/get @a "acc") } { done: false, acc: (str/concat @c (object/get @a "acc")) }))) "acc"))
+        (set @entity.lead (str/slice @entity.before 0 (- (str/len @entity.before) (str/len @entity.word))))
+        (set @entity.scan (array/reduce (str/split @entity.before "") { i: 0, s: false, st: [], k: [] } (fn a c (if (= @c "\"") { i: (+ (object/get @a "i") 1), s: (not (object/get @a "s")), st: (object/get @a "st"), k: (object/get @a "k") } (if (and (not (object/get @a "s")) (= @c "[")) { i: (+ (object/get @a "i") 1), s: false, st: (object/get @a "st"), k: (array/append (object/get @a "k") (object/get @a "i")) } (if (and (not (object/get @a "s")) (= @c "]")) { i: (+ (object/get @a "i") 1), s: false, st: (object/get @a "st"), k: (array/dropLast (object/get @a "k") 1) } (if (and (not (object/get @a "s")) (= @c "{")) { i: (+ (object/get @a "i") 1), s: false, st: (array/append (object/get @a "st") (object/get @a "i")), k: (object/get @a "k") } (if (and (not (object/get @a "s")) (= @c "}")) { i: (+ (object/get @a "i") 1), s: false, st: (array/dropLast (object/get @a "st") 1), k: (object/get @a "k") } { i: (+ (object/get @a "i") 1), s: (object/get @a "s"), st: (object/get @a "st"), k: (object/get @a "k") }))))))))
+        (set @entity.inside (array/last (str/split @entity.before "<")))
+        (set @entity.header (if (= (array/len (object/get @entity.scan "st")) 0) "" (str/trim (array/last (str/split (str/slice @entity.before 0 (array/last (object/get @entity.scan "st"))) "\n")))))
+        (set @entity.entry (if (= (array/len (object/get @entity.scan "k")) 0) "" (str/trim (array/last (str/split (str/replaceAll (str/slice @entity.lead (+ (array/first (object/get @entity.scan "k")) 1) (str/len @entity.lead)) "," "\n") "\n")))))
+        (set @entity.fImport (and (> (array/len (str/split @entity.line "\"")) 1) (let ((w (str/split (str/trim (str/join (array/dropLast (str/split @entity.line "\"") 1) "\"")) " "))) (and (= (array/len @w) 3) (= (array/nth @w 0) "uses") (= (array/nth @w 2) "from")))))
+        (set @entity.fMod (if (= (array/len (object/get @entity.scan "k")) 0) "" (let ((hw (array/first (str/split (str/trim (array/last (str/split (str/slice @entity.before 0 (array/first (object/get @entity.scan "k"))) "\n"))) " ")))) (if (or (= @hw "app") (= @hw "page")) @hw ""))))
+        (set @entity.fSuffix (or (str/endsWith @entity.lead ".traits.") (str/endsWith @entity.lead ".orbitals.")))
+        (set @entity.fTag (and (> (array/len (str/split @entity.before "<")) 1) (not (str/includes @entity.inside ">")) (not (str/startsWith @entity.inside "/")) (not (str/startsWith @entity.inside "trait.")) (not (or (str/includes @entity.inside " ") (str/includes @entity.inside "\n") (str/includes @entity.inside "\t")))))
+        (set @entity.fProp (and (> (array/len (str/split @entity.before "<")) 1) (not (str/includes @entity.inside ">")) (not (str/startsWith @entity.inside "/")) (not (str/startsWith @entity.inside "trait.")) (or (str/includes @entity.inside " ") (str/includes @entity.inside "\n") (str/includes @entity.inside "\t")) (array/some @entity.rows (fn r (= (object/get @r "tag") (array/first (str/split (str/trim @entity.inside) " "))))) (not (or (str/endsWith (str/trimEnd @entity.lead) "=") (> (- (array/len (str/split @entity.inside "{")) 1) (- (array/len (str/split @entity.inside "}")) 1))))))
+        (set @entity.fConfig (and (>= (array/len (object/get @entity.scan "st")) 2) (not (str/includes @entity.line ":")) (str/endsWith @entity.header "config")))
+        (set @entity.fEffect (str/endsWith (str/trimEnd @entity.lead) "("))
+        (set @entity.fType (and (> (array/len (object/get @entity.scan "st")) 0) (str/startsWith @entity.header "entity ") (str/endsWith (str/trimEnd (str/trimStart (str/slice @entity.line 0 (- (str/len @entity.line) (str/len @entity.word))))) ":") (!= (str/trim (str/slice (str/trimEnd (str/trimStart (str/slice @entity.line 0 (- (str/len @entity.line) (str/len @entity.word))))) 0 (- (str/len (str/trimEnd (str/trimStart (str/slice @entity.line 0 (- (str/len @entity.line) (str/len @entity.word)))))) 1))) "") (array/every (str/split (str/trim (str/slice (str/trimEnd (str/trimStart (str/slice @entity.line 0 (- (str/len @entity.line) (str/len @entity.word))))) 0 (- (str/len (str/trimEnd (str/trimStart (str/slice @entity.line 0 (- (str/len @entity.line) (str/len @entity.word)))))) 1))) "") (fn c (str/includes "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-" @c)))))
+        (set @entity.fStart (and (or (= @entity.header "") (array/includes ["orbital", "trait", "entity"] (array/first (str/split @entity.header " ")))) (or (= (str/trim @entity.lead) "") (= (str/trim (str/trimStart (str/slice @entity.line 0 (- (str/len @entity.line) (str/len @entity.word))))) ""))))
+        (set @entity.target (if (and @entity.fConfig (str/includes (str/trim (array/last (str/split (str/slice @entity.before 0 (array/nth (object/get @entity.scan "st") (- (array/len (object/get @entity.scan "st")) 2))) "\n"))) "=")) (str/trim (array/nth (str/split (str/trim (array/last (str/split (str/slice @entity.before 0 (array/nth (object/get @entity.scan "st") (- (array/len (object/get @entity.scan "st")) 2))) "\n"))) "=") 1)) ""))
+        (set @entity.member (if @entity.fSuffix (if (str/endsWith @entity.lead ".traits.") "traits" "orbitals") (if (>= (array/len (str/split @entity.target ".")) 3) (str/trim (array/nth (str/split @entity.target ".") 1)) "")))
+        (set @entity.alias (if @entity.fSuffix (object/get (array/reduce (array/reverse (str/split (str/slice @entity.lead 0 (- (str/len @entity.lead) (if (= @entity.member "traits") 8 10))) "")) { done: false, acc: "" } (fn a c (if (or (object/get @a "done") (not (str/includes "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-" @c))) { done: true, acc: (object/get @a "acc") } { done: false, acc: (str/concat @c (object/get @a "acc")) }))) "acc") (if (>= (array/len (str/split @entity.target ".")) 3) (str/trim (array/first (str/split @entity.target "."))) "")))
+        (set @entity.name (if (>= (array/len (str/split @entity.target ".")) 3) (array/first (str/split (str/trim (array/nth (str/split @entity.target ".") 2)) " ")) ""))
+        (set @entity.behavior (let ((w (array/find (array/map (str/split @entity.source "\n") (fn l (str/split (str/trim @l) " "))) (fn w (and (>= (array/len @w) 4) (= (array/nth @w 0) "uses") (= (array/nth @w 1) @entity.alias)))))) (if (or (= @w null) (= @entity.alias "")) "" (str/replaceAll (str/replaceAll (array/nth @w 3) "\"" "") "{" ""))))
+        (set @entity.ctx (if @entity.fImport "pending" (if (!= @entity.fMod "") "modifier" (if @entity.fSuffix (if (str/endsWith @entity.lead ".traits.") "trait-ref" "orbital-ref") (if (str/endsWith @entity.lead (quote "@entity.")) "entity-field" (if (str/endsWith @entity.lead "<trait.") "trait-embed" (if @entity.fTag "pattern-tag" (if @entity.fProp "pattern-prop" (if @entity.fConfig "config-key" (if @entity.fEffect "effect" (if @entity.fType "field-type" (if @entity.fStart "keyword" "none"))))))))))) )
+        (set @entity.cands (if (= @entity.ctx "modifier") (if (= @entity.entry "") (array/map (array/filter (if (= @entity.fMod "app") ["version", "description", "theme", "themes", "locales", "egress", "inbound", "store", "fs", "exec", "net", "env", "stdio", "sys", "desktop", "kv", "deployment", "public", "origin", "icon", "siteName", "signIn"] ["view", "entity", "initial", "access", "indexing", "title", "description", "translationOf"]) (fn k (not (str/includes (str/slice @entity.before (+ (array/first (object/get @entity.scan "k")) 1) (str/len @entity.before)) (str/concat @k ":"))))) (fn k { label: @k kind: "keyword" })) (let ((e (str/trim (if (str/endsWith @entity.entry ":") (str/slice @entity.entry 0 (- (str/len @entity.entry) 1)) @entity.entry)))) (array/map (if (= @e "access") ["public", "authenticated"] (if (= @e "indexing") ["index", "noindex"] [])) (fn k { label: @k kind: "keyword" })))) (if (= @entity.ctx "entity-field") (if (and (str/includes @entity.before "orbital ") (str/includes (str/concat "orbital " (array/last (str/split @entity.before "orbital ")) (str/slice @entity.source @entity.offset (str/len @entity.source))) "entity ") (str/includes (array/nth (str/split (str/concat "orbital " (array/last (str/split @entity.before "orbital ")) (str/slice @entity.source @entity.offset (str/len @entity.source))) (if (str/includes (str/concat "orbital " (array/last (str/split @entity.before "orbital ")) (str/slice @entity.source @entity.offset (str/len @entity.source))) "\n  entity ") "\n  entity " "entity ")) 1) "{")) (array/map (array/filter (array/map (str/split (array/first (str/split (str/join (array/drop (str/split (array/nth (str/split (str/concat "orbital " (array/last (str/split @entity.before "orbital ")) (str/slice @entity.source @entity.offset (str/len @entity.source))) (if (str/includes (str/concat "orbital " (array/last (str/split @entity.before "orbital ")) (str/slice @entity.source @entity.offset (str/len @entity.source))) "\n  entity ") "\n  entity " "entity ")) 1) "{") 1) "{") "}")) "\n") (fn l { n: (str/trim (array/first (str/split @l ":"))), t: (str/trim (str/join (array/drop (str/split @l ":") 1) ":")), has: (str/includes @l ":") })) (fn x (and (object/get @x "has") (!= (object/get @x "n") "") (array/every (str/split (object/get @x "n") "") (fn c (str/includes "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_" @c)))))) (fn x { label: (object/get @x "n") kind: "entity-field" detail: (object/get @x "t") })) []) (if (= @entity.ctx "trait-embed") (array/map (array/filter (array/map (str/split @entity.source "\n") (fn l (str/split (str/trim @l) " "))) (fn w (and (> (array/len @w) 1) (= (array/first @w) "trait")))) (fn w { label: (object/get (array/reduce (str/split (array/nth @w 1) "") { done: false, acc: "" } (fn a c (if (or (object/get @a "done") (not (str/includes "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-" @c))) { done: true, acc: (object/get @a "acc") } { done: false, acc: (str/concat (object/get @a "acc") @c) }))) "acc") kind: "trait" })) (if (= @entity.ctx "pattern-tag") (array/map @entity.rows (fn r { label: (object/get @r "tag") kind: "pattern" detail: (object/get @r "pattern") })) (if (= @entity.ctx "pattern-prop") (let ((r (array/find @entity.rows (fn r (= (object/get @r "tag") (array/first (str/split (str/trim @entity.inside) " "))))))) (array/map (array/filter (object/get @r "props") (fn p (not (array/includes (array/map (array/filter (str/split @entity.inside " ") (fn t (str/includes @t "="))) (fn t (array/first (str/split @t "=")))) @p)))) (fn p { label: @p kind: "prop" detail: (object/get @r "pattern") }))) (if (= @entity.ctx "effect") (array/map @entity.effects (fn e { label: @e kind: "operator" })) (if (= @entity.ctx "field-type") (array/map @entity.types (fn e { label: @e kind: "keyword" detail: "type" })) (if (= @entity.ctx "keyword") (array/map (if (or (= @entity.header "") false) ["app", "type", "uses", "orbital", "theme", "config"] (let ((w (str/split @entity.header " "))) (if (= (array/first @w) "orbital") (if (= (array/nth @w 2) "=") ["entity", "entities", "fields", "roles", "events", "pages", "omit", "only", "config", "extend", "retype", "mock", "traits", "listens", "trait"] ["uses", "expects", "type", "entity", "trait", "page", "theme", "config"]) (if (= (array/first @w) "trait") (if (= (array/nth @w 2) "=") ["events", "fields", "config", "on", "name", "listens", "emitsScope"] ["initial", "state", "emits", "listens", "ticks", "config"]) (if (= (array/first @w) "entity") ["derived"] []))))) (fn k { label: @k kind: "keyword" })) [])))))))))
+        (emit COMPLETE_STAGE { behavior: @entity.behavior member: @entity.member name: @entity.name context: (if (= @entity.ctx "modifier") (if (= @entity.entry "") "modifier-key" "modifier-value") @entity.ctx) prefix: @entity.word candidates: (array/sort (array/reduce (array/filter @entity.cands (fn c (str/startsWith (str/lower (object/get @c "label")) (str/lower @entity.word)))) [] (fn a c (if (array/some @a (fn x (= (object/get @x "label") (object/get @c "label")))) @a (array/append @a @c)))) "label" "asc") })
+      COMPLETE_STAGE -> loading when (and (array/includes ["trait-ref", "orbital-ref", "config-key"] @payload.context) (!= @payload.behavior ""))
+        (behavior/describe { behavior: @payload.behavior } { key: "describe" emit: { success: COMPLETE_DESCRIBED, failure: COMPLETE_DESCRIBE_FAILED } })
+      COMPLETE_STAGE -> loading when (and (array/includes ["trait-ref", "orbital-ref", "config-key"] @payload.context) (= @payload.behavior ""))
+        (emit COMPLETE_CTX { context: "none", prefix: @payload.prefix, candidates: [] })
+      COMPLETE_STAGE -> loading when (not (array/includes ["trait-ref", "orbital-ref", "config-key"] @payload.context))
+        (emit COMPLETE_CTX { context: @payload.context, prefix: @payload.prefix, candidates: @payload.candidates })
+      COMPLETE_DESCRIBE_FAILED -> loading
+        (emit COMPLETE_CTX { context: "none", prefix: @entity.word, candidates: [] })
+      COMPLETE_DESCRIBED -> loading
+        (emit COMPLETE_CTX { context: @entity.ctx, prefix: @entity.word, candidates: (array/sort (array/reduce (array/filter (if (= @entity.ctx "trait-ref") (array/map (array/flatten (array/map (or (object/get @payload.result "orbitals") []) (fn o (array/map (or (object/get @o "traits") []) (fn t @t))))) (fn t { label: (object/get @t "trait"), kind: "trait", detail: @entity.alias })) (if (= @entity.ctx "orbital-ref") (array/map (or (object/get @payload.result "orbitals") []) (fn o { label: (object/get (object/get @o "value") "orbital"), kind: "orbital", detail: @entity.alias })) (if (= @entity.member "traits") (array/map (object/keys (or (object/get (array/find (array/flatten (array/map (or (object/get @payload.result "orbitals") []) (fn o (array/map (or (object/get @o "traits") []) (fn t @t))))) (fn t (= (object/get @t "trait") @entity.name))) "config") (json/parse "{}" DescConfig))) (fn k { label: @k, kind: "config-key", detail: (object/get (object/get (or (object/get (array/find (array/flatten (array/map (or (object/get @payload.result "orbitals") []) (fn o (array/map (or (object/get @o "traits") []) (fn t @t))))) (fn t (= (object/get @t "trait") @entity.name))) "config") (json/parse "{}" DescConfig)) @k) "type") })) (if (= @entity.member "orbitals") (array/map (object/keys (or (object/get (array/find (or (object/get @payload.result "orbitals") []) (fn o (= (object/get (object/get @o "value") "orbital") @entity.name))) "config") (json/parse "{}" DescConfig))) (fn k { label: @k, kind: "config-key", detail: (object/get (object/get (or (object/get (array/find (or (object/get @payload.result "orbitals") []) (fn o (= (object/get (object/get @o "value") "orbital") @entity.name))) "config") (json/parse "{}" DescConfig)) @k) "type") })) [])))) (fn c (str/startsWith (str/lower (object/get @c "label")) (str/lower @entity.word)))) [] (fn a c (if (array/some @a (fn x (= (object/get @x "label") (object/get @c "label")))) @a (array/append @a @c)))) "label" "asc") })
+      COMPLETE_CTX -> idle when (= @payload.context "pending")
+        (emit COMPLETE_ANSWERED { status: 500, body: "orb complete: this context needs installed behavior contracts and is pending (G-STD-096)" })
+      COMPLETE_CTX -> idle when (!= @payload.context "pending")
+        (emit COMPLETE_ANSWERED { status: 200, body: (json/stringify @payload) })
+    }
+
+    emits {
+      COMPLETE_ANSWERED -> external {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      COMPLETE_RUN {
+        source : string!
+        offset : number!
+        effects : [string]!
+        types : [string]!
+        rows : [PatternRow]!
+      }
+        @description "Internal: complete at the offset against the loaded language tables."
+        @tier "internal"
+      COMPLETE_STAGE {
+        context : string!
+        prefix : string!
+        candidates : [Cand]!
+        behavior : string!
+        member : string!
+        name : string!
+      }
+        @description "Internal: the analysed completion, before any behavior lookup."
+        @tier "internal"
+      COMPLETE_DESCRIBED {
+        result : Described
+      }
+        @description "behavior/describe: the used behavior's contract."
+        @tier "internal"
+      COMPLETE_DESCRIBE_FAILED {
+        error : string
+      }
+        @description "behavior/describe failed."
+        @tier "internal"
+      COMPLETE_CTX {
+        context : string!
+        prefix : string!
+        candidates : [Cand]!
+      }
+        @description "The completion: its context, the partial word and the candidates."
+        @tier "internal"
+      COMPLETE_FAILED {
+        error : string
+      }
+        @description "A read failed."
+        @tier "internal"
+      COMPLETE_SOURCE {
+        data : bytes!
+      }
+        @description "os/read-file: the source."
+        @tier "internal"
+      COMPLETE_MANIFEST {
+        data : bytes!
+      }
+        @description "os/read-file: the installed @almadar/core package.json."
+        @tier "internal"
+      COMPLETE_VOCABULARY {
+        data : bytes!
+      }
+        @description "os/read-file: the installed vocabulary."
+        @tier "internal"
+      COMPLETE_PATTERNS {
+        data : bytes!
+      }
+        @description "os/read-file: the installed patterns registry."
+        @tier "internal"
+    }
+
+    listens {
+      COMPLETE_START {
+        file : string!
+        offset : number!
+      }
+        @description "Complete at an offset of a file."
+      OrbComplete.COMPLETE_START -> COMPLETE_START
+    }
+  }
+
+  page "/orb-complete" as OrbCompletePage -> OrbComplete, ArgsCli, CompleteEngine
+}

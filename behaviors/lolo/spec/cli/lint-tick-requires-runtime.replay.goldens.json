@@ -1,0 +1,791 @@
+{
+ "atom": "cli/atoms/std-orb-lint-tick-requires-runtime.lolo",
+ "trait": "OrbLintTickRequiresRuntime",
+ "cases": [
+  {
+   "id": "persistent-with-numeric-tick",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "Cooldown",
+           "ticks": [
+            {
+             "name": "Tick",
+             "interval": 100,
+             "effects": []
+            }
+           ],
+           "linkedEntity": "CooldownRecord"
+          }
+         ],
+         "entity": {
+          "name": "CooldownRecord",
+          "persistence": "persistent"
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "tick-requires-runtime",
+         "findings": [
+          {
+           "code": "ORB_TICK_REQUIRES_RUNTIME",
+           "path": "orbitals[0 (A)].traits[0 (Cooldown)].ticks",
+           "message": "trait \"Cooldown\" runs a non-cron tick against entity \"CooldownRecord\", which is Persistent — a persistent entity mutated on every tick is usually meant to be [runtime]",
+           "suggestion": "Mark entity \"CooldownRecord\" [runtime], or switch the tick to a Cron interval if it's a server-scheduled job",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-cron-interval-exempt",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "Scheduled",
+           "ticks": [
+            {
+             "name": "Tick",
+             "interval": "0 9 * * *",
+             "effects": []
+            }
+           ],
+           "linkedEntity": "Job"
+          }
+         ],
+         "entity": {
+          "name": "Job",
+          "persistence": "persistent"
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "tick-requires-runtime",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-runtime-entity",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "Cooldown",
+           "ticks": [
+            {
+             "name": "Tick",
+             "interval": 100,
+             "effects": []
+            }
+           ],
+           "linkedEntity": "CooldownRecord"
+          }
+         ],
+         "entity": {
+          "name": "CooldownRecord",
+          "persistence": "runtime"
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "tick-requires-runtime",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "absent-persistence-counts-as-persistent",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "ticks": [
+            {
+             "name": "Tick",
+             "interval": 32,
+             "effects": []
+            }
+           ],
+           "linkedEntity": "E"
+          }
+         ],
+         "entity": {
+          "name": "E"
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "tick-requires-runtime",
+         "findings": [
+          {
+           "code": "ORB_TICK_REQUIRES_RUNTIME",
+           "path": "orbitals[0 (A)].traits[0 (T)].ticks",
+           "message": "trait \"T\" runs a non-cron tick against entity \"E\", which is Persistent — a persistent entity mutated on every tick is usually meant to be [runtime]",
+           "suggestion": "Mark entity \"E\" [runtime], or switch the tick to a Cron interval if it's a server-scheduled job",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "one-numeric-among-cron-ticks",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "ticks": [
+            {
+             "name": "Tick",
+             "interval": "0 9 * * *",
+             "effects": []
+            },
+            {
+             "name": "Tick",
+             "interval": 500,
+             "effects": []
+            }
+           ],
+           "linkedEntity": "E"
+          }
+         ],
+         "entity": {
+          "name": "E",
+          "persistence": "persistent"
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "tick-requires-runtime",
+         "findings": [
+          {
+           "code": "ORB_TICK_REQUIRES_RUNTIME",
+           "path": "orbitals[0 (A)].traits[0 (T)].ticks",
+           "message": "trait \"T\" runs a non-cron tick against entity \"E\", which is Persistent — a persistent entity mutated on every tick is usually meant to be [runtime]",
+           "suggestion": "Mark entity \"E\" [runtime], or switch the tick to a Cron interval if it's a server-scheduled job",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-no-ticks",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "ticks": [],
+           "linkedEntity": "E"
+          }
+         ],
+         "entity": {
+          "name": "E",
+          "persistence": "persistent"
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "tick-requires-runtime",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-trait-without-linked-entity",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "ticks": [
+            {
+             "name": "Tick",
+             "interval": 100,
+             "effects": []
+            }
+           ]
+          }
+         ],
+         "entity": {
+          "name": "E",
+          "persistence": "persistent"
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "tick-requires-runtime",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-unknown-linked-entity",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "ticks": [
+            {
+             "name": "Tick",
+             "interval": 100,
+             "effects": []
+            }
+           ],
+           "linkedEntity": "Ghost"
+          }
+         ],
+         "entity": {
+          "name": "E",
+          "persistence": "persistent"
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "tick-requires-runtime",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "auxiliary-entity-is-found",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "ticks": [
+            {
+             "name": "Tick",
+             "interval": 100,
+             "effects": []
+            }
+           ],
+           "linkedEntity": "Aux"
+          }
+         ],
+         "entity": {
+          "name": "E",
+          "persistence": "runtime"
+         },
+         "auxiliaryEntities": [
+          {
+           "name": "Aux",
+           "persistence": "persistent"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "tick-requires-runtime",
+         "findings": [
+          {
+           "code": "ORB_TICK_REQUIRES_RUNTIME",
+           "path": "orbitals[0 (A)].traits[0 (T)].ticks",
+           "message": "trait \"T\" runs a non-cron tick against entity \"Aux\", which is Persistent — a persistent entity mutated on every tick is usually meant to be [runtime]",
+           "suggestion": "Mark entity \"Aux\" [runtime], or switch the tick to a Cron interval if it's a server-scheduled job",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-auxiliary-runtime",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "ticks": [
+            {
+             "name": "Tick",
+             "interval": 100,
+             "effects": []
+            }
+           ],
+           "linkedEntity": "Aux"
+          }
+         ],
+         "entity": {
+          "name": "E",
+          "persistence": "persistent"
+         },
+         "auxiliaryEntities": [
+          {
+           "name": "Aux",
+           "persistence": "runtime"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "tick-requires-runtime",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "last-entity-of-the-name-wins",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "ticks": [
+            {
+             "name": "Tick",
+             "interval": 100,
+             "effects": []
+            }
+           ],
+           "linkedEntity": "Shared"
+          }
+         ],
+         "entity": {
+          "name": "Shared",
+          "persistence": "persistent"
+         }
+        },
+        {
+         "name": "B",
+         "traits": [],
+         "entity": {
+          "name": "Shared",
+          "persistence": "runtime"
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "tick-requires-runtime",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-singleton-is-not-persistent",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "ticks": [
+            {
+             "name": "Tick",
+             "interval": 100,
+             "effects": []
+            }
+           ],
+           "linkedEntity": "E"
+          }
+         ],
+         "entity": {
+          "name": "E",
+          "persistence": "singleton"
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "tick-requires-runtime",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "second-orbital-and-trait-index",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [],
+         "entity": {
+          "name": "X",
+          "persistence": "runtime"
+         }
+        },
+        {
+         "name": "B",
+         "traits": [
+          {
+           "name": "U",
+           "ticks": [],
+           "linkedEntity": "E"
+          },
+          {
+           "name": "T",
+           "ticks": [
+            {
+             "name": "Tick",
+             "interval": 100,
+             "effects": []
+            }
+           ],
+           "linkedEntity": "E"
+          }
+         ],
+         "entity": {
+          "name": "E",
+          "persistence": "persistent"
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "tick-requires-runtime",
+         "findings": [
+          {
+           "code": "ORB_TICK_REQUIRES_RUNTIME",
+           "path": "orbitals[1 (B)].traits[1 (T)].ticks",
+           "message": "trait \"T\" runs a non-cron tick against entity \"E\", which is Persistent — a persistent entity mutated on every tick is usually meant to be [runtime]",
+           "suggestion": "Mark entity \"E\" [runtime], or switch the tick to a Cron interval if it's a server-scheduled job",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,1315 @@
+{
+ "atom": "cli/atoms/std-orb-lint-http-egress-entry.lolo",
+ "trait": "OrbLintHttpEgressEntry",
+ "cases": [
+  {
+   "id": "bad-https___a_com_path",
+   "steps": [
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "egress": [
+        "https://a.com/path"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "http-egress-entry",
+         "findings": [
+          {
+           "code": "ORB_HTTP_EGRESS_ENTRY_INVALID",
+           "path": "egress[0]",
+           "message": "egress entry 'https://a.com/path' is not scheme://host[:port]",
+           "suggestion": "Write an origin only: no path, query, credentials or trailing slash",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bad-a_com",
+   "steps": [
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "egress": [
+        "a.com"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "http-egress-entry",
+         "findings": [
+          {
+           "code": "ORB_HTTP_EGRESS_ENTRY_INVALID",
+           "path": "egress[0]",
+           "message": "egress entry 'a.com' is not scheme://host[:port]",
+           "suggestion": "Write an origin only: no path, query, credentials or trailing slash",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bad-ftp___a_com",
+   "steps": [
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "egress": [
+        "ftp://a.com"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "http-egress-entry",
+         "findings": [
+          {
+           "code": "ORB_HTTP_EGRESS_ENTRY_INVALID",
+           "path": "egress[0]",
+           "message": "egress entry 'ftp://a.com' is not scheme://host[:port]",
+           "suggestion": "Write an origin only: no path, query, credentials or trailing slash",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bad-https___a_com_",
+   "steps": [
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "egress": [
+        "https://a.com/"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "http-egress-entry",
+         "findings": [
+          {
+           "code": "ORB_HTTP_EGRESS_ENTRY_INVALID",
+           "path": "egress[0]",
+           "message": "egress entry 'https://a.com/' is not scheme://host[:port]",
+           "suggestion": "Write an origin only: no path, query, credentials or trailing slash",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bad-https___a_com_x",
+   "steps": [
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "egress": [
+        "https://a.com:x"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "http-egress-entry",
+         "findings": [
+          {
+           "code": "ORB_HTTP_EGRESS_ENTRY_INVALID",
+           "path": "egress[0]",
+           "message": "egress entry 'https://a.com:x' is not scheme://host[:port]",
+           "suggestion": "Write an origin only: no path, query, credentials or trailing slash",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bad-https___",
+   "steps": [
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "egress": [
+        "https://"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "http-egress-entry",
+         "findings": [
+          {
+           "code": "ORB_HTTP_EGRESS_ENTRY_INVALID",
+           "path": "egress[0]",
+           "message": "egress entry 'https://' is not scheme://host[:port]",
+           "suggestion": "Write an origin only: no path, query, credentials or trailing slash",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bad-ftp___x",
+   "steps": [
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "egress": [
+        "ftp://x"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "http-egress-entry",
+         "findings": [
+          {
+           "code": "ORB_HTTP_EGRESS_ENTRY_INVALID",
+           "path": "egress[0]",
+           "message": "egress entry 'ftp://x' is not scheme://host[:port]",
+           "suggestion": "Write an origin only: no path, query, credentials or trailing slash",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bad-redis___cache_internal_0",
+   "steps": [
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "egress": [
+        "redis://cache.internal/0"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "http-egress-entry",
+         "findings": [
+          {
+           "code": "ORB_HTTP_EGRESS_ENTRY_INVALID",
+           "path": "egress[0]",
+           "message": "egress entry 'redis://cache.internal/0' is not scheme://host[:port]",
+           "suggestion": "Write an origin only: no path, query, credentials or trailing slash",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bad-postgres___u_p_db_internal",
+   "steps": [
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "egress": [
+        "postgres://u:p@db.internal"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "http-egress-entry",
+         "findings": [
+          {
+           "code": "ORB_HTTP_EGRESS_ENTRY_INVALID",
+           "path": "egress[0]",
+           "message": "egress entry 'postgres://u:p@db.internal' is not scheme://host[:port]",
+           "suggestion": "Write an origin only: no path, query, credentials or trailing slash",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bad-redis___",
+   "steps": [
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "egress": [
+        "redis://"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "http-egress-entry",
+         "findings": [
+          {
+           "code": "ORB_HTTP_EGRESS_ENTRY_INVALID",
+           "path": "egress[0]",
+           "message": "egress entry 'redis://' is not scheme://host[:port]",
+           "suggestion": "Write an origin only: no path, query, credentials or trailing slash",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bad-redis___h_x",
+   "steps": [
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "egress": [
+        "redis://h:x"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "http-egress-entry",
+         "findings": [
+          {
+           "code": "ORB_HTTP_EGRESS_ENTRY_INVALID",
+           "path": "egress[0]",
+           "message": "egress entry 'redis://h:x' is not scheme://host[:port]",
+           "suggestion": "Write an origin only: no path, query, credentials or trailing slash",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bad-https___a_com_65536",
+   "steps": [
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "egress": [
+        "https://a.com:65536"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "http-egress-entry",
+         "findings": [
+          {
+           "code": "ORB_HTTP_EGRESS_ENTRY_INVALID",
+           "path": "egress[0]",
+           "message": "egress entry 'https://a.com:65536' is not scheme://host[:port]",
+           "suggestion": "Write an origin only: no path, query, credentials or trailing slash",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bad-https____80",
+   "steps": [
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "egress": [
+        "https://:80"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "http-egress-entry",
+         "findings": [
+          {
+           "code": "ORB_HTTP_EGRESS_ENTRY_INVALID",
+           "path": "egress[0]",
+           "message": "egress entry 'https://:80' is not scheme://host[:port]",
+           "suggestion": "Write an origin only: no path, query, credentials or trailing slash",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bad-https___a_com_x",
+   "steps": [
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "egress": [
+        "https://a.com?x"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "http-egress-entry",
+         "findings": [
+          {
+           "code": "ORB_HTTP_EGRESS_ENTRY_INVALID",
+           "path": "egress[0]",
+           "message": "egress entry 'https://a.com?x' is not scheme://host[:port]",
+           "suggestion": "Write an origin only: no path, query, credentials or trailing slash",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bad-https_____",
+   "steps": [
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "egress": [
+        "https://[]"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "http-egress-entry",
+         "findings": [
+          {
+           "code": "ORB_HTTP_EGRESS_ENTRY_INVALID",
+           "path": "egress[0]",
+           "message": "egress entry 'https://[]' is not scheme://host[:port]",
+           "suggestion": "Write an origin only: no path, query, credentials or trailing slash",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bad-https___a_b_com",
+   "steps": [
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "egress": [
+        "https://a b.com"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "http-egress-entry",
+         "findings": [
+          {
+           "code": "ORB_HTTP_EGRESS_ENTRY_INVALID",
+           "path": "egress[0]",
+           "message": "egress entry 'https://a b.com' is not scheme://host[:port]",
+           "suggestion": "Write an origin only: no path, query, credentials or trailing slash",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-https___a_com",
+   "steps": [
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "egress": [
+        "https://a.com"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "http-egress-entry",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-http___localhost_8080",
+   "steps": [
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "egress": [
+        "http://localhost:8080"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "http-egress-entry",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-https______1__9000",
+   "steps": [
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "egress": [
+        "https://[::1]:9000"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "http-egress-entry",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-redis___cache_internal_6379",
+   "steps": [
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "egress": [
+        "redis://cache.internal:6379"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "http-egress-entry",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-rediss___cache_internal",
+   "steps": [
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "egress": [
+        "rediss://cache.internal"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "http-egress-entry",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-postgres___db_internal_5432",
+   "steps": [
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "egress": [
+        "postgres://db.internal:5432"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "http-egress-entry",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-postgresql___db_internal",
+   "steps": [
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "egress": [
+        "postgresql://db.internal"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "http-egress-entry",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-HTTPS___A_COM",
+   "steps": [
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "egress": [
+        "HTTPS://A.COM"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "http-egress-entry",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-https___a_com_65535",
+   "steps": [
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "egress": [
+        "https://a.com:65535"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "http-egress-entry",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-https___a_com_0080",
+   "steps": [
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "egress": [
+        "https://a.com:0080"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "http-egress-entry",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "second-entry-indexed",
+   "steps": [
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "egress": [
+        "https://a.com",
+        "bad"
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "http-egress-entry",
+         "findings": [
+          {
+           "code": "ORB_HTTP_EGRESS_ENTRY_INVALID",
+           "path": "egress[1]",
+           "message": "egress entry 'bad' is not scheme://host[:port]",
+           "suggestion": "Write an origin only: no path, query, credentials or trailing slash",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-no-egress",
+   "steps": [
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {}
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintHttpEgressEntry",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "http-egress-entry",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

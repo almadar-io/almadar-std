@@ -1,0 +1,62 @@
+app std-f32 [
+  version: "1.0.0",
+  description: "std-f32 — encode numbers as IEEE 754 binary32 in exact integer arithmetic over math/*, no float-to-bits operator. F32_ENCODE { values, tag } answers F32_ENCODED { bits, rounded, tag } (the tag is echoed so two requests with equal answers stay distinct events): per value the unsigned bit pattern and the number it stands for, rounded to nearest with ties to the even mantissa (what a Rust f64 to f32 cast does). The binade is found from the natural log and corrected against exact powers of two; the value is scaled by an exact power of two to a count of units in the last place (2^-149 on the subnormal grid), rounded on that integer's exact fraction, and a round-up past 2^24 units carries into the next exponent. Overflow past the largest finite binary32 is refused as F32_REFUSED { index, reason: overflow }, never an infinity."
+]
+uses Spec from "almadar-std/f32"
+
+type F32Acc = { bits : [number]!, rounded : [number]!, bad : number!, i : number! }
+
+orbital F32Orbital {
+  entity F32Run [runtime] {
+    id : string!
+    values : [number] = []
+    tag : string = ""
+    acc : F32Acc = { bits: [], rounded: [], bad: -1, i: 0 }
+  }
+
+  trait F32Encode -> F32Run [integration, instance] {
+    initial: idle
+
+    state idle {
+      F32_ENCODE -> idle
+        (set @entity.values @payload.values)
+        (set @entity.tag (str/default @payload.tag ""))
+        (set @entity.acc (array/reduce @entity.values { bits: [], rounded: [], bad: -1, i: 0 } (fn fa v (let ((a (math/abs @v)) (ng (if (< @v 0) 1 0))) (if (<= @a 0) { bits: (array/append @fa.bits 0), rounded: (array/append @fa.rounded 0), bad: @fa.bad, i: (+ @fa.i 1) } (let ((e0 (math/floor (/ (math/ln @a) 0.6931471805599453)))) (let ((e1 (if (> (math/pow 2 @e0) @a) (- @e0 1) @e0))) (let ((e (if (<= (math/pow 2 (+ @e1 1)) @a) (+ @e1 1) @e1))) (let ((ex (math/max @e -126))) (let ((t (* @a (math/pow 2 (- 23 @ex))))) (let ((fl (math/floor @t))) (let ((fr (- @t @fl))) (let ((m0 (+ @fl (if (> @fr 0.5) 1 (if (and (>= @fr 0.5) (<= @fr 0.5) (>= (math/mod @fl 2) 1)) 1 0))))) (let ((cy (>= @m0 16777216))) (let ((e2 (if @cy (+ @ex 1) @ex)) (m (if @cy 8388608 @m0))) (let ((biased (if (>= @m 8388608) (+ @e2 127) 0)) (mant (if (>= @m 8388608) (- @m 8388608) @m))) (if (>= @biased 255) { bits: @fa.bits, rounded: @fa.rounded, bad: (if (< @fa.bad 0) @fa.i @fa.bad), i: (+ @fa.i 1) } { bits: (array/append @fa.bits (+ (* @ng 2147483648) (* @biased 8388608) @mant)), rounded: (array/append @fa.rounded (* (- 1 (* 2 @ng)) @m (math/pow 2 (- @e2 23)))), bad: @fa.bad, i: (+ @fa.i 1) })))))))))))))))))
+        (emit F32_DONE { })
+
+      F32_DONE -> idle when (>= @entity.acc.bad 0)
+        (emit F32_REFUSED { index: @entity.acc.bad, reason: "overflow", tag: @entity.tag })
+      F32_DONE -> idle when (< @entity.acc.bad 0)
+        (emit F32_ENCODED { bits: @entity.acc.bits, rounded: @entity.acc.rounded, tag: @entity.tag })
+    }
+
+    emits {
+      F32_DONE -> internal { }
+      F32_ENCODED -> external {
+        bits : [number]!
+        rounded : [number]!
+        tag : string
+      }
+        @description "Per value, the binary32 bit pattern (unsigned) and the number it stands for."
+        @tier "primary"
+      F32_REFUSED -> external {
+        index : number!
+        reason : string!
+        tag : string
+      }
+        @description "The first value that rounds past the largest finite binary32."
+        @tier "primary"
+    }
+
+    listens {
+      F32_ENCODE -> external {
+        values : [number]!
+        tag : string
+      }
+        @description "Encode these numbers as binary32 (round to nearest, ties to even)."
+        @synonyms "float32, single precision, ieee754, f32 bits"
+    }
+  }
+
+  page "/f32" -> F32Encode
+}

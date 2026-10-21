@@ -1,0 +1,22 @@
+app ci-runners-down-mac-spec [
+  version: "1.0.0",
+  description: "Design contract for the gaps left in std-orb-runners against tools/local-ci. (1) `orb runners down --mac` stops the native mac runner (deregisters the runner of <runnerDir> with config.sh remove using a freshly minted token and stops its Runner.Listener) and removes no docker container; `down` without --mac keeps removing <prefix>-runner-<i>. (2) `orb runners up --mac` prints `supervising an ephemeral almadar-mac runner for <url path> — ctrl-c to stop` before the first job, as run-mac-runner.sh does. (3) under `up --mac`, a failing config.sh or run.sh prints `  !! runner job failed to start or run (retrying)` before the 5 second wait, as run-mac-runner.sh does. (4) a second `up` for the same prefix or runner dir while one is supervising answers a usage error (status 409, `already supervising <prefix>`) instead of two supervisors minting competing registrations (none runs today: the second process seen on the real machine is the supervisor's own per-job child). Composes std-orb-runners states (running) and std-cli sh/docker runners already bound there; the interrupt cleanup of run-runner.sh and run-mac-runner.sh waits on os/watch-signal (G-ORB-307)."
+]
+
+orbital CiRunnersDownMacSpec {
+  expects entity CiRunnersRun [runtime] {
+    id : string!
+    verb : string
+    mac : boolean
+  }
+  expects trait CiRunnersDownMac {
+    state running {
+      RN_STOP_MAC -> running
+      RN_BANNER_PRINTED -> running
+    }
+    emits {
+      RUNNERS_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page "/ci-runners-down-mac" -> CiRunnersDownMac
+}

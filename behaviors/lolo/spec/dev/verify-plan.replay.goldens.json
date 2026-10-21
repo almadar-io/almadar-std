@@ -146,6 +146,534 @@
    ]
   },
   {
+   "id": "bound-entity-slot-is-the-linked-row",
+   "steps": [
+    {
+     "event": "PLAN_REQUEST",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Item",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Item",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "a",
+              "to": "b",
+              "event": "GO",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "rows": [
+       {
+        "orbital": "O",
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "payload": [
+         {
+          "name": "data",
+          "type": "@entity",
+          "required": true
+         },
+         {
+          "name": "batch",
+          "type": "[@entity]",
+          "required": true
+         },
+         {
+          "name": "title",
+          "type": "string",
+          "required": true
+         }
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_COMPUTED",
+        "payload": {
+         "count": 1
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "PLAN_COMPUTED",
+     "payload": {
+      "count": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_ANSWERED",
+        "payload": {
+         "steps": [
+          {
+           "trait": "T",
+           "linkedEntity": "Item",
+           "from": "a",
+           "event": "GO",
+           "to": "b",
+           "toStates": [
+            "b"
+           ],
+           "variant": "success",
+           "guarded": false,
+           "solved": true,
+           "payloadCase": "success",
+           "payload": {
+            "data": {
+             "id": "Item-verify-seed-1"
+            },
+            "batch": [
+             {
+              "id": "Item-verify-seed-1"
+             }
+            ],
+            "title": "verify"
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "entity-slot-carries-a-full-sample-row",
+   "steps": [
+    {
+     "event": "PLAN_REQUEST",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Item",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "name",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+             "active",
+             "inactive"
+            ]
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Item",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "a",
+              "to": "b",
+              "event": "GO",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "rows": [
+       {
+        "orbital": "O",
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "payload": [
+         {
+          "name": "data",
+          "type": "@entity",
+          "required": true
+         },
+         {
+          "name": "kind",
+          "type": "@entity",
+          "required": true,
+          "values": [
+           "x"
+          ]
+         },
+         {
+          "name": "title",
+          "type": "string",
+          "required": true
+         }
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_COMPUTED",
+        "payload": {
+         "count": 1
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "PLAN_COMPUTED",
+     "payload": {
+      "count": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_ANSWERED",
+        "payload": {
+         "steps": [
+          {
+           "trait": "T",
+           "linkedEntity": "Item",
+           "from": "a",
+           "event": "GO",
+           "to": "b",
+           "toStates": [
+            "b"
+           ],
+           "variant": "success",
+           "guarded": false,
+           "solved": true,
+           "payloadCase": "success",
+           "payload": {
+            "data": {
+             "id": "Item-verify-seed-1",
+             "name": "Name 1",
+             "status": "active"
+            },
+            "kind": "x",
+            "title": "verify"
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "create-only-event-addresses-a-fresh-row",
+   "steps": [
+    {
+     "event": "PLAN_REQUEST",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Item",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "name",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+             "active",
+             "inactive"
+            ]
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Item",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "a",
+              "to": "b",
+              "event": "GO",
+              "effects": [
+               [
+                "persist",
+                "create",
+                "Item",
+                "@payload.data"
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "rows": [
+       {
+        "orbital": "O",
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "payload": [
+         {
+          "name": "data",
+          "type": "@entity",
+          "required": true
+         },
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         }
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_COMPUTED",
+        "payload": {
+         "count": 1
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "PLAN_COMPUTED",
+     "payload": {
+      "count": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_ANSWERED",
+        "payload": {
+         "steps": [
+          {
+           "trait": "T",
+           "linkedEntity": "Item",
+           "from": "a",
+           "event": "GO",
+           "to": "b",
+           "toStates": [
+            "b"
+           ],
+           "variant": "success",
+           "guarded": false,
+           "solved": true,
+           "payloadCase": "success",
+           "payload": {
+            "data": {
+             "id": "Item-verify-new-1",
+             "name": "Name 1",
+             "status": "active"
+            },
+            "id": "Item-verify-new-1"
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-update-event-addresses-the-seeded-row",
+   "steps": [
+    {
+     "event": "PLAN_REQUEST",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Item",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "name",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+             "active",
+             "inactive"
+            ]
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Item",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "a",
+              "to": "b",
+              "event": "GO",
+              "effects": [
+               [
+                "persist",
+                "update",
+                "Item",
+                "@payload.data"
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "rows": [
+       {
+        "orbital": "O",
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "payload": [
+         {
+          "name": "data",
+          "type": "@entity",
+          "required": true
+         },
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         }
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_COMPUTED",
+        "payload": {
+         "count": 1
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "PLAN_COMPUTED",
+     "payload": {
+      "count": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_ANSWERED",
+        "payload": {
+         "steps": [
+          {
+           "trait": "T",
+           "linkedEntity": "Item",
+           "from": "a",
+           "event": "GO",
+           "to": "b",
+           "toStates": [
+            "b"
+           ],
+           "variant": "success",
+           "guarded": false,
+           "solved": true,
+           "payloadCase": "success",
+           "payload": {
+            "data": {
+             "id": "Item-verify-seed-1",
+             "name": "Name 1",
+             "status": "active"
+            },
+            "id": "Item-verify-seed-1"
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
    "id": "object-slot-is-unplanned",
    "steps": [
     {

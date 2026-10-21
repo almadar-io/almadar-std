@@ -1,0 +1,264 @@
+app std-orb-update-notice [
+  version: "1.0.0",
+  inbound: ["cli-notice"],
+  env: ["ORB_NO_UPDATE_CHECK", "CI"],
+  fs: { "~/.orb/**": [read, write, create], "~/.orb": [create] },
+  egress: ["https://registry.npmjs.org"],
+  description: "std-orb-update-notice — the daily updates-available notice (spec/cli/orb-update-notice.lolo; golden: orbital-cli update_notice.rs). The call's first argv word `record` (after orb update) stamps ~/.orb/.update-check.json as checked now with nothing available and prints nothing. Any other call stays silent when ORB_NO_UPDATE_CHECK or CI is set or stderr is not a terminal; otherwise it reads the cache { checkedAt (seconds), available [[name, installed, newest]] }: a cache under a day old answers its list, an older, absent or garbled one rescans. The scan reads each @almadar/ dependency of ~/.orb/package.json with its range and its installed version (~/.orb/node_modules/<name>/package.json), asks std-npm-lookup for the versions, walks the stable ones (no prerelease) from the newest down until std-semver says one satisfies the range, and keeps the package when that version compares above the installed one. A package that is not installed, whose lookup is refused, whose range std-semver refuses, or that no stable version satisfies is skipped. The cache is written (a failed write is ignored) and the answer carries the one stderr line `orb: updates available (<name> <from> → <to>, …); run `orb update --global`` or nothing."
+]
+uses Spec from "almadar-std/orb-update-notice"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type NoticeCache = { checkedAt : number!, available : [[string]]! }
+type NoticeManifest = { dependencies : Map string string? }
+type NoticeInstalled = { version : string? }
+type NoticeDep = { name : string!, range : string! }
+
+orbital OrbUpdateNoticeOrbital {
+  uses Npm from "std/behaviors/std-npm-lookup"
+  uses Semver from "std/behaviors/std-semver"
+
+  entity UpdateNoticeRun [runtime] {
+    id : string!
+    mode : string = ""
+    nowSec : number = 0
+    checkedAt : number = 0
+    cached : [[string]] = []
+    deps : [NoticeDep] = []
+    cursor : number = 0
+    installed : string = ""
+    cands : [string] = []
+    cc : number = 0
+    found : [[string]] = []
+  }
+
+  trait Registry = Npm.traits.NpmLookup {
+    listens {
+      OrbUpdateNotice.UN_ASK -> NPM_LOOKUP
+    }
+  }
+
+  trait Versions = Semver.traits.Semver {
+    listens {
+      OrbUpdateNotice.UN_SAT -> SEMVER_SATISFIES
+      OrbUpdateNotice.UN_CMP -> SEMVER_COMPARE
+    }
+  }
+
+  trait OrbUpdateNotice -> UpdateNoticeRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      UPDATE_NOTICE_CALLED -> writing when (= (str/default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "") "record")
+        (set @entity.mode "record")
+        (set @entity.nowSec (math/floor (/ (time/now) 1000)))
+        (set @entity.found [])
+        (emit UN_WRITE { })
+      UPDATE_NOTICE_CALLED -> gating when (!= (str/default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "") "record")
+        (set @entity.mode "check")
+        (set @entity.nowSec (math/floor (/ (time/now) 1000)))
+        (set @entity.found [])
+        (emit UN_GATE { })
+    }
+
+    state gating {
+      INIT -> gating
+      UN_GATE -> gating
+        (os/getenv "ORB_NO_UPDATE_CHECK" { key: "noupd" emit: { success: UN_ENV_NOUPD, failure: UN_ENV_FAILED } })
+      UN_ENV_NOUPD -> ready when (!= @payload.value null)
+        (emit UPDATE_NOTICE_ANSWERED { status: 200, body: "", stderr: "" })
+      UN_ENV_NOUPD -> gating when (= @payload.value null)
+        (os/getenv "CI" { key: "ci" emit: { success: UN_ENV_CI, failure: UN_ENV_FAILED } })
+      UN_ENV_CI -> ready when (!= @payload.value null)
+        (emit UPDATE_NOTICE_ANSWERED { status: 200, body: "", stderr: "" })
+      UN_ENV_CI -> gating when (= @payload.value null)
+        (os/isatty 2 { key: "tty" emit: { success: UN_TTY, failure: UN_ENV_FAILED } })
+      UN_ENV_FAILED -> ready
+        (emit UPDATE_NOTICE_ANSWERED { status: 200, body: "", stderr: "" })
+      UN_TTY -> ready when (not @payload.ok)
+        (emit UPDATE_NOTICE_ANSWERED { status: 200, body: "", stderr: "" })
+      UN_TTY -> reading when @payload.ok
+        (os/read-file "~/.orb/.update-check.json" { key: "cache" emit: { success: UN_CACHE_READ, failure: UN_CACHE_ABSENT } })
+    }
+
+    state reading {
+      INIT -> reading
+      UN_CACHE_READ -> reading when (!= (json/parse (bytes/to-string @payload.data) NoticeCache) null)
+        (set @entity.checkedAt (object/get (json/parse (bytes/to-string @payload.data) NoticeCache) "checkedAt"))
+        (set @entity.cached (object/get (json/parse (bytes/to-string @payload.data) NoticeCache) "available"))
+        (emit UN_DUE { })
+      UN_CACHE_READ -> reading when (= (json/parse (bytes/to-string @payload.data) NoticeCache) null)
+        (set @entity.checkedAt 0)
+        (set @entity.cached [])
+        (emit UN_DUE { })
+      UN_CACHE_ABSENT -> reading
+        (set @entity.checkedAt 0)
+        (set @entity.cached [])
+        (emit UN_DUE { })
+      UN_DUE -> ready when (< (- @entity.nowSec @entity.checkedAt) 86400)
+        (emit UPDATE_NOTICE_ANSWERED { status: 200, body: "", stderr: (if (= (array/len @entity.cached) 0) "" (str/concat "orb: updates available (" (str/join (array/map @entity.cached (fn t (str/concat (array/nth @t 0) " " (array/nth @t 1) " → " (array/nth @t 2)))) ", ") "); run `orb update --global`")) })
+      UN_DUE -> scanning when (>= (- @entity.nowSec @entity.checkedAt) 86400)
+        (os/read-file "~/.orb/package.json" { key: "manifest" emit: { success: UN_MANIFEST_READ, failure: UN_MANIFEST_ABSENT } })
+    }
+
+    state scanning {
+      INIT -> scanning
+      UN_MANIFEST_READ -> scanning when (!= (json/parse (bytes/to-string @payload.data) NoticeManifest) null)
+        (set @entity.deps (array/map (array/filter (object/entries (object/get (json/parse (bytes/to-string @payload.data) NoticeManifest) "dependencies" {})) (fn t (str/startsWith (array/nth @t 0) (quote "@almadar/")))) (fn t { name: (array/nth @t 0), range: (array/nth @t 1) })))
+        (set @entity.cursor 0)
+        (emit UN_NEXT { })
+      UN_MANIFEST_READ -> writing when (= (json/parse (bytes/to-string @payload.data) NoticeManifest) null)
+        (emit UN_WRITE { })
+      UN_MANIFEST_ABSENT -> writing
+        (emit UN_WRITE { })
+      UN_NEXT -> writing when (>= @entity.cursor (array/len @entity.deps))
+        (emit UN_WRITE { })
+      UN_NEXT -> scanning when (< @entity.cursor (array/len @entity.deps))
+        (os/read-file (str/concat "~/.orb/node_modules/" (object/get (array/nth @entity.deps @entity.cursor) "name") "/package.json") { key: "installed" emit: { success: UN_PKG_READ, failure: UN_PKG_ABSENT } })
+      UN_PKG_ABSENT -> scanning
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit UN_NEXT { })
+      UN_PKG_READ -> scanning when (= (object/get (json/parse (bytes/to-string @payload.data) NoticeInstalled) "version") null)
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit UN_NEXT { })
+      UN_PKG_READ -> looking when (!= (object/get (json/parse (bytes/to-string @payload.data) NoticeInstalled) "version") null)
+        (set @entity.installed (object/get (json/parse (bytes/to-string @payload.data) NoticeInstalled) "version"))
+        (emit UN_ASK { requestId: (str/concat @entity.cursor), name: (object/get (array/nth @entity.deps @entity.cursor) "name"), tag: "latest" })
+    }
+
+    state looking {
+      INIT -> looking
+      UN_LOOKED -> looking
+        (set @entity.cands (array/reverse (array/filter @payload.versions (fn v (not (str/includes @v "-"))))))
+        (set @entity.cc 0)
+        (emit UN_TRY { })
+      UN_LOOK_REFUSED -> scanning
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit UN_NEXT { })
+      UN_TRY -> scanning when (>= @entity.cc (array/len @entity.cands))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit UN_NEXT { })
+      UN_TRY -> looking when (< @entity.cc (array/len @entity.cands))
+        (emit UN_SAT { requestId: (str/concat @entity.cursor "." @entity.cc), version: (array/nth @entity.cands @entity.cc), range: (object/get (array/nth @entity.deps @entity.cursor) "range") })
+      UN_SATISFIED -> looking when (not @payload.value)
+        (set @entity.cc (+ @entity.cc 1))
+        (emit UN_TRY { })
+      UN_SATISFIED -> looking when @payload.value
+        (emit UN_CMP { requestId: @payload.requestId, a: (array/nth @entity.cands @entity.cc), b: @entity.installed })
+      UN_SEMVER_REFUSED -> scanning
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit UN_NEXT { })
+      UN_COMPARED -> scanning when (= @payload.value 1)
+        (set @entity.found (array/append @entity.found [(object/get (array/nth @entity.deps @entity.cursor) "name"), @entity.installed, (array/nth @entity.cands @entity.cc)]))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit UN_NEXT { })
+      UN_COMPARED -> scanning when (!= @payload.value 1)
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit UN_NEXT { })
+    }
+
+    state writing {
+      INIT -> writing
+      UN_WRITE -> writing
+        (os/mkdir "~/.orb" true { key: "dir" emit: { success: UN_DIR, failure: UN_DIR } })
+      UN_DIR -> writing
+        (os/write-file "~/.orb/.update-check.json" (bytes/from-string (json/stringify { checkedAt: @entity.nowSec, available: @entity.found })) { key: "cache" emit: { success: UN_WRITTEN, failure: UN_WRITTEN } })
+      UN_WRITTEN -> ready when (or (= @entity.mode "record") (= (array/len @entity.found) 0))
+        (emit UPDATE_NOTICE_ANSWERED { status: 200, body: "", stderr: "" })
+      UN_WRITTEN -> ready when (and (!= @entity.mode "record") (> (array/len @entity.found) 0))
+        (emit UPDATE_NOTICE_ANSWERED { status: 200, body: "", stderr: (str/concat "orb: updates available (" (str/join (array/map @entity.found (fn t (str/concat (array/nth @t 0) " " (array/nth @t 1) " → " (array/nth @t 2)))) ", ") "); run `orb update --global`") })
+    }
+
+    emits {
+      UPDATE_NOTICE_ANSWERED -> external { status : number!  body : string!  stderr : string }
+        @description "The notice line on stderr, or nothing."
+        @tier "primary"
+      UN_GATE { }
+        @description "Internal: check the environment gates."
+        @tier "internal"
+      UN_DUE { }
+        @description "Internal: the cache is loaded; decide fresh or stale."
+        @tier "internal"
+      UN_NEXT { }
+        @description "Internal: read the next declared package."
+        @tier "internal"
+      UN_TRY { }
+        @description "Internal: test the next stable candidate against the range."
+        @tier "internal"
+      UN_WRITE { }
+        @description "Internal: write the cache."
+        @tier "internal"
+      UN_ASK { requestId : string!  name : string!  tag : string }
+        @description "Internal: ask the registry for the package's versions."
+        @tier "internal"
+      UN_SAT { requestId : string!  version : string!  range : string! }
+        @description "Internal: ask std-semver whether the candidate satisfies the range."
+        @tier "internal"
+      UN_CMP { requestId : string!  a : string!  b : string! }
+        @description "Internal: ask std-semver to order the candidate against the installed version."
+        @tier "internal"
+      UN_ENV_NOUPD { value : string }
+        @description "Internal: ORB_NO_UPDATE_CHECK."
+        @tier "internal"
+      UN_ENV_CI { value : string }
+        @description "Internal: CI."
+        @tier "internal"
+      UN_ENV_FAILED { error : string  kind : string }
+        @description "Internal: an environment read was denied."
+        @tier "internal"
+      UN_TTY { ok : boolean! }
+        @description "Internal: whether stderr is a terminal."
+        @tier "internal"
+      UN_CACHE_READ { data : bytes! }
+        @description "Internal: the cache file."
+        @tier "internal"
+      UN_CACHE_ABSENT { error : string  kind : string }
+        @description "Internal: no cache file."
+        @tier "internal"
+      UN_MANIFEST_READ { data : bytes! }
+        @description "Internal: the user store manifest."
+        @tier "internal"
+      UN_MANIFEST_ABSENT { error : string  kind : string }
+        @description "Internal: no manifest."
+        @tier "internal"
+      UN_PKG_READ { data : bytes! }
+        @description "Internal: an installed package's manifest."
+        @tier "internal"
+      UN_PKG_ABSENT { error : string  kind : string }
+        @description "Internal: the package is not installed."
+        @tier "internal"
+      UN_DIR { }
+        @description "Internal: the store directory exists."
+        @tier "internal"
+      UN_WRITTEN { }
+        @description "Internal: the cache write finished or failed (ignored)."
+        @tier "internal"
+    }
+
+    listens {
+      UPDATE_NOTICE_CALLED -> inbound "cli-notice" answers UPDATE_NOTICE_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run the daily updates-available notice, or `record` after orb update."
+        @synonyms "update check, new version available, outdated packages"
+      UN_LOOKED { requestId : string!  name : string!  versions : [string]!  distTags : Map string string  version : string!  tarballs : Map string string }
+        @description "Internal: the package's versions."
+      UN_LOOK_REFUSED { requestId : string!  name : string  code : string!  status : number!  error : string! }
+        @description "Internal: the lookup failed."
+      UN_SATISFIED { requestId : string!  value : boolean! }
+        @description "Internal: the satisfies answer."
+      UN_COMPARED { requestId : string!  value : number! }
+        @description "Internal: the compare answer."
+      UN_SEMVER_REFUSED { requestId : string!  operation : string!  reason : string! }
+        @description "Internal: std-semver refused."
+      Registry.NPM_LOOKED -> UN_LOOKED
+      Registry.NPM_LOOKUP_REFUSED -> UN_LOOK_REFUSED
+      Versions.SEMVER_SATISFIED -> UN_SATISFIED
+      Versions.SEMVER_COMPARED -> UN_COMPARED
+      Versions.SEMVER_REFUSED -> UN_SEMVER_REFUSED
+    }
+  }
+
+  page "/orb-update-notice" as OrbUpdateNoticePage -> OrbUpdateNotice, Registry, Versions
+}

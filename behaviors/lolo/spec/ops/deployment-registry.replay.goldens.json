@@ -482,27 +482,24 @@
        "version": 1,
        "activates": true
       }
-     }
-    },
-    {
-     "event": "ROLLBACK_ACTIVE_ABSENT",
-     "payload": {
-      "code": "not-found",
-      "error": "x"
      },
      "expect": {
       "neverEmits": [
        "ROLLBACK_FAILED"
-      ]
-     }
-    },
-    {
-     "event": "ROLLBACK_WRITTEN",
-     "payload": {
-      "id": "acme/shop"
-     },
-     "expect": {
+      ],
       "emits": [
+       {
+        "event": "ROLLBACK_ACTIVE_ABSENT",
+        "payload": {
+         "code": "not-found"
+        }
+       },
+       {
+        "event": "ROLLBACK_WRITTEN",
+        "payload": {
+         "id": "acme/shop"
+        }
+       },
        {
         "event": "ROLLED_BACK",
         "payload": {
@@ -513,7 +510,8 @@
       ]
      }
     }
-   ]
+   ],
+   "note": "the fetch of the absent ActiveDeployment runs in the step kernel and cascades ROLLBACK_ACTIVE_ABSENT -> create -> ROLLBACK_WRITTEN -> ROLLED_BACK, so the cascade is asserted instead of feeding those events by hand (a second create is a duplicate-id)"
   },
   {
    "id": "rollback-to-own-cloud-version-refused",

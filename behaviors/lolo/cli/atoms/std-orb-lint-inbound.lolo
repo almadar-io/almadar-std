@@ -1,0 +1,151 @@
+app std-orb-lint-inbound [
+  version: "1.0.0",
+  inbound: ["cli-lint-inbound"],
+  fs: { cwd: "**": [read] },
+  description: "std-orb-lint-inbound — the `orb lint inbound <file>` command, the port of ORB_INBOUND_ENTRY_INVALID, ORB_INBOUND_UNDECLARED, ORB_INBOUND_DUPLICATE, ORB_INBOUND_VERIFY_INVALID and ORB_INBOUND_ANSWER_UNDECLARED (effect/inbound.rs validate_inbound). It lowers the file with program/read, checks the app's `inbound` entries (a lower-case hook name, listed once) and every inline trait event that handles an inbound hook (declared by the app, one handler per name, a `verifies` header and credential of the right form, an answer the trait emits), each with the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint inbound: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-inbound"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital OrbLintInboundOrbital {
+  entity OrbLintInboundRun [runtime] {
+    id : string!
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintInbound -> OrbLintInboundRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_RUN -> reading
+        (set @entity.findings [])
+        (os/read-file { anchor: "cwd" path: @payload.file } { key: "file" emit: { success: LINT_FILE_READ, failure: LINT_FILE_UNREAD } })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "inbound", findings: @entity.findings })
+    }
+
+    state reading {
+      INIT -> reading
+      LINT_FILE_READ -> reading
+        (program/read (bytes/to-string @payload.data) { emit: { success: LINT_PROGRAM_READ, failure: LINT_FILE_UNREAD } })
+      LINT_PROGRAM_READ -> ready
+        (set @entity.findings (let ((orbitals (object/get @payload.result "orbitals")) (entries (object/get @payload.result "inbound" [])))
+          (let ((handlers (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+                  (let ((orb (array/nth @orbitals @oi)))
+                    (let ((trs (object/get @orb "traits" [])))
+                      (array/flatten (array/map (array/filter (array/range 0 (array/len @trs)) (fn ti (validate/object (array/nth @trs @ti)))) (fn ti
+                        (let ((td (array/nth @trs @ti)))
+                          (let ((evs (object/get (object/get @td "stateMachine" {}) "events" [])) (emitted (array/map (object/get @td "emits" []) (fn x (object/get @x "event" "")))))
+                            (array/map (array/filter (array/range 0 (array/len @evs)) (fn ei (object/has (array/nth @evs @ei) "inbound"))) (fn ei
+                              (let ((ev (array/nth @evs @ei)))
+                                (let ((inb (object/get @ev "inbound")))
+                                  { at: (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].traits[" @ti " (" (object/get @td "name" "") ")].stateMachine.events[" @ei "]"),
+                                    key: (object/get @ev "key" ""), name: (object/get @inb "name" ""), ans: (object/get @inb "answers" ""),
+                                    hasV: (object/has @inb "verifies"), hdr: (object/get (object/get @inb "verifies" {}) "header" ""), cred: (object/get (object/get @inb "verifies" {}) "credential" ""),
+                                    emitted: @emitted }))))))))))))))))
+            (array/concat
+              (array/flatten (array/map (array/range 0 (array/len @entries)) (fn i
+                (let ((en (array/nth @entries @i)))
+                  (if (not (validate/pattern @en "^[a-z0-9][a-z0-9-]*$"))
+                    [{ code: "ORB_INBOUND_ENTRY_INVALID", path: (str/concat "inbound[" @i "]"), message: (str/concat "inbound entry '" @en "' is not a hook name"), suggestion: "Write the one path segment after /api/hooks/: lower-case letters, digits and '-'", severity: "error" }]
+                    (if (array/includes (array/slice @entries 0 @i) @en)
+                      [{ code: "ORB_INBOUND_ENTRY_INVALID", path: (str/concat "inbound[" @i "]"), message: (str/concat "inbound entry '" @en "' is listed twice"), suggestion: "", severity: "error" }]
+                      []))))))
+              (array/flatten (array/map (array/range 0 (array/len @handlers)) (fn k
+                (let ((h (array/nth @handlers @k)))
+                  (array/flatten [
+                    (if (array/includes @entries (object/get @h "name")) [] [{ code: "ORB_INBOUND_UNDECLARED", path: (object/get @h "at"), message: (str/concat "event '" (object/get @h "key") "' handles the inbound hook '" (object/get @h "name") "', which the program's `inbound` does not declare"), suggestion: "Add the hook name to the app's `inbound: [...]`", severity: "error" }])
+                    (if (> (array/len (array/filter (array/slice @handlers 0 @k) (fn p (= (object/get @p "name") (object/get @h "name"))))) 0) [{ code: "ORB_INBOUND_DUPLICATE", path: (object/get @h "at"), message: (str/concat "the inbound hook '" (object/get @h "name") "' has more than one handler"), suggestion: "", severity: "error" }] [])
+                    (if (and (object/get @h "hasV") (or (not (validate/pattern (object/get @h "hdr") "^[a-z0-9][a-z0-9-]*$")) (not (validate/pattern (object/get @h "cred") "^[A-Za-z0-9_]+$"))))
+                      [{ code: "ORB_INBOUND_VERIFY_INVALID", path: (object/get @h "at"), message: (str/concat "inbound hook '" (object/get @h "name") "' verifies header '" (object/get @h "hdr") "' against credential '" (object/get @h "cred") "', which are not a lower-case header name and a credential name"), suggestion: (str/concat "Write `verifies " (json/stringify "x-signature-token") " " (json/stringify "PROVIDER_TOKEN") "`: a lower-case header, then a credential name of letters, digits and '_'"), severity: "error" }]
+                      [])
+                    (if (array/includes (object/get @h "emitted") (object/get @h "ans")) [] [{ code: "ORB_INBOUND_ANSWER_UNDECLARED", path: (object/get @h "at"), message: (str/concat "event '" (object/get @h "key") "' answers with '" (object/get @h "ans") "', which the trait does not declare in `emits`"), suggestion: "Declare the answer event in the trait's `emits { … }` with a `status : number!` and a `body : string!` payload", severity: "error" }])])))))))))
+        (emit LINT_FINISH { })
+      LINT_FILE_UNREAD -> ready
+        (emit LINT_UNREAD { rule: "inbound" })
+    }
+
+    emits {
+      LINT_UNREAD -> external { rule : string! }
+        @description "This rule could not read or lower the file."
+        @tier "internal"
+      LINT_RUN -> external { file : string! }
+        @description "The lint request this trait answers, from the cli trait or the umbrella."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FILE_READ { data : bytes! }
+        @description "The file read."
+        @tier "internal"
+      LINT_FILE_UNREAD { error : string }
+        @description "The file could not be read or lowered."
+        @tier "internal"
+      LINT_PROGRAM_READ { result : string }
+        @description "The file lowered by program/read."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      OrbLintInboundCli.LINT_RUN -> LINT_RUN
+    }
+  }
+
+  trait OrbLintInboundCli -> OrbLintInboundRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint inbound <file>" })
+      LINT_CALLED -> waiting when (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (emit LINT_RUN { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "inbound") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint inbound: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "inbound") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_UNREAD -> ready when (= @payload.rule "inbound")
+        (emit LINT_ANSWERED { status: 500, body: "lint inbound: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_RUN -> external { file : string! }
+        @description "Ask the rule trait to lint this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_UNREAD -> external { rule : string! }
+        @description "The rule trait could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-inbound" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint inbound` with its arguments and working directory."
+        @synonyms "orb lint inbound, inbound hooks"
+      OrbLintInbound.LINT_FOUND -> LINT_FOUND
+      OrbLintInbound.LINT_UNREAD -> LINT_UNREAD
+    }
+  }
+
+  page "/orb-lint-inbound" as OrbLintInboundPage -> OrbLintInbound, OrbLintInboundCli
+}

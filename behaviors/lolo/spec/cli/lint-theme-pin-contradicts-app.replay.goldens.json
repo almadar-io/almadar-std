@@ -1,0 +1,458 @@
+{
+ "atom": "cli/atoms/std-orb-lint-theme-pin-contradicts-app.lolo",
+ "trait": "OrbLintThemePinContradictsApp",
+ "cases": [
+  {
+   "id": "contradicting-pin",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "TaskOrbital",
+         "traits": [
+          {
+           "name": "TaskLayout"
+          }
+         ]
+        },
+        {
+         "name": "OddOrbital",
+         "traits": [
+          {
+           "name": "OddLayout",
+           "config": {
+            "theme": {
+             "type": "string",
+             "default": "terminal-dark"
+            }
+           }
+          }
+         ]
+        }
+       ],
+       "theme": "linear-clean-light"
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "theme-pin-contradicts-app",
+         "findings": [
+          {
+           "code": "ORB_THEME_PIN_CONTRADICTS_APP",
+           "path": "orbitals[1 (OddOrbital)].theme",
+           "message": "OddOrbital pins theme \"terminal-dark\" while the app declares \"linear-clean-light\" at the app level",
+           "suggestion": "remove the config pin so the orbital inherits the app theme via @currentTheme - or, for a deliberate per-orbital override, declare it as the orbital's own `theme \"<key>\"`",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "two-distinct-pins-sorted-and-deduped",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "Odd",
+         "traits": [
+          {
+           "name": "A",
+           "config": {
+            "theme": {
+             "type": "string",
+             "default": "zeta-dark"
+            }
+           }
+          },
+          {
+           "name": "B",
+           "config": {
+            "theme": {
+             "type": "string",
+             "default": "alpha-dark"
+            }
+           }
+          },
+          {
+           "name": "C",
+           "config": {
+            "theme": {
+             "type": "string",
+             "default": "zeta-dark"
+            }
+           }
+          }
+         ]
+        }
+       ],
+       "theme": "linear-clean-light"
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "theme-pin-contradicts-app",
+         "findings": [
+          {
+           "code": "ORB_THEME_PIN_CONTRADICTS_APP",
+           "path": "orbitals[0 (Odd)].theme",
+           "message": "Odd pins theme \"alpha-dark\", \"zeta-dark\" while the app declares \"linear-clean-light\" at the app level",
+           "suggestion": "remove the config pin so the orbital inherits the app theme via @currentTheme - or, for a deliberate per-orbital override, declare it as the orbital's own `theme \"<key>\"`",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "inline-app-theme-name",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "Odd",
+         "traits": [
+          {
+           "name": "A",
+           "config": {
+            "theme": {
+             "type": "string",
+             "default": "terminal-dark"
+            }
+           }
+          }
+         ]
+        }
+       ],
+       "theme": {
+        "name": "mine",
+        "tokens": {}
+       }
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "theme-pin-contradicts-app",
+         "findings": [
+          {
+           "code": "ORB_THEME_PIN_CONTRADICTS_APP",
+           "path": "orbitals[0 (Odd)].theme",
+           "message": "Odd pins theme \"terminal-dark\" while the app declares \"mine\" at the app level",
+           "suggestion": "remove the config pin so the orbital inherits the app theme via @currentTheme - or, for a deliberate per-orbital override, declare it as the orbital's own `theme \"<key>\"`",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-matching-pin",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "TaskOrbital",
+         "traits": [
+          {
+           "name": "TaskLayout",
+           "config": {
+            "theme": {
+             "type": "string",
+             "default": "linear-clean-light"
+            }
+           }
+          }
+         ]
+        }
+       ],
+       "theme": "linear-clean-light"
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "theme-pin-contradicts-app",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-empty-pin",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "Odd",
+         "traits": [
+          {
+           "name": "A",
+           "config": {
+            "theme": {
+             "type": "string",
+             "default": ""
+            }
+           }
+          }
+         ]
+        }
+       ],
+       "theme": "linear-clean-light"
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "theme-pin-contradicts-app",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-binding-pin",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "Odd",
+         "traits": [
+          {
+           "name": "A",
+           "config": {
+            "theme": {
+             "type": "string",
+             "default": "@currentTheme"
+            }
+           }
+          }
+         ]
+        }
+       ],
+       "theme": "linear-clean-light"
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "theme-pin-contradicts-app",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-no-app-theme",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "Odd",
+         "traits": [
+          {
+           "name": "A",
+           "config": {
+            "theme": {
+             "type": "string",
+             "default": "terminal-dark"
+            }
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "theme-pin-contradicts-app",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-empty-app-theme",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "Odd",
+         "traits": [
+          {
+           "name": "A",
+           "config": {
+            "theme": {
+             "type": "string",
+             "default": "terminal-dark"
+            }
+           }
+          }
+         ]
+        }
+       ],
+       "theme": ""
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "theme-pin-contradicts-app",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

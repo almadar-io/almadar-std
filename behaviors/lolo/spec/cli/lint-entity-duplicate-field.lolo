@@ -2,12 +2,13 @@ app lint-entity-duplicate-field-spec [
   version: "1.0.0",
   description: "Design contract for `orb lint entity-duplicate-field <file>`. It lowers the file with program/read and, for every orbital's inline entity, reports each field whose non-empty name an earlier field of the same entity already uses, with the Rust path, message and suggestion (status 500, exit 1). Unnamed fields are skipped. Clean answers `lint entity-duplicate-field: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
 orbital LintEntityDuplicateFieldSpec {
   expects trait OrbLintEntityDuplicateField {
     state ready
     emits {
-      LINT_FOUND { rule : string!  findings : [string]! }
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
       LINT_UNREAD { rule : string! }
     }
   }

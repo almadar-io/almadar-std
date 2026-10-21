@@ -1,0 +1,274 @@
+app std-motion [
+  version: "1.0.0",
+  description: "std-motion — the theme's motion shapes and element entry resolved once for the native shells. PARSE_TRANSFORM reads a CSS transform list (none, translateX/Y/Z, translate, uniform scale, and the calc(<n>px * var(--motion-enter-slide-sign)) inline sign on the x axis) into one scale, translate and inline-signed shape, composing left to right as CSS does, and refuses anything outside that vocabulary; CSS_TIME_MS reads a plain CSS time (450ms, 0.3s) in milliseconds; RESOLVE_MOTION resolves a theme's motion tokens against the base: a refused or absent shape keeps the base, the entry defaults to fade and the stagger to 40 ms."
+]
+uses Spec from "almadar-std/motion"
+
+type MotionLen = { v : number!, s : boolean!, ok : boolean!, raw : string! }
+type MotionShape = { scale : number!, translateX : number!, translateY : number!, inlineSigned : boolean! }
+type MotionEntryTokens = { default : string, stagger : string }
+type MotionTokens = { shapes : Map string string, entry : MotionEntryTokens }
+
+orbital MotionOrbital {
+  entity MotionRun [runtime] {
+    id : string!
+    text : string @description "The transform being parsed." = ""
+    rest : string @description "The part of the transform still to parse." = ""
+    name : string @description "The transform function being applied." = ""
+    close : number @description "Where the current function's parenthesis closes, or -1." = 0
+    args : [string] @description "The current function's arguments." = []
+    scale : number @description "The scale composed so far." = 1
+    tx : number @description "The x translate composed so far." = 0
+    ty : number @description "The y translate composed so far." = 0
+    signed : boolean @description "Whether the x translate carries the inline sign." = false
+    ok : boolean @description "Whether the transform parsed." = true
+    error : string @description "Why the transform was refused." = ""
+    lx : MotionLen @description "The x length being applied." = { v: 0, s: false, ok: true, raw: "0" }
+    ly : MotionLen @description "The y length being applied." = { v: 0, s: false, ok: true, raw: "0" }
+    kx : number @description "The first scale factor." = 1
+    ky : number @description "The second scale factor." = 1
+    kxOk : boolean @description "Whether the first scale factor is a number." = true
+    kyOk : boolean @description "Whether the second scale factor is a number." = true
+    kraw : string @description "The first scale argument as written." = ""
+    kraw2 : string @description "The second scale argument as written." = ""
+    hit : boolean @description "Whether a CSS time parsed." = false
+    ms : number @description "The CSS time in milliseconds." = 0
+    declared : Map string string @description "The theme's declared shape tokens." = {}
+    base : Map string MotionShape @description "The base shapes." = {}
+    shapes : Map string MotionShape @description "The resolved shapes by surface." = {}
+    queue : [string] @description "The surfaces still to resolve." = []
+    curName : string @description "The surface being resolved." = ""
+    entryDefault : string @description "The element entry played when content changes." = "fade"
+    staggerMs : number @description "One enter-delay step in milliseconds." = 40
+    resolving : boolean @description "Whether a theme resolution is in progress." = false
+  }
+
+  trait Motion -> MotionRun [lifecycle, instance] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      PARSE_TRANSFORM -> ready
+        (set @entity.text (str/trim ?raw))
+        (set @entity.rest (if (= (str/trim ?raw) "none") "" (str/trim ?raw)))
+        (set @entity.scale 1)
+        (set @entity.tx 0)
+        (set @entity.ty 0)
+        (set @entity.signed false)
+        (set @entity.ok true)
+        (set @entity.error "")
+        (emit TF_STEP { raw: ?raw })
+      TF_STEP -> ready when (or (not @entity.ok) (= @entity.rest ""))
+        (emit TRANSFORM_RESULT { ok: @entity.ok, error: @entity.error, scale: @entity.scale, translateX: @entity.tx, translateY: @entity.ty, inlineSigned: @entity.signed })
+      TF_STEP -> ready when (and @entity.ok (!= @entity.rest "") (not (str/includes @entity.rest "(")))
+        (set @entity.ok false)
+        (set @entity.error (str/concat "`" @entity.rest "` is not a transform function"))
+        (emit TRANSFORM_RESULT { ok: @entity.ok, error: @entity.error, scale: @entity.scale, translateX: @entity.tx, translateY: @entity.ty, inlineSigned: @entity.signed })
+      TF_STEP -> ready when (and @entity.ok (!= @entity.rest "") (str/includes @entity.rest "("))
+        (set @entity.name (str/trim (array/nth (str/split @entity.rest "(") 0)))
+        (set @entity.close (array/nth (array/reduce (array/range (array/len (str/split @entity.rest ""))) [0, -1] (fn acc i (if (or (>= (array/nth @acc 1) 0) (< @i (str/len (array/nth (str/split @entity.rest "(") 0)))) @acc (let ((c (array/nth (str/split @entity.rest "") @i))) (if (= @c "(") [(+ (array/nth @acc 0) 1), -1] (if (= @c ")") (if (= (- (array/nth @acc 0) 1) 0) [0, @i] [(- (array/nth @acc 0) 1), -1]) @acc)))))) 1))
+        (emit TF_PARSED { })
+      TF_PARSED -> ready when (< @entity.close 0)
+        (set @entity.ok false)
+        (set @entity.error (str/concat "unbalanced parentheses in `" @entity.text "`"))
+        (emit TRANSFORM_RESULT { ok: @entity.ok, error: @entity.error, scale: @entity.scale, translateX: @entity.tx, translateY: @entity.ty, inlineSigned: @entity.signed })
+      TF_PARSED -> ready when (>= @entity.close 0)
+        (set @entity.args (let ((st (array/reduce (str/split (str/slice @entity.rest (+ (str/len (array/nth (str/split @entity.rest "(") 0)) 1) @entity.close) "") { depth: 0, cur: "", parts: [] } (fn acc c (if (= @c "(") { depth: (+ (object/get @acc "depth") 1), cur: (str/concat (object/get @acc "cur") @c), parts: (object/get @acc "parts") } (if (= @c ")") { depth: (math/max (- (object/get @acc "depth") 1) 0), cur: (str/concat (object/get @acc "cur") @c), parts: (object/get @acc "parts") } (if (and (= @c ",") (= (object/get @acc "depth") 0)) { depth: 0, cur: "", parts: (array/append (object/get @acc "parts") (str/trim (object/get @acc "cur"))) } { depth: (object/get @acc "depth"), cur: (str/concat (object/get @acc "cur") @c), parts: (object/get @acc "parts") })))))) ) (array/append (object/get @st "parts") (str/trim (object/get @st "cur")))))
+        (set @entity.rest (str/trim (str/slice @entity.rest (+ @entity.close 1) (str/len @entity.rest))))
+        (emit TF_APPLY { })
+      TF_APPLY -> ready when (and (= @entity.name "translateX") (= (array/len @entity.args) 1))
+        (set @entity.lx (let ((r (str/trim (array/nth @entity.args 0)))) (if (= @r "0") { v: 0, s: false, ok: true, raw: @r } (if (str/endsWith @r "px") (if (and (!= (str/trim (str/slice @r 0 (- (str/len @r) 2))) "") (= (str/replace-pattern (str/trim (str/slice @r 0 (- (str/len @r) 2))) "^[+-]?([0-9]+[.]?[0-9]*|[.][0-9]+)([eE][+-]?[0-9]+)?$" "") "")) { v: (str/to-number (str/trim (str/slice @r 0 (- (str/len @r) 2)))), s: false, ok: true, raw: @r } { v: 0, s: false, ok: false, raw: @r }) (if (and true (str/startsWith @r "calc(") (str/endsWith @r ")") (str/includes @r "*") (= (str/trim (str/join (array/drop (str/split (str/slice @r 5 (- (str/len @r) 1)) "*") 1) "*")) "var(--motion-enter-slide-sign)")) (let ((lp (str/trim (array/nth (str/split (str/slice @r 5 (- (str/len @r) 1)) "*") 0)))) (if (= @lp "0") { v: 0, s: true, ok: true, raw: @r } (if (and (str/endsWith @lp "px") (and (!= (str/trim (str/slice @lp 0 (- (str/len @lp) 2))) "") (= (str/replace-pattern (str/trim (str/slice @lp 0 (- (str/len @lp) 2))) "^[+-]?([0-9]+[.]?[0-9]*|[.][0-9]+)([eE][+-]?[0-9]+)?$" "") ""))) { v: (str/to-number (str/trim (str/slice @lp 0 (- (str/len @lp) 2)))), s: true, ok: true, raw: @r } { v: 0, s: false, ok: false, raw: @r }))) { v: 0, s: false, ok: false, raw: @r })))))
+        (set @entity.ly { v: 0, s: false, ok: true, raw: "0" })
+        (emit TF_TRANSLATE { })
+      TF_APPLY -> ready when (and (= @entity.name "translateY") (= (array/len @entity.args) 1))
+        (set @entity.lx { v: 0, s: false, ok: true, raw: "0" })
+        (set @entity.ly (let ((r (str/trim (array/nth @entity.args 0)))) (if (= @r "0") { v: 0, s: false, ok: true, raw: @r } (if (str/endsWith @r "px") (if (and (!= (str/trim (str/slice @r 0 (- (str/len @r) 2))) "") (= (str/replace-pattern (str/trim (str/slice @r 0 (- (str/len @r) 2))) "^[+-]?([0-9]+[.]?[0-9]*|[.][0-9]+)([eE][+-]?[0-9]+)?$" "") "")) { v: (str/to-number (str/trim (str/slice @r 0 (- (str/len @r) 2)))), s: false, ok: true, raw: @r } { v: 0, s: false, ok: false, raw: @r }) (if (and false (str/startsWith @r "calc(") (str/endsWith @r ")") (str/includes @r "*") (= (str/trim (str/join (array/drop (str/split (str/slice @r 5 (- (str/len @r) 1)) "*") 1) "*")) "var(--motion-enter-slide-sign)")) (let ((lp (str/trim (array/nth (str/split (str/slice @r 5 (- (str/len @r) 1)) "*") 0)))) (if (= @lp "0") { v: 0, s: true, ok: true, raw: @r } (if (and (str/endsWith @lp "px") (and (!= (str/trim (str/slice @lp 0 (- (str/len @lp) 2))) "") (= (str/replace-pattern (str/trim (str/slice @lp 0 (- (str/len @lp) 2))) "^[+-]?([0-9]+[.]?[0-9]*|[.][0-9]+)([eE][+-]?[0-9]+)?$" "") ""))) { v: (str/to-number (str/trim (str/slice @lp 0 (- (str/len @lp) 2)))), s: true, ok: true, raw: @r } { v: 0, s: false, ok: false, raw: @r }))) { v: 0, s: false, ok: false, raw: @r })))))
+        (emit TF_TRANSLATE { })
+      TF_APPLY -> ready when (and (= @entity.name "translate") (= (array/len @entity.args) 1))
+        (set @entity.lx (let ((r (str/trim (array/nth @entity.args 0)))) (if (= @r "0") { v: 0, s: false, ok: true, raw: @r } (if (str/endsWith @r "px") (if (and (!= (str/trim (str/slice @r 0 (- (str/len @r) 2))) "") (= (str/replace-pattern (str/trim (str/slice @r 0 (- (str/len @r) 2))) "^[+-]?([0-9]+[.]?[0-9]*|[.][0-9]+)([eE][+-]?[0-9]+)?$" "") "")) { v: (str/to-number (str/trim (str/slice @r 0 (- (str/len @r) 2)))), s: false, ok: true, raw: @r } { v: 0, s: false, ok: false, raw: @r }) (if (and true (str/startsWith @r "calc(") (str/endsWith @r ")") (str/includes @r "*") (= (str/trim (str/join (array/drop (str/split (str/slice @r 5 (- (str/len @r) 1)) "*") 1) "*")) "var(--motion-enter-slide-sign)")) (let ((lp (str/trim (array/nth (str/split (str/slice @r 5 (- (str/len @r) 1)) "*") 0)))) (if (= @lp "0") { v: 0, s: true, ok: true, raw: @r } (if (and (str/endsWith @lp "px") (and (!= (str/trim (str/slice @lp 0 (- (str/len @lp) 2))) "") (= (str/replace-pattern (str/trim (str/slice @lp 0 (- (str/len @lp) 2))) "^[+-]?([0-9]+[.]?[0-9]*|[.][0-9]+)([eE][+-]?[0-9]+)?$" "") ""))) { v: (str/to-number (str/trim (str/slice @lp 0 (- (str/len @lp) 2)))), s: true, ok: true, raw: @r } { v: 0, s: false, ok: false, raw: @r }))) { v: 0, s: false, ok: false, raw: @r })))))
+        (set @entity.ly { v: 0, s: false, ok: true, raw: "0" })
+        (emit TF_TRANSLATE { })
+      TF_APPLY -> ready when (and (= @entity.name "translate") (= (array/len @entity.args) 2))
+        (set @entity.lx (let ((r (str/trim (array/nth @entity.args 0)))) (if (= @r "0") { v: 0, s: false, ok: true, raw: @r } (if (str/endsWith @r "px") (if (and (!= (str/trim (str/slice @r 0 (- (str/len @r) 2))) "") (= (str/replace-pattern (str/trim (str/slice @r 0 (- (str/len @r) 2))) "^[+-]?([0-9]+[.]?[0-9]*|[.][0-9]+)([eE][+-]?[0-9]+)?$" "") "")) { v: (str/to-number (str/trim (str/slice @r 0 (- (str/len @r) 2)))), s: false, ok: true, raw: @r } { v: 0, s: false, ok: false, raw: @r }) (if (and true (str/startsWith @r "calc(") (str/endsWith @r ")") (str/includes @r "*") (= (str/trim (str/join (array/drop (str/split (str/slice @r 5 (- (str/len @r) 1)) "*") 1) "*")) "var(--motion-enter-slide-sign)")) (let ((lp (str/trim (array/nth (str/split (str/slice @r 5 (- (str/len @r) 1)) "*") 0)))) (if (= @lp "0") { v: 0, s: true, ok: true, raw: @r } (if (and (str/endsWith @lp "px") (and (!= (str/trim (str/slice @lp 0 (- (str/len @lp) 2))) "") (= (str/replace-pattern (str/trim (str/slice @lp 0 (- (str/len @lp) 2))) "^[+-]?([0-9]+[.]?[0-9]*|[.][0-9]+)([eE][+-]?[0-9]+)?$" "") ""))) { v: (str/to-number (str/trim (str/slice @lp 0 (- (str/len @lp) 2)))), s: true, ok: true, raw: @r } { v: 0, s: false, ok: false, raw: @r }))) { v: 0, s: false, ok: false, raw: @r })))))
+        (set @entity.ly (let ((r (str/trim (array/nth @entity.args 1)))) (if (= @r "0") { v: 0, s: false, ok: true, raw: @r } (if (str/endsWith @r "px") (if (and (!= (str/trim (str/slice @r 0 (- (str/len @r) 2))) "") (= (str/replace-pattern (str/trim (str/slice @r 0 (- (str/len @r) 2))) "^[+-]?([0-9]+[.]?[0-9]*|[.][0-9]+)([eE][+-]?[0-9]+)?$" "") "")) { v: (str/to-number (str/trim (str/slice @r 0 (- (str/len @r) 2)))), s: false, ok: true, raw: @r } { v: 0, s: false, ok: false, raw: @r }) (if (and false (str/startsWith @r "calc(") (str/endsWith @r ")") (str/includes @r "*") (= (str/trim (str/join (array/drop (str/split (str/slice @r 5 (- (str/len @r) 1)) "*") 1) "*")) "var(--motion-enter-slide-sign)")) (let ((lp (str/trim (array/nth (str/split (str/slice @r 5 (- (str/len @r) 1)) "*") 0)))) (if (= @lp "0") { v: 0, s: true, ok: true, raw: @r } (if (and (str/endsWith @lp "px") (and (!= (str/trim (str/slice @lp 0 (- (str/len @lp) 2))) "") (= (str/replace-pattern (str/trim (str/slice @lp 0 (- (str/len @lp) 2))) "^[+-]?([0-9]+[.]?[0-9]*|[.][0-9]+)([eE][+-]?[0-9]+)?$" "") ""))) { v: (str/to-number (str/trim (str/slice @lp 0 (- (str/len @lp) 2)))), s: true, ok: true, raw: @r } { v: 0, s: false, ok: false, raw: @r }))) { v: 0, s: false, ok: false, raw: @r })))))
+        (emit TF_TRANSLATE { })
+      TF_APPLY -> ready when (and (= @entity.name "translateZ") (= (array/len @entity.args) 1))
+        (set @entity.lx (let ((r (str/trim (array/nth @entity.args 0)))) (if (= @r "0") { v: 0, s: false, ok: true, raw: @r } (if (str/endsWith @r "px") (if (and (!= (str/trim (str/slice @r 0 (- (str/len @r) 2))) "") (= (str/replace-pattern (str/trim (str/slice @r 0 (- (str/len @r) 2))) "^[+-]?([0-9]+[.]?[0-9]*|[.][0-9]+)([eE][+-]?[0-9]+)?$" "") "")) { v: (str/to-number (str/trim (str/slice @r 0 (- (str/len @r) 2)))), s: false, ok: true, raw: @r } { v: 0, s: false, ok: false, raw: @r }) (if (and false (str/startsWith @r "calc(") (str/endsWith @r ")") (str/includes @r "*") (= (str/trim (str/join (array/drop (str/split (str/slice @r 5 (- (str/len @r) 1)) "*") 1) "*")) "var(--motion-enter-slide-sign)")) (let ((lp (str/trim (array/nth (str/split (str/slice @r 5 (- (str/len @r) 1)) "*") 0)))) (if (= @lp "0") { v: 0, s: true, ok: true, raw: @r } (if (and (str/endsWith @lp "px") (and (!= (str/trim (str/slice @lp 0 (- (str/len @lp) 2))) "") (= (str/replace-pattern (str/trim (str/slice @lp 0 (- (str/len @lp) 2))) "^[+-]?([0-9]+[.]?[0-9]*|[.][0-9]+)([eE][+-]?[0-9]+)?$" "") ""))) { v: (str/to-number (str/trim (str/slice @lp 0 (- (str/len @lp) 2)))), s: true, ok: true, raw: @r } { v: 0, s: false, ok: false, raw: @r }))) { v: 0, s: false, ok: false, raw: @r })))))
+        (set @entity.ly { v: 0, s: false, ok: true, raw: "0" })
+        (emit TF_Z { })
+      TF_APPLY -> ready when (and (= @entity.name "scale") (= (array/len @entity.args) 1))
+        (set @entity.kxOk (and (!= (str/trim (array/nth @entity.args 0)) "") (= (str/replace-pattern (str/trim (array/nth @entity.args 0)) "^[+-]?([0-9]+[.]?[0-9]*|[.][0-9]+)([eE][+-]?[0-9]+)?$" "") "")))
+        (set @entity.kyOk true)
+        (set @entity.kx (if (and (!= (str/trim (array/nth @entity.args 0)) "") (= (str/replace-pattern (str/trim (array/nth @entity.args 0)) "^[+-]?([0-9]+[.]?[0-9]*|[.][0-9]+)([eE][+-]?[0-9]+)?$" "") "")) (str/to-number (str/trim (array/nth @entity.args 0))) 0))
+        (set @entity.ky (if (and (!= (str/trim (array/nth @entity.args 0)) "") (= (str/replace-pattern (str/trim (array/nth @entity.args 0)) "^[+-]?([0-9]+[.]?[0-9]*|[.][0-9]+)([eE][+-]?[0-9]+)?$" "") "")) (str/to-number (str/trim (array/nth @entity.args 0))) 0))
+        (set @entity.kraw (array/nth @entity.args 0))
+        (set @entity.kraw2 (array/nth @entity.args 0))
+        (emit TF_SCALE { })
+      TF_APPLY -> ready when (and (= @entity.name "scale") (= (array/len @entity.args) 2))
+        (set @entity.kxOk (and (!= (str/trim (array/nth @entity.args 0)) "") (= (str/replace-pattern (str/trim (array/nth @entity.args 0)) "^[+-]?([0-9]+[.]?[0-9]*|[.][0-9]+)([eE][+-]?[0-9]+)?$" "") "")))
+        (set @entity.kyOk (and (!= (str/trim (array/nth @entity.args 1)) "") (= (str/replace-pattern (str/trim (array/nth @entity.args 1)) "^[+-]?([0-9]+[.]?[0-9]*|[.][0-9]+)([eE][+-]?[0-9]+)?$" "") "")))
+        (set @entity.kx (if (and (!= (str/trim (array/nth @entity.args 0)) "") (= (str/replace-pattern (str/trim (array/nth @entity.args 0)) "^[+-]?([0-9]+[.]?[0-9]*|[.][0-9]+)([eE][+-]?[0-9]+)?$" "") "")) (str/to-number (str/trim (array/nth @entity.args 0))) 0))
+        (set @entity.ky (if (and (!= (str/trim (array/nth @entity.args 1)) "") (= (str/replace-pattern (str/trim (array/nth @entity.args 1)) "^[+-]?([0-9]+[.]?[0-9]*|[.][0-9]+)([eE][+-]?[0-9]+)?$" "") "")) (str/to-number (str/trim (array/nth @entity.args 1))) 0))
+        (set @entity.kraw (array/nth @entity.args 0))
+        (set @entity.kraw2 (array/nth @entity.args 1))
+        (emit TF_SCALE { })
+      TF_APPLY -> ready when (not (or (and (array/includes ["translateX", "translateY", "translateZ", "scale"] @entity.name) (= (array/len @entity.args) 1)) (and (= @entity.name "translate") (or (= (array/len @entity.args) 1) (= (array/len @entity.args) 2))) (and (= @entity.name "scale") (= (array/len @entity.args) 2))))
+        (set @entity.ok false)
+        (set @entity.error (str/concat "`" @entity.name "(" (str/join @entity.args ", ") ")` is not a motion transform"))
+        (emit TRANSFORM_RESULT { ok: @entity.ok, error: @entity.error, scale: @entity.scale, translateX: @entity.tx, translateY: @entity.ty, inlineSigned: @entity.signed })
+      TF_TRANSLATE -> ready when (not @entity.lx.ok)
+        (set @entity.ok false)
+        (set @entity.error (str/concat "`" @entity.lx.raw "` is not a px length"))
+        (emit TRANSFORM_RESULT { ok: @entity.ok, error: @entity.error, scale: @entity.scale, translateX: @entity.tx, translateY: @entity.ty, inlineSigned: @entity.signed })
+      TF_TRANSLATE -> ready when (and @entity.lx.ok (not @entity.ly.ok))
+        (set @entity.ok false)
+        (set @entity.error (str/concat "`" @entity.ly.raw "` is not a px length"))
+        (emit TRANSFORM_RESULT { ok: @entity.ok, error: @entity.error, scale: @entity.scale, translateX: @entity.tx, translateY: @entity.ty, inlineSigned: @entity.signed })
+      TF_TRANSLATE -> ready when (and @entity.lx.ok @entity.ly.ok (or (and @entity.lx.s (!= @entity.tx 0) (not @entity.signed)) (and (not @entity.lx.s) (!= @entity.lx.v 0) @entity.signed)))
+        (set @entity.ok false)
+        (set @entity.error "a signed and an unsigned x translate in one transform")
+        (emit TRANSFORM_RESULT { ok: @entity.ok, error: @entity.error, scale: @entity.scale, translateX: @entity.tx, translateY: @entity.ty, inlineSigned: @entity.signed })
+      TF_TRANSLATE -> ready when (and @entity.lx.ok @entity.ly.ok (not (or (and @entity.lx.s (!= @entity.tx 0) (not @entity.signed)) (and (not @entity.lx.s) (!= @entity.lx.v 0) @entity.signed))))
+        (set @entity.signed (or @entity.signed @entity.lx.s))
+        (set @entity.tx (+ @entity.tx (* @entity.scale @entity.lx.v)))
+        (set @entity.ty (+ @entity.ty (* @entity.scale @entity.ly.v)))
+        (emit TF_STEP { raw: @entity.rest })
+      TF_Z -> ready when (not @entity.lx.ok)
+        (set @entity.ok false)
+        (set @entity.error (str/concat "`" @entity.lx.raw "` is not a px length"))
+        (emit TRANSFORM_RESULT { ok: @entity.ok, error: @entity.error, scale: @entity.scale, translateX: @entity.tx, translateY: @entity.ty, inlineSigned: @entity.signed })
+      TF_Z -> ready when @entity.lx.ok
+        (emit TF_STEP { raw: @entity.rest })
+      TF_SCALE -> ready when (not @entity.kxOk)
+        (set @entity.ok false)
+        (set @entity.error (str/concat "`" (str/trim @entity.kraw) "` is not a number"))
+        (emit TRANSFORM_RESULT { ok: @entity.ok, error: @entity.error, scale: @entity.scale, translateX: @entity.tx, translateY: @entity.ty, inlineSigned: @entity.signed })
+      TF_SCALE -> ready when (and @entity.kxOk (not @entity.kyOk))
+        (set @entity.ok false)
+        (set @entity.error (str/concat "`" (str/trim @entity.kraw2) "` is not a number"))
+        (emit TRANSFORM_RESULT { ok: @entity.ok, error: @entity.error, scale: @entity.scale, translateX: @entity.tx, translateY: @entity.ty, inlineSigned: @entity.signed })
+      TF_SCALE -> ready when (and @entity.kxOk @entity.kyOk (!= @entity.kx @entity.ky))
+        (set @entity.ok false)
+        (set @entity.error (str/concat "non-uniform `scale(" @entity.kx ", " @entity.ky ")`"))
+        (emit TRANSFORM_RESULT { ok: @entity.ok, error: @entity.error, scale: @entity.scale, translateX: @entity.tx, translateY: @entity.ty, inlineSigned: @entity.signed })
+      TF_SCALE -> ready when (and @entity.kxOk @entity.kyOk (= @entity.kx @entity.ky))
+        (set @entity.scale (* @entity.scale @entity.kx))
+        (emit TF_STEP { raw: @entity.rest })
+      CSS_TIME_MS -> ready
+        (set @entity.hit (let ((t (str/trim ?raw))) (if (str/endsWith @t "ms") (and (and (!= (str/trim (str/slice @t 0 (- (str/len @t) 2))) "") (= (str/replace-pattern (str/trim (str/slice @t 0 (- (str/len @t) 2))) "^[+-]?([0-9]+[.]?[0-9]*|[.][0-9]+)([eE][+-]?[0-9]+)?$" "") "")) (>= (str/to-number (str/trim (str/slice @t 0 (- (str/len @t) 2)))) 0)) (if (str/endsWith @t "s") (and (and (!= (str/trim (str/slice @t 0 (- (str/len @t) 1))) "") (= (str/replace-pattern (str/trim (str/slice @t 0 (- (str/len @t) 1))) "^[+-]?([0-9]+[.]?[0-9]*|[.][0-9]+)([eE][+-]?[0-9]+)?$" "") "")) (>= (str/to-number (str/trim (str/slice @t 0 (- (str/len @t) 1)))) 0)) false))))
+        (set @entity.ms (if @entity.hit (let ((t (str/trim ?raw))) (if (str/endsWith @t "ms") (math/round (str/to-number (str/trim (str/slice @t 0 (- (str/len @t) 2))))) (math/round (* (str/to-number (str/trim (str/slice @t 0 (- (str/len @t) 1)))) 1000)))) 0))
+        (emit CSS_TIME_RESULT { hit: @entity.hit, ms: @entity.ms })
+      RESOLVE_MOTION -> ready
+        (set @entity.declared (object/get ?motion "shapes" {}))
+        (set @entity.base { modalEnter: { scale: 0.96, translateX: 0, translateY: (* 0.96 8), inlineSigned: false }, modalExit: { scale: 0.92, translateX: 0, translateY: (* 0.92 16), inlineSigned: false }, popoverEnter: { scale: 0.95, translateX: 0, translateY: 0, inlineSigned: false }, popoverExit: { scale: 0.95, translateX: 0, translateY: 0, inlineSigned: false }, toastEnter: { scale: 1, translateX: 0, translateY: 16, inlineSigned: false }, toastExit: { scale: 1, translateX: 0, translateY: 16, inlineSigned: false }, pageEnter: { scale: 1, translateX: 0, translateY: 8, inlineSigned: false }, enterRise: { scale: 1, translateX: 0, translateY: 12, inlineSigned: false }, enterScale: { scale: 0.96, translateX: 0, translateY: 0, inlineSigned: false }, enterSlide: { scale: 1, translateX: 16, translateY: 0, inlineSigned: true } })
+        (set @entity.shapes {})
+        (set @entity.queue (str/split "modalEnter,modalExit,popoverEnter,popoverExit,toastEnter,toastExit,pageEnter,enterRise,enterScale,enterSlide" ","))
+        (set @entity.entryDefault (object/get (object/get ?motion "entry" {}) "default" "fade"))
+        (set @entity.staggerMs (if (let ((t (str/trim (object/get (object/get ?motion "entry" {}) "stagger" "")))) (if (str/endsWith @t "ms") (and (and (!= (str/trim (str/slice @t 0 (- (str/len @t) 2))) "") (= (str/replace-pattern (str/trim (str/slice @t 0 (- (str/len @t) 2))) "^[+-]?([0-9]+[.]?[0-9]*|[.][0-9]+)([eE][+-]?[0-9]+)?$" "") "")) (>= (str/to-number (str/trim (str/slice @t 0 (- (str/len @t) 2)))) 0)) (if (str/endsWith @t "s") (and (and (!= (str/trim (str/slice @t 0 (- (str/len @t) 1))) "") (= (str/replace-pattern (str/trim (str/slice @t 0 (- (str/len @t) 1))) "^[+-]?([0-9]+[.]?[0-9]*|[.][0-9]+)([eE][+-]?[0-9]+)?$" "") "")) (>= (str/to-number (str/trim (str/slice @t 0 (- (str/len @t) 1)))) 0)) false))) (let ((t (str/trim (object/get (object/get ?motion "entry" {}) "stagger" "")))) (if (str/endsWith @t "ms") (math/round (str/to-number (str/trim (str/slice @t 0 (- (str/len @t) 2))))) (math/round (* (str/to-number (str/trim (str/slice @t 0 (- (str/len @t) 1)))) 1000)))) 40))
+        (set @entity.resolving true)
+        (emit RESOLVE_NEXT { at: 10 })
+      RESOLVE_NEXT -> ready when (= (array/len @entity.queue) 0)
+        (set @entity.resolving false)
+        (emit MOTION_RESOLVED { entryDefault: @entity.entryDefault, staggerMs: @entity.staggerMs, shapes: @entity.shapes })
+      RESOLVE_NEXT -> ready when (and (> (array/len @entity.queue) 0) (object/has @entity.declared (array/first @entity.queue)))
+        (set @entity.curName (array/first @entity.queue))
+        (set @entity.queue (array/drop @entity.queue 1))
+        (set @entity.text (str/trim (object/get @entity.declared @entity.curName)))
+        (set @entity.rest (if (= @entity.text "none") "" @entity.text))
+        (set @entity.scale 1)
+        (set @entity.tx 0)
+        (set @entity.ty 0)
+        (set @entity.signed false)
+        (set @entity.ok true)
+        (set @entity.error "")
+        (emit TF_STEP { raw: @entity.text })
+      RESOLVE_NEXT -> ready when (and (> (array/len @entity.queue) 0) (not (object/has @entity.declared (array/first @entity.queue))))
+        (set @entity.shapes (object/set @entity.shapes (array/first @entity.queue) (object/get @entity.base (array/first @entity.queue))))
+        (set @entity.queue (array/drop @entity.queue 1))
+        (emit RESOLVE_NEXT { at: (array/len @entity.queue) })
+      TRANSFORM_RESULT -> ready when @entity.resolving
+        (set @entity.shapes (object/set @entity.shapes @entity.curName (if @entity.ok { scale: @entity.scale, translateX: @entity.tx, translateY: @entity.ty, inlineSigned: @entity.signed } (object/get @entity.base @entity.curName))))
+        (emit RESOLVE_NEXT { at: (array/len @entity.queue) })
+    }
+
+    emits {
+      TRANSFORM_RESULT -> external {
+        ok : boolean
+        error : string
+        scale : number
+        translateX : number
+        translateY : number
+        inlineSigned : boolean
+      }
+        @description "A CSS transform was parsed into one shape, or refused with the reason."
+        @synonyms "parsed transform, motion shape"
+        @tier "primary"
+      CSS_TIME_RESULT -> external {
+        hit : boolean
+        ms : number
+      }
+        @description "A CSS time was read in milliseconds."
+        @synonyms "css time"
+        @tier "primary"
+      MOTION_RESOLVED -> external {
+        entryDefault : string
+        staggerMs : number
+        shapes : Map string MotionShape
+      }
+        @description "A theme's motion resolved against the base."
+        @synonyms "resolved motion"
+        @tier "primary"
+      TF_STEP { raw : string }
+        @description "Internal: parse the next transform function."
+        @tier "internal"
+      TF_PARSED {  }
+        @description "Internal: a transform function was delimited."
+        @tier "internal"
+      TF_APPLY {  }
+        @description "Internal: apply a transform function."
+        @tier "internal"
+      TF_TRANSLATE {  }
+        @description "Internal: apply a translate."
+        @tier "internal"
+      TF_Z {  }
+        @description "Internal: check a translateZ."
+        @tier "internal"
+      TF_SCALE {  }
+        @description "Internal: apply a scale."
+        @tier "internal"
+      RESOLVE_NEXT { at : number }
+        @description "Internal: resolve the next surface shape."
+        @tier "internal"
+    }
+
+    listens {
+      PARSE_TRANSFORM { raw : string! }
+        @description "Parse a CSS transform list into one scale, translate and inline-signed shape."
+        @synonyms "css transform"
+      CSS_TIME_MS { raw : string! }
+        @description "Read a plain CSS time (450ms, 0.3s) in milliseconds."
+        @synonyms "css time"
+      RESOLVE_MOTION { motion : MotionTokens }
+        @description "Resolve a theme's motion tokens: each shape parsed or kept at the base, the entry default and the stagger."
+        @synonyms "theme motion"
+      TF_STEP { raw : string }
+        @description "Parse the next transform function."
+      TF_PARSED { }
+        @description "A transform function was delimited."
+      TF_APPLY { }
+        @description "Apply a transform function."
+      TF_TRANSLATE { }
+        @description "Apply a translate."
+      TF_Z { }
+        @description "Check a translateZ."
+      TF_SCALE { }
+        @description "Apply a scale."
+      RESOLVE_NEXT { at : number }
+        @description "Resolve the next surface shape."
+      TRANSFORM_RESULT { ok : boolean  error : string  scale : number  translateX : number  translateY : number  inlineSigned : boolean }
+        @description "A transform finished parsing."
+    }
+  }
+
+  page "/motion" as MotionPage -> Motion
+}

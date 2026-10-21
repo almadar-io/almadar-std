@@ -6,11 +6,12 @@ app std-orb-lint-identity-unique [
 ]
 uses Spec from "almadar-std/lint-identity-unique"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
 orbital OrbLintIdentityUniqueOrbital {
   entity OrbLintIdentityUniqueRun [runtime] {
     id : string!
-    findings : [string] = []
+    findings : [OrbFinding] = []
   }
 
   trait OrbLintIdentityUnique -> OrbLintIdentityUniqueRun [integration] {
@@ -38,7 +39,7 @@ orbital OrbLintIdentityUniqueOrbital {
                         (array/map (array/filter (object/get (array/nth @orbitals @oi) "auxiliaryEntities" []) (fn en (and (validate/object @en) (object/get @en "identity" false)))) (fn en (object/get @en "name"))))))))
             (let ((names (array/unique (if (> (array/len @prim) 0) @prim @aux))))
               (if (> (array/len @names) 1)
-                [(str/concat "[ORB_S_IDENTITY_NOT_UNIQUE] orbitals: " (array/len @names) " entities are tagged [identity]: " (str/join (array/sort @names) ", ") ". `@user` resolves to a single viewer, so more than one declaration makes every `@user.x` ambiguous.\n  suggestion: Keep exactly one [identity] entity and reference it from the other orbitals (`ownerId : <IdentityEntity>`).")]
+                [{ code: "ORB_S_IDENTITY_NOT_UNIQUE", path: "orbitals", message: (str/concat (array/len @names) " entities are tagged [identity]: " (str/join (array/sort @names) ", ") ". `@user` resolves to a single viewer, so more than one declaration makes every `@user.x` ambiguous."), suggestion: "Keep exactly one [identity] entity and reference it from the other orbitals (`ownerId : <IdentityEntity>`).", severity: "error" }]
                 [])))))
         (emit LINT_FINISH { })
       LINT_FILE_UNREAD -> ready
@@ -52,7 +53,7 @@ orbital OrbLintIdentityUniqueOrbital {
       LINT_RUN -> external { file : string! }
         @description "The lint request this trait answers, from the cli trait or the umbrella."
         @tier "internal"
-      LINT_FOUND -> external { rule : string!  findings : [string]! }
+      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
         @description "This rule's findings for the file, offered to the lint-all umbrella."
         @tier "internal"
       LINT_FILE_READ { data : bytes! }
@@ -90,7 +91,7 @@ orbital OrbLintIdentityUniqueOrbital {
       LINT_FOUND -> ready when (and (= @payload.rule "identity-unique") (= (array/len @payload.findings) 0))
         (emit LINT_ANSWERED { status: 200, body: "lint identity-unique: clean" })
       LINT_FOUND -> ready when (and (= @payload.rule "identity-unique") (> (array/len @payload.findings) 0))
-        (emit LINT_ANSWERED { status: 500, body: (str/join @payload.findings "\n") })
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
       LINT_UNREAD -> ready when (= @payload.rule "identity-unique")
         (emit LINT_ANSWERED { status: 500, body: "lint identity-unique: the file could not be read or lowered" })
     }
@@ -105,7 +106,7 @@ orbital OrbLintIdentityUniqueOrbital {
       LINT_RUN -> external { file : string! }
         @description "Ask the rule trait to lint this file."
         @tier "internal"
-      LINT_FOUND -> external { rule : string!  findings : [string]! }
+      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
         @description "The rule trait's findings for the file."
         @tier "internal"
       LINT_UNREAD -> external { rule : string! }

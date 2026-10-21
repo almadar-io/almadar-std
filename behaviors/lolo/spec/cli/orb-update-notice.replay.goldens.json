@@ -1,0 +1,1400 @@
+{
+ "atom": "cli/atoms/std-orb-update-notice.lolo",
+ "trait": "OrbUpdateNotice",
+ "source": "orbital-cli/src/commands/update_notice.rs",
+ "note": "Expected values follow the Rust code (it has no tests). Each step seeds its entity; the replay kernel answers every os read, write and getenv with an unsupported failure, so a step's cascade runs on through those failure events, and the file answers a later step would carry are fed as seeded steps. Byte payloads (data) are standard base64 of the file text.",
+ "cases": [
+  {
+   "id": "record-stamps-the-cache-without-gating",
+   "steps": [
+    {
+     "event": "UPDATE_NOTICE_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\": [\"record\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UN_WRITE",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "UN_GATE"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "check-gates-before-anything-is-written",
+   "steps": [
+    {
+     "event": "UPDATE_NOTICE_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\": [], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UN_GATE",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "UN_WRITE"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "update-check-off-env-answers-silent",
+   "steps": [
+    {
+     "event": "UN_ENV_NOUPD",
+     "payload": {
+      "value": "1"
+     },
+     "from": "gating",
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UPDATE_NOTICE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "",
+         "stderr": ""
+        }
+       }
+      ],
+      "neverEmits": [
+       "UN_ENV_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "update-check-env-unset-goes-on-to-ci",
+   "steps": [
+    {
+     "event": "UN_ENV_NOUPD",
+     "payload": {},
+     "from": "gating",
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UN_ENV_FAILED",
+        "payload": {
+         "key": "ci"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "ci-set-answers-silent",
+   "steps": [
+    {
+     "event": "UN_ENV_CI",
+     "payload": {
+      "value": "true"
+     },
+     "from": "gating",
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UPDATE_NOTICE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "",
+         "stderr": ""
+        }
+       }
+      ],
+      "neverEmits": [
+       "UN_ENV_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "ci-unset-goes-on-to-the-terminal-check",
+   "steps": [
+    {
+     "event": "UN_ENV_CI",
+     "payload": {},
+     "from": "gating",
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UN_ENV_FAILED",
+        "payload": {
+         "key": "tty"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "not-a-terminal-answers-silent",
+   "steps": [
+    {
+     "event": "UN_TTY",
+     "payload": {
+      "ok": false
+     },
+     "from": "gating",
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UPDATE_NOTICE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "",
+         "stderr": ""
+        }
+       }
+      ],
+      "neverEmits": [
+       "UN_CACHE_ABSENT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-terminal-reads-the-cache",
+   "steps": [
+    {
+     "event": "UN_TTY",
+     "payload": {
+      "ok": true
+     },
+     "from": "gating",
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UN_CACHE_ABSENT",
+        "payload": {
+         "key": "cache"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "fresh-cache-prints-what-it-holds",
+   "steps": [
+    {
+     "event": "UN_CACHE_READ",
+     "payload": {
+      "data": "eyJjaGVja2VkQXQiOiA5OTAwMCwgImF2YWlsYWJsZSI6IFtbIkBhbG1hZGFyL2NvcmUiLCAiMS4yLjAiLCAiMS4xMC4wIl0sIFsiQGFsbWFkYXIvc3RkIiwgIjMuMC4wIiwgIjMuMS40Il1dfQ=="
+     },
+     "from": "reading",
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UN_DUE",
+        "payload": {}
+       },
+       {
+        "event": "UPDATE_NOTICE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "",
+         "stderr": "orb: updates available (@almadar/core 1.2.0 → 1.10.0, @almadar/std 3.0.0 → 3.1.4); run `orb update --global`"
+        }
+       }
+      ],
+      "neverEmits": [
+       "UN_MANIFEST_ABSENT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "fresh-empty-cache-prints-nothing",
+   "steps": [
+    {
+     "event": "UN_CACHE_READ",
+     "payload": {
+      "data": "eyJjaGVja2VkQXQiOiA5OTAwMCwgImF2YWlsYWJsZSI6IFtdfQ=="
+     },
+     "from": "reading",
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UPDATE_NOTICE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "",
+         "stderr": ""
+        }
+       }
+      ],
+      "neverEmits": [
+       "UN_MANIFEST_ABSENT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "stale-cache-rescans-instead-of-printing",
+   "steps": [
+    {
+     "event": "UN_CACHE_READ",
+     "payload": {
+      "data": "eyJjaGVja2VkQXQiOiAwLCAiYXZhaWxhYmxlIjogW1siQGFsbWFkYXIvY29yZSIsICIxLjAuMCIsICIxLjEuMCJdXX0="
+     },
+     "from": "reading",
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UN_DUE",
+        "payload": {}
+       },
+       {
+        "event": "UN_MANIFEST_ABSENT",
+        "payload": {
+         "key": "manifest"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-day-old-to-the-second-is-stale",
+   "steps": [
+    {
+     "event": "UN_CACHE_READ",
+     "payload": {
+      "data": "eyJjaGVja2VkQXQiOiAxMzYwMCwgImF2YWlsYWJsZSI6IFtdfQ=="
+     },
+     "from": "reading",
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UN_MANIFEST_ABSENT",
+        "payload": {
+         "key": "manifest"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "one-second-short-of-a-day-is-fresh",
+   "steps": [
+    {
+     "event": "UN_CACHE_READ",
+     "payload": {
+      "data": "eyJjaGVja2VkQXQiOiAxMzYwMSwgImF2YWlsYWJsZSI6IFtdfQ=="
+     },
+     "from": "reading",
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UPDATE_NOTICE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "",
+         "stderr": ""
+        }
+       }
+      ],
+      "neverEmits": [
+       "UN_MANIFEST_ABSENT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "absent-cache-is-stale",
+   "steps": [
+    {
+     "event": "UN_CACHE_ABSENT",
+     "payload": {
+      "error": "x",
+      "kind": "not-found"
+     },
+     "from": "reading",
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UN_DUE",
+        "payload": {}
+       },
+       {
+        "event": "UN_MANIFEST_ABSENT",
+        "payload": {
+         "key": "manifest"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "garbled-cache-is-stale",
+   "steps": [
+    {
+     "event": "UN_CACHE_READ",
+     "payload": {
+      "data": "bm90IGpzb24="
+     },
+     "from": "reading",
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UN_DUE",
+        "payload": {}
+       },
+       {
+        "event": "UN_MANIFEST_ABSENT",
+        "payload": {
+         "key": "manifest"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "manifest-reads-the-almadar-package",
+   "steps": [
+    {
+     "event": "UN_MANIFEST_READ",
+     "payload": {
+      "data": "eyJkZXBlbmRlbmNpZXMiOiB7IkBhbG1hZGFyL2NvcmUiOiAiXjEuMi4wIiwgImxvZGFzaCI6ICJeNC4wLjAifX0="
+     },
+     "from": "scanning",
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UN_NEXT",
+        "payload": {}
+       },
+       {
+        "event": "UN_PKG_ABSENT",
+        "payload": {
+         "key": "installed"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "manifest-without-almadar-packages-writes-an-empty-cache",
+   "steps": [
+    {
+     "event": "UN_MANIFEST_READ",
+     "payload": {
+      "data": "eyJkZXBlbmRlbmNpZXMiOiB7ImxvZGFzaCI6ICJeNC4wLjAifX0="
+     },
+     "from": "scanning",
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UN_NEXT",
+        "payload": {}
+       },
+       {
+        "event": "UN_WRITE",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "UN_PKG_ABSENT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "absent-manifest-writes-an-empty-cache",
+   "steps": [
+    {
+     "event": "UN_MANIFEST_ABSENT",
+     "payload": {
+      "error": "x",
+      "kind": "not-found"
+     },
+     "from": "scanning",
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UN_WRITE",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "UN_NEXT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "installed-version-asks-the-registry",
+   "steps": [
+    {
+     "event": "UN_PKG_READ",
+     "payload": {
+      "data": "eyJ2ZXJzaW9uIjogIjEuMi4wIn0="
+     },
+     "from": "scanning",
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [
+       {
+        "name": "@almadar/core",
+        "range": "^1.2.0"
+       }
+      ],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UN_ASK",
+        "payload": {
+         "requestId": "0",
+         "name": "@almadar/core",
+         "tag": "latest"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "package-without-a-version-is-skipped",
+   "steps": [
+    {
+     "event": "UN_PKG_READ",
+     "payload": {
+      "data": "e30="
+     },
+     "from": "scanning",
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [
+       {
+        "name": "@almadar/core",
+        "range": "^1.2.0"
+       }
+      ],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UN_NEXT",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "UN_ASK"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "uninstalled-package-is-skipped",
+   "steps": [
+    {
+     "event": "UN_PKG_ABSENT",
+     "payload": {
+      "error": "x",
+      "kind": "not-found"
+     },
+     "from": "scanning",
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [
+       {
+        "name": "@almadar/core",
+        "range": "^1.2.0"
+       }
+      ],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UN_NEXT",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "UN_ASK"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "lookup-walks-stable-versions-downward-to-the-newest-in-range",
+   "steps": [
+    {
+     "event": "UN_LOOKED",
+     "payload": {
+      "requestId": "0",
+      "name": "@almadar/core",
+      "versions": [
+       "1.2.0",
+       "1.3.0",
+       "1.10.0",
+       "2.0.0",
+       "2.1.0-rc.1"
+      ],
+      "version": "2.0.0"
+     },
+     "from": "looking",
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [
+       {
+        "name": "@almadar/core",
+        "range": "^1.2.0"
+       }
+      ],
+      "cursor": 0,
+      "installed": "1.2.0",
+      "cands": [],
+      "cc": 0,
+      "found": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UN_TRY",
+        "payload": {}
+       },
+       {
+        "event": "UN_SAT",
+        "payload": {
+         "requestId": "0.0",
+         "version": "2.0.0",
+         "range": "^1.2.0"
+        }
+       },
+       {
+        "event": "UN_TRY",
+        "payload": {}
+       },
+       {
+        "event": "UN_SAT",
+        "payload": {
+         "requestId": "0.1",
+         "version": "1.10.0",
+         "range": "^1.2.0"
+        }
+       },
+       {
+        "event": "UN_CMP",
+        "payload": {
+         "requestId": "0.1",
+         "a": "1.10.0",
+         "b": "1.2.0"
+        }
+       },
+       {
+        "event": "UPDATE_NOTICE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "",
+         "stderr": "orb: updates available (@almadar/core 1.2.0 → 1.10.0); run `orb update --global`"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-prerelease-is-never-a-candidate",
+   "steps": [
+    {
+     "event": "UN_LOOKED",
+     "payload": {
+      "requestId": "0",
+      "name": "@almadar/core",
+      "versions": [
+       "1.3.0-rc.1"
+      ],
+      "version": "1.3.0-rc.1"
+     },
+     "from": "looking",
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [
+       {
+        "name": "@almadar/core",
+        "range": "^1.2.0"
+       }
+      ],
+      "cursor": 0,
+      "installed": "1.2.0",
+      "cands": [],
+      "cc": 0,
+      "found": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UN_TRY",
+        "payload": {}
+       },
+       {
+        "event": "UN_NEXT",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "UN_SAT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "same-version-in-range-prints-nothing",
+   "steps": [
+    {
+     "event": "UN_LOOKED",
+     "payload": {
+      "requestId": "0",
+      "name": "@almadar/core",
+      "versions": [
+       "1.2.0",
+       "1.3.0",
+       "1.10.0",
+       "2.0.0",
+       "2.1.0-rc.1"
+      ],
+      "version": "2.0.0"
+     },
+     "from": "looking",
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [
+       {
+        "name": "@almadar/core",
+        "range": "^1.2.0"
+       }
+      ],
+      "cursor": 0,
+      "installed": "1.10.0",
+      "cands": [],
+      "cc": 0,
+      "found": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UN_CMP",
+        "payload": {
+         "requestId": "0.1",
+         "a": "1.10.0",
+         "b": "1.10.0"
+        }
+       },
+       {
+        "event": "UPDATE_NOTICE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "",
+         "stderr": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "installed-above-the-newest-in-range-prints-nothing",
+   "steps": [
+    {
+     "event": "UN_LOOKED",
+     "payload": {
+      "requestId": "0",
+      "name": "@almadar/core",
+      "versions": [
+       "1.2.0",
+       "1.3.0",
+       "1.10.0",
+       "2.0.0",
+       "2.1.0-rc.1"
+      ],
+      "version": "2.0.0"
+     },
+     "from": "looking",
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [
+       {
+        "name": "@almadar/core",
+        "range": "^1.2.0"
+       }
+      ],
+      "cursor": 0,
+      "installed": "1.11.0",
+      "cands": [],
+      "cc": 0,
+      "found": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UN_CMP",
+        "payload": {
+         "requestId": "0.1",
+         "a": "1.10.0",
+         "b": "1.11.0"
+        }
+       },
+       {
+        "event": "UPDATE_NOTICE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "",
+         "stderr": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "no-version-in-range-skips-the-package",
+   "steps": [
+    {
+     "event": "UN_LOOKED",
+     "payload": {
+      "requestId": "0",
+      "name": "@almadar/core",
+      "versions": [
+       "2.0.0",
+       "3.0.0"
+      ],
+      "version": "3.0.0"
+     },
+     "from": "looking",
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [
+       {
+        "name": "@almadar/core",
+        "range": "^1.2.0"
+       }
+      ],
+      "cursor": 0,
+      "installed": "1.2.0",
+      "cands": [],
+      "cc": 0,
+      "found": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UN_SAT",
+        "payload": {
+         "requestId": "0.1",
+         "version": "2.0.0",
+         "range": "^1.2.0"
+        }
+       },
+       {
+        "event": "UN_NEXT",
+        "payload": {}
+       },
+       {
+        "event": "UPDATE_NOTICE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "",
+         "stderr": ""
+        }
+       }
+      ],
+      "neverEmits": [
+       "UN_CMP"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "compound-range-resolves-like-rust",
+   "steps": [
+    {
+     "event": "UN_LOOKED",
+     "payload": {
+      "requestId": "0",
+      "name": "@almadar/core",
+      "versions": [
+       "1.4.0"
+      ],
+      "version": "1.4.0"
+     },
+     "from": "looking",
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [
+       {
+        "name": "@almadar/core",
+        "range": ">=1.0.0 <2.0.0"
+       }
+      ],
+      "cursor": 0,
+      "installed": "1.2.0",
+      "cands": [],
+      "cc": 0,
+      "found": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UN_SAT",
+        "payload": {
+         "requestId": "0.0",
+         "version": "1.4.0",
+         "range": ">=1.0.0 <2.0.0"
+        }
+       },
+       {
+        "event": "UN_CMP",
+        "payload": {
+         "requestId": "0.0",
+         "a": "1.4.0",
+         "b": "1.2.0"
+        }
+       },
+       {
+        "event": "UPDATE_NOTICE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "",
+         "stderr": "orb: updates available (@almadar/core 1.2.0 → 1.4.0); run `orb update --global`"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "registry-refusal-skips-the-package",
+   "steps": [
+    {
+     "event": "UN_LOOK_REFUSED",
+     "payload": {
+      "requestId": "0",
+      "name": "@almadar/core",
+      "code": "unreachable",
+      "status": 0,
+      "error": "x"
+     },
+     "from": "looking",
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [
+       {
+        "name": "@almadar/core",
+        "range": "^1.2.0"
+       }
+      ],
+      "cursor": 0,
+      "installed": "1.2.0",
+      "cands": [],
+      "cc": 0,
+      "found": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UN_NEXT",
+        "payload": {}
+       },
+       {
+        "event": "UPDATE_NOTICE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "",
+         "stderr": ""
+        }
+       }
+      ],
+      "neverEmits": [
+       "UN_SAT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "written-cache-answers-the-notice",
+   "steps": [
+    {
+     "event": "UN_WRITTEN",
+     "payload": {},
+     "from": "writing",
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": [
+       [
+        "@almadar/core",
+        "1.2.0",
+        "1.10.0"
+       ]
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UPDATE_NOTICE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "",
+         "stderr": "orb: updates available (@almadar/core 1.2.0 → 1.10.0); run `orb update --global`"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "written-cache-with-nothing-found-answers-silent",
+   "steps": [
+    {
+     "event": "UN_WRITTEN",
+     "payload": {},
+     "from": "writing",
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UPDATE_NOTICE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "",
+         "stderr": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "record-prints-nothing-after-writing",
+   "steps": [
+    {
+     "event": "UN_WRITTEN",
+     "payload": {},
+     "from": "writing",
+     "entity": {
+      "id": "run",
+      "mode": "record",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": [
+       [
+        "@almadar/core",
+        "1.2.0",
+        "1.10.0"
+       ]
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UPDATE_NOTICE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "",
+         "stderr": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "unparseable-range-skips-the-package",
+   "steps": [
+    {
+     "event": "UN_LOOKED",
+     "payload": {
+      "requestId": "0",
+      "name": "@almadar/core",
+      "versions": [
+       "1.4.0"
+      ],
+      "version": "1.4.0"
+     },
+     "from": "looking",
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [
+       {
+        "name": "@almadar/core",
+        "range": "banana"
+       }
+      ],
+      "cursor": 0,
+      "installed": "1.2.0",
+      "cands": [],
+      "cc": 0,
+      "found": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UN_SAT",
+        "payload": {
+         "requestId": "0.0",
+         "version": "1.4.0",
+         "range": "banana"
+        }
+       },
+       {
+        "event": "UN_NEXT",
+        "payload": {}
+       },
+       {
+        "event": "UPDATE_NOTICE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "",
+         "stderr": ""
+        }
+       }
+      ],
+      "neverEmits": [
+       "UN_CMP"
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

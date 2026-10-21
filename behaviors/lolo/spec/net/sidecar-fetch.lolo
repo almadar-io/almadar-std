@@ -1,0 +1,22 @@
+app sidecar-fetch-spec [
+  version: "1.0.0",
+  description: "Design contract for the network half of the sidecar store (golden: orbital-cli sidecar_fetch.rs tests). SIDECAR_RESOLVE names a package's declared file and, when the package's sidecars.lock.json pins it, its sha256, byte count and capability url. A file the lock does not pin is answered as declared, untouched; none declared answers an empty path. A pinned file already in ~/.almadar/sidecars/<sha256> is answered from the cache with no fetch; a missing one is fetched once and verified against the pinned sha256 before it is stored. A failed fetch is reported with the origin and the file, never the url (its query carries the capability token)."
+]
+
+orbital SidecarFetchSpec {
+  expects config { origin : url }
+  expects entity SidecarAsk [runtime] {
+    id : string!
+    sha256 : string
+  }
+  expects trait SidecarFetch {
+    state idle
+    state probing
+    state fetching
+    emits {
+      SIDECAR_RESOLVED { requestId : string!  path : string! }
+      SIDECAR_REFUSED { requestId : string!  code : string!  error : string! }
+    }
+  }
+  expects page "/sidecar-fetch" -> SidecarFetch
+}

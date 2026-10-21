@@ -1,0 +1,465 @@
+{
+ "atom": "cli/atoms/std-orb-lint-duplicate-use-alias.lolo",
+ "trait": "OrbLintDuplicateUseAlias",
+ "cases": [
+  {
+   "id": "same-alias-same-file",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "ConsumerOrbital",
+         "uses": [
+          {
+           "from": "./pickup.orb",
+           "as": "Pickup"
+          },
+          {
+           "from": "./pickup.orb",
+           "as": "Pickup"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "duplicate-use-alias",
+         "findings": [
+          {
+           "code": "ORB_O_DUPLICATE_USE_ALIAS",
+           "path": "orbitals[name=ConsumerOrbital].uses[1]",
+           "message": "Duplicate import alias 'Pickup' at orbitals[name=ConsumerOrbital].uses[1] — each `uses` alias names one import",
+           "suggestion": "",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "same-alias-other-file",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "ConsumerOrbital",
+         "uses": [
+          {
+           "from": "./pickup.orb",
+           "as": "Pickup"
+          },
+          {
+           "from": "./other.orb",
+           "as": "Pickup"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "duplicate-use-alias",
+         "findings": [
+          {
+           "code": "ORB_O_DUPLICATE_USE_ALIAS",
+           "path": "orbitals[name=ConsumerOrbital].uses[1]",
+           "message": "Duplicate import alias 'Pickup' at orbitals[name=ConsumerOrbital].uses[1] — each `uses` alias names one import",
+           "suggestion": "",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-one-file-under-two-aliases",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "ConsumerOrbital",
+         "uses": [
+          {
+           "from": "./pickup.orb",
+           "as": "A"
+          },
+          {
+           "from": "./pickup.orb",
+           "as": "B"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "duplicate-use-alias",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-distinct-aliases",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "O",
+         "uses": [
+          {
+           "from": "./a.orb",
+           "as": "A"
+          },
+          {
+           "from": "./b.orb",
+           "as": "B"
+          },
+          {
+           "from": "./c.orb",
+           "as": "C"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "duplicate-use-alias",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-no-uses",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "O"
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "duplicate-use-alias",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "only-the-first-repeat-per-orbital",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "O",
+         "uses": [
+          {
+           "from": "x",
+           "as": "A"
+          },
+          {
+           "from": "x",
+           "as": "A"
+          },
+          {
+           "from": "x",
+           "as": "A"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "duplicate-use-alias",
+         "findings": [
+          {
+           "code": "ORB_O_DUPLICATE_USE_ALIAS",
+           "path": "orbitals[name=O].uses[1]",
+           "message": "Duplicate import alias 'A' at orbitals[name=O].uses[1] — each `uses` alias names one import",
+           "suggestion": "",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "later-repeat-index",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "O",
+         "uses": [
+          {
+           "from": "x",
+           "as": "A"
+          },
+          {
+           "from": "y",
+           "as": "B"
+          },
+          {
+           "from": "z",
+           "as": "C"
+          },
+          {
+           "from": "y",
+           "as": "B"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "duplicate-use-alias",
+         "findings": [
+          {
+           "code": "ORB_O_DUPLICATE_USE_ALIAS",
+           "path": "orbitals[name=O].uses[3]",
+           "message": "Duplicate import alias 'B' at orbitals[name=O].uses[3] — each `uses` alias names one import",
+           "suggestion": "",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "each-orbital-reports-its-own",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "P",
+         "uses": [
+          {
+           "from": "x",
+           "as": "A"
+          },
+          {
+           "from": "x",
+           "as": "A"
+          }
+         ]
+        },
+        {
+         "name": "Q",
+         "uses": [
+          {
+           "from": "x",
+           "as": "A"
+          }
+         ]
+        },
+        {
+         "name": "R",
+         "uses": [
+          {
+           "from": "x",
+           "as": "B"
+          },
+          {
+           "from": "y",
+           "as": "B"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "duplicate-use-alias",
+         "findings": [
+          {
+           "code": "ORB_O_DUPLICATE_USE_ALIAS",
+           "path": "orbitals[name=P].uses[1]",
+           "message": "Duplicate import alias 'A' at orbitals[name=P].uses[1] — each `uses` alias names one import",
+           "suggestion": "",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_O_DUPLICATE_USE_ALIAS",
+           "path": "orbitals[name=R].uses[1]",
+           "message": "Duplicate import alias 'B' at orbitals[name=R].uses[1] — each `uses` alias names one import",
+           "suggestion": "",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

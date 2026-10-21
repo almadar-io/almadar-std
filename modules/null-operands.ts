@@ -75,7 +75,7 @@ export const NULL_REJECTING_OPERANDS: Readonly<Record<string, readonly number[]>
   'format/currency': [1],
   'hash/md5': [0, 1],
   'hash/pbkdf2': [0, 1, 2, 3],
-  'hash/sha256': [0, 1],
+  'hash/sha256': [0, 1, 2],
   'hmac/sha256': [0, 1, 2],
   'json/valid': [0],
   'math/mod': [1],

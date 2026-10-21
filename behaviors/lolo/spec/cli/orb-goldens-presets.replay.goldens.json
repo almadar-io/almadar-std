@@ -1,0 +1,76 @@
+{
+ "atom": "auth/atoms/std-bearer-verify.lolo",
+ "trait": "BearerVerifier",
+ "note": "Presets reach the trait through the runner: the same step is played with the entity seeded at case level, seeded at step level, and not seeded.",
+ "cases": [
+  {
+   "id": "case-entity-preset-reaches-the-trait",
+   "entity": {
+    "emulator": true,
+    "queue": [
+     {
+      "requestId": 7,
+      "authorization": "Bearer eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpc3MiOiIiLCJhdWQiOiIiLCJzdWIiOiJ1MSIsImV4cCI6NDEwMjQ0NDgwMH0."
+     }
+    ]
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "BEARER_PUMP",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "JWS_VERIFIED",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "step-entity-preset-reaches-the-trait",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "BEARER_PUMP",
+     "payload": {},
+     "entity": {
+      "emulator": true,
+      "queue": [
+       {
+        "requestId": 7,
+        "authorization": "Bearer eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpc3MiOiIiLCJhdWQiOiIiLCJzdWIiOiJ1MSIsImV4cCI6NDEwMjQ0NDgwMH0."
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "JWS_VERIFIED",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-without-a-preset-the-trait-does-not-verify",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "BEARER_PUMP",
+     "payload": {},
+     "expect": {
+      "neverEmits": [
+       "JWS_VERIFIED"
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

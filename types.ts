@@ -327,6 +327,7 @@ export interface OperatorEffectMeta {
     | 'random-bytes'
     | 'credential-status'
     | 'credential-forget'
+    | 'access-check'
     | 'credential-list'
     | 'credential-set'
     | 'credential-remove'

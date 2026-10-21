@@ -1,0 +1,1225 @@
+{
+  "atom": "../ui/core/atoms/std-theme-resolve.lolo",
+  "trait": "ThemeResolve",
+  "cases": [
+    {
+      "id": "theme_keys_follow_the_generated_css_selectors: light and dark",
+      "steps": [
+        {
+          "event": "THEME_KEYS",
+          "payload": {
+            "presets": [
+              {
+                "name": "clay",
+                "declaresTokens": true,
+                "hasDark": true
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_KEYS_RESULT",
+                "payload": {
+                  "declared": [
+                    "clay-light",
+                    "clay-dark"
+                  ],
+                  "keys": [
+                    "clay-dark",
+                    "clay-light"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "theme_keys: light only (control for the dark key)",
+      "steps": [
+        {
+          "event": "THEME_KEYS",
+          "payload": {
+            "presets": [
+              {
+                "name": "paper",
+                "declaresTokens": true,
+                "hasDark": false
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_KEYS_RESULT",
+                "payload": {
+                  "declared": [
+                    "paper-light"
+                  ],
+                  "keys": [
+                    "paper-light"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a_dark_only_preset_has_no_light_key",
+      "steps": [
+        {
+          "event": "THEME_KEYS",
+          "payload": {
+            "presets": [
+              {
+                "name": "game-rpg",
+                "declaresTokens": false,
+                "hasDark": true
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_KEYS_RESULT",
+                "payload": {
+                  "declared": [
+                    "game-rpg-dark"
+                  ],
+                  "keys": [
+                    "game-rpg-dark"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control_a_non_dark_variant_adds_no_key",
+      "steps": [
+        {
+          "event": "THEME_KEYS",
+          "payload": {
+            "presets": [
+              {
+                "name": "clay",
+                "declaresTokens": true,
+                "hasDark": false
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_KEYS_RESULT",
+                "payload": {
+                  "declared": [
+                    "clay-light"
+                  ],
+                  "keys": [
+                    "clay-light"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "preset_keys_are_sorted_across_presets",
+      "steps": [
+        {
+          "event": "THEME_KEYS",
+          "payload": {
+            "presets": [
+              {
+                "name": "zen",
+                "declaresTokens": true,
+                "hasDark": false
+              },
+              {
+                "name": "aqua",
+                "declaresTokens": true,
+                "hasDark": true
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_KEYS_RESULT",
+                "payload": {
+                  "declared": [
+                    "zen-light",
+                    "aqua-light",
+                    "aqua-dark"
+                  ],
+                  "keys": [
+                    "aqua-dark",
+                    "aqua-light",
+                    "zen-light"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a preset with no tokens and no dark variant has no key",
+      "steps": [
+        {
+          "event": "THEME_KEYS",
+          "payload": {
+            "presets": [
+              {
+                "name": "empty",
+                "declaresTokens": false,
+                "hasDark": false
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_KEYS_RESULT",
+                "payload": {
+                  "declared": [],
+                  "keys": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "resolve_theme_precedence: neither declares a theme gives the default",
+      "steps": [
+        {
+          "event": "THEME_RESOLVE",
+          "payload": {
+            "presets": [
+              {
+                "name": "clay",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "aqua",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "minimalist",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "linear-clean",
+                "declaresTokens": true,
+                "hasDark": true
+              }
+            ],
+            "orbitals": [
+              {
+                "name": "A",
+                "theme": ""
+              }
+            ],
+            "orbital": "A",
+            "appTheme": "",
+            "hasMode": false,
+            "requestedMode": "light"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_RESOLVED",
+                "payload": {
+                  "key": "minimalist-light",
+                  "base": "minimalist",
+                  "mode": "light",
+                  "found": true,
+                  "mergesVariant": false
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "precedence: the app theme wins when the orbital declares none",
+      "steps": [
+        {
+          "event": "THEME_RESOLVE",
+          "payload": {
+            "presets": [
+              {
+                "name": "clay",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "aqua",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "minimalist",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "linear-clean",
+                "declaresTokens": true,
+                "hasDark": true
+              }
+            ],
+            "orbitals": [
+              {
+                "name": "A",
+                "theme": ""
+              }
+            ],
+            "orbital": "A",
+            "appTheme": "linear-clean-light",
+            "hasMode": false,
+            "requestedMode": "light"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_RESOLVED",
+                "payload": {
+                  "key": "linear-clean-light",
+                  "base": "linear-clean",
+                  "mode": "light",
+                  "found": true,
+                  "mergesVariant": false
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "precedence: the orbital theme wins over the app theme",
+      "steps": [
+        {
+          "event": "THEME_RESOLVE",
+          "payload": {
+            "presets": [
+              {
+                "name": "clay",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "aqua",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "minimalist",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "linear-clean",
+                "declaresTokens": true,
+                "hasDark": true
+              }
+            ],
+            "orbitals": [
+              {
+                "name": "A",
+                "theme": "clay-light"
+              }
+            ],
+            "orbital": "A",
+            "appTheme": "linear-clean-light",
+            "hasMode": false,
+            "requestedMode": "light"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_RESOLVED",
+                "payload": {
+                  "key": "clay-light",
+                  "base": "clay",
+                  "mode": "light",
+                  "found": true,
+                  "mergesVariant": false
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: an orbital name the schema lacks falls to the app theme",
+      "steps": [
+        {
+          "event": "THEME_RESOLVE",
+          "payload": {
+            "presets": [
+              {
+                "name": "clay",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "aqua",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "minimalist",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "linear-clean",
+                "declaresTokens": true,
+                "hasDark": true
+              }
+            ],
+            "orbitals": [
+              {
+                "name": "A",
+                "theme": "clay-light"
+              }
+            ],
+            "orbital": "Z",
+            "appTheme": "linear-clean-light",
+            "hasMode": false,
+            "requestedMode": "light"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_RESOLVED",
+                "payload": {
+                  "key": "linear-clean-light",
+                  "base": "linear-clean"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "resolve_theme_dark_merges_variant: a dark key",
+      "steps": [
+        {
+          "event": "THEME_RESOLVE",
+          "payload": {
+            "presets": [
+              {
+                "name": "clay",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "aqua",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "minimalist",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "linear-clean",
+                "declaresTokens": true,
+                "hasDark": true
+              }
+            ],
+            "orbitals": [
+              {
+                "name": "A",
+                "theme": ""
+              }
+            ],
+            "orbital": "A",
+            "appTheme": "clay-dark",
+            "hasMode": false,
+            "requestedMode": "light"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_RESOLVED",
+                "payload": {
+                  "key": "clay-dark",
+                  "base": "clay",
+                  "mode": "dark",
+                  "found": true,
+                  "mergesVariant": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: the light key of the same preset does not merge the variant",
+      "steps": [
+        {
+          "event": "THEME_RESOLVE",
+          "payload": {
+            "presets": [
+              {
+                "name": "clay",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "aqua",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "minimalist",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "linear-clean",
+                "declaresTokens": true,
+                "hasDark": true
+              }
+            ],
+            "orbitals": [
+              {
+                "name": "A",
+                "theme": ""
+              }
+            ],
+            "orbital": "A",
+            "appTheme": "clay-light",
+            "hasMode": false,
+            "requestedMode": "light"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_RESOLVED",
+                "payload": {
+                  "key": "clay-light",
+                  "mode": "light",
+                  "mergesVariant": false
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "requested_mode overrides the key suffix (light key forced dark)",
+      "steps": [
+        {
+          "event": "THEME_RESOLVE",
+          "payload": {
+            "presets": [
+              {
+                "name": "clay",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "aqua",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "minimalist",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "linear-clean",
+                "declaresTokens": true,
+                "hasDark": true
+              }
+            ],
+            "orbitals": [
+              {
+                "name": "A",
+                "theme": ""
+              }
+            ],
+            "orbital": "A",
+            "appTheme": "clay-light",
+            "hasMode": true,
+            "requestedMode": "dark"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_RESOLVED",
+                "payload": {
+                  "key": "clay-dark",
+                  "mode": "dark",
+                  "mergesVariant": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: requested light overrides a dark key",
+      "steps": [
+        {
+          "event": "THEME_RESOLVE",
+          "payload": {
+            "presets": [
+              {
+                "name": "clay",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "aqua",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "minimalist",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "linear-clean",
+                "declaresTokens": true,
+                "hasDark": true
+              }
+            ],
+            "orbitals": [
+              {
+                "name": "A",
+                "theme": ""
+              }
+            ],
+            "orbital": "A",
+            "appTheme": "clay-dark",
+            "hasMode": true,
+            "requestedMode": "light"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_RESOLVED",
+                "payload": {
+                  "key": "clay-light",
+                  "mode": "light",
+                  "mergesVariant": false
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a dark key on a preset without a dark variant does not merge",
+      "steps": [
+        {
+          "event": "THEME_RESOLVE",
+          "payload": {
+            "presets": [
+              {
+                "name": "paper",
+                "declaresTokens": true,
+                "hasDark": false
+              }
+            ],
+            "orbitals": [
+              {
+                "name": "A",
+                "theme": ""
+              }
+            ],
+            "orbital": "A",
+            "appTheme": "paper-dark",
+            "hasMode": false,
+            "requestedMode": "light"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_RESOLVED",
+                "payload": {
+                  "key": "paper-dark",
+                  "mode": "dark",
+                  "found": true,
+                  "mergesVariant": false
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a bare base name resolves light",
+      "steps": [
+        {
+          "event": "THEME_RESOLVE",
+          "payload": {
+            "presets": [
+              {
+                "name": "clay",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "aqua",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "minimalist",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "linear-clean",
+                "declaresTokens": true,
+                "hasDark": true
+              }
+            ],
+            "orbitals": [
+              {
+                "name": "A",
+                "theme": ""
+              }
+            ],
+            "orbital": "A",
+            "appTheme": "aqua",
+            "hasMode": false,
+            "requestedMode": "light"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_RESOLVED",
+                "payload": {
+                  "key": "aqua-light",
+                  "base": "aqua",
+                  "mode": "light",
+                  "found": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a bare base keeps the requested mode",
+      "steps": [
+        {
+          "event": "THEME_RESOLVE",
+          "payload": {
+            "presets": [
+              {
+                "name": "clay",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "aqua",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "minimalist",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "linear-clean",
+                "declaresTokens": true,
+                "hasDark": true
+              }
+            ],
+            "orbitals": [
+              {
+                "name": "A",
+                "theme": ""
+              }
+            ],
+            "orbital": "A",
+            "appTheme": "aqua",
+            "hasMode": true,
+            "requestedMode": "dark"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_RESOLVED",
+                "payload": {
+                  "key": "aqua-dark",
+                  "mode": "dark",
+                  "mergesVariant": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an unknown key resolves with no tokens and the key as given",
+      "steps": [
+        {
+          "event": "THEME_RESOLVE",
+          "payload": {
+            "presets": [
+              {
+                "name": "clay",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "aqua",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "minimalist",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "linear-clean",
+                "declaresTokens": true,
+                "hasDark": true
+              }
+            ],
+            "orbitals": [
+              {
+                "name": "A",
+                "theme": ""
+              }
+            ],
+            "orbital": "A",
+            "appTheme": "zz-unknown-dark",
+            "hasMode": false,
+            "requestedMode": "light"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_RESOLVED",
+                "payload": {
+                  "key": "zz-unknown-dark",
+                  "base": "zz-unknown",
+                  "mode": "dark",
+                  "found": false,
+                  "mergesVariant": false
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "default with a requested dark mode uses the minimalist dark key",
+      "steps": [
+        {
+          "event": "THEME_RESOLVE",
+          "payload": {
+            "presets": [
+              {
+                "name": "clay",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "aqua",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "minimalist",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "linear-clean",
+                "declaresTokens": true,
+                "hasDark": true
+              }
+            ],
+            "orbitals": [
+              {
+                "name": "A",
+                "theme": ""
+              }
+            ],
+            "orbital": "A",
+            "appTheme": "",
+            "hasMode": true,
+            "requestedMode": "dark"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_RESOLVED",
+                "payload": {
+                  "key": "minimalist-dark",
+                  "base": "minimalist",
+                  "mode": "dark",
+                  "found": true,
+                  "mergesVariant": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "default when the presets lack minimalist is the fixed light key whatever the mode",
+      "steps": [
+        {
+          "event": "THEME_RESOLVE",
+          "payload": {
+            "presets": [
+              {
+                "name": "clay",
+                "declaresTokens": true,
+                "hasDark": true
+              }
+            ],
+            "orbitals": [
+              {
+                "name": "A",
+                "theme": ""
+              }
+            ],
+            "orbital": "A",
+            "appTheme": "",
+            "hasMode": true,
+            "requestedMode": "dark"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_RESOLVED",
+                "payload": {
+                  "key": "minimalist-light",
+                  "base": "minimalist",
+                  "mode": "dark",
+                  "found": false,
+                  "mergesVariant": false
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "carries_referenced_presets_and_the_default_once",
+      "steps": [
+        {
+          "event": "THEME_CARRY",
+          "payload": {
+            "presets": [
+              {
+                "name": "clay",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "aqua",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "minimalist",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "linear-clean",
+                "declaresTokens": true,
+                "hasDark": true
+              }
+            ],
+            "appTheme": "clay-dark",
+            "orbitalThemes": [
+              "clay-light",
+              "aqua"
+            ],
+            "themes": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CARRIED",
+                "payload": {
+                  "names": [
+                    "aqua",
+                    "clay",
+                    "minimalist"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "carries_the_themes_a_program_switches_to",
+      "steps": [
+        {
+          "event": "THEME_CARRY",
+          "payload": {
+            "presets": [
+              {
+                "name": "clay",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "aqua",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "minimalist",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "linear-clean",
+                "declaresTokens": true,
+                "hasDark": true
+              }
+            ],
+            "appTheme": "clay-light",
+            "orbitalThemes": [],
+            "themes": [
+              "aqua-dark",
+              "clay-dark"
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CARRIED",
+                "payload": {
+                  "names": [
+                    "aqua",
+                    "clay",
+                    "minimalist"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control_no_declared_theme_carries_only_the_default",
+      "steps": [
+        {
+          "event": "THEME_CARRY",
+          "payload": {
+            "presets": [
+              {
+                "name": "clay",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "aqua",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "minimalist",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "linear-clean",
+                "declaresTokens": true,
+                "hasDark": true
+              }
+            ],
+            "appTheme": "",
+            "orbitalThemes": [],
+            "themes": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CARRIED",
+                "payload": {
+                  "names": [
+                    "minimalist"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "edge_an_unknown_key_carries_nothing_for_it",
+      "steps": [
+        {
+          "event": "THEME_CARRY",
+          "payload": {
+            "presets": [
+              {
+                "name": "clay",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "aqua",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "minimalist",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "linear-clean",
+                "declaresTokens": true,
+                "hasDark": true
+              }
+            ],
+            "appTheme": "zz-unknown-dark",
+            "orbitalThemes": [],
+            "themes": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CARRIED",
+                "payload": {
+                  "names": [
+                    "minimalist"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: the default is not duplicated when referenced",
+      "steps": [
+        {
+          "event": "THEME_CARRY",
+          "payload": {
+            "presets": [
+              {
+                "name": "clay",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "aqua",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "minimalist",
+                "declaresTokens": true,
+                "hasDark": true
+              },
+              {
+                "name": "linear-clean",
+                "declaresTokens": true,
+                "hasDark": true
+              }
+            ],
+            "appTheme": "minimalist-dark",
+            "orbitalThemes": [
+              "minimalist-light"
+            ],
+            "themes": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CARRIED",
+                "payload": {
+                  "names": [
+                    "minimalist"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a preset set without the default carries only what it holds",
+      "steps": [
+        {
+          "event": "THEME_CARRY",
+          "payload": {
+            "presets": [
+              {
+                "name": "clay",
+                "declaresTokens": true,
+                "hasDark": true
+              }
+            ],
+            "appTheme": "clay-dark",
+            "orbitalThemes": [],
+            "themes": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CARRIED",
+                "payload": {
+                  "names": [
+                    "clay"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

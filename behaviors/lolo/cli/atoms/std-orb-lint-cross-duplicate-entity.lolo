@@ -6,11 +6,12 @@ app std-orb-lint-cross-duplicate-entity [
 ]
 uses Spec from "almadar-std/lint-cross-duplicate-entity"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
 orbital OrbLintCrossDuplicateEntityOrbital {
   entity OrbLintCrossDuplicateEntityRun [runtime] {
     id : string!
-    findings : [string] = []
+    findings : [OrbFinding] = []
   }
 
   trait OrbLintCrossDuplicateEntity -> OrbLintCrossDuplicateEntityRun [integration] {
@@ -37,7 +38,7 @@ orbital OrbLintCrossDuplicateEntityOrbital {
                 (if (or (= @nm "") (!= (array/first (array/filter (array/range 0 (array/len @owners)) (fn j (= (array/nth @owners @j) @nm)))) @oi) (< (array/len (array/filter @owners (fn x (= @x @nm)))) 2))
                   []
                   (let ((places (array/map (array/filter @orbitals (fn o (= (if (validate/object (object/get @o "entity" {})) (object/get (object/get @o "entity" {}) "name" "") "") @nm))) (fn o (str/concat "\"" (object/get @o "name") "\"")))))
-                    [(str/concat "[ORB_X_DUPLICATE_ENTITY] orbitals: Entity '" @nm "' is defined in multiple orbitals: [" (str/join @places ", ") "]\n  suggestion: Each entity name must be unique across all orbitals")])))))))))
+                    [{ code: "ORB_X_DUPLICATE_ENTITY", path: "orbitals", message: (str/concat "Entity '" @nm "' is defined in multiple orbitals: [" (str/join @places ", ") "]"), suggestion: "Each entity name must be unique across all orbitals", severity: "error" }])))))))))
         (emit LINT_FINISH { })
       LINT_FILE_UNREAD -> ready
         (emit LINT_UNREAD { rule: "cross-duplicate-entity" })
@@ -50,7 +51,7 @@ orbital OrbLintCrossDuplicateEntityOrbital {
       LINT_RUN -> external { file : string! }
         @description "The lint request this trait answers, from the cli trait or the umbrella."
         @tier "internal"
-      LINT_FOUND -> external { rule : string!  findings : [string]! }
+      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
         @description "This rule's findings for the file, offered to the lint-all umbrella."
         @tier "internal"
       LINT_FILE_READ { data : bytes! }
@@ -88,7 +89,7 @@ orbital OrbLintCrossDuplicateEntityOrbital {
       LINT_FOUND -> ready when (and (= @payload.rule "cross-duplicate-entity") (= (array/len @payload.findings) 0))
         (emit LINT_ANSWERED { status: 200, body: "lint cross-duplicate-entity: clean" })
       LINT_FOUND -> ready when (and (= @payload.rule "cross-duplicate-entity") (> (array/len @payload.findings) 0))
-        (emit LINT_ANSWERED { status: 500, body: (str/join @payload.findings "\n") })
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
       LINT_UNREAD -> ready when (= @payload.rule "cross-duplicate-entity")
         (emit LINT_ANSWERED { status: 500, body: "lint cross-duplicate-entity: the file could not be read or lowered" })
     }
@@ -103,7 +104,7 @@ orbital OrbLintCrossDuplicateEntityOrbital {
       LINT_RUN -> external { file : string! }
         @description "Ask the rule trait to lint this file."
         @tier "internal"
-      LINT_FOUND -> external { rule : string!  findings : [string]! }
+      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
         @description "The rule trait's findings for the file."
         @tier "internal"
       LINT_UNREAD -> external { rule : string! }

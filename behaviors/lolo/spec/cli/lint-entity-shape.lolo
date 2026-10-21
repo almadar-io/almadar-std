@@ -2,12 +2,13 @@ app lint-entity-shape-spec [
   version: "1.0.0",
   description: "Design contract for `orb lint entity-shape <file>`. It lowers the file with program/read and reports an entity with no name (ORB_E_MISSING_NAME) and an entity with no fields (ORB_E_NO_FIELDS), the validate_entity checks, for every orbital's inline entity, with the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint entity-shape: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
 orbital LintEntityShapeSpec {
   expects trait OrbLintEntityShape {
     state ready
     emits {
-      LINT_FOUND { rule : string!  findings : [string]! }
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
       LINT_UNREAD { rule : string! }
     }
   }

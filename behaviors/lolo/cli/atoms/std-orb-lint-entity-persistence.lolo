@@ -6,11 +6,12 @@ app std-orb-lint-entity-persistence [
 ]
 uses Spec from "almadar-std/lint-entity-persistence"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
 orbital OrbLintEntityPersistenceOrbital {
   entity OrbLintEntityPersistenceRun [runtime] {
     id : string!
-    findings : [string] = []
+    findings : [OrbFinding] = []
   }
 
   trait OrbLintEntityPersistence -> OrbLintEntityPersistenceRun [integration] {
@@ -34,7 +35,7 @@ orbital OrbLintEntityPersistenceOrbital {
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
             (let ((ent (object/get (array/nth @orbitals @oi) "entity" {})))
               (if (validate/object @ent) (if (and (= (object/get @ent "persistence" "") "persistent") (not (object/has @ent "collection")))
-                [(str/concat "[ORB_E_MISSING_COLLECTION] orbitals[" @oi "].entity.collection: " "Persistent entity requires a collection name" "\n  suggestion: Add a 'collection' property for database storage")]
+                [{ code: "ORB_E_MISSING_COLLECTION", path: (str/concat "orbitals[" @oi "].entity.collection"), message: "Persistent entity requires a collection name", suggestion: "Add a 'collection' property for database storage", severity: "error" }]
                 []) [])))))))
         (emit LINT_FINISH { })
       LINT_FILE_UNREAD -> ready
@@ -48,7 +49,7 @@ orbital OrbLintEntityPersistenceOrbital {
       LINT_RUN -> external { file : string! }
         @description "The lint request this trait answers, from the cli trait or the umbrella."
         @tier "internal"
-      LINT_FOUND -> external { rule : string!  findings : [string]! }
+      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
         @description "This rule's findings for the file, offered to the lint-all umbrella."
         @tier "internal"
       LINT_FILE_READ { data : bytes! }
@@ -86,7 +87,7 @@ orbital OrbLintEntityPersistenceOrbital {
       LINT_FOUND -> ready when (and (= @payload.rule "entity-persistence") (= (array/len @payload.findings) 0))
         (emit LINT_ANSWERED { status: 200, body: "lint entity-persistence: clean" })
       LINT_FOUND -> ready when (and (= @payload.rule "entity-persistence") (> (array/len @payload.findings) 0))
-        (emit LINT_ANSWERED { status: 500, body: (str/join @payload.findings "\n") })
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
       LINT_UNREAD -> ready when (= @payload.rule "entity-persistence")
         (emit LINT_ANSWERED { status: 500, body: "lint entity-persistence: the file could not be read or lowered" })
     }
@@ -101,7 +102,7 @@ orbital OrbLintEntityPersistenceOrbital {
       LINT_RUN -> external { file : string! }
         @description "Ask the rule trait to lint this file."
         @tier "internal"
-      LINT_FOUND -> external { rule : string!  findings : [string]! }
+      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
         @description "The rule trait's findings for the file."
         @tier "internal"
       LINT_UNREAD -> external { rule : string! }

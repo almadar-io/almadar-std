@@ -3,9 +3,9 @@ app std-browse [
   description: "std-browse as a Function — single primitive: data-grid. Owns the fetch + REFETCH (query/filter/page) state machine. Consumers configure fields/imageField/itemActions/cols/gap/variant; the atom renders the grid. Each `fields[]` entry accepts `{ name, label, variant }` plus optional `referenceEntity` + `displayField` to render a foreign-key column as the joined entity's display value (data-grid resolves @list[referenceEntity] at render time when both keys are present). `browseLook` (table default / dense / feed / gallery / master-detail / triage) selects one of six render bodies; dense/feed/gallery were folded in from std-browse-dense/-feed/-gallery (Phase 5.B); master-detail (split record view driven by the guarded VIEW/CLOSE self-transitions) and triage (inbox rows) were folded in 2026-07-26. Consumers retarget by setting browseLook."
 ]
 type BadgeColor = "default" | "primary" | "secondary" | "success" | "warning" | "danger" | "error" | "info" | "neutral" | "destructive"
-type FieldSpec = { name : string!, label : string, variant : h3 | h4 | overline | avatar | body | caption | badge | small | progress, icon : string, format : date | time | datetime | currency | number | boolean | percent, key : string, header : string, colorMap : Map string BadgeColor, labels : Map string string }
+type BrowseFieldSpec = { name : string!, label : string, variant : h3 | h4 | overline | avatar | body | caption | badge | small | progress, icon : string, format : date | time | datetime | currency | number | boolean | percent, key : string, header : string, colorMap : Map string BadgeColor, labels : Map string string }
 type ItemAction = { label : string!, event : event, navigatesTo : string, variant : primary | secondary | ghost | danger, icon : string, roles : [string], when : SExpr }
-type ColumnSpec = { key : string!, field : string, header : string, width : string, align : left | center | right, className : string, weight : normal | medium | semibold, format : badge | date | currency | number | percent | boolean, icon : string, colorMap : Map string BadgeColor, labels : Map string string, variant : h3 | h4 }
+type ColumnSpec = { key : string!, field : string, header : string, label : string, width : string, align : left | center | right, className : string, weight : normal | medium | semibold, format : badge | date | currency | number | percent | boolean, icon : icon, sortable : boolean, colorMap : Map string BadgeColor, labels : Map string string, variant : h3 | h4 }
 type FilterSpec = { field : string!, label : string, options : [string] }
 orbital BrowseItemOrbital {
   type BrowseDetailAction = {
@@ -249,7 +249,7 @@ orbital BrowseItemOrbital {
     }
 
     config {
-      fields : [FieldSpec] = [{
+      fields : [BrowseFieldSpec] = [{
         label: Name
         name: name
         variant: h4
@@ -420,7 +420,7 @@ orbital BrowseItemOrbital {
         @label "Browse look"
         @description "Layer 2 visual treatment for the whole browse surface. table = the default data-grid (bodyContent); dense = spreadsheet-style table with toolbar search (denseBodyContent); feed = chronological card stream (feedBodyContent); gallery = image-first responsive card grid (galleryBodyContent); master-detail = record-work split view — dense list left, clicked record's detail right (masterDetailBodyContent); triage = inbox-register compact rows for queue work (triageBodyContent). Selecting a non-table look swaps which body tree renders after rows load; any body may still be overridden directly at the call site for a one-off layout."
         @tier "presentation"
-      detailFields : [FieldSpec] = [{
+      detailFields : [BrowseFieldSpec] = [{
         label: Name
         name: name
         variant: h4

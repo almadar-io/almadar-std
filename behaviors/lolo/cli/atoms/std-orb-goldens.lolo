@@ -2,7 +2,7 @@ app std-orb-goldens [
   version: "1.0.0",
   inbound: ["cli-goldens"],
   fs: { cwd: "**": [read] },
-  description: "std-orb-goldens — the `orb goldens <file.goldens.json>` command, the parity-golden replay as a std program. The file names an atom (a path under the std lolo root, resolved three levels above the file: spec/<topic>/<file>), a default trait and cases; each case is a list of steps { trait, from, event, payload, expect { fired, state, emits [{ event, payload }], neverEmits [event] } }. It reads the file and the atom (os/read-file, program/read) and plays each case's steps in ONE program/step call, a fresh kernel per case. An expected emit matches the emit at the same position by event name and by every payload key it names (a nested value compares whole). One line per case, `pass` or `fail`, the unmet expectations indented under a fail, then `N passed, M failed`; status 200 (exit 0) when none failed, else 500 (exit 1); usage status 400 (exit 2); a failed read, parse or step answers 500 with its error."
+  description: "std-orb-goldens — the `orb goldens <file.goldens.json>` command, the parity-golden replay as a std program. The file names an atom (a path under the std lolo root, resolved three levels above the file: spec/<topic>/<file>), a default trait and cases; each case is a list of steps { trait, from, event, payload, expect { fired, state, emits [{ event, payload }], neverEmits [event] } }. It reads the file and the atom (os/read-file, program/read) and plays each case's steps in ONE program/step call, a fresh kernel per case. An expected emit matches the emit at the same position by event name and by every payload key it names (a nested value compares whole). One line per case, `pass` or `fail`, the unmet expectations indented under a fail, then `N passed, M failed`; status 200 (exit 0) when none failed, else 500 (exit 1); usage status 400 (exit 2); a failed read, parse or step answers 500 with its error. An expect may carry emitCounts ({ EVENT: n }, the event is emitted exactly n times in the step; 0 means never) and exactEmits, the step's complete ordered emit list: it must have as many emits as the step produced and each, in position, must match by event name and the payload keys it names, so an early incomplete emit is not masked by a later full one. A case is checked against the schema before it is played: an unknown case, step or expect key (note and golden are doc-only case strings, never asserted), a case config (waits on G-ORB-460) and an expect.entity (program/step answers no post-step entity row) each fail the case with a message. A case entity seeds the first step and a step entity seeds that step, through program/step's per-request entity; now is forwarded likewise."
 ]
 uses Spec from "almadar-std/orb-goldens"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -10,9 +10,9 @@ type GoldenValue = string | number | boolean | [GoldenValue] | Map string Golden
 type GoldenPayload = Map string GoldenValue
 type GoldenEmit = { event : string!, payload : GoldenPayload }
 type GoldenEmitted = { type : string!, payload : GoldenPayload }
-type GoldenExpect = { fired : boolean, state : string, emits : [GoldenEmit], neverEmits : [string] }
-type GoldenStep = { keep : string, keepField : string, now : number, trait : string, orbital : string, from : string, event : string!, payload : GoldenPayload, expect : GoldenExpect }
-type GoldenCase = { skip : string, entity : GoldenPayload, config : GoldenPayload, now : number, id : string!, steps : [GoldenStep]! }
+type GoldenExpect = { fired : boolean, state : string, emits : [GoldenEmit], neverEmits : [string], exactEmits : [GoldenEmit], emitCounts : Map string number, entity : GoldenPayload }
+type GoldenStep = { keep : string, keepField : string, now : number, entity : GoldenPayload, trait : string, orbital : string, from : string, event : string!, payload : GoldenPayload, expect : GoldenExpect }
+type GoldenCase = { note : string, golden : string, skip : string, entity : GoldenPayload, config : GoldenPayload, now : number, id : string!, steps : [GoldenStep]! }
 type GoldenFile = { atom : string!, trait : string!, orbital : string, cases : [GoldenCase]! }
 type GoldenEntry = { name : string!, kind : string! }
 type GoldenFull = { orbitals : [orbital] }
@@ -103,6 +103,21 @@ orbital GoldensOrbital {
         (emit GOLDENS_NEXT { at: @entity.cursor })
       GOLDENS_NEXT -> running when (and (< @entity.cursor (array/len (object/get (json/parse @entity.golden GoldenFile) "cases"))) (not (object/has (array/nth (object/get (json/parse @entity.golden GoldenFile) "cases") @entity.cursor) "skip")))
         (set @entity.curCase (json/stringify (array/nth (object/get (json/parse @entity.golden GoldenFile) "cases") @entity.cursor)))
+        (set @entity.fails (array/concat
+          (array/map (array/filter (object/keys (json/parse @entity.curCase GoldenCase)) (fn k (not (array/includes ["skip", "entity", "config", "now", "id", "steps", "note", "golden"] @k)))) (fn k (str/concat "unknown case key: " @k)))
+          (if (object/has (json/parse @entity.curCase GoldenCase) "config") [(str/concat "case config is unsupported until G-ORB-460 lands: the case cannot be played")] [])
+          (array/flatten (array/reduce (object/get (json/parse @entity.curCase GoldenCase) "steps") [] (fn acc s
+            (array/append @acc (array/concat
+              (array/map (array/filter (object/keys @s) (fn k (not (array/includes ["keep", "keepField", "now", "entity", "trait", "orbital", "from", "event", "payload", "expect"] @k)))) (fn k (str/concat "step " (array/len @acc) ": unknown step key: " @k)))
+              (array/map (array/filter (object/keys (object/get @s "expect" {})) (fn k (not (array/includes ["fired", "state", "emits", "neverEmits", "exactEmits", "emitCounts", "entity"] @k)))) (fn k (str/concat "step " (array/len @acc) ": unknown expect key: " @k)))
+              (if (object/has (object/get @s "expect" {}) "entity") [(str/concat "step " (array/len @acc) ": expect.entity cannot be checked: program/step answers no post-step entity row")] []))))))))
+        (emit GOLDENS_PREFLIGHT {})
+      GOLDENS_PREFLIGHT -> running when (> (array/len @entity.fails) 0)
+        (set @entity.lines (array/concat @entity.lines [(str/concat "fail  " (object/get (json/parse @entity.curCase GoldenCase) "id"))] (array/map @entity.fails (fn m (str/concat "  " @m)))))
+        (set @entity.fails [])
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit GOLDENS_NEXT { at: @entity.cursor })
+      GOLDENS_PREFLIGHT -> running when (= (array/len @entity.fails) 0)
         (program/step (json/parse @entity.program GoldenFull)
           (array/reduce (array/take (object/get (json/parse @entity.curCase GoldenCase) "steps") (if (array/some (object/get (json/parse @entity.curCase GoldenCase) "steps") (fn s (object/has @s "keep"))) (+ @entity.upto 1) (array/len (object/get (json/parse @entity.curCase GoldenCase) "steps")))) [] (fn acc s
             (array/append @acc (object/merge
@@ -114,9 +129,8 @@ orbital GoldensOrbital {
                   (if (str/startsWith (json/stringify (object/get (object/get @s "payload" {}) @k)) "\"$")
                     (object/set @pl @k (object/get @entity.vars (str/slice (object/get (object/get @s "payload" {}) @k) 1 (str/len (object/get (object/get @s "payload" {}) @k)))))
                     @pl))) }
-              (if (= (array/len @acc) 0) (object/merge
-                (if (object/has (json/parse @entity.curCase GoldenCase) "entity") { entity: (object/get (json/parse @entity.curCase GoldenCase) "entity") } {})
-                (if (object/has (json/parse @entity.curCase GoldenCase) "config") { config: (object/get (json/parse @entity.curCase GoldenCase) "config") } {})) {})
+              (let ((seed (object/merge (if (= (array/len @acc) 0) (object/get (json/parse @entity.curCase GoldenCase) "entity" {}) {}) (object/get @s "entity" {}))))
+                (if (= (array/len (object/keys @seed)) 0) {} { entity: @seed }))
               (if (object/has @s "now") { now: (object/get @s "now") } (if (object/has (json/parse @entity.curCase GoldenCase) "now") { now: (object/get (json/parse @entity.curCase GoldenCase) "now") } {}))))))
           { key: "steps" emit: { success: GOLDENS_STEPPED, failure: GOLDENS_CASE_FAILED } })
       GOLDENS_STEPPED -> running when (and (array/some (object/get (json/parse @entity.curCase GoldenCase) "steps") (fn s (object/has @s "keep"))) (< (+ @entity.upto 1) (array/len (object/get (json/parse @entity.curCase GoldenCase) "steps"))))
@@ -140,6 +154,15 @@ orbital GoldensOrbital {
                 (if (and (object/has @ex "state") (!= (object/get (object/get @rr "state") "after") (object/get @ex "state"))) [(str/concat "step " (array/len @acc) ": state expected " (object/get @ex "state") " got " (object/get (object/get @rr "state") "after") "; answer " (json/stringify (object/pick @rr ["transitionFired", "guard", "firedArm"])))] [])
                 (let ((want (object/get @ex "emits" [])) (hit (object/get (array/reduce @allEm { k: 0 } (fn m a (if (and (< (object/get @m "k") (array/len (object/get @ex "emits" []))) (let ((x (array/nth (object/get @ex "emits" []) (object/get @m "k")))) (and (= (object/get @a "type") (object/get @x "event")) (array/every (object/keys (object/get @x "payload" {})) (fn key (let ((av (object/get (object/get @a "payload" {}) @key)) (xv (object/get (object/get @x "payload" {}) @key))) (or (= (json/stringify @av) (json/stringify @xv)) (and (str/startsWith (json/stringify @av) "{") (str/startsWith (json/stringify @xv) "{") (= @av @xv)) (and (str/startsWith (json/stringify @av) "[") (str/startsWith (json/stringify @xv) "[") (= @av @xv))))))))) { k: (+ (object/get @m "k") 1) } @m))) "k")))
                   (if (< @hit (array/len @want)) [(str/concat "step " (array/len @acc) ": emit " @hit " " (object/get (array/nth @want @hit) "event") " " (json/stringify (object/get (array/nth @want @hit) "payload" {})) " not found in order; actual: " (if (= (array/len @allEm) 0) (str/concat "nothing emitted, answer " (json/stringify (object/pick @rr ["transitionFired", "guard", "firedArm", "state"]))) (str/join (array/map @allEm (fn a (str/concat (object/get @a "type") " " (json/stringify (object/get @a "payload" {}))))) "; ")))] []))
+                (array/map (array/filter (object/keys (object/get @ex "emitCounts" {})) (fn n (!= (array/len (array/filter @allEm (fn em (= (object/get @em "type") @n)))) (object/get (object/get @ex "emitCounts") @n)))) (fn n (str/concat "step " (array/len @acc) ": emitCounts " @n " expected " (object/get (object/get @ex "emitCounts") @n) " got " (array/len (array/filter @allEm (fn em (= (object/get @em "type") @n)))))))
+                (let ((wantX (object/get @ex "exactEmits" null)))
+                  (if (== @wantX null)
+                    []
+                    (array/concat
+                      (if (!= (array/len @allEm) (array/len @wantX)) [(str/concat "step " (array/len @acc) ": exactEmits expected " (array/len @wantX) " emit(s), got " (array/len @allEm) ": " (str/join (array/map @allEm (fn a (str/concat (object/get @a "type") " " (json/stringify (object/get @a "payload" {}))))) "; "))] [])
+                      (array/map
+                        (array/filter (array/range 0 (array/len @wantX)) (fn i (let ((a (array/nth @allEm @i)) (x (array/nth @wantX @i))) (not (and (!= @a null) (= (object/get @a "type") (object/get @x "event")) (array/every (object/keys (object/get @x "payload" {})) (fn key (let ((av (object/get (object/get @a "payload" {}) @key)) (xv (object/get (object/get @x "payload" {}) @key))) (or (= (json/stringify @av) (json/stringify @xv)) (and (str/startsWith (json/stringify @av) "{") (str/startsWith (json/stringify @xv) "{") (= @av @xv)) (and (str/startsWith (json/stringify @av) "[") (str/startsWith (json/stringify @xv) "[") (= @av @xv))))))))))) 
+                        (fn i (str/concat "step " (array/len @acc) ": exactEmits entry " @i " expected " (object/get (array/nth @wantX @i) "event") " " (json/stringify (object/get (array/nth @wantX @i) "payload" {})) " got " (if (== (array/nth @allEm @i) null) "nothing" (str/concat (object/get (array/nth @allEm @i) "type") " " (json/stringify (object/get (array/nth @allEm @i) "payload" {}))))))))))
                 (array/map (array/filter (object/get @ex "neverEmits" []) (fn n (array/some @allEm (fn em (= (object/get @em "type") @n))))) (fn n (str/concat "step " (array/len @acc) ": emitted " @n " in " (str/join (array/map @allEm (fn a (str/concat (object/get @a "type") " " (json/stringify (object/get @a "payload" {}))))) "; ")))))))))))) (fn m (!= @m ""))))
         (set @entity.lines (array/concat @entity.lines [(str/concat (if (= (array/len @entity.fails) 0) "pass" "fail") "  " (object/get (array/nth (object/get (json/parse @entity.golden GoldenFile) "cases") @entity.cursor) "id"))] (array/map @entity.fails (fn m (str/concat "  " @m)))))
         (set @entity.cursor (+ @entity.cursor 1))
@@ -178,6 +201,9 @@ orbital GoldensOrbital {
         @tier "internal"
       GOLDENS_PROGRAM { result : SExpr! }
         @description "The atom parsed."
+        @tier "internal"
+      GOLDENS_PREFLIGHT {}
+        @description "A case's keys checked against the schema before it is played."
         @tier "internal"
       GOLDENS_STEPPED { result : [GoldenPlayed]! }
         @description "One case's steps played."

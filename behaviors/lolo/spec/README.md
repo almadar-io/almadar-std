@@ -19,12 +19,17 @@ A spec sits under the same folder path as the behavior it specs: the spec for `f
 | `store/bearer-verify.lolo` | `std-bearer-verify` (unbound until WS-0 crypto operators land; `KeyDocument` persistent, verdicts emit `BEARER_VERIFIED { viewer }` / `BEARER_REFUSED { reason }`) |
 | `store/bigint.lolo` | `std-bigint` (bound; base-2^24 limb arrays, `MODPOW`/`MODINV` run on engine registers; one dispatch is capped at 2000 cascaded events by the kernel) |
 | `codec/semver.lolo` | `std-semver` (bound; strict parse, precedence compare, bump, node-semver ranges (^ ~ comparators, x-ranges, partials, hyphen, space-joined sets, `||`), min; optional `requestId` echoed on every answer; ~790 replay goldens generated from the semver npm package in `semver-*.replay.goldens.json`, sharded because the replay runner holds ~30 MB per case; workspace:/link:/file: pins refused) |
+| `codec/toml.lolo` | `std-toml` (bound; TOML 1.0 to a Map value, date-times kept as their text, refusals by closed code with the line; 92 replay goldens from the toml.io examples checked against Python tomllib, paired refusal controls, the real `orbital-rust/Cargo.toml` in `codec/toml.replay.goldens.json`) |
 | `store/rsa.lolo` | `std-rsa` (bound; RS256 verify over `std-bigint`, about 5 s per verify) |
 | `store/jws.lolo` | `std-jws` (bound; compact RS256 JWS verify over `std-rsa`, claim policy stays in `std-bearer-verify`) |
 | `ml/label-capture.lolo` | `std-ml-label-capture` |
 | `ml/ladder.lolo` | `std-ml-ladder` (bound; `std-escalating-decision` composes both traits) |
 | `ml/llm-provider.lolo` | `std-llm` (bound; dropping `LLM_FAILED` or the `LLM_GENERATE`/`LLM_CLASSIFY`/`LLM_EMBED` arms fails it) |
 | `ui/core/gallery.lolo` | `std-gallery` |
+| `ui/core/canvas-theme.lolo` | `std-canvas-theme` (bound; twin of `canvas_theme.rs`; `CANVAS_THEME_PRESET` merges one preset with its dark variant and resolves; 124 Chromium fixtures + 10 Rust-semantics edge cases in `ui/core/canvas-theme-{1,2,3}.replay.goldens.json`; the atom is generated text, regenerate nothing by hand) |
+| `ui/core/theme-resolve.lolo` | `std-theme-resolve` (bound; twin of `theme.rs` `theme_keys`, `carry_theme_definitions`, `resolve_theme` precedence and key split; 26 replay goldens from the Rust tests, each paired with a control, in `ui/core/theme-resolve.replay.goldens.json`) |
+| `ui/core/theme-resolve.lolo` (css) | `std-theme-resolve` `THEME_MERGE` and `THEME_CSS_VARS` (tokens to CSS custom properties, twin of `theme.rs` `merge_theme_tokens`, `css_axes` and `css_vars`; 64 replay goldens (the nested preset token record goes in as the preset JSON carries it and the atom flattens it) from the Rust `css_vars_tests`, each paired with a control, in `ui/core/theme-css-vars.replay.goldens.json`) |
+| `ui/core/theme-boot.lolo` | `std-theme-boot` (organism in `ui/core/organisms`; composes `std-theme-resolve`, `std-canvas-theme` and `std-motion`; `THEME_BOOT` and `THEME_TOGGLE` answer one `THEME_APPLIED { theme, canvasTheme, motion }` with the kernel `SnapshotWire` field names (theme = key, base, mode, merged tokens); 13 replay goldens from three raw presets in light and dark, a toggle, a boot-mode override and unknown-key controls; once-only emission was probed by hand, see G-STD-111) |
 | `ui/core/collection-fetch.lolo` | `std-collection-fetch` (bound; dropping the failure event or its `idle` edge fails it) |
 | `store/audit-entry.lolo` | any program with the audit row (`std-audit-capture`, `std-document-mgmt`) |
 | `store/throttle.lolo` | `std-throttle` (bound; proves `open ⇒ suppressed = 0`) |

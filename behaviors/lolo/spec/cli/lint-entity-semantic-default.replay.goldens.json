@@ -1,0 +1,861 @@
+{
+ "atom": "cli/atoms/std-orb-lint-entity-semantic-default.lolo",
+ "trait": "OrbLintEntitySemanticDefault",
+ "cases": [
+  {
+   "id": "url-not-a-url",
+   "steps": [
+    {
+     "trait": "OrbLintEntitySemanticDefault",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Inv",
+          "fields": [
+           {
+            "name": "v",
+            "type": "url",
+            "default": "Cover Image"
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEntitySemanticDefault",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-semantic-default",
+         "findings": [
+          {
+           "code": "ORB_E_SEMANTIC_VALUE_INVALID",
+           "path": "orbitals[0].entity.fields[0].default",
+           "message": "'Cover Image' is not a valid url",
+           "suggestion": "Provide a valid url or drop the default",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-short-host-is-a-url",
+   "steps": [
+    {
+     "trait": "OrbLintEntitySemanticDefault",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Inv",
+          "fields": [
+           {
+            "name": "v",
+            "type": "url",
+            "default": "http://x.y"
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEntitySemanticDefault",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-semantic-default",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "email-without-dotted-domain",
+   "steps": [
+    {
+     "trait": "OrbLintEntitySemanticDefault",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Inv",
+          "fields": [
+           {
+            "name": "v",
+            "type": "email",
+            "default": "ann@localhost"
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEntitySemanticDefault",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-semantic-default",
+         "findings": [
+          {
+           "code": "ORB_E_SEMANTIC_VALUE_INVALID",
+           "path": "orbitals[0].entity.fields[0].default",
+           "message": "'ann@localhost' is not a valid email",
+           "suggestion": "Provide a valid email or drop the default",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-valid-email",
+   "steps": [
+    {
+     "trait": "OrbLintEntitySemanticDefault",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Inv",
+          "fields": [
+           {
+            "name": "v",
+            "type": "email",
+            "default": "ann@example.com"
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEntitySemanticDefault",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-semantic-default",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "phone-invalid",
+   "steps": [
+    {
+     "trait": "OrbLintEntitySemanticDefault",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Inv",
+          "fields": [
+           {
+            "name": "v",
+            "type": "phone",
+            "default": "abc"
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEntitySemanticDefault",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-semantic-default",
+         "findings": [
+          {
+           "code": "ORB_E_SEMANTIC_VALUE_INVALID",
+           "path": "orbitals[0].entity.fields[0].default",
+           "message": "'abc' is not a valid phone",
+           "suggestion": "Provide a valid phone or drop the default",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-valid-phone",
+   "steps": [
+    {
+     "trait": "OrbLintEntitySemanticDefault",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Inv",
+          "fields": [
+           {
+            "name": "v",
+            "type": "phone",
+            "default": "+14155552671"
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEntitySemanticDefault",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-semantic-default",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "uuid-invalid",
+   "steps": [
+    {
+     "trait": "OrbLintEntitySemanticDefault",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Inv",
+          "fields": [
+           {
+            "name": "v",
+            "type": "uuid",
+            "default": "nope"
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEntitySemanticDefault",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-semantic-default",
+         "findings": [
+          {
+           "code": "ORB_E_SEMANTIC_VALUE_INVALID",
+           "path": "orbitals[0].entity.fields[0].default",
+           "message": "'nope' is not a valid uuid",
+           "suggestion": "Provide a valid uuid or drop the default",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-valid-uuid",
+   "steps": [
+    {
+     "trait": "OrbLintEntitySemanticDefault",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Inv",
+          "fields": [
+           {
+            "name": "v",
+            "type": "uuid",
+            "default": "123e4567-e89b-12d3-a456-426614174000"
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEntitySemanticDefault",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-semantic-default",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "image-checked-as-url",
+   "steps": [
+    {
+     "trait": "OrbLintEntitySemanticDefault",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Inv",
+          "fields": [
+           {
+            "name": "v",
+            "type": "image",
+            "default": "nope"
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEntitySemanticDefault",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-semantic-default",
+         "findings": [
+          {
+           "code": "ORB_E_SEMANTIC_VALUE_INVALID",
+           "path": "orbitals[0].entity.fields[0].default",
+           "message": "'nope' is not a valid image",
+           "suggestion": "Provide a valid image or drop the default",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-image-url",
+   "steps": [
+    {
+     "trait": "OrbLintEntitySemanticDefault",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Inv",
+          "fields": [
+           {
+            "name": "v",
+            "type": "image",
+            "default": "https://x.io/a.png"
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEntitySemanticDefault",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-semantic-default",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "empty-default-email",
+   "steps": [
+    {
+     "trait": "OrbLintEntitySemanticDefault",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Inv",
+          "fields": [
+           {
+            "name": "v",
+            "type": "email",
+            "default": ""
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEntitySemanticDefault",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-semantic-default",
+         "findings": [
+          {
+           "code": "ORB_E_SEMANTIC_VALUE_INVALID",
+           "path": "orbitals[0].entity.fields[0].default",
+           "message": "A 'email' field cannot default to an empty string",
+           "suggestion": "Drop the default — the mock generator synthesizes a valid value",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "empty-default-url-second-field",
+   "steps": [
+    {
+     "trait": "OrbLintEntitySemanticDefault",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Inv",
+          "fields": [
+           {
+            "name": "a",
+            "type": "string",
+            "default": "x"
+           },
+           {
+            "name": "b",
+            "type": "url",
+            "default": ""
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEntitySemanticDefault",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-semantic-default",
+         "findings": [
+          {
+           "code": "ORB_E_SEMANTIC_VALUE_INVALID",
+           "path": "orbitals[0].entity.fields[1].default",
+           "message": "A 'url' field cannot default to an empty string",
+           "suggestion": "Drop the default — the mock generator synthesizes a valid value",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-plain-string-default-unchecked",
+   "steps": [
+    {
+     "trait": "OrbLintEntitySemanticDefault",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Inv",
+          "fields": [
+           {
+            "name": "v",
+            "type": "string",
+            "default": "Cover Image"
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEntitySemanticDefault",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-semantic-default",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-no-default",
+   "steps": [
+    {
+     "trait": "OrbLintEntitySemanticDefault",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Inv",
+          "fields": [
+           {
+            "name": "v",
+            "type": "email"
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEntitySemanticDefault",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-semantic-default",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-non-string-default",
+   "steps": [
+    {
+     "trait": "OrbLintEntitySemanticDefault",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Inv",
+          "fields": [
+           {
+            "name": "v",
+            "type": "email",
+            "default": 5
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEntitySemanticDefault",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-semantic-default",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

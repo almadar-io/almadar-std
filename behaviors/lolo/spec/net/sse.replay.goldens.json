@@ -1,0 +1,502 @@
+{
+ "atom": "net/atoms/std-sse.lolo",
+ "trait": "Sse",
+ "note": "Design contract spec/net/sse.lolo. RESPOND_CHUNK bodies are bytes, which a step answers as base64 of the frame text.",
+ "cases": [
+  {
+   "id": "open-writes-the-event-stream-head",
+   "steps": [
+    {
+     "from": "serving",
+     "event": "SSE_OPEN",
+     "payload": {
+      "requestId": 5
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "RESPOND_HEAD",
+        "payload": {
+         "requestId": 5,
+         "status": 200,
+         "headers": [
+          {
+           "name": "content-type",
+           "value": "text/event-stream"
+          },
+          {
+           "name": "cache-control",
+           "value": "no-cache"
+          },
+          {
+           "name": "x-accel-buffering",
+           "value": "no"
+          }
+         ]
+        }
+       },
+       {
+        "event": "RESPOND_CHUNK",
+        "payload": {
+         "requestId": 5,
+         "body": "cmV0cnk6IDMwMDAKCg=="
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "open": []
+   }
+  },
+  {
+   "id": "send-to-an-open-stream-writes-a-frame",
+   "steps": [
+    {
+     "from": "serving",
+     "event": "SSE_SEND",
+     "payload": {
+      "requestId": 5,
+      "data": "hello"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND_CHUNK",
+        "payload": {
+         "requestId": 5,
+         "body": "ZGF0YTogaGVsbG8KCg=="
+        }
+       }
+      ],
+      "neverEmits": [
+       "SSE_REFUSED"
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "open": [
+     5
+    ]
+   }
+  },
+  {
+   "id": "send-with-id-event-and-multiline-data-frames-every-line",
+   "steps": [
+    {
+     "from": "serving",
+     "event": "SSE_SEND",
+     "payload": {
+      "requestId": 5,
+      "event": "tick",
+      "id": "7",
+      "data": "a\nb"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND_CHUNK",
+        "payload": {
+         "requestId": 5,
+         "body": "aWQ6IDcKZXZlbnQ6IHRpY2sKZGF0YTogYQpkYXRhOiBiCgo="
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "open": [
+     5
+    ]
+   },
+   "note": "spec: SSE_SEND { event: tick, id: 7, data: a newline b }"
+  },
+  {
+   "id": "control-send-to-a-stream-never-opened-is-refused-closed",
+   "steps": [
+    {
+     "from": "serving",
+     "event": "SSE_SEND",
+     "payload": {
+      "requestId": 9,
+      "data": "x"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SSE_REFUSED",
+        "payload": {
+         "requestId": 9,
+         "kind": "closed",
+         "error": "no open stream has this id"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESPOND_CHUNK"
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "open": [
+     5
+    ]
+   }
+  },
+  {
+   "id": "send-with-cr-in-data-is-refused-invalid",
+   "steps": [
+    {
+     "from": "serving",
+     "event": "SSE_SEND",
+     "payload": {
+      "requestId": 5,
+      "data": "a\rb"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SSE_REFUSED",
+        "payload": {
+         "requestId": 5,
+         "kind": "invalid",
+         "error": "event and id take no CR or LF, id no NUL, data no CR"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESPOND_CHUNK"
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "open": [
+     5
+    ]
+   }
+  },
+  {
+   "id": "send-with-lf-in-event-is-refused-invalid",
+   "steps": [
+    {
+     "from": "serving",
+     "event": "SSE_SEND",
+     "payload": {
+      "requestId": 5,
+      "data": "x",
+      "event": "a\nb"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SSE_REFUSED",
+        "payload": {
+         "requestId": 5,
+         "kind": "invalid",
+         "error": "event and id take no CR or LF, id no NUL, data no CR"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESPOND_CHUNK"
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "open": [
+     5
+    ]
+   }
+  },
+  {
+   "id": "send-with-nul-in-id-is-refused-invalid",
+   "steps": [
+    {
+     "from": "serving",
+     "event": "SSE_SEND",
+     "payload": {
+      "requestId": 5,
+      "data": "x",
+      "id": "a\u0000b"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SSE_REFUSED",
+        "payload": {
+         "requestId": 5,
+         "kind": "invalid",
+         "error": "event and id take no CR or LF, id no NUL, data no CR"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESPOND_CHUNK"
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "open": [
+     5
+    ]
+   }
+  },
+  {
+   "id": "control-lf-in-data-is-allowed-it-splits-lines",
+   "steps": [
+    {
+     "from": "serving",
+     "event": "SSE_SEND",
+     "payload": {
+      "requestId": 5,
+      "data": "a\nb"
+     },
+     "expect": {
+      "neverEmits": [
+       "SSE_REFUSED"
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "open": [
+     5
+    ]
+   }
+  },
+  {
+   "id": "heartbeat-on-a-multiple-of-the-cadence-writes-a-comment",
+   "steps": [
+    {
+     "from": "serving",
+     "event": "STREAM_IDLE",
+     "payload": {
+      "requestId": 5,
+      "idle": 3
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND_CHUNK",
+        "payload": {
+         "requestId": 5,
+         "body": "OiBoYgoK"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "open": [
+     5
+    ]
+   }
+  },
+  {
+   "id": "control-heartbeat-off-the-cadence-writes-nothing",
+   "steps": [
+    {
+     "from": "serving",
+     "event": "STREAM_IDLE",
+     "payload": {
+      "requestId": 5,
+      "idle": 4
+     },
+     "expect": {
+      "neverEmits": [
+       "RESPOND_CHUNK"
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "open": [
+     5
+    ]
+   }
+  },
+  {
+   "id": "control-heartbeat-on-a-closed-stream-writes-nothing",
+   "steps": [
+    {
+     "from": "serving",
+     "event": "STREAM_IDLE",
+     "payload": {
+      "requestId": 9,
+      "idle": 3
+     },
+     "expect": {
+      "neverEmits": [
+       "RESPOND_CHUNK"
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "open": [
+     5
+    ]
+   }
+  },
+  {
+   "id": "close-ends-the-stream-and-reports-server",
+   "steps": [
+    {
+     "from": "serving",
+     "event": "SSE_CLOSE",
+     "payload": {
+      "requestId": 5
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND_END",
+        "payload": {
+         "requestId": 5
+        }
+       },
+       {
+        "event": "SSE_CLOSED",
+        "payload": {
+         "requestId": 5,
+         "reason": "server"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "open": [
+     5
+    ]
+   }
+  },
+  {
+   "id": "control-close-of-a-stream-not-open-does-nothing",
+   "steps": [
+    {
+     "from": "serving",
+     "event": "SSE_CLOSE",
+     "payload": {
+      "requestId": 9
+     },
+     "expect": {
+      "neverEmits": [
+       "RESPOND_END",
+       "SSE_CLOSED"
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "open": [
+     5
+    ]
+   }
+  },
+  {
+   "id": "connection-close-forgets-the-stream-and-writes-nothing",
+   "steps": [
+    {
+     "from": "serving",
+     "event": "STREAM_CLOSED",
+     "payload": {
+      "requestId": 5,
+      "reason": "client"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SSE_CLOSED",
+        "payload": {
+         "requestId": 5,
+         "reason": "client"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESPOND_CHUNK",
+       "RESPOND_END"
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "open": [
+     5
+    ]
+   }
+  },
+  {
+   "id": "control-connection-close-of-an-unknown-stream-reports-nothing",
+   "steps": [
+    {
+     "from": "serving",
+     "event": "STREAM_CLOSED",
+     "payload": {
+      "requestId": 9,
+      "reason": "client"
+     },
+     "expect": {
+      "neverEmits": [
+       "SSE_CLOSED"
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "open": [
+     5
+    ]
+   }
+  },
+  {
+   "id": "send-after-close-is-refused-closed",
+   "steps": [
+    {
+     "from": "serving",
+     "event": "SSE_CLOSE",
+     "payload": {
+      "requestId": 5
+     },
+     "expect": {}
+    },
+    {
+     "from": "serving",
+     "event": "SSE_SEND",
+     "payload": {
+      "requestId": 5,
+      "data": "x"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SSE_REFUSED",
+        "payload": {
+         "requestId": 5,
+         "kind": "closed",
+         "error": "no open stream has this id"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "open": [
+     5
+    ]
+   }
+  }
+ ]
+}

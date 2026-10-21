@@ -1,0 +1,133 @@
+app std-orb-lint-entity-mock-member [
+  version: "1.0.0",
+  inbound: ["cli-lint-entity-mock-member"],
+  fs: { cwd: "**": [read] },
+  description: "std-orb-lint-entity-mock-member — the `orb lint entity-mock-member <file>` command, the port of ORB_E_MOCK_NOT_IN_ENUM (entity.rs validate_field). It lowers the file with program/read and, for every non-union field with declared values and a @mock, reports the comma-separated trimmed candidates that are not among the values, with the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint entity-mock-member: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-entity-mock-member"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital OrbLintEntityMockMemberOrbital {
+  entity OrbLintEntityMockMemberRun [runtime] {
+    id : string!
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintEntityMockMember -> OrbLintEntityMockMemberRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_RUN -> reading
+        (set @entity.findings [])
+        (os/read-file { anchor: "cwd" path: @payload.file } { key: "file" emit: { success: LINT_FILE_READ, failure: LINT_FILE_UNREAD } })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "entity-mock-member", findings: @entity.findings })
+    }
+
+    state reading {
+      INIT -> reading
+      LINT_FILE_READ -> reading
+        (program/read (bytes/to-string @payload.data) { emit: { success: LINT_PROGRAM_READ, failure: LINT_FILE_UNREAD } })
+      LINT_PROGRAM_READ -> ready
+        (set @entity.findings (let ((orbitals (object/get @payload.result "orbitals")))
+          (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+            (let ((ent (object/get (array/nth @orbitals @oi) "entity" {})))
+              (if (validate/object @ent) (let ((fields (object/get @ent "fields" [])))
+                (array/flatten (array/map (array/range 0 (array/len @fields)) (fn fi
+                  (let ((f (array/nth @fields @fi)))
+                    (let ((values (object/get @f "values" [])) (cands (array/filter (array/map (str/split (object/get @f "mock" "") ",") (fn c (str/trim @c))) (fn c (!= @c "")))))
+                      (if (and (> (array/len @values) 0) (!= (object/get @f "type" "") "union"))
+                        (let ((outside (array/filter @cands (fn c (not (array/includes @values @c))))))
+                          (if (> (array/len @outside) 0)
+                            [{ code: "ORB_E_MOCK_NOT_IN_ENUM", path: (str/concat "orbitals[" @oi "].entity.fields[" @fi "].mock"), message: (str/concat (str/decode-uri-component "%40") "mock candidate(s) " (str/join @outside ", ") " are not values of this field"), suggestion: "Use only the field's declared values as @mock candidates", severity: "error" }]
+                            []))
+                        []))))))) [])))))))
+        (emit LINT_FINISH { })
+      LINT_FILE_UNREAD -> ready
+        (emit LINT_UNREAD { rule: "entity-mock-member" })
+    }
+
+    emits {
+      LINT_UNREAD -> external { rule : string! }
+        @description "This rule could not read or lower the file."
+        @tier "internal"
+      LINT_RUN -> external { file : string! }
+        @description "The lint request this trait answers, from the cli trait or the umbrella."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FILE_READ { data : bytes! }
+        @description "The file read."
+        @tier "internal"
+      LINT_FILE_UNREAD { error : string }
+        @description "The file could not be read or lowered."
+        @tier "internal"
+      LINT_PROGRAM_READ { result : string }
+        @description "The file lowered by program/read."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      OrbLintEntityMockMemberCli.LINT_RUN -> LINT_RUN
+    }
+  }
+
+  trait OrbLintEntityMockMemberCli -> OrbLintEntityMockMemberRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint entity-mock-member <file>" })
+      LINT_CALLED -> waiting when (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (emit LINT_RUN { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "entity-mock-member") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint entity-mock-member: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "entity-mock-member") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_UNREAD -> ready when (= @payload.rule "entity-mock-member")
+        (emit LINT_ANSWERED { status: 500, body: "lint entity-mock-member: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_RUN -> external { file : string! }
+        @description "Ask the rule trait to lint this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_UNREAD -> external { rule : string! }
+        @description "The rule trait could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-entity-mock-member" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint entity-mock-member` with its arguments and working directory."
+        @synonyms "orb lint entity-mock-member, seed source"
+      OrbLintEntityMockMember.LINT_FOUND -> LINT_FOUND
+      OrbLintEntityMockMember.LINT_UNREAD -> LINT_UNREAD
+    }
+  }
+
+  page "/orb-lint-entity-mock-member" as OrbLintEntityMockMemberPage -> OrbLintEntityMockMember, OrbLintEntityMockMemberCli
+}

@@ -6,11 +6,12 @@ app std-orb-lint-sign-in-route [
 ]
 uses Spec from "almadar-std/lint-sign-in-route"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
 orbital OrbLintSignInRouteOrbital {
   entity OrbLintSignInRouteRun [runtime] {
     id : string!
-    findings : [string] = []
+    findings : [OrbFinding] = []
   }
 
   trait OrbLintSignInRoute -> OrbLintSignInRouteRun [integration] {
@@ -33,15 +34,15 @@ orbital OrbLintSignInRouteOrbital {
         (set @entity.findings (let ((sgi (if (object/has @payload.result "site") (object/get (object/get @payload.result "site") "signIn" "") "")) (allp (array/flatten (array/map (object/get @payload.result "orbitals") (fn orb (object/get @orb "pages" []))))))
           (array/flatten [
             (array/flatten (array/map (array/filter @allp (fn pg (or (= (object/get @pg "path" "") "/login") (= (object/get @pg "path" "") "/login/")))) (fn pg
-              [(str/concat "[ORB_P_HOST_RESERVED_ROUTE] " (object/get @pg "path") ": '" (object/get @pg "path") "' is the host's own sign-in route; no page may be declared on it\n  suggestion: move this page to another route; name `signIn: \"/login\"` to send viewers to the host's sign-in")])))
+              [{ code: "ORB_P_HOST_RESERVED_ROUTE", path: (object/get @pg "path"), message: (str/concat "'" (object/get @pg "path") "' is the host's own sign-in route; no page may be declared on it"), suggestion: "move this page to another route; name `signIn: \"/login\"` to send viewers to the host's sign-in", severity: "error" }])))
             (if (or (= @sgi "") (= @sgi "/login") (= @sgi "/login/"))
               []
               (let ((tgt (str/join (array/map (str/split @sgi "/") (fn seg (if (str/startsWith @seg ":") ":" @seg))) "/")))
                 (let ((hits (array/filter @allp (fn pg (= (str/join (array/map (str/split (object/get @pg "path" "") "/") (fn seg (if (str/startsWith @seg ":") ":" @seg))) "/") @tgt)))))
                   (if (= (array/len @hits) 0)
-                    [(str/concat "[ORB_P_SIGN_IN_UNKNOWN_ROUTE] site.signIn: the `signIn` route '" @sgi "' is no page of this app\n  suggestion: point `signIn:` at a page anonymous viewers can open")]
+                    [{ code: "ORB_P_SIGN_IN_UNKNOWN_ROUTE", path: "site.signIn", message: (str/concat "the `signIn` route '" @sgi "' is no page of this app"), suggestion: "point `signIn:` at a page anonymous viewers can open", severity: "error" }]
                     (if (= (object/get (array/first @hits) "access" "") "authenticated")
-                      [(str/concat "[ORB_P_SIGN_IN_UNKNOWN_ROUTE] site.signIn: the `signIn` route '" @sgi "' is itself `access: authenticated`\n  suggestion: point `signIn:` at a page anonymous viewers can open")]
+                      [{ code: "ORB_P_SIGN_IN_UNKNOWN_ROUTE", path: "site.signIn", message: (str/concat "the `signIn` route '" @sgi "' is itself `access: authenticated`"), suggestion: "point `signIn:` at a page anonymous viewers can open", severity: "error" }]
                       [])))))])))
         (emit LINT_FINISH { })
       LINT_FILE_UNREAD -> ready
@@ -55,7 +56,7 @@ orbital OrbLintSignInRouteOrbital {
       LINT_RUN -> external { file : string! }
         @description "The lint request this trait answers, from the cli trait or the umbrella."
         @tier "internal"
-      LINT_FOUND -> external { rule : string!  findings : [string]! }
+      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
         @description "This rule's findings for the file, offered to the lint-all umbrella."
         @tier "internal"
       LINT_FILE_READ { data : bytes! }
@@ -93,7 +94,7 @@ orbital OrbLintSignInRouteOrbital {
       LINT_FOUND -> ready when (and (= @payload.rule "sign-in-route") (= (array/len @payload.findings) 0))
         (emit LINT_ANSWERED { status: 200, body: "lint sign-in-route: clean" })
       LINT_FOUND -> ready when (and (= @payload.rule "sign-in-route") (> (array/len @payload.findings) 0))
-        (emit LINT_ANSWERED { status: 500, body: (str/join @payload.findings "\n") })
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
       LINT_UNREAD -> ready when (= @payload.rule "sign-in-route")
         (emit LINT_ANSWERED { status: 500, body: "lint sign-in-route: the file could not be read or lowered" })
     }
@@ -108,7 +109,7 @@ orbital OrbLintSignInRouteOrbital {
       LINT_RUN -> external { file : string! }
         @description "Ask the rule trait to lint this file."
         @tier "internal"
-      LINT_FOUND -> external { rule : string!  findings : [string]! }
+      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
         @description "The rule trait's findings for the file."
         @tier "internal"
       LINT_UNREAD -> external { rule : string! }

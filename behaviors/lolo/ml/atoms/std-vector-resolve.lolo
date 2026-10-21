@@ -1,0 +1,398 @@
+app std-vector-resolve [
+  version: "1.0.0",
+  description: "std-vector-resolve — resolve embedding vectors for a batch of texts the way orb does: package snapshots first, then the user store, then the configured provider for what no store holds. RESOLVE { wanted, snapshots, userDir, providerModel } takes the texts with the caller's keys, the snapshot files as bytes (empty = missing), the user vectors directory ($ALMADAR_VECTORS_DIR or ~/.almadar/vectors, resolved by the caller) and the model the configured provider produces (empty when no provider is configured). The model is the first non-empty snapshot's, else the provider's, else baai/bge-base-en-v1.5; an empty wanted list answers at once. It asks for the user store with USER_STORE_NEEDED { path, model } (userDir/model-slug.vec, characters outside A-Za-z0-9._- become _), the caller answers USER_STORE_READ { data }, and std-vector-store resolves every text across the layers. Texts it holds are answered; the rest are deduplicated and embedded through std-llm in batches of 64. With misses and no provider it refuses ORB_VECTOR_PROVIDER_MISSING naming the count and the first 5 caller keys; a provider whose model differs from the stored model refuses ORB_VECTOR_MODEL_MISMATCH. The embedded vectors are persisted into the user store through std-vector-write (quantized, merged, locked) and the whole lookup is run again, so VECTORS_ANSWERED { model, vectors } carries one { key, vector } per wanted text with the int8-rounded values Rust returns; VECTORS_EMBEDDED { model, texts, vectors } still reports the raw provider vectors; VECTORS_REFUSED { code, detail } carries any refusal, the store's included.",
+  egress: ["https://api.openai.com", "https://openrouter.ai", "http://127.0.0.1:1234"],
+  fs: { cwd: "**": [read, write, remove, create] },
+  exec: ["kill"]
+]
+uses Spec from "almadar-std/vector-resolve"
+uses Store from "std/behaviors/std-vector-store"
+uses Llm from "std/behaviors/std-llm"
+uses Write from "std/behaviors/std-vector-write"
+uses Quantize from "std/behaviors/std-vector-quantize"
+uses F32 from "std/behaviors/std-f32"
+uses Delay from "std/behaviors/std-delay"
+uses Sig6 from "std/behaviors/std-sig6"
+uses BigCmp from "std/behaviors/std-bigcmp"
+
+type WantedText = { key : string!, text : string! }
+type StoreEntry = { found : boolean!, dims : number!, scale : number!, record : bytes!, vector : [number]! }
+type KeyedVector = { key : string!, vector : [number]! }
+
+orbital VectorResolveOrbital {
+  entity ResolveRun [runtime] {
+    id : string!
+    wanted : [WantedText] = []
+    snapshots : [bytes] = []
+    snapshotPaths : [string] = []
+    userDir : string = ""
+    providerModel : string = ""
+    providerKind : string = ""
+    embedModel : string = ""
+    model : string = ""
+    texts : [string] = []
+    entries : [StoreEntry] = []
+    misses : [string] = []
+    chunks : [[string]] = []
+    chunkIdx : number = 0
+    got : [[number]] = []
+    persisted : number = 0
+    userPath : string = ""
+  }
+
+  trait ResolveStore = Store.traits.VectorLookup {
+    listens {
+      VectorResolve.VECTOR_LOOKUP_MANY -> VECTOR_LOOKUP_MANY
+      ResolveWrite.VECTOR_LOOKUP_MANY -> VECTOR_LOOKUP_MANY
+      ResolveSig6.SIG6_DONE -> SIG6_DONE
+      ResolveSig6.SIG6_REFUSED -> SIG6_REFUSED
+    }
+  }
+
+  trait ResolveWrite = Write.traits.VectorWrite {
+    listens {
+      VectorResolve.VECTOR_WRITE -> VECTOR_WRITE
+      ResolveQuantize.QUANTIZED -> QUANTIZED
+      ResolveQuantize.QUANTIZE_REFUSED -> QUANTIZE_REFUSED
+      ResolveStore.VECTOR_RESOLVED -> VECTOR_RESOLVED
+      ResolveStore.VECTOR_REFUSED -> VECTOR_REFUSED
+      ResolveDelay.ELAPSED -> ELAPSED
+    }
+  }
+
+  trait ResolveQuantize = Quantize.traits.VectorQuantize {
+    listens {
+      ResolveWrite.QUANTIZE -> QUANTIZE
+      ResolveF32.F32_ENCODED -> F32_ENCODED
+      ResolveF32.F32_REFUSED -> F32_REFUSED
+      ResolveSig6.SIG6_DONE -> SIG6_DONE
+      ResolveSig6.SIG6_REFUSED -> SIG6_REFUSED
+    }
+  }
+
+  trait ResolveF32 = F32.traits.F32Encode {
+    listens {
+      ResolveQuantize.F32_ENCODE -> F32_ENCODE
+      ResolveSig6.F32_ENCODE -> F32_ENCODE
+    }
+  }
+
+  trait ResolveSig6 = Sig6.traits.Sig6 {
+    listens {
+      ResolveQuantize.SIG6 -> SIG6
+      ResolveStore.SIG6 -> SIG6
+      ResolveBigCmp.BIGCMP_ANSWERED -> BIGCMP_ANSWERED
+      ResolveF32.F32_ENCODED -> F32_ENCODED
+      ResolveF32.F32_REFUSED -> F32_REFUSED
+    }
+  }
+
+  trait ResolveBigCmp = BigCmp.traits.BigCmp {
+    listens {
+      ResolveSig6.BIGCMP_BATCH -> BIGCMP_BATCH
+    }
+  }
+
+  trait ResolveDelay = Delay.traits.Delay {
+    listens {
+      ResolveWrite.LOCK_WAIT -> START
+    }
+  }
+
+  trait ResolveLlmOrShared = Llm.traits.LlmClient {
+    events {
+      LLM_EMBED: LLM_EMBED_ORS
+    }
+    config {
+      embedProvider: openrouter
+      embedOrigin: "https://openrouter.ai"
+      embedBasePath: "/api/v1"
+      embedModel: "baai/bge-base-en-v1.5"
+      embedApiKey: "EMBEDDING_API_KEY"
+    }
+    listens {
+      VectorResolve.LLM_EMBED_ORS -> LLM_EMBED_ORS
+    }
+  }
+
+  trait ResolveLlmOrOwn = Llm.traits.LlmClient {
+    events {
+      LLM_EMBED: LLM_EMBED_ORO
+    }
+    config {
+      embedProvider: openrouter
+      embedOrigin: "https://openrouter.ai"
+      embedBasePath: "/api/v1"
+      embedModel: "baai/bge-base-en-v1.5"
+      embedApiKey: "OPEN_ROUTER_API_KEY"
+    }
+    listens {
+      VectorResolve.LLM_EMBED_ORO -> LLM_EMBED_ORO
+    }
+  }
+
+  trait ResolveLlmOaShared = Llm.traits.LlmClient {
+    events {
+      LLM_EMBED: LLM_EMBED_OAS
+    }
+    config {
+      embedProvider: openai
+      embedOrigin: "https://api.openai.com"
+      embedBasePath: "/v1"
+      embedModel: "baai/bge-base-en-v1.5"
+      embedApiKey: "EMBEDDING_API_KEY"
+    }
+    listens {
+      VectorResolve.LLM_EMBED_OAS -> LLM_EMBED_OAS
+    }
+  }
+
+  trait ResolveLlmOaOwn = Llm.traits.LlmClient {
+    events {
+      LLM_EMBED: LLM_EMBED_OAO
+    }
+    config {
+      embedProvider: openai
+      embedOrigin: "https://api.openai.com"
+      embedBasePath: "/v1"
+      embedModel: "baai/bge-base-en-v1.5"
+      embedApiKey: "OPENAI_API_KEY"
+    }
+    listens {
+      VectorResolve.LLM_EMBED_OAO -> LLM_EMBED_OAO
+    }
+  }
+
+  trait ResolveLlmLm = Llm.traits.LlmClient {
+    events {
+      LLM_EMBED: LLM_EMBED_LM
+    }
+    config {
+      embedProvider: lmstudio
+      embedOrigin: "http://127.0.0.1:1234"
+      embedBasePath: "/v1"
+      embedModel: "text-embedding-bge-base-en-v1.5"
+      embedApiKey: "EMBEDDING_API_KEY"
+    }
+    listens {
+      VectorResolve.LLM_EMBED_LM -> LLM_EMBED_LM
+    }
+  }
+
+  trait VectorResolve -> ResolveRun [integration, instance] {
+    initial: idle
+
+    state idle {
+      RESOLVE -> idle when (== (array/len @payload.wanted) 0)
+        (emit VECTORS_ANSWERED { model: (array/reduce @payload.snapshots (if (!= @payload.providerModel "") @payload.providerModel "") (fn sm sb (if (!= @sm "") @sm (if (< (bytes/length @sb) 12) "" (bytes/to-string (bytes/slice @sb 10 (+ 10 (bytes/read-uint @sb 8 2 "le")))))))), vectors: [] })
+
+      RESOLVE -> reading when (> (array/len @payload.wanted) 0)
+        (set @entity.wanted @payload.wanted)
+        (set @entity.snapshots @payload.snapshots)
+        (set @entity.snapshotPaths (or @payload.snapshotPaths []))
+        (set @entity.userDir @payload.userDir)
+        (set @entity.providerModel @payload.providerModel)
+        (set @entity.providerKind (str/default @payload.providerKind ""))
+        (set @entity.embedModel (str/default @payload.embedModel ""))
+        (set @entity.texts (array/unique (array/map @payload.wanted (fn wt @wt.text))))
+        (set @entity.got [])
+        (set @entity.chunkIdx 0)
+        (set @entity.persisted 0)
+        (set @entity.model (let ((snap (array/reduce @payload.snapshots "" (fn sm sb (if (!= @sm "") @sm (if (< (bytes/length @sb) 12) "" (bytes/to-string (bytes/slice @sb 10 (+ 10 (bytes/read-uint @sb 8 2 "le"))))))))))
+          (if (!= @snap "") @snap (if (!= @payload.providerModel "") @payload.providerModel "baai/bge-base-en-v1.5"))))
+        (set @entity.userPath (str/concat @entity.userDir "/" (str/replace-pattern @entity.model "[^A-Za-z0-9._-]" "_") ".vec"))
+        (emit USER_STORE_NEEDED { model: @entity.model, path: @entity.userPath })
+
+      FINISHED -> idle
+        (emit VECTORS_ANSWERED { model: @entity.model, vectors: (array/map @entity.wanted (fn w (let ((en (array/nth @entity.entries (array/indexOf @entity.texts @w.text)))) { key: @w.key, vector: (if @en.found @en.vector (array/nth @entity.got (array/indexOf @entity.misses @w.text))) }))) })
+    }
+
+    state reading {
+      USER_STORE_READ -> looking
+        (emit VECTOR_LOOKUP_MANY { stores: (array/append @entity.snapshots @payload.data), origins: (array/append (array/map (array/range 0 (array/len @entity.snapshots)) (fn si (if (< @si (array/len @entity.snapshotPaths)) (array/nth @entity.snapshotPaths @si) (str/concat "snapshot " @si)))) @entity.userPath), model: @entity.model, texts: @entity.texts })
+    }
+
+    state looking {
+      VECTOR_RESOLVED -> looking
+        (set @entity.entries @payload.entries)
+        (set @entity.misses (array/unique (array/map (array/filter (array/range 0 (array/len @entity.texts)) (fn mi (not (object/get (array/nth @payload.entries @mi) "found")))) (fn mi (array/nth @entity.texts @mi)))))
+        (emit MISSES_COMPUTED { })
+
+      MISSES_COMPUTED -> idle when (or (== (array/len @entity.misses) 0) (>= @entity.persisted 1))
+        (emit FINISHED { })
+      MISSES_COMPUTED -> idle when (and (> (array/len @entity.misses) 0) (< @entity.persisted 1) (== @entity.providerModel ""))
+        (emit VECTORS_REFUSED { code: "ORB_VECTOR_PROVIDER_MISSING", detail: (str/concat (array/len @entity.misses) " embedding text(s) have no stored vector (first: " (str/join (array/map (array/take @entity.misses 5) (fn mt (object/get (array/find @entity.wanted (fn w (== @w.text @mt))) "key"))) ", ") ") and no embedding provider is configured; set EMBEDDING_PROVIDER (openrouter|openai|lmstudio) with OPEN_ROUTER_API_KEY, OPENAI_API_KEY or EMBEDDING_API_KEY (lmstudio: LMSTUDIO_URL), or import vectors with `orb behaviors vectors import`") })
+      MISSES_COMPUTED -> idle when (and (> (array/len @entity.misses) 0) (< @entity.persisted 1) (!= @entity.providerModel "") (!= @entity.providerModel @entity.model))
+        (emit VECTORS_REFUSED { code: "ORB_VECTOR_MODEL_MISMATCH", detail: (str/concat "the stored vectors are `" @entity.model "` but the configured embedder produces `" @entity.providerModel "`") })
+      MISSES_COMPUTED -> embedding when (and (> (array/len @entity.misses) 0) (< @entity.persisted 1) (!= @entity.providerModel "") (== @entity.providerModel @entity.model))
+        (set @entity.chunks (array/map (array/range 0 (math/ceil (/ (array/len @entity.misses) 64))) (fn ci (array/slice @entity.misses (* 64 @ci) (* 64 (+ @ci 1))))))
+        (set @entity.chunkIdx 0)
+        (emit EMBED_BATCH { texts: (array/slice @entity.misses 0 64) })
+
+      VECTOR_REFUSED -> idle
+        (emit VECTORS_REFUSED { code: @payload.code, detail: @payload.detail })
+    }
+
+    state embedding {
+      EMBED_BATCH -> embedding when (== @entity.providerKind "openrouter-shared")
+        (emit LLM_EMBED_ORS { texts: @payload.texts, model: @entity.embedModel })
+      EMBED_BATCH -> embedding when (== @entity.providerKind "openrouter-own")
+        (emit LLM_EMBED_ORO { texts: @payload.texts, model: @entity.embedModel })
+      EMBED_BATCH -> embedding when (== @entity.providerKind "openai-shared")
+        (emit LLM_EMBED_OAS { texts: @payload.texts, model: @entity.embedModel })
+      EMBED_BATCH -> embedding when (== @entity.providerKind "openai-own")
+        (emit LLM_EMBED_OAO { texts: @payload.texts, model: @entity.embedModel })
+      EMBED_BATCH -> embedding when (== @entity.providerKind "lmstudio")
+        (emit LLM_EMBED_LM { texts: @payload.texts, model: @entity.embedModel })
+      EMBED_BATCH -> idle when (and (!= @entity.providerKind "openrouter-shared") (!= @entity.providerKind "openrouter-own") (!= @entity.providerKind "openai-shared") (!= @entity.providerKind "openai-own") (!= @entity.providerKind "lmstudio"))
+        (emit VECTORS_REFUSED { code: "ORB_VECTOR_PROVIDER_KIND", detail: (str/concat "no embedding instance serves the provider kind `" @entity.providerKind "`") })
+      LLM_EMBED_RESULT -> idle when (!= (array/len @payload.embeddings) (array/len (array/nth @entity.chunks @entity.chunkIdx)))
+        (emit VECTORS_REFUSED { code: "ORB_VECTOR_EMBED_COUNT", detail: (str/concat "the embedder returned " (array/len @payload.embeddings) " vectors for " (array/len (array/nth @entity.chunks @entity.chunkIdx)) " texts") })
+      LLM_EMBED_RESULT -> embedding when (and (== (array/len @payload.embeddings) (array/len (array/nth @entity.chunks @entity.chunkIdx))) (< (+ @entity.chunkIdx 1) (array/len @entity.chunks)))
+        (set @entity.got (array/concat @entity.got @payload.embeddings))
+        (set @entity.chunkIdx (+ @entity.chunkIdx 1))
+        (emit EMBED_BATCH { texts: (array/nth @entity.chunks @entity.chunkIdx) })
+      LLM_EMBED_RESULT -> persisting when (and (== (array/len @payload.embeddings) (array/len (array/nth @entity.chunks @entity.chunkIdx))) (>= (+ @entity.chunkIdx 1) (array/len @entity.chunks)))
+        (set @entity.got (array/concat @entity.got @payload.embeddings))
+        (emit VECTORS_EMBEDDED { model: @entity.model, texts: @entity.misses, vectors: @entity.got })
+        (emit VECTOR_WRITE { path: @entity.userPath, model: @entity.model, records: (array/map (array/range 0 (array/len @entity.misses)) (fn wi { text: (array/nth @entity.misses @wi), vector: (array/nth @entity.got @wi) })) })
+      LLM_FAILED -> idle
+        (emit VECTORS_REFUSED { code: "ORB_VECTOR_EMBED_FAILED", detail: (str/concat "embedding failed: " @payload.message) })
+    }
+
+    state persisting {
+      VECTOR_WRITTEN -> reading
+        (set @entity.persisted 1)
+        (emit USER_STORE_NEEDED { model: @entity.model, path: @entity.userPath })
+      VECTOR_WRITE_REFUSED -> idle
+        (emit VECTORS_REFUSED { code: @payload.code, detail: @payload.detail })
+    }
+
+    emits {
+      USER_STORE_NEEDED -> external {
+        model : string!
+        path : string!
+      }
+        @description "The user store file to read for this model; answer with USER_STORE_READ (empty bytes when the file does not exist)."
+        @tier "secondary"
+      VECTOR_LOOKUP_MANY -> external {
+        stores : [bytes]!
+        origins : [string]
+        model : string!
+        texts : [string]!
+      }
+        @tier "secondary"
+      EMBED_BATCH -> internal {
+        texts : [string]!
+      }
+      LLM_EMBED_ORS -> external {
+        texts : [string]!
+        model : string
+      }
+        @tier "secondary"
+      LLM_EMBED_ORO -> external {
+        texts : [string]!
+        model : string
+      }
+        @tier "secondary"
+      LLM_EMBED_OAS -> external {
+        texts : [string]!
+        model : string
+      }
+        @tier "secondary"
+      LLM_EMBED_OAO -> external {
+        texts : [string]!
+        model : string
+      }
+        @tier "secondary"
+      LLM_EMBED_LM -> external {
+        texts : [string]!
+        model : string
+      }
+        @tier "secondary"
+      VECTOR_WRITE -> external {
+        path : string!
+        model : string!
+        records : [{ text : string!, vector : [number]! }]!
+      }
+        @tier "secondary"
+      MISSES_COMPUTED -> internal { }
+      FINISHED -> internal { }
+      VECTORS_ANSWERED -> external {
+        model : string!
+        vectors : [KeyedVector]!
+      }
+        @description "One vector per wanted text under the caller's key."
+        @tier "primary"
+      VECTORS_EMBEDDED -> external {
+        model : string!
+        texts : [string]!
+        vectors : [[number]]!
+      }
+        @description "The texts the provider embedded and their vectors, for the caller to persist into the user store."
+        @tier "primary"
+      VECTORS_REFUSED -> external {
+        code : string!
+        detail : string!
+      }
+        @description "ORB_VECTOR_PROVIDER_MISSING, ORB_VECTOR_MODEL_MISMATCH, ORB_VECTOR_EMBED_FAILED, ORB_VECTOR_EMBED_COUNT or a store refusal."
+        @tier "primary"
+    }
+
+    listens {
+      ResolveStore.VECTOR_RESOLVED -> VECTOR_RESOLVED
+      ResolveStore.VECTOR_REFUSED -> VECTOR_REFUSED
+      ResolveLlmOrShared.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      ResolveLlmOrShared.LLM_FAILED -> LLM_FAILED
+      ResolveLlmOrOwn.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      ResolveLlmOrOwn.LLM_FAILED -> LLM_FAILED
+      ResolveLlmOaShared.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      ResolveLlmOaShared.LLM_FAILED -> LLM_FAILED
+      ResolveLlmOaOwn.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      ResolveLlmOaOwn.LLM_FAILED -> LLM_FAILED
+      ResolveLlmLm.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      ResolveLlmLm.LLM_FAILED -> LLM_FAILED
+      VECTOR_RESOLVED {
+        model : string!
+        entries : [StoreEntry]!
+      }
+      VECTOR_REFUSED {
+        code : string!
+        detail : string!
+      }
+      LLM_EMBED_RESULT {
+        embeddings : [[number]]!
+      }
+      LLM_FAILED {
+        code : string
+        message : string!
+      }
+      ResolveWrite.VECTOR_WRITTEN -> VECTOR_WRITTEN
+      ResolveWrite.VECTOR_WRITE_REFUSED -> VECTOR_WRITE_REFUSED
+      VECTOR_WRITTEN {
+        path : string!
+        count : number!
+      }
+      VECTOR_WRITE_REFUSED {
+        code : string!
+        detail : string!
+      }
+      RESOLVE -> external {
+        wanted : [WantedText]!
+        snapshots : [bytes]!
+        snapshotPaths : [string]
+        userDir : string!
+        providerModel : string!
+        providerKind : string
+        embedModel : string
+      }
+        @description "Resolve vectors for these texts: snapshots, then the user store, then the provider."
+        @synonyms "embedding lookup, vector cache, embed on miss"
+      USER_STORE_READ {
+        data : bytes!
+      }
+    }
+  }
+
+  page "/vector-resolve" as VectorResolvePage -> VectorResolve, ResolveStore, ResolveWrite, ResolveQuantize, ResolveF32, ResolveSig6, ResolveBigCmp, ResolveDelay, ResolveLlmOrShared, ResolveLlmOrOwn, ResolveLlmOaShared, ResolveLlmOaOwn, ResolveLlmLm
+}

@@ -1,0 +1,26 @@
+app orb-update-notice-spec [
+  version: "1.0.0",
+  description: "Design contract for the daily updates-available notice (golden: orbital-cli update_notice.rs). Once a day (the cache ~/.orb/.update-check.json holds { checkedAt (seconds), available [[name, installed, newest]] }) it asks the registry for each @almadar/ package declared in ~/.orb/package.json and, when the newest stable version inside the declared range is above the installed one, answers one stderr line. Off with ORB_NO_UPDATE_CHECK, with CI set, or when stderr is not a terminal. `record` (after orb update) stamps the cache as checked now with nothing available."
+]
+
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+
+orbital OrbUpdateNoticeSpec {
+  expects entity UpdateNoticeRun [runtime] {
+    id : string!
+    checkedAt : number
+    @invariant (>= @entity.checkedAt 0)
+  }
+  expects trait OrbUpdateNotice {
+    state ready
+    state gating
+    state reading
+    state scanning
+    state looking
+    state writing
+    emits {
+      UPDATE_NOTICE_ANSWERED { status : number!  body : string!  stderr : string }
+    }
+  }
+  expects page "/orb-update-notice" -> OrbUpdateNotice
+}

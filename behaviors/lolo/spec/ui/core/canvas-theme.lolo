@@ -1,0 +1,18 @@
+app canvas-theme-spec [
+  version: "1.0.0",
+  description: "Design contract for the canvas drawing theme (twin of orbital-core runtime canvas_theme.rs, pinned by the 124 Chromium-generated fixtures in orbital-core tests/fixtures/canvas-theme). CANVAS_THEME_RESOLVE carries the merged theme tokens the resolution reads (colors, typography, radii, type-scale sizes and the diagram, geometry and surface strings; an absent token is the empty string) and answers CANVAS_THEME_RESULT with the tones, series, ground and surfaces as the computed rgb()/rgba() text Chromium serializes, the strokes, dash and dot lists, fill, marker, label, text sizes and corner. A missing series color rotates the primary hue in oklch by 45 degrees per step."
+]
+
+orbital CanvasThemeSpec {
+  expects entity CanvasThemeRun [runtime] {
+    id : string!
+    ground : string
+    corner : number
+  }
+  expects trait CanvasTheme {
+    state ready
+    state ready { CANVAS_THEME_RESOLVE -> ready }
+    emits { CANVAS_THEME_RESULT }
+  }
+  expects page "/canvas-theme" -> CanvasTheme
+}

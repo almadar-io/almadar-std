@@ -1,0 +1,21 @@
+app key-chord-spec [
+  version: "1.0.0",
+  description: "Design contract for key-chord matching (twin of orbital-core runtime key_chord.rs): the two chord spellings, keyMap resolution with a modified entry beating the bare code, editable-element detection, capture-table merge and keydown routing."
+]
+
+orbital KeyChordSpec {
+  expects entity KeyChordRun [runtime] {
+    id : string!
+    value : string
+    hit : boolean
+    skipped : boolean
+    editorId : string
+    captured : boolean
+  }
+  expects trait KeyChord {
+    state ready
+    state ready { KEY_CHORD -> ready  KEY_MAP_CODE -> ready  RESOLVE_KEY_MAP -> ready  IS_EDITABLE -> ready  MERGE_CAPTURE -> ready  ROUTE_KEY -> ready }
+    emits { KEY_RESULT }
+  }
+  expects page "/key-chord" -> KeyChord
+}

@@ -1,0 +1,22 @@
+app render-report-spec [
+  version: "1.0.0",
+  description: "Design contract for the client render report and the renderer coverage answer (twin of orbital-core runtime render_report.rs and renderer_coverage.rs): verdicts name their distinct offenders, a headline reads PASS or FAIL with counts, and an unsupported pattern is named with its renderer and version, never silently substituted."
+]
+
+orbital RenderReportSpec {
+  expects entity RenderReportRun [runtime] {
+    id : string!
+    name : string
+    passed : boolean
+    detail : string
+    ok : boolean
+    headline : string
+    message : string
+  }
+  expects trait RenderReporter {
+    state ready
+    state ready { RENDER_VERDICT -> ready  RENDER_HEADLINE -> ready  UNSUPPORTED_MESSAGE -> ready  UNSUPPORTED_PATTERNS -> ready }
+    emits { REPORT_RESULT }
+  }
+  expects page "/render-report" -> RenderReporter
+}

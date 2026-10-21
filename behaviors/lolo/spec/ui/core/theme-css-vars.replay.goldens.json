@@ -1,0 +1,2803 @@
+{
+  "atom": "../ui/core/atoms/std-theme-resolve.lolo",
+  "trait": "ThemeResolve",
+  "cases": [
+    {
+      "id": "legacy_maps_use_their_prefixes: colors",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "colors": {
+                "primary": "#14b8a6",
+                "primary-foreground": "#ffffff"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--color-primary": "#14b8a6",
+                    "--color-primary-foreground": "#ffffff"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "legacy: radii",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "radii": {
+                "sm": "4px",
+                "full": "9999px"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--radius-sm": "4px",
+                    "--radius-full": "9999px"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "legacy: spacing",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "spacing": {
+                "1": "4px"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--space-1": "4px"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "legacy: typography",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "typography": {
+                "font-family": "Inter",
+                "line-height-base": "1.5"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--font-family": "Inter",
+                    "--line-height-base": "1.5"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "legacy: shadows",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "shadows": {
+                "sm": "0 1px 2px #000",
+                "main": "0 4px 8px #000"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--shadow-sm": "0 1px 2px #000",
+                    "--shadow-main": "0 4px 8px #000"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "empty_tokens_emit_nothing",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {}
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {}
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "only set keys appear",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "colors": {
+                "primary": "#ff0000"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--color-primary": "#ff0000"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "dark_variant_layers_over_base_colors",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "dark",
+            "base": {
+              "colors": {
+                "primary": "#14b8a6",
+                "background": "#ffffff"
+              }
+            },
+            "variant": {
+              "colors": {
+                "background": "#000000"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--color-background": "#000000",
+                    "--color-primary": "#14b8a6"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "dark_mode_uses_base_radii_when_variant_omits_them",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "dark",
+            "base": {
+              "radii": {
+                "md": "8px"
+              }
+            },
+            "variant": {
+              "colors": {
+                "background": "#000"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--color-background": "#000",
+                    "--radius-md": "8px"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control_light_mode_ignores_the_dark_variant",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "colors": {
+                "background": "#fff"
+              }
+            },
+            "variant": {
+              "colors": {
+                "background": "#000"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--color-background": "#fff"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "density_axis: spacing steps",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "density": {
+                "spacing": {
+                  "space0": "0px",
+                  "space3": "12px",
+                  "space12": "48px"
+                }
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--space-0": "0px",
+                    "--space-3": "12px",
+                    "--space-12": "48px"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "density: element heights",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "density": {
+                "buttonHeightMd": "36px",
+                "inputHeightLg": "44px",
+                "rowHeightCompact": "32px"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--button-height-md": "36px",
+                    "--input-height-lg": "44px",
+                    "--row-height-compact": "32px"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "density: paddings and gap",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "density": {
+                "cardPaddingMd": "16px",
+                "dialogPadding": "24px",
+                "sectionGap": "32px"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--card-padding-md": "16px",
+                    "--dialog-padding": "24px",
+                    "--section-gap": "32px"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "density: only one step",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "density": {
+                "spacing": {
+                  "space3": "12px"
+                }
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--space-3": "12px"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "type_scale: families",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "typeScale": {
+                "displayFamily": "\"Fraunces\", serif",
+                "bodyFamily": "\"Inter\", sans-serif",
+                "monoFamily": "mono"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--font-family-display": "\"Fraunces\", serif",
+                    "--font-family-body": "\"Inter\", sans-serif",
+                    "--font-family-mono": "mono"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "type_scale: scale",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "typeScale": {
+                "scale": {
+                  "sm": {
+                    "size": "14px",
+                    "lineHeight": "20px"
+                  },
+                  "2xl": {
+                    "size": "24px",
+                    "lineHeight": "32px"
+                  },
+                  "display-1": {
+                    "size": "48px",
+                    "lineHeight": "52px"
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--text-sm": "14px",
+                    "--leading-sm": "20px",
+                    "--text-2xl": "24px",
+                    "--leading-2xl": "32px",
+                    "--text-display-1": "48px",
+                    "--leading-display-1": "52px"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "type_scale: intents",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "typeScale": {
+                "intents": {
+                  "headingMajor": {
+                    "slot": "display",
+                    "size": "2xl",
+                    "weight": "bold"
+                  },
+                  "caption": {
+                    "slot": "body",
+                    "size": "xs",
+                    "weight": "normal"
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--intent-heading-major-size": "var(--text-2xl)",
+                    "--intent-heading-major-weight": "var(--font-weight-bold)",
+                    "--intent-heading-major-leading": "var(--leading-2xl)",
+                    "--intent-caption-size": "var(--text-xs)",
+                    "--intent-caption-weight": "var(--font-weight-normal)",
+                    "--intent-caption-leading": "var(--leading-xs)"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "motion: durations",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "motion": {
+                "durations": {
+                  "fast": "100ms",
+                  "normal": "200ms",
+                  "dramatic": "600ms"
+                }
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--duration-fast": "100ms",
+                    "--duration-normal": "200ms",
+                    "--duration-dramatic": "600ms"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "motion: easings",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "motion": {
+                "easings": {
+                  "linear": "linear",
+                  "spring": "cubic-bezier(0.34, 1.56, 0.64, 1)"
+                }
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--easing-linear": "linear",
+                    "--easing-spring": "cubic-bezier(0.34, 1.56, 0.64, 1)"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "motion: intents",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "motion": {
+                "intents": {
+                  "enter": {
+                    "duration": "fast",
+                    "easing": "emphasized"
+                  },
+                  "press": {
+                    "duration": "instant",
+                    "easing": "linear"
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--intent-enter-duration": "var(--duration-fast)",
+                    "--intent-enter-easing": "var(--easing-emphasized)",
+                    "--intent-press-duration": "var(--duration-instant)",
+                    "--intent-press-easing": "var(--easing-linear)"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "iconography: family and sizes",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "iconography": {
+                "family": "phosphor-duotone",
+                "strokeWidth": "1.5",
+                "defaultSize": "20px"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--icon-family": "phosphor-duotone",
+                    "--icon-stroke-width": "1.5",
+                    "--icon-default-size": "20px"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "iconography: family lucide passes through",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "iconography": {
+                "family": "lucide"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--icon-family": "lucide"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "iconography: family phosphor-outline passes through",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "iconography": {
+                "family": "phosphor-outline"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--icon-family": "phosphor-outline"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "iconography: family phosphor-fill passes through",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "iconography": {
+                "family": "phosphor-fill"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--icon-family": "phosphor-fill"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "iconography: family phosphor-duotone passes through",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "iconography": {
+                "family": "phosphor-duotone"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--icon-family": "phosphor-duotone"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "iconography: family tabler passes through",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "iconography": {
+                "family": "tabler"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--icon-family": "tabler"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "iconography: family fa-solid passes through",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "iconography": {
+                "family": "fa-solid"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--icon-family": "fa-solid"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "elevation_axis",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "elevation": {
+                "cardElevation": "var(--shadow-sm)",
+                "popoverElevation": "var(--shadow-main)",
+                "dialogElevation": "var(--shadow-lg)",
+                "toastElevation": "none"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--elevation-card": "var(--shadow-sm)",
+                    "--elevation-popover": "var(--shadow-main)",
+                    "--elevation-dialog": "var(--shadow-lg)",
+                    "--elevation-toast": "none"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "geometry_axis",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "geometry": {
+                "radiusContainer": "12px",
+                "radiusInteractive": "9999px",
+                "radiusPill": "9999px",
+                "borderHairline": "1px",
+                "borderStandard": "2px",
+                "borderHeavy": "3px"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--radius-container": "12px",
+                    "--radius-interactive": "9999px",
+                    "--radius-pill": "9999px",
+                    "--border-hairline": "1px",
+                    "--border-standard": "2px",
+                    "--border-heavy": "3px"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "dark_cascade_per_axis_and_unset_axes",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "dark",
+            "base": {
+              "density": {
+                "buttonHeightMd": "36px"
+              },
+              "iconography": {
+                "family": "lucide",
+                "defaultSize": "16px"
+              }
+            },
+            "variant": {
+              "density": {
+                "buttonHeightMd": "40px"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--button-height-md": "40px",
+                    "--icon-family": "lucide",
+                    "--icon-default-size": "16px"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "combined_axis_fixture",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "density": {
+                "spacing": {
+                  "space3": "12px",
+                  "space6": "24px"
+                },
+                "buttonHeightMd": "36px"
+              },
+              "typeScale": {
+                "bodyFamily": "\"Inter\", sans-serif",
+                "scale": {
+                  "base": {
+                    "size": "16px",
+                    "lineHeight": "24px"
+                  }
+                },
+                "intents": {
+                  "bodyDefault": {
+                    "slot": "body",
+                    "size": "base",
+                    "weight": "normal"
+                  }
+                }
+              },
+              "motion": {
+                "durations": {
+                  "normal": "200ms"
+                },
+                "intents": {
+                  "hover": {
+                    "duration": "fast",
+                    "easing": "standard"
+                  }
+                }
+              },
+              "iconography": {
+                "family": "lucide"
+              },
+              "elevation": {
+                "cardElevation": "var(--shadow-sm)"
+              },
+              "geometry": {
+                "radiusContainer": "8px",
+                "borderHairline": "1px"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--space-3": "12px",
+                    "--space-6": "24px",
+                    "--button-height-md": "36px",
+                    "--font-family-body": "\"Inter\", sans-serif",
+                    "--text-base": "16px",
+                    "--leading-base": "24px",
+                    "--intent-body-default-size": "var(--text-base)",
+                    "--intent-body-default-weight": "var(--font-weight-normal)",
+                    "--intent-body-default-leading": "var(--leading-base)",
+                    "--duration-normal": "200ms",
+                    "--intent-hover-duration": "var(--duration-fast)",
+                    "--intent-hover-easing": "var(--easing-standard)",
+                    "--icon-family": "lucide",
+                    "--elevation-card": "var(--shadow-sm)",
+                    "--radius-container": "8px",
+                    "--border-hairline": "1px"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "range_axes: heading",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "typeScale": {
+                "displayFamily": "\"Limelight\", serif",
+                "fontImport": "https://fonts.googleapis.com/css2?family=Limelight&display=swap",
+                "headingWeight": "400",
+                "headingTransform": "uppercase",
+                "headingTracking": "0.2em",
+                "headingStyle": "italic",
+                "headingShadow": "0 0 6px currentColor"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--font-family-display": "\"Limelight\", serif",
+                    "--heading-weight": "400",
+                    "--heading-transform": "uppercase",
+                    "--heading-tracking": "0.2em",
+                    "--heading-style": "italic",
+                    "--heading-shadow": "0 0 6px currentColor"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "range_axes: geometry shapes",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "geometry": {
+                "cornerShape": "bevel",
+                "cornerShapePill": "round",
+                "cornerShapeInteractive": "round",
+                "borderStyle": "double",
+                "borderStyleInteractive": "outset"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--corner-shape": "bevel",
+                    "--corner-shape-pill": "round",
+                    "--corner-shape-interactive": "round",
+                    "--border-style": "double",
+                    "--border-style-interactive": "outset"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "range_axes: elevation",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "elevation": {
+                "interactiveElevation": "2px 2px 0 #000",
+                "pressedElevation": "inset 2px 2px 0 #000"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--elevation-interactive": "2px 2px 0 #000",
+                    "--elevation-pressed": "inset 2px 2px 0 #000"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "range_axes: surface",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "surface": {
+                "backdrop": "blur(18px) saturate(1.6)",
+                "cardImage": "linear-gradient(#fff6, #fff0)",
+                "pageImage": "radial-gradient(#0002 1px, transparent 1px)",
+                "pageImageSize": "8px 8px"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--surface-backdrop": "blur(18px) saturate(1.6)",
+                    "--surface-card-image": "linear-gradient(#fff6, #fff0)",
+                    "--surface-page-image": "radial-gradient(#0002 1px, transparent 1px)",
+                    "--surface-page-image-size": "8px 8px"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "dark_surface_replaces_base",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "dark",
+            "base": {
+              "surface": {
+                "backdrop": "blur(18px)",
+                "cardImage": "x"
+              }
+            },
+            "variant": {
+              "surface": {
+                "backdrop": "blur(4px)"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--surface-backdrop": "blur(4px)"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "absent_dark_surface_falls_back (empty variant equals light)",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "dark",
+            "base": {
+              "surface": {
+                "backdrop": "blur(18px)",
+                "cardImage": "x"
+              }
+            },
+            "variant": {}
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--surface-backdrop": "blur(18px)",
+                    "--surface-card-image": "x"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control_no_range_axes: only the geometry var",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "geometry": {
+                "radiusContainer": "8px"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--radius-container": "8px"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "empty string passes through",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "geometry": {
+                "borderStyle": ""
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--border-style": ""
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "motion_shapes",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "motion": {
+                "shapes": {
+                  "modalEnter": "scale(0.9)",
+                  "pageEnter": "none",
+                  "toastEnter": "translateX(24px)"
+                }
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--motion-modal-enter-from-transform": "scale(0.9)",
+                    "--motion-toast-enter-from-transform": "translateX(24px)",
+                    "--motion-page-enter-from-transform": "none"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: durations alone emit no --motion- vars",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "motion": {
+                "durations": {
+                  "normal": "200ms"
+                }
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--duration-normal": "200ms"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "motion entry rise with stagger and shape",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "motion": {
+                "entry": {
+                  "default": "rise",
+                  "stagger": "60ms"
+                },
+                "shapes": {
+                  "enterRise": "translateY(24px)"
+                }
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--motion-enter-default": "almadar-enter-rise",
+                    "--motion-enter-stagger": "60ms",
+                    "--motion-enter-rise-from-transform": "translateY(24px)"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "motion busy delay",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "motion": {
+                "busyDelay": "500ms"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--motion-busy-delay": "500ms"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "motion entry none",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "motion": {
+                "entry": {
+                  "default": "none"
+                }
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--motion-enter-default": "none"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "motion awaiting skeleton true",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "motion": {
+                "awaitingSkeleton": true
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--awaiting-skeleton-display": "block"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: awaiting skeleton false",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "motion": {
+                "awaitingSkeleton": false
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--awaiting-skeleton-display": "none"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: durations only emit no entry vars",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "motion": {
+                "durations": {
+                  "fast": "100ms"
+                }
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--duration-fast": "100ms"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "diagram_axis",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "diagram": {
+                "strokeThin": "1px",
+                "strokeNormal": "2px",
+                "strokeBold": "4px",
+                "lineCap": "square",
+                "lineJoin": "miter",
+                "dash": "8 4",
+                "dot": "1 4",
+                "fillStyle": "outline",
+                "fillOpacity": "0.25",
+                "roughness": "1.5",
+                "glow": "6",
+                "shadow": "2px 2px 0 #000",
+                "marker": "open",
+                "labelFont": "mono",
+                "labelSize": "sm",
+                "labelWeight": "600",
+                "labelCase": "uppercase",
+                "corner": "0px"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--diagram-stroke-thin": "1px",
+                    "--diagram-stroke-normal": "2px",
+                    "--diagram-stroke-bold": "4px",
+                    "--diagram-line-cap": "square",
+                    "--diagram-line-join": "miter",
+                    "--diagram-dash": "8 4",
+                    "--diagram-dot": "1 4",
+                    "--diagram-fill-style": "outline",
+                    "--diagram-fill-opacity": "0.25",
+                    "--diagram-roughness": "1.5",
+                    "--diagram-glow": "6",
+                    "--diagram-shadow": "2px 2px 0 #000",
+                    "--diagram-marker": "open",
+                    "--diagram-label-font": "mono",
+                    "--diagram-label-size": "sm",
+                    "--diagram-label-weight": "600",
+                    "--diagram-label-case": "uppercase",
+                    "--diagram-corner": "0px"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_axis",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "scene": {
+                "materialRoughness": "0.8",
+                "materialMetalness": "0.1",
+                "materialFlat": "1",
+                "materialOutline": "2",
+                "lightAmbient": "0.6",
+                "lightKey": "1.2",
+                "lightKeyColor": "#fff4e0",
+                "fog": "0.2"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--material-roughness": "0.8",
+                    "--material-metalness": "0.1",
+                    "--material-flat": "1",
+                    "--material-outline": "2",
+                    "--light-ambient": "0.6",
+                    "--light-key": "1.2",
+                    "--light-key-color": "#fff4e0",
+                    "--scene-fog": "0.2"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "canvas ground surface diagram",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "surface": {
+                "diagram": "var(--color-card)",
+                "backdrop": "blur(4px)"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--surface-backdrop": "blur(4px)",
+                    "--surface-diagram": "var(--color-card)"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "diagram glow alone",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "diagram": {
+                "glow": "8"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--diagram-glow": "8"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a geometry corner shape emits no diagram, material, light or fog var",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "geometry": {
+                "cornerShape": "round"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--corner-shape": "round"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "dark_variant_replaces_the_whole_drawing_axis",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "dark",
+            "base": {
+              "diagram": {
+                "glow": "6",
+                "strokeNormal": "2px"
+              },
+              "scene": {
+                "lightAmbient": "0.6",
+                "materialRoughness": "0.8"
+              },
+              "surface": {
+                "diagram": "var(--color-card)"
+              }
+            },
+            "variant": {
+              "diagram": {
+                "glow": "10"
+              },
+              "scene": {
+                "lightAmbient": "0.3"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--diagram-glow": "10",
+                    "--light-ambient": "0.3",
+                    "--surface-diagram": "var(--color-card)"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "series_and_diagram_colors_ride_the_colors_map",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "colors": {
+                "series-1": "#123456",
+                "diagram-ink": "#000"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--color-series-1": "#123456",
+                    "--color-diagram-ink": "#000"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "surface_band_axes",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "surface": {
+                "edgeMask": "url(\"a.svg\")",
+                "edgeHeight": "40px",
+                "textureMask": "url(\"b.svg\")",
+                "textureSize": "24px 24px",
+                "accentImage": "linear-gradient(red, blue)",
+                "scrim": "linear-gradient(black, transparent)"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--surface-edge-mask": "url(\"a.svg\")",
+                    "--surface-edge-height": "40px",
+                    "--surface-texture-mask": "url(\"b.svg\")",
+                    "--surface-texture-size": "24px 24px",
+                    "--surface-accent-image": "linear-gradient(red, blue)",
+                    "--surface-scrim": "linear-gradient(black, transparent)"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a bare backdrop emits no band vars",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "surface": {
+                "backdrop": "none"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--surface-backdrop": "none"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "surface band: dark edge mask replaces light",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "dark",
+            "base": {
+              "surface": {
+                "edgeMask": "url(\"light.svg\")"
+              }
+            },
+            "variant": {
+              "surface": {
+                "edgeMask": "url(\"dark.svg\")"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--surface-edge-mask": "url(\"dark.svg\")"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "illustration_loading_artwork",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "illustration": {
+                "loadingAsset": "data:image/svg+xml;utf8,%3Csvg%3E%3C/svg%3E"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--illustration-loading": "url(\"data:image/svg+xml;utf8,%3Csvg%3E%3C/svg%3E\")",
+                    "--loader-mark-display": "inline-block",
+                    "--loader-icon-display": "none"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "illustration: dark artwork replaces light",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "dark",
+            "base": {
+              "illustration": {
+                "loadingAsset": "data:image/svg+xml;utf8,%3Csvg%3E%3C/svg%3E"
+              }
+            },
+            "variant": {
+              "illustration": {
+                "loadingAsset": "data:image/svg+xml;utf8,%3Csvg%20id=%22d%22%3E%3C/svg%3E"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {
+                    "--illustration-loading": "url(\"data:image/svg+xml;utf8,%3Csvg%20id=%22d%22%3E%3C/svg%3E\")",
+                    "--loader-mark-display": "inline-block",
+                    "--loader-icon-display": "none"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: an illustration without a loading asset emits nothing",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "illustration": {
+                "style": "minimal"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {}
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: an empty loading asset emits nothing",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "illustration": {
+                "loadingAsset": ""
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT",
+                "payload": {
+                  "vars": {}
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "THEME_MERGE: the typed color axis is taken wholesale from the dark variant",
+      "steps": [
+        {
+          "event": "THEME_MERGE",
+          "payload": {
+            "mode": "dark",
+            "base": {
+              "color": {
+                "primary": "#111111",
+                "accent": "#222222"
+              }
+            },
+            "variant": {
+              "color": {
+                "primary": "#eeeeee"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_MERGED",
+                "payload": {
+                  "tokens": {
+                    "color": {
+                      "primary": "#eeeeee"
+                    },
+                    "colors": null,
+                    "radii": null,
+                    "spacing": null,
+                    "typography": null,
+                    "shadows": null,
+                    "density": null,
+                    "typeScale": null,
+                    "motion": null,
+                    "iconography": null,
+                    "elevation": null,
+                    "geometry": null,
+                    "illustration": null,
+                    "surface": null,
+                    "diagram": null,
+                    "scene": null
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "THEME_MERGE control: the color axis falls to the base when the variant has none, and in light mode",
+      "steps": [
+        {
+          "event": "THEME_MERGE",
+          "payload": {
+            "mode": "dark",
+            "base": {
+              "color": {
+                "primary": "#111111"
+              }
+            },
+            "variant": {
+              "colors": {
+                "background": "#000"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_MERGED",
+                "payload": {
+                  "tokens": {
+                    "color": {
+                      "primary": "#111111"
+                    },
+                    "colors": {
+                      "background": "#000"
+                    },
+                    "radii": null,
+                    "spacing": null,
+                    "typography": null,
+                    "shadows": null,
+                    "density": null,
+                    "typeScale": null,
+                    "motion": null,
+                    "iconography": null,
+                    "elevation": null,
+                    "geometry": null,
+                    "illustration": null,
+                    "surface": null,
+                    "diagram": null,
+                    "scene": null
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "THEME_MERGE",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "color": {
+                "primary": "#111111"
+              }
+            },
+            "variant": {
+              "color": {
+                "primary": "#eeeeee"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_MERGED",
+                "payload": {
+                  "tokens": {
+                    "color": {
+                      "primary": "#111111"
+                    },
+                    "colors": null,
+                    "radii": null,
+                    "spacing": null,
+                    "typography": null,
+                    "shadows": null,
+                    "density": null,
+                    "typeScale": null,
+                    "motion": null,
+                    "iconography": null,
+                    "elevation": null,
+                    "geometry": null,
+                    "illustration": null,
+                    "surface": null,
+                    "diagram": null,
+                    "scene": null
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "THEME_MERGE: dark takes the variant axis wholesale and layers base colors",
+      "steps": [
+        {
+          "event": "THEME_MERGE",
+          "payload": {
+            "mode": "dark",
+            "base": {
+              "colors": {
+                "primary": "#14b8a6",
+                "background": "#fff"
+              },
+              "radii": {
+                "md": "8px"
+              }
+            },
+            "variant": {
+              "colors": {
+                "background": "#000"
+              },
+              "radii": {
+                "md": "2px",
+                "sm": "1px"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_MERGED",
+                "payload": {
+                  "tokens": {
+                    "color": null,
+                    "colors": {
+                      "primary": "#14b8a6",
+                      "background": "#000"
+                    },
+                    "radii": {
+                      "md": "2px",
+                      "sm": "1px"
+                    },
+                    "spacing": null,
+                    "typography": null,
+                    "shadows": null,
+                    "density": null,
+                    "typeScale": null,
+                    "motion": null,
+                    "iconography": null,
+                    "elevation": null,
+                    "geometry": null,
+                    "illustration": null,
+                    "surface": null,
+                    "diagram": null,
+                    "scene": null
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "THEME_MERGE control: light mode returns the base axes",
+      "steps": [
+        {
+          "event": "THEME_MERGE",
+          "payload": {
+            "mode": "light",
+            "base": {
+              "colors": {
+                "primary": "#14b8a6"
+              },
+              "radii": {
+                "md": "8px"
+              }
+            },
+            "variant": {
+              "colors": {
+                "background": "#000"
+              },
+              "radii": {
+                "md": "2px"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_MERGED",
+                "payload": {
+                  "tokens": {
+                    "color": null,
+                    "colors": {
+                      "primary": "#14b8a6"
+                    },
+                    "radii": {
+                      "md": "8px"
+                    },
+                    "spacing": null,
+                    "typography": null,
+                    "shadows": null,
+                    "density": null,
+                    "typeScale": null,
+                    "motion": null,
+                    "iconography": null,
+                    "elevation": null,
+                    "geometry": null,
+                    "illustration": null,
+                    "surface": null,
+                    "diagram": null,
+                    "scene": null
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "raw preset file (cyberpunk) runs through merge and css vars",
+      "steps": [
+        {
+          "event": "THEME_CSS_VARS",
+          "payload": {
+            "mode": "dark",
+            "base": {
+              "density": {
+                "spacing": {
+                  "space0": "0px",
+                  "space1": "4px",
+                  "space2": "7px",
+                  "space3": "11px",
+                  "space4": "15px",
+                  "space5": "18px",
+                  "space6": "22px",
+                  "space7": "26px",
+                  "space8": "29px",
+                  "space9": "33px",
+                  "space10": "37px",
+                  "space11": "40px",
+                  "space12": "44px"
+                },
+                "buttonHeightSm": "26px",
+                "buttonHeightMd": "34px",
+                "buttonHeightLg": "44px",
+                "inputHeightSm": "26px",
+                "inputHeightMd": "34px",
+                "inputHeightLg": "44px",
+                "rowHeightCompact": "30px",
+                "rowHeightNormal": "38px",
+                "rowHeightSpacious": "46px",
+                "cardPaddingSm": "12px",
+                "cardPaddingMd": "16px",
+                "cardPaddingLg": "22px",
+                "dialogPadding": "22px",
+                "sectionGap": "28px"
+              },
+              "typeScale": {
+                "displayFamily": "\"Orbitron\", \"Chakra Petch\", sans-serif",
+                "bodyFamily": "var(--font-family)",
+                "monoFamily": "\"Share Tech Mono\", ui-monospace, monospace",
+                "fontImport": "https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap",
+                "headingWeight": "700",
+                "headingTransform": "uppercase",
+                "headingTracking": "0.14em",
+                "headingStyle": "normal",
+                "scale": {
+                  "xs": {
+                    "size": "11px",
+                    "lineHeight": "16px"
+                  },
+                  "sm": {
+                    "size": "13px",
+                    "lineHeight": "18px"
+                  },
+                  "base": {
+                    "size": "15px",
+                    "lineHeight": "22px"
+                  },
+                  "lg": {
+                    "size": "17px",
+                    "lineHeight": "24px"
+                  },
+                  "xl": {
+                    "size": "19px",
+                    "lineHeight": "26px"
+                  },
+                  "2xl": {
+                    "size": "22px",
+                    "lineHeight": "30px"
+                  },
+                  "3xl": {
+                    "size": "28px",
+                    "lineHeight": "34px"
+                  },
+                  "4xl": {
+                    "size": "34px",
+                    "lineHeight": "40px"
+                  },
+                  "display-1": {
+                    "size": "44px",
+                    "lineHeight": "48px"
+                  },
+                  "display-2": {
+                    "size": "56px",
+                    "lineHeight": "60px"
+                  }
+                },
+                "intents": {
+                  "headingMajor": {
+                    "slot": "display",
+                    "size": "xl",
+                    "weight": "bold"
+                  },
+                  "headingMinor": {
+                    "slot": "display",
+                    "size": "lg",
+                    "weight": "bold"
+                  },
+                  "bodyEmphasis": {
+                    "slot": "body",
+                    "size": "base",
+                    "weight": "medium"
+                  },
+                  "bodyDefault": {
+                    "slot": "body",
+                    "size": "sm",
+                    "weight": "normal"
+                  },
+                  "bodyQuiet": {
+                    "slot": "body",
+                    "size": "sm",
+                    "weight": "normal"
+                  },
+                  "caption": {
+                    "slot": "body",
+                    "size": "xs",
+                    "weight": "normal"
+                  },
+                  "numeric": {
+                    "slot": "mono",
+                    "size": "sm",
+                    "weight": "medium"
+                  }
+                }
+              },
+              "motion": {
+                "durations": {
+                  "instant": "0ms",
+                  "fast": "60ms",
+                  "normal": "120ms",
+                  "slow": "200ms",
+                  "dramatic": "300ms"
+                },
+                "easings": {
+                  "linear": "steps(2, end)",
+                  "standard": "steps(2, end)",
+                  "emphasized": "steps(3, end)",
+                  "spring": "steps(2, end)"
+                },
+                "shapes": {
+                  "modalEnter": "scaleY(0.02)",
+                  "modalExit": "scaleY(0.02)",
+                  "pageEnter": "translateX(-12px)",
+                  "popoverEnter": "scaleY(0.1)",
+                  "popoverExit": "scaleY(0.1)",
+                  "toastEnter": "translateX(24px)",
+                  "toastExit": "translateX(24px)"
+                }
+              },
+              "iconography": {
+                "family": "phosphor-outline",
+                "strokeWidth": "1.5",
+                "defaultSize": "16px"
+              },
+              "elevation": {
+                "cardElevation": "var(--shadow-main)",
+                "popoverElevation": "var(--shadow-lg)",
+                "dialogElevation": "var(--shadow-lg)",
+                "toastElevation": "var(--shadow-lg)",
+                "interactiveElevation": "var(--shadow-sm)",
+                "pressedElevation": "var(--shadow-active)"
+              },
+              "geometry": {
+                "radiusContainer": "12px",
+                "radiusInteractive": "10px",
+                "radiusPill": "12px",
+                "cornerShape": "bevel",
+                "cornerShapePill": "bevel",
+                "borderStyle": "solid",
+                "borderStyleInteractive": "solid",
+                "borderHairline": "1px",
+                "borderStandard": "var(--border-width)",
+                "borderHeavy": "var(--border-width-thick)"
+              },
+              "surface": {
+                "pageImage": "repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.07) 0px, rgba(0, 0, 0, 0.07) 1px, transparent 1px, transparent 3px)",
+                "pageImageSize": "auto"
+              },
+              "colors": {
+                "primary": "#000000",
+                "primary-hover": "#2a2a2a",
+                "primary-foreground": "#fcee0a",
+                "secondary": "#ff2a6d",
+                "secondary-hover": "#ff5c8d",
+                "secondary-foreground": "#000000",
+                "accent": "#00606b",
+                "accent-foreground": "#ffffff",
+                "muted": "#f0e200",
+                "muted-foreground": "#2a2600",
+                "background": "#fcee0a",
+                "foreground": "#000000",
+                "card": "#fff9a8",
+                "card-foreground": "#000000",
+                "surface": "#fff36a",
+                "border": "#000000",
+                "input": "#000000",
+                "ring": "#000000",
+                "table-header": "#fff36a",
+                "table-border": "#000000",
+                "table-row-hover": "#ffe600",
+                "surface-hover": "#ffe600",
+                "border-hover": "#000000",
+                "placeholder": "#4a4400",
+                "error": "#b0002a",
+                "error-foreground": "#ffffff",
+                "success": "#006b2e",
+                "success-foreground": "#ffffff",
+                "warning": "#ff9500",
+                "warning-foreground": "#000000",
+                "info": "#0050d0",
+                "info-foreground": "#ffffff",
+                "scrim": "rgba(0, 0, 0, 0.6)",
+                "series-1": "#c0045c",
+                "series-2": "#006b8a",
+                "series-3": "#5a1fb0",
+                "series-4": "#353535",
+                "series-5": "#8a4a00",
+                "series-6": "#006163",
+                "series-7": "#9a0a9a",
+                "series-8": "#0244bc",
+                "diagram-ink": "#000000",
+                "diagram-label": "#000000",
+                "diagram-guide": "#6a6430",
+                "diagram-axis": "#111111",
+                "diagram-grid": "#e6dd70",
+                "diagram-highlight": "#ff2a6d",
+                "diagram-fill": "#000000"
+              },
+              "radii": {
+                "none": "0px",
+                "sm": "6px",
+                "md": "10px",
+                "lg": "12px",
+                "xl": "14px",
+                "full": "12px"
+              },
+              "shadows": {
+                "main": "3px 3px 0 #000000, 6px 6px 0 #ff2a6d",
+                "sm": "2px 2px 0 #000000, 4px 4px 0 #ff2a6d",
+                "lg": "4px 4px 0 #000000, 8px 8px 0 #ff2a6d",
+                "inner": "inset 2px 2px 0 rgba(0,0,0,.25)",
+                "none": "none",
+                "hover": "4px 4px 0 #000000, 8px 8px 0 #00b8c8",
+                "active": "0 0 0 #000000"
+              },
+              "typography": {
+                "border-width": "2px",
+                "border-width-thin": "1px",
+                "border-width-thick": "3px",
+                "font-family": "\"Rajdhani\", \"Chakra Petch\", system-ui, sans-serif",
+                "font-weight-normal": "500",
+                "font-weight-medium": "600",
+                "font-weight-bold": "700",
+                "letter-spacing": "0.02em",
+                "line-height": "1.4",
+                "icon-color": "#000000",
+                "transition-fast": "60ms",
+                "transition-normal": "120ms",
+                "transition-slow": "200ms",
+                "transition-timing": "steps(2, end)",
+                "hover-scale": "1",
+                "hover-translate-y": "-1px",
+                "hover-translate-x": "1px",
+                "active-scale": "0.98",
+                "active-translate-y": "0px",
+                "focus-ring-width": "2px",
+                "focus-ring-offset": "2px",
+                "focus-ring-color": "#000000"
+              },
+              "diagram": {
+                "strokeThin": "1.5px",
+                "strokeNormal": "2.5px",
+                "strokeBold": "4px",
+                "lineCap": "square",
+                "lineJoin": "miter",
+                "dash": "4 3",
+                "dot": "1 3",
+                "fillStyle": "tint",
+                "fillOpacity": "0.25",
+                "roughness": "0",
+                "glow": "6",
+                "shadow": "2px 2px 0 #ff2a6d",
+                "marker": "line",
+                "labelFont": "display",
+                "labelSize": "xs",
+                "labelWeight": "700",
+                "labelCase": "uppercase",
+                "corner": "2px"
+              },
+              "scene": {
+                "materialRoughness": "0.3",
+                "materialMetalness": "0.7",
+                "materialFlat": "0",
+                "materialOutline": "0",
+                "lightAmbient": "0.35",
+                "lightKey": "1.2",
+                "lightKeyColor": "#ff5ad0",
+                "fog": "0.2"
+              }
+            },
+            "variant": {
+              "typeScale": {
+                "displayFamily": "\"Orbitron\", \"Chakra Petch\", sans-serif",
+                "bodyFamily": "var(--font-family)",
+                "monoFamily": "\"Share Tech Mono\", ui-monospace, monospace",
+                "fontImport": "https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap",
+                "headingWeight": "700",
+                "headingTransform": "uppercase",
+                "headingTracking": "0.14em",
+                "headingStyle": "normal",
+                "scale": {
+                  "xs": {
+                    "size": "11px",
+                    "lineHeight": "16px"
+                  },
+                  "sm": {
+                    "size": "13px",
+                    "lineHeight": "18px"
+                  },
+                  "base": {
+                    "size": "15px",
+                    "lineHeight": "22px"
+                  },
+                  "lg": {
+                    "size": "17px",
+                    "lineHeight": "24px"
+                  },
+                  "xl": {
+                    "size": "19px",
+                    "lineHeight": "26px"
+                  },
+                  "2xl": {
+                    "size": "22px",
+                    "lineHeight": "30px"
+                  },
+                  "3xl": {
+                    "size": "28px",
+                    "lineHeight": "34px"
+                  },
+                  "4xl": {
+                    "size": "34px",
+                    "lineHeight": "40px"
+                  },
+                  "display-1": {
+                    "size": "44px",
+                    "lineHeight": "48px"
+                  },
+                  "display-2": {
+                    "size": "56px",
+                    "lineHeight": "60px"
+                  }
+                },
+                "intents": {
+                  "headingMajor": {
+                    "slot": "display",
+                    "size": "xl",
+                    "weight": "bold"
+                  },
+                  "headingMinor": {
+                    "slot": "display",
+                    "size": "lg",
+                    "weight": "bold"
+                  },
+                  "bodyEmphasis": {
+                    "slot": "body",
+                    "size": "base",
+                    "weight": "medium"
+                  },
+                  "bodyDefault": {
+                    "slot": "body",
+                    "size": "sm",
+                    "weight": "normal"
+                  },
+                  "bodyQuiet": {
+                    "slot": "body",
+                    "size": "sm",
+                    "weight": "normal"
+                  },
+                  "caption": {
+                    "slot": "body",
+                    "size": "xs",
+                    "weight": "normal"
+                  },
+                  "numeric": {
+                    "slot": "mono",
+                    "size": "sm",
+                    "weight": "medium"
+                  }
+                }
+              },
+              "surface": {
+                "pageImage": "repeating-linear-gradient(0deg, rgba(0, 240, 255, 0.05) 0px, rgba(0, 240, 255, 0.05) 1px, transparent 1px, transparent 3px)",
+                "pageImageSize": "auto"
+              },
+              "colors": {
+                "primary": "#fcee0a",
+                "primary-hover": "#fff35c",
+                "primary-foreground": "#000000",
+                "secondary": "#ff2a6d",
+                "secondary-hover": "#ff5c8d",
+                "secondary-foreground": "#000000",
+                "accent": "#00f0ff",
+                "accent-foreground": "#001418",
+                "muted": "#1d1d33",
+                "muted-foreground": "#b8c4e0",
+                "background": "#0a0a14",
+                "foreground": "#e8f4ff",
+                "card": "#12121f",
+                "card-foreground": "#e8f4ff",
+                "surface": "#0f0f1c",
+                "border": "#00f0ff",
+                "input": "#00f0ff",
+                "ring": "#fcee0a",
+                "table-header": "#0f0f1c",
+                "table-border": "#00f0ff",
+                "table-row-hover": "#1a1a30",
+                "surface-hover": "#1a1a30",
+                "border-hover": "#fcee0a",
+                "placeholder": "#7a86a8",
+                "error": "#ff4d6d",
+                "error-foreground": "#1a0008",
+                "success": "#2bff9a",
+                "success-foreground": "#002a14",
+                "warning": "#ffb000",
+                "warning-foreground": "#1a1000",
+                "info": "#4dc3ff",
+                "info-foreground": "#001a2e",
+                "scrim": "rgba(0, 0, 0, 0.7)",
+                "series-1": "#00f0ff",
+                "series-2": "#ed1d86",
+                "series-3": "#c6f246",
+                "series-4": "#b36bff",
+                "series-5": "#63da3c",
+                "series-6": "#ff8a00",
+                "series-7": "#5a8aff",
+                "series-8": "#ff6bd6",
+                "diagram-ink": "#e8f4ff",
+                "diagram-label": "#cfe8ff",
+                "diagram-guide": "#5a6a9a",
+                "diagram-axis": "#7ad8e8",
+                "diagram-grid": "#1f2040",
+                "diagram-highlight": "#fcee0a",
+                "diagram-fill": "#00f0ff"
+              },
+              "shadows": {
+                "main": "0 0 0 1px rgba(0,240,255,.45), 0 0 12px rgba(0,240,255,.35), 0 0 32px rgba(255,42,109,.2)",
+                "sm": "0 0 0 1px rgba(0,240,255,.35), 0 0 6px rgba(0,240,255,.3)",
+                "lg": "0 0 0 1px rgba(0,240,255,.55), 0 0 20px rgba(0,240,255,.45), 0 0 48px rgba(255,42,109,.3)",
+                "inner": "inset 0 0 10px rgba(0,240,255,.25)",
+                "none": "none",
+                "hover": "0 0 0 1px rgba(252,238,10,.8), 0 0 16px rgba(252,238,10,.55), 0 0 36px rgba(255,42,109,.3)",
+                "active": "inset 0 0 12px rgba(252,238,10,.45)"
+              },
+              "typography": {
+                "border-width": "2px",
+                "border-width-thin": "1px",
+                "border-width-thick": "3px",
+                "font-family": "\"Rajdhani\", \"Chakra Petch\", system-ui, sans-serif",
+                "font-weight-normal": "500",
+                "font-weight-medium": "600",
+                "font-weight-bold": "700",
+                "letter-spacing": "0.02em",
+                "line-height": "1.4",
+                "icon-color": "#00f0ff",
+                "transition-fast": "60ms",
+                "transition-normal": "120ms",
+                "transition-slow": "200ms",
+                "transition-timing": "steps(2, end)",
+                "hover-scale": "1",
+                "hover-translate-y": "-1px",
+                "hover-translate-x": "1px",
+                "active-scale": "0.98",
+                "active-translate-y": "0px",
+                "focus-ring-width": "2px",
+                "focus-ring-offset": "2px",
+                "focus-ring-color": "#fcee0a"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "THEME_CSS_VARS_RESULT"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

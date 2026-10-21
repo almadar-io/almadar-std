@@ -1,0 +1,873 @@
+{
+  "pendingOn": "tree/fold over the Expr type (string | number | boolean | [Expr]) is live only after the checkpoint reinstall: the installed 18.0.5 answers 'Type mismatch: expected [Expr], got array' on a nested list. Every case here derives an owner column from an @read/@update/@delete/@create policy expression.",
+  "atom": "dev/atoms/std-mock-seed.lolo",
+  "trait": "MockSeed",
+  "cases": [
+    {
+      "id": "owners-object-get-spelling-stamps-entity-id (seed.rs:2068)",
+      "steps": [
+        {
+          "event": "DERIVE_OWNERS",
+          "payload": {
+            "result": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "EmployeeOrbital",
+                  "entity": {
+                    "name": "Employee",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ],
+                    "identity": true,
+                    "read_policy": [
+                      "or",
+                      [
+                        "=",
+                        "@user.role",
+                        "approver"
+                      ],
+                      [
+                        "=",
+                        [
+                          "object/get",
+                          "@entity",
+                          "id"
+                        ],
+                        "@user.id"
+                      ]
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                }
+              ]
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "OWNERS_DERIVED",
+                "payload": {
+                  "owners": {
+                    "employee": [
+                      "id"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "owners-matches-either-operand-order (seed.rs:2081)",
+      "steps": [
+        {
+          "event": "DERIVE_OWNERS",
+          "payload": {
+            "result": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "EmployeeOrbital",
+                  "entity": {
+                    "name": "Employee",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ],
+                    "identity": true,
+                    "read_policy": [
+                      "=",
+                      "@user.id",
+                      [
+                        "object/get",
+                        "@entity",
+                        "id"
+                      ]
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                }
+              ]
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "OWNERS_DERIVED",
+                "payload": {
+                  "owners": {
+                    "employee": [
+                      "id"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "owners-dotted-path-spelling-also-matches (seed.rs:2094)",
+      "steps": [
+        {
+          "event": "DERIVE_OWNERS",
+          "payload": {
+            "result": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "EmployeeOrbital",
+                  "entity": {
+                    "name": "Employee",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ],
+                    "identity": true,
+                    "read_policy": [
+                      "=",
+                      "@entity.id",
+                      "@user.id"
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                }
+              ]
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "OWNERS_DERIVED",
+                "payload": {
+                  "owners": {
+                    "employee": [
+                      "id"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "owners-a-relation-column-stays-a-relation-owner-column-not-self-identity (seed.rs:2106)",
+      "steps": [
+        {
+          "event": "DERIVE_OWNERS",
+          "payload": {
+            "result": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "EmployeeOrbital",
+                  "entity": {
+                    "name": "Employee",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "managerId",
+                        "type": "relation",
+                        "relation": {
+                          "entity": "Employee",
+                          "cardinality": "one"
+                        }
+                      }
+                    ],
+                    "identity": true,
+                    "read_policy": [
+                      "=",
+                      [
+                        "object/get",
+                        "@entity",
+                        "managerId"
+                      ],
+                      "@user.id"
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                }
+              ]
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "OWNERS_DERIVED",
+                "payload": {
+                  "owners": {
+                    "employee": [
+                      "managerId"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "owners-entity-id-compared-to-a-literal-is-not-ownership (seed.rs:2137)",
+      "steps": [
+        {
+          "event": "DERIVE_OWNERS",
+          "payload": {
+            "result": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "EmployeeOrbital",
+                  "entity": {
+                    "name": "Employee",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ],
+                    "identity": true,
+                    "read_policy": [
+                      "=",
+                      [
+                        "object/get",
+                        "@entity",
+                        "id"
+                      ],
+                      "x"
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                }
+              ]
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "OWNERS_DERIVED",
+                "payload": {
+                  "owners": {}
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "owners-a-non-relation-field-named-by-a-read-policy-is-an-owner-column (seed.rs:2156)",
+      "steps": [
+        {
+          "event": "DERIVE_OWNERS",
+          "payload": {
+            "result": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "PersonOrbital",
+                  "entity": {
+                    "name": "Person",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ],
+                    "identity": true
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "NoteOrbital",
+                  "entity": {
+                    "name": "Note",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "authorId",
+                        "type": "string"
+                      }
+                    ],
+                    "read_policy": [
+                      "==",
+                      [
+                        "object/get",
+                        "@entity",
+                        "authorId"
+                      ],
+                      "@user.id"
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                }
+              ]
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "OWNERS_DERIVED",
+                "payload": {
+                  "owners": {
+                    "note": [
+                      "authorId"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "owners-create-policy-is-excluded-from-the-policy-derived-arm (seed.rs:2186)",
+      "steps": [
+        {
+          "event": "DERIVE_OWNERS",
+          "payload": {
+            "result": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "PersonOrbital",
+                  "entity": {
+                    "name": "Person",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ],
+                    "identity": true
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "NoteOrbital",
+                  "entity": {
+                    "name": "Note",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "authorId",
+                        "type": "string"
+                      }
+                    ],
+                    "create_policy": [
+                      "=",
+                      [
+                        "object/get",
+                        "@entity",
+                        "authorId"
+                      ],
+                      "@user.id"
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                }
+              ]
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "OWNERS_DERIVED",
+                "payload": {
+                  "owners": {}
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "owners-update-and-delete-policies-count-and-nest-in-and-or",
+      "steps": [
+        {
+          "event": "DERIVE_OWNERS",
+          "payload": {
+            "result": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "PersonOrbital",
+                  "entity": {
+                    "name": "Person",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ],
+                    "identity": true
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "DocOrbital",
+                  "entity": {
+                    "name": "Doc",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "a",
+                        "type": "string"
+                      },
+                      {
+                        "name": "b",
+                        "type": "string"
+                      }
+                    ],
+                    "update_policy": [
+                      "and",
+                      [
+                        "or",
+                        true,
+                        [
+                          "=",
+                          "@entity.a",
+                          "@user.id"
+                        ]
+                      ],
+                      false
+                    ],
+                    "delete_policy": [
+                      "=",
+                      "@user.id",
+                      "@entity.b"
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                }
+              ]
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "OWNERS_DERIVED",
+                "payload": {
+                  "owners": {
+                    "doc": [
+                      "a",
+                      "b"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "owners-self-identity-from-a-create-policy-alone",
+      "steps": [
+        {
+          "event": "DERIVE_OWNERS",
+          "payload": {
+            "result": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "EmployeeOrbital",
+                  "entity": {
+                    "name": "Employee",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ],
+                    "identity": true,
+                    "create_policy": [
+                      "=",
+                      "@entity.id",
+                      "@user.id"
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                }
+              ]
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "OWNERS_DERIVED",
+                "payload": {
+                  "owners": {
+                    "employee": [
+                      "id"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "dataset-self-identity-stamps-the-viewer-on-row-zero-only (PENDING: tree/fold)",
+      "steps": [
+        {
+          "event": "INIT",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "CORPUS_ASK",
+                "payload": {}
+              },
+              {
+                "event": "CORPUS_IS",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "DATASET_START",
+          "payload": {
+            "source": "program.lolo",
+            "count": 3,
+            "seed": 42,
+            "nowMs": 1780272000000,
+            "viewerId": "v1",
+            "viewerMayCreate": true,
+            "createAllows": []
+          }
+        },
+        {
+          "event": "DS_OWNS_ENV",
+          "payload": {}
+        },
+        {
+          "event": "DS_PROGRAM_READ",
+          "payload": {
+            "result": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "EmployeeOrbital",
+                  "entity": {
+                    "name": "Employee",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ],
+                    "identity": true,
+                    "read_policy": [
+                      "=",
+                      "@entity.id",
+                      "@user.id"
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                }
+              ]
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DATASET_DONE",
+                "payload": {
+                  "stores": {
+                    "employee": [
+                      {
+                        "id": "v1",
+                        "createdAt": "2026-02-28T21:27:22.569Z",
+                        "updatedAt": "2026-03-02T21:27:22.569Z"
+                      },
+                      {
+                        "id": "Employee Id 2",
+                        "createdAt": "2025-11-02T07:01:00.133Z",
+                        "updatedAt": "2025-11-08T07:01:00.133Z"
+                      },
+                      {
+                        "id": "Employee Id 3",
+                        "createdAt": "2026-01-14T21:13:00.024Z",
+                        "updatedAt": "2026-01-14T21:13:00.024Z"
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "dataset-a-read-policy-column-is-stamped-on-every-other-row (PENDING: tree/fold)",
+      "steps": [
+        {
+          "event": "INIT",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "CORPUS_ASK",
+                "payload": {}
+              },
+              {
+                "event": "CORPUS_IS",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "DATASET_START",
+          "payload": {
+            "source": "program.lolo",
+            "count": 3,
+            "seed": 42,
+            "nowMs": 1780272000000,
+            "viewerId": "v1",
+            "viewerMayCreate": true,
+            "createAllows": []
+          }
+        },
+        {
+          "event": "DS_OWNS_ENV",
+          "payload": {}
+        },
+        {
+          "event": "DS_PROGRAM_READ",
+          "payload": {
+            "result": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "DocOrbital",
+                  "entity": {
+                    "name": "Doc",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "authorId",
+                        "type": "string",
+                        "default": "x",
+                        "required": true
+                      }
+                    ],
+                    "read_policy": [
+                      "=",
+                      "@user.id",
+                      [
+                        "object/get",
+                        "@entity",
+                        "authorId"
+                      ]
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                }
+              ]
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DATASET_DONE",
+                "payload": {
+                  "stores": {
+                    "doc": [
+                      {
+                        "id": "Doc Id 1",
+                        "authorId": "v1",
+                        "createdAt": "2026-02-28T21:27:22.569Z",
+                        "updatedAt": "2026-03-02T21:27:22.569Z"
+                      },
+                      {
+                        "id": "Doc Id 2",
+                        "authorId": "x",
+                        "createdAt": "2025-11-02T07:01:00.133Z",
+                        "updatedAt": "2025-11-08T07:01:00.133Z"
+                      },
+                      {
+                        "id": "Doc Id 3",
+                        "authorId": "v1",
+                        "createdAt": "2026-01-14T21:13:00.024Z",
+                        "updatedAt": "2026-01-14T21:13:00.024Z"
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "dataset-control-a-create-policy-column-is-never-stamped (PENDING: tree/fold)",
+      "steps": [
+        {
+          "event": "INIT",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "CORPUS_ASK",
+                "payload": {}
+              },
+              {
+                "event": "CORPUS_IS",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "DATASET_START",
+          "payload": {
+            "source": "program.lolo",
+            "count": 3,
+            "seed": 42,
+            "nowMs": 1780272000000,
+            "viewerId": "v1",
+            "viewerMayCreate": true,
+            "createAllows": []
+          }
+        },
+        {
+          "event": "DS_OWNS_ENV",
+          "payload": {}
+        },
+        {
+          "event": "DS_PROGRAM_READ",
+          "payload": {
+            "result": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "DocOrbital",
+                  "entity": {
+                    "name": "Doc",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "authorId",
+                        "type": "string",
+                        "default": "x",
+                        "required": true
+                      }
+                    ],
+                    "create_policy": [
+                      "=",
+                      "@user.id",
+                      [
+                        "object/get",
+                        "@entity",
+                        "authorId"
+                      ]
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                }
+              ]
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DATASET_DONE",
+                "payload": {
+                  "stores": {
+                    "doc": [
+                      {
+                        "id": "Doc Id 1",
+                        "authorId": "x",
+                        "createdAt": "2026-02-28T21:27:22.569Z",
+                        "updatedAt": "2026-03-02T21:27:22.569Z"
+                      },
+                      {
+                        "id": "Doc Id 2",
+                        "authorId": "x",
+                        "createdAt": "2025-11-02T07:01:00.133Z",
+                        "updatedAt": "2025-11-08T07:01:00.133Z"
+                      },
+                      {
+                        "id": "Doc Id 3",
+                        "authorId": "x",
+                        "createdAt": "2026-01-14T21:13:00.024Z",
+                        "updatedAt": "2026-01-14T21:13:00.024Z"
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

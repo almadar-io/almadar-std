@@ -1,0 +1,886 @@
+{
+ "atom": "cli/atoms/std-orb-runners.lolo",
+ "trait": "OrbRunners",
+ "cases": [
+  {
+   "id": "a verb outside up|once|down is a usage error",
+   "entity": {
+    "prefix": "almadar",
+    "count": 2,
+    "index": 1,
+    "urlPath": "almadar-io",
+    "scope": "orgs/almadar-io",
+    "pat": "tok",
+    "image": "almadar-runner:2.337.0-r5",
+    "rtok": "reg",
+    "runnerDir": "/Users/x/actions-runner-mac",
+    "runnerVersion": "2.337.0",
+    "labels": "self-hosted,macos,arm64,almadar-mac",
+    "host": "mbp",
+    "pid": "42"
+   },
+   "steps": [
+    {
+     "event": "RN_ARGS_DONE",
+     "payload": {
+      "stage": "runners",
+      "flags": {},
+      "positionals": [
+       "bogus"
+      ],
+      "errors": [],
+      "words": [
+       "bogus"
+      ]
+     },
+     "from": "parsing",
+     "expect": {
+      "emits": [
+       {
+        "event": "RUNNERS_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "usage: orb runners up|once|down [--mac]"
+        }
+       }
+      ],
+      "state": "ready"
+     }
+    }
+   ]
+  },
+  {
+   "id": "down removes <prefix>-runner-<i> with docker rm -f",
+   "entity": {
+    "prefix": "almadar",
+    "count": 2,
+    "index": 1,
+    "urlPath": "almadar-io",
+    "scope": "orgs/almadar-io",
+    "pat": "tok",
+    "image": "almadar-runner:2.337.0-r5",
+    "rtok": "reg",
+    "runnerDir": "/Users/x/actions-runner-mac",
+    "runnerVersion": "2.337.0",
+    "labels": "self-hosted,macos,arm64,almadar-mac",
+    "host": "mbp",
+    "pid": "42",
+    "verb": "down",
+    "mac": false
+   },
+   "steps": [
+    {
+     "event": "RN_START",
+     "payload": {},
+     "from": "reading",
+     "expect": {
+      "emits": [
+       {
+        "event": "RN_DOCKER_RUN",
+        "payload": {
+         "stage": "rm",
+         "argv": [
+          "rm",
+          "-f",
+          "almadar-runner-1"
+         ]
+        }
+       }
+      ],
+      "state": "running"
+     }
+    }
+   ]
+  },
+  {
+   "id": "down walks to the last index then answers stopped",
+   "entity": {
+    "prefix": "almadar",
+    "count": 2,
+    "index": 2,
+    "urlPath": "almadar-io",
+    "scope": "orgs/almadar-io",
+    "pat": "tok",
+    "image": "almadar-runner:2.337.0-r5",
+    "rtok": "reg",
+    "runnerDir": "/Users/x/actions-runner-mac",
+    "runnerVersion": "2.337.0",
+    "labels": "self-hosted,macos,arm64,almadar-mac",
+    "host": "mbp",
+    "pid": "42",
+    "verb": "down",
+    "mac": false
+   },
+   "steps": [
+    {
+     "event": "RN_DOCKER_DONE",
+     "payload": {
+      "stage": "rm",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "",
+      "stderr": ""
+     },
+     "from": "running",
+     "expect": {
+      "emits": [
+       {
+        "event": "RUNNERS_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "stopped"
+        }
+       }
+      ],
+      "state": "ready"
+     }
+    }
+   ]
+  },
+  {
+   "id": "down --mac without a token is refused (it must mint one)",
+   "entity": {
+    "prefix": "almadar",
+    "count": 2,
+    "index": 1,
+    "urlPath": "almadar-io",
+    "scope": "orgs/almadar-io",
+    "pat": "",
+    "image": "almadar-runner:2.337.0-r5",
+    "rtok": "reg",
+    "runnerDir": "/Users/x/actions-runner-mac",
+    "runnerVersion": "2.337.0",
+    "labels": "self-hosted,macos,arm64,almadar-mac",
+    "host": "mbp",
+    "pid": "42",
+    "verb": "down",
+    "mac": true,
+    "vars": {
+     "ALMADAR_ROOT": ""
+    }
+   },
+   "steps": [
+    {
+     "event": "RN_START",
+     "payload": {},
+     "from": "reading",
+     "expect": {
+      "emits": [
+       {
+        "event": "RUNNERS_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "no GITHUB_TOKEN (env or ~/kflow.ai.builder/.env)"
+        }
+       }
+      ],
+      "state": "ready"
+     }
+    }
+   ]
+  },
+  {
+   "id": "down --mac mints a token, not a docker rm",
+   "entity": {
+    "prefix": "almadar",
+    "count": 2,
+    "index": 1,
+    "urlPath": "almadar-io",
+    "scope": "orgs/almadar-io",
+    "pat": "tok",
+    "image": "almadar-runner:2.337.0-r5",
+    "rtok": "reg",
+    "runnerDir": "/Users/x/actions-runner-mac",
+    "runnerVersion": "2.337.0",
+    "labels": "self-hosted,macos,arm64,almadar-mac",
+    "host": "mbp",
+    "pid": "42",
+    "verb": "down",
+    "mac": true,
+    "cont": "mac-down"
+   },
+   "steps": [
+    {
+     "event": "RN_HOME",
+     "payload": {
+      "key": "home",
+      "value": "/Users/x"
+     },
+     "from": "running",
+     "expect": {
+      "emits": [
+       {
+        "event": "RN_MINT",
+        "payload": {}
+       }
+      ],
+      "state": "running"
+     }
+    }
+   ]
+  },
+  {
+   "id": "down --mac deregisters the runner of its directory",
+   "entity": {
+    "prefix": "almadar",
+    "count": 2,
+    "index": 1,
+    "urlPath": "almadar-io",
+    "scope": "orgs/almadar-io",
+    "pat": "tok",
+    "image": "almadar-runner:2.337.0-r5",
+    "rtok": "reg",
+    "runnerDir": "/Users/x/actions-runner-mac",
+    "runnerVersion": "2.337.0",
+    "labels": "self-hosted,macos,arm64,almadar-mac",
+    "host": "mbp",
+    "pid": "42",
+    "verb": "down",
+    "mac": true,
+    "cont": "mac-down"
+   },
+   "steps": [
+    {
+     "event": "RN_MINTED",
+     "payload": {},
+     "from": "running",
+     "expect": {
+      "emits": [
+       {
+        "event": "RN_SH_RUN",
+        "payload": {
+         "stage": "mac-deregister",
+         "argv": [
+          "-c",
+          "cd \"$1\" && ./config.sh remove --token \"$2\" >/dev/null 2>&1 || true",
+          "sh",
+          "/Users/x/actions-runner-mac",
+          "reg"
+         ]
+        }
+       }
+      ],
+      "state": "running"
+     }
+    },
+    {
+     "event": "RN_SH_DONE",
+     "payload": {
+      "stage": "mac-deregister",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "",
+      "stderr": ""
+     },
+     "from": "running",
+     "expect": {
+      "emits": [
+       {
+        "event": "RUNNERS_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "stopped"
+        }
+       }
+      ],
+      "state": "ready"
+     }
+    }
+   ]
+  },
+  {
+   "id": "up runs the single-supervisor guard first",
+   "entity": {
+    "prefix": "almadar",
+    "count": 2,
+    "index": 1,
+    "urlPath": "almadar-io",
+    "scope": "orgs/almadar-io",
+    "pat": "tok",
+    "image": "almadar-runner:2.337.0-r5",
+    "rtok": "reg",
+    "runnerDir": "/Users/x/actions-runner-mac",
+    "runnerVersion": "2.337.0",
+    "labels": "self-hosted,macos,arm64,almadar-mac",
+    "host": "mbp",
+    "pid": "42",
+    "verb": "up",
+    "mac": false
+   },
+   "steps": [
+    {
+     "event": "RN_START",
+     "payload": {},
+     "from": "reading",
+     "expect": {
+      "emits": [
+       {
+        "event": "RN_SH_RUN",
+        "payload": {
+         "stage": "guard",
+         "argv": [
+          "-c",
+          "d=\"$HOME/.almadar\"; f=\"$d/runners-$1-$2.pid\"; mkdir -p \"$d\"; if [ -f \"$f\" ] && kill -0 \"$(cat \"$f\")\" 2>/dev/null; then exit 9; fi; echo $PPID > \"$f\"",
+          "sh",
+          "almadar",
+          "docker"
+         ]
+        }
+       }
+      ],
+      "state": "running"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a live supervisor refuses a second up with 409",
+   "entity": {
+    "prefix": "almadar",
+    "count": 2,
+    "index": 1,
+    "urlPath": "almadar-io",
+    "scope": "orgs/almadar-io",
+    "pat": "tok",
+    "image": "almadar-runner:2.337.0-r5",
+    "rtok": "reg",
+    "runnerDir": "/Users/x/actions-runner-mac",
+    "runnerVersion": "2.337.0",
+    "labels": "self-hosted,macos,arm64,almadar-mac",
+    "host": "mbp",
+    "pid": "42",
+    "verb": "up",
+    "mac": false,
+    "cont": "guard"
+   },
+   "steps": [
+    {
+     "event": "RN_SH_DONE",
+     "payload": {
+      "stage": "guard",
+      "exitCode": 9,
+      "signal": 0,
+      "stdout": "",
+      "stderr": ""
+     },
+     "from": "running",
+     "expect": {
+      "emits": [
+       {
+        "event": "RUNNERS_ANSWERED",
+        "payload": {
+         "status": 409,
+         "body": "already supervising almadar"
+        }
+       }
+      ],
+      "state": "ready"
+     }
+    }
+   ]
+  },
+  {
+   "id": "CONTROL no live supervisor: the banner prints and reconcile begins",
+   "entity": {
+    "prefix": "almadar",
+    "count": 2,
+    "index": 1,
+    "urlPath": "almadar-io",
+    "scope": "orgs/almadar-io",
+    "pat": "tok",
+    "image": "almadar-runner:2.337.0-r5",
+    "rtok": "reg",
+    "runnerDir": "/Users/x/actions-runner-mac",
+    "runnerVersion": "2.337.0",
+    "labels": "self-hosted,macos,arm64,almadar-mac",
+    "host": "mbp",
+    "pid": "42",
+    "verb": "up",
+    "mac": false,
+    "cont": "guard"
+   },
+   "steps": [
+    {
+     "event": "RN_SH_DONE",
+     "payload": {
+      "stage": "guard",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "",
+      "stderr": ""
+     },
+     "from": "running",
+     "expect": {
+      "emits": [
+       {
+        "event": "RN_TTY_RUN",
+        "payload": {
+         "stage": "say",
+         "argv": [
+          "-c",
+          "printf '%s\\n' \"$1\"",
+          "sh",
+          "supervising 2 ephemeral runner(s) for almadar-io \u2014 ctrl-c to stop"
+         ]
+        }
+       }
+      ],
+      "state": "running"
+     }
+    }
+   ]
+  },
+  {
+   "id": "reconcile starts only the missing container, with the pinned docker argv",
+   "entity": {
+    "prefix": "almadar",
+    "count": 2,
+    "index": 2,
+    "urlPath": "almadar-io",
+    "scope": "orgs/almadar-io",
+    "pat": "tok",
+    "image": "almadar-runner:2.337.0-r5",
+    "rtok": "reg",
+    "runnerDir": "/Users/x/actions-runner-mac",
+    "runnerVersion": "2.337.0",
+    "labels": "self-hosted,macos,arm64,almadar-mac",
+    "host": "mbp",
+    "pid": "42",
+    "verb": "up",
+    "mac": false,
+    "cont": "start"
+   },
+   "steps": [
+    {
+     "event": "RN_MINTED",
+     "payload": {},
+     "from": "running",
+     "expect": {
+      "emits": [
+       {
+        "event": "RN_DOCKER_RUN",
+        "payload": {
+         "stage": "start",
+         "argv": [
+          "run",
+          "--rm",
+          "-d",
+          "--shm-size=2g",
+          "--ulimit",
+          "core=0",
+          "--name",
+          "almadar-runner-2",
+          "-v",
+          "almadar-pnpm-store:/home/runner/.pnpm-store",
+          "-v",
+          "almadar-npm-cache:/home/runner/.npm",
+          "-e",
+          "GITHUB_URL_PATH=almadar-io",
+          "-e",
+          "RUNNER_TOKEN=reg",
+          "-e",
+          "RUNNER_NAME=almadar-local-2",
+          "-e",
+          "RUNNER_LABELS=self-hosted,linux,arm64,almadar-local",
+          "almadar-runner:2.337.0-r5"
+         ]
+        }
+       }
+      ],
+      "state": "running"
+     }
+    }
+   ]
+  },
+  {
+   "id": "reconcile skips a runner docker ps already lists",
+   "entity": {
+    "prefix": "almadar",
+    "count": 2,
+    "index": 1,
+    "urlPath": "almadar-io",
+    "scope": "orgs/almadar-io",
+    "pat": "tok",
+    "image": "almadar-runner:2.337.0-r5",
+    "rtok": "reg",
+    "runnerDir": "/Users/x/actions-runner-mac",
+    "runnerVersion": "2.337.0",
+    "labels": "self-hosted,macos,arm64,almadar-mac",
+    "host": "mbp",
+    "pid": "42",
+    "verb": "up",
+    "mac": false,
+    "cont": "reconcile"
+   },
+   "steps": [
+    {
+     "event": "RN_DOCKER_DONE",
+     "payload": {
+      "stage": "ps",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "almadar-runner-1\nalmadar-runner-2\n",
+      "stderr": ""
+     },
+     "from": "running",
+     "expect": {
+      "emits": [
+       {
+        "event": "RN_NEXT",
+        "payload": {}
+       }
+      ],
+      "state": "running"
+     }
+    },
+    {
+     "event": "RN_NEXT",
+     "payload": {},
+     "from": "running",
+     "expect": {
+      "emits": [
+       {
+        "event": "RN_SLEEP",
+        "payload": {}
+       }
+      ],
+      "state": "running"
+     }
+    }
+   ]
+  },
+  {
+   "id": "once runs one container on the terminal with the pinned argv",
+   "entity": {
+    "prefix": "almadar",
+    "count": 2,
+    "index": 1,
+    "urlPath": "almadar-io",
+    "scope": "orgs/almadar-io",
+    "pat": "tok",
+    "image": "almadar-runner:2.337.0-r5",
+    "rtok": "reg",
+    "runnerDir": "/Users/x/actions-runner-mac",
+    "runnerVersion": "2.337.0",
+    "labels": "self-hosted,macos,arm64,almadar-mac",
+    "host": "mbp",
+    "pid": "42",
+    "verb": "once",
+    "mac": false,
+    "cont": "once"
+   },
+   "steps": [
+    {
+     "event": "RN_MINTED",
+     "payload": {},
+     "from": "running",
+     "expect": {
+      "emits": [
+       {
+        "event": "RN_DOCKER_TTY",
+        "payload": {
+         "stage": "once",
+         "argv": [
+          "run",
+          "--rm",
+          "-it",
+          "--shm-size=2g",
+          "--ulimit",
+          "core=0",
+          "-v",
+          "almadar-pnpm-store:/home/runner/.pnpm-store",
+          "-v",
+          "almadar-npm-cache:/home/runner/.npm",
+          "-e",
+          "GITHUB_URL_PATH=almadar-io",
+          "-e",
+          "RUNNER_TOKEN=reg",
+          "-e",
+          "RUNNER_NAME=almadar-local-once",
+          "-e",
+          "RUNNER_LABELS=self-hosted,linux,arm64,almadar-local",
+          "almadar-runner:2.337.0-r5"
+         ]
+        }
+       }
+      ],
+      "state": "running"
+     }
+    }
+   ]
+  },
+  {
+   "id": "up --mac prints the supervise banner before the first job",
+   "entity": {
+    "prefix": "almadar",
+    "count": 2,
+    "index": 1,
+    "urlPath": "almadar-io",
+    "scope": "orgs/almadar-io",
+    "pat": "tok",
+    "image": "almadar-runner:2.337.0-r5",
+    "rtok": "reg",
+    "runnerDir": "/Users/x/actions-runner-mac",
+    "runnerVersion": "2.337.0",
+    "labels": "self-hosted,macos,arm64,almadar-mac",
+    "host": "mbp",
+    "pid": "42",
+    "verb": "up",
+    "mac": true
+   },
+   "steps": [
+    {
+     "event": "RN_SH_DONE",
+     "payload": {
+      "stage": "host",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "mbp\n",
+      "stderr": ""
+     },
+     "from": "running",
+     "expect": {
+      "emits": [
+       {
+        "event": "RN_TTY_RUN",
+        "payload": {
+         "stage": "say",
+         "argv": [
+          "-c",
+          "printf '%s\\n' \"$1\"",
+          "sh",
+          "supervising an ephemeral almadar-mac runner for almadar-io \u2014 ctrl-c to stop"
+         ]
+        }
+       }
+      ],
+      "state": "running"
+     }
+    }
+   ]
+  },
+  {
+   "id": "CONTROL once --mac prints no banner and mints",
+   "entity": {
+    "prefix": "almadar",
+    "count": 2,
+    "index": 1,
+    "urlPath": "almadar-io",
+    "scope": "orgs/almadar-io",
+    "pat": "tok",
+    "image": "almadar-runner:2.337.0-r5",
+    "rtok": "reg",
+    "runnerDir": "/Users/x/actions-runner-mac",
+    "runnerVersion": "2.337.0",
+    "labels": "self-hosted,macos,arm64,almadar-mac",
+    "host": "mbp",
+    "pid": "42",
+    "verb": "once",
+    "mac": true
+   },
+   "steps": [
+    {
+     "event": "RN_SH_DONE",
+     "payload": {
+      "stage": "host",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "mbp\n",
+      "stderr": ""
+     },
+     "from": "running",
+     "expect": {
+      "emits": [
+       {
+        "event": "RN_MINT",
+        "payload": {}
+       }
+      ],
+      "state": "running"
+     }
+    }
+   ]
+  },
+  {
+   "id": "after the banner the first mac job mints a token",
+   "entity": {
+    "prefix": "almadar",
+    "count": 2,
+    "index": 1,
+    "urlPath": "almadar-io",
+    "scope": "orgs/almadar-io",
+    "pat": "tok",
+    "image": "almadar-runner:2.337.0-r5",
+    "rtok": "reg",
+    "runnerDir": "/Users/x/actions-runner-mac",
+    "runnerVersion": "2.337.0",
+    "labels": "self-hosted,macos,arm64,almadar-mac",
+    "host": "mbp",
+    "pid": "42",
+    "verb": "up",
+    "mac": true,
+    "cont": "mac-first"
+   },
+   "steps": [
+    {
+     "event": "RN_TTY_DONE",
+     "payload": {
+      "stage": "say",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "",
+      "stderr": ""
+     },
+     "from": "running",
+     "expect": {
+      "emits": [
+       {
+        "event": "RN_MINT",
+        "payload": {}
+       }
+      ],
+      "state": "running"
+     }
+    }
+   ]
+  },
+  {
+   "id": "up --mac: a failed config.sh or run.sh prints the retrying line",
+   "entity": {
+    "prefix": "almadar",
+    "count": 2,
+    "index": 1,
+    "urlPath": "almadar-io",
+    "scope": "orgs/almadar-io",
+    "pat": "tok",
+    "image": "almadar-runner:2.337.0-r5",
+    "rtok": "reg",
+    "runnerDir": "/Users/x/actions-runner-mac",
+    "runnerVersion": "2.337.0",
+    "labels": "self-hosted,macos,arm64,almadar-mac",
+    "host": "mbp",
+    "pid": "42",
+    "verb": "up",
+    "mac": true,
+    "report": "failed"
+   },
+   "steps": [
+    {
+     "event": "RN_SH_DONE",
+     "payload": {
+      "stage": "mac-remove",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "",
+      "stderr": ""
+     },
+     "from": "running",
+     "expect": {
+      "emits": [
+       {
+        "event": "RN_TTY_RUN",
+        "payload": {
+         "stage": "say",
+         "argv": [
+          "-c",
+          "printf '%s\\n' \"$1\"",
+          "sh",
+          "  !! runner job failed to start or run (retrying)"
+         ]
+        }
+       }
+      ],
+      "state": "running"
+     }
+    }
+   ]
+  },
+  {
+   "id": "CONTROL up --mac: a clean job just sleeps",
+   "entity": {
+    "prefix": "almadar",
+    "count": 2,
+    "index": 1,
+    "urlPath": "almadar-io",
+    "scope": "orgs/almadar-io",
+    "pat": "tok",
+    "image": "almadar-runner:2.337.0-r5",
+    "rtok": "reg",
+    "runnerDir": "/Users/x/actions-runner-mac",
+    "runnerVersion": "2.337.0",
+    "labels": "self-hosted,macos,arm64,almadar-mac",
+    "host": "mbp",
+    "pid": "42",
+    "verb": "up",
+    "mac": true,
+    "report": ""
+   },
+   "steps": [
+    {
+     "event": "RN_SH_DONE",
+     "payload": {
+      "stage": "mac-remove",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "",
+      "stderr": ""
+     },
+     "from": "running",
+     "expect": {
+      "emits": [
+       {
+        "event": "RN_SLEEP",
+        "payload": {}
+       }
+      ],
+      "state": "running"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a mac run.sh failure marks the job failed",
+   "entity": {
+    "prefix": "almadar",
+    "count": 2,
+    "index": 1,
+    "urlPath": "almadar-io",
+    "scope": "orgs/almadar-io",
+    "pat": "tok",
+    "image": "almadar-runner:2.337.0-r5",
+    "rtok": "reg",
+    "runnerDir": "/Users/x/actions-runner-mac",
+    "runnerVersion": "2.337.0",
+    "labels": "self-hosted,macos,arm64,almadar-mac",
+    "host": "mbp",
+    "pid": "42",
+    "verb": "up",
+    "mac": true
+   },
+   "steps": [
+    {
+     "event": "RN_TTY_DONE",
+     "payload": {
+      "stage": "mac-run",
+      "exitCode": 1,
+      "signal": 0,
+      "stdout": "",
+      "stderr": ""
+     },
+     "from": "running",
+     "expect": {
+      "emits": [
+       {
+        "event": "RN_SH_RUN",
+        "payload": {
+         "stage": "mac-remove"
+        }
+       }
+      ],
+      "state": "running"
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,143 @@
+app std-orb-lint-asset-inline-url [
+  version: "1.0.0",
+  inbound: ["cli-lint-asset-inline-url"],
+  fs: { cwd: "**": [read] },
+  description: "std-orb-lint-asset-inline-url — the `orb lint asset-inline-url <file>` command, the prevention rung of G-BEHAVIORS-101. It lowers the file with program/read and, for every orbital that composes std-asset-pack (a trait whose ref names an alias that the orbital's uses binds to std/behaviors/std-asset-pack, or any trait declaring the pack's assetPack config knob), reports each literal http:// or https:// string in the config defaults of its other traits and in its entity seed rows (instances), walked at any depth with tree/fold. The trait composed from the atom is skipped, the origin knob of a trait that declares assetPack is exempt, and the app egress entries are never read. One finding per url with its path (status 500, exit 1). Clean answers `lint asset-inline-url: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-asset-inline-url"
+type UrlText = { v : string }
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital OrbLintAssetInlineUrlOrbital {
+  entity OrbLintAssetInlineUrlRun [runtime] {
+    id : string!
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintAssetInlineUrl -> OrbLintAssetInlineUrlRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_RUN -> reading
+        (set @entity.findings [])
+        (os/read-file { anchor: "cwd" path: @payload.file } { key: "file" emit: { success: LINT_FILE_READ, failure: LINT_FILE_UNREAD } })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "asset-inline-url", findings: @entity.findings })
+    }
+
+    state reading {
+      INIT -> reading
+      LINT_FILE_READ -> reading
+        (program/read (bytes/to-string @payload.data) { emit: { success: LINT_PROGRAM_READ, failure: LINT_FILE_UNREAD } })
+      LINT_PROGRAM_READ -> ready
+        (set @entity.findings (let ((orbitals (object/get @payload.result "orbitals" [])))
+          (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+            (let ((orb (array/nth @orbitals @oi)))
+              (let ((trs (object/get @orb "traits" [])) (oname (object/get @orb "name" "")))
+                (let ((packAliases (array/map (array/filter (object/get @orb "uses" []) (fn u (= (object/get @u "from" "") "std/behaviors/std-asset-pack"))) (fn u (object/get @u "as" "")))) (isPack (array/map @trs (fn td (and (validate/object @td) (let ((parts (str/split (object/get @td "ref" "") "."))) (and (= (array/len @parts) 3) (array/includes @packAliases (array/nth @parts 0))))))))
+                      (hasKnob (array/map @trs (fn td (and (validate/object @td) (validate/object (object/get @td "config" null)) (object/has (object/get @td "config") "assetPack"))))))
+                  (if (not (or (array/some @isPack (fn b @b)) (array/some @hasKnob (fn b @b))))
+                    []
+                    (let ((where (str/concat "orbitals[" @oi " (" @oname ")]"))
+                          (units (array/concat
+                            (array/flatten (array/map (array/range 0 (array/len @trs)) (fn ti
+                              (let ((td (array/nth @trs @ti)))
+                                (if (or (array/nth @isPack @ti) (not (validate/object (object/get @td "config" null))))
+                                  []
+                                  (array/map (array/filter (object/entries (object/get @td "config")) (fn e (not (and (= (array/nth @e 0) "origin") (array/nth @hasKnob @ti))))) (fn e
+                                    { path: (str/concat @where ".traits[" @ti " (" (object/get @td "name" "") ")].config." (array/nth @e 0) ".default"), ti: @ti, kn: (array/nth @e 0) })))))))
+                            (if (validate/object (object/get @orb "entity" null))
+                              [{ path: (str/concat @where ".entity.instances"), ti: -1, kn: "" }]
+                              []))))
+                      (array/flatten (array/map @units (fn u
+                        (let ((v (if (= (object/get @u "ti") -1) (object/get (object/get @orb "entity") "instances" null) (let ((cf (object/get (array/nth @trs (object/get @u "ti")) "config"))) (if (validate/object (object/get @cf (object/get @u "kn") null)) (object/get (object/get @cf (object/get @u "kn")) "default" null) null)))) (p (object/get @u "path")))
+(let ((dq (str/decode-uri-component "%22"))) (array/map (array/filter (json/nodes [@v]) (fn y (let ((t (json/stringify @y))) (or (str/startsWith @t (str/concat @dq "https://")) (str/startsWith @t (str/concat @dq "http://")))))) (fn y { code: "ORB_ASSET_INLINE_URL", path: @p, message: (str/concat "Orbital '" @oname "' composes std-asset-pack but carries the literal asset url '" (object/get (json/parse (str/concat "{" @dq "v" @dq ":" (json/stringify @y) "}") UrlText) "v") "'"), suggestion: "Add the art to the pack's assets rows and look it up by key; the pack atom's origin is the only place a host belongs", severity: "error" })))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FILE_UNREAD -> ready
+        (emit LINT_UNREAD { rule: "asset-inline-url" })
+    }
+
+    emits {
+      LINT_UNREAD -> external { rule : string! }
+        @description "This rule could not read or lower the file."
+        @tier "internal"
+      LINT_RUN -> external { file : string! }
+        @description "The lint request this trait answers, from the cli trait or the umbrella."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FILE_READ { data : bytes! }
+        @description "The file read."
+        @tier "internal"
+      LINT_FILE_UNREAD { error : string }
+        @description "The file could not be read or lowered."
+        @tier "internal"
+      LINT_PROGRAM_READ { result : string }
+        @description "The file lowered by program/read."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      OrbLintAssetInlineUrlCli.LINT_RUN -> LINT_RUN
+    }
+  }
+
+  trait OrbLintAssetInlineUrlCli -> OrbLintAssetInlineUrlRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint asset-inline-url <file>" })
+      LINT_CALLED -> waiting when (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (emit LINT_RUN { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "asset-inline-url") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint asset-inline-url: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "asset-inline-url") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_UNREAD -> ready when (= @payload.rule "asset-inline-url")
+        (emit LINT_ANSWERED { status: 500, body: "lint asset-inline-url: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_RUN -> external { file : string! }
+        @description "Ask the rule trait to lint this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_UNREAD -> external { rule : string! }
+        @description "The rule trait could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-asset-inline-url" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint asset-inline-url` with its arguments and working directory."
+        @synonyms "orb lint asset-inline-url"
+      OrbLintAssetInlineUrl.LINT_FOUND -> LINT_FOUND
+      OrbLintAssetInlineUrl.LINT_UNREAD -> LINT_UNREAD
+    }
+  }
+
+  page "/orb-lint-asset-inline-url" as OrbLintAssetInlineUrlPage -> OrbLintAssetInlineUrl, OrbLintAssetInlineUrlCli
+}

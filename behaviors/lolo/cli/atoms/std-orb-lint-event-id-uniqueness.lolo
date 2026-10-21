@@ -1,0 +1,131 @@
+app std-orb-lint-event-id-uniqueness [
+  version: "1.0.0",
+  inbound: ["cli-lint-event-id-uniqueness"],
+  fs: { cwd: "**": [read] },
+  description: "std-orb-lint-event-id-uniqueness — the `orb lint event-id-uniqueness <file>` command, the port of ORB_ID_DUPLICATE_EVENT_ID (id_integrity.rs check_duplicate_event_ids; the other ORB_ID rules walk the ledger and are not ported). It lowers the file with program/read and, per orbital, reports each event id (stateMachine.events[].id or emits[].eventId) declared by two or more different inline traits, once per id sorted by id, with the Rust path and message (status 500, exit 1). An id repeated inside one trait is one owner. Clean answers `lint event-id-uniqueness: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-event-id-uniqueness"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital OrbLintEventIdUniquenessOrbital {
+  entity OrbLintEventIdUniquenessRun [runtime] {
+    id : string!
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintEventIdUniqueness -> OrbLintEventIdUniquenessRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_RUN -> reading
+        (set @entity.findings [])
+        (os/read-file { anchor: "cwd" path: @payload.file } { key: "file" emit: { success: LINT_FILE_READ, failure: LINT_FILE_UNREAD } })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "event-id-uniqueness", findings: @entity.findings })
+    }
+
+    state reading {
+      INIT -> reading
+      LINT_FILE_READ -> reading
+        (program/read (bytes/to-string @payload.data) { emit: { success: LINT_PROGRAM_READ, failure: LINT_FILE_UNREAD } })
+      LINT_PROGRAM_READ -> ready
+        (set @entity.findings (let ((orbitals (object/get @payload.result "orbitals")))
+          (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+            (let ((orb (array/nth @orbitals @oi)))
+              (let ((owners (array/flatten (array/map (array/filter (object/get @orb "traits" []) (fn t (validate/object @t))) (fn t
+                              (array/map (array/unique (array/concat
+                                (array/map (array/filter (object/get (object/get @t "stateMachine" {}) "events" []) (fn e (object/has @e "id"))) (fn e (object/get @e "id")))
+                                (array/map (array/filter (object/get @t "emits" []) (fn e (object/has @e "eventId"))) (fn e (object/get @e "eventId")))))
+                                (fn i { id: @i, name: (object/get @t "name" "") })))))))
+                (array/map (array/filter (array/sort (array/map (array/unique (array/map @owners (fn w (object/get @w "id")))) (fn i { id: @i })) "id" "asc") (fn r (> (array/len (array/filter @owners (fn w (= (object/get @w "id") (object/get @r "id"))))) 1)))
+                  (fn r (let ((who (array/map (array/filter @owners (fn w (= (object/get @w "id") (object/get @r "id")))) (fn w (object/get @w "name")))))
+                    { code: "ORB_ID_DUPLICATE_EVENT_ID", path: (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")]"), message: (str/concat "event id `" (object/get @r "id") "` is declared by " (array/len @who) " different traits (" (str/join @who ", ") ") — ids must be document-unique; every id→name resolution over this schema is ambiguous."), suggestion: "", severity: "error" }))))))))))
+        (emit LINT_FINISH { })
+      LINT_FILE_UNREAD -> ready
+        (emit LINT_UNREAD { rule: "event-id-uniqueness" })
+    }
+
+    emits {
+      LINT_UNREAD -> external { rule : string! }
+        @description "This rule could not read or lower the file."
+        @tier "internal"
+      LINT_RUN -> external { file : string! }
+        @description "The lint request this trait answers, from the cli trait or the umbrella."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FILE_READ { data : bytes! }
+        @description "The file read."
+        @tier "internal"
+      LINT_FILE_UNREAD { error : string }
+        @description "The file could not be read or lowered."
+        @tier "internal"
+      LINT_PROGRAM_READ { result : string }
+        @description "The file lowered by program/read."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      OrbLintEventIdUniquenessCli.LINT_RUN -> LINT_RUN
+    }
+  }
+
+  trait OrbLintEventIdUniquenessCli -> OrbLintEventIdUniquenessRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint event-id-uniqueness <file>" })
+      LINT_CALLED -> waiting when (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (emit LINT_RUN { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "event-id-uniqueness") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint event-id-uniqueness: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "event-id-uniqueness") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_UNREAD -> ready when (= @payload.rule "event-id-uniqueness")
+        (emit LINT_ANSWERED { status: 500, body: "lint event-id-uniqueness: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_RUN -> external { file : string! }
+        @description "Ask the rule trait to lint this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_UNREAD -> external { rule : string! }
+        @description "The rule trait could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-event-id-uniqueness" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint event-id-uniqueness` with its arguments and working directory."
+        @synonyms "orb lint event-id-uniqueness, event id uniqueness"
+      OrbLintEventIdUniqueness.LINT_FOUND -> LINT_FOUND
+      OrbLintEventIdUniqueness.LINT_UNREAD -> LINT_UNREAD
+    }
+  }
+
+  page "/orb-lint-event-id-uniqueness" as OrbLintEventIdUniquenessPage -> OrbLintEventIdUniqueness, OrbLintEventIdUniquenessCli
+}

@@ -1,0 +1,168 @@
+app std-toml [
+  version: "1.0.0",
+  description: "std-toml — TOML 1.0 text to a value over str/*, array/*, object/*, json/parse and math/*, no new operators. TOML_PARSE { requestId?, text } answers TOML_PARSED { requestId, value } (the document as a Map) or TOML_REFUSED { requestId, code, line, detail }, staged as lex (one array/reduce over the characters), decode (basic-string escapes through json/parse), structure (one array/reduce over the tokens into path-keyed rows that enforce duplicate-key and table-redefinition rules) and collapse (rows folded bottom-up by depth). Covers tables, dotted tables, arrays of tables, bare, quoted and dotted keys, basic, literal and multi-line strings, decimal, hex, octal and binary integers with underscores, floats, booleans, arrays and inline tables. Offset date-times, local date-times, local dates and local times are returned as the string as written, because the value type has no date and a string loses nothing; integers and floats are both numbers, so 1 and 1.0 read the same. Left out and refused by code: integers beyond 2^53-1 (integer-range), inf and nan (special-float); a date is checked for its month and for the days of that month, leap years included; a date and time separated by one space is read as one date-time. Every request takes an optional requestId that every answer and internal stage event echoes. Refusal codes are closed: unexpected-char, unterminated-string, unterminated-array, inline-newline, control-char, bad-escape, syntax, bad-value, integer-range, special-float, duplicate-key, table-conflict, reserved-key."
+]
+uses Spec from "almadar-std/toml"
+
+type TomlValue = string | number | boolean | [TomlValue] | Map string TomlValue
+type TomlText = string
+type TomlTok = { k : string!, v : string!, n : number!, f : string!, e : string! }
+type TomlRow = { p : string!, par : string!, seg : string!, d : number!, kind : string!, n : number!, leaf : TomlValue! }
+type TomlFrame = { p : string!, d : number!, kind : string!, n : number! }
+type TomlDoc = { rows : [TomlRow]!, ph : string!, ks : [string]!, hk : string!, cur : string!, curd : number!, fr : [TomlFrame]!, err : string!, eline : number!, edet : string! }
+type TomlLex = { toks : [TomlTok]!, mode : string!, buf : string!, line : number!, skip : number!, stk : string!, ctx : string!, ls : boolean!, inh : boolean!, vb : boolean!, err : string!, eline : number!, edet : string!, tline : number!, oline : number! }
+
+orbital TomlOrbital {
+  entity TomlRun [runtime] {
+    id : string!
+    requestId : string = ""
+    lex : TomlLex = { toks: [], mode: "", buf: "", line: 1, skip: 0, stk: "", ctx: "k", ls: true, inh: false, vb: false, err: "", eline: 0, edet: "", tline: 1, oline: 1 }
+    toks : [TomlTok] = []
+    err : string = ""
+    errLine : number = 0
+    errDetail : string = ""
+    doc : TomlDoc = { rows: [], ph: "L", ks: [], hk: "", cur: "", curd: 0, fr: [], err: "", eline: 0, edet: "" }
+    value : TomlValue
+  }
+
+  trait Toml -> TomlRun [integration, instance] {
+    initial: idle
+
+    state idle {
+      TOML_PARSE -> idle
+        (set @entity.requestId (str/default ?requestId ""))
+        (set @entity.lex (let ((cs (str/split (str/concat (str/replaceAll ?text "\r\n" "\n") "\n") ""))) (array/reduce (array/range 0 (array/len @cs)) { toks: [], mode: "", buf: "", line: 1, skip: 0, stk: "", ctx: "k", ls: true, inh: false, vb: false, err: "", eline: 0, edet: "", tline: 1, oline: 1 } (fn a i (if (> (str/len @a.err) 0) @a (if (> @a.skip 0) (object/merge @a { skip: (- @a.skip 1) }) (let ((c (array/nth @cs @i)) (n1 (array/nth @cs (+ @i 1))) (n2 (array/nth @cs (+ @i 2))) (n3 (array/nth @cs (+ @i 3)))) (let ((a1 (if (and (== @a.mode "cm") (== @c "\n")) (object/merge @a { mode: "" }) (if (and (== @a.mode "bare") (not (or (validate/pattern @c (if @a.vb "^[A-Za-z0-9_.:+-]$" "^[A-Za-z0-9_-]$")) (and (== @c " ") (and @a.vb (and (validate/pattern @a.buf "^[0-9]{4}-[0-9]{2}-[0-9]{2}$") (validate/pattern @n1 "^[0-9]$"))))))) (object/merge @a { toks: (array/append @a.toks { k: "bare", v: @a.buf, n: @a.tline, f: "", e: "" }), mode: "", buf: "", ctx: "x" }) @a)))) (let ((top (if (== @a1.stk "") "" (str/slice @a1.stk (- (str/len @a1.stk) 1) (str/len @a1.stk))))) (if (or (== @a1.mode "bs") (or (== @a1.mode "ls") (or (== @a1.mode "bm") (== @a1.mode "lm")))) (let ((m @a1.mode)) (let ((multi (or (== @m "bm") (== @m "lm"))) (lit (or (== @m "ls") (== @m "lm"))) (qc (if (or (== @m "ls") (== @m "lm")) "'" "\u{22}"))) (let ((isq (== @c @qc))) (let ((fin (if @multi (and @isq (and (== @n1 @qc) (and (== @n2 @qc) (!= @n3 @qc)))) @isq)))
+  (if @fin (object/merge @a1 { toks: (array/append @a1.toks { k: "str", v: @a1.buf, n: @a1.tline, f: @m, e: "" }), mode: "", buf: "", ctx: "x", ls: false, skip: (if @multi 2 0) })
+  (if (and (not @lit) (== @c "\\")) (object/merge @a1 { buf: (str/concat @a1.buf @c @n1), skip: 1, line: (if (== @n1 "\n") (+ @a1.line 1) @a1.line) })
+  (if (and (== @c "\n") (not @multi)) (object/merge @a1 { err: "unterminated-string", eline: @a1.line, edet: @c })
+  (object/merge @a1 { buf: (str/concat @a1.buf @c), line: (if (== @c "\n") (+ @a1.line 1) @a1.line) })))))))) (if (== @a1.mode "cm") @a1 (if (== @a1.mode "bare") (object/merge @a1 { buf: (str/concat @a1.buf @c) }) (if (or (== @c " ") (== @c "\t")) @a1
+(if (== @c "\n")
+  (if (== @a1.stk "")
+    (object/merge @a1 { toks: (array/append @a1.toks { k: "nl", v: "", n: @a1.line, f: "", e: "" }), ctx: "k", ls: true, inh: false, line: (+ @a1.line 1) })
+    (if (== @top "a") (object/merge @a1 { line: (+ @a1.line 1) }) (object/merge @a1 { err: "inline-newline", eline: @a1.line, edet: @c })))
+(if (== @c "#") (object/merge @a1 { mode: "cm" })
+(if (== @c "\u{22}")
+  (if (and (== @n1 "\u{22}") (== @n2 "\u{22}")) (object/merge @a1 { mode: "bm", buf: "", skip: 2, tline: @a1.line, ls: false }) (object/merge @a1 { mode: "bs", buf: "", tline: @a1.line, ls: false }))
+(if (== @c "'")
+  (if (and (== @n1 "'") (== @n2 "'")) (object/merge @a1 { mode: "lm", buf: "", skip: 2, tline: @a1.line, ls: false }) (object/merge @a1 { mode: "ls", buf: "", tline: @a1.line, ls: false }))
+(if (== @c "=") (object/merge @a1 { toks: (array/append @a1.toks { k: "eq", v: "", n: @a1.line, f: "", e: "" }), ctx: "v", ls: false })
+(if (== @c ".") (object/merge @a1 { toks: (array/append @a1.toks { k: "dot", v: "", n: @a1.line, f: "", e: "" }), ctx: "k", ls: false })
+(if (== @c ",")
+  (if (== @top "a") (object/merge @a1 { toks: (array/append @a1.toks { k: "comma", v: "", n: @a1.line, f: "", e: "" }), ctx: "v", ls: false })
+    (if (== @top "t") (object/merge @a1 { toks: (array/append @a1.toks { k: "comma", v: "", n: @a1.line, f: "", e: "" }), ctx: "k", ls: false }) (object/merge @a1 { err: "unexpected-char", eline: @a1.line, edet: @c })))
+(if (== @c "[")
+  (if (== @a1.ctx "v") (object/merge @a1 { toks: (array/append @a1.toks { k: "aopen", v: "", n: @a1.line, f: "", e: "" }), stk: (str/concat @a1.stk "a"), oline: (if (== @a1.stk "") @a1.line @a1.oline), ctx: "v", ls: false })
+    (if (and (== @a1.ctx "k") (and (== @a1.stk "") @a1.ls))
+      (if (== @n1 "[") (object/merge @a1 { toks: (array/append @a1.toks { k: "hopen2", v: "", n: @a1.line, f: "", e: "" }), skip: 1, inh: true, ls: false }) (object/merge @a1 { toks: (array/append @a1.toks { k: "hopen", v: "", n: @a1.line, f: "", e: "" }), inh: true, ls: false }))
+      (object/merge @a1 { err: "unexpected-char", eline: @a1.line, edet: @c })))
+(if (== @c "]")
+  (if (== @top "a") (object/merge @a1 { toks: (array/append @a1.toks { k: "aclose", v: "", n: @a1.line, f: "", e: "" }), stk: (str/slice @a1.stk 0 (- (str/len @a1.stk) 1)), ctx: "x", ls: false })
+    (if @a1.inh
+      (if (== @n1 "]") (object/merge @a1 { toks: (array/append @a1.toks { k: "hclose2", v: "", n: @a1.line, f: "", e: "" }), skip: 1, inh: false, ctx: "x" }) (object/merge @a1 { toks: (array/append @a1.toks { k: "hclose", v: "", n: @a1.line, f: "", e: "" }), inh: false, ctx: "x" }))
+      (object/merge @a1 { err: "unexpected-char", eline: @a1.line, edet: @c })))
+(if (== @c "{")
+  (if (== @a1.ctx "v") (object/merge @a1 { toks: (array/append @a1.toks { k: "topen", v: "", n: @a1.line, f: "", e: "" }), stk: (str/concat @a1.stk "t"), oline: (if (== @a1.stk "") @a1.line @a1.oline), ctx: "k", ls: false }) (object/merge @a1 { err: "unexpected-char", eline: @a1.line, edet: @c }))
+(if (== @c "}")
+  (if (== @top "t") (object/merge @a1 { toks: (array/append @a1.toks { k: "tclose", v: "", n: @a1.line, f: "", e: "" }), stk: (str/slice @a1.stk 0 (- (str/len @a1.stk) 1)), ctx: "x", ls: false }) (object/merge @a1 { err: "unexpected-char", eline: @a1.line, edet: @c }))
+(if (validate/pattern @c "^[A-Za-z0-9_+-]$") (object/merge @a1 { mode: "bare", buf: @c, vb: (== @a1.ctx "v"), tline: @a1.line, ls: false })
+  (object/merge @a1 { err: "unexpected-char", eline: @a1.line, edet: @c }))))))))))))))))))))))))))
+        (set @entity.err (if (!= @entity.lex.err "") @entity.lex.err (if (!= @entity.lex.mode "") "unterminated-string" (if (!= @entity.lex.stk "") "unterminated-array" ""))))
+        (set @entity.errLine (if (!= @entity.lex.err "") @entity.lex.eline (if (!= @entity.lex.mode "") @entity.lex.tline (if (!= @entity.lex.stk "") @entity.lex.oline (- @entity.lex.line 1)))))
+        (set @entity.errDetail (if (!= @entity.lex.err "") @entity.lex.edet ""))
+        (emit TOML_LEXED { requestId: @entity.requestId })
+
+      TOML_LEXED -> idle when (!= @entity.err "")
+        (emit TOML_REFUSED { requestId: @entity.requestId, code: @entity.err, line: @entity.errLine, detail: @entity.errDetail })
+      TOML_LEXED -> idle when (== @entity.err "")
+        (set @entity.toks (array/map @entity.lex.toks (fn t (if (!= @t.k "str") @t (let ((lit (or (== @t.f "ls") (== @t.f "lm"))) (multi (or (== @t.f "bm") (== @t.f "lm")))) (let ((r0 (if (and @multi (str/startsWith @t.v "\n")) (str/slice @t.v 1 (str/len @t.v)) @t.v))) (if (validate/pattern @r0 (if @multi "[\\x00-\\x08\\x0B-\\x1F\\x7F]" "[\\x00-\\x08\\x0A-\\x1F\\x7F]")) { k: "str", v: "", n: @t.n, f: @t.f, e: "control-char" } (if @lit { k: "str", v: @r0, n: @t.n, f: @t.f, e: "" } (let ((r1 (str/replaceAll @r0 "\\\\" "\u{1}"))) (let ((r2 (str/replace-pattern @r1 "\\\\[ \t]*\n[ \t\n]*" ""))) (let ((r3 (str/replaceAll @r2 (str/concat "\\" "\u{22}") "\u{2}"))) (if (or (str/includes (str/replace-pattern @r3 "\\\\([btnfr]|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})" "") "\\") (validate/pattern @r3 "\\\\u[dD][89A-Fa-f]")) { k: "str", v: "", n: @t.n, f: @t.f, e: "bad-escape" } (let ((parts (str/split @r3 "\\U"))) (let ((r4 (str/concat (array/first @parts) (str/join (array/map (array/drop @parts 1) (fn pt (let ((h (str/lower (str/slice @pt 0 8))) (rest (str/slice @pt 8 (str/len @pt))) (dg (str/split "0123456789abcdef" ""))) (let ((cp (array/reduce (str/split @h "") 0 (fn ac ch (+ (* @ac 16) (array/indexOf @dg @ch)))))) (let ((ns (if (> @cp 65535) (array/append (array/append [] (+ 55296 (math/floor (/ (- @cp 65536) 1024)))) (+ 56320 (math/mod (- @cp 65536) 1024))) (array/append [] @cp)))) (str/concat (if (or (> @cp 1114111) (and (>= @cp 55296) (<= @cp 57343))) "\\uZZZZ" (str/join (array/map @ns (fn nn (str/concat "\\u" (array/nth @dg (math/floor (/ @nn 4096))) (array/nth @dg (math/mod (math/floor (/ @nn 256)) 16)) (array/nth @dg (math/mod (math/floor (/ @nn 16)) 16)) (array/nth @dg (math/mod @nn 16))))) "")) @rest)))))) "")))) (let ((js (str/concat "\u{22}" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll @r4 "\u{22}" (str/concat "\\" "\u{22}")) "\t" "\\t") "\n" "\\n") "\u{1}" "\\\\") "\u{2}" (str/concat "\\" "\u{22}")) "\u{22}"))) (let ((dv (json/parse @js TomlText))) (if (== @dv null) { k: "str", v: "", n: @t.n, f: @t.f, e: "bad-escape" } { k: "str", v: @dv, n: @t.n, f: @t.f, e: "" })))))))))))))))))
+        (set @entity.err (let ((bads (array/filter @entity.toks (fn t (!= @t.e ""))))) (if (== (array/len @bads) 0) "" (object/get (array/first @bads) "e"))))
+        (set @entity.errLine (let ((bads (array/filter @entity.toks (fn t (!= @t.e ""))))) (if (== (array/len @bads) 0) 0 (object/get (array/first @bads) "n"))))
+        (emit TOML_DECODED { requestId: @entity.requestId })
+
+      TOML_DECODED -> idle when (!= @entity.err "")
+        (emit TOML_REFUSED { requestId: @entity.requestId, code: @entity.err, line: @entity.errLine, detail: "" })
+      TOML_DECODED -> idle when (== @entity.err "")
+        (set @entity.doc (array/reduce @entity.toks { rows: [], ph: "L", ks: [], hk: "", cur: "", curd: 0, fr: [], err: "", eline: 0, edet: "" } (fn ds t (if (!= @ds.err "") @ds (let ((ph @ds.ph) (top (if (== (array/len @ds.fr) 0) { p: "", d: 0, kind: "", n: 0 } (array/last @ds.fr))))
+(if (== @t.k "nl") (if (or (== @ph "L") (and (== @ph "A") (== (array/len @ds.fr) 0))) (object/merge @ds { ph: "L" }) (object/merge @ds { err: "syntax", eline: @t.n, edet: (if (== @t.v "") @t.k @t.v) }))
+(if (or (== @t.k "hopen") (== @t.k "hopen2")) (if (== @ph "L") (object/merge @ds { ph: "H1", ks: (array/slice @ds.ks 0 0), hk: (if (== @t.k "hopen") "1" "2") }) (object/merge @ds { err: "syntax", eline: @t.n, edet: (if (== @t.v "") @t.k @t.v) }))
+(if (or (== @t.k "str") (== @t.k "bare"))
+  (if (or (== @ph "L") (or (== @ph "K1") (== @ph "T0"))) (if (== @t.v "__proto__") (object/merge @ds { err: "reserved-key", eline: @t.n, edet: (if (== @t.v "") @t.k @t.v) }) (object/merge @ds { ks: (array/append (array/slice @ds.ks 0 0) @t.v), ph: "K2" }))
+  (if (== @ph "K3") (if (== @t.v "__proto__") (object/merge @ds { err: "reserved-key", eline: @t.n, edet: (if (== @t.v "") @t.k @t.v) }) (object/merge @ds { ks: (array/append @ds.ks @t.v), ph: "K2" }))
+  (if (== @ph "H1") (if (== @t.v "__proto__") (object/merge @ds { err: "reserved-key", eline: @t.n, edet: (if (== @t.v "") @t.k @t.v) }) (object/merge @ds { ks: (array/append (array/slice @ds.ks 0 0) @t.v), ph: "H2" }))
+  (if (== @ph "H3") (if (== @t.v "__proto__") (object/merge @ds { err: "reserved-key", eline: @t.n, edet: (if (== @t.v "") @t.k @t.v) }) (object/merge @ds { ks: (array/append @ds.ks @t.v), ph: "H2" }))
+  (if (or (== @ph "V") (== @ph "V0")) (let ((b @t.v) (s (str/replaceAll @t.v "_" "")) (isA (== @ds.ph "V0")) (top (if (== (array/len @ds.fr) 0) { p: "", d: 0, kind: "", n: 0 } (array/last @ds.fr))))
+ (let ((kd (if (== @t.k "str") "str" (if (or (== @b "true") (== @b "false")) "bool" (if (validate/pattern @b "^[+-]?(0|[1-9](_?[0-9])*)$") "dec" (if (validate/pattern @b "^0x[0-9A-Fa-f](_?[0-9A-Fa-f])*$") "hex" (if (validate/pattern @b "^0o[0-7](_?[0-7])*$") "oct" (if (validate/pattern @b "^0b[01](_?[01])*$") "bin" (if (validate/pattern @b "^[+-]?(0|[1-9](_?[0-9])*)(\\.[0-9](_?[0-9])*([eE][+-]?[0-9](_?[0-9])*)?|[eE][+-]?[0-9](_?[0-9])*)$") "flt" (if (validate/pattern @b "^[+-]?(inf|nan)$") "spec" (if (validate/pattern @b "^([0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])|[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])[Tt ]([01][0-9]|2[0-3]):[0-5][0-9]:([0-5][0-9]|60)(\\.[0-9]+)?(([Zz]|[+-]([01][0-9]|2[0-3]):[0-5][0-9]))?|([01][0-9]|2[0-3]):[0-5][0-9]:([0-5][0-9]|60)(\\.[0-9]+)?)$") "date" "bad")))))))))) (base (if @isA @top.p (if (== (array/len @ds.fr) 0) @ds.cur @top.p))) (bd (if @isA @top.d (if (== (array/len @ds.fr) 0) @ds.curd @top.d))))
+ (let ((lf (if (== @kd "str") @t.v (if (== @kd "bool") (== @b "true") (if (== @kd "dec") (let ((iv (str/to-int @s))) (if (== @iv null) 0 @iv)) (if (or (== @kd "hex") (or (== @kd "oct") (== @kd "bin"))) (array/reduce (str/split (str/lower (str/slice @s 2 (str/len @s))) "") 0 (fn ac ch (+ (* @ac (if (== @kd "hex") 16 (if (== @kd "oct") 8 2))) (array/indexOf (str/split "0123456789abcdef" "") @ch)))) (if (== @kd "flt") (str/to-number @s) (if (== @kd "date") @b ""))))))) (w (if @isA { rows: @ds.rows, path: @base, depth: @bd, err: "" } (array/reduce (array/range 0 (- (array/len @ds.ks) 1)) { rows: @ds.rows, path: @base, depth: @bd, err: "" } (fn wa j (if (!= @wa.err "") @wa (let ((sg (array/nth @ds.ks @j))) (let ((e (if (== @wa.path "") (str/replaceAll (str/replaceAll (str/replaceAll @sg "%" "%25") "." "%2E") "#" "%23") (str/concat @wa.path "." (str/replaceAll (str/replaceAll (str/replaceAll @sg "%" "%25") "." "%2E") "#" "%23"))))) (let ((r (array/find @wa.rows (fn q (== @q.p @e))))) (if (== @r null) { rows: (array/append @wa.rows { p: @e, par: @wa.path, seg: @sg, d: (+ @wa.depth 1), kind: "D", n: 0, leaf: "" }), path: @e, depth: (+ @wa.depth 1), err: "" } (if (== @r.kind "D") { rows: @wa.rows, path: @e, depth: (+ @wa.depth 1), err: "" } (if (or (== @r.kind "H") (or (== @r.kind "I") (== @r.kind "A"))) { rows: @wa.rows, path: @e, depth: @wa.depth, err: "table-conflict" } { rows: @wa.rows, path: @e, depth: @wa.depth, err: "duplicate-key" }))))))))))))
+ (let ((ec (if (== @kd "bad") "bad-value" (if (== @kd "spec") "special-float" (if (and (== @kd "dec") (== (str/to-int @s) null)) "integer-range" (if (and (or (== @kd "hex") (or (== @kd "oct") (== @kd "bin"))) (> @lf 9007199254740991)) "integer-range" (if (and (== @kd "date") (validate/pattern @b "^[0-9]{4}-")) (let ((yy (str/to-int (str/slice @b 0 4))) (mm (str/to-int (str/slice @b 5 7))) (dd (str/to-int (str/slice @b 8 10)))) (if (> @dd (if (== @mm 2) (if (and (== (math/mod @yy 4) 0) (or (!= (math/mod @yy 100) 0) (== (math/mod @yy 400) 0))) 29 28) (if (array/includes (str/split "4,6,9,11" ",") (str/concat @mm)) 30 31))) "bad-value" "")) "")))))) (lseg (if @isA (str/concat "#" @top.n) (array/last @ds.ks)))) (let ((e (if (== @w.path "") (if @isA @lseg (str/replaceAll (str/replaceAll (str/replaceAll @lseg "%" "%25") "." "%2E") "#" "%23")) (str/concat @w.path "." (if @isA @lseg (str/replaceAll (str/replaceAll (str/replaceAll @lseg "%" "%25") "." "%2E") "#" "%23")))))) 
+  (if (!= @ec "") (object/merge @ds { err: @ec, eline: @t.n, edet: @t.v })
+  (if (!= @w.err "") (object/merge @ds { err: @w.err, eline: @t.n, edet: (if (== @t.v "") @t.k @t.v) })
+  (if (not (== (array/find @w.rows (fn q (== @q.p @e))) null)) (object/merge @ds { err: "duplicate-key", eline: @t.n, edet: (if (== @t.v "") @t.k @t.v) })
+  (let ((bumped (if @isA (array/append (array/slice @ds.fr 0 (- (array/len @ds.fr) 1)) { p: @top.p, d: @top.d, kind: @top.kind, n: (+ @top.n 1) }) @ds.fr)))
+   (object/merge @ds { rows: (array/append @w.rows { p: @e, par: @w.path, seg: @lseg, d: (+ @w.depth 1), kind: "V", n: 0, leaf: @lf }), ph: "A", ks: (array/slice @ds.ks 0 0), fr: @bumped })))))))))) (object/merge @ds { err: "syntax", eline: @t.n, edet: (if (== @t.v "") @t.k @t.v) }))))))
+(if (== @t.k "dot") (if (== @ph "K2") (object/merge @ds { ph: "K3" }) (if (== @ph "H2") (object/merge @ds { ph: "H3" }) (object/merge @ds { err: "syntax", eline: @t.n, edet: (if (== @t.v "") @t.k @t.v) })))
+(if (== @t.k "eq") (if (== @ph "K2") (object/merge @ds { ph: "V" }) (object/merge @ds { err: "syntax", eline: @t.n, edet: (if (== @t.v "") @t.k @t.v) }))
+(if (or (== @t.k "hclose") (== @t.k "hclose2")) (if (and (== @ph "H2") (== @ds.hk (if (== @t.k "hclose") "1" "2"))) (let ((w (array/reduce (array/range 0 (- (array/len @ds.ks) 1)) { rows: @ds.rows, path: "", depth: 0, err: "" } (fn wa j (if (!= @wa.err "") @wa (let ((sg (array/nth @ds.ks @j))) (let ((e (if (== @wa.path "") (str/replaceAll (str/replaceAll (str/replaceAll @sg "%" "%25") "." "%2E") "#" "%23") (str/concat @wa.path "." (str/replaceAll (str/replaceAll (str/replaceAll @sg "%" "%25") "." "%2E") "#" "%23"))))) (let ((r (array/find @wa.rows (fn q (== @q.p @e))))) (if (== @r null) { rows: (array/append @wa.rows { p: @e, par: @wa.path, seg: @sg, d: (+ @wa.depth 1), kind: "I", n: 0, leaf: "" }), path: @e, depth: (+ @wa.depth 1), err: "" } (if (or (== @r.kind "H") (or (== @r.kind "I") (== @r.kind "D"))) { rows: @wa.rows, path: @e, depth: (+ @wa.depth 1), err: "" } (if (== @r.kind "A") { rows: @wa.rows, path: (str/concat @e ".#" (- @r.n 1)), depth: (+ @wa.depth 2), err: "" } { rows: @wa.rows, path: @e, depth: @wa.depth, err: "table-conflict" })))))))))) (lseg (array/last @ds.ks)))
+ (let ((e (if (== @w.path "") (str/replaceAll (str/replaceAll (str/replaceAll @lseg "%" "%25") "." "%2E") "#" "%23") (str/concat @w.path "." (str/replaceAll (str/replaceAll (str/replaceAll @lseg "%" "%25") "." "%2E") "#" "%23")))) (is2 (== @t.k "hclose2")))
+ (let ((r (array/find @w.rows (fn q (== @q.p @e)))))
+  (if (!= @w.err "") (object/merge @ds { err: @w.err, eline: @t.n, edet: @t.k })
+  (if (not (== (if (== @t.k "hclose") @ds.hk "2") (if (== @t.k "hclose") "1" "2"))) (object/merge @ds { err: "syntax", eline: @t.n, edet: (if (== @t.v "") @t.k @t.v) })
+  (if (not @is2)
+    (if (== @r null) (object/merge @ds { rows: (array/append @w.rows { p: @e, par: @w.path, seg: @lseg, d: (+ @w.depth 1), kind: "H", n: 0, leaf: "" }), ph: "A", ks: (array/slice @ds.ks 0 0), cur: @e, curd: (+ @w.depth 1) })
+      (if (== @r.kind "I") (object/merge @ds { rows: (array/map @w.rows (fn q (if (== @q.p @e) { p: @q.p, par: @q.par, seg: @q.seg, d: @q.d, kind: "H", n: @r.n, leaf: @q.leaf } @q))), ph: "A", ks: (array/slice @ds.ks 0 0), cur: @e, curd: (+ @w.depth 1) })
+        (if (or (== @r.kind "V") (or (== @r.kind "S") (== @r.kind "T"))) (object/merge @ds { err: "duplicate-key", eline: @t.n, edet: (if (== @t.v "") @t.k @t.v) }) (object/merge @ds { err: "table-conflict", eline: @t.n, edet: (if (== @t.v "") @t.k @t.v) }))))
+    (if (== @r null) (object/merge @ds { rows: (array/append (array/append @w.rows { p: @e, par: @w.path, seg: @lseg, d: (+ @w.depth 1), kind: "A", n: 1, leaf: "" }) { p: (str/concat @e ".#0"), par: @e, seg: "#0", d: (+ @w.depth 2), kind: "H", n: 0, leaf: "" }), ph: "A", ks: (array/slice @ds.ks 0 0), cur: (str/concat @e ".#0"), curd: (+ @w.depth 2) })
+      (if (== @r.kind "A") (object/merge @ds { rows: (array/append (array/map @w.rows (fn q (if (== @q.p @e) { p: @q.p, par: @q.par, seg: @q.seg, d: @q.d, kind: "A", n: (+ @r.n 1), leaf: @q.leaf } @q))) { p: (str/concat @e ".#" @r.n), par: @e, seg: (str/concat "#" @r.n), d: (+ @w.depth 2), kind: "H", n: 0, leaf: "" }), ph: "A", ks: (array/slice @ds.ks 0 0), cur: (str/concat @e ".#" @r.n), curd: (+ @w.depth 2) })
+        (if (or (== @r.kind "V") (or (== @r.kind "S") (== @r.kind "T"))) (object/merge @ds { err: "duplicate-key", eline: @t.n, edet: (if (== @t.v "") @t.k @t.v) }) (object/merge @ds { err: "table-conflict", eline: @t.n, edet: (if (== @t.v "") @t.k @t.v) })))))))))) (object/merge @ds { err: "syntax", eline: @t.n, edet: (if (== @t.v "") @t.k @t.v) }))
+(if (or (== @t.k "aopen") (== @t.k "topen")) (if (or (== @ph "V") (== @ph "V0")) (let ((isA (== @ds.ph "V0")) (top (if (== (array/len @ds.fr) 0) { p: "", d: 0, kind: "", n: 0 } (array/last @ds.fr))) (knd (if (== @t.k "aopen") "S" "T")))
+ (let ((base (if @isA @top.p (if (== (array/len @ds.fr) 0) @ds.cur @top.p))) (bd (if @isA @top.d (if (== (array/len @ds.fr) 0) @ds.curd @top.d))))
+ (let ((w (if @isA { rows: @ds.rows, path: @base, depth: @bd, err: "" } (array/reduce (array/range 0 (- (array/len @ds.ks) 1)) { rows: @ds.rows, path: @base, depth: @bd, err: "" } (fn wa j (if (!= @wa.err "") @wa (let ((sg (array/nth @ds.ks @j))) (let ((e (if (== @wa.path "") (str/replaceAll (str/replaceAll (str/replaceAll @sg "%" "%25") "." "%2E") "#" "%23") (str/concat @wa.path "." (str/replaceAll (str/replaceAll (str/replaceAll @sg "%" "%25") "." "%2E") "#" "%23"))))) (let ((r (array/find @wa.rows (fn q (== @q.p @e))))) (if (== @r null) { rows: (array/append @wa.rows { p: @e, par: @wa.path, seg: @sg, d: (+ @wa.depth 1), kind: "D", n: 0, leaf: "" }), path: @e, depth: (+ @wa.depth 1), err: "" } (if (== @r.kind "D") { rows: @wa.rows, path: @e, depth: (+ @wa.depth 1), err: "" } (if (or (== @r.kind "H") (or (== @r.kind "I") (== @r.kind "A"))) { rows: @wa.rows, path: @e, depth: @wa.depth, err: "table-conflict" } { rows: @wa.rows, path: @e, depth: @wa.depth, err: "duplicate-key" }))))))))))) (lseg (if @isA (str/concat "#" @top.n) (array/last @ds.ks))))
+ (let ((e (if (== @w.path "") (if @isA @lseg (str/replaceAll (str/replaceAll (str/replaceAll @lseg "%" "%25") "." "%2E") "#" "%23")) (str/concat @w.path "." (if @isA @lseg (str/replaceAll (str/replaceAll (str/replaceAll @lseg "%" "%25") "." "%2E") "#" "%23"))))))
+  (if (!= @w.err "") (object/merge @ds { err: @w.err, eline: @t.n, edet: @t.k })
+  (if (not (== (array/find @w.rows (fn q (== @q.p @e))) null)) (object/merge @ds { err: "duplicate-key", eline: @t.n, edet: (if (== @t.v "") @t.k @t.v) })
+  (let ((bumped (if @isA (array/append (array/slice @ds.fr 0 (- (array/len @ds.fr) 1)) { p: @top.p, d: @top.d, kind: @top.kind, n: (+ @top.n 1) }) @ds.fr)))
+   (object/merge @ds { rows: (array/append @w.rows { p: @e, par: @w.path, seg: @lseg, d: (+ @w.depth 1), kind: "@knd", n: 0, leaf: "" }), ph: (if (== @knd "S") "V0" "T0"), ks: (array/slice @ds.ks 0 0), fr: (array/append @bumped { p: @e, d: (+ @w.depth 1), kind: @knd, n: 0 }) })))))))) (object/merge @ds { err: "syntax", eline: @t.n, edet: (if (== @t.v "") @t.k @t.v) }))
+(if (== @t.k "aclose") (if (and (or (== @ph "V0") (== @ph "A")) (== @top.kind "S")) (object/merge @ds { fr: (array/slice @ds.fr 0 (- (array/len @ds.fr) 1)), ph: "A" }) (object/merge @ds { err: "syntax", eline: @t.n, edet: (if (== @t.v "") @t.k @t.v) }))
+(if (== @t.k "tclose") (if (and (or (== @ph "T0") (== @ph "A")) (== @top.kind "T")) (object/merge @ds { fr: (array/slice @ds.fr 0 (- (array/len @ds.fr) 1)), ph: "A" }) (object/merge @ds { err: "syntax", eline: @t.n, edet: (if (== @t.v "") @t.k @t.v) }))
+(if (== @t.k "comma") (if (and (== @ph "A") (== @top.kind "S")) (object/merge @ds { ph: "V0" }) (if (and (== @ph "A") (== @top.kind "T")) (object/merge @ds { ph: "K1" }) (object/merge @ds { err: "syntax", eline: @t.n, edet: (if (== @t.v "") @t.k @t.v) })))
+(object/merge @ds { err: "syntax", eline: @t.n, edet: (if (== @t.v "") @t.k @t.v) }))))))))))))))))
+        (emit TOML_STRUCTURED { requestId: @entity.requestId })
+
+      TOML_STRUCTURED -> idle when (!= @entity.doc.err "")
+        (emit TOML_REFUSED { requestId: @entity.requestId, code: @entity.doc.err, line: @entity.doc.eline, detail: @entity.doc.edet })
+      TOML_STRUCTURED -> idle when (== @entity.doc.err "")
+        (set @entity.value (let ((maxd (array/reduce @entity.doc.rows 0 (fn m r (math/max @m @r.d))))) (let ((fin (array/reduce (array/range 0 @maxd) @entity.doc.rows (fn acc s (let ((dd (- @maxd @s))) (array/map @acc (fn r (if (and (== @r.d @dd) (!= @r.kind "V")) { p: @r.p, par: @r.par, seg: @r.seg, d: @r.d, kind: @r.kind, n: @r.n, leaf: (let ((kids (array/filter @acc (fn k (== @k.par @r.p))))) (if (or (== @r.kind "S") (== @r.kind "A")) (array/map @kids (fn k @k.leaf)) (object/fromEntries (array/map @kids (fn k [@k.seg, @k.leaf]))))) } @r)))))))) (object/fromEntries (array/map (array/filter @fin (fn r (== @r.par ""))) (fn r [@r.seg, @r.leaf]))))))
+        (emit TOML_PARSED { requestId: @entity.requestId, value: @entity.value })
+    }
+
+    emits {
+      TOML_LEXED -> internal { requestId : string! }
+      TOML_DECODED -> internal { requestId : string! }
+      TOML_STRUCTURED -> internal { requestId : string! }
+      TOML_PARSED -> external {
+        requestId : string!
+        value : TomlValue!
+      }
+        @description "The document as a table."
+        @tier "primary"
+      TOML_REFUSED -> external {
+        requestId : string!
+        code : string!
+        line : number!
+        detail : string!
+      }
+        @description "Why the text was refused."
+        @tier "primary"
+    }
+
+    listens {
+      TOML_PARSE -> external {
+        requestId : string
+        text : string!
+      }
+        @description "Read this TOML text."
+        @synonyms "parse toml, read toml"
+    }
+  }
+
+  page "/toml" -> Toml
+}

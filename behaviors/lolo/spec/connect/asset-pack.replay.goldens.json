@@ -28,7 +28,7 @@
      "event": "PACK_HTTP_REPLIED",
      "payload": {
       "status": 200,
-      "body": "{\"pack\": \"kflow/x\", \"version\": 1, \"base\": \"https://h\", \"assets\": {\"units/a\": {\"url\": \"/u/a.png\", \"role\": \"npc\"}, \"units/b\": {\"url\": \"/u/b.png\", \"role\": \"npc\"}, \"ui/c\": {\"url\": \"/ui/c.png\", \"role\": \"ui\"}}}"
+      "body": "{\"pack\": \"kflow/x\", \"version\": 1, \"base\": \"https://h\", \"assets\": [{\"key\": \"units/a\", \"url\": \"/u/a.png\", \"role\": \"npc\"}, {\"key\": \"units/b\", \"url\": \"/u/b.png\", \"role\": \"npc\"}, {\"key\": \"ui/c\", \"url\": \"/ui/c.png\", \"role\": \"ui\"}]}"
      },
      "from": "loading",
      "expect": {
@@ -36,7 +36,7 @@
        {
         "event": "PACK_TEXT",
         "payload": {
-         "text": "{\"pack\": \"kflow/x\", \"version\": 1, \"base\": \"https://h\", \"assets\": {\"units/a\": {\"url\": \"/u/a.png\", \"role\": \"npc\"}, \"units/b\": {\"url\": \"/u/b.png\", \"role\": \"npc\"}, \"ui/c\": {\"url\": \"/ui/c.png\", \"role\": \"ui\"}}}"
+         "text": "{\"pack\": \"kflow/x\", \"version\": 1, \"base\": \"https://h\", \"assets\": [{\"key\": \"units/a\", \"url\": \"/u/a.png\", \"role\": \"npc\"}, {\"key\": \"units/b\", \"url\": \"/u/b.png\", \"role\": \"npc\"}, {\"key\": \"ui/c\", \"url\": \"/ui/c.png\", \"role\": \"ui\"}]}"
         }
        }
       ],
@@ -46,7 +46,7 @@
     {
      "event": "PACK_TEXT",
      "payload": {
-      "text": "{\"pack\": \"kflow/x\", \"version\": 1, \"base\": \"https://h\", \"assets\": {\"units/a\": {\"url\": \"/u/a.png\", \"role\": \"npc\"}, \"units/b\": {\"url\": \"/u/b.png\", \"role\": \"npc\"}, \"ui/c\": {\"url\": \"/ui/c.png\", \"role\": \"ui\"}}}"
+      "text": "{\"pack\": \"kflow/x\", \"version\": 1, \"base\": \"https://h\", \"assets\": [{\"key\": \"units/a\", \"url\": \"/u/a.png\", \"role\": \"npc\"}, {\"key\": \"units/b\", \"url\": \"/u/b.png\", \"role\": \"npc\"}, {\"key\": \"ui/c\", \"url\": \"/ui/c.png\", \"role\": \"ui\"}]}"
      },
      "from": "loading",
      "expect": {
@@ -121,7 +121,7 @@
     {
      "event": "PACK_TEXT",
      "payload": {
-      "text": "{\"pack\": \"kflow/x\", \"version\": 1, \"base\": \"https://h\", \"assets\": {\"units/a\": {\"url\": \"/u/a.png\", \"role\": \"npc\"}, \"ui/c\": {\"url\": \"/ui/c.png\", \"role\": \"ui\"}}}"
+      "text": "{\"pack\": \"kflow/x\", \"version\": 1, \"base\": \"https://h\", \"assets\": [{\"key\": \"units/a\", \"url\": \"/u/a.png\", \"role\": \"npc\"}, {\"key\": \"ui/c\", \"url\": \"/ui/c.png\", \"role\": \"ui\"}]}"
      },
      "from": "loading",
      "expect": {
@@ -316,6 +316,114 @@
       ],
       "state": "ready",
       "emits": [
+       {
+        "event": "ASSET_PACK_SETTLED",
+        "payload": {
+         "pack": "kflow/x",
+         "status": "failed"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "duplicate-key",
+   "note": "two rows share units/a: the whole pack is refused",
+   "steps": [
+    {
+     "event": "PACK_TEXT",
+     "payload": {
+      "text": "{\"pack\": \"kflow/x\", \"version\": 1, \"base\": \"https://h\", \"assets\": [{\"key\": \"units/a\", \"url\": \"/u/a.png\"}, {\"key\": \"units/a\", \"url\": \"/u/a2.png\"}]}"
+     },
+     "from": "loading",
+     "expect": {
+      "state": "failed",
+      "emits": [
+       {
+        "event": "ASSET_PACK_FAILED",
+        "payload": {
+         "pack": "kflow/x",
+         "message": "duplicate asset key in /shared/x/assets.json"
+        }
+       },
+       {
+        "event": "ASSET_PACK_PUBLISH",
+        "payload": {}
+       },
+       {
+        "event": "ASSET_PACK_SETTLED",
+        "payload": {
+         "pack": "kflow/x",
+         "status": "failed"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "missing-key-field",
+   "note": "a row without key: the whole pack is refused",
+   "steps": [
+    {
+     "event": "PACK_TEXT",
+     "payload": {
+      "text": "{\"pack\": \"kflow/x\", \"version\": 1, \"base\": \"https://h\", \"assets\": [{\"key\": \"units/a\", \"url\": \"/u/a.png\"}, {\"url\": \"/u/b.png\"}]}"
+     },
+     "from": "loading",
+     "expect": {
+      "state": "failed",
+      "emits": [
+       {
+        "event": "ASSET_PACK_FAILED",
+        "payload": {
+         "pack": "kflow/x",
+         "message": "asset row without key in /shared/x/assets.json"
+        }
+       },
+       {
+        "event": "ASSET_PACK_PUBLISH",
+        "payload": {}
+       },
+       {
+        "event": "ASSET_PACK_SETTLED",
+        "payload": {
+         "pack": "kflow/x",
+         "status": "failed"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "invalid-style",
+   "note": "style outside pixel|vector|hd|1-bit|isometric|lowpoly: refused",
+   "steps": [
+    {
+     "event": "PACK_TEXT",
+     "payload": {
+      "text": "{\"pack\": \"kflow/x\", \"version\": 1, \"base\": \"https://h\", \"assets\": [{\"key\": \"units/a\", \"url\": \"/u/a.png\", \"style\": \"watercolor\"}]}"
+     },
+     "from": "loading",
+     "expect": {
+      "state": "failed",
+      "emits": [
+       {
+        "event": "ASSET_PACK_FAILED",
+        "payload": {
+         "pack": "kflow/x",
+         "message": "asset row with invalid style in /shared/x/assets.json"
+        }
+       },
+       {
+        "event": "ASSET_PACK_PUBLISH",
+        "payload": {}
+       },
        {
         "event": "ASSET_PACK_SETTLED",
         "payload": {

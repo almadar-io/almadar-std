@@ -1,0 +1,22 @@
+app motion-spec [
+  version: "1.0.0",
+  description: "Design contract for the theme motion shapes (twin of orbital-core runtime motion.rs): a CSS transform list parses into one shape composing left to right, anything outside the vocabulary is refused, and a theme's tokens resolve against the base with a bad token keeping the base."
+]
+
+orbital MotionSpec {
+  expects entity MotionRun [runtime] {
+    id : string!
+    ok : boolean
+    error : string
+    scale : number
+    tx : number
+    ty : number
+    signed : boolean
+  }
+  expects trait Motion {
+    state ready
+    state ready { PARSE_TRANSFORM -> ready  CSS_TIME_MS -> ready  RESOLVE_MOTION -> ready }
+    emits { TRANSFORM_RESULT  CSS_TIME_RESULT  MOTION_RESOLVED }
+  }
+  expects page "/motion" -> Motion
+}

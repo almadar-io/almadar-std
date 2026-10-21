@@ -1,0 +1,439 @@
+{
+ "atom": "cli/atoms/std-orb-lint-entity-seed-source.lolo",
+ "trait": "OrbLintEntitySeedSource",
+ "cases": [
+  {
+   "id": "mock-with-instances",
+   "steps": [
+    {
+     "trait": "OrbLintEntitySeedSource",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Inv",
+          "seedMock": true,
+          "instances": [
+           {
+            "id": "a"
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEntitySeedSource",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-seed-source",
+         "findings": [
+          {
+           "code": "ORB_E_SEED_SOURCE_CONFLICT",
+           "path": "orbitals[0].entity.instances",
+           "message": "Entity 'Inv' declares both `mock` seeding and written-out `instances` — exactly one seed source",
+           "suggestion": "Keep the written-out rows, or drop them and keep `mock`.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "mock-with-locale-instances",
+   "steps": [
+    {
+     "trait": "OrbLintEntitySeedSource",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Inv",
+          "seedMock": true,
+          "localeInstances": {
+           "ar": [
+            {
+             "id": "a"
+            }
+           ]
+          }
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEntitySeedSource",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-seed-source",
+         "findings": [
+          {
+           "code": "ORB_E_SEED_SOURCE_CONFLICT",
+           "path": "orbitals[0].entity.instances",
+           "message": "Entity 'Inv' declares both `mock` seeding and written-out `instances` — exactly one seed source",
+           "suggestion": "Keep the written-out rows, or drop them and keep `mock`.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "second-orbital-indexed",
+   "steps": [
+    {
+     "trait": "OrbLintEntitySeedSource",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Inv"
+         }
+        },
+        {
+         "entity": {
+          "name": "Inv",
+          "seedMock": true,
+          "instances": [
+           {
+            "id": "a"
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEntitySeedSource",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-seed-source",
+         "findings": [
+          {
+           "code": "ORB_E_SEED_SOURCE_CONFLICT",
+           "path": "orbitals[1].entity.instances",
+           "message": "Entity 'Inv' declares both `mock` seeding and written-out `instances` — exactly one seed source",
+           "suggestion": "Keep the written-out rows, or drop them and keep `mock`.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-mock-only",
+   "steps": [
+    {
+     "trait": "OrbLintEntitySeedSource",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Inv",
+          "seedMock": true
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEntitySeedSource",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-seed-source",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-instances-only",
+   "steps": [
+    {
+     "trait": "OrbLintEntitySeedSource",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Inv",
+          "instances": [
+           {
+            "id": "a"
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEntitySeedSource",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-seed-source",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-locale-instances-only",
+   "steps": [
+    {
+     "trait": "OrbLintEntitySeedSource",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Inv",
+          "localeInstances": {
+           "ar": [
+            {
+             "id": "a"
+            }
+           ]
+          }
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEntitySeedSource",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-seed-source",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-mock-with-empty-instances",
+   "steps": [
+    {
+     "trait": "OrbLintEntitySeedSource",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Inv",
+          "seedMock": true,
+          "instances": [],
+          "localeInstances": {}
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEntitySeedSource",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-seed-source",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-no-seed",
+   "steps": [
+    {
+     "trait": "OrbLintEntitySeedSource",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Inv"
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEntitySeedSource",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-seed-source",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

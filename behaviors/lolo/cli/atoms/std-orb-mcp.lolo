@@ -1,0 +1,553 @@
+app std-orb-mcp [
+  version: "1.0.0",
+  env: ["ALMADAR_PERSONA_OWNS"],
+  inbound: ["cli-mcp"],
+  exec: ["orb"],
+  stdio: [in, out],
+  fs: { cwd: "**": [read], "~/.orb/**": [read] },
+  description: "std-orb-mcp — the `orb mcp [--program <file>]` command: the MCP server as a std program (spec/cli/mcp-server.lolo). The hook cli-mcp takes argv; `--program <file>` names the program whose inbound hooks are served as tools beside the language's. The server version is what `orb --version` answers (`orb X.Y.Z`), run from PATH (os/spawn takes a literal command, so the running binary's own path cannot be spawned). Stdin is read through os/stdin-read keyed mcp-stdin, split on newlines into a queue, and each line is answered in order (one at a time: a tool that does I/O holds the queue until it answers) with one compact JSON line on stdout; stdin eof ends the command. Protocol: initialize, ping, tools/list, tools/call, prompts/list, prompts/get; a parse error is code -32700 with the text `parse error: invalid JSON` (the Rust server's serde wording is not reproduced), an unknown method -32601, an unknown prompt -32602, an unknown tool a tool result with isError. Tools served: validate, format (without write), behaviors (with scopes), describe_behavior, read_behavior ({ path, source } through behavior/source file: true), play, operators, patterns, evaluate (the expression in a one-transition program built with quasiquote, played through program/step with the request entity and payload). Pending, answered with isError naming the reason: complete (the lolo completion rules are not ported), test (result shape), format with write, behaviors without scopes. Hook tools from --program are listed from program/inputs and called by program/dispatch with inbound; the guest-binding gap is recorded in the std ledger."
+]
+uses Spec from "almadar-std/mcp-server"
+uses Args from "std/behaviors/std-args"
+uses Complete from "std/behaviors/std-orb-complete"
+uses Reference from "std/behaviors/std-orb-reference"
+uses Test from "std/behaviors/std-orb-test"
+uses Walk from "std/behaviors/std-verify-walk"
+uses Machine from "std/behaviors/std-machine"
+uses Plan from "std/behaviors/std-verify-plan"
+uses Seed from "std/behaviors/std-mock-seed"
+uses Judge from "std/behaviors/std-verify-judge"
+uses Credit from "std/behaviors/std-verify-credit"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
+type McpJson = string | number | boolean | [McpJson] | Map string McpJson
+type McpStep = { trait : string!, event : string!, payload : Map string McpJson?, from : string? }
+type McpArgs = { path : string?, final : boolean?, write : boolean?, name : string?, category : string?, scopes : [string]?, exposure : [string]?, spec : string?, steps : [McpStep]?, topic : string?, offset : number?, expr : McpJson?, entity : Map string McpJson?, payload : Map string McpJson?, body : McpJson?, headers : Map string string? }
+type McpParams = { protocolVersion : string?, name : string?, arguments : McpArgs? }
+type McpEmitted = { payload : Map string McpJson? }
+type McpPlayedResult = { emitted : [McpEmitted]? }
+type McpPlayed = { result : McpPlayedResult? }
+type McpMessage = { id : McpJson?, method : string?, params : McpParams? }
+
+orbital OrbMcpOrbital {
+  entity McpSession [runtime] {
+    id : string!
+    program : string! = ""
+    pid : number = 0
+    pending : string! = ""
+    version : string = ""
+    buffer : string = ""
+    queue : [string] = []
+    reply : string = ""
+    rid : McpJson = 0
+    tool : string = ""
+    args : McpArgs = {}
+    attempt : number = 0
+    file : string = ""
+    source : string = ""
+    cwd : string = ""
+    hookNames : [string] = []
+    instructions : string = ""
+    tools : [McpJson] = []
+  }
+
+  trait ArgsCli = Args.traits.ArgsParser {
+    listens {
+      McpServer.MCP_ARGS_PARSE -> ARGS_PARSE
+    }
+  }
+
+  trait TestMachine = Machine.traits.Machine {
+    listens {
+      TestWalk.WALK_MACHINE_READ -> MACHINE_READ
+    }
+  }
+
+  trait TestPlan = Plan.traits.Plan {
+    listens {
+      TestWalk.WALK_PLAN_REQUEST -> PLAN_REQUEST
+      MockSeed.ROWS_DONE -> ROWS_DONE
+    }
+  }
+
+  trait MockSeed = Seed.traits.MockSeed {
+    listens {
+      MockStream.CORPUS_IS -> CORPUS_IS
+      TestPlan.SAMPLE_ROWS -> SAMPLE_ROWS
+    }
+  }
+
+  trait MockStream = Seed.traits.MockStream {
+  }
+
+  trait TestJudge = Judge.traits.Judge {
+    listens {
+      TestWalk.WALK_JUDGE_REQUEST -> JUDGE_REQUEST
+    }
+  }
+
+  trait TestCreditor = Credit.traits.Credit {
+    listens {
+      TestWalk.WALK_CREDIT_REQUEST -> CREDIT_REQUEST
+    }
+  }
+
+  trait TestWalk = Walk.traits.VerifyWalk {
+    listens {
+      TestEngine.TEST_WALK_CALL -> VERIFY_WALK_START
+      TestMachine.MACHINE_ANSWERED -> WALK_MACHINE_ANSWERED
+      TestPlan.PLAN_ANSWERED -> WALK_PLAN_ANSWERED
+      TestJudge.JUDGE_ANSWERED -> WALK_JUDGE_ANSWERED
+      TestCreditor.CREDIT_ANSWERED -> WALK_CREDIT_ANSWERED
+    }
+  }
+
+  trait TestEngine = Test.traits.TestEngine {
+    listens {
+      McpServer.MCP_TEST_START -> TEST_START
+      TestWalk.VERIFY_WALK_ANSWERED -> TEST_WALK_ANSWERED
+    }
+  }
+
+  trait ReferenceEngine = Reference.traits.ReferenceEngine {
+    listens {
+      McpServer.MCP_REFERENCE_START -> REFERENCE_START
+    }
+  }
+
+  trait CompleteEngine = Complete.traits.CompleteEngine {
+    listens {
+      McpServer.MCP_COMPLETE_START -> COMPLETE_START
+    }
+  }
+
+  trait McpServer -> McpSession [integration] {
+    initial: starting
+
+    state starting {
+      INIT -> starting
+      MCP_CALLED -> parsing
+        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
+        (emit MCP_ARGS_PARSE { stage: "mcp" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "program" aliases: [] takesValue: true repeatable: false }] })
+    }
+
+    state parsing {
+      INIT -> parsing
+      MCP_ARGS_DONE -> starting when (or (> (array/len @payload.errors) 0) (> (array/len @payload.positionals) 0))
+        (emit MCP_ANSWERED { status: 400, body: "usage: orb mcp [--program <file>]" })
+      MCP_ARGS_DONE -> versioning when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0))
+        (set @entity.program (array/first (or (object/get @payload.flags "program") [])))
+        (os/spawn "orb" ["--version"] { cwd: null env: null stdin: "null" stdout: "pipe" stderr: "null" detached: false } { key: "spawn" emit: { success: MCP_SPAWNED, failure: MCP_START_FAILED } })
+    }
+
+    state versioning {
+      INIT -> versioning
+      MCP_START_FAILED -> starting
+        (emit MCP_ANSWERED { status: 500, body: (str/concat "orb mcp: " @payload.error) })
+      MCP_SPAWNED -> versioning
+        (set @entity.pid @payload.pid)
+        (os/read @payload.stdout 4096 { key: "version" emit: { success: MCP_VERSION_TEXT, failure: MCP_START_FAILED } })
+      MCP_VERSION_TEXT -> versioning
+        (os/wait @entity.pid { key: "wait" emit: { success: MCP_WAITED, failure: MCP_START_FAILED } })
+        (set @entity.reply (str/trim (bytes/to-string @payload.data)))
+      MCP_WAITED -> versioning when (str/startsWith @entity.reply "orb ")
+        (emit MCP_VERSIONED { version: (str/slice @entity.reply 4) })
+      MCP_WAITED -> starting when (not (str/startsWith @entity.reply "orb "))
+        (emit MCP_ANSWERED { status: 500, body: "orb mcp: the host binary did not answer --version as `orb X.Y.Z`" })
+      MCP_VERSIONED -> versioning when (= @entity.program "")
+        (set @entity.version @payload.version)
+        (set @entity.hookNames [])
+        (set @entity.instructions "Orb is a programming language. A program is a finite graph of states and events: written as .lolo text, held as .orb data, compiled to a full-stack app. You build by composing installed behaviors (atoms own their state machine; you override data, event names and config), not by writing every state machine from scratch.\nLoop: (1) `behaviors` with no scopes lists the installed packages and topics; list a topic, then `describe_behavior` and `read_behavior` the ones that fit. (2) Write the .lolo file, importing them with `uses`. `reference` is the language reference; `operators`, `patterns` and `complete` tell you what the language accepts. (3) `validate` until it reports 0 errors and 0 warnings; every finding carries a code, a path and a fix. (4) `play` events through the machine to check it does what was asked. (5) Run it with `npx -y @almadar/orb serve <file>`.")
+        (set @entity.tools [
+    { name: "validate" description: "Validate a .lolo or .orb program with the full compiler pipeline. The bar is 0 errors and 0 warnings; each finding has a code, a path and a suggested fix." inputSchema: { type: "object" properties: { path: { type: "string" description: "The .lolo or .orb file" } final: { type: "boolean" description: "Also run the finished-app checks" } } required: ["path"] } }
+    { name: "complete" description: "What is valid at a character offset in a .lolo file: keywords, effect operators, pattern tags and props, installed behaviors' import paths, traits, orbitals and typed config keys." inputSchema: { type: "object" properties: { path: { type: "string" description: "The .lolo file" } offset: { type: "integer" minimum: 0 description: "Byte offset of the cursor" } } required: ["path", "offset"] } }
+    { name: "format" description: "Pretty-print a .lolo or .orb file in the syntax it is written in. Returns the text; `write: true` also rewrites the file." inputSchema: { type: "object" properties: { path: { type: "string" } write: { type: "boolean" description: "Rewrite the file in place" } } required: ["path"] } }
+    { name: "operators" description: "The language's operators (the only functions and effects a program can call). With `name`: that operator's full entry (params, return type, examples). Without: every operator's name, category and description, optionally for one `category`." inputSchema: { type: "object" properties: { name: { type: "string" } category: { type: "string" } } required: [] } }
+    { name: "patterns" description: "The UI patterns `render-ui` accepts. With `name`: that pattern's full entry (every prop with its types and enum values). Without: every pattern's name, category and description, optionally for one `category`." inputSchema: { type: "object" properties: { name: { type: "string" } category: { type: "string" } } required: [] } }
+    { name: "behaviors" description: "The installed behaviors you compose with `uses`. With no `scopes`: each installed package's prefix and its topics with a count. With `scopes` (e.g. `almadar-std/ui/core` or a `<prefix>/<topic>`): every behavior there with its description, capabilities, level and traits." inputSchema: { type: "object" properties: { scopes: { type: "array" items: { type: "string" } } exposure: { type: "array" items: { type: "string" enum: ["app", "experience", "palette", "both", "internal"] } } } required: [] } }
+    { name: "describe_behavior" description: "One behavior's contract: its knobs (typed config), events, transitions and pages. `spec` is `<prefix>/<name>`, `<prefix>/<name>.traits.<Trait>` or `<prefix>/<name>.orbitals.<Orbital>`." inputSchema: { type: "object" properties: { spec: { type: "string" } } required: ["spec"] } }
+    { name: "read_behavior" description: "A behavior's source file, to read as a worked example of the language. `spec` as in `describe_behavior`." inputSchema: { type: "object" properties: { spec: { type: "string" } } required: ["spec"] } }
+    { name: "play" description: "Fire events through a program's state machines in the real kernel, in order. Each step names a `trait` and an `event`, with an optional `payload` and an optional `from` state to start that trait in. Returns, per step, every trait that moved: the transition, the guards tried, the effects run and the events emitted, plus each trait's state after the step." inputSchema: { type: "object" properties: { path: { type: "string" } steps: { type: "array" items: { type: "object" properties: { trait: { type: "string" } event: { type: "string" } payload: { type: "object" } from: { type: "string" } } required: ["trait", "event"] } } } required: ["path", "steps"] } }
+    { name: "test" description: "The exhaustive walk: every transition of every trait, generated from the graph and played headlessly from the initial state. Returns passed/failed/skipped counts and each case's outcome; a failure names the state it expected and the one it got." inputSchema: { type: "object" properties: { path: { type: "string" } } required: ["path"] } }
+    { name: "reference" description: "The language reference, generated from the compiler. With no `topic`: every construct, the vocabulary (keywords, tags, sigils, effects, types) and the validation-code topics. With a construct `topic` (e.g. `Trait`, `Entity`, `Listen`, `Page`): its description, its fields and real examples from the installed std. Also `vocabulary` and `codes/<category>` (every code with what it rejects)." inputSchema: { type: "object" properties: { topic: { type: "string" } } required: [] } }
+    { name: "evaluate" description: "Evaluate one S-expression (as JSON, e.g. ['+', 2, 3]) with the language's evaluator, with optional `entity` and `payload` bindings for @entity and @payload." inputSchema: { type: "object" properties: { expr: { description: "The S-expression as JSON" } entity: { type: "object" } payload: { type: "object" } } required: ["expr"] } }
+        ])
+        (emit MCP_LISTEN { })
+      MCP_VERSIONED -> versioning when (!= @entity.program "")
+        (set @entity.version @payload.version)
+        (set @entity.instructions "Orb is a programming language. A program is a finite graph of states and events: written as .lolo text, held as .orb data, compiled to a full-stack app. You build by composing installed behaviors (atoms own their state machine; you override data, event names and config), not by writing every state machine from scratch.\nLoop: (1) `behaviors` with no scopes lists the installed packages and topics; list a topic, then `describe_behavior` and `read_behavior` the ones that fit. (2) Write the .lolo file, importing them with `uses`. `reference` is the language reference; `operators`, `patterns` and `complete` tell you what the language accepts. (3) `validate` until it reports 0 errors and 0 warnings; every finding carries a code, a path and a fix. (4) `play` events through the machine to check it does what was asked. (5) Run it with `npx -y @almadar/orb serve <file>`.")
+        (set @entity.tools [
+    { name: "validate" description: "Validate a .lolo or .orb program with the full compiler pipeline. The bar is 0 errors and 0 warnings; each finding has a code, a path and a suggested fix." inputSchema: { type: "object" properties: { path: { type: "string" description: "The .lolo or .orb file" } final: { type: "boolean" description: "Also run the finished-app checks" } } required: ["path"] } }
+    { name: "complete" description: "What is valid at a character offset in a .lolo file: keywords, effect operators, pattern tags and props, installed behaviors' import paths, traits, orbitals and typed config keys." inputSchema: { type: "object" properties: { path: { type: "string" description: "The .lolo file" } offset: { type: "integer" minimum: 0 description: "Byte offset of the cursor" } } required: ["path", "offset"] } }
+    { name: "format" description: "Pretty-print a .lolo or .orb file in the syntax it is written in. Returns the text; `write: true` also rewrites the file." inputSchema: { type: "object" properties: { path: { type: "string" } write: { type: "boolean" description: "Rewrite the file in place" } } required: ["path"] } }
+    { name: "operators" description: "The language's operators (the only functions and effects a program can call). With `name`: that operator's full entry (params, return type, examples). Without: every operator's name, category and description, optionally for one `category`." inputSchema: { type: "object" properties: { name: { type: "string" } category: { type: "string" } } required: [] } }
+    { name: "patterns" description: "The UI patterns `render-ui` accepts. With `name`: that pattern's full entry (every prop with its types and enum values). Without: every pattern's name, category and description, optionally for one `category`." inputSchema: { type: "object" properties: { name: { type: "string" } category: { type: "string" } } required: [] } }
+    { name: "behaviors" description: "The installed behaviors you compose with `uses`. With no `scopes`: each installed package's prefix and its topics with a count. With `scopes` (e.g. `almadar-std/ui/core` or a `<prefix>/<topic>`): every behavior there with its description, capabilities, level and traits." inputSchema: { type: "object" properties: { scopes: { type: "array" items: { type: "string" } } exposure: { type: "array" items: { type: "string" enum: ["app", "experience", "palette", "both", "internal"] } } } required: [] } }
+    { name: "describe_behavior" description: "One behavior's contract: its knobs (typed config), events, transitions and pages. `spec` is `<prefix>/<name>`, `<prefix>/<name>.traits.<Trait>` or `<prefix>/<name>.orbitals.<Orbital>`." inputSchema: { type: "object" properties: { spec: { type: "string" } } required: ["spec"] } }
+    { name: "read_behavior" description: "A behavior's source file, to read as a worked example of the language. `spec` as in `describe_behavior`." inputSchema: { type: "object" properties: { spec: { type: "string" } } required: ["spec"] } }
+    { name: "play" description: "Fire events through a program's state machines in the real kernel, in order. Each step names a `trait` and an `event`, with an optional `payload` and an optional `from` state to start that trait in. Returns, per step, every trait that moved: the transition, the guards tried, the effects run and the events emitted, plus each trait's state after the step." inputSchema: { type: "object" properties: { path: { type: "string" } steps: { type: "array" items: { type: "object" properties: { trait: { type: "string" } event: { type: "string" } payload: { type: "object" } from: { type: "string" } } required: ["trait", "event"] } } } required: ["path", "steps"] } }
+    { name: "test" description: "The exhaustive walk: every transition of every trait, generated from the graph and played headlessly from the initial state. Returns passed/failed/skipped counts and each case's outcome; a failure names the state it expected and the one it got." inputSchema: { type: "object" properties: { path: { type: "string" } } required: ["path"] } }
+    { name: "reference" description: "The language reference, generated from the compiler. With no `topic`: every construct, the vocabulary (keywords, tags, sigils, effects, types) and the validation-code topics. With a construct `topic` (e.g. `Trait`, `Entity`, `Listen`, `Page`): its description, its fields and real examples from the installed std. Also `vocabulary` and `codes/<category>` (every code with what it rejects)." inputSchema: { type: "object" properties: { topic: { type: "string" } } required: [] } }
+    { name: "evaluate" description: "Evaluate one S-expression (as JSON, e.g. ['+', 2, 3]) with the language's evaluator, with optional `entity` and `payload` bindings for @entity and @payload." inputSchema: { type: "object" properties: { expr: { description: "The S-expression as JSON" } entity: { type: "object" } payload: { type: "object" } } required: ["expr"] } }
+        ])
+        (program/inputs { key: "inputs" emit: { success: MCP_INPUTS, failure: MCP_START_FAILED } })
+      MCP_INPUTS -> versioning
+        (set @entity.hookNames (array/map (object/get @payload.result "inputs") (fn i (object/get @i "event"))))
+        (emit MCP_LISTEN { })
+      MCP_CHUNK -> versioning
+        (set @entity.buffer (str/concat @entity.buffer @payload.data))
+        (set @entity.queue (array/concat @entity.queue (array/slice (str/split @entity.buffer "\n") 0 (- (array/len (str/split @entity.buffer "\n")) 1))))
+        (set @entity.buffer (array/last (str/split @entity.buffer "\n")))
+      MCP_LISTEN -> serving
+        (os/stdin-read { key: "mcp-stdin" emit: { onMessage: MCP_CHUNK, success: MCP_EOF, failure: MCP_START_FAILED } })
+        (emit MCP_PUMP { })
+    }
+
+    state serving {
+      INIT -> serving
+      MCP_STDOUT_FAILED -> starting
+        (emit MCP_ANSWERED { status: 500, body: (str/concat "orb mcp: " @payload.error) })
+      MCP_START_FAILED -> starting
+        (emit MCP_ANSWERED { status: 500, body: (str/concat "orb mcp: " @payload.error) })
+      MCP_EOF -> starting
+        (emit MCP_ANSWERED { status: 200, body: "" })
+      MCP_CHUNK -> serving
+        (set @entity.buffer (str/concat @entity.buffer @payload.data))
+        (set @entity.queue (array/concat @entity.queue (array/slice (str/split @entity.buffer "\n") 0 (- (array/len (str/split @entity.buffer "\n")) 1))))
+        (set @entity.buffer (array/last (str/split @entity.buffer "\n")))
+        (emit MCP_PUMP { })
+      MCP_PUMP -> serving when (> (array/len @entity.queue) 0)
+        (emit MCP_LINE_IN { line: (array/first @entity.queue) })
+        (set @entity.queue (array/drop @entity.queue 1))
+      MCP_LINE_IN -> serving when (= (str/trim @payload.line) "")
+        (emit MCP_PUMP { })
+      MCP_LINE_IN -> serving when (and (!= (str/trim @payload.line) "") (not (json/valid @payload.line)))
+        (set @entity.reply (json/stringify { jsonrpc: "2.0" id: null error: { code: -32700 message: "parse error: invalid JSON" } }))
+        (emit MCP_LINE_OUT { line: @entity.reply })
+        (os/stdout-write (bytes/from-string (str/concat @entity.reply "\n")) { key: "mcp-stdout" emit: { failure: MCP_STDOUT_FAILED } })
+        (emit MCP_PUMP { })
+      MCP_LINE_IN -> serving when (and (json/valid @payload.line) (not (object/has (json/parse @payload.line McpMessage) "id")))
+        (emit MCP_PUMP { })
+      MCP_LINE_IN -> serving when (and (json/valid @payload.line) (object/has (json/parse @payload.line McpMessage) "id") (= (object/get (json/parse @payload.line McpMessage) "method") "initialize"))
+        (set @entity.reply (json/stringify { jsonrpc: "2.0" id: (object/get (json/parse @payload.line McpMessage) "id") result: { protocolVersion: (if (array/includes ["2025-06-18", "2025-03-26", "2024-11-05"] (object/get (object/get (json/parse @payload.line McpMessage) "params") "protocolVersion")) (object/get (object/get (json/parse @payload.line McpMessage) "params") "protocolVersion") "2025-06-18") capabilities: { tools: (json/parse "{}" McpJson) prompts: (json/parse "{}" McpJson) } serverInfo: { name: "orb" version: @entity.version } instructions: @entity.instructions } }))
+        (emit MCP_LINE_OUT { line: @entity.reply })
+        (os/stdout-write (bytes/from-string (str/concat @entity.reply "\n")) { key: "mcp-stdout" emit: { failure: MCP_STDOUT_FAILED } })
+        (emit MCP_PUMP { })
+      MCP_LINE_IN -> serving when (and (json/valid @payload.line) (object/has (json/parse @payload.line McpMessage) "id") (= (object/get (json/parse @payload.line McpMessage) "method") "ping"))
+        (set @entity.reply (json/stringify { jsonrpc: "2.0" id: (object/get (json/parse @payload.line McpMessage) "id") result: (json/parse "{}" McpJson) }))
+        (emit MCP_LINE_OUT { line: @entity.reply })
+        (os/stdout-write (bytes/from-string (str/concat @entity.reply "\n")) { key: "mcp-stdout" emit: { failure: MCP_STDOUT_FAILED } })
+        (emit MCP_PUMP { })
+      MCP_LINE_IN -> serving when (and (json/valid @payload.line) (object/has (json/parse @payload.line McpMessage) "id") (= (object/get (json/parse @payload.line McpMessage) "method") "tools/list"))
+        (set @entity.reply (json/stringify { jsonrpc: "2.0" id: (object/get (json/parse @payload.line McpMessage) "id") result: { tools: @entity.tools } }))
+        (emit MCP_LINE_OUT { line: @entity.reply })
+        (os/stdout-write (bytes/from-string (str/concat @entity.reply "\n")) { key: "mcp-stdout" emit: { failure: MCP_STDOUT_FAILED } })
+        (emit MCP_PUMP { })
+      MCP_LINE_IN -> serving when (and (json/valid @payload.line) (object/has (json/parse @payload.line McpMessage) "id") (= (object/get (json/parse @payload.line McpMessage) "method") "prompts/list"))
+        (set @entity.reply (json/stringify { jsonrpc: "2.0" id: (object/get (json/parse @payload.line McpMessage) "id") result: { prompts: [{ name: "build" description: "Build an app in Orb, from finding behaviors to a program that validates 0/0" arguments: [{ name: "app" description: "What to build" required: false }] }] } }))
+        (emit MCP_LINE_OUT { line: @entity.reply })
+        (os/stdout-write (bytes/from-string (str/concat @entity.reply "\n")) { key: "mcp-stdout" emit: { failure: MCP_STDOUT_FAILED } })
+        (emit MCP_PUMP { })
+      MCP_LINE_IN -> serving when (and (json/valid @payload.line) (object/has (json/parse @payload.line McpMessage) "id") (= (object/get (json/parse @payload.line McpMessage) "method") "prompts/get") (!= (object/get (object/get (json/parse @payload.line McpMessage) "params") "name") "build"))
+        (set @entity.reply (json/stringify { jsonrpc: "2.0" id: (object/get (json/parse @payload.line McpMessage) "id") error: { code: -32602 message: (str/concat "unknown prompt " (json/stringify (object/get (object/get (json/parse @payload.line McpMessage) "params") "name"))) } }))
+        (emit MCP_LINE_OUT { line: @entity.reply })
+        (os/stdout-write (bytes/from-string (str/concat @entity.reply "\n")) { key: "mcp-stdout" emit: { failure: MCP_STDOUT_FAILED } })
+        (emit MCP_PUMP { })
+      MCP_LINE_IN -> serving when (and (json/valid @payload.line) (object/has (json/parse @payload.line McpMessage) "id") (= (object/get (json/parse @payload.line McpMessage) "method") "prompts/get") (= (object/get (object/get (json/parse @payload.line McpMessage) "params") "name") "build"))
+        (set @entity.reply (json/stringify { jsonrpc: "2.0" id: (object/get (json/parse @payload.line McpMessage) "id") result: { description: "Build an app in Orb" messages: [{ role: "user" content: { type: "text" text: (str/concat "Build " (or (object/get (object/get (object/get (json/parse @payload.line McpMessage) "params") "arguments") "app") "the app the user asked for") " in Orb.\n\n" @entity.instructions) } }] } }))
+        (emit MCP_LINE_OUT { line: @entity.reply })
+        (os/stdout-write (bytes/from-string (str/concat @entity.reply "\n")) { key: "mcp-stdout" emit: { failure: MCP_STDOUT_FAILED } })
+        (emit MCP_PUMP { })
+      MCP_LINE_IN -> serving when (and (json/valid @payload.line) (object/has (json/parse @payload.line McpMessage) "id") (not (array/includes ["initialize", "ping", "tools/list", "tools/call", "prompts/list", "prompts/get"] (object/get (json/parse @payload.line McpMessage) "method"))))
+        (set @entity.reply (json/stringify { jsonrpc: "2.0" id: (object/get (json/parse @payload.line McpMessage) "id") error: { code: -32601 message: (str/concat "method not found: " (object/get (json/parse @payload.line McpMessage) "method")) } }))
+        (emit MCP_LINE_OUT { line: @entity.reply })
+        (os/stdout-write (bytes/from-string (str/concat @entity.reply "\n")) { key: "mcp-stdout" emit: { failure: MCP_STDOUT_FAILED } })
+        (emit MCP_PUMP { })
+      MCP_LINE_IN -> serving when (and (json/valid @payload.line) (object/has (json/parse @payload.line McpMessage) "id") (= (object/get (json/parse @payload.line McpMessage) "method") "tools/call") (not (array/includes ["validate", "complete", "format", "operators", "patterns", "behaviors", "describe_behavior", "read_behavior", "play", "test", "reference", "evaluate"] (object/get (object/get (json/parse @payload.line McpMessage) "params") "name"))) (not (array/includes @entity.hookNames (object/get (object/get (json/parse @payload.line McpMessage) "params") "name"))))
+        (set @entity.reply (json/stringify { jsonrpc: "2.0" id: (object/get (json/parse @payload.line McpMessage) "id") result: { content: [{ type: "text" text: (str/concat "orb has no tool `" (object/get (object/get (json/parse @payload.line McpMessage) "params") "name") "`") }] isError: true } }))
+        (emit MCP_LINE_OUT { line: @entity.reply })
+        (os/stdout-write (bytes/from-string (str/concat @entity.reply "\n")) { key: "mcp-stdout" emit: { failure: MCP_STDOUT_FAILED } })
+        (emit MCP_PUMP { })
+        (emit MCP_LINE_OUT { line: @entity.reply })
+        (os/stdout-write (bytes/from-string (str/concat @entity.reply "\n")) { key: "mcp-stdout" emit: { failure: MCP_STDOUT_FAILED } })
+        (emit MCP_PUMP { })
+      MCP_LINE_IN -> working when (and (json/valid @payload.line) (object/has (json/parse @payload.line McpMessage) "id") (= (object/get (json/parse @payload.line McpMessage) "method") "tools/call") (or (array/includes ["validate", "format", "behaviors", "describe_behavior", "read_behavior", "play", "operators", "patterns", "evaluate", "complete", "reference", "test"] (object/get (object/get (json/parse @payload.line McpMessage) "params") "name")) (array/includes @entity.hookNames (object/get (object/get (json/parse @payload.line McpMessage) "params") "name"))))
+        (set @entity.rid (object/get (json/parse @payload.line McpMessage) "id"))
+        (set @entity.tool (object/get (object/get (json/parse @payload.line McpMessage) "params") "name"))
+        (set @entity.args (or (object/get (object/get (json/parse @payload.line McpMessage) "params") "arguments") (json/parse "{}" McpArgs)))
+        (set @entity.attempt 0)
+        (emit MCP_RUN { })
+    }
+
+    state working {
+      INIT -> working
+      MCP_CHUNK -> working
+        (set @entity.buffer (str/concat @entity.buffer @payload.data))
+        (set @entity.queue (array/concat @entity.queue (array/slice (str/split @entity.buffer "\n") 0 (- (array/len (str/split @entity.buffer "\n")) 1))))
+        (set @entity.buffer (array/last (str/split @entity.buffer "\n")))
+      MCP_EOF -> starting
+        (emit MCP_ANSWERED { status: 200, body: "" })
+      MCP_RUN -> working when (or (= @entity.tool "validate") (= @entity.tool "format") (= @entity.tool "play"))
+        (os/read-file { anchor: "cwd" path: (object/get @entity.args "path") } { key: "source" emit: { success: MCP_FILE, failure: MCP_TOOL_FAILED } })
+      MCP_FILE -> working when (!= @entity.tool "format")
+        (program/read (bytes/to-string @payload.data) { key: "program" emit: { success: MCP_PROGRAM, failure: MCP_TOOL_FAILED } })
+      MCP_FILE -> working when (and (= @entity.tool "format") (= (object/get @entity.args "write") true))
+        (emit MCP_TOOL_FAILED { error: "format with write is pending its port" })
+      MCP_FILE -> working when (and (= @entity.tool "format") (!= (object/get @entity.args "write") true))
+        (program/read (bytes/to-string @payload.data) { key: "program" emit: { success: MCP_PROGRAM, failure: MCP_TOOL_FAILED } })
+      MCP_PROGRAM -> working when (= @entity.tool "validate")
+        (program/validate @payload.result { final: (= (object/get @entity.args "final") true) emit: { success: MCP_TOOL_DONE, failure: MCP_TOOL_FAILED } })
+      MCP_PROGRAM -> working when (= @entity.tool "format")
+        (program/print @payload.result { emit: { success: MCP_PRINTED, failure: MCP_TOOL_FAILED } })
+      MCP_PROGRAM -> working when (= @entity.tool "play")
+        (program/step @payload.result (object/get @entity.args "steps") { emit: { success: MCP_TOOL_DONE, failure: MCP_TOOL_FAILED } })
+      MCP_PRINTED -> working
+        (emit MCP_TOOL_DONE { result: { source: @payload.result } })
+      MCP_RUN -> working when (= @entity.tool "describe_behavior")
+        (behavior/describe { behavior: (array/first (str/split (object/get @entity.args "spec") ".traits.")) } { emit: { success: MCP_TOOL_DONE, failure: MCP_TOOL_FAILED } })
+      MCP_RUN -> working when (= @entity.tool "read_behavior")
+        (behavior/source { behavior: (array/first (str/split (object/get @entity.args "spec") ".traits.")) } { file: true emit: { success: MCP_TOOL_DONE, failure: MCP_TOOL_FAILED } })
+      MCP_RUN -> working when (and (= @entity.tool "behaviors") (> (array/len (or (object/get @entity.args "scopes") [])) 0))
+        (behavior/catalog { paths: (object/get @entity.args "scopes"), exposure: (or (object/get @entity.args "exposure") []) } { vectors: false emit: { success: MCP_TOOL_DONE, failure: MCP_TOOL_FAILED } })
+      MCP_RUN -> working when (and (= @entity.tool "behaviors") (= (array/len (or (object/get @entity.args "scopes") [])) 0))
+        (emit MCP_TOOL_FAILED { error: "behaviors without scopes (installed topics) is pending its port" })
+      MCP_RUN -> working when (= @entity.tool "evaluate")
+        (program/step (quasiquote { name: "evalprog" version: "1.0.0" orbitals: [{ name: "EvalOrbital" entity: { name: "EvalRow" persistence: "runtime" fields: [{ name: "id" type: "string" required: true }] } traits: [{ name: "Eval" category: "integration" linkedEntity: "EvalRow" emits: [{ event: "EVALUATED", payloadSchema: [{ name: "value", type: "string" }] }] stateMachine: { states: [{ name: "idle" isInitial: true }] events: [{ key: "INIT" name: "Initialize" }, { key: "EVAL" name: "Eval" }] transitions: [{ from: "idle" to: "idle" event: "INIT" }, { from: "idle" to: "idle" event: "EVAL" effects: [["emit", "EVALUATED", { value: (unquote (object/get @entity.args "expr")) }]] }] } scope: "instance" }] pages: [{ name: "Eval" path: "/eval" traits: [{ ref: "Eval" }] }] }] schemaVersion: 1 }) [{ orbital: "EvalOrbital" trait: "Eval" from: "idle" event: "EVAL" payload: (or (object/get @entity.args "payload") (json/parse "{}" McpJson)) entity: (object/merge { id: "e" } (or (object/get @entity.args "entity") (json/parse "{}" McpJson))) }] { emit: { success: MCP_STEPPED, failure: MCP_TOOL_FAILED } })
+      MCP_STEPPED -> working
+        (emit MCP_TOOL_DONE { result: { value: (object/get (object/get (array/first (object/get (object/get (array/first @payload.result) "result") "emitted")) "payload") "value") } })
+      MCP_RUN -> working when (= @entity.tool "complete")
+        (emit MCP_COMPLETE_START { file: (object/get @entity.args "path"), offset: (object/get @entity.args "offset") })
+      MCP_COMPLETE_ANSWERED -> working when (= @payload.status 200)
+        (emit MCP_TOOL_DONE { result: (json/parse @payload.body McpJson) })
+      MCP_COMPLETE_ANSWERED -> working when (!= @payload.status 200)
+        (emit MCP_TOOL_FAILED { error: @payload.body })
+      MCP_RUN -> working when (= @entity.tool "reference")
+        (emit MCP_REFERENCE_START { topic: (or (object/get @entity.args "topic") "") })
+      MCP_REFERENCE_ANSWERED -> working when (= @payload.status 200)
+        (emit MCP_TOOL_DONE { result: (json/parse @payload.body McpJson) })
+      MCP_REFERENCE_ANSWERED -> working when (!= @payload.status 200)
+        (emit MCP_TOOL_FAILED { error: @payload.body })
+      MCP_RUN -> working when (= @entity.tool "test")
+        (emit MCP_TEST_START { cwd: @entity.cwd, file: (object/get @entity.args "path"), traitFilter: "", report: "json", verbose: false })
+      MCP_TEST_ANSWERED -> working when (and (json/valid @payload.body) (str/startsWith (str/trim @payload.body) "{"))
+        (emit MCP_TOOL_DONE { result: (json/parse @payload.body McpJson) })
+      MCP_TEST_ANSWERED -> working when (not (and (json/valid @payload.body) (str/startsWith (str/trim @payload.body) "{")))
+        (emit MCP_TOOL_FAILED { error: @payload.body })
+      MCP_RUN -> working when (= @entity.tool "operators")
+        (set @entity.file "node_modules/@almadar/std/canonical-operators.json")
+        (os/read-file { anchor: "cwd" path: @entity.file } { key: "table" emit: { success: MCP_TABLE, failure: MCP_TABLE_FAILED } })
+      MCP_RUN -> working when (= @entity.tool "patterns")
+        (set @entity.file "node_modules/@almadar/core/dist/patterns/patterns-registry.json")
+        (os/read-file { anchor: "cwd" path: @entity.file } { key: "table" emit: { success: MCP_TABLE, failure: MCP_TABLE_FAILED } })
+      MCP_TABLE_FAILED -> working when (= @entity.attempt 0)
+        (set @entity.attempt 1)
+        (os/read-file (str/concat "~/.orb/" @entity.file) { key: "table" emit: { success: MCP_TABLE, failure: MCP_TABLE_FAILED } })
+      MCP_TABLE_FAILED -> working when (!= @entity.attempt 0)
+        (emit MCP_TOOL_FAILED { error: (str/concat "the installed " @entity.tool " table is not installed: " @payload.error) })
+      MCP_TABLE -> working when (!= (object/get @entity.args "name") null)
+        (emit MCP_TABLE_READ { table: (object/get (json/parse (bytes/to-string @payload.data) McpJson) (if (= @entity.tool "operators") "operators" "patterns")) })
+      MCP_TABLE -> working when (= (object/get @entity.args "name") null)
+        (emit MCP_TABLE_READ { table: (object/get (json/parse (bytes/to-string @payload.data) McpJson) (if (= @entity.tool "operators") "operators" "patterns")) })
+      MCP_TABLE_READ -> working when (and (!= (object/get @entity.args "name") null) (object/has @payload.table (object/get @entity.args "name")))
+        (emit MCP_TOOL_DONE { result: { name: (object/get @entity.args "name") entry: (object/get @payload.table (object/get @entity.args "name")) } })
+      MCP_TABLE_READ -> working when (and (!= (object/get @entity.args "name") null) (not (object/has @payload.table (object/get @entity.args "name"))))
+        (emit MCP_TOOL_FAILED { error: (str/concat "no " @entity.tool " entry named `" (object/get @entity.args "name") "`") })
+      MCP_TABLE_READ -> working when (= (object/get @entity.args "name") null)
+        (emit MCP_TOOL_DONE { result: (object/set (json/parse "{}" McpJson) @entity.tool (array/map (array/filter (object/keys @payload.table) (fn k (or (= (object/get @entity.args "category") null) (= (object/get (object/get @payload.table @k) "category") (object/get @entity.args "category"))))) (fn k { name: @k category: (object/get (object/get @payload.table @k) "category") description: (object/get (object/get @payload.table @k) "description") }))) })
+      MCP_RUN -> working when (array/includes @entity.hookNames @entity.tool)
+        (program/dispatch { inbound: @entity.tool body: (if (= (object/get @entity.args "body") null) "" (json/stringify (object/get @entity.args "body"))) headers: (or (object/get @entity.args "headers") (json/parse "{}" McpJson)) } { emit: { success: MCP_TOOL_DONE, failure: MCP_TOOL_FAILED } })
+      MCP_TOOL_DONE -> serving
+        (set @entity.reply (json/stringify { jsonrpc: "2.0" id: @entity.rid result: { content: [{ type: "text" text: (json/stringify (if (object/has @payload.result "__none") @payload.result @payload.result)) }] structuredContent: (if (object/has @payload.result "__none") @payload.result @payload.result) isError: false } }))
+        (emit MCP_LINE_OUT { line: @entity.reply })
+        (os/stdout-write (bytes/from-string (str/concat @entity.reply "\n")) { key: "mcp-stdout" emit: { failure: MCP_STDOUT_FAILED } })
+        (emit MCP_PUMP { })
+      MCP_TOOL_FAILED -> serving
+        (set @entity.reply (json/stringify { jsonrpc: "2.0" id: @entity.rid result: { content: [{ type: "text" text: @payload.error }] isError: true } }))
+        (emit MCP_LINE_OUT { line: @entity.reply })
+        (os/stdout-write (bytes/from-string (str/concat @entity.reply "\n")) { key: "mcp-stdout" emit: { failure: MCP_STDOUT_FAILED } })
+        (emit MCP_PUMP { })
+    }
+
+    emits {
+      MCP_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      MCP_LINE_OUT -> external {
+        line : string!
+      }
+        @description "One JSON-RPC reply line, written to stdout."
+        @tier "internal"
+      MCP_PUMP { }
+        @description "Internal: take the next queued line."
+        @tier "internal"
+      MCP_LINE_IN {
+        line : string!
+      }
+        @description "Internal: one stdin line to answer."
+        @tier "internal"
+      MCP_LISTEN { }
+        @description "Internal: start reading stdin."
+        @tier "internal"
+      MCP_RUN { }
+        @description "Internal: run the tool call held in the entity."
+        @tier "internal"
+      MCP_ARGS_PARSE {
+        stage : string!
+        argv : [string]!
+        flags : [ArgFlag]!
+      }
+        @description "Internal: parse the call's words against --program."
+        @tier "internal"
+      MCP_VERSIONED {
+        version : string!
+      }
+        @description "Internal: the installed @almadar/orb version is known."
+        @tier "internal"
+      MCP_TABLE_READ {
+        table : Map string McpJson!
+      }
+        @description "Internal: an installed language table is parsed."
+        @tier "internal"
+      MCP_SPAWNED {
+        pid : number!
+        stdout : number!
+      }
+        @description "os/spawn: the --version child."
+        @tier "internal"
+      MCP_VERSION_TEXT {
+        data : bytes!
+      }
+        @description "os/read: the child's stdout."
+        @tier "internal"
+      MCP_WAITED {
+        code : number
+      }
+        @description "os/wait: the child ended."
+        @tier "internal"
+      MCP_START_FAILED {
+        error : string
+      }
+        @description "os/read-file or os/stdin-read failed."
+        @tier "internal"
+      MCP_STDOUT_FAILED {
+        error : string
+      }
+        @description "os/stdout-write failed."
+        @tier "internal"
+      MCP_CHUNK {
+        data : string!
+      }
+        @description "os/stdin-read: a chunk of stdin."
+        @tier "internal"
+      MCP_EOF { }
+        @description "os/stdin-read: stdin ended."
+        @tier "internal"
+      MCP_INPUTS {
+        result : McpJson
+      }
+        @description "program/inputs: the hosted program's declared inputs."
+        @tier "internal"
+      MCP_FILE {
+        data : bytes!
+      }
+        @description "os/read-file: the tool's file."
+        @tier "internal"
+      MCP_PROGRAM {
+        result : string
+      }
+        @description "program/read's success."
+        @tier "internal"
+      MCP_PRINTED {
+        result : string
+      }
+        @description "program/print's success."
+        @tier "internal"
+      MCP_TABLE {
+        data : bytes!
+      }
+        @description "os/read-file: an installed language table."
+        @tier "internal"
+      MCP_TABLE_FAILED {
+        error : string
+      }
+        @description "The language table could not be read."
+        @tier "internal"
+      MCP_TEST_START {
+        cwd : string!
+        file : string!
+        traitFilter : string!
+        report : string!
+        verbose : boolean!
+      }
+        @description "Internal: run std-orb-test for the test tool."
+        @tier "internal"
+      MCP_REFERENCE_START {
+        topic : string!
+      }
+        @description "Internal: run std-orb-reference for the reference tool."
+        @tier "internal"
+      MCP_COMPLETE_START {
+        file : string!
+        offset : number!
+      }
+        @description "Internal: run std-orb-complete for the complete tool."
+        @tier "internal"
+      MCP_STEPPED {
+        result : [McpPlayed]
+      }
+        @description "program/step: the played request."
+        @tier "internal"
+      MCP_TOOL_DONE {
+        result : McpJson
+      }
+        @description "A tool's success."
+        @tier "internal"
+      MCP_TOOL_FAILED {
+        error : string
+      }
+        @description "A tool's failure."
+        @tier "internal"
+    }
+
+    listens {
+      MCP_CALLED -> inbound "cli-mcp" answers MCP_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb mcp`, the MCP server over stdio."
+        @synonyms "orb mcp, the orb MCP server, language tools for an agent"
+      MCP_TEST_ANSWERED {
+        status : number!
+        body : string!
+      }
+        @description "std-orb-test's TEST_ANSWERED."
+      MCP_REFERENCE_ANSWERED {
+        status : number!
+        body : string!
+      }
+        @description "std-orb-reference's REFERENCE_ANSWERED."
+      MCP_COMPLETE_ANSWERED {
+        status : number!
+        body : string!
+      }
+        @description "std-orb-complete's COMPLETE_ANSWERED."
+      MCP_ARGS_DONE {
+        stage : string!
+        flags : Map string [string]!
+        positionals : [string]!
+        errors : [string]!
+        words : [string]!
+      }
+        @description "std-args's ARGS_PARSED."
+      ArgsCli.ARGS_PARSED -> MCP_ARGS_DONE
+      CompleteEngine.COMPLETE_ANSWERED -> MCP_COMPLETE_ANSWERED
+      ReferenceEngine.REFERENCE_ANSWERED -> MCP_REFERENCE_ANSWERED
+      TestEngine.TEST_ANSWERED -> MCP_TEST_ANSWERED
+    }
+  }
+
+  page "/mcp" as OrbMcpPage -> McpServer, ArgsCli, CompleteEngine, ReferenceEngine, TestEngine, TestWalk, TestMachine, TestPlan, TestJudge, TestCreditor, MockSeed, MockStream
+}

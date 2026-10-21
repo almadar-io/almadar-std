@@ -1,0 +1,144 @@
+app std-orb-lint-entity-locale-instances [
+  version: "1.0.0",
+  inbound: ["cli-lint-entity-locale-instances"],
+  fs: { cwd: "**": [read] },
+  description: "std-orb-lint-entity-locale-instances — the `orb lint entity-locale-instances <file>` command, the port of ORB_E_LOCALE_INSTANCES_NOT_LOCAL, ORB_E_LOCALE_INSTANCES_UNKNOWN_LOCALE and ORB_E_LOCALE_INSTANCES_INCOMPLETE (entity.rs validate_all_locale_instances; the per-row type check ORB_E_INSTANCE_INVALID is not ported, it needs the field types). It lowers the file with program/read and, for every inline primary and auxiliary entity that writes per-locale rows, reports a non-browser-stored entity, a block for an undeclared or default locale, a missing default `instances` block and a missing block for a declared non-default locale, each with the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint entity-locale-instances: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-entity-locale-instances"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital OrbLintEntityLocaleInstancesOrbital {
+  entity OrbLintEntityLocaleInstancesRun [runtime] {
+    id : string!
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintEntityLocaleInstances -> OrbLintEntityLocaleInstancesRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_RUN -> reading
+        (set @entity.findings [])
+        (os/read-file { anchor: "cwd" path: @payload.file } { key: "file" emit: { success: LINT_FILE_READ, failure: LINT_FILE_UNREAD } })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "entity-locale-instances", findings: @entity.findings })
+    }
+
+    state reading {
+      INIT -> reading
+      LINT_FILE_READ -> reading
+        (program/read (bytes/to-string @payload.data) { emit: { success: LINT_PROGRAM_READ, failure: LINT_FILE_UNREAD } })
+      LINT_PROGRAM_READ -> ready
+        (set @entity.findings (let ((orbitals (object/get @payload.result "orbitals")) (decl (object/get @payload.result "locales" [])))
+          (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+            (let ((orb (array/nth @orbitals @oi)))
+              (let ((aux (object/get @orb "auxiliaryEntities" [])))
+                (array/flatten (array/map
+                  (array/concat [{ pth: (str/concat "orbitals[" @oi "].entity"), ee: (object/get @orb "entity" {}) }]
+                    (array/map (array/filter (array/range 0 (array/len @aux)) (fn ai (validate/object (array/nth @aux @ai)))) (fn ai { pth: (str/concat "orbitals[" @oi "].auxiliaryEntities[" @ai "]"), ee: (array/nth @aux @ai) })))
+                  (fn it
+                    (let ((ee (object/get @it "ee")))
+                      (if (not (validate/object @ee))
+                        []
+                        (let ((pth (object/get @it "pth")) (nm (object/get @ee "name" "")) (blocks (object/get @ee "localeInstances" {})) (dflt (if (> (array/len @decl) 0) (array/first @decl) "")))
+                          (let ((keys (object/keys @blocks)) (bp (str/concat @pth ".localeInstances")))
+                            (if (= (array/len @keys) 0)
+                              []
+                              (array/flatten [
+                                (if (object/get @ee "local" false) [] [{ code: "ORB_E_LOCALE_INSTANCES_NOT_LOCAL", path: @bp, message: (str/concat "Entity '" @nm "' writes rows per locale but its rows are not browser-stored; a server's rows are shared by every viewer"), suggestion: "Add `local` (`[persistent: <collection>, local]`) or keep one `instances` block.", severity: "error" }])
+                                (array/flatten (array/map (array/filter @keys (fn k (or (not (array/includes @decl @k)) (and (> (array/len @decl) 0) (= @k @dflt))))) (fn k
+                                  [{ code: "ORB_E_LOCALE_INSTANCES_UNKNOWN_LOCALE", path: (str/concat @bp "." @k), message: (if (and (> (array/len @decl) 0) (= @k @dflt))
+                                      (str/concat "Entity '" @nm "' writes `instances " @k "`, but '" @k "' is the default locale: its rows are the plain `instances` block")
+                                      (str/concat "Entity '" @nm "' writes `instances " @k "`, but the app declares locales [" (str/join (array/map @decl (fn d (json/stringify @d))) ", ") "]")), suggestion: "Write one block per declared locale other than the first; declare the locale in the app's `locales [ … ]`.", severity: "error" }])))
+                                (if (> (array/len (object/get @ee "instances" [])) 0) [] [{ code: "ORB_E_LOCALE_INSTANCES_INCOMPLETE", path: (str/concat @pth ".instances"), message: (str/concat "Entity '" @nm "' writes rows per locale but no default `instances` block for its default locale"), suggestion: "Add `instances [ … ]` with the default locale's rows.", severity: "error" }])
+                                (array/map (array/filter (array/drop @decl 1) (fn l (not (array/includes @keys @l)))) (fn l
+                                  { code: "ORB_E_LOCALE_INSTANCES_INCOMPLETE", path: @bp, message: (str/concat "Entity '" @nm "' writes rows per locale but has no `instances " @l "` block"), suggestion: "Write a block for every declared locale once any is written.", severity: "error" }))]))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FILE_UNREAD -> ready
+        (emit LINT_UNREAD { rule: "entity-locale-instances" })
+    }
+
+    emits {
+      LINT_UNREAD -> external { rule : string! }
+        @description "This rule could not read or lower the file."
+        @tier "internal"
+      LINT_RUN -> external { file : string! }
+        @description "The lint request this trait answers, from the cli trait or the umbrella."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FILE_READ { data : bytes! }
+        @description "The file read."
+        @tier "internal"
+      LINT_FILE_UNREAD { error : string }
+        @description "The file could not be read or lowered."
+        @tier "internal"
+      LINT_PROGRAM_READ { result : string }
+        @description "The file lowered by program/read."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      OrbLintEntityLocaleInstancesCli.LINT_RUN -> LINT_RUN
+    }
+  }
+
+  trait OrbLintEntityLocaleInstancesCli -> OrbLintEntityLocaleInstancesRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint entity-locale-instances <file>" })
+      LINT_CALLED -> waiting when (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (emit LINT_RUN { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "entity-locale-instances") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint entity-locale-instances: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "entity-locale-instances") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_UNREAD -> ready when (= @payload.rule "entity-locale-instances")
+        (emit LINT_ANSWERED { status: 500, body: "lint entity-locale-instances: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_RUN -> external { file : string! }
+        @description "Ask the rule trait to lint this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_UNREAD -> external { rule : string! }
+        @description "The rule trait could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-entity-locale-instances" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint entity-locale-instances` with its arguments and working directory."
+        @synonyms "orb lint entity-locale-instances, per-locale instances"
+      OrbLintEntityLocaleInstances.LINT_FOUND -> LINT_FOUND
+      OrbLintEntityLocaleInstances.LINT_UNREAD -> LINT_UNREAD
+    }
+  }
+
+  page "/orb-lint-entity-locale-instances" as OrbLintEntityLocaleInstancesPage -> OrbLintEntityLocaleInstances, OrbLintEntityLocaleInstancesCli
+}

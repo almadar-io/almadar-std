@@ -1,10 +1,10 @@
 app std-args [
   version: "1.0.0",
-  description: "std-args — parse a command's words against a declared flag table over array/*, object/* and str/*. ARGS_PARSE { stage, argv, flags } answers ARGS_PARSED { stage, flags, positionals, errors, words }. A flag is { name, aliases, takesValue, repeatable }: name matches --name, aliases are written whole (-o). `--name value` and `--name=value` are the same: the value splits on the first equals only, so `--query=a=b` gives a=b, and `--name=` gives an empty value. A flag with no value is present as [true] (`--ai=x` is an error); a value flag with nothing after it is an error; an undeclared flag is `unknown flag: <word>`; a repeated flag that is not repeatable is an error, and a repeatable one collects its values in order. flags maps each flag's name to its values; positionals are the other words in order; the value after a value flag is always a value, even when it starts with a dash. words is argv with every --name=value split into --name and value."
+  description: "std-args — parse a command's words against a declared flag table over array/*, object/* and str/*. ARGS_PARSE { stage, argv, flags } answers ARGS_PARSED { stage, flags, positionals, errors, words }. A flag is { name, aliases, takesValue, repeatable, defaultValue, choices }: name matches --name, aliases are written whole (-o). `--name value` and `--name=value` are the same: the value splits on the first equals only, so `--query=a=b` gives a=b, and `--name=` gives an empty value. A flag with no value is present as [true] (`--ai=x` is an error); a value flag with nothing after it is an error; an undeclared flag is `unknown flag: <word>`; a repeated flag that is not repeatable is an error, and a repeatable one collects its values in order. flags maps each flag's name to its values; positionals are the other words in order; the value after a value flag is always a value, even when it starts with a dash. words is argv with every --name=value split into --name and value."
 ]
 uses Spec from "almadar-std/args"
 
-type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
+type ArgsFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean!, defaultValue : string, choices : [string] }
 type ArgsAcc = { flags : Map string [string]!, positionals : [string]!, errors : [string]!, words : [string]!, pending : string! }
 
 orbital ArgsOrbital {
@@ -19,7 +19,7 @@ orbital ArgsOrbital {
     state idle {
       INIT -> idle
       ARGS_PARSE -> idle
-        (set @entity.acc (array/reduce @payload.argv { flags: {}, positionals: [], errors: [], words: [], pending: "" } (fn acc t
+        (set @entity.acc (let ((av (array/flatten (array/map (array/range 0 (array/len @payload.argv)) (fn i (let ((t (array/nth @payload.argv @i)) (prev (if (> @i 0) (array/nth @payload.argv (- @i 1)) "")) (nx (if (< (+ @i 1) (array/len @payload.argv)) (array/nth @payload.argv (+ @i 1)) ""))) (let ((ft (array/find @payload.flags (fn f (and (!= (object/get @f "defaultValue") null) (= (str/concat "--" (object/get @f "name")) @t))))) (fp (array/find @payload.flags (fn f (and (!= (object/get @f "defaultValue") null) (= (str/concat "--" (object/get @f "name")) @prev)))))) (if (and (!= @fp null) (array/includes (or (object/get @fp "choices") []) @t)) [] (if (!= @ft null) [(str/concat @t "=" (if (array/includes (or (object/get @ft "choices") []) @nx) @nx (object/get @ft "defaultValue")))] [@t]))))))))) (array/reduce @av { flags: {}, positionals: [], errors: [], words: [], pending: "" } (fn acc t
           (if (!= @acc.pending "")
             (object/merge @acc { flags: (object/set @acc.flags @acc.pending (array/append (or (object/get @acc.flags @acc.pending) []) @t)), words: (array/append @acc.words @t), pending: "" })
             (if (and (str/startsWith @t "-") (> (str/len @t) 1))
@@ -39,7 +39,7 @@ orbital ArgsOrbital {
                           (if @eq
                             (object/merge @acc { errors: (array/append @acc.errors (str/concat "flag takes no value: " @head)), words: (array/concat @acc.words [@head, @val]) })
                             (object/merge @acc { flags: (object/set @acc.flags (object/get @flag "name") ["true"]), words: (array/append @acc.words @t) }))))))))
-              (object/merge @acc { positionals: (array/append @acc.positionals @t), words: (array/append @acc.words @t) }))))))
+              (object/merge @acc { positionals: (array/append @acc.positionals @t), words: (array/append @acc.words @t) })))))))
         (set @entity.acc (if (!= @entity.acc.pending "") (object/merge @entity.acc { errors: (array/append @entity.acc.errors (str/concat "missing value for --" @entity.acc.pending)) }) @entity.acc))
         (emit ARGS_PARSED { stage: @payload.stage flags: @entity.acc.flags positionals: @entity.acc.positionals errors: @entity.acc.errors words: @entity.acc.words })
     }
@@ -61,7 +61,7 @@ orbital ArgsOrbital {
       ARGS_PARSE -> external {
         stage : string!
         argv : [string]!
-        flags : [ArgFlag]!
+        flags : [ArgsFlag]!
       }
         @description "Parse these words against this flag table; stage names the ask in the answer."
         @synonyms "parse arguments, parse flags, option parser"

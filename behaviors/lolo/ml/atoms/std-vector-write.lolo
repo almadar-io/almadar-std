@@ -1,0 +1,394 @@
+app std-vector-write [
+  version: "1.0.0",
+  description: "std-vector-write — write embedding vectors into an ORBVEC user store the way insert_many does. VECTOR_WRITE { path, model, records } quantizes through std-vector-quantize, creates the directory, takes the writer lock path.lock by exclusive create, reads the store, has std-vector-store validate it, refuses a model or dims that differ from the stored ones (ORB_VECTOR_MODEL_MISMATCH, ORB_VECTOR_DIMS_MISMATCH), merges (an incoming record wins a shared key, a later incoming duplicate wins an earlier one), keeps strictly ascending key order by inserting the sorted incoming records into the existing ones with a binary search, writes path.tmp and renames it over the store, then removes the lock. VECTOR_WRITTEN { path, count } carries the total records; VECTOR_WRITE_REFUSED { code, detail } carries any refusal after the lock was released. A held lock is waited on with the Rust backoff (5 ms doubling to 100 ms, delayed through std-delay whose resolution is its 100 ms deadline check) until 180 s, then ORB_VECTOR_LOCKED; a lock older than 120 s or whose recorded pid is gone (kill -0) is renamed aside and removed.",
+  fs: { cwd: "**": [read, write, remove, create] },
+  exec: ["kill"]
+]
+uses Spec from "almadar-std/vector-write"
+uses Quantize from "std/behaviors/std-vector-quantize"
+uses Store from "std/behaviors/std-vector-store"
+uses F32 from "std/behaviors/std-f32"
+uses Delay from "std/behaviors/std-delay"
+uses Sig6 from "std/behaviors/std-sig6"
+uses BigCmp from "std/behaviors/std-bigcmp"
+
+type VecRecord = { text : string!, vector : [number]! }
+type PlanStep = { row : bytes!, pos : number!, eq : number! }
+
+orbital VectorWriteOrbital {
+  entity VectorWriteRun [runtime] {
+    id : string!
+    path : string = ""
+    model : string = ""
+    dims : number = 0
+    rows : [bytes] = []
+    existing : bytes = ""
+    emodel : string = ""
+    edims : number = 0
+    ecount : number = 0
+    eoff : number = 0
+    kept : [number] = []
+    sorted : [bytes] = []
+    plan : [PlanStep] = []
+    merged : bytes = ""
+    total : number = 0
+    lockStart : number = 0
+    wait : number = 5
+    lockPid : number = 0
+    pendingCode : string = ""
+    pendingDetail : string = ""
+  }
+
+  trait WriteF32 = F32.traits.F32Encode {
+    listens {
+      WriteQuantize.F32_ENCODE -> F32_ENCODE
+      WriteSig6.F32_ENCODE -> F32_ENCODE
+    }
+  }
+
+  trait WriteSig6 = Sig6.traits.Sig6 {
+    listens {
+      WriteQuantize.SIG6 -> SIG6
+      WriteStore.SIG6 -> SIG6
+      WriteBigCmp.BIGCMP_ANSWERED -> BIGCMP_ANSWERED
+      WriteF32.F32_ENCODED -> F32_ENCODED
+      WriteF32.F32_REFUSED -> F32_REFUSED
+    }
+  }
+
+  trait WriteBigCmp = BigCmp.traits.BigCmp {
+    listens {
+      WriteSig6.BIGCMP_BATCH -> BIGCMP_BATCH
+    }
+  }
+
+  trait WriteQuantize = Quantize.traits.VectorQuantize {
+    listens {
+      VectorWrite.QUANTIZE -> QUANTIZE
+      WriteF32.F32_ENCODED -> F32_ENCODED
+      WriteF32.F32_REFUSED -> F32_REFUSED
+      WriteSig6.SIG6_DONE -> SIG6_DONE
+      WriteSig6.SIG6_REFUSED -> SIG6_REFUSED
+    }
+  }
+
+  trait WriteDelay = Delay.traits.Delay {
+    listens {
+      VectorWrite.LOCK_WAIT -> START
+    }
+  }
+
+  trait WriteStore = Store.traits.VectorLookup {
+    listens {
+      VectorWrite.VECTOR_LOOKUP_MANY -> VECTOR_LOOKUP_MANY
+      WriteSig6.SIG6_DONE -> SIG6_DONE
+      WriteSig6.SIG6_REFUSED -> SIG6_REFUSED
+    }
+  }
+
+  trait VectorWrite -> VectorWriteRun [integration, instance] {
+    initial: idle
+
+    state idle {
+      VECTOR_WRITE -> quantizing
+        (set @entity.path @payload.path)
+        (set @entity.model @payload.model)
+        (set @entity.existing (bytes/from-string ""))
+        (set @entity.pendingCode "")
+        (set @entity.pendingDetail "")
+        (emit QUANTIZE { model: @payload.model, records: @payload.records })
+    }
+
+    state quantizing {
+      QUANTIZED -> preparing
+        (set @entity.rows @payload.rows)
+        (set @entity.dims @payload.dims)
+        (os/mkdir { anchor: "cwd" path: (os/path-dir @entity.path) } true { emit: { success: DIR_READY, failure: IO_FAILED } })
+      QUANTIZE_REFUSED -> idle
+        (emit VECTOR_WRITE_REFUSED { code: @payload.code, detail: @payload.detail })
+    }
+
+    state preparing {
+      DIR_READY -> locking
+        (set @entity.lockStart @now)
+        (set @entity.wait 5)
+        (os/open { anchor: "cwd" path: (str/concat @entity.path ".lock") } "wx" { emit: { success: LOCK_TAKEN, failure: LOCK_FAILED } })
+      IO_FAILED -> idle
+        (emit VECTOR_WRITE_REFUSED { code: "ORB_VECTOR_IO", detail: (str/concat @entity.path ": " @payload.error) })
+    }
+
+    state locking {
+      LOCK_TAKEN -> locked
+        (os/close @payload.fd { emit: { success: FD_CLOSED, failure: FD_CLOSED } })
+      LOCK_FAILED -> statting when (== @payload.kind "exists")
+        (os/stat { anchor: "cwd" path: (str/concat @entity.path ".lock") } { emit: { success: LOCK_STATTED, failure: LOCK_BUSY } })
+      LOCK_FAILED -> idle when (!= @payload.kind "exists")
+        (emit VECTOR_WRITE_REFUSED { code: "ORB_VECTOR_IO", detail: (str/concat @entity.path ".lock: " @payload.error) })
+    }
+
+    state locked {
+      FD_CLOSED -> pidding
+        (os/pid { emit: { success: PID_READ, failure: PID_FAILED } })
+    }
+
+    state pidding {
+      PID_READ -> stamping
+        (os/write-file { anchor: "cwd" path: (str/concat @entity.path ".lock") } (bytes/from-string (str/concat @payload.pid " " @now)) { emit: { success: LOCK_STAMPED, failure: LOCK_STAMPED } })
+      PID_FAILED -> stamping
+        (os/write-file { anchor: "cwd" path: (str/concat @entity.path ".lock") } (bytes/from-string (str/concat "0 " @now)) { emit: { success: LOCK_STAMPED, failure: LOCK_STAMPED } })
+    }
+
+    state stamping {
+      LOCK_STAMPED -> reading
+        (os/read-file { anchor: "cwd" path: @entity.path } { emit: { success: STORE_READ, failure: STORE_READ_FAILED } })
+    }
+
+    state statting {
+      LOCK_STATTED -> breaking when (>= (- @now @payload.mtime) 120000)
+        (emit LOCK_STALE { reason: "age" })
+      LOCK_STATTED -> checking when (< (- @now @payload.mtime) 120000)
+        (os/read-file { anchor: "cwd" path: (str/concat @entity.path ".lock") } { emit: { success: LOCK_PID_READ, failure: LOCK_BUSY } })
+      LOCK_BUSY -> backoff
+        (emit LOCK_RETRY { })
+    }
+
+    state checking {
+      LOCK_PID_READ -> backoff when (== (str/to-int (array/first (str/split (bytes/to-string @payload.data) " "))) null)
+        (emit LOCK_RETRY { })
+      LOCK_PID_READ -> probing when (!= (str/to-int (array/first (str/split (bytes/to-string @payload.data) " "))) null)
+        (set @entity.lockPid (str/to-int (array/first (str/split (bytes/to-string @payload.data) " "))))
+        (os/spawn "kill" ["-0" (str/concat (str/to-int (array/first (str/split (bytes/to-string @payload.data) " "))))] { cwd: null env: {} stdin: "null" stdout: "null" stderr: "null" detached: false } { emit: { success: KILL_SPAWNED, failure: KILL_SPAWN_FAILED } })
+      LOCK_BUSY -> backoff
+        (emit LOCK_RETRY { })
+    }
+
+    state probing {
+      KILL_SPAWNED -> probing
+        (os/wait @payload.pid { emit: { success: KILL_EXITED, failure: KILL_SPAWN_FAILED } })
+      KILL_EXITED -> breaking when (and (!= @payload.code null) (> @payload.code 0))
+        (emit LOCK_STALE { reason: "pid" })
+      KILL_EXITED -> backoff when (or (== @payload.code null) (<= @payload.code 0))
+        (emit LOCK_RETRY { })
+      KILL_SPAWN_FAILED -> backoff
+        (emit LOCK_RETRY { })
+    }
+
+    state breaking {
+      LOCK_STALE -> breaking
+        (os/rename { anchor: "cwd" path: (str/concat @entity.path ".lock") } { anchor: "cwd" path: (str/concat @entity.path ".lock.stale") } { emit: { success: LOCK_ASIDE, failure: LOCK_ASIDE } })
+      LOCK_ASIDE -> unlocking
+        (os/remove { anchor: "cwd" path: (str/concat @entity.path ".lock.stale") } { emit: { success: STALE_REMOVED, failure: STALE_REMOVED } })
+    }
+
+    state unlocking {
+      STALE_REMOVED -> locking
+        (os/open { anchor: "cwd" path: (str/concat @entity.path ".lock") } "wx" { emit: { success: LOCK_TAKEN, failure: LOCK_FAILED } })
+    }
+
+    state backoff {
+      LOCK_RETRY -> idle when (>= (- @now @entity.lockStart) 180000)
+        (emit VECTOR_WRITE_REFUSED { code: "ORB_VECTOR_LOCKED", detail: (str/concat @entity.path ".lock stayed locked for " (- @now @entity.lockStart) " ms (another session is writing; if none is, delete the lock file)") })
+      LOCK_RETRY -> waiting when (< (- @now @entity.lockStart) 180000)
+        (emit LOCK_WAIT { delayMs: @entity.wait })
+        (set @entity.wait (math/min (* @entity.wait 2) 100))
+    }
+
+    state waiting {
+      ELAPSED -> locking
+        (os/open { anchor: "cwd" path: (str/concat @entity.path ".lock") } "wx" { emit: { success: LOCK_TAKEN, failure: LOCK_FAILED } })
+    }
+
+    state reading {
+      STORE_READ -> validating
+        (set @entity.existing @payload.data)
+        (emit VECTOR_LOOKUP_MANY { stores: [@payload.data], origins: [@entity.path], model: @entity.model, texts: [] })
+      STORE_READ_FAILED -> validating when (== @payload.kind "not-found")
+        (set @entity.existing (bytes/from-string ""))
+        (emit VECTOR_LOOKUP_MANY { stores: [], origins: [], model: @entity.model, texts: [] })
+      STORE_READ_FAILED -> releasing when (!= @payload.kind "not-found")
+        (set @entity.pendingCode "ORB_VECTOR_IO")
+        (set @entity.pendingDetail (str/concat @entity.path ": " @payload.error))
+        (os/remove { anchor: "cwd" path: (str/concat @entity.path ".lock") } { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } })
+    }
+
+    state validating {
+      VECTOR_RESOLVED -> merging
+        (set @entity.emodel (if (> (bytes/length @entity.existing) 0) (bytes/to-string (bytes/slice @entity.existing 10 (+ 10 (bytes/read-uint @entity.existing 8 2 "le")))) ""))
+        (set @entity.eoff (if (> (bytes/length @entity.existing) 0) (+ 16 (bytes/read-uint @entity.existing 8 2 "le")) 0))
+        (set @entity.edims (if (> (bytes/length @entity.existing) 0) (bytes/read-uint @entity.existing (- @entity.eoff 6) 2 "le") 0))
+        (set @entity.ecount (if (> (bytes/length @entity.existing) 0) (bytes/read-uint @entity.existing (- @entity.eoff 4) 4 "le") 0))
+        (emit CHECKED { })
+      VECTOR_REFUSED -> releasing
+        (set @entity.pendingCode @payload.code)
+        (set @entity.pendingDetail @payload.detail)
+        (os/remove { anchor: "cwd" path: (str/concat @entity.path ".lock") } { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } })
+    }
+
+    state merging {
+      CHECKED -> releasing when (and (!= @entity.emodel "") (!= @entity.emodel @entity.model))
+        (set @entity.pendingCode "ORB_VECTOR_MODEL_MISMATCH")
+        (set @entity.pendingDetail (str/concat @entity.emodel " vs " @entity.model " — vectors from different embedding models are not comparable"))
+        (os/remove { anchor: "cwd" path: (str/concat @entity.path ".lock") } { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } })
+      CHECKED -> releasing when (and (!= @entity.emodel "") (== @entity.emodel @entity.model) (!= @entity.edims @entity.dims))
+        (set @entity.pendingCode "ORB_VECTOR_DIMS_MISMATCH")
+        (set @entity.pendingDetail (str/concat "model " @entity.model " has " @entity.edims " dims in one store and " @entity.dims " in the other"))
+        (os/remove { anchor: "cwd" path: (str/concat @entity.path ".lock") } { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } })
+      CHECKED -> writing when (or (== @entity.emodel "") (and (== @entity.emodel @entity.model) (== @entity.edims @entity.dims)))
+        (set @entity.kept (array/filter (array/range 0 (array/len @entity.rows)) (fn i (not (array/some (array/range (+ @i 1) (array/len @entity.rows)) (fn j (bytes/equals (bytes/slice (array/nth @entity.rows @i) 0 32) (bytes/slice (array/nth @entity.rows @j) 0 32))))))))
+        (set @entity.sorted (let ((rk (array/map @entity.kept (fn i { i: @i, r: (array/len (array/filter @entity.kept (fn j (< (array/reduce (array/range 0 8) 0 (fn cd cw (if (!= @cd 0) @cd (let ((cx (bytes/read-uint (bytes/slice (array/nth @entity.rows @j) 0 32) (* 4 @cw) 4 "be")) (cy (bytes/read-uint (bytes/slice (array/nth @entity.rows @i) 0 32) (* 4 @cw) 4 "be"))) (if (< @cx @cy) -1 (if (> @cx @cy) 1 0)))))) 0)))) })))) (array/map (array/range 0 (array/len @rk)) (fn r (array/nth @entity.rows (object/get (array/find @rk (fn z (== @z.r @r))) "i"))))))
+        (set @entity.plan (array/map @entity.sorted (fn row (let ((lo (object/get (array/reduce (array/range 0 34) { lo: 0, hi: @entity.ecount } (fn sa sj (if (>= @sa.lo @sa.hi) @sa (let ((mid (math/floor (/ (+ @sa.lo @sa.hi) 2)))) (if (< (array/reduce (array/range 0 8) 0 (fn cd cw (if (!= @cd 0) @cd (let ((cx (bytes/read-uint (bytes/slice @entity.existing (+ @entity.eoff (* @mid (+ 36 @entity.edims))) (+ @entity.eoff (* @mid (+ 36 @entity.edims)) 32)) (* 4 @cw) 4 "be")) (cy (bytes/read-uint (bytes/slice @row 0 32) (* 4 @cw) 4 "be"))) (if (< @cx @cy) -1 (if (> @cx @cy) 1 0)))))) 0) { lo: (+ @mid 1), hi: @sa.hi } { lo: @sa.lo, hi: @mid }))))) "lo"))) { row: @row, pos: @lo, eq: (if (and (< @lo @entity.ecount) (== (array/reduce (array/range 0 8) 0 (fn cd cw (if (!= @cd 0) @cd (let ((cx (bytes/read-uint (bytes/slice @entity.existing (+ @entity.eoff (* @lo (+ 36 @entity.edims))) (+ @entity.eoff (* @lo (+ 36 @entity.edims)) 32)) (* 4 @cw) 4 "be")) (cy (bytes/read-uint (bytes/slice @row 0 32) (* 4 @cw) 4 "be"))) (if (< @cx @cy) -1 (if (> @cx @cy) 1 0)))))) 0)) 1 0) }))))
+        (set @entity.total (- (+ @entity.ecount (array/len @entity.sorted)) (array/reduce @entity.plan 0 (fn ta tp (+ @ta @tp.eq)))))
+        (set @entity.merged (let ((end (array/reduce @entity.plan { parts: [], cur: 0 } (fn pa pl { parts: (array/concat @pa.parts [(bytes/slice @entity.existing (+ @entity.eoff (* @pa.cur (+ 36 @entity.edims))) (+ @entity.eoff (* @pl.pos (+ 36 @entity.edims)))) @pl.row]), cur: (+ @pl.pos @pl.eq) })))) (bytes/concat (array/concat [(bytes/from-string "ORBVEC") (bytes/write-uint 1 2 "le") (bytes/write-uint (bytes/length (bytes/from-string @entity.model)) 2 "le") (bytes/from-string @entity.model) (bytes/write-uint @entity.dims 2 "le") (bytes/write-uint @entity.total 4 "le")] @end.parts [(bytes/slice @entity.existing (+ @entity.eoff (* @end.cur (+ 36 @entity.edims))) (+ @entity.eoff (* @entity.ecount (+ 36 @entity.edims))))]))))
+        (emit MERGED { total: @entity.total, bytes: @entity.merged })
+    }
+
+    state writing {
+      MERGED -> renaming
+        (os/write-file { anchor: "cwd" path: (str/concat @entity.path ".tmp") } @payload.bytes { emit: { success: TMP_WRITTEN, failure: WRITE_FAILED } })
+    }
+
+    state renaming {
+      TMP_WRITTEN -> releasing
+        (os/rename { anchor: "cwd" path: (str/concat @entity.path ".tmp") } { anchor: "cwd" path: @entity.path } { emit: { success: RENAMED, failure: WRITE_FAILED } })
+      WRITE_FAILED -> releasing
+        (set @entity.pendingCode "ORB_VECTOR_IO")
+        (set @entity.pendingDetail (str/concat @entity.path ": " @payload.error))
+        (os/remove { anchor: "cwd" path: (str/concat @entity.path ".lock") } { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } })
+    }
+
+    state releasing {
+      RENAMED -> releasing
+        (os/remove { anchor: "cwd" path: (str/concat @entity.path ".lock") } { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } })
+      LOCK_REMOVED -> idle when (!= @entity.pendingCode "")
+        (emit VECTOR_WRITE_REFUSED { code: @entity.pendingCode, detail: @entity.pendingDetail })
+      LOCK_REMOVED -> idle when (== @entity.pendingCode "")
+        (emit VECTOR_WRITTEN { path: @entity.path, count: @entity.total })
+    }
+
+    emits {
+      QUANTIZE -> external {
+        model : string!
+        records : [VecRecord]!
+      }
+        @tier "secondary"
+      VECTOR_LOOKUP_MANY -> external {
+        stores : [bytes]!
+        origins : [string]
+        model : string!
+        texts : [string]!
+      }
+        @tier "secondary"
+      DIR_READY -> internal { }
+      IO_FAILED -> internal {
+        error : string!
+      }
+      LOCK_TAKEN -> internal {
+        fd : number!
+      }
+      PID_READ -> internal {
+        pid : number!
+      }
+      PID_FAILED -> internal {
+        error : string!
+        kind : string!
+      }
+      LOCK_STAMPED -> internal { }
+      LOCK_STATTED -> internal {
+        mtime : number!
+      }
+      LOCK_BUSY -> internal { }
+      LOCK_PID_READ -> internal {
+        data : bytes!
+      }
+      LOCK_RETRY -> internal { }
+      LOCK_STALE -> internal {
+        reason : string!
+      }
+      KILL_SPAWNED -> internal {
+        pid : number!
+      }
+      KILL_SPAWN_FAILED -> internal { }
+      KILL_EXITED -> internal {
+        code : number
+      }
+      LOCK_ASIDE -> internal { }
+      STALE_REMOVED -> internal { }
+      LOCK_WAIT -> external {
+        delayMs : number!
+      }
+        @tier "secondary"
+
+      LOCK_FAILED -> internal {
+        error : string!
+        kind : string!
+      }
+      FD_CLOSED -> internal { }
+      STORE_READ -> internal {
+        data : bytes!
+      }
+      STORE_READ_FAILED -> internal {
+        error : string!
+        kind : string!
+      }
+      TMP_WRITTEN -> internal { }
+      RENAMED -> internal { }
+      WRITE_FAILED -> internal {
+        error : string!
+      }
+      LOCK_REMOVED -> internal { }
+      CHECKED -> internal { }
+      MERGED -> internal {
+        total : number!
+        bytes : bytes!
+      }
+      VECTOR_WRITTEN -> external {
+        path : string!
+        count : number!
+      }
+        @description "The store holds this many records after the write."
+        @tier "primary"
+      VECTOR_WRITE_REFUSED -> external {
+        code : string!
+        detail : string!
+      }
+        @description "ORB_VECTOR_BAD_MODEL, BAD_RECORD, LOCKED, IO, MODEL_MISMATCH, DIMS_MISMATCH or a store validation code."
+        @tier "primary"
+    }
+
+    listens {
+      WriteQuantize.QUANTIZED -> QUANTIZED
+      WriteQuantize.QUANTIZE_REFUSED -> QUANTIZE_REFUSED
+      WriteDelay.ELAPSED -> ELAPSED
+      WriteStore.VECTOR_RESOLVED -> VECTOR_RESOLVED
+      WriteStore.VECTOR_REFUSED -> VECTOR_REFUSED
+      QUANTIZED {
+        dims : number!
+        rows : [bytes]!
+      }
+      QUANTIZE_REFUSED {
+        code : string!
+        detail : string!
+      }
+      VECTOR_RESOLVED {
+        model : string!
+        entries : [{ found : boolean!, dims : number!, scale : number!, record : bytes!, vector : [number]! }]!
+      }
+      VECTOR_REFUSED {
+        code : string!
+        detail : string!
+      }
+      ELAPSED {
+        waitedMs : number!
+      }
+      VECTOR_WRITE -> external {
+        path : string!
+        model : string!
+        records : [VecRecord]!
+      }
+        @description "Write these vectors into the ORBVEC store at path, merging with what is there."
+        @synonyms "persist embeddings, insert vectors, user vector store write"
+    }
+  }
+
+  page "/vector-write" as VectorWritePage -> VectorWrite, WriteQuantize, WriteF32, WriteSig6, WriteBigCmp, WriteDelay, WriteStore
+}

@@ -2,15 +2,17 @@ app std-orb-lint-generic-types [
   version: "1.0.0",
   inbound: ["cli-lint-generic-types"],
   fs: { cwd: "**": [read] },
-  description: "std-orb-lint-generic-types - the `orb lint generic-types <file>` command, the port of ORB_T_GENERIC_TYPE_DEPRECATED. It lowers the file with program/read and reports every inline trait config knob typed json, any or scalar (or a list of them) and every emit payload field typed json, any, scalar or shapeless object, with its path and suggestion (status 500, exit 1). Top-level entity fields, the orbital types map and event payloads are checked; nested properties and array items are not walked. Clean answers `lint generic-types: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  description: "std-orb-lint-generic-types - the `orb lint generic-types <file>` command, the port of ORB_T_GENERIC_TYPE_DEPRECATED. It lowers the file with program/read and reports every inline trait config knob typed json, any or scalar (or a list of them) and every emit payload field typed json, any, scalar or shapeless object, with its path and suggestion (status 500, exit 1). Entity fields, the orbital types map and emit and event payloads are walked through nested properties and array items at any depth with tree/fold, like the Rust check. Clean answers `lint generic-types: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-generic-types"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type FieldShape = string | number | boolean | [FieldShape] | Map string FieldShape
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
 orbital OrbLintGenericTypesOrbital {
   entity OrbLintGenericTypesRun [runtime] {
     id : string!
-    findings : [string] = []
+    findings : [OrbFinding] = []
   }
 
   trait OrbLintGenericTypes -> OrbLintGenericTypesRun [integration] {
@@ -37,11 +39,38 @@ orbital OrbLintGenericTypesOrbital {
                 (array/concat
                   (array/flatten (array/map (array/filter (array/concat [(object/get @orb "entity" {})] (object/get @orb "auxiliaryEntities" [])) (fn xe (validate/object @xe))) (fn en
                     (array/flatten (array/map (object/get @en "fields" []) (fn f
-                      (if (and (= (object/get @f "type" "") "object") (not (object/has @f "items")) (= (array/len (object/keys (object/get @f "properties" {}))) 0)) [(str/concat "[ORB_T_GENERIC_TYPE_DEPRECATED] " (str/concat "entities." (object/get @en "name" "") ".fields." (object/get @f "name" "<unnamed>")) ": Entity field declares the generic type 'object (no declared properties — authored `object`/`json`)' — generic types (`json`, shapeless `object`, `any`, `scalar`) are not allowed in a declaration position.\n  suggestion: Replace the generic type: renderable content → `node`; structured data → an inline `{ k: T }` shape, a named `type` alias, or `Map K V`; a value of several kinds → a named tagged-union `type` alias (or the concrete primitive); the row of an entity a config knob names → `@entity @config.<knob>`; the row of the linked entity → `@entity @config.<knob>`; genuinely polymorphic atoms → a declared type parameter.")] [])))))))
+                      (array/map (tree/fold @f (fn (n k)
+                  (if (validate/array @n)
+                    (array/flatten @k)
+                    (if (validate/object @n)
+                      (let ((ft (object/get @n "type" "")))
+                        (if (= @ft "object")
+                          (if (object/has @n "items")
+                            (array/map (object/get @k "items" []) (fn h { rel: (str/concat "{}" (object/get @h "rel")) }))
+                            (if (= (array/len (object/keys (object/get @n "properties" {}))) 0)
+                              [{ rel: "" }]
+                              (array/flatten (array/map (object/entries (object/get @k "properties" {})) (fn e (array/map (array/nth @e 1) (fn h { rel: (str/concat "." (array/nth @e 0) (object/get @h "rel")) })))))))
+                          (if (and (= @ft "array") (object/has @n "items"))
+                            (array/map (object/get @k "items" []) (fn h { rel: (str/concat "[]" (object/get @h "rel")) }))
+                            [])))
+                      []))) FieldShape) (fn h { code: "ORB_T_GENERIC_TYPE_DEPRECATED", path: (str/concat "entities." (object/get @en "name" "") ".fields." (object/get @f "name" "<unnamed>") (object/get @h "rel")), message: (str/concat "Entity field declares the generic type '" "object (no declared properties — authored `object`/`json`)" "' — generic types (`json`, shapeless `object`, `any`, `scalar`) are not allowed in a declaration position."), suggestion: "Replace the generic type: renderable content → `node`; structured data → an inline `{ k: T }` shape, a named `type` alias, or `Map K V`; a value of several kinds → a named tagged-union `type` alias (or the concrete primitive); the row of an entity a config knob names → `@entity @config.<knob>`; the row of the linked entity → `@entity @config.<knob>`; genuinely polymorphic atoms → a declared type parameter.", severity: "error" }))))))))
                   (let ((tys (object/get @orb "types" {})))
-                    (array/flatten (array/map (object/keys @tys) (fn al
-                      (array/flatten (array/map (object/get @tys @al) (fn pf
-                        (let ((ty (object/get @pf "type" ""))) (if (and (not (object/has @pf "items")) (or (= @ty "json") (= @ty "any") (= @ty "scalar") (= @ty "[json]") (= @ty "[any]") (= @ty "[scalar]") (and (= @ty "object") (= (array/len (object/get @pf "properties" [])) 0)))) [(str/concat "[ORB_T_GENERIC_TYPE_DEPRECATED] " (str/concat "orbitals[" @oi "].types." @al "." (object/get @pf "name" "")) ": Payload field declares the generic type '" (if (= @ty "object") "object (no declared properties)" @ty) "' — generic types (`json`, shapeless `object`, `any`, `scalar`) are not allowed in a declaration position.\n  suggestion: Replace the generic type: renderable content → `node`; structured data → an inline `{ k: T }` shape, a named `type` alias, or `Map K V`; a value of several kinds → a named tagged-union `type` alias (or the concrete primitive); the row of an entity a config knob names → `@entity @config.<knob>`; the row of the linked entity → `@entity @config.<knob>`; genuinely polymorphic atoms → a declared type parameter.")] []))))))))))
+                    (array/flatten (array/map (array/flatten (array/map (object/keys @tys) (fn al (array/map (object/get @tys @al) (fn pf { f: @pf, w: (str/concat "orbitals[" @oi "].types." @al) }))))) (fn x (array/map (tree/fold (object/get @x "f") (fn (n k)
+                  (if (validate/array @n)
+                    (array/flatten @k)
+                    (if (validate/object @n)
+                      (let ((nm (object/get @n "name" "")) (ft (object/get @n "type" "")))
+                        (if (object/has @n "items")
+                          (array/map (object/get @k "items" []) (fn h { rel: (str/concat "." @nm "[]" (object/get @h "rel")), ty: (object/get @h "ty") }))
+                          (array/concat
+                            (let ((base (if (and (str/startsWith @ft "[") (str/endsWith @ft "]")) (str/slice @ft 1 (- (str/len @ft) 1)) @ft)))
+                              (if (or (= @base "json") (= @base "any") (= @base "scalar"))
+                                [{ rel: (str/concat "." @nm), ty: @ft }]
+                                (if (and (= @base "object") (= (array/len (object/get @n "properties" [])) 0))
+                                  [{ rel: (str/concat "." @nm), ty: "object (no declared properties)" }]
+                                  [])))
+                            (array/map (object/get @k "properties" []) (fn h { rel: (str/concat "." @nm (object/get @h "rel")), ty: (object/get @h "ty") })))))
+                      []))) FieldShape) (fn h { code: "ORB_T_GENERIC_TYPE_DEPRECATED", path: (str/concat (object/get @x "w") (object/get @h "rel")), message: (str/concat "Payload field declares the generic type '" (object/get @h "ty") "' — generic types (`json`, shapeless `object`, `any`, `scalar`) are not allowed in a declaration position."), suggestion: "Replace the generic type: renderable content → `node`; structured data → an inline `{ k: T }` shape, a named `type` alias, or `Map K V`; a value of several kinds → a named tagged-union `type` alias (or the concrete primitive); the row of an entity a config knob names → `@entity @config.<knob>`; the row of the linked entity → `@entity @config.<knob>`; genuinely polymorphic atoms → a declared type parameter.", severity: "error" })))))))
                 (array/flatten (array/map (array/range 0 (array/len (object/get @orb "traits" []))) (fn ti
                   (let ((td (array/nth (object/get @orb "traits" []) @ti)))
                     (let ((tp (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].traits[" @ti " (" (object/get @td "name" "") ")]"))
@@ -51,14 +80,40 @@ orbital OrbLintGenericTypesOrbital {
                           (array/flatten (array/map (object/keys @cfg) (fn k
                             (let ((ty (object/get (object/get @cfg @k) "type" "")))
                               (if (or (= @ty "json") (= @ty "any") (= @ty "scalar") (= @ty "[json]") (= @ty "[any]") (= @ty "[scalar]"))
-                                [(str/concat "[ORB_T_GENERIC_TYPE_DEPRECATED] " @tp ".config." @k ": Config field declares the generic type '" @ty "' — generic types (`json`, shapeless `object`, `any`, `scalar`) are not allowed in a declaration position.\n  suggestion: Replace the generic type: renderable content → `node`; structured data → an inline `{ k: T }` shape, a named `type` alias, or `Map K V`; a value of several kinds → a named tagged-union `type` alias (or the concrete primitive); the row of an entity a config knob names → `@entity @config.<knob>`; the row of the linked entity → `@entity @config.<knob>`; genuinely polymorphic atoms → a declared type parameter.")]
+                                [{ code: "ORB_T_GENERIC_TYPE_DEPRECATED", path: (str/concat @tp ".config." @k), message: (str/concat "Config field declares the generic type '" @ty "' — generic types (`json`, shapeless `object`, `any`, `scalar`) are not allowed in a declaration position."), suggestion: "Replace the generic type: renderable content → `node`; structured data → an inline `{ k: T }` shape, a named `type` alias, or `Map K V`; a value of several kinds → a named tagged-union `type` alias (or the concrete primitive); the row of an entity a config knob names → `@entity @config.<knob>`; the row of the linked entity → `@entity @config.<knob>`; genuinely polymorphic atoms → a declared type parameter.", severity: "error" }]
                                 [])))))
-                          (array/flatten (array/map (object/get @td "emits" []) (fn em
-                            (array/flatten (array/map (object/get @em "payloadSchema" []) (fn pf
-                              (let ((ty (object/get @pf "type" ""))) (if (and (not (object/has @pf "items")) (or (= @ty "json") (= @ty "any") (= @ty "scalar") (= @ty "[json]") (= @ty "[any]") (= @ty "[scalar]") (and (= @ty "object") (= (array/len (object/get @pf "properties" [])) 0)))) [(str/concat "[ORB_T_GENERIC_TYPE_DEPRECATED] " (str/concat @tp ".emits." (object/get @em "event" "") "." (object/get @pf "name" "")) ": Payload field declares the generic type '" (if (= @ty "object") "object (no declared properties)" @ty) "' — generic types (`json`, shapeless `object`, `any`, `scalar`) are not allowed in a declaration position.\n  suggestion: Replace the generic type: renderable content → `node`; structured data → an inline `{ k: T }` shape, a named `type` alias, or `Map K V`; a value of several kinds → a named tagged-union `type` alias (or the concrete primitive); the row of an entity a config knob names → `@entity @config.<knob>`; the row of the linked entity → `@entity @config.<knob>`; genuinely polymorphic atoms → a declared type parameter.")] [])))))))))
-                        (array/flatten (array/map (object/get (object/get @td "stateMachine" {}) "events" []) (fn ev
-                          (array/flatten (array/map (object/get @ev "payloadSchema" []) (fn pf
-                            (let ((ty (object/get @pf "type" ""))) (if (and (not (object/has @pf "items")) (or (= @ty "json") (= @ty "any") (= @ty "scalar") (= @ty "[json]") (= @ty "[any]") (= @ty "[scalar]") (and (= @ty "object") (= (array/len (object/get @pf "properties" [])) 0)))) [(str/concat "[ORB_T_GENERIC_TYPE_DEPRECATED] " (str/concat @tp ".events." (object/get @ev "key" "") "." (object/get @pf "name" "")) ": Payload field declares the generic type '" (if (= @ty "object") "object (no declared properties)" @ty) "' — generic types (`json`, shapeless `object`, `any`, `scalar`) are not allowed in a declaration position.\n  suggestion: Replace the generic type: renderable content → `node`; structured data → an inline `{ k: T }` shape, a named `type` alias, or `Map K V`; a value of several kinds → a named tagged-union `type` alias (or the concrete primitive); the row of an entity a config knob names → `@entity @config.<knob>`; the row of the linked entity → `@entity @config.<knob>`; genuinely polymorphic atoms → a declared type parameter.")] [])))))))))))))))))))))
+                          (array/flatten (array/map (array/flatten (array/map (object/get @td "emits" []) (fn em (array/map (object/get @em "payloadSchema" []) (fn pf { f: @pf, w: (str/concat @tp ".emits." (object/get @em "event" "")) }))))) (fn x (array/map (tree/fold (object/get @x "f") (fn (n k)
+                  (if (validate/array @n)
+                    (array/flatten @k)
+                    (if (validate/object @n)
+                      (let ((nm (object/get @n "name" "")) (ft (object/get @n "type" "")))
+                        (if (object/has @n "items")
+                          (array/map (object/get @k "items" []) (fn h { rel: (str/concat "." @nm "[]" (object/get @h "rel")), ty: (object/get @h "ty") }))
+                          (array/concat
+                            (let ((base (if (and (str/startsWith @ft "[") (str/endsWith @ft "]")) (str/slice @ft 1 (- (str/len @ft) 1)) @ft)))
+                              (if (or (= @base "json") (= @base "any") (= @base "scalar"))
+                                [{ rel: (str/concat "." @nm), ty: @ft }]
+                                (if (and (= @base "object") (= (array/len (object/get @n "properties" [])) 0))
+                                  [{ rel: (str/concat "." @nm), ty: "object (no declared properties)" }]
+                                  [])))
+                            (array/map (object/get @k "properties" []) (fn h { rel: (str/concat "." @nm (object/get @h "rel")), ty: (object/get @h "ty") })))))
+                      []))) FieldShape) (fn h { code: "ORB_T_GENERIC_TYPE_DEPRECATED", path: (str/concat (object/get @x "w") (object/get @h "rel")), message: (str/concat "Payload field declares the generic type '" (object/get @h "ty") "' — generic types (`json`, shapeless `object`, `any`, `scalar`) are not allowed in a declaration position."), suggestion: "Replace the generic type: renderable content → `node`; structured data → an inline `{ k: T }` shape, a named `type` alias, or `Map K V`; a value of several kinds → a named tagged-union `type` alias (or the concrete primitive); the row of an entity a config knob names → `@entity @config.<knob>`; the row of the linked entity → `@entity @config.<knob>`; genuinely polymorphic atoms → a declared type parameter.", severity: "error" }))))))
+                        (array/flatten (array/map (array/flatten (array/map (object/get (object/get @td "stateMachine" {}) "events" []) (fn ev (array/map (object/get @ev "payloadSchema" []) (fn pf { f: @pf, w: (str/concat @tp ".events." (object/get @ev "key" "")) }))))) (fn x (array/map (tree/fold (object/get @x "f") (fn (n k)
+                  (if (validate/array @n)
+                    (array/flatten @k)
+                    (if (validate/object @n)
+                      (let ((nm (object/get @n "name" "")) (ft (object/get @n "type" "")))
+                        (if (object/has @n "items")
+                          (array/map (object/get @k "items" []) (fn h { rel: (str/concat "." @nm "[]" (object/get @h "rel")), ty: (object/get @h "ty") }))
+                          (array/concat
+                            (let ((base (if (and (str/startsWith @ft "[") (str/endsWith @ft "]")) (str/slice @ft 1 (- (str/len @ft) 1)) @ft)))
+                              (if (or (= @base "json") (= @base "any") (= @base "scalar"))
+                                [{ rel: (str/concat "." @nm), ty: @ft }]
+                                (if (and (= @base "object") (= (array/len (object/get @n "properties" [])) 0))
+                                  [{ rel: (str/concat "." @nm), ty: "object (no declared properties)" }]
+                                  [])))
+                            (array/map (object/get @k "properties" []) (fn h { rel: (str/concat "." @nm (object/get @h "rel")), ty: (object/get @h "ty") })))))
+                      []))) FieldShape) (fn h { code: "ORB_T_GENERIC_TYPE_DEPRECATED", path: (str/concat (object/get @x "w") (object/get @h "rel")), message: (str/concat "Payload field declares the generic type '" (object/get @h "ty") "' — generic types (`json`, shapeless `object`, `any`, `scalar`) are not allowed in a declaration position."), suggestion: "Replace the generic type: renderable content → `node`; structured data → an inline `{ k: T }` shape, a named `type` alias, or `Map K V`; a value of several kinds → a named tagged-union `type` alias (or the concrete primitive); the row of an entity a config knob names → `@entity @config.<knob>`; the row of the linked entity → `@entity @config.<knob>`; genuinely polymorphic atoms → a declared type parameter.", severity: "error" }))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FILE_UNREAD -> ready
         (emit LINT_UNREAD { rule: "generic-types" })
@@ -71,7 +126,7 @@ orbital OrbLintGenericTypesOrbital {
       LINT_RUN -> external { file : string! }
         @description "The lint request this trait answers, from the cli trait or the umbrella."
         @tier "internal"
-      LINT_FOUND -> external { rule : string!  findings : [string]! }
+      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
         @description "This rule's findings for the file, offered to the lint-all umbrella."
         @tier "internal"
       LINT_FILE_READ { data : bytes! }
@@ -109,7 +164,7 @@ orbital OrbLintGenericTypesOrbital {
       LINT_FOUND -> ready when (and (= @payload.rule "generic-types") (= (array/len @payload.findings) 0))
         (emit LINT_ANSWERED { status: 200, body: "lint generic-types: clean" })
       LINT_FOUND -> ready when (and (= @payload.rule "generic-types") (> (array/len @payload.findings) 0))
-        (emit LINT_ANSWERED { status: 500, body: (str/join @payload.findings "\n") })
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
       LINT_UNREAD -> ready when (= @payload.rule "generic-types")
         (emit LINT_ANSWERED { status: 500, body: "lint generic-types: the file could not be read or lowered" })
     }
@@ -124,7 +179,7 @@ orbital OrbLintGenericTypesOrbital {
       LINT_RUN -> external { file : string! }
         @description "Ask the rule trait to lint this file."
         @tier "internal"
-      LINT_FOUND -> external { rule : string!  findings : [string]! }
+      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
         @description "The rule trait's findings for the file."
         @tier "internal"
       LINT_UNREAD -> external { rule : string! }

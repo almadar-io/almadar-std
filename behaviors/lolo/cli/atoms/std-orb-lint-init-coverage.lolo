@@ -6,11 +6,12 @@ app std-orb-lint-init-coverage [
 ]
 uses Spec from "almadar-std/lint-init-coverage"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
 orbital OrbLintInitCoverageOrbital {
   entity OrbLintInitCoverageRun [runtime] {
     id : string!
-    findings : [string] = []
+    findings : [OrbFinding] = []
   }
 
   trait OrbLintInitCoverage -> OrbLintInitCoverageRun [integration] {
@@ -53,7 +54,7 @@ orbital OrbLintInitCoverageOrbital {
                               (let ((reachable (array/reduce (array/range 0 (array/len @states)) [@initial]
                                   (fn (cur i) (array/unique (array/concat @cur (array/map (array/filter @arms (fn a (and (not (object/get @a "dead")) (array/some (object/get @a "froms") (fn f (or (= @f "*") (array/includes @cur @f))))))) (fn a (object/get @a "to")))))))))
                                 (array/map (array/filter @states (fn st (and (array/includes @reachable (object/get @st "name")) (not (array/some @arms (fn a (and (= (object/get @a "event") "INIT") (array/some (object/get @a "froms") (fn f (or (= @f (object/get @st "name")) (= @f "*")))))))))))
-                                  (fn st (str/concat "[ORB_CIRCUIT_INIT_UNCOVERED_STATE] orbitals[" @oi " (" (object/get @o "name") ")].traits[" @ti " (" (object/get @t "name") ")].stateMachine.states." (object/get @st "name") ": Page trait '" (object/get @t "name") "' handles INIT in '" @initial "' but not in reachable state '" (object/get @st "name") "': revisiting the page from there does nothing\n  suggestion: Add an `INIT` arm to state '" (object/get @st "name") "' that re-initializes the trait (as '" @initial "' does)"))))))))))))))))))))
+                                  (fn st { code: "ORB_CIRCUIT_INIT_UNCOVERED_STATE", path: (str/concat "orbitals[" @oi " (" (object/get @o "name") ")].traits[" @ti " (" (object/get @t "name") ")].stateMachine.states." (object/get @st "name")), message: (str/concat "Page trait '" (object/get @t "name") "' handles INIT in '" @initial "' but not in reachable state '" (object/get @st "name") "': revisiting the page from there does nothing"), suggestion: (str/concat "Add an `INIT` arm to state '" (object/get @st "name") "' that re-initializes the trait (as '" @initial "' does)"), severity: "error" })))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FILE_UNREAD -> ready
         (emit LINT_UNREAD { rule: "init-coverage" })
@@ -66,7 +67,7 @@ orbital OrbLintInitCoverageOrbital {
       LINT_RUN -> external { file : string! }
         @description "The lint request this trait answers, from the cli trait or the umbrella."
         @tier "internal"
-      LINT_FOUND -> external { rule : string!  findings : [string]! }
+      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
         @description "This rule's findings for the file, offered to the lint-all umbrella."
         @tier "internal"
       LINT_FILE_READ { data : bytes! }
@@ -104,7 +105,7 @@ orbital OrbLintInitCoverageOrbital {
       LINT_FOUND -> ready when (and (= @payload.rule "init-coverage") (= (array/len @payload.findings) 0))
         (emit LINT_ANSWERED { status: 200, body: "lint init-coverage: clean" })
       LINT_FOUND -> ready when (and (= @payload.rule "init-coverage") (> (array/len @payload.findings) 0))
-        (emit LINT_ANSWERED { status: 500, body: (str/join @payload.findings "\n") })
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
       LINT_UNREAD -> ready when (= @payload.rule "init-coverage")
         (emit LINT_ANSWERED { status: 500, body: "lint init-coverage: the file could not be read or lowered" })
     }
@@ -119,7 +120,7 @@ orbital OrbLintInitCoverageOrbital {
       LINT_RUN -> external { file : string! }
         @description "Ask the rule trait to lint this file."
         @tier "internal"
-      LINT_FOUND -> external { rule : string!  findings : [string]! }
+      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
         @description "The rule trait's findings for the file."
         @tier "internal"
       LINT_UNREAD -> external { rule : string! }

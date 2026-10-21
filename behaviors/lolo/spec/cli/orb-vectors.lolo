@@ -1,0 +1,23 @@
+app orb-vectors-spec [
+  version: "1.0.0",
+  inbound: ["cli-behaviors-vectors-snapshot"],
+  description: "Design contract for `orb behaviors vectors snapshot --package <dir> [--out <path>]`: write the package's vector snapshot (dist/vectors.vec by default). The command names one installed package; it takes the package's organism texts then its capability texts, reads the user store directory from ALMADAR_VECTORS_DIR (else HOME/.almadar/vectors) and the embedding provider's model from EMBEDDING_PROVIDER, EMBEDDING_API_KEY, OPENAI_API_KEY, OPEN_ROUTER_API_KEY and EMBEDDING_MODEL (empty when no provider is configured: openai and openrouter need a key, lmstudio and any other name need none; lmstudio embeds as baai/bge-base-en-v1.5, the others as EMBEDDING_MODEL or that same default), and writes the snapshot the snapshot contract describes. A missing or repeated --package, an unknown flag or a positional answers 400 with the usage line and does nothing; a directory that is not an installed package answers 500 with the reason. Success answers `<prefix>: <n> vectors (<model>) -> <out>`; a refusal answers 500 with its code and detail (the empty-package refusal with its detail alone). The legacy `vectors import` command is retired and has no contract."
+]
+
+orbital OrbVectorsSpec {
+  expects trait OrbVectors {
+    state ready {
+      SNAPSHOT_CALLED -> parsing
+    }
+    state parsing
+    state packaging
+    state organism
+    state capability
+    state env1
+    state running
+    emits {
+      VECTORS_CMD_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page "/orb-vectors" -> OrbVectors
+}

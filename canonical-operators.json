@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-10-21T06:28:24.033Z",
+  "generated": "2026-10-21T13:25:32.722Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -123,6 +123,12 @@
     },
     "std-os": {
       "description": "OS-level event watchers for system triggers",
+      "target": [
+        "ts"
+      ]
+    },
+    "std-kv": {
+      "description": "Key-value row stores; the host picks the medium",
       "target": [
         "ts"
       ]
@@ -689,6 +695,100 @@
       ],
       "examples": [
         "(>= 5 5) // => true"
+      ],
+      "docsSource": "generated"
+    },
+    "access-check": {
+      "category": "effect",
+      "minArity": 1,
+      "maxArity": 2,
+      "returnType": "void",
+      "description": "Ask the kernel for the verdict of an entity access policy: whether viewer may create, read, update or delete row of entity, evaluated by the same evaluator fetch and persist enforce. The success payload is { allowed }; an entity with no policy for the action allows every viewer, a null viewer is nobody. An entity the program does not declare, an unknown action or a request missing a key fails with { error }.",
+      "module": "core",
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "access-check",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "allowed": "boolean"
+          }
+        }
+      },
+      "runsOn": "server",
+      "params": [
+        {
+          "name": "request",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "entity": "string",
+              "action": {
+                "kind": "union",
+                "of": [
+                  {
+                    "kind": "literal",
+                    "value": "create"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "read"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "update"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "delete"
+                  }
+                ]
+              },
+              "row": {
+                "kind": "entityRef"
+              },
+              "viewer": {
+                "kind": "union",
+                "of": [
+                  {
+                    "kind": "entityRef"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": null
+                  }
+                ]
+              }
+            }
+          },
+          "description": "The entity name, the action, the candidate row (the incoming data for create, the existing row otherwise) and the viewer (null for nobody)"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure } } routes the { allowed } payload and the { error } failure",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(access-check {\"entity\":\"Task\",\"action\":\"create\",\"row\":{\"ownerId\":\"u1\"},\"viewer\":{\"id\":\"u1\"}} {\"emit\":{\"success\":\"CHECKED\",\"failure\":\"CHECK_FAILED\"}})"
       ],
       "docsSource": "generated"
     },
@@ -2962,6 +3062,69 @@
       ],
       "docsSource": "generated"
     },
+    "behavior/packages": {
+      "category": "std-behavior",
+      "minArity": 0,
+      "maxArity": 1,
+      "returnType": {
+        "kind": "array",
+        "of": {
+          "kind": "object",
+          "fields": {
+            "root": "string",
+            "prefix": "string",
+            "vectors": {
+              "kind": "union",
+              "of": [
+                "string",
+                {
+                  "kind": "literal",
+                  "value": null
+                }
+              ]
+            }
+          }
+        }
+      },
+      "description": "The installed behavior packages, each `{ root, prefix, vectors }`: its directory, its behavior prefix, and the path of its `orb.vectors` snapshot as the sidecar lock resolves it (the cached sidecar when locked), `null` when the package declares none.",
+      "module": "behavior",
+      "hasSideEffects": true,
+      "runsOn": "server",
+      "host": "program",
+      "params": [
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Emit configuration ({ emit: { success, failure } })",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(behavior/packages {\"emit\":{\"success\":\"PACKAGES\",\"failure\":\"PACKAGES_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
     "behavior/pipe": {
       "category": "std-composition",
       "minArity": 2,
@@ -3084,8 +3247,20 @@
       "category": "std-behavior",
       "minArity": 1,
       "maxArity": 2,
-      "returnType": "sexpr",
-      "description": "The behavior a trait value, an orbital value or `{ behavior }` names, as a quoted program.",
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "sexpr",
+          {
+            "kind": "object",
+            "fields": {
+              "path": "string",
+              "source": "string"
+            }
+          }
+        ]
+      },
+      "description": "The behavior a trait value, an orbital value or `{ behavior }` names, as a quoted program. With `options.file: true` it answers the source file instead, `{ path, source }`: the resolved file path and its text, as `orb mcp`'s `read_behavior` does.",
       "module": "behavior",
       "hasSideEffects": true,
       "runsOn": "server",
@@ -3102,6 +3277,75 @@
             ]
           },
           "description": "A trait value, an orbital value, or { behavior }"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "file": "boolean",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Emit configuration ({ emit: { success, failure } }); `file: true` answers `{ path, source }`",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(behavior/source @entity.widget {\"emit\":{\"success\":\"SOURCED\",\"failure\":\"SOURCE_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "behavior/texts": {
+      "category": "std-behavior",
+      "minArity": 1,
+      "maxArity": 2,
+      "returnType": {
+        "kind": "array",
+        "of": {
+          "kind": "object",
+          "fields": {
+            "key": "string",
+            "text": "string",
+            "hash": "string"
+          }
+        }
+      },
+      "description": "The embedding texts of the installed behaviors under registry folders (`<prefix>/<topic>[/<tier>]`), in embed order: each organism text, then each `<name>#capabilities` text, then every knob text (`<name>/<orbital>/<trait>/<knob>`), each `{ key, text, hash }` with `hash` the SHA-256 of the text, as `orb behaviors texts --json` prints them. `kind` (`organism`, `capability` or `knob`) keeps one kind.",
+      "module": "behavior",
+      "hasSideEffects": true,
+      "runsOn": "server",
+      "host": "program",
+      "params": [
+        {
+          "name": "scope",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "paths": {
+                "kind": "array",
+                "of": "string"
+              },
+              "kind": "string"
+            }
+          },
+          "description": "Registry folders and an optional text kind"
         },
         {
           "name": "options",
@@ -3132,7 +3376,7 @@
         }
       ],
       "examples": [
-        "(behavior/source @entity.widget {\"emit\":{\"success\":\"SOURCED\",\"failure\":\"SOURCE_FAILED\"}})"
+        "(behavior/texts {\"paths\":[\"almadar-std/ui/core/molecules\"],\"kind\":\"knob\"} {\"emit\":{\"success\":\"TEXTS\",\"failure\":\"TEXTS_FAILED\"}})"
       ],
       "docsSource": "generated"
     },
@@ -3167,6 +3411,190 @@
       ],
       "examples": [
         "(behavior/wire [{\"name\": \"t1\"} {\"name\": \"t2\"}] [])"
+      ],
+      "docsSource": "generated"
+    },
+    "bit/and": {
+      "category": "std-math",
+      "minArity": 2,
+      "maxArity": null,
+      "returnType": "number",
+      "description": "Bitwise AND of two or more 32-bit words, folded left. Each operand must be a whole number 0..4294967295 (an unsigned 32-bit word). An operand that is negative, not whole, not finite, 2^32 or above, or not a number fails with kind invalid; nothing is wrapped. The result is a whole number 0..4294967295.",
+      "module": "bit",
+      "params": [
+        {
+          "name": "...words",
+          "type": "number",
+          "description": "Unsigned 32-bit words",
+          "rejectsNull": true
+        }
+      ],
+      "examples": [
+        "(bit/and 305419896 255) // => 120"
+      ],
+      "docsSource": "generated"
+    },
+    "bit/not": {
+      "category": "std-math",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "number",
+      "description": "Bitwise NOT over 32 bits (4294967295 - a). The operand must be a whole number 0..4294967295 (an unsigned 32-bit word). An operand that is negative, not whole, not finite, 2^32 or above, or not a number fails with kind invalid; nothing is wrapped. The result is a whole number 0..4294967295.",
+      "module": "bit",
+      "params": [
+        {
+          "name": "a",
+          "type": "number",
+          "description": "Unsigned 32-bit word",
+          "rejectsNull": true
+        }
+      ],
+      "examples": [
+        "(bit/not 0) // => 4294967295"
+      ],
+      "docsSource": "generated"
+    },
+    "bit/or": {
+      "category": "std-math",
+      "minArity": 2,
+      "maxArity": null,
+      "returnType": "number",
+      "description": "Bitwise OR of two or more 32-bit words, folded left. Each operand must be a whole number 0..4294967295 (an unsigned 32-bit word). An operand that is negative, not whole, not finite, 2^32 or above, or not a number fails with kind invalid; nothing is wrapped. The result is a whole number 0..4294967295.",
+      "module": "bit",
+      "params": [
+        {
+          "name": "...words",
+          "type": "number",
+          "description": "Unsigned 32-bit words",
+          "rejectsNull": true
+        }
+      ],
+      "examples": [
+        "(bit/or 2147483648 1) // => 2147483649"
+      ],
+      "docsSource": "generated"
+    },
+    "bit/rotl": {
+      "category": "std-math",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "number",
+      "description": "Rotate left by n bits within 32 bits. The word must be a whole number 0..4294967295 (an unsigned 32-bit word). An operand that is negative, not whole, not finite, 2^32 or above, or not a number fails with kind invalid; nothing is wrapped. A count outside the whole numbers 0..31 (32 included) fails with kind invalid; nothing is masked. The result is a whole number 0..4294967295.",
+      "module": "bit",
+      "params": [
+        {
+          "name": "a",
+          "type": "number",
+          "description": "Unsigned 32-bit word",
+          "rejectsNull": true
+        },
+        {
+          "name": "n",
+          "type": "number",
+          "description": "Bit count, a whole number 0..31",
+          "rejectsNull": true
+        }
+      ],
+      "examples": [
+        "(bit/rotl 305419896 8) // => 878082066"
+      ],
+      "docsSource": "generated"
+    },
+    "bit/rotr": {
+      "category": "std-math",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "number",
+      "description": "Rotate right by n bits within 32 bits. The word must be a whole number 0..4294967295 (an unsigned 32-bit word). An operand that is negative, not whole, not finite, 2^32 or above, or not a number fails with kind invalid; nothing is wrapped. A count outside the whole numbers 0..31 (32 included) fails with kind invalid; nothing is masked. The result is a whole number 0..4294967295.",
+      "module": "bit",
+      "params": [
+        {
+          "name": "a",
+          "type": "number",
+          "description": "Unsigned 32-bit word",
+          "rejectsNull": true
+        },
+        {
+          "name": "n",
+          "type": "number",
+          "description": "Bit count, a whole number 0..31",
+          "rejectsNull": true
+        }
+      ],
+      "examples": [
+        "(bit/rotr 305419896 8) // => 2014458966"
+      ],
+      "docsSource": "generated"
+    },
+    "bit/shl": {
+      "category": "std-math",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "number",
+      "description": "Left shift by n bits; bits shifted past bit 31 are discarded. The word must be a whole number 0..4294967295 (an unsigned 32-bit word). An operand that is negative, not whole, not finite, 2^32 or above, or not a number fails with kind invalid; nothing is wrapped. A count outside the whole numbers 0..31 (32 included) fails with kind invalid; nothing is masked. The result is a whole number 0..4294967295.",
+      "module": "bit",
+      "params": [
+        {
+          "name": "a",
+          "type": "number",
+          "description": "Unsigned 32-bit word",
+          "rejectsNull": true
+        },
+        {
+          "name": "n",
+          "type": "number",
+          "description": "Bit count, a whole number 0..31",
+          "rejectsNull": true
+        }
+      ],
+      "examples": [
+        "(bit/shl 305419896 4) // => 591751040"
+      ],
+      "docsSource": "generated"
+    },
+    "bit/shr": {
+      "category": "std-math",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "number",
+      "description": "Logical (zero-fill) right shift by n bits. The word must be a whole number 0..4294967295 (an unsigned 32-bit word). An operand that is negative, not whole, not finite, 2^32 or above, or not a number fails with kind invalid; nothing is wrapped. A count outside the whole numbers 0..31 (32 included) fails with kind invalid; nothing is masked. The result is a whole number 0..4294967295.",
+      "module": "bit",
+      "params": [
+        {
+          "name": "a",
+          "type": "number",
+          "description": "Unsigned 32-bit word",
+          "rejectsNull": true
+        },
+        {
+          "name": "n",
+          "type": "number",
+          "description": "Bit count, a whole number 0..31",
+          "rejectsNull": true
+        }
+      ],
+      "examples": [
+        "(bit/shr 305419896 8) // => 1193046"
+      ],
+      "docsSource": "generated"
+    },
+    "bit/xor": {
+      "category": "std-math",
+      "minArity": 2,
+      "maxArity": null,
+      "returnType": "number",
+      "description": "Bitwise XOR of two or more 32-bit words, folded left. Each operand must be a whole number 0..4294967295 (an unsigned 32-bit word). An operand that is negative, not whole, not finite, 2^32 or above, or not a number fails with kind invalid; nothing is wrapped. The result is a whole number 0..4294967295.",
+      "module": "bit",
+      "params": [
+        {
+          "name": "...words",
+          "type": "number",
+          "description": "Unsigned 32-bit words",
+          "rejectsNull": true
+        }
+      ],
+      "examples": [
+        "(bit/xor 305419896 2596069104) // => 2290649224"
       ],
       "docsSource": "generated"
     },
@@ -8174,15 +8602,21 @@
     "hash/sha256": {
       "category": "std-codec",
       "minArity": 2,
-      "maxArity": 2,
+      "maxArity": 3,
       "returnType": "string",
-      "description": "SHA-256 digest of a string (its UTF-8 bytes), as lower-case hex or standard base64 (FIPS 180-2)",
+      "description": "SHA-256 digest (FIPS 180-2) as lower-case hex or standard base64. Input \"text\" (the default) hashes a string's UTF-8 bytes; \"bytes\" hashes a bytes value (standard padded base64, decoded once, as hash/md5 reads it). Invalid base64 or another input kind fails with kind invalid",
       "module": "hash",
       "params": [
         {
-          "name": "s",
-          "type": "string",
-          "description": "The string to hash",
+          "name": "data",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              "bytes"
+            ]
+          },
+          "description": "The string to hash, or a bytes value when input is \"bytes\"",
           "rejectsNull": true
         },
         {
@@ -8202,10 +8636,31 @@
           },
           "description": "Digest encoding: \"hex\" or \"base64\"",
           "rejectsNull": true
+        },
+        {
+          "name": "input",
+          "type": {
+            "kind": "union",
+            "of": [
+              {
+                "kind": "literal",
+                "value": "text"
+              },
+              {
+                "kind": "literal",
+                "value": "bytes"
+              }
+            ]
+          },
+          "description": "Input kind: \"text\" (default) or \"bytes\"",
+          "optional": true,
+          "defaultValue": "text",
+          "rejectsNull": true
         }
       ],
       "examples": [
-        "(hash/sha256 \"abc\" \"hex\") // => \"ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad\""
+        "(hash/sha256 \"abc\" \"hex\") // => \"ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad\"",
+        "(hash/sha256 \"YWJj\" \"hex\" \"bytes\") // => \"ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad\""
       ],
       "docsSource": "generated"
     },
@@ -9373,6 +9828,321 @@
       ],
       "examples": [
         "(json/valid \"null\") // => true"
+      ],
+      "docsSource": "generated"
+    },
+    "kv/batch": {
+      "category": "std-kv",
+      "minArity": 2,
+      "maxArity": 3,
+      "returnType": "void",
+      "description": "Apply puts and deletes to one store all-or-nothing (grant kv: write). Success payload: { applied }.",
+      "module": "kv",
+      "hasSideEffects": true,
+      "runsOn": "any",
+      "host": "kv",
+      "params": [
+        {
+          "name": "store",
+          "type": "string",
+          "description": "Store name ([A-Za-z0-9._-]+)"
+        },
+        {
+          "name": "ops",
+          "type": {
+            "kind": "array",
+            "of": {
+              "kind": "union",
+              "of": [
+                {
+                  "kind": "object",
+                  "fields": {
+                    "kind": {
+                      "kind": "literal",
+                      "value": "put"
+                    },
+                    "key": "string",
+                    "value": {
+                      "kind": "var",
+                      "name": "T"
+                    }
+                  }
+                },
+                {
+                  "kind": "object",
+                  "fields": {
+                    "kind": {
+                      "kind": "literal",
+                      "value": "delete"
+                    },
+                    "key": "string"
+                  }
+                }
+              ]
+            }
+          },
+          "description": "The puts and deletes, applied in order"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, invalid, io, timeout, unsupported, closed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(kv/batch \"rows\" [{\"kind\":\"put\",\"key\":\"order/1\",\"value\":{\"id\":\"1\"}},{\"kind\":\"delete\",\"key\":\"order/2\"}] {\"emit\":{\"success\":\"ROWS_WRITTEN\",\"failure\":\"KV_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "kv/delete": {
+      "category": "std-kv",
+      "minArity": 2,
+      "maxArity": 3,
+      "returnType": "void",
+      "description": "Delete one key (grant kv: write). Success payload: { existed }; deleting a miss succeeds with existed: false.",
+      "module": "kv",
+      "hasSideEffects": true,
+      "runsOn": "any",
+      "host": "kv",
+      "params": [
+        {
+          "name": "store",
+          "type": "string",
+          "description": "Store name ([A-Za-z0-9._-]+)"
+        },
+        {
+          "name": "key",
+          "type": "string",
+          "description": "Key (any string, the empty key included)"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, invalid, io, timeout, unsupported, closed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(kv/delete \"rows\" \"order/1\" {\"emit\":{\"success\":\"ROW_DELETED\",\"failure\":\"KV_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "kv/get": {
+      "category": "std-kv",
+      "minArity": 2,
+      "maxArity": 3,
+      "returnType": "void",
+      "description": "Read one key (grant kv: read). Success payload: { found, value? }; a miss is { found: false }, not a failure.",
+      "module": "kv",
+      "hasSideEffects": true,
+      "runsOn": "any",
+      "host": "kv",
+      "params": [
+        {
+          "name": "store",
+          "type": "string",
+          "description": "Store name ([A-Za-z0-9._-]+)"
+        },
+        {
+          "name": "key",
+          "type": "string",
+          "description": "Key (any string, the empty key included)"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, invalid, io, timeout, unsupported, closed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(kv/get \"rows\" \"order/1\" {\"emit\":{\"success\":\"ROW_READ\",\"failure\":\"KV_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "kv/put": {
+      "category": "std-kv",
+      "minArity": 3,
+      "maxArity": 4,
+      "returnType": "void",
+      "description": "Write one key, replacing any value (grant kv: write). The value must be JSON. Success payload: { storedKey }.",
+      "module": "kv",
+      "hasSideEffects": true,
+      "runsOn": "any",
+      "host": "kv",
+      "params": [
+        {
+          "name": "store",
+          "type": "string",
+          "description": "Store name ([A-Za-z0-9._-]+)"
+        },
+        {
+          "name": "key",
+          "type": "string",
+          "description": "Key (any string, the empty key included)"
+        },
+        {
+          "name": "value",
+          "type": {
+            "kind": "var",
+            "name": "T"
+          },
+          "description": "A JSON value"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, invalid, io, timeout, unsupported, closed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(kv/put \"rows\" \"order/1\" {\"id\":\"1\"} {\"emit\":{\"success\":\"ROW_PUT\",\"failure\":\"KV_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "kv/scan": {
+      "category": "std-kv",
+      "minArity": 2,
+      "maxArity": 4,
+      "returnType": "void",
+      "description": "Every key starting with prefix, ascending in UTF-8 byte order, at most limit (grant kv: read). Success payload: { entries: [{ key, value }] }.",
+      "module": "kv",
+      "hasSideEffects": true,
+      "runsOn": "any",
+      "host": "kv",
+      "params": [
+        {
+          "name": "store",
+          "type": "string",
+          "description": "Store name ([A-Za-z0-9._-]+)"
+        },
+        {
+          "name": "prefix",
+          "type": "string",
+          "description": "Key prefix; \"\" is the whole store"
+        },
+        {
+          "name": "limit",
+          "type": "number",
+          "description": "Most entries to return",
+          "optional": true
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, invalid, io, timeout, unsupported, closed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(kv/scan \"rows\" \"order/\" {\"emit\":{\"success\":\"ROWS_SCANNED\",\"failure\":\"KV_FAILED\"}})"
       ],
       "docsSource": "generated"
     },
@@ -19518,7 +20288,7 @@
         },
         "open": true
       },
-      "description": "Dispatch one declared external input AS THE CURRENT USER, through the ordinary dispatch: its guards, grants and entity policies apply, never a bypass. The address is `EVENT`, `Trait.EVENT` or `Orbital.Trait.EVENT` (resolved from the calling trait) and must name a declared external input; the arguments are the payload object or its JSON text (absent or empty is `{}`). An optional `{ schema: [field] }` holds the arguments to a stated payload before dispatch. Success carries `{ result, text }`, the outcome the model is answered with: `{ ok: true, emitted: [{ event, payload? }] }`, or `{ ok: false, error }` for a refusal (an undeclared input, arguments that are not a JSON object, `{ error, issues }` when they miss the schema) or a dispatch that did not take effect (a rejection code, a failed guard, a failed effect, no transition).",
+      "description": "Dispatch one declared external input AS THE CURRENT USER, through the ordinary dispatch: its guards, grants and entity policies apply, never a bypass. The address is `EVENT`, `Trait.EVENT` or `Orbital.Trait.EVENT` (resolved from the calling trait) and must name a declared external input; the arguments are the payload object or its JSON text (absent or empty is `{}`). An optional `{ schema: [field] }` holds the arguments to a stated payload before dispatch. Success carries `{ result, text }`, the outcome the model is answered with: `{ ok: true, emitted: [{ event, payload? }] }`, or `{ ok: false, error }` for a refusal (an undeclared input, arguments that are not a JSON object, `{ error, issues }` when they miss the schema) or a dispatch that did not take effect (a rejection code, a failed guard, a failed effect, no transition). Given one options object `{ inbound: name, body?, headers? }` in place of the address, it instead delivers `body` (text) and `headers` (`{ name: text }`) to the program's inbound handler `name` through the kernel's inbound route, credential check and answer path, as a request to `/api/hooks/<name>` is delivered, and success carries the handler's answer `{ status, body }` (an undeclared name is the kernel's 404 answer, not a failure). The delivery runs inside the asking dispatch, so an answer only a later completion would carry is not waited for: the answer is what the delivering dispatch settled. The options may instead describe an event request, as the HTTP dispatch routes carry it: `orbital` and `event` (required, and the address must be `orbital.targetTrait.event`), `targetTrait` (absent: the orbital's handlers are discovered, or `traits: [{ trait, from, event? }]` run as declared, an empty list being the inert `no-dispatchable-traits` rejection), `entityId` (default `default`), `mount: [{ trait, event }]` (a lifecycle batch), `input: true` (only a declared external input runs, otherwise the `not-an-external-input` rejection), `clientId` (the origin left out of the live broadcast), `locale`, `delivery` and `dispatchLog` (continuing a client-begun dispatch) and `viewer` (the dispatch's `@user`). Such a request is not limited to declared inputs; an empty text, record or mount list counts as absent. `wire: true` answers the whole `EventResponse` instead of the outcome. A failure carries `errors: [{ code, status }]`: `ORBITAL_NOT_FOUND` 404, `LOCALE_NOT_DECLARED` 400, `NO_TRAIT` 400, `INVALID_REQUEST` 400, `EVENT_PROCESSING_ERROR`.",
       "module": "program",
       "hasSideEffects": true,
       "runsOn": "server",
@@ -19526,8 +20296,25 @@
       "params": [
         {
           "name": "address",
-          "type": "string",
-          "description": "The input to dispatch: `EVENT`, `Trait.EVENT` or `Orbital.Trait.EVENT`"
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              {
+                "kind": "object",
+                "fields": {
+                  "inbound": "string",
+                  "body": "string",
+                  "headers": {
+                    "kind": "map",
+                    "key": "string",
+                    "value": "string"
+                  }
+                }
+              }
+            ]
+          },
+          "description": "The input to dispatch: `EVENT`, `Trait.EVENT` or `Orbital.Trait.EVENT`; or an inbound delivery `{ inbound, body?, headers? }`"
         },
         {
           "name": "arguments",
@@ -19740,10 +20527,50 @@
               },
               "open": true
             }
+          },
+          "state": {
+            "kind": "object",
+            "fields": {
+              "orbital": "string",
+              "traits": {
+                "kind": "array",
+                "of": {
+                  "kind": "object",
+                  "fields": {
+                    "trait": "string",
+                    "entityId": "string",
+                    "state": "string"
+                  },
+                  "open": true
+                }
+              }
+            },
+            "open": true
+          },
+          "stats": {
+            "kind": "object",
+            "fields": {
+              "registeredSchemas": "number",
+              "registeredTraits": "number",
+              "activeInstances": "number",
+              "cachedEntities": "number"
+            }
+          },
+          "trace": {
+            "kind": "array",
+            "of": {
+              "kind": "object",
+              "fields": {
+                "seq": "number",
+                "seed": "string"
+              },
+              "open": true
+            }
           }
-        }
+        },
+        "open": true
       },
-      "description": "Reflect the running program's declared external inputs, the events an outside client may send: `inputs` lists each with its orbital, trait, event, qualified `address`, description, declared `payloadSchema` and the JSON Schema of that payload (`parameters`), so a tool-calling model can be offered them as tools; `entities` lists the persisted entities `persist/read-named` accepts. An optional `{ select: [{ event, payload? }] }` also answers `selected`: the inputs those addresses (`EVENT`, `Trait.EVENT` or `Orbital.Trait.EVENT`, resolved from the calling trait) name, in order, each with the stated `payload` in place of its own; an address that is not a declared external input fails the call. Success carries `{ result: { inputs, entities, selected }, text }`. Nothing is filtered by caller: `program/dispatch` decides at dispatch.",
+      "description": "Reflect the running program's declared external inputs, the events an outside client may send: `inputs` lists each with its orbital, trait, event, qualified `address`, description, declared `payloadSchema` and the JSON Schema of that payload (`parameters`), so a tool-calling model can be offered them as tools; `entities` lists the persisted entities `persist/read-named` accepts. An optional `{ select: [{ event, payload? }] }` also answers `selected`: the inputs those addresses (`EVENT`, `Trait.EVENT` or `Orbital.Trait.EVENT`, resolved from the calling trait) name, in order, each with the stated `payload` in place of its own; an address that is not a declared external input fails the call. Success carries `{ result: { inputs, entities, selected }, text }`. Nothing is filtered by caller: `program/dispatch` decides at dispatch. The same options can also ask for runtime reads, each answered only when asked: `{ state: orbital }` adds `state: { orbital, traits: [{ trait, entityId, state, entity }] }` (every running instance of that orbital's traits, with its entity; an orbital that is not registered fails the call), `{ stats: true }` adds `stats: { registeredSchemas, registeredTraits, activeInstances, cachedEntities }` (the kernel's counters), and `{ trace: n }` adds `trace`, the host's last `n` traced dispatch steps, oldest first (asked of the host, which keeps the trace; empty while tracing is off).",
       "module": "program",
       "hasSideEffects": true,
       "runsOn": "server",
@@ -19763,11 +20590,14 @@
                   },
                   "open": true
                 }
-              }
+              },
+              "state": "string",
+              "stats": "boolean",
+              "trace": "number"
             },
             "open": true
           },
-          "description": "An optional selection (`select`) of inputs to reflect with a stated payload",
+          "description": "An optional selection (`select`) of inputs to reflect with a stated payload, and the runtime reads to add: `state` (an orbital), `stats`, `trace` (a step count)",
           "optional": true
         },
         {
@@ -19903,6 +20733,92 @@
       ],
       "docsSource": "generated"
     },
+    "program/resolve-rows": {
+      "category": "std-program",
+      "minArity": 2,
+      "maxArity": 3,
+      "returnType": {
+        "kind": "object",
+        "fields": {
+          "rows": {
+            "kind": "array",
+            "of": {
+              "kind": "object",
+              "fields": {
+                "id": "string"
+              },
+              "open": true
+            }
+          },
+          "total": "number"
+        }
+      },
+      "description": "Resolve a row-set reference (`{ entityType, ids, total, query }`, the `ref` a rendered row set carries) against the store as it is now, FOR THE VIEWER NAMED: the entity's `@read` policy is applied for that viewer inside the one resolver every renderer reaches, so a row they may not read is omitted, as is a row deleted since the reference was made. The viewer is always stated (`null` is the anonymous viewer), never taken from the asking dispatch. Success carries `{ result: { rows, total } }`; a malformed reference fails.",
+      "module": "program",
+      "hasSideEffects": true,
+      "runsOn": "server",
+      "host": "program",
+      "params": [
+        {
+          "name": "reference",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "entityType": "string",
+              "ids": {
+                "kind": "array",
+                "of": "string"
+              },
+              "total": "number"
+            },
+            "open": true
+          },
+          "description": "The row-set reference to resolve"
+        },
+        {
+          "name": "viewer",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "id": "string"
+            },
+            "open": true
+          },
+          "description": "The viewer the rows are resolved for (`null` is anonymous)"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Emit configuration ({ emit: { success, failure } })",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(program/resolve-rows @payload.ref @payload.viewer {\"key\":\"@payload.requestId\",\"emit\":{\"success\":\"ROWS_RESOLVED\",\"failure\":\"ROWS_UNRESOLVED\"}})"
+      ],
+      "docsSource": "generated"
+    },
     "program/step": {
       "category": "std-program",
       "minArity": 2,
@@ -19911,7 +20827,7 @@
         "kind": "array",
         "of": "PlayedStep"
       },
-      "description": "Play transitions of a program in one run of the kernel, each from the state it names, and return each request played: the request with its `result` circuit step — whether it fired, the arm that fired, every guard tried, each effect of the fired arm (`routed` when its failure went to its declared `emit.failure`), the events it emitted, and each `@ensures` of the arm judged by the kernel (`held`, `broken` with its counterexample bindings, or `inconclusive` with the reason). With `options.render`, each result also carries `rendered`: the slots its trait filled, walked by the kernel's render probe as typed node facts (pattern, renderer coverage, entity binding, `@trait` references).",
+      "description": "Play transitions of a program in one run of the kernel, each from the state it names, and return each request played: the request with its `result` circuit step — whether it fired, the arm that fired, every guard tried, each effect of the fired arm (`routed` when its failure went to its declared `emit.failure`), the events it emitted, and each `@ensures` of the arm judged by the kernel (`held`, `broken` with its counterexample bindings, or `inconclusive` with the reason). It also carries `outcomes`: every trait the dispatch cascade moved, in dispatch order, each `{ orbital, trait, event, from, to, arm, fired, emitted }` (`event` is the event that trait handled, `arm` the arm that fired or null; the first is the requested trait, equal to the top-level fields). A request may seed its trait's entity row (`entity`: fields merged over the row before the event), override its trait's knobs (`config`: values over the declared config defaults, for that trait and that request only) and pin the clock (`now`: the ms-epoch `@now` its dispatch reads); without them the request plays as before. Each result also carries `entityAfter`: the requested trait's entity row after the request. A keyed os/* or http ask a step makes is left pending, reported among the effects and neither run nor failed, so no completion route fires; a later request plays its answer event (an unkeyed one fails, as with no host). With `options.render`, each result also carries `rendered`: the slots its trait filled, walked by the kernel's render probe as typed node facts (pattern, renderer coverage, entity binding, `@trait` references).",
       "module": "program",
       "hasSideEffects": true,
       "runsOn": "server",
@@ -19939,7 +20855,7 @@
               "open": true
             }
           },
-          "description": "The transitions to play: `{ orbital, trait, from, event, payload }` each"
+          "description": "The transitions to play: `{ orbital, trait, from, event, payload, entity?, config?, now? }` each"
         },
         {
           "name": "options",
@@ -19972,6 +20888,64 @@
       ],
       "examples": [
         "(program/step @entity.program [{\"orbital\":\"Editor\",\"trait\":\"Modes\",\"from\":\"NORMAL\",\"event\":\"KEY\",\"payload\":{\"key\":\"i\"}}] {\"emit\":{\"success\":\"STEPPED\",\"failure\":\"STEP_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "program/tick": {
+      "category": "std-program",
+      "minArity": 0,
+      "maxArity": 1,
+      "returnType": {
+        "kind": "object",
+        "fields": {
+          "ran": {
+            "kind": "array",
+            "of": {
+              "kind": "object",
+              "fields": {
+                "trait": "string",
+                "tick": "string"
+              }
+            }
+          }
+        }
+      },
+      "description": "Run one tick pass of the host now: every declared `[background]` tick that is due runs over its rows, as the host's own tick driver runs it (a tick that is not `[background]` runs only where a client mounts its trait, so a pass never fires one). The first pass of a host only captures its clock. Success carries `{ result: { ran: [{ trait, tick }] } }`, the ticks that ran, in order. For a server program answering a scheduler that wakes a host scaled to zero; who may ask is the program's own gate.",
+      "module": "program",
+      "hasSideEffects": true,
+      "runsOn": "server",
+      "host": "program",
+      "params": [
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Emit configuration ({ emit: { success, failure } })",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(program/tick {\"key\":\"@payload.requestId\",\"emit\":{\"success\":\"TICK_RAN\",\"failure\":\"TICK_FAILED\"}})"
       ],
       "docsSource": "generated"
     },

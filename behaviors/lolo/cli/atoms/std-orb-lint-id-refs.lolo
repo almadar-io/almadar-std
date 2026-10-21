@@ -1,0 +1,168 @@
+app std-orb-lint-id-refs [
+  version: "1.0.0",
+  inbound: ["cli-lint-id-refs"],
+  fs: { cwd: "**": [read] },
+  description: "std-orb-lint-id-refs — the `orb lint id-refs <file>` command, the port of ORB_ID_UNKNOWN_REF, ORB_ID_KIND_MISMATCH and ORB_ID_NAME_MISMATCH (id_integrity.rs Checker::check). It lowers the file with program/read and checks every dual-carry id at the primary entity (extends and top-level field relations) and at each orbital trait (linked entity, entityRefIds, emits, listens and their sources, and a reference trait's ref): the id's kind prefix against the position, the id against the declared nodes and the ledger, and the sibling name against the ledger curName (an `@config.<key>` curName is satisfied by the owning trait's config default), each with the Rust path and message (status 500, exit 1). Not ported: ORB_ID_LEDGER_ORPHAN (it needs the `@trait.` embed tokens of every effect, which waits for the shared IR walk), auxiliary and data entities, nested field relations, page-owned traits and page objects. Clean answers `lint id-refs: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-id-refs"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital OrbLintIdRefsOrbital {
+  entity OrbLintIdRefsRun [runtime] {
+    id : string!
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintIdRefs -> OrbLintIdRefsRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_RUN -> reading
+        (set @entity.findings [])
+        (os/read-file { anchor: "cwd" path: @payload.file } { key: "file" emit: { success: LINT_FILE_READ, failure: LINT_FILE_UNREAD } })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "id-refs", findings: @entity.findings })
+    }
+
+    state reading {
+      INIT -> reading
+      LINT_FILE_READ -> reading
+        (program/read (bytes/to-string @payload.data) { emit: { success: LINT_PROGRAM_READ, failure: LINT_FILE_UNREAD } })
+      LINT_PROGRAM_READ -> ready
+        (set @entity.findings (let ((orbitals (object/get @payload.result "orbitals")) (ledgerEntries (object/get (object/get @payload.result "ledger" {}) "entries" {})))
+          (let ((allTraits (array/flatten (array/map @orbitals (fn orb (array/filter (object/get @orb "traits" []) (fn x (validate/object @x))))))) (declared (array/flatten (array/map @orbitals (fn orb
+                  (array/flatten [
+                    (if (object/has @orb "id") [(object/get @orb "id")] [])
+                    (let ((ee (object/get @orb "entity" {}))) (if (and (validate/object @ee) (object/has @ee "id")) [(object/get @ee "id")] []))
+                    (array/map (array/filter (object/get @orb "auxiliaryEntities" []) (fn ae (and (validate/object @ae) (object/has @ae "id")))) (fn ae (object/get @ae "id")))
+                    (array/map (array/filter (object/get @orb "pages" []) (fn pg (and (validate/object @pg) (object/has @pg "id")))) (fn pg (object/get @pg "id")))
+                    (array/map (array/filter (object/get @orb "traits" []) (fn t (and (validate/object @t) (object/has @t "id")))) (fn t (object/get @t "id")))
+                    (array/flatten (array/map (array/filter (object/get @orb "traits" []) (fn t (validate/object @t))) (fn t
+                      (array/flatten [
+                        (array/map (array/filter (object/get @t "emits" []) (fn em (object/has @em "eventId"))) (fn em (object/get @em "eventId")))
+                        (array/map (array/filter (object/get @t "dataEntities" []) (fn de (object/has @de "id"))) (fn de (object/get @de "id")))]))))])))))
+                (positions (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+                  (let ((orb (array/nth @orbitals @oi)))
+                    (let ((op (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")]")) (ee (object/get @orb "entity" {})) (trs (object/get @orb "traits" [])))
+                      (array/flatten [
+                        (if (validate/object @ee)
+                          (array/flatten [
+                            (let ((t @ee)) (if (object/has @ee "extendsId") [{ id: (object/get @ee "extendsId"), exp: "ent_", name: (object/get @ee "extends" ""), hasName: (object/has @ee "extends"), path: (str/concat @op ".entity.extends") }] []))
+                            (let ((fl (object/get @ee "fields" [])))
+                              (array/flatten (array/map (array/range 0 (array/len @fl)) (fn fi
+                                (let ((rel (object/get (array/nth @fl @fi) "relation" {})))
+                                  (if (validate/object @rel) (if (object/has @rel "entityId") [{ id: (object/get @rel "entityId"), exp: "ent_", name: (object/get @rel "entity" ""), hasName: (object/has @rel "entity"), path: (str/concat @op ".entity.fields[" @fi "].relation") }] []) []))))))])
+                          [])
+                        (array/flatten (array/map (array/filter (array/range 0 (array/len @trs)) (fn ti (validate/object (array/nth @trs @ti)))) (fn ti
+                          (let ((t (array/nth @trs @ti)) (tp (str/concat @op ".traits[" @ti "]")))
+                            (if (object/has @t "ref")
+                              (array/flatten [ (if (object/has @t "refId") [{ id: (object/get @t "refId"), exp: "trt_", name: (object/get @t "ref" ""), hasName: (object/has @t "ref"), path: (str/concat @tp ".ref") }] [])
+                                (if (object/has @t "linkedEntityId") [{ id: (object/get @t "linkedEntityId"), exp: "ent_", name: (object/get @t "linkedEntity" ""), hasName: (object/has @t "linkedEntity"), path: (str/concat @tp ".linkedEntity") }] []) ])
+                              (array/flatten [ (if (object/has @t "linkedEntityId") [{ id: (object/get @t "linkedEntityId"), exp: "ent_", name: (object/get @t "linkedEntity" ""), hasName: (object/has @t "linkedEntity"), path: (str/concat @tp ".linkedEntity") }] [])
+                                (array/map (object/keys (object/get @t "entityRefIds" {})) (fn k { id: (object/get (object/get @t "entityRefIds") @k), exp: "ent_", name: "", hasName: false, path: (str/concat @tp ".entityRefIds[" @k "]") }))
+                                (array/flatten (array/map (array/range 0 (array/len (object/get @t "emits" []))) (fn ei (let ((em (array/nth (object/get @t "emits" []) @ei))) (if (object/has @em "eventId") [{ id: (object/get @em "eventId"), exp: "evt_", name: (object/get @em "event" ""), hasName: (object/has @em "event"), path: (str/concat @tp ".emits[" @ei " (" (object/get @em "event" "") ")]") }] [])))))
+                                (array/flatten (array/map (array/range 0 (array/len (object/get @t "listens" []))) (fn li (let ((ln (array/nth (object/get @t "listens" []) @li)) (lp (str/concat @tp ".listens[" @li "]")))
+    (let ((src (object/get @ln "source" {})))
+      (array/flatten [ (if (object/has @ln "eventId") [{ id: (object/get @ln "eventId"), exp: "evt_", name: (object/get @ln "event" ""), hasName: (object/has @ln "event"), path: (str/concat @lp ".event") }] [])
+        (if (object/has @ln "triggersId") [{ id: (object/get @ln "triggersId"), exp: "evt_", name: (object/get @ln "triggers" ""), hasName: (object/has @ln "triggers"), path: (str/concat @lp ".triggers") }] [])
+        (if (= (object/get @src "kind" "") "orbital") (if (object/has @src "orbitalId") [{ id: (object/get @src "orbitalId"), exp: "orb_", name: (object/get @src "orbital" ""), hasName: (object/has @src "orbital"), path: (str/concat @lp ".source.orbital") }] []) [])
+        (if (or (= (object/get @src "kind" "") "orbital") (= (object/get @src "kind" "") "trait")) (if (object/has @src "traitId") [{ id: (object/get @src "traitId"), exp: "trt_", name: (object/get @src "trait" ""), hasName: (object/has @src "trait"), path: (str/concat @lp ".source.trait") }] []) []) ])))))) ]))))))]))))))))
+            (array/flatten (array/map @positions (fn p
+              (let ((id (object/get @p "id")) (exp (object/get @p "exp")) (nm (object/get @p "name")))
+                (let ((kinds (array/filter ["orb_" "ent_" "trt_" "evt_" "pag_" "svc_" "thm_" "pal_"] (fn k (and (> (str/len @id) (str/len @k)) (str/startsWith @id @k))))))
+                  (let ((got (if (> (array/len @kinds) 0) (array/first @kinds) "<unknown>")) (cur (object/get (object/get @ledgerEntries @id {}) "curName" "")) (parent (object/get (object/get @ledgerEntries @id {}) "parent" "")))
+                    (array/flatten [
+                      (if (= @got @exp) [] [{ code: "ORB_ID_KIND_MISMATCH", path: (object/get @p "path"), message: (str/concat "id `" @id "` has kind `" @got "` but this position requires a `" @exp "` id."), suggestion: "", severity: "error" }])
+                      (if (or (array/includes @declared @id) (object/has @ledgerEntries @id)) [] [{ code: "ORB_ID_UNKNOWN_REF", path: (object/get @p "path"), message: (str/concat "id `" @id "` matches no arena node nor ledger entry."), suggestion: "", severity: "error" }])
+                      (if (and (object/get @p "hasName") (not (str/includes @nm ".")) (object/has @ledgerEntries @id) (!= @cur @nm) (not (and (str/startsWith @cur (quote "@config.")) (let ((pt (array/find @allTraits (fn x (= (object/get @x "id" "") @parent))))) (and (validate/object @pt) (= (object/get (object/get (object/get @pt "config" {}) (str/slice @cur 8 (str/len @cur)) {}) "default" "") @nm))))))
+                        [{ code: "ORB_ID_NAME_MISMATCH", path: (object/get @p "path"), message: (str/concat "name `" @nm "` disagrees with ledger curName `" @cur "` for id `" @id "`."), suggestion: "", severity: "error" }]
+                        [])]))))))))))
+        (emit LINT_FINISH { })
+      LINT_FILE_UNREAD -> ready
+        (emit LINT_UNREAD { rule: "id-refs" })
+    }
+
+    emits {
+      LINT_UNREAD -> external { rule : string! }
+        @description "This rule could not read or lower the file."
+        @tier "internal"
+      LINT_RUN -> external { file : string! }
+        @description "The lint request this trait answers, from the cli trait or the umbrella."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FILE_READ { data : bytes! }
+        @description "The file read."
+        @tier "internal"
+      LINT_FILE_UNREAD { error : string }
+        @description "The file could not be read or lowered."
+        @tier "internal"
+      LINT_PROGRAM_READ { result : string }
+        @description "The file lowered by program/read."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      OrbLintIdRefsCli.LINT_RUN -> LINT_RUN
+    }
+  }
+
+  trait OrbLintIdRefsCli -> OrbLintIdRefsRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint id-refs <file>" })
+      LINT_CALLED -> waiting when (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (emit LINT_RUN { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "id-refs") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint id-refs: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "id-refs") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_UNREAD -> ready when (= @payload.rule "id-refs")
+        (emit LINT_ANSWERED { status: 500, body: "lint id-refs: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_RUN -> external { file : string! }
+        @description "Ask the rule trait to lint this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_UNREAD -> external { rule : string! }
+        @description "The rule trait could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-id-refs" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint id-refs` with its arguments and working directory."
+        @synonyms "orb lint id-refs, id refs"
+      OrbLintIdRefs.LINT_FOUND -> LINT_FOUND
+      OrbLintIdRefs.LINT_UNREAD -> LINT_UNREAD
+    }
+  }
+
+  page "/orb-lint-id-refs" as OrbLintIdRefsPage -> OrbLintIdRefs, OrbLintIdRefsCli
+}

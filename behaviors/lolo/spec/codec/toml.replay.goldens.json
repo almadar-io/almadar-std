@@ -1,0 +1,4318 @@
+{
+ "atom": "codec/atoms/std-toml.lolo",
+ "trait": "Toml",
+ "note": "Expected values come from Python tomllib (TOML 1.0) over the toml.io spec examples; date-times are expected as the text as written. Each positive has a paired refusal control. Internal stage events are delivered by hand, as in the semver replay goldens.",
+ "cases": [
+  {
+   "id": "comments and key/value",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "# This is a full-line comment\nkey = \"value\"  # This is a comment at the end of a line\nanother = \"# This is not a comment\"\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_PARSED",
+        "payload": {
+         "requestId": "",
+         "value": {
+          "key": "value",
+          "another": "# This is not a comment"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "missing value before comment",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "key = # INVALID\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "syntax",
+         "line": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bare keys",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "key = \"value\"\nbare_key = \"value\"\nbare-key = \"value\"\n1234 = \"value\"\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_PARSED",
+        "payload": {
+         "requestId": "",
+         "value": {
+          "key": "value",
+          "bare_key": "value",
+          "bare-key": "value",
+          "1234": "value"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "empty bare key",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "= \"no key name\"\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "syntax",
+         "line": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "quoted keys",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "\"127.0.0.1\" = \"value\"\n\"character encoding\" = \"value\"\n\"ʎǝʞ\" = \"value\"\n'key2' = \"value\"\n'quoted \"value\"' = \"value\"\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_PARSED",
+        "payload": {
+         "requestId": "",
+         "value": {
+          "127.0.0.1": "value",
+          "character encoding": "value",
+          "ʎǝʞ": "value",
+          "key2": "value",
+          "quoted \"value\"": "value"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "dotted keys",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "name = \"Orange\"\nphysical.color = \"orange\"\nphysical.shape = \"round\"\nsite.\"google.com\" = true\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_PARSED",
+        "payload": {
+         "requestId": "",
+         "value": {
+          "name": "Orange",
+          "physical": {
+           "color": "orange",
+           "shape": "round"
+          },
+          "site": {
+           "google.com": true
+          }
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "dotted keys with whitespace",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "fruit.name = \"banana\"\nfruit. color = \"yellow\"\nfruit . flavor = \"banana\"\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_PARSED",
+        "payload": {
+         "requestId": "",
+         "value": {
+          "fruit": {
+           "name": "banana",
+           "color": "yellow",
+           "flavor": "banana"
+          }
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "two key/values on one line",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "first = \"Tom\" last = \"Preston-Werner\"\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "syntax",
+         "line": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "duplicate bare key",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "name = \"Tom\"\nname = \"Pradyun\"\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "duplicate-key",
+         "line": 2
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "duplicate bare and quoted key",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "spelling = \"favorite\"\n\"spelling\" = \"favourite\"\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "duplicate-key",
+         "line": 2
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "distinct keys with a shared dotted prefix",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "fruit.apple.color = \"red\"\nfruit.apple.taste = \"sweet\"\nfruit.orange = 2\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_PARSED",
+        "payload": {
+         "requestId": "",
+         "value": {
+          "fruit": {
+           "apple": {
+            "color": "red",
+            "taste": "sweet"
+           },
+           "orange": 2
+          }
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "value redefined as a table by a dotted key",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "fruit.apple = 1\nfruit.apple.smooth = true\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "duplicate-key",
+         "line": 2
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "basic string escapes",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "str = \"I'm a string. \\\"You can quote me\\\". Name\\tJos\\u00E9\\nLocation\\tSF.\"\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_PARSED",
+        "payload": {
+         "requestId": "",
+         "value": {
+          "str": "I'm a string. \"You can quote me\". Name\tJosé\nLocation\tSF."
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "more escapes: b f r backslash U",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "a = \"\\b\\f\\r\\\\\"\nb = \"\\U0001F600 \\U000000E9\"\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_PARSED",
+        "payload": {
+         "requestId": "",
+         "value": {
+          "a": "\b\f\r\\",
+          "b": "😀 é"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "unknown escape",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "a = \"\\q\"\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "bad-escape",
+         "line": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "lone surrogate escape",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "a = \"\\ud800\"\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "bad-escape",
+         "line": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "code point above U+10FFFF",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "a = \"\\U00110000\"\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "bad-escape",
+         "line": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control character in a string",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "a = \"x\u0001y\"\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "control-char",
+         "line": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "multi-line basic string",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "str1 = \"\"\"\nRoses are red\nViolets are blue\"\"\"\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_PARSED",
+        "payload": {
+         "requestId": "",
+         "value": {
+          "str1": "Roses are red\nViolets are blue"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "line-ending backslash",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "str1 = \"The quick brown fox jumps over the lazy dog.\"\n\nstr2 = \"\"\"\nThe quick brown \\\n\n\n  fox jumps over \\\n    the lazy dog.\"\"\"\n\nstr3 = \"\"\"\\\n       The quick brown \\\n       fox jumps over \\\n       the lazy dog.\\\n       \"\"\"\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_PARSED",
+        "payload": {
+         "requestId": "",
+         "value": {
+          "str1": "The quick brown fox jumps over the lazy dog.",
+          "str2": "The quick brown fox jumps over the lazy dog.",
+          "str3": "The quick brown fox jumps over the lazy dog."
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "quotes inside multi-line basic strings",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "str4 = \"\"\"Here are two quotation marks: \"\". Simple enough.\"\"\"\nstr5 = \"\"\"Here are three quotation marks: \"\"\\\".\"\"\"\nstr6 = \"\"\"Here are fifteen quotation marks: \"\"\\\"\"\"\\\"\"\"\\\"\"\"\\\"\"\"\\\".\"\"\"\nstr7 = \"\"\"\"This,\" she said, \"is just a pointless statement.\"\"\"\"\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_PARSED",
+        "payload": {
+         "requestId": "",
+         "value": {
+          "str4": "Here are two quotation marks: \"\". Simple enough.",
+          "str5": "Here are three quotation marks: \"\"\".",
+          "str6": "Here are fifteen quotation marks: \"\"\"\"\"\"\"\"\"\"\"\"\"\"\".",
+          "str7": "\"This,\" she said, \"is just a pointless statement.\""
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "literal strings",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "winpath  = 'C:\\Users\\nodejs\\templates'\nwinpath2 = '\\\\ServerX\\admin$\\system32\\'\nquoted   = 'Tom \"Dubs\" Preston-Werner'\nregex    = '<\\i\\c*\\s*>'\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_PARSED",
+        "payload": {
+         "requestId": "",
+         "value": {
+          "winpath": "C:\\Users\\nodejs\\templates",
+          "winpath2": "\\\\ServerX\\admin$\\system32\\",
+          "quoted": "Tom \"Dubs\" Preston-Werner",
+          "regex": "<\\i\\c*\\s*>"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "multi-line literal strings",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "regex2 = '''I [dw]on't need \\d{2} apples'''\nlines  = '''\nThe first newline is\ntrimmed in raw strings.\n   All other whitespace\n   is preserved.\n'''\nquot15 = '''Here are fifteen quotation marks: \"\"\"\"\"\"\"\"\"\"\"\"\"\"\"'''\napos15 = \"Here are fifteen apostrophes: '''''''''''''''\"\nstr = ''''That,' she said, 'is still pointless.''''\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_PARSED",
+        "payload": {
+         "requestId": "",
+         "value": {
+          "regex2": "I [dw]on't need \\d{2} apples",
+          "lines": "The first newline is\ntrimmed in raw strings.\n   All other whitespace\n   is preserved.\n",
+          "quot15": "Here are fifteen quotation marks: \"\"\"\"\"\"\"\"\"\"\"\"\"\"\"",
+          "apos15": "Here are fifteen apostrophes: '''''''''''''''",
+          "str": "'That,' she said, 'is still pointless.'"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "unterminated basic string",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "a = \"abc\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "unterminated-string",
+         "line": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "unterminated literal string",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "a = 'abc\nb = 1\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "unterminated-string",
+         "line": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "unterminated multi-line string",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "a = \"\"\"abc\nb = 1\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "unterminated-string",
+         "line": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "integers",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "int1 = +99\nint2 = 42\nint3 = 0\nint4 = -17\nint5 = 1_000\nint6 = 5_349_221\nint7 = 53_49_221\nint8 = 1_2_3_4_5\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_PARSED",
+        "payload": {
+         "requestId": "",
+         "value": {
+          "int1": 99,
+          "int2": 42,
+          "int3": 0,
+          "int4": -17,
+          "int5": 1000,
+          "int6": 5349221,
+          "int7": 5349221,
+          "int8": 12345
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "hex octal binary",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "hex1 = 0xDEADBEEF\nhex2 = 0xdeadbeef\nhex3 = 0xdead_beef\noct1 = 0o01234567\noct2 = 0o755\nbin1 = 0b11010110\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_PARSED",
+        "payload": {
+         "requestId": "",
+         "value": {
+          "hex1": 3735928559,
+          "hex2": 3735928559,
+          "hex3": 3735928559,
+          "oct1": 342391,
+          "oct2": 493,
+          "bin1": 214
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "leading zero integer",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "a = 01\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "bad-value",
+         "line": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "double underscore",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "a = 1__0\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "bad-value",
+         "line": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "trailing underscore",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "a = 1_\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "bad-value",
+         "line": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "empty hex",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "a = 0x\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "bad-value",
+         "line": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "binary digit out of range",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "a = 0b102\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "bad-value",
+         "line": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "integer beyond 2^53-1",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "a = 9007199254740992\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "integer-range",
+         "line": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "largest safe integer",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "a = 9007199254740991\nb = -9007199254740991\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_PARSED",
+        "payload": {
+         "requestId": "",
+         "value": {
+          "a": 9007199254740991,
+          "b": -9007199254740991
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "floats",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "flt1 = +1.0\nflt2 = 3.1415\nflt3 = -0.01\nflt4 = 5e+22\nflt5 = 1e06\nflt6 = -2E-2\nflt7 = 6.626e-34\nflt8 = 224_617.445_991_228\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_PARSED",
+        "payload": {
+         "requestId": "",
+         "value": {
+          "flt1": 1.0,
+          "flt2": 3.1415,
+          "flt3": -0.01,
+          "flt4": 5e+22,
+          "flt5": 1000000.0,
+          "flt6": -0.02,
+          "flt7": 6.626e-34,
+          "flt8": 224617.445991228
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "float without fraction digits",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "a = 1.\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "bad-value",
+         "line": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "float without integer part",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "a = .5\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "syntax",
+         "line": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "infinity",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "a = +inf\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "special-float",
+         "line": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "not a number",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "a = nan\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "special-float",
+         "line": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "booleans",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "bool1 = true\nbool2 = false\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_PARSED",
+        "payload": {
+         "requestId": "",
+         "value": {
+          "bool1": true,
+          "bool2": false
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "misspelled boolean",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "a = tru\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "bad-value",
+         "line": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "capitalised boolean",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "a = True\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "bad-value",
+         "line": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "date-times as text",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "odt1 = 1979-05-27T07:32:00Z\nodt2 = 1979-05-27T00:32:00-07:00\nodt3 = 1979-05-27T00:32:00.999999-07:00\nldt1 = 1979-05-27T07:32:00\nld1 = 1979-05-27\nlt1 = 07:32:00\nlt2 = 00:32:00.999999\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_PARSED",
+        "payload": {
+         "requestId": "",
+         "value": {
+          "odt1": "1979-05-27T07:32:00Z",
+          "odt2": "1979-05-27T00:32:00-07:00",
+          "odt3": "1979-05-27T00:32:00.999999-07:00",
+          "ldt1": "1979-05-27T07:32:00",
+          "ld1": "1979-05-27",
+          "lt1": "07:32:00",
+          "lt2": "00:32:00.999999"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "month out of range",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "a = 1979-13-27\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "bad-value",
+         "line": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "hour out of range",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "a = 25:32:00\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "bad-value",
+         "line": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "arrays",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "integers = [ 1, 2, 3 ]\ncolors = [ \"red\", \"yellow\", \"green\" ]\nnested_arrays_of_ints = [ [ 1, 2 ], [3, 4, 5] ]\nnested_mixed_array = [ [ 1, 2 ], [\"a\", \"b\", \"c\"] ]\nstring_array = [ \"all\", 'strings', \"\"\"are the same\"\"\", '''type''' ]\nnumbers = [ 0.1, 0.2, 0.5, 1, 2, 5 ]\nmixed = [ 1, \"a\", true, [ 2 ] ]\nempty = []\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_PARSED",
+        "payload": {
+         "requestId": "",
+         "value": {
+          "integers": [
+           1,
+           2,
+           3
+          ],
+          "colors": [
+           "red",
+           "yellow",
+           "green"
+          ],
+          "nested_arrays_of_ints": [
+           [
+            1,
+            2
+           ],
+           [
+            3,
+            4,
+            5
+           ]
+          ],
+          "nested_mixed_array": [
+           [
+            1,
+            2
+           ],
+           [
+            "a",
+            "b",
+            "c"
+           ]
+          ],
+          "string_array": [
+           "all",
+           "strings",
+           "are the same",
+           "type"
+          ],
+          "numbers": [
+           0.1,
+           0.2,
+           0.5,
+           1,
+           2,
+           5
+          ],
+          "mixed": [
+           1,
+           "a",
+           true,
+           [
+            2
+           ]
+          ],
+          "empty": []
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "multi-line arrays with comments and trailing comma",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "contributors = [\n  \"Foo Bar <foo@example.com>\",\n  { name = \"Baz Qux\", email = \"bazqux@example.com\", url = \"https://example.com/bazqux\" }\n]\nintegers2 = [\n  1, 2, 3\n]\nintegers3 = [\n  1,\n  2, # this is ok\n]\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_PARSED",
+        "payload": {
+         "requestId": "",
+         "value": {
+          "contributors": [
+           "Foo Bar <foo@example.com>",
+           {
+            "name": "Baz Qux",
+            "email": "bazqux@example.com",
+            "url": "https://example.com/bazqux"
+           }
+          ],
+          "integers2": [
+           1,
+           2,
+           3
+          ],
+          "integers3": [
+           1,
+           2
+          ]
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "empty array element",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "a = [1,,2]\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "syntax",
+         "line": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "arrays closed",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "a = [1, 2]\nb = 3\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_PARSED",
+        "payload": {
+         "requestId": "",
+         "value": {
+          "a": [
+           1,
+           2
+          ],
+          "b": 3
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "unterminated array",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "a = [1, 2\nb = 3\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "unterminated-array",
+         "line": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "unterminated nested inline table reports the outer opener",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "x = 1\ny = [ { a = 1 },\n { b = 2 }\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "unterminated-array",
+         "line": 2
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "tables",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "[table-1]\nkey1 = \"some string\"\nkey2 = 123\n\n[table-2]\nkey1 = \"another string\"\nkey2 = 456\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_PARSED",
+        "payload": {
+         "requestId": "",
+         "value": {
+          "table-1": {
+           "key1": "some string",
+           "key2": 123
+          },
+          "table-2": {
+           "key1": "another string",
+           "key2": 456
+          }
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "dotted and quoted table names",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "[dog.\"tater.man\"]\ntype.name = \"pug\"\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_PARSED",
+        "payload": {
+         "requestId": "",
+         "value": {
+          "dog": {
+           "tater.man": {
+            "type": {
+             "name": "pug"
+            }
+           }
+          }
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "whitespace around table name parts",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "[a.b.c]            # this is best practice\n[ d.e.f ]          # same as [d.e.f]\n[ g .  h  . i ]    # same as [g.h.i]\n[ j . \"ʞ\" . 'l' ]  # same as [j.\"ʞ\".'l']\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_PARSED",
+        "payload": {
+         "requestId": "",
+         "value": {
+          "a": {
+           "b": {
+            "c": {}
+           }
+          },
+          "d": {
+           "e": {
+            "f": {}
+           }
+          },
+          "g": {
+           "h": {
+            "i": {}
+           }
+          },
+          "j": {
+           "ʞ": {
+            "l": {}
+           }
+          }
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "super-table after sub-table",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "[x.y.z.w]\n[x]\nk = 1\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_PARSED",
+        "payload": {
+         "requestId": "",
+         "value": {
+          "x": {
+           "y": {
+            "z": {
+             "w": {}
+            }
+           },
+           "k": 1
+          }
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "root keys then tables",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "a = 1\nb.c = 2\n[t]\nd = 3\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_PARSED",
+        "payload": {
+         "requestId": "",
+         "value": {
+          "a": 1,
+          "b": {
+           "c": 2
+          },
+          "t": {
+           "d": 3
+          }
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "sub-table of a dotted-key table",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "[fruit]\napple.color = \"red\"\napple.taste.sweet = true\n[fruit.apple.texture]\nsmooth = true\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_PARSED",
+        "payload": {
+         "requestId": "",
+         "value": {
+          "fruit": {
+           "apple": {
+            "color": "red",
+            "taste": {
+             "sweet": true
+            },
+            "texture": {
+             "smooth": true
+            }
+           }
+          }
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "table redefined",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "[fruit]\napple = \"red\"\n[fruit]\norange = \"orange\"\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "table-conflict",
+         "line": 3
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "implicit table defined twice",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "[a]\n[a.b]\n[a]\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "table-conflict",
+         "line": 3
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "value redefined as a table",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "[fruit]\napple = \"red\"\n[fruit.apple]\ntexture = \"smooth\"\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "duplicate-key",
+         "line": 3
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "dotted-key table redefined by a header",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "[fruit]\napple.color = \"red\"\n[fruit.apple]\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "table-conflict",
+         "line": 3
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "header never closed",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "[a\nb = 1\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "syntax",
+         "line": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "mismatched header brackets",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "[a]]\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "syntax",
+         "line": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "header then a value on the next line",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "[a]\nb = 1\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_PARSED",
+        "payload": {
+         "requestId": "",
+         "value": {
+          "a": {
+           "b": 1
+          }
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "inline tables",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "name = { first = \"Tom\", last = \"Preston-Werner\" }\npoint = { x = 1, y = 2 }\nanimal = { type.name = \"pug\" }\nempty = {}\nnested = { a = { b = [1, { c = 2 }] } }\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_PARSED",
+        "payload": {
+         "requestId": "",
+         "value": {
+          "name": {
+           "first": "Tom",
+           "last": "Preston-Werner"
+          },
+          "point": {
+           "x": 1,
+           "y": 2
+          },
+          "animal": {
+           "type": {
+            "name": "pug"
+           }
+          },
+          "empty": {},
+          "nested": {
+           "a": {
+            "b": [
+             1,
+             {
+              "c": 2
+             }
+            ]
+           }
+          }
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "inline table trailing comma",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "a = { x = 1, }\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "syntax",
+         "line": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "inline table spanning lines",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "a = { x = 1,\n  y = 2 }\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "inline-newline",
+         "line": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "inline table extended by a dotted key",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "type = { name = \"Nail\" }\ntype.edible = false\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "duplicate-key",
+         "line": 2
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "inline table extended by a header",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "[product]\ntype = { name = \"Nail\" }\n[product.type]\nedible = false\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "duplicate-key",
+         "line": 3
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "array of tables",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "[[products]]\nname = \"Hammer\"\nsku = 738594937\n\n[[products]]  # empty table within the array\n\n[[products]]\nname = \"Nail\"\nsku = 284758393\n\ncolor = \"gray\"\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_PARSED",
+        "payload": {
+         "requestId": "",
+         "value": {
+          "products": [
+           {
+            "name": "Hammer",
+            "sku": 738594937
+           },
+           {},
+           {
+            "name": "Nail",
+            "sku": 284758393,
+            "color": "gray"
+           }
+          ]
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nested arrays of tables",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "[[fruits]]\nname = \"apple\"\n\n[fruits.physical]  # subtable\ncolor = \"red\"\nshape = \"round\"\n\n[[fruits.varieties]]  # nested array of tables\nname = \"red delicious\"\n\n[[fruits.varieties]]\nname = \"granny smith\"\n\n[[fruits]]\nname = \"banana\"\n\n[[fruits.varieties]]\nname = \"plantain\"\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_PARSED",
+        "payload": {
+         "requestId": "",
+         "value": {
+          "fruits": [
+           {
+            "name": "apple",
+            "physical": {
+             "color": "red",
+             "shape": "round"
+            },
+            "varieties": [
+             {
+              "name": "red delicious"
+             },
+             {
+              "name": "granny smith"
+             }
+            ]
+           },
+           {
+            "name": "banana",
+            "varieties": [
+             {
+              "name": "plantain"
+             }
+            ]
+           }
+          ]
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "array of inline tables",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "points = [ { x = 1, y = 2, z = 3 },\n           { x = 7, y = 8, z = 9 },\n           { x = 2, y = 4, z = 8 } ]\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_PARSED",
+        "payload": {
+         "requestId": "",
+         "value": {
+          "points": [
+           {
+            "x": 1,
+            "y": 2,
+            "z": 3
+           },
+           {
+            "x": 7,
+            "y": 8,
+            "z": 9
+           },
+           {
+            "x": 2,
+            "y": 4,
+            "z": 8
+           }
+          ]
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "table then array of tables",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "[fruits]\n[[fruits]]\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "table-conflict",
+         "line": 2
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "array of tables then table",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "[[fruits]]\n[fruits]\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "table-conflict",
+         "line": 2
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "static array extended as array of tables",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "fruits = []\n[[fruits]]\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "duplicate-key",
+         "line": 2
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "empty document",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": ""
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_PARSED",
+        "payload": {
+         "requestId": "",
+         "value": {}
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "only comments and blank lines",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "# nothing\n\n   # here\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_PARSED",
+        "payload": {
+         "requestId": "",
+         "value": {}
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "CRLF line endings",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "a = 1\r\n[t]\r\nb = \"x\"\r\nc = \"\"\"\r\nl1\r\nl2\"\"\"\r\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_PARSED",
+        "payload": {
+         "requestId": "",
+         "value": {
+          "a": 1,
+          "t": {
+           "b": "x",
+           "c": "l1\nl2"
+          }
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "reserved key",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "__proto__ = 1\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "reserved-key",
+         "line": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "character that starts no token",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "a = $\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "unexpected-char",
+         "line": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "Cargo.toml of orbital-rust (workspace version)",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "[workspace]\nresolver = \"2\"\nmembers = [\n    \"crates/orbital-shell-android\",\n    \"crates/orbital-shell-ios\",\n    \"crates/orbital-shell-chrome\",\n    \"crates/orbital-core\",\n    \"crates/orbital-core/crates/base\",\n    \"crates/orbital-core/crates/eval\",\n    \"crates/orbital-core/crates/runtime\",\n    \"crates/io-gate\",\n    \"crates/orbital-router\",\n    \"crates/orbital-compiler\",\n    \"crates/orbital-lolo\",\n    \"crates/orbital-shell-typescript\",\n    \"crates/orbital-shell-python\",\n    \"crates/orbital-shell-rust\",\n    \"crates/orbital-server\",\n    \"crates/orbital-shell-rust/renderers/dioxus\",\n    \"crates/orbital-shell-rust/renderers/tui\",\n    \"crates/orbital-canvas\",\n    \"crates/orbital-ffi\",\n    \"crates/orbital-wasm\",\n    \"crates/orbital-node\",\n    \"crates/orbital-python\",\n    \"crates/orbital-cli\",\n    \"crates/orbital-verify\",\n    \"crates/orbital-test-support\",\n    \"crates/orbital-integration-tests\",\n]\n\n[workspace.package]\nversion = \"18.0.5\"\nedition = \"2021\"\nlicense = \"MIT\"\nrepository = \"https://github.com/almadar-io/orbital-rust\"\n\n[workspace.dependencies]\n# Serialization\nserde = { version = \"1.0\", features = [\"derive\"] }\nserde_json = { version = \"1.0\", features = [\"float_roundtrip\"] }\nserde_path_to_error = \"0.1\"\n\n# Async runtime\ntokio = { version = \"1.0\", features = [\"full\"] }\n\n# Server\naxum = \"0.7\"\ntower = \"0.4\"\ntower-http = { version = \"0.5\", features = [\"cors\", \"trace\", \"compression-br\", \"compression-gzip\"] }\n\n# Database\nsqlx = { version = \"0.7\", features = [\"runtime-tokio\", \"postgres\", \"sqlite\"] }\n\n# Client/Game (bevy disabled for faster compile times)\n# bevy = \"0.13\"\n# bevy_egui = \"0.25\"\n\n# HTTP client (using rustls to avoid OpenSSL dependency)\nreqwest = { version = \"0.11\", default-features = false, features = [\"json\", \"rustls-tls\"] }\n# ureq: sync HTTP for the client bridge (localhost over HTTP). `default-features = false`\n# drops ureq's default TLS (rustls → ring), which has no wasm32 C backend; the\n# client only speaks HTTP, so TLS is unused here.\nureq = { version = \"2.9\", default-features = false, features = [\"json\"] }\n\n# TUI\nratatui = \"0.29\"\ncrossterm = \"0.28\"\n\n# Utilities\nthiserror = \"1.0\"\nanyhow = \"1.0\"\ntracing = \"0.1\"\ntracing-subscriber = { version = \"0.3\", features = [\"env-filter\"] }\nlru = \"0.12\"\nlazy_static = \"1.4\"\nchrono = { version = \"0.4\", features = [\"serde\"] }\nparking_lot = \"0.12\"\nsemver = \"1\"\n\n# CLI\nclap = { version = \"4.0\", features = [\"derive\"] }\n\n# Testing\npretty_assertions = \"1.4\"\n\n# Dioxus (separate client renderer crate — `orbital-client-dioxus`)\ndioxus = { version = \"0.7\", default-features = false }\n\n# Vendored patch: dioxus-native 0.7.9's `Config::default()` references the\n# optional `dioxus_cli_config` dep without a feature guard, so the crate cannot\n# compile with default features off — which wasm32 requires (tokio/devtools\n# have no wasm build, and `hot-reload`'s `dioxus_devtools::connect` is non-wasm).\n# The vendored copy guards the call behind `#[cfg(feature = \"hot-reload\")]`.\n# Remove once a fixed dioxus-native release lands.\n# wasm32 release builds: size over everything else. The default `release`\n# profile emits ~48MB binaries (no LTO, debuginfo kept); this profile + the\n# build scripts' wasm-opt pass brings the glue down to something a browser can\n# compile in seconds. Desktop/server builds keep the plain `release` profile.\n# Fast dev loop: workspace code at opt-level=0 (fastest to compile) and keep\n# incremental on for the inner loop. Dependencies default to opt-level=0 too;\n# set deps to a higher opt-level only if dev-runtime perf needs it (not needed\n# for the CLI/compiler, which is I/O-bound).\n# Line tables only (file:line backtraces): full debuginfo filled target/debug past 200 GB.\n[profile.dev]\nopt-level = 0\nincremental = true\ndebug = \"line-tables-only\"\n\n[profile.dev.package.\"*\"]\nopt-level = 0\ndebug = false\n\n# Release: keep line tables for panic backtraces, avoid full debuginfo bloat.\n[profile.release]\ndebug = \"line-tables-only\"\n\n# Local `make install-dev`: release optimizations, but incremental with many\n# codegen units so an edit rebuilds in seconds. CI and published builds use `release`.\n[profile.dev-install]\ninherits = \"release\"\nincremental = true\ncodegen-units = 256\n\n# Published binaries (orb, the shell programs, orb-desktop): whole-program LTO in\n# one codegen unit for size and speed. Line tables stay in the build so the\n# release job can split them into a symbol file per platform before stripping.\n[profile.dist]\ninherits = \"release\"\nlto = \"fat\"\ncodegen-units = 1\ndebug = \"line-tables-only\"\n\n[profile.wasm-release]\ninherits = \"release\"\n# opt-level 3 (not \"z\"): the size win comes from gzipping the baked corpus in\n# orbital-compiler/build.rs — size-optimized codegen made vello's hot loops\n# ~10x slower for a ~1MB saving.\nopt-level = 3\nlto = \"fat\"\ncodegen-units = 1\nstrip = \"debuginfo\"\n\n[patch.crates-io]\ndioxus-native = { path = \"crates/orbital-shell-rust/renderers/dioxus/vendor/dioxus-native\" }\nblitz-dom = { path = \"crates/orbital-shell-rust/renderers/dioxus/vendor/blitz-dom\" }\n\n# The public crates depend on each other by git; inside this workspace they are\n# the submodule checkouts under crates/.\n[patch.\"https://github.com/almadar-io/orbital-core\"]\norbital-core = { path = \"crates/orbital-core\" }\norbital-core-base = { path = \"crates/orbital-core/crates/base\" }\norbital-core-eval = { path = \"crates/orbital-core/crates/eval\" }\norbital-core-runtime = { path = \"crates/orbital-core/crates/runtime\" }\n[patch.\"https://github.com/almadar-io/orbital-canvas\"]\norbital-canvas = { path = \"crates/orbital-canvas\" }\n[patch.\"https://github.com/almadar-io/orbital-ffi\"]\norbital-ffi = { path = \"crates/orbital-ffi\" }\n[patch.\"https://github.com/almadar-io/orbital-shell-typescript\"]\norbital-shell-typescript = { path = \"crates/orbital-shell-typescript\" }\n[patch.\"https://github.com/almadar-io/orbital-shell-python\"]\norbital-shell-python = { path = \"crates/orbital-shell-python\" }\n[patch.\"https://github.com/almadar-io/orbital-shell-rust\"]\norbital-shell-rust = { path = \"crates/orbital-shell-rust\" }\n[patch.\"https://github.com/almadar-io/orbital-shell-ios\"]\norbital-shell-ios = { path = \"crates/orbital-shell-ios\" }\n[patch.\"https://github.com/almadar-io/orbital-shell-android\"]\norbital-shell-android = { path = \"crates/orbital-shell-android\" }\n[patch.\"https://github.com/almadar-io/orbital-shell-chrome\"]\norbital-shell-chrome = { path = \"crates/orbital-shell-chrome\" }\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_PARSED",
+        "payload": {
+         "requestId": "",
+         "value": {
+          "workspace": {
+           "resolver": "2",
+           "members": [
+            "crates/orbital-shell-android",
+            "crates/orbital-shell-ios",
+            "crates/orbital-shell-chrome",
+            "crates/orbital-core",
+            "crates/orbital-core/crates/base",
+            "crates/orbital-core/crates/eval",
+            "crates/orbital-core/crates/runtime",
+            "crates/io-gate",
+            "crates/orbital-router",
+            "crates/orbital-compiler",
+            "crates/orbital-lolo",
+            "crates/orbital-shell-typescript",
+            "crates/orbital-shell-python",
+            "crates/orbital-shell-rust",
+            "crates/orbital-server",
+            "crates/orbital-shell-rust/renderers/dioxus",
+            "crates/orbital-shell-rust/renderers/tui",
+            "crates/orbital-canvas",
+            "crates/orbital-ffi",
+            "crates/orbital-wasm",
+            "crates/orbital-node",
+            "crates/orbital-python",
+            "crates/orbital-cli",
+            "crates/orbital-verify",
+            "crates/orbital-test-support",
+            "crates/orbital-integration-tests"
+           ],
+           "package": {
+            "version": "18.0.5",
+            "edition": "2021",
+            "license": "MIT",
+            "repository": "https://github.com/almadar-io/orbital-rust"
+           },
+           "dependencies": {
+            "serde": {
+             "version": "1.0",
+             "features": [
+              "derive"
+             ]
+            },
+            "serde_json": {
+             "version": "1.0",
+             "features": [
+              "float_roundtrip"
+             ]
+            },
+            "serde_path_to_error": "0.1",
+            "tokio": {
+             "version": "1.0",
+             "features": [
+              "full"
+             ]
+            },
+            "axum": "0.7",
+            "tower": "0.4",
+            "tower-http": {
+             "version": "0.5",
+             "features": [
+              "cors",
+              "trace",
+              "compression-br",
+              "compression-gzip"
+             ]
+            },
+            "sqlx": {
+             "version": "0.7",
+             "features": [
+              "runtime-tokio",
+              "postgres",
+              "sqlite"
+             ]
+            },
+            "reqwest": {
+             "version": "0.11",
+             "default-features": false,
+             "features": [
+              "json",
+              "rustls-tls"
+             ]
+            },
+            "ureq": {
+             "version": "2.9",
+             "default-features": false,
+             "features": [
+              "json"
+             ]
+            },
+            "ratatui": "0.29",
+            "crossterm": "0.28",
+            "thiserror": "1.0",
+            "anyhow": "1.0",
+            "tracing": "0.1",
+            "tracing-subscriber": {
+             "version": "0.3",
+             "features": [
+              "env-filter"
+             ]
+            },
+            "lru": "0.12",
+            "lazy_static": "1.4",
+            "chrono": {
+             "version": "0.4",
+             "features": [
+              "serde"
+             ]
+            },
+            "parking_lot": "0.12",
+            "semver": "1",
+            "clap": {
+             "version": "4.0",
+             "features": [
+              "derive"
+             ]
+            },
+            "pretty_assertions": "1.4",
+            "dioxus": {
+             "version": "0.7",
+             "default-features": false
+            }
+           }
+          },
+          "profile": {
+           "dev": {
+            "opt-level": 0,
+            "incremental": true,
+            "debug": "line-tables-only",
+            "package": {
+             "*": {
+              "opt-level": 0,
+              "debug": false
+             }
+            }
+           },
+           "release": {
+            "debug": "line-tables-only"
+           },
+           "dev-install": {
+            "inherits": "release",
+            "incremental": true,
+            "codegen-units": 256
+           },
+           "dist": {
+            "inherits": "release",
+            "lto": "fat",
+            "codegen-units": 1,
+            "debug": "line-tables-only"
+           },
+           "wasm-release": {
+            "inherits": "release",
+            "opt-level": 3,
+            "lto": "fat",
+            "codegen-units": 1,
+            "strip": "debuginfo"
+           }
+          },
+          "patch": {
+           "crates-io": {
+            "dioxus-native": {
+             "path": "crates/orbital-shell-rust/renderers/dioxus/vendor/dioxus-native"
+            },
+            "blitz-dom": {
+             "path": "crates/orbital-shell-rust/renderers/dioxus/vendor/blitz-dom"
+            }
+           },
+           "https://github.com/almadar-io/orbital-core": {
+            "orbital-core": {
+             "path": "crates/orbital-core"
+            },
+            "orbital-core-base": {
+             "path": "crates/orbital-core/crates/base"
+            },
+            "orbital-core-eval": {
+             "path": "crates/orbital-core/crates/eval"
+            },
+            "orbital-core-runtime": {
+             "path": "crates/orbital-core/crates/runtime"
+            }
+           },
+           "https://github.com/almadar-io/orbital-canvas": {
+            "orbital-canvas": {
+             "path": "crates/orbital-canvas"
+            }
+           },
+           "https://github.com/almadar-io/orbital-ffi": {
+            "orbital-ffi": {
+             "path": "crates/orbital-ffi"
+            }
+           },
+           "https://github.com/almadar-io/orbital-shell-typescript": {
+            "orbital-shell-typescript": {
+             "path": "crates/orbital-shell-typescript"
+            }
+           },
+           "https://github.com/almadar-io/orbital-shell-python": {
+            "orbital-shell-python": {
+             "path": "crates/orbital-shell-python"
+            }
+           },
+           "https://github.com/almadar-io/orbital-shell-rust": {
+            "orbital-shell-rust": {
+             "path": "crates/orbital-shell-rust"
+            }
+           },
+           "https://github.com/almadar-io/orbital-shell-ios": {
+            "orbital-shell-ios": {
+             "path": "crates/orbital-shell-ios"
+            }
+           },
+           "https://github.com/almadar-io/orbital-shell-android": {
+            "orbital-shell-android": {
+             "path": "crates/orbital-shell-android"
+            }
+           },
+           "https://github.com/almadar-io/orbital-shell-chrome": {
+            "orbital-shell-chrome": {
+             "path": "crates/orbital-shell-chrome"
+            }
+           }
+          }
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "package.toml style",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "[package]\nname = \"kflow-demo\"\nversion = \"1.2.3\"\nedition = \"2021\"\nauthors = [\"A <a@x.io>\", \"B\"]\n\n[dependencies]\nserde = { version = \"1.0\", features = [\"derive\"] }\nlocal = { path = \"../local\" }\n\n[dependencies.tokio]\nversion = \"1\"\nfeatures = [\"rt\", \"macros\"]\noptional = true\n\n[[bin]]\nname = \"a\"\npath = \"src/a.rs\"\n\n[[bin]]\nname = \"b\"\npath = \"src/b.rs\"\n\n[profile.release]\nopt-level = 3\nlto = true\ncodegen-units = 1\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_PARSED",
+        "payload": {
+         "requestId": "",
+         "value": {
+          "package": {
+           "name": "kflow-demo",
+           "version": "1.2.3",
+           "edition": "2021",
+           "authors": [
+            "A <a@x.io>",
+            "B"
+           ]
+          },
+          "dependencies": {
+           "serde": {
+            "version": "1.0",
+            "features": [
+             "derive"
+            ]
+           },
+           "local": {
+            "path": "../local"
+           },
+           "tokio": {
+            "version": "1",
+            "features": [
+             "rt",
+             "macros"
+            ],
+            "optional": true
+           }
+          },
+          "bin": [
+           {
+            "name": "a",
+            "path": "src/a.rs"
+           },
+           {
+            "name": "b",
+            "path": "src/b.rs"
+           }
+          ],
+          "profile": {
+           "release": {
+            "opt-level": 3,
+            "lto": true,
+            "codegen-units": 1
+           }
+          }
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "requestId is echoed on every answer",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "a = 1\n",
+      "requestId": "r1"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": "r1"
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": "r1"
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": "r1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_PARSED",
+        "payload": {
+         "requestId": "r1",
+         "value": {
+          "a": 1
+         }
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "a = 1\n",
+      "requestId": "r2"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": "r2"
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": "r2"
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": "r2"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_PARSED",
+        "payload": {
+         "requestId": "r2",
+         "value": {
+          "a": 1
+         }
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "a = = 1\n",
+      "requestId": "r3"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": "r3"
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": "r3"
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": "r3"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "r3",
+         "code": "syntax",
+         "line": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "date and time separated by a space",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "a = 1979-05-27 07:32:00Z\nb = 1979-05-27 07:32:00.5\nc = 1979-05-27\nd = 07:32:00\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_PARSED",
+        "payload": {
+         "requestId": "",
+         "value": {
+          "a": "1979-05-27 07:32:00Z",
+          "b": "1979-05-27 07:32:00.5",
+          "c": "1979-05-27",
+          "d": "07:32:00"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "date followed by a non-time after a space",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "a = 1979-05-27 x\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "syntax",
+         "line": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "date and time with two spaces",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "a = 1979-05-27  07:32:00\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "unexpected-char",
+         "line": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "February 30",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "a = 2024-02-30\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "bad-value",
+         "line": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "February 29 in a common year",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "a = 2023-02-29\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "bad-value",
+         "line": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "February 29 in a century common year",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "a = 1900-02-29T00:00:00Z\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "bad-value",
+         "line": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "April 31",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "a = 2024-04-31\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "bad-value",
+         "line": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "February 29 in a leap year",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "a = 2024-02-29\nb = 2000-02-29 00:00:00\nc = 2023-02-28\nd = 2024-04-30\ne = 2024-12-31\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_PARSED",
+        "payload": {
+         "requestId": "",
+         "value": {
+          "a": "2024-02-29",
+          "b": "2000-02-29 00:00:00",
+          "c": "2023-02-28",
+          "d": "2024-04-30",
+          "e": "2024-12-31"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}
