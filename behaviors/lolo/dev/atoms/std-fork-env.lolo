@@ -1,0 +1,62 @@
+app std-fork-env [
+  version: "1.0.0",
+  description: "std-fork-env — the hermetic environment of a forked server as data. FORK_ENV strips the declared credential variables from the inherited environment (unless real integrations are allowed), applies the mock flags, lets the caller's environment win over those, and pins mock mode and a development NODE_ENV last so no caller can omit or override a sandbox back to a live mode. FORK_ROOT picks the fork's one project root. The credential variable list is the caller's payload; spawning the process is the host's.",
+  egress: []
+]
+;; @capabilities "fork environment, hermetic sandbox, credential scrub, project root"
+uses Spec from "almadar-std/fork-env"
+
+type EnvMap = Map string string
+
+orbital ForkEnvOrbital {
+  entity ForkEnvRun [runtime] {
+    id : string!
+    env : EnvMap = {}
+    root : string = ""
+  }
+
+  trait ForkEnv -> ForkEnvRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+
+      FORK_ENV -> ready
+        (set @entity.env
+          (object/merge
+            (if @payload.allowReal @payload.base (object/omit @payload.base @payload.credentialVars))
+            (if @payload.agentMock { AGENT_MOCK: "true" } {})
+            (if @payload.mockLLM { MOCK_LLM: "true" } {})
+            @payload.integrationEnv
+            (if @payload.allowReal {} { ALMADAR_INTEGRATIONS_MODE: "mock", NODE_ENV: "development" })))
+        (emit FORK_ENV_BUILT { env: @entity.env })
+
+      FORK_ROOT -> ready
+        (set @entity.root
+          (if (object/has @payload.env "ALMADAR_PROJECT_ROOT") (object/get @payload.env "ALMADAR_PROJECT_ROOT")
+            (if (object/has @payload.env "ALMADAR_ROOT") (object/get @payload.env "ALMADAR_ROOT")
+              (if (!= @payload.schemaDir "") @payload.schemaDir @payload.cwd))))
+        (emit FORK_ROOT_RESOLVED { root: @entity.root })
+    }
+
+    emits {
+      FORK_ENV_BUILT -> external { env : Map string string! }
+        @description "The environment the fork is started with."
+        @tier "domain"
+      FORK_ROOT_RESOLVED -> external { root : string! }
+        @description "The fork's one project root."
+        @tier "domain"
+    }
+
+    listens {
+      FORK_ENV -> external { base : Map string string!, credentialVars : [string]!, allowReal : boolean!, agentMock : boolean!, mockLLM : boolean!, integrationEnv : Map string string! }
+        @description "Build the environment a forked server sees."
+        @synonyms "fork env, sandbox environment, credential scrub, hermetic env"
+      FORK_ROOT -> external { env : Map string string!, schemaDir : string!, cwd : string! }
+        @description "Pick the fork's project root; an empty schemaDir means none."
+        @synonyms "project root, fork root"
+    }
+  }
+
+  page "/fork-env" -> ForkEnv
+}

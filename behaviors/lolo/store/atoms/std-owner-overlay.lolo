@@ -1,0 +1,67 @@
+app std-owner-overlay [
+  version: "1.0.0",
+  description: "std-owner-overlay — the read-time owner overlay as data. OVERLAY_PICK chooses which of a set of shared rows 'is' a viewer: the row ids sorted, indexed by the first four bytes of SHA-256 of the owner id (big-endian) modulo the row count, so the same viewer lands on the same row whatever order the store read them in. OVERLAY_APPLY sets the named owner fields of that one row to the viewer in the answer only; every other row comes back as it was. Reading rows and answering a request are the host's.",
+  egress: []
+]
+;; @capabilities "owner overlay, viewer row, deterministic row pick, shared row owner stamp"
+uses Spec from "almadar-std/owner-overlay"
+
+type OverlayRow = Map string string
+
+orbital OwnerOverlayOrbital {
+  entity OverlayRun [runtime] {
+    id : string!
+    rowId : string = ""
+    found : boolean = false
+    rows : [OverlayRow] = []
+  }
+
+  trait OwnerOverlay -> OverlayRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+
+      OVERLAY_PICK -> ready
+        (do (set @entity.found (> (array/len @payload.rows) 0))
+            (set @entity.rowId
+              (if (> (array/len @payload.rows) 0)
+                (let ((ids (array/sort (array/map @payload.rows (fn (r) (object/get @r "id"))))))
+                  (array/nth @ids (math/mod (bytes/read-uint (hash/sha256 @payload.ownerId "base64") 0 4 "be") (array/len @ids))))
+                "")))
+        (emit OVERLAY_PICKED { rowId: @entity.rowId, found: @entity.found })
+
+      OVERLAY_APPLY -> ready
+        (if (or (= (array/len @payload.fields) 0) (= (array/len @payload.rows) 0))
+          (set @entity.rows @payload.rows)
+          (let ((ids (array/sort (array/map @payload.rows (fn (r) (object/get @r "id"))))))
+            (let ((target (array/nth @ids (math/mod (bytes/read-uint (hash/sha256 @payload.ownerId "base64") 0 4 "be") (array/len @ids)))))
+              (set @entity.rows
+                (array/map @payload.rows (fn (r)
+                  (if (= (object/get @r "id") @target)
+                    (array/reduce @payload.fields @r (fn (acc f) (object/set @acc @f @payload.ownerId)))
+                    @r)))))))
+        (emit OVERLAY_APPLIED { rows: @entity.rows })
+    }
+
+    emits {
+      OVERLAY_PICKED -> external { rowId : string!, found : boolean! }
+        @description "The id of the row that stands for the viewer, and whether there was one."
+        @tier "domain"
+      OVERLAY_APPLIED -> external { rows : [OverlayRow]! }
+        @description "The rows with the viewer stamped on the picked row's owner fields."
+        @tier "domain"
+    }
+
+    listens {
+      OVERLAY_PICK -> external { rows : [OverlayRow]!, ownerId : string! }
+        @description "Pick, deterministically from the viewer alone, which shared row stands for the viewer."
+        @synonyms "owner overlay, viewer row, deterministic row pick"
+      OVERLAY_APPLY -> external { rows : [OverlayRow]!, fields : [string]!, ownerId : string! }
+        @description "Stamp the viewer onto the named owner fields of the picked row, leaving every other row as it is."
+        @synonyms "owner overlay apply, stamp viewer on shared row"
+    }
+  }
+
+  page "/owner-overlay" as OwnerOverlayPage -> OwnerOverlay
+}

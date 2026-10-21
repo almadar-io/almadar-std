@@ -1,0 +1,65 @@
+app std-seed-fingerprint [
+  version: "1.0.0",
+  description: "std-seed-fingerprint — the stale-seed detector as data. FINGERPRINT hashes (SHA-256, lowercase hex) the compact JSON of the generator version and, per named field, the name, type, intrinsic flag, default and relation target the mock seed generator consumes, so any change to what a seed was built from changes the digest. The generatorVersion knob is bumped whenever the generator's output for the same declaration changes. Storing the digest on the seeded collection and comparing on read is the host's.",
+  egress: []
+]
+;; @capabilities "seed fingerprint, stale seed, reseed detection, mock seed hash"
+uses Spec from "almadar-std/seed-fingerprint"
+
+type OrbValue = string | number | boolean | [OrbValue] | Map string OrbValue
+type FingerprintField = { name : string, type : string!, intrinsic : boolean, default : OrbValue, relation : { entity : string! } }
+
+orbital SeedFingerprintOrbital {
+  entity FingerprintRun [runtime] {
+    id : string!
+    digest : string = ""
+  }
+
+  trait SeedFingerprint -> FingerprintRun [integration] {
+    initial: ready
+
+    config {
+      generatorVersion : number = 2
+        @label "Generator version"
+        @description "Bumped whenever the seed generator's output for the same field declarations changes, so a generator change alone forces a reseed."
+        @tier "policy"
+    }
+
+    state ready {
+      INIT -> ready
+
+      FINGERPRINT -> ready
+        (set @entity.digest
+          (hash/sha256
+            (str/concat "{\"generatorVersion\":" (json/stringify @config.generatorVersion) ",\"fields\":["
+              (str/join
+                (array/map
+                  (array/filter @payload.fields (fn (f) (object/has @f "name")))
+                  (fn (f) (str/concat
+                    "{\"name\":" (json/stringify (object/get @f "name"))
+                    ",\"type\":" (json/stringify (object/get @f "type"))
+                    ",\"intrinsic\":" (json/stringify (object/get @f "intrinsic" false))
+                    ",\"default\":" (json/stringify (object/get @f "default" null))
+                    ",\"relationTarget\":" (json/stringify (if (= (object/get @f "type") "relation") (object/get @f "relation.entity" null) null))
+                    "}")))
+                ",")
+              "]}")
+            "hex"))
+        (emit FINGERPRINTED { digest: @entity.digest })
+    }
+
+    emits {
+      FINGERPRINTED -> external { digest : string! }
+        @description "The SHA-256 hex digest of what the seed generator consumes from the declared fields."
+        @tier "domain"
+    }
+
+    listens {
+      FINGERPRINT -> external { fields : [FingerprintField]! }
+        @description "Fingerprint the field declarations a mock seed is built from."
+        @synonyms "seed fingerprint, stale seed detector, reseed hash"
+    }
+  }
+
+  page "/seed-fingerprint" as SeedFingerprintPage -> SeedFingerprint
+}

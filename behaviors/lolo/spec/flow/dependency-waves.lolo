@@ -1,0 +1,20 @@
+app dependency-waves-spec [
+  version: "1.0.0",
+  description: "Design contract for ordering a dependency graph into publish waves. WAVES_REQUEST { nodes : [{ name, deps }] } answers WAVES_ANSWERED { order, waves, reach } or, when the graph has a cycle, WAVES_CYCLE { cycles }. A dep naming no node is ignored. order lists every node after each of its deps, ties by name. A node sits one wave after its deepest dep, so the nodes of a wave can run at once; waves hold sorted names. reach maps each node to all its transitive deps. A cycle is every strongly connected set of two or more nodes (a node depending on itself included), its members sorted and joined by ' <-> ', the list sorted. There is no cap on path length or node count: a cycle shows when a level reaches the node count."
+]
+
+orbital DependencyWavesSpec {
+  expects entity WavesRun [runtime] {
+    id : string!
+  }
+  expects trait Waves {
+    state ready {
+      WAVES_REQUEST -> ready
+    }
+    emits {
+      WAVES_ANSWERED { order : [string]!  waves : [[string]]!  reach : Map string [string]! }
+      WAVES_CYCLE { cycles : [string]! }
+    }
+  }
+  expects page "/dependency-waves" -> Waves
+}

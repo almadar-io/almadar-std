@@ -1,0 +1,22 @@
+app fork-env [
+  version: "1.0.0",
+  description: "Design contract for the hermetic environment of a forked server. FORK_ENV { base, credentialVars, allowReal, agentMock, mockLLM, integrationEnv } answers FORK_ENV_BUILT { env }: unless allowReal, every credentialVars key is stripped from base first; then AGENT_MOCK=true when agentMock and MOCK_LLM=true when mockLLM are set, then integrationEnv wins over all of those, and unless allowReal ALMADAR_INTEGRATIONS_MODE=mock and NODE_ENV=development are pinned last so no caller can override a sandbox back to a live mode. FORK_ROOT { env, schemaDir, cwd } answers FORK_ROOT_RESOLVED { root }: ALMADAR_PROJECT_ROOT, else ALMADAR_ROOT, else schemaDir when given, else cwd."
+]
+
+type EnvMap = Map string string
+
+orbital ForkEnvSpec {
+  expects entity ForkEnvRun [runtime] {
+    id : string!
+    env : EnvMap
+    root : string
+  }
+  expects trait ForkEnv {
+    state ready
+    emits {
+      FORK_ENV_BUILT { env : Map string string! }
+      FORK_ROOT_RESOLVED { root : string! }
+    }
+  }
+  expects page "/fork-env" -> ForkEnv
+}

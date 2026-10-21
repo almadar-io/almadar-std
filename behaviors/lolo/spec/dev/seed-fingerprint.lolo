@@ -1,0 +1,21 @@
+app seed-fingerprint [
+  version: "1.0.0",
+  description: "Design contract for the stale-seed detector. FINGERPRINT { fields } answers FINGERPRINTED { digest }: the lowercase hex SHA-256 of the compact JSON {generatorVersion, fields:[{name, type, intrinsic, default, relationTarget}]} over exactly what the mock seed generator consumes from each named field (a field with no name is skipped; intrinsic defaults to false, default to null, relationTarget is the target entity of a relation-typed field and null otherwise), so a renamed, retyped, re-defaulted, retagged or retargeted field, or a bumped generator version, changes the digest and a stored seed marker is reseeded. The digest of the same declaration is byte-identical to the one stored by the previous host."
+]
+
+type OrbValue = string | number | boolean | [OrbValue] | Map string OrbValue
+type FingerprintField = { name : string, type : string!, intrinsic : boolean, default : OrbValue, relation : { entity : string! } }
+
+orbital SeedFingerprintSpec {
+  expects entity FingerprintRun [runtime] {
+    id : string!
+    digest : string
+  }
+  expects trait SeedFingerprint {
+    state ready
+    emits {
+      FINGERPRINTED { digest : string! }
+    }
+  }
+  expects page "/seed-fingerprint" -> SeedFingerprint
+}

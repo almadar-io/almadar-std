@@ -1,0 +1,281 @@
+{
+ "atom": "codec/atoms/std-semver.lolo",
+ "trait": "Semver",
+ "note": "requestId is echoed on every answer; identical requests with different ids are distinct deliveries (EXEC-QUEUE-4 keys on the payload)",
+ "cases": [
+  {
+   "id": "two identical compares, different ids, both answer",
+   "steps": [
+    {
+     "event": "SEMVER_COMPARE",
+     "payload": {
+      "a": "1.0.0",
+      "b": "2.0.0",
+      "requestId": "a"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {
+      "requestId": "a"
+     }
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {
+      "requestId": "a"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_COMPARED",
+        "payload": {
+         "value": -1,
+         "requestId": "a"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "SEMVER_COMPARE",
+     "payload": {
+      "a": "1.0.0",
+      "b": "2.0.0",
+      "requestId": "b"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {
+      "requestId": "b"
+     }
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {
+      "requestId": "b"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_COMPARED",
+        "payload": {
+         "value": -1,
+         "requestId": "b"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "two identical satisfies, different ids, both answer",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "1.2.3",
+      "range": "^1.0.0",
+      "requestId": "r1"
+     }
+    },
+    {
+     "event": "SEMVER_DESUGAR",
+     "payload": {
+      "requestId": "r1"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {
+      "requestId": "r1"
+     }
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {
+      "requestId": "r1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_SATISFIED",
+        "payload": {
+         "value": true,
+         "requestId": "r1"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "1.2.3",
+      "range": "^1.0.0",
+      "requestId": "r2"
+     }
+    },
+    {
+     "event": "SEMVER_DESUGAR",
+     "payload": {
+      "requestId": "r2"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {
+      "requestId": "r2"
+     }
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {
+      "requestId": "r2"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_SATISFIED",
+        "payload": {
+         "value": true,
+         "requestId": "r2"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "interleaved bump then refusal keep their own ids",
+   "steps": [
+    {
+     "event": "SEMVER_BUMP",
+     "payload": {
+      "version": "1.2.3",
+      "kind": "minor",
+      "requestId": "x1"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {
+      "requestId": "x1"
+     }
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {
+      "requestId": "x1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_BUMPED",
+        "payload": {
+         "version": "1.3.0",
+         "requestId": "x1"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "SEMVER_BUMP",
+     "payload": {
+      "version": "1.2",
+      "kind": "minor",
+      "requestId": "x2"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {
+      "requestId": "x2"
+     }
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {
+      "requestId": "x2"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_REFUSED",
+        "payload": {
+         "operation": "bump",
+         "reason": "invalid",
+         "requestId": "x2"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "direct refusal echoes the id",
+   "steps": [
+    {
+     "event": "SEMVER_BUMP",
+     "payload": {
+      "version": "1.0.0",
+      "kind": "nope",
+      "requestId": "k9"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_REFUSED",
+        "payload": {
+         "operation": "bump",
+         "reason": "kind",
+         "requestId": "k9"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "no id answers an empty requestId",
+   "steps": [
+    {
+     "event": "SEMVER_COMPARE",
+     "payload": {
+      "a": "1.0.0",
+      "b": "1.0.0"
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_COMPARED",
+        "payload": {
+         "value": 0,
+         "requestId": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

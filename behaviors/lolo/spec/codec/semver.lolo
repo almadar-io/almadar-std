@@ -1,6 +1,6 @@
 app semver-spec [
   version: "1.0.0",
-  description: "Design contract for Semantic Versioning 2.0.0 arithmetic, the version logic the cascade needs without a JS dependency. SEMVER_PARSE { version } answers SEMVER_PARSED { valid, major, minor, patch, prerelease, build } (strict MAJOR.MINOR.PATCH[-pre][+build], no leading v or zeros; invalid answers valid false, never a refusal). SEMVER_COMPARE { a, b } answers SEMVER_COMPARED { value } -1, 0 or 1 by precedence (build ignored; a prerelease below its release; numeric identifiers numerically, below alphanumerics, alphanumerics by byte order, a shorter list below a longer one). SEMVER_BUMP { version, kind, identifier? } answers SEMVER_BUMPED { version } for major, minor, patch or prerelease with the node-semver increment rules. SEMVER_SATISFIES { version, range } answers SEMVER_SATISFIED { value } for exact, =, ^, ~, >=, >, <=, < and * single comparators, a prerelease satisfying only a comparator with a prerelease on the same MAJOR.MINOR.PATCH. SEMVER_MIN { range } answers SEMVER_MINIMUM { version }. SEMVER_REFUSED { operation, reason } with reason invalid, range, workspace (workspace:, link:, file: pins are not ranges), kind or identifier. Registry-aware next-version choice and the 0.x minor-to-patch demotion are cascade policy, not semver, and stay in almadar-cascade."
+  description: "Design contract for Semantic Versioning 2.0.0 arithmetic, the version logic the cascade needs without a JS dependency. SEMVER_PARSE { version } answers SEMVER_PARSED { requestId : string!  valid, major, minor, patch, prerelease, build } (strict MAJOR.MINOR.PATCH[-pre][+build], no leading v or zeros; invalid answers valid false, never a refusal). SEMVER_COMPARE { a, b } answers SEMVER_COMPARED { requestId : string!  value } -1, 0 or 1 by precedence (build ignored; a prerelease below its release; numeric identifiers numerically, below alphanumerics, alphanumerics by byte order, a shorter list below a longer one). SEMVER_BUMP { version, kind, identifier? } answers SEMVER_BUMPED { requestId : string!  version } for major, minor, patch or prerelease with the node-semver increment rules. SEMVER_SATISFIES { version, range } answers SEMVER_SATISFIED { requestId : string!  value } for exact, =, ^, ~, >=, >, <=, < and * single comparators, a prerelease satisfying only a comparator with a prerelease on the same MAJOR.MINOR.PATCH. SEMVER_MIN { range } answers SEMVER_MINIMUM { requestId : string!  version }. SEMVER_REFUSED { requestId : string!  operation, reason } with reason invalid, range, workspace (workspace:, link:, file: pins are not ranges), kind or identifier. Registry-aware next-version choice and the 0.x minor-to-patch demotion are cascade policy, not semver, and stay in almadar-cascade."
 ]
 
 orbital SemverSpec {
@@ -16,12 +16,12 @@ orbital SemverSpec {
       SEMVER_MIN -> idle
     }
     emits {
-      SEMVER_PARSED { valid : boolean!  major : number!  minor : number!  patch : number!  prerelease : string!  build : string! }
-      SEMVER_COMPARED { value : number! }
-      SEMVER_BUMPED { version : string! }
-      SEMVER_SATISFIED { value : boolean! }
-      SEMVER_MINIMUM { version : string! }
-      SEMVER_REFUSED { operation : string!  reason : string! }
+      SEMVER_PARSED { requestId : string!  valid : boolean!  major : number!  minor : number!  patch : number!  prerelease : string!  build : string! }
+      SEMVER_COMPARED { requestId : string!  value : number! }
+      SEMVER_BUMPED { requestId : string!  version : string! }
+      SEMVER_SATISFIED { requestId : string!  value : boolean! }
+      SEMVER_MINIMUM { requestId : string!  version : string! }
+      SEMVER_REFUSED { requestId : string!  operation : string!  reason : string! }
     }
   }
   expects page "/semver" -> Semver

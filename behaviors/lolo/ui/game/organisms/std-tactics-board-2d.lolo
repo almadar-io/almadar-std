@@ -1,6 +1,7 @@
 app std-tactics-board-2d [
   version: "1.0.0",
   description: "2D player-controlled grid-tactics board FRAME: composes grid-tactics (units authority) + fx-particles + round-flow + a player-intent/render trait onto one shared GameState with a canvas-2d render. Games consume this molecule and supply only theme/assets/units via config."
+  egress: ["https://almadar-kflow-assets.web.app"]
 ]
 orbital TacticsBoard2DOrbital {
   uses Tactics from "std/behaviors/std-grid-tactics"
@@ -9,6 +10,7 @@ orbital TacticsBoard2DOrbital {
   uses Score from "std/behaviors/std-score"
   uses AnimTick from "std/behaviors/std-anim-tick"
   uses SvgArt from "std/behaviors/std-svg-asset-art"
+  uses Pack from "std/behaviors/std-asset-pack"
 
   type Asset = {
     url : asset
@@ -35,6 +37,7 @@ orbital TacticsBoard2DOrbital {
     unitType : string
     name : string
     modelUrl : Asset!
+    assetKey : string
   }
   type Tile = {
     id : string
@@ -44,6 +47,7 @@ orbital TacticsBoard2DOrbital {
     terrain : string
     passable : boolean
     terrainSprite : Asset!
+    assetKey : string
   }
   type Fx = {
     id : string!
@@ -88,6 +92,7 @@ orbital TacticsBoard2DOrbital {
     z : number
     type : string
     assetUrl : Asset!
+    assetKey : string
     color : string
     elevation : number
   }
@@ -113,15 +118,15 @@ orbital TacticsBoard2DOrbital {
   entity GameState [runtime, shared] {
     id : string!
     units : [Unit] = [
-      { id: "p1", position: { x: 0, y: 0 }, x: 0, y: 0, z: 0, team: "player", health: 3, maxHealth: 3, unitType: "unit", name: "Player", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png", role: "player", category: "unit", animations: ["idle"], style: "vector", dimension: "2d", aspect: "1:1", name: "player-unit", thumbnailUrl: "" } },
-      { id: "e1", position: { x: 1, y: 1 }, x: 1, y: 1, z: 0, team: "enemy", health: 2, maxHealth: 2, unitType: "unit", name: "Enemy", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png", role: "enemy", category: "unit", animations: ["idle"], style: "vector", dimension: "2d", aspect: "1:1", name: "enemy-unit", thumbnailUrl: "" } }
+      { id: "p1", position: { x: 0, y: 0 }, x: 0, y: 0, z: 0, team: "player", health: 3, maxHealth: 3, unitType: "unit", name: "Player", modelUrl: {}, assetKey: "unit-art/soldier" },
+      { id: "e1", position: { x: 1, y: 1 }, x: 1, y: 1, z: 0, team: "enemy", health: 2, maxHealth: 2, unitType: "unit", name: "Enemy", modelUrl: {}, assetKey: "unit-art/soldier" }
     ]
     fx : [Fx] = []
     tiles : [Tile] = [
-      { id: "t-0-0", x: 0, y: 0, z: 0, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png", role: "tile", category: "terrain", animations: ["static"], style: "vector", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } },
-      { id: "t-0-1", x: 0, y: 1, z: 0, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png", role: "tile", category: "terrain", animations: ["static"], style: "vector", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } },
-      { id: "t-1-0", x: 1, y: 0, z: 0, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png", role: "tile", category: "terrain", animations: ["static"], style: "vector", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } },
-      { id: "t-1-1", x: 1, y: 1, z: 0, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png", role: "tile", category: "terrain", animations: ["static"], style: "vector", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }
+      { id: "t-0-0", x: 0, y: 0, z: 0, terrain: "grass", passable: true, terrainSprite: {}, assetKey: "tile-art/grass" },
+      { id: "t-0-1", x: 0, y: 1, z: 0, terrain: "grass", passable: true, terrainSprite: {}, assetKey: "tile-art/grass" },
+      { id: "t-1-0", x: 1, y: 0, z: 0, terrain: "grass", passable: true, terrainSprite: {}, assetKey: "tile-art/grass" },
+      { id: "t-1-1", x: 1, y: 1, z: 0, terrain: "grass", passable: true, terrainSprite: {}, assetKey: "tile-art/grass" }
     ]
     result : string = "none"
     selectedUnitId : string = ""
@@ -141,6 +146,11 @@ orbital TacticsBoard2DOrbital {
     animAttackerId : string = ""
     animAtkTicksLeft : number = 0
     svgAssetArt : Map string Map string [node] = {}
+    assetByKey : Map string Asset = {}
+    assetManifest : Map string Map string Asset = { terrains: {}, units: {}, features: {}, effects: {}, ui: {} }
+    assetPackStatus : string = "idle"
+    assetPackMissing : [string] = []
+    assetPackCursor : number = 0
   }
 
   trait TacticsAuthority = Tactics.traits.GridTactics -> GameState {
@@ -150,14 +160,14 @@ orbital TacticsBoard2DOrbital {
       gridHeight: 2
       attackDamage: 3
       units: [
-        { id: "p1", position: { x: 0, y: 0 }, x: 0, y: 0, z: 0, team: "player", health: 3, maxHealth: 3, unitType: "unit", name: "Player", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png", role: "player", category: "unit", animations: ["idle"], style: "vector", dimension: "2d", aspect: "1:1", name: "player-unit", thumbnailUrl: "" } },
-        { id: "e1", position: { x: 1, y: 1 }, x: 1, y: 1, z: 0, team: "enemy", health: 2, maxHealth: 2, unitType: "unit", name: "Enemy", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png", role: "enemy", category: "unit", animations: ["idle"], style: "vector", dimension: "2d", aspect: "1:1", name: "enemy-unit", thumbnailUrl: "" } }
+        { id: "p1", position: { x: 0, y: 0 }, x: 0, y: 0, z: 0, team: "player", health: 3, maxHealth: 3, unitType: "unit", name: "Player", modelUrl: {}, assetKey: "unit-art/soldier" },
+        { id: "e1", position: { x: 1, y: 1 }, x: 1, y: 1, z: 0, team: "enemy", health: 2, maxHealth: 2, unitType: "unit", name: "Enemy", modelUrl: {}, assetKey: "unit-art/soldier" }
       ]
       tiles: [
-        { id: "t-0-0", x: 0, y: 0, z: 0, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png", role: "tile", category: "terrain", animations: ["static"], style: "vector", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } },
-        { id: "t-0-1", x: 0, y: 1, z: 0, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png", role: "tile", category: "terrain", animations: ["static"], style: "vector", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } },
-        { id: "t-1-0", x: 1, y: 0, z: 0, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png", role: "tile", category: "terrain", animations: ["static"], style: "vector", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } },
-        { id: "t-1-1", x: 1, y: 1, z: 0, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png", role: "tile", category: "terrain", animations: ["static"], style: "vector", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }
+        { id: "t-0-0", x: 0, y: 0, z: 0, terrain: "grass", passable: true, terrainSprite: {}, assetKey: "tile-art/grass" },
+        { id: "t-0-1", x: 0, y: 1, z: 0, terrain: "grass", passable: true, terrainSprite: {}, assetKey: "tile-art/grass" },
+        { id: "t-1-0", x: 1, y: 0, z: 0, terrain: "grass", passable: true, terrainSprite: {}, assetKey: "tile-art/grass" },
+        { id: "t-1-1", x: 1, y: 1, z: 0, terrain: "grass", passable: true, terrainSprite: {}, assetKey: "tile-art/grass" }
       ]
     }
 
@@ -207,6 +217,16 @@ orbital TacticsBoard2DOrbital {
 
   trait VectorArt = SvgArt.traits.SvgAssetArtCollector -> GameState { }
 
+  trait AssetPack = Pack.traits.AssetPackLoader -> GameState {
+    config {
+      assetPack: "kflow/std-board-demo"
+      transport: "http"
+      packPath: "/shared/std-board-demo/assets.json"
+      groups: ["tile-art", "unit-art"]
+      expectedKeys: ["tile-art/grass", "unit-art/soldier"]
+    }
+  }
+
   trait PlayerIntent -> GameState [interaction, instance] {
     initial: playing
 
@@ -219,17 +239,17 @@ orbital TacticsBoard2DOrbital {
         (set @entity.turn 0)
         (render-ui main {
           type: game-shell
-          backgroundAsset: @config.backgroundAsset
-          hudBackgroundAsset: @config.hudBackgroundAsset
+          backgroundAsset: (if (!= @config.backgroundAssetKey "") (object/get @entity.assetByKey @config.backgroundAssetKey) @config.backgroundAsset)
+          hudBackgroundAsset: (if (!= @config.hudBackgroundAssetKey "") (object/get @entity.assetByKey @config.hudBackgroundAssetKey) @config.hudBackgroundAsset)
           hud: { type: game-hud, stats: (array/concat [ { label: "Result", value: @entity.result, format: "text" }, { label: "Phase", value: @entity.uiPhase, format: "text" }, { label: "Turn", value: @entity.turn }, { label: "Score", value: @entity.score } ] @config.extraStats) }
           addons: { type: stack, direction: vertical, gap: sm, children: (array/concat [ { type: button, action: END_TURN, label: "End Turn", variant: primary }, { type: button, action: CANCEL, label: "Cancel", variant: secondary } ] @config.extraAddons) }
           children: [ { type: canvas, fit: true, camera: { pos: { x: (/ (+ (array/min @entity.tiles "x") (array/max @entity.tiles "x")) 2), y: (/ (+ (array/min @entity.tiles "y") (array/max @entity.tiles "y")) 2) } }, projection: @config.projection, showMinimap: @config.showMinimap, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, drawables: (array/concat [
             { type: draw-shape-layer, items: (array/map @entity.tiles (fn t { type: draw-shape, shape: "cell", position: { x: (object/get @t x), y: (object/get @t y) }, fill: "#5c94fc", stroke: "rgba(255,255,255,0.35)", strokeWidth: 1 })) }
-            { type: draw-sprite-layer, items: (array/filter (array/map (array/filter @entity.tiles (fn t (not (object/get @entity.svgAssetArt (object/get @t terrain))))) (fn t { type: draw-sprite, position: { x: (object/get @t x), y: (object/get @t y) }, asset: (if (validate/required (object/get (object/get @t terrainSprite) url)) (object/get @t terrainSprite) (object/get (object/get @config.assetManifest terrains) (object/get @t terrain))), anchor: "center", width: 1, height: 1 })) (fn s (validate/required (object/get (object/get @s asset) url)))) }
+            { type: draw-sprite-layer, items: (array/filter (array/map (array/filter @entity.tiles (fn t (not (object/get @entity.svgAssetArt (object/get @t terrain))))) (fn t { type: draw-sprite, position: { x: (object/get @t x), y: (object/get @t y) }, asset: (if (validate/required (object/get (object/get @t terrainSprite) url)) (object/get @t terrainSprite) (if (and (validate/required (object/get @t assetKey)) (object/has @entity.assetByKey (object/get @t assetKey))) (object/get @entity.assetByKey (object/get @t assetKey)) (object/get (object/merge (object/get @config.assetManifest terrains) (object/get @entity.assetManifest terrains)) (object/get @t terrain)))), anchor: "center", width: 1, height: 1 })) (fn s (validate/required (object/get (object/get @s asset) url)))) }
           ] (array/concat
             (array/map (array/filter @entity.tiles (fn t (object/get @entity.svgAssetArt (object/get @t terrain)))) (fn t { type: draw-group, position: { x: (object/get @t x), y: (object/get @t y) }, items: (object/get (object/get @entity.svgAssetArt (object/get @t terrain)) "idle") }))
           (array/concat [
-            { type: draw-sprite-layer, items: (array/filter (array/map (array/filter @config.features (fn f (not (object/get @entity.svgAssetArt (object/get @f type))))) (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y) }, asset: (object/get @f assetUrl), anchor: "ground", width: 1, height: 1 })) (fn s (validate/required (object/get (object/get @s asset) url)))) }
+            { type: draw-sprite-layer, items: (array/filter (array/map (array/filter @config.features (fn f (not (object/get @entity.svgAssetArt (object/get @f type))))) (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y) }, asset: (if (validate/required (object/get (object/get @f assetUrl) url)) (object/get @f assetUrl) (if (and (validate/required (object/get @f assetKey)) (object/has @entity.assetByKey (object/get @f assetKey))) (object/get @entity.assetByKey (object/get @f assetKey)) (object/get (object/merge (object/get @config.assetManifest features) (object/get @entity.assetManifest features)) (object/get @f type)))), anchor: "ground", width: 1, height: 1 })) (fn s (validate/required (object/get (object/get @s asset) url)))) }
           ] (array/concat
             (array/map (array/filter @config.features (fn f (object/get @entity.svgAssetArt (object/get @f type)))) (fn f { type: draw-group, position: { x: (object/get @f x), y: (object/get @f y) }, items: (object/get (object/get @entity.svgAssetArt (object/get @f type)) "idle") }))
           (array/concat [
@@ -239,15 +259,15 @@ orbital TacticsBoard2DOrbital {
           ] (array/concat
             (array/map (array/filter @entity.units (fn u (object/get @entity.svgAssetArt (object/get @u unitType)))) (fn u (let ((unitStates (object/get @entity.svgAssetArt (object/get @u unitType))) (unitAnim (if (<= (object/get @u health) 0) "death" (if (and (== (object/get @u id) @entity.animAttackerId) (> @entity.animAtkTicksLeft 0)) "attack" (if (== (object/get @u id) @entity.animUnitId) @entity.animState "idle"))))) { type: draw-group, id: (object/get @u id), position: { x: (+ (object/get (object/get @u position) x) (/ (- 1 @config.vectorUnitScale) 2)), y: (+ (object/get (object/get @u position) y) (- 1 @config.vectorUnitScale)) }, scale: @config.vectorUnitScale, opacity: (if (> (array/len (array/filter @entity.actedIds (fn aid (== @aid (object/get @u id))))) 0) 0.45 1), items: (if (object/get @unitStates @unitAnim) (object/get @unitStates @unitAnim) (object/get @unitStates "idle")) })))
           (array/concat [
-            { type: draw-sprite-layer, items: (array/filter (array/map (array/filter @entity.units (fn u (not (object/get @entity.svgAssetArt (object/get @u unitType))))) (fn u (let ((unitAsset (if (validate/required (object/get (object/get @u modelUrl) url)) (object/get @u modelUrl) (object/get (object/get @config.assetManifest units) (object/get @u unitType)))) (unitUrl (object/get @unitAsset url)) (unitAnim (if (<= (object/get @u health) 0) "death" (if (and (== (object/get @u id) @entity.animAttackerId) (> @entity.animAtkTicksLeft 0)) "attack" (if (== (object/get @u id) @entity.animUnitId) @entity.animState "idle"))))) { type: draw-sprite, position: (object/get @u position), asset: (if (and @unitUrl (str/includes @unitUrl ".svg")) (object/merge @unitAsset { url: (str/concat (array/nth (str/split @unitUrl ".svg") 0) (str/concat "." (str/concat @unitAnim (str/concat "-" (str/concat (if (== @unitAnim "walk") (% @entity.animCounter 2) (if (== @unitAnim "idle") (% (math/floor (/ @entity.animCounter 3)) 4) 0))) ".svg")))) }) @unitAsset), id: (object/get @u id), anchor: "ground", width: 0.5, height: 0.5, opacity: (if (> (array/len (array/filter @entity.actedIds (fn aid (== @aid (object/get @u id))))) 0) 0.45 1) }))) (fn s (validate/required (object/get (object/get @s asset) url)))) }
+            { type: draw-sprite-layer, items: (array/filter (array/map (array/filter @entity.units (fn u (not (object/get @entity.svgAssetArt (object/get @u unitType))))) (fn u (let ((unitAsset (if (validate/required (object/get (object/get @u modelUrl) url)) (object/get @u modelUrl) (if (and (validate/required (object/get @u assetKey)) (object/has @entity.assetByKey (object/get @u assetKey))) (object/get @entity.assetByKey (object/get @u assetKey)) (object/get (object/merge (object/get @config.assetManifest units) (object/get @entity.assetManifest units)) (object/get @u unitType))))) (unitUrl (object/get @unitAsset url)) (unitAnim (if (<= (object/get @u health) 0) "death" (if (and (== (object/get @u id) @entity.animAttackerId) (> @entity.animAtkTicksLeft 0)) "attack" (if (== (object/get @u id) @entity.animUnitId) @entity.animState "idle"))))) { type: draw-sprite, position: (object/get @u position), asset: (if (and @unitUrl (str/includes @unitUrl ".svg")) (object/merge @unitAsset { url: (str/concat (array/nth (str/split @unitUrl ".svg") 0) (str/concat "." (str/concat @unitAnim (str/concat "-" (str/concat (if (== @unitAnim "walk") (% @entity.animCounter 2) (if (== @unitAnim "idle") (% (math/floor (/ @entity.animCounter 3)) 4) 0))) ".svg")))) }) @unitAsset), id: (object/get @u id), anchor: "ground", width: 0.5, height: 0.5, opacity: (if (> (array/len (array/filter @entity.actedIds (fn aid (== @aid (object/get @u id))))) 0) 0.45 1) }))) (fn s (validate/required (object/get (object/get @s asset) url)))) }
             { type: draw-shape-layer, items: (array/map (array/filter @entity.units (fn u (> (object/get @u health) 0))) (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), anchor: "ground", offsetX: -0.25, offsetY: -0.6, width: 0.5, height: 0.12, fill: "rgba(0,0,0,0.6)" })) }
             { type: draw-shape-layer, items: (array/map (array/filter @entity.units (fn u (> (object/get @u health) 0))) (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), anchor: "ground", offsetX: -0.25, offsetY: -0.6, width: (* 0.5 (/ (object/get @u health) (object/get @u maxHealth))), height: 0.12, fill: "#22c55e" })) }
             { type: draw-text-layer, items: (array/map (array/filter @entity.units (fn u (> (object/get @u health) 0))) (fn u { type: draw-text, text: (object/get @u name), position: (object/get @u position), offsetY: -0.85, color: "#ffffff" })) }
-            { type: draw-fx-layer, items: @entity.fx, tickMs: 500, presets: @config.fxPresets, art: @entity.svgAssetArt, sprites: (object/get @config.assetManifest effects) }
+            { type: draw-fx-layer, items: @entity.fx, tickMs: 500, presets: @config.fxPresets, art: @entity.svgAssetArt, sprites: (object/merge (object/get @config.assetManifest effects) (object/get @entity.assetManifest effects)) }
           ] (array/concat
             []
           [
-            { type: draw-sprite-layer, items: (array/map (array/filter (array/flatten (array/map @entity.units (fn u (array/flatten (array/map [ ["idle", 4], ["walk", 2], ["attack", 1], ["hit", 1], ["death", 1] ] (fn st (array/map (array/range 0 (array/nth @st 1)) (fn i (if (and (validate/required (object/get (object/get @u modelUrl) url)) (str/includes (object/get (object/get @u modelUrl) url) ".svg")) (str/concat (array/nth (str/split (object/get (object/get @u modelUrl) url) ".svg") 0) (str/concat "." (str/concat (array/nth @st 0) (str/concat "-" (str/concat @i ".svg"))))) ""))))))))) (fn w (!= @w ""))) (fn warmUrl { type: draw-sprite, position: { x: 0, y: 0 }, asset: { url: @warmUrl }, opacity: 0, width: 0.5, height: 0.5 })) }
+            { type: draw-sprite-layer, items: (array/map (array/filter (array/flatten (array/map @entity.units (fn u (array/flatten (array/map [ ["idle", 4], ["walk", 2], ["attack", 1], ["hit", 1], ["death", 1] ] (fn st (array/map (array/range 0 (array/nth @st 1)) (fn i (if (and (validate/required (object/get (if (validate/required (object/get (object/get @u modelUrl) url)) (object/get @u modelUrl) (if (and (validate/required (object/get @u assetKey)) (object/has @entity.assetByKey (object/get @u assetKey))) (object/get @entity.assetByKey (object/get @u assetKey)) {})) url)) (str/includes (object/get (if (validate/required (object/get (object/get @u modelUrl) url)) (object/get @u modelUrl) (if (and (validate/required (object/get @u assetKey)) (object/has @entity.assetByKey (object/get @u assetKey))) (object/get @entity.assetByKey (object/get @u assetKey)) {})) url) ".svg")) (str/concat (array/nth (str/split (object/get (if (validate/required (object/get (object/get @u modelUrl) url)) (object/get @u modelUrl) (if (and (validate/required (object/get @u assetKey)) (object/has @entity.assetByKey (object/get @u assetKey))) (object/get @entity.assetByKey (object/get @u assetKey)) {})) url) ".svg") 0) (str/concat "." (str/concat (array/nth @st 0) (str/concat "-" (str/concat @i ".svg"))))) ""))))))))) (fn w (!= @w ""))) (fn warmUrl { type: draw-sprite, position: { x: 0, y: 0 }, asset: { url: @warmUrl }, opacity: 0, width: 0.5, height: 0.5 })) }
           ])))))))) } ]
         })
 
@@ -315,17 +335,17 @@ orbital TacticsBoard2DOrbital {
         (set @entity.animAttackerId (if (== @entity.animAtkTicksLeft 0) "" @entity.animAttackerId))
         (render-ui main {
           type: game-shell
-          backgroundAsset: @config.backgroundAsset
-          hudBackgroundAsset: @config.hudBackgroundAsset
+          backgroundAsset: (if (!= @config.backgroundAssetKey "") (object/get @entity.assetByKey @config.backgroundAssetKey) @config.backgroundAsset)
+          hudBackgroundAsset: (if (!= @config.hudBackgroundAssetKey "") (object/get @entity.assetByKey @config.hudBackgroundAssetKey) @config.hudBackgroundAsset)
           hud: { type: game-hud, stats: (array/concat [ { label: "Result", value: @entity.result, format: "text" }, { label: "Phase", value: @entity.uiPhase, format: "text" }, { label: "Turn", value: @entity.turn }, { label: "Score", value: @entity.score } ] @config.extraStats) }
           addons: { type: stack, direction: vertical, gap: sm, children: (array/concat [ { type: button, action: END_TURN, label: "End Turn", variant: primary }, { type: button, action: CANCEL, label: "Cancel", variant: secondary } ] @config.extraAddons) }
           children: [ { type: canvas, fit: true, camera: { pos: { x: (/ (+ (array/min @entity.tiles "x") (array/max @entity.tiles "x")) 2), y: (/ (+ (array/min @entity.tiles "y") (array/max @entity.tiles "y")) 2) } }, projection: @config.projection, showMinimap: @config.showMinimap, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, drawables: (array/concat [
             { type: draw-shape-layer, items: (array/map @entity.tiles (fn t { type: draw-shape, shape: "cell", position: { x: (object/get @t x), y: (object/get @t y) }, fill: "#5c94fc", stroke: "rgba(255,255,255,0.35)", strokeWidth: 1 })) }
-            { type: draw-sprite-layer, items: (array/filter (array/map (array/filter @entity.tiles (fn t (not (object/get @entity.svgAssetArt (object/get @t terrain))))) (fn t { type: draw-sprite, position: { x: (object/get @t x), y: (object/get @t y) }, asset: (if (validate/required (object/get (object/get @t terrainSprite) url)) (object/get @t terrainSprite) (object/get (object/get @config.assetManifest terrains) (object/get @t terrain))), anchor: "center", width: 1, height: 1 })) (fn s (validate/required (object/get (object/get @s asset) url)))) }
+            { type: draw-sprite-layer, items: (array/filter (array/map (array/filter @entity.tiles (fn t (not (object/get @entity.svgAssetArt (object/get @t terrain))))) (fn t { type: draw-sprite, position: { x: (object/get @t x), y: (object/get @t y) }, asset: (if (validate/required (object/get (object/get @t terrainSprite) url)) (object/get @t terrainSprite) (if (and (validate/required (object/get @t assetKey)) (object/has @entity.assetByKey (object/get @t assetKey))) (object/get @entity.assetByKey (object/get @t assetKey)) (object/get (object/merge (object/get @config.assetManifest terrains) (object/get @entity.assetManifest terrains)) (object/get @t terrain)))), anchor: "center", width: 1, height: 1 })) (fn s (validate/required (object/get (object/get @s asset) url)))) }
           ] (array/concat
             (array/map (array/filter @entity.tiles (fn t (object/get @entity.svgAssetArt (object/get @t terrain)))) (fn t { type: draw-group, position: { x: (object/get @t x), y: (object/get @t y) }, items: (object/get (object/get @entity.svgAssetArt (object/get @t terrain)) "idle") }))
           (array/concat [
-            { type: draw-sprite-layer, items: (array/filter (array/map (array/filter @config.features (fn f (not (object/get @entity.svgAssetArt (object/get @f type))))) (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y) }, asset: (object/get @f assetUrl), anchor: "ground", width: 1, height: 1 })) (fn s (validate/required (object/get (object/get @s asset) url)))) }
+            { type: draw-sprite-layer, items: (array/filter (array/map (array/filter @config.features (fn f (not (object/get @entity.svgAssetArt (object/get @f type))))) (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y) }, asset: (if (validate/required (object/get (object/get @f assetUrl) url)) (object/get @f assetUrl) (if (and (validate/required (object/get @f assetKey)) (object/has @entity.assetByKey (object/get @f assetKey))) (object/get @entity.assetByKey (object/get @f assetKey)) (object/get (object/merge (object/get @config.assetManifest features) (object/get @entity.assetManifest features)) (object/get @f type)))), anchor: "ground", width: 1, height: 1 })) (fn s (validate/required (object/get (object/get @s asset) url)))) }
           ] (array/concat
             (array/map (array/filter @config.features (fn f (object/get @entity.svgAssetArt (object/get @f type)))) (fn f { type: draw-group, position: { x: (object/get @f x), y: (object/get @f y) }, items: (object/get (object/get @entity.svgAssetArt (object/get @f type)) "idle") }))
           (array/concat [
@@ -335,11 +355,11 @@ orbital TacticsBoard2DOrbital {
           ] (array/concat
             (array/map (array/filter @entity.units (fn u (object/get @entity.svgAssetArt (object/get @u unitType)))) (fn u (let ((unitStates (object/get @entity.svgAssetArt (object/get @u unitType))) (unitAnim (if (<= (object/get @u health) 0) "death" (if (and (== (object/get @u id) @entity.animAttackerId) (> @entity.animAtkTicksLeft 0)) "attack" (if (== (object/get @u id) @entity.animUnitId) @entity.animState "idle"))))) { type: draw-group, id: (object/get @u id), position: { x: (+ (object/get (object/get @u position) x) (/ (- 1 @config.vectorUnitScale) 2)), y: (+ (object/get (object/get @u position) y) (- 1 @config.vectorUnitScale)) }, scale: @config.vectorUnitScale, opacity: (if (> (array/len (array/filter @entity.actedIds (fn aid (== @aid (object/get @u id))))) 0) 0.45 1), items: (if (object/get @unitStates @unitAnim) (object/get @unitStates @unitAnim) (object/get @unitStates "idle")) })))
           (array/concat [
-            { type: draw-sprite-layer, items: (array/filter (array/map (array/filter @entity.units (fn u (not (object/get @entity.svgAssetArt (object/get @u unitType))))) (fn u (let ((unitAsset (if (validate/required (object/get (object/get @u modelUrl) url)) (object/get @u modelUrl) (object/get (object/get @config.assetManifest units) (object/get @u unitType)))) (unitUrl (object/get @unitAsset url)) (unitAnim (if (<= (object/get @u health) 0) "death" (if (and (== (object/get @u id) @entity.animAttackerId) (> @entity.animAtkTicksLeft 0)) "attack" (if (== (object/get @u id) @entity.animUnitId) @entity.animState "idle"))))) { type: draw-sprite, position: (object/get @u position), asset: (if (and @unitUrl (str/includes @unitUrl ".svg")) (object/merge @unitAsset { url: (str/concat (array/nth (str/split @unitUrl ".svg") 0) (str/concat "." (str/concat @unitAnim (str/concat "-" (str/concat (if (== @unitAnim "walk") (% @entity.animCounter 2) (if (== @unitAnim "idle") (% (math/floor (/ @entity.animCounter 3)) 4) 0))) ".svg")))) }) @unitAsset), id: (object/get @u id), anchor: "ground", width: 0.5, height: 0.5, opacity: (if (> (array/len (array/filter @entity.actedIds (fn aid (== @aid (object/get @u id))))) 0) 0.45 1) }))) (fn s (validate/required (object/get (object/get @s asset) url)))) }
+            { type: draw-sprite-layer, items: (array/filter (array/map (array/filter @entity.units (fn u (not (object/get @entity.svgAssetArt (object/get @u unitType))))) (fn u (let ((unitAsset (if (validate/required (object/get (object/get @u modelUrl) url)) (object/get @u modelUrl) (if (and (validate/required (object/get @u assetKey)) (object/has @entity.assetByKey (object/get @u assetKey))) (object/get @entity.assetByKey (object/get @u assetKey)) (object/get (object/merge (object/get @config.assetManifest units) (object/get @entity.assetManifest units)) (object/get @u unitType))))) (unitUrl (object/get @unitAsset url)) (unitAnim (if (<= (object/get @u health) 0) "death" (if (and (== (object/get @u id) @entity.animAttackerId) (> @entity.animAtkTicksLeft 0)) "attack" (if (== (object/get @u id) @entity.animUnitId) @entity.animState "idle"))))) { type: draw-sprite, position: (object/get @u position), asset: (if (and @unitUrl (str/includes @unitUrl ".svg")) (object/merge @unitAsset { url: (str/concat (array/nth (str/split @unitUrl ".svg") 0) (str/concat "." (str/concat @unitAnim (str/concat "-" (str/concat (if (== @unitAnim "walk") (% @entity.animCounter 2) (if (== @unitAnim "idle") (% (math/floor (/ @entity.animCounter 3)) 4) 0))) ".svg")))) }) @unitAsset), id: (object/get @u id), anchor: "ground", width: 0.5, height: 0.5, opacity: (if (> (array/len (array/filter @entity.actedIds (fn aid (== @aid (object/get @u id))))) 0) 0.45 1) }))) (fn s (validate/required (object/get (object/get @s asset) url)))) }
             { type: draw-shape-layer, items: (array/map (array/filter @entity.units (fn u (> (object/get @u health) 0))) (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), anchor: "ground", offsetX: -0.25, offsetY: -0.6, width: 0.5, height: 0.12, fill: "rgba(0,0,0,0.6)" })) }
             { type: draw-shape-layer, items: (array/map (array/filter @entity.units (fn u (> (object/get @u health) 0))) (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), anchor: "ground", offsetX: -0.25, offsetY: -0.6, width: (* 0.5 (/ (object/get @u health) (object/get @u maxHealth))), height: 0.12, fill: "#22c55e" })) }
             { type: draw-text-layer, items: (array/map (array/filter @entity.units (fn u (> (object/get @u health) 0))) (fn u { type: draw-text, text: (object/get @u name), position: (object/get @u position), offsetY: -0.85, color: "#ffffff" })) }
-            { type: draw-fx-layer, items: @entity.fx, tickMs: 500, presets: @config.fxPresets, art: @entity.svgAssetArt, sprites: (object/get @config.assetManifest effects) }
+            { type: draw-fx-layer, items: @entity.fx, tickMs: 500, presets: @config.fxPresets, art: @entity.svgAssetArt, sprites: (object/merge (object/get @config.assetManifest effects) (object/get @entity.assetManifest effects)) }
           ] []))))))) } ]
         })
     }
@@ -430,6 +450,14 @@ orbital TacticsBoard2DOrbital {
         @label "Background Asset"
         @description "Game-shell background panel sprite (theme chrome)."
         @tier "presentation"
+      backgroundAssetKey : string = ""
+        @label "Background Asset Key"
+        @description "group/name key of the declared asset pack (std-asset-pack) drawn as the game-shell background; empty = use backgroundAsset."
+        @tier "presentation"
+      hudBackgroundAssetKey : string = ""
+        @label "HUD Background Asset Key"
+        @description "group/name key of the declared asset pack drawn as the HUD panel background; empty = use hudBackgroundAsset."
+        @tier "presentation"
       hudBackgroundAsset : Asset = {}
         @label "HUD Background Asset"
         @description "HUD panel background sprite (theme chrome)."
@@ -449,5 +477,5 @@ orbital TacticsBoard2DOrbital {
     }
   }
 
-  page "/tactics-board-2d" as TacticsBoard2DPage -> TacticsAuthority, FxDecay, RoundLogic, ScoreKeeper, PlayerIntent, AnimClock, VectorArt
+  page "/tactics-board-2d" as TacticsBoard2DPage -> TacticsAuthority, FxDecay, RoundLogic, ScoreKeeper, PlayerIntent, AnimClock, VectorArt, AssetPack
 }

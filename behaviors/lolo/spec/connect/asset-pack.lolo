@@ -1,0 +1,22 @@
+app asset-pack-spec [
+  version: "1.0.0",
+  description: "Design contract for a board's asset pack loader. The board declares assetPack; at INIT the loader reads the pack manifest (AssetPackManifest in @almadar/core types/asset.ts), publishes assetByKey and the nested assetManifest, shows placeholders while loading and for every missing or failed key, and emits ASSET_PACK_MISSING { pack, key } once per such key and ASSET_PACK_FAILED { pack, message } when the pack cannot be read."
+]
+
+orbital AssetPackSpec {
+  expects entity StdAssetPack [runtime, shared] {
+    id : string!
+  }
+  expects trait AssetPackLoader {
+    state idle
+    state loading
+    state reporting
+    state failed
+    state ready
+    emits {
+      ASSET_PACK_MISSING { pack : string!  key : string! }
+      ASSET_PACK_FAILED { pack : string!  message : string! }
+    }
+  }
+  expects page "/std-asset-pack" -> AssetPackLoader
+}

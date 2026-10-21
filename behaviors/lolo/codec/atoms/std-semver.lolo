@@ -1,9 +1,10 @@
 app std-semver [
   version: "1.0.0",
-  description: "std-semver — Semantic Versioning 2.0.0 over str/*, array/* and math/*. SEMVER_PARSE { version } answers SEMVER_PARSED { valid, major, minor, patch, prerelease, build } (valid false with zeros when the text is not strict MAJOR.MINOR.PATCH[-pre][+build]: no leading v, no leading zeros). SEMVER_COMPARE { a, b } answers SEMVER_COMPARED { value } -1, 0 or 1 by semver precedence (build ignored; a prerelease sorts below its release; prerelease identifiers compare numerically when both numeric, numeric below alphanumeric, alphanumerics by byte order, a shorter list below a longer one with equal prefix). SEMVER_BUMP { version, kind, identifier? } answers SEMVER_BUMPED { version } for kind major, minor, patch or prerelease with the node-semver inc rules (a prerelease major/minor/patch graduates to its release, prerelease increments the rightmost numeric identifier or appends 0, identifier restarts the counter at identifier.0 unless the list already starts with it followed by a number); the build is dropped. SEMVER_SATISFIES { version, range } answers SEMVER_SATISFIED { value } for the single-comparator forms exact, =, ^, ~, >=, >, <=, < and *, with the node-semver rule that a prerelease satisfies only a comparator with a prerelease on the same MAJOR.MINOR.PATCH. SEMVER_MIN { range } answers SEMVER_MINIMUM { version } (the lowest version the range admits; refused for < and <=). SEMVER_REFUSED { operation, reason } with reason invalid (a version that does not parse), range (an unsupported or unparseable range: partials like ^1, x-ranges, compound ranges), workspace (a workspace:, link: or file: pin, never a version range), kind or identifier."
+  description: "std-semver — Semantic Versioning 2.0.0 over str/*, array/* and math/*. SEMVER_PARSE { version } answers SEMVER_PARSED { valid, major, minor, patch, prerelease, build } (valid false with zeros when the text is not strict MAJOR.MINOR.PATCH[-pre][+build]: no leading v, no leading zeros). SEMVER_COMPARE { a, b } answers SEMVER_COMPARED { value } -1, 0 or 1 by semver precedence (build ignored; a prerelease sorts below its release; prerelease identifiers compare numerically when both numeric, numeric below alphanumeric, alphanumerics by byte order, a shorter list below a longer one with equal prefix). SEMVER_BUMP { version, kind, identifier? } answers SEMVER_BUMPED { version } for kind major, minor, patch or prerelease with the node-semver inc rules (a prerelease major/minor/patch graduates to its release, prerelease increments the rightmost numeric identifier or appends 0, identifier restarts the counter at identifier.0 unless the list already starts with it followed by a number); the build is dropped. SEMVER_SATISFIES { version, range } answers SEMVER_SATISFIED { value } for the single-comparator forms exact, =, ^, ~, >=, >, <=, < and *, with the node-semver rule that a prerelease satisfies only a comparator with a prerelease on the same MAJOR.MINOR.PATCH. SEMVER_MIN { range } answers SEMVER_MINIMUM { version } (the lowest version the range admits; refused for < and <=). SEMVER_REFUSED { operation, reason }; every request takes an optional requestId that every answer and internal stage event echoes, so identical requests with different ids both complete inside one cascade with reason invalid (a version that does not parse), range (an unsupported or unparseable range: partials like ^1, x-ranges, compound ranges), workspace (a workspace:, link: or file: pin, never a version range), kind or identifier."
 ]
 uses Spec from "almadar-std/semver"
 
+type SemverPrim = { set : number!, op : string!, v : string!, lo : string!, lb : boolean! }
 type SemverParts = { ok : boolean!, major : number!, minor : number!, patch : number!, pre : [string]!, build : string! }
 
 orbital SemverOrbital {
@@ -15,8 +16,13 @@ orbital SemverOrbital {
     cmps : [number] = []
     kind : string = ""
     identifier : string = ""
-    rangeOp : string = ""
     reason : string = ""
+    requestId : string = ""
+    range : string = ""
+    cand : string = ""
+    prims : [SemverPrim] = []
+    nSets : number = 0
+    bad : boolean = false
     next : SemverParts = { ok: true, major: 0, minor: 0, patch: 0, pre: [], build: "" }
     value : number = 0
     satisfied : boolean = false
@@ -28,88 +34,124 @@ orbital SemverOrbital {
 
     state idle {
       SEMVER_PARSE -> idle
+        (set @entity.requestId (str/default ?requestId ""))
         (set @entity.op "parse")
+        (set @entity.bad false)
         (set @entity.inputs (array/append [] ?version))
-        (emit SEMVER_STAGE { })
+        (emit SEMVER_STAGE { requestId: @entity.requestId })
 
       SEMVER_COMPARE -> idle
+        (set @entity.requestId (str/default ?requestId ""))
         (set @entity.op "compare")
+        (set @entity.bad false)
         (set @entity.inputs (array/append (array/append [] ?a) ?b))
-        (emit SEMVER_STAGE { })
+        (emit SEMVER_STAGE { requestId: @entity.requestId })
 
       SEMVER_BUMP -> idle when (not (array/includes (str/split "major,minor,patch,prerelease" ",") ?kind))
-        (emit SEMVER_REFUSED { operation: "bump", reason: "kind" })
+        (set @entity.requestId (str/default ?requestId ""))
+        (emit SEMVER_REFUSED { requestId: @entity.requestId, operation: "bump", reason: "kind" })
       SEMVER_BUMP -> idle when (and (array/includes (str/split "major,minor,patch,prerelease" ",") ?kind) (!= (str/replace-pattern (str/default ?identifier "") "[0-9A-Za-z-]" "") ""))
-        (emit SEMVER_REFUSED { operation: "bump", reason: "identifier" })
+        (set @entity.requestId (str/default ?requestId ""))
+        (emit SEMVER_REFUSED { requestId: @entity.requestId, operation: "bump", reason: "identifier" })
       SEMVER_BUMP -> idle when (and (array/includes (str/split "major,minor,patch,prerelease" ",") ?kind) (== (str/replace-pattern (str/default ?identifier "") "[0-9A-Za-z-]" "") ""))
+        (set @entity.requestId (str/default ?requestId ""))
         (set @entity.op "bump")
+        (set @entity.bad false)
         (set @entity.kind ?kind)
         (set @entity.identifier (str/default ?identifier ""))
         (set @entity.inputs (array/append [] ?version))
-        (emit SEMVER_STAGE { })
+        (emit SEMVER_STAGE { requestId: @entity.requestId })
 
       SEMVER_SATISFIES -> idle when (or (str/startsWith (str/trim ?range) "workspace:") (or (str/startsWith (str/trim ?range) "link:") (str/startsWith (str/trim ?range) "file:")))
-        (emit SEMVER_REFUSED { operation: "satisfies", reason: "workspace" })
-      SEMVER_SATISFIES -> idle when (and (== (str/trim ?range) "*") (not (or (str/startsWith (str/trim ?range) "workspace:") (str/startsWith (str/trim ?range) "link:"))))
-        (set @entity.op "any")
-        (set @entity.inputs (array/append [] ?version))
-        (emit SEMVER_STAGE { })
-      SEMVER_SATISFIES -> idle when (and (!= (str/trim ?range) "*") (not (or (str/startsWith (str/trim ?range) "workspace:") (or (str/startsWith (str/trim ?range) "link:") (str/startsWith (str/trim ?range) "file:")))))
+        (set @entity.requestId (str/default ?requestId ""))
+        (emit SEMVER_REFUSED { requestId: @entity.requestId, operation: "satisfies", reason: "workspace" })
+      SEMVER_SATISFIES -> idle when (not (or (str/startsWith (str/trim ?range) "workspace:") (or (str/startsWith (str/trim ?range) "link:") (str/startsWith (str/trim ?range) "file:"))))
+        (set @entity.requestId (str/default ?requestId ""))
         (set @entity.op "satisfies")
-        (set @entity.rangeOp (let ((r (str/trim ?range))) (if (str/startsWith @r ">=") ">=" (if (str/startsWith @r "<=") "<=" (if (str/startsWith @r "^") "^" (if (str/startsWith @r "~") "~" (if (str/startsWith @r ">") ">" (if (str/startsWith @r "<") "<" (if (str/startsWith @r "=") "=" "")))))))))
-        (set @entity.inputs (array/append (array/append [] ?version) (str/slice (str/trim ?range) (str/len @entity.rangeOp) (str/len (str/trim ?range)))))
-        (emit SEMVER_STAGE { })
+        (set @entity.cand ?version)
+        (set @entity.range (str/trim ?range))
+        (emit SEMVER_DESUGAR { requestId: @entity.requestId })
 
       SEMVER_MIN -> idle when (or (str/startsWith (str/trim ?range) "workspace:") (or (str/startsWith (str/trim ?range) "link:") (str/startsWith (str/trim ?range) "file:")))
-        (emit SEMVER_REFUSED { operation: "min", reason: "workspace" })
-      SEMVER_MIN -> idle when (== (str/trim ?range) "*")
-        (emit SEMVER_MINIMUM { version: "0.0.0" })
-      SEMVER_MIN -> idle when (and (!= (str/trim ?range) "*") (not (or (str/startsWith (str/trim ?range) "workspace:") (or (str/startsWith (str/trim ?range) "link:") (str/startsWith (str/trim ?range) "file:")))))
-        (set @entity.op "min")
-        (set @entity.rangeOp (let ((r (str/trim ?range))) (if (str/startsWith @r ">=") ">=" (if (str/startsWith @r "<=") "<=" (if (str/startsWith @r "^") "^" (if (str/startsWith @r "~") "~" (if (str/startsWith @r ">") ">" (if (str/startsWith @r "<") "<" (if (str/startsWith @r "=") "=" "")))))))))
-        (set @entity.inputs (array/append [] (str/slice (str/trim ?range) (str/len @entity.rangeOp) (str/len (str/trim ?range)))))
-        (emit SEMVER_STAGE { })
+        (set @entity.requestId (str/default ?requestId ""))
+        (emit SEMVER_REFUSED { requestId: @entity.requestId, operation: "min", reason: "workspace" })
+      SEMVER_MIN -> idle when (not (or (str/startsWith (str/trim ?range) "workspace:") (or (str/startsWith (str/trim ?range) "link:") (str/startsWith (str/trim ?range) "file:"))))
+        (set @entity.requestId (str/default ?requestId ""))
+        (set @entity.op "minA")
+        (set @entity.cand "0.0.0")
+        (set @entity.range (str/trim ?range))
+        (emit SEMVER_DESUGAR { requestId: @entity.requestId })
+
+      SEMVER_DESUGAR -> idle
+        (set @entity.prims (array/flatten (array/map (array/range 0 (array/len (str/split @entity.range "||"))) (fn si (let ((st (str/trim (array/nth (str/split @entity.range "||") @si)))) (let ((hy (str/split @st " - "))) (let ((toks (if (> (array/len @hy) 1) (if (== (array/len @hy) 2) (array/append (array/append [] (str/concat ">=" (str/trim (array/nth @hy 0)))) (str/concat "<=" (str/trim (array/nth @hy 1)))) (array/append [] "!")) (if (== @st "") (array/append [] "*") (str/split (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replace-pattern @st "[ ]+" " ") ">= " ">=") "<= " "<=") "~> " "~>") "> " ">") "< " "<") "= " "=") "^ " "^") "~ " "~") " "))))) (array/flatten (array/map @toks (fn t (let ((op (if (str/startsWith @t ">=") ">=" (if (str/startsWith @t "<=") "<=" (if (str/startsWith @t "~>") "~" (if (str/startsWith @t ">") ">" (if (str/startsWith @t "<") "<" (if (str/startsWith @t "=") "=" (if (str/startsWith @t "^") "^" (if (str/startsWith @t "~") "~" ""))))))))) (ol (if (str/startsWith @t "~>") 2 (if (str/startsWith @t ">=") 2 (if (str/startsWith @t "<=") 2 (if (or (str/startsWith @t ">") (or (str/startsWith @t "<") (or (str/startsWith @t "=") (or (str/startsWith @t "^") (str/startsWith @t "~"))))) 1 0)))))) (let ((b0 (str/slice @t @ol (str/len @t)))) (let ((body (if (or (str/startsWith @b0 "v") (str/startsWith @b0 "V")) (str/slice @b0 1 (str/len @b0)) @b0))) (let ((dp (str/split (array/nth (str/split @body "+") 0) "-"))) (let ((core (if (== @body "") "*" (array/nth @dp 0))) (hasPre (> (array/len @dp) 1)) (pre (str/join (array/drop @dp 1) "-"))) (let ((nums (str/split @core "."))) (let ((okAll (if (and (<= (array/len @nums) 3) (array/every @nums (fn x (or (or (== @x "x") (or (== @x "X") (== @x "*"))) (and (> (str/len @x) 0) (and (== (str/replace-pattern @x "[0-9]" "") "") (or (== (str/len @x) 1) (!= (str/slice @x 0 1) "0")))))))) true false))) (let ((a0 (if (and @okAll (not (or (== (array/nth @nums 0) "x") (or (== (array/nth @nums 0) "X") (== (array/nth @nums 0) "*"))))) (str/to-int (array/nth @nums 0)) -1))) (let ((a1 (if (and @okAll (and (> (array/len @nums) 1) (and (>= @a0 0) (not (or (== (array/nth @nums 1) "x") (or (== (array/nth @nums 1) "X") (== (array/nth @nums 1) "*"))))))) (str/to-int (array/nth @nums 1)) -1))) (let ((a2 (if (and @okAll (and (> (array/len @nums) 2) (and (>= @a1 0) (not (or (== (array/nth @nums 2) "x") (or (== (array/nth @nums 2) "X") (== (array/nth @nums 2) "*"))))))) (str/to-int (array/nth @nums 2)) -1))) (let ((suf (if @hasPre (str/concat "-" @pre) ""))) (if (and @okAll (or (not @hasPre) (>= @a2 0))) (if (< @a0 0) (if (or (== @op ">") (== @op "<")) (array/append [] { set: @si, op: "<", v: "0.0.0-0", lo: "0.0.0", lb: false }) (array/append [] { set: @si, op: ">=", v: "0.0.0", lo: "0.0.0", lb: true })) (if (or (== @op "") (== @op "=")) (if (>= @a2 0) (array/append [] { set: @si, op: "=", v: (str/concat @a0 "." @a1 "." @a2 @suf), lo: (str/concat @a0 "." @a1 "." @a2 @suf), lb: true }) (if (>= @a1 0) (array/append (array/append [] { set: @si, op: ">=", v: (str/concat @a0 "." @a1 ".0"), lo: (str/concat @a0 "." @a1 ".0"), lb: true }) { set: @si, op: "<", v: (str/concat @a0 "." (+ @a1 1) ".0-0"), lo: "0.0.0", lb: false }) (array/append (array/append [] { set: @si, op: ">=", v: (str/concat @a0 ".0.0"), lo: (str/concat @a0 ".0.0"), lb: true }) { set: @si, op: "<", v: (str/concat (+ @a0 1) ".0.0-0"), lo: "0.0.0", lb: false }))) (if (== @op ">=") (if (>= @a2 0) (array/append [] { set: @si, op: ">=", v: (str/concat @a0 "." @a1 "." @a2 @suf), lo: (str/concat @a0 "." @a1 "." @a2 @suf), lb: true }) (if (>= @a1 0) (array/append [] { set: @si, op: ">=", v: (str/concat @a0 "." @a1 ".0"), lo: (str/concat @a0 "." @a1 ".0"), lb: true }) (array/append [] { set: @si, op: ">=", v: (str/concat @a0 ".0.0"), lo: (str/concat @a0 ".0.0"), lb: true }))) (if (== @op ">") (if (>= @a2 0) (array/append [] { set: @si, op: ">", v: (str/concat @a0 "." @a1 "." @a2 @suf), lo: (if @hasPre (str/concat (str/concat @a0 "." @a1 "." @a2 @suf) ".0") (str/concat @a0 "." @a1 "." (+ @a2 1))), lb: true }) (if (>= @a1 0) (array/append [] { set: @si, op: ">=", v: (str/concat @a0 "." (+ @a1 1) ".0"), lo: (str/concat @a0 "." (+ @a1 1) ".0"), lb: true }) (array/append [] { set: @si, op: ">=", v: (str/concat (+ @a0 1) ".0.0"), lo: (str/concat (+ @a0 1) ".0.0"), lb: true }))) (if (== @op "<") (if (>= @a2 0) (array/append [] { set: @si, op: "<", v: (str/concat @a0 "." @a1 "." @a2 @suf), lo: "0.0.0", lb: false }) (if (>= @a1 0) (array/append [] { set: @si, op: "<", v: (str/concat @a0 "." @a1 ".0-0"), lo: "0.0.0", lb: false }) (array/append [] { set: @si, op: "<", v: (str/concat @a0 ".0.0-0"), lo: "0.0.0", lb: false }))) (if (== @op "<=") (if (>= @a2 0) (array/append [] { set: @si, op: "<=", v: (str/concat @a0 "." @a1 "." @a2 @suf), lo: "0.0.0", lb: false }) (if (>= @a1 0) (array/append [] { set: @si, op: "<", v: (str/concat @a0 "." (+ @a1 1) ".0-0"), lo: "0.0.0", lb: false }) (array/append [] { set: @si, op: "<", v: (str/concat (+ @a0 1) ".0.0-0"), lo: "0.0.0", lb: false }))) (if (== @op "~") (if (>= @a2 0) (array/append (array/append [] { set: @si, op: ">=", v: (str/concat @a0 "." @a1 "." @a2 @suf), lo: (str/concat @a0 "." @a1 "." @a2 @suf), lb: true }) { set: @si, op: "<", v: (str/concat @a0 "." (+ @a1 1) ".0-0"), lo: "0.0.0", lb: false }) (if (>= @a1 0) (array/append (array/append [] { set: @si, op: ">=", v: (str/concat @a0 "." @a1 ".0"), lo: (str/concat @a0 "." @a1 ".0"), lb: true }) { set: @si, op: "<", v: (str/concat @a0 "." (+ @a1 1) ".0-0"), lo: "0.0.0", lb: false }) (array/append (array/append [] { set: @si, op: ">=", v: (str/concat @a0 ".0.0"), lo: (str/concat @a0 ".0.0"), lb: true }) { set: @si, op: "<", v: (str/concat (+ @a0 1) ".0.0-0"), lo: "0.0.0", lb: false }))) (if (>= @a2 0) (array/append (array/append [] { set: @si, op: ">=", v: (str/concat @a0 "." @a1 "." @a2 @suf), lo: (str/concat @a0 "." @a1 "." @a2 @suf), lb: true }) { set: @si, op: "<", v: (if (> @a0 0) (str/concat (+ @a0 1) ".0.0-0") (if (> @a1 0) (str/concat "0." (+ @a1 1) ".0-0") (str/concat "0.0." (+ @a2 1) "-0"))), lo: "0.0.0", lb: false }) (if (>= @a1 0) (array/append (array/append [] { set: @si, op: ">=", v: (str/concat @a0 "." @a1 ".0"), lo: (str/concat @a0 "." @a1 ".0"), lb: true }) { set: @si, op: "<", v: (if (> @a0 0) (str/concat (+ @a0 1) ".0.0-0") (str/concat @a0 "." (+ @a1 1) ".0-0")), lo: "0.0.0", lb: false }) (array/append (array/append [] { set: @si, op: ">=", v: (str/concat @a0 ".0.0"), lo: (str/concat @a0 ".0.0"), lb: true }) { set: @si, op: "<", v: (str/concat (+ @a0 1) ".0.0-0"), lo: "0.0.0", lb: false })))))))))) (array/append [] { set: @si, op: "!", v: "0.0.0", lo: "0.0.0", lb: false })))))))))))))))))))))))
+        (set @entity.bad (array/some @entity.prims (fn q (== @q.op "!"))))
+        (set @entity.nSets (+ 1 (array/reduce @entity.prims 0 (fn m q (math/max @m @q.set)))))
+        (set @entity.inputs (array/prepend (array/map @entity.prims (fn q @q.v)) @entity.cand))
+        (emit SEMVER_STAGE { requestId: @entity.requestId })
 
       SEMVER_STAGE -> idle
         (set @entity.parsed (array/map @entity.inputs (fn raw (let ((halves (str/split @raw "+"))) (let ((hasBuild (== (array/len @halves) 2)) (dparts (str/split (array/nth @halves 0) "-"))) (let ((nums (str/split (array/nth @dparts 0) ".")) (hasPre (> (array/len @dparts) 1)) (preStr (str/join (array/drop @dparts 1) "-")) (build (if @hasBuild (array/nth @halves 1) ""))) (let ((preIds (if @hasPre (str/split @preStr ".") []))) (let ((ok (if (and (<= (array/len @halves) 2) (and (== (array/len @nums) 3) (and (array/every @nums (fn n (and (> (str/len @n) 0) (and (== (str/replace-pattern @n "[0-9]" "") "") (or (== (str/len @n) 1) (!= (str/slice @n 0 1) "0")))))) (and (or (not @hasPre) (array/every @preIds (fn q (and (> (str/len @q) 0) (and (== (str/replace-pattern @q "[0-9A-Za-z-]" "") "") (or (!= (str/replace-pattern @q "[0-9]" "") "") (or (== (str/len @q) 1) (!= (str/slice @q 0 1) "0")))))))) (or (not @hasBuild) (array/every (str/split @build ".") (fn w (and (> (str/len @w) 0) (== (str/replace-pattern @w "[0-9A-Za-z-]" "") ""))))))))) true false))) { ok: @ok, major: (if @ok (str/to-int (array/nth @nums 0)) 0), minor: (if @ok (str/to-int (array/nth @nums 1)) 0), patch: (if @ok (str/to-int (array/nth @nums 2)) 0), pre: (if @ok @preIds []), build: (if @ok @build "") }))))))))
-        (set @entity.reason (if (== @entity.op "parse") "" (if (== @entity.op "min") (if (array/every @entity.parsed (fn p (== @p.ok true))) "" "range") (if (array/every @entity.parsed (fn p (== @p.ok true))) "" (if (or (== @entity.op "compare") (== (array/nth (array/map @entity.parsed (fn p (if @p.ok 1 0))) 0) 0)) "invalid" "range")))))
-        (set @entity.cmps (array/map (let ((p0 (array/nth @entity.parsed 0)) (p1 (if (> (array/len @entity.parsed) 1) (array/nth @entity.parsed 1) (array/nth @entity.parsed 0)))) (let ((hi (if (== @entity.rangeOp "^") (if (> @p1.major 0) { ok: true, major: (+ @p1.major 1), minor: 0, patch: 0, pre: (str/split "0" "."), build: "" } (if (> @p1.minor 0) { ok: true, major: 0, minor: (+ @p1.minor 1), patch: 0, pre: (str/split "0" "."), build: "" } { ok: true, major: 0, minor: 0, patch: (+ @p1.patch 1), pre: (str/split "0" "."), build: "" })) { ok: true, major: @p1.major, minor: (+ @p1.minor 1), patch: 0, pre: (str/split "0" "."), build: "" }))) (if (== @entity.op "satisfies") (array/append (array/append [] [@p0, @p1]) [@p0, @hi]) (array/append [] [@p0, @p1])))) (fn pr (let ((l (array/nth @pr 0)) (r (array/nth @pr 1))) (let ((d0 (math/sign (- @l.major @r.major))) (d1 (math/sign (- @l.minor @r.minor))) (d2 (math/sign (- @l.patch @r.patch)))) (let ((c (if (!= @d0 0) @d0 (if (!= @d1 0) @d1 @d2)))) (if (!= @c 0) @c (if (and (== (array/len @l.pre) 0) (== (array/len @r.pre) 0)) 0 (if (== (array/len @l.pre) 0) 1 (if (== (array/len @r.pre) 0) -1 (array/reduce (array/range 0 (math/max (array/len @l.pre) (array/len @r.pre))) 0 (fn acc i (if (!= @acc 0) @acc (let ((x (array/nth @l.pre @i)) (y (array/nth @r.pre @i))) (if (== @x null) -1 (if (== @y null) 1 (let ((xn (== (str/replace-pattern @x "[0-9]" "") "")) (yn (== (str/replace-pattern @y "[0-9]" "") ""))) (if (and @xn @yn) (math/sign (- (str/to-int @x) (str/to-int @y))) (if @xn -1 (if @yn 1 (if (< @x @y) -1 (if (> @x @y) 1 0))))))))))))))))))))))
-        (emit SEMVER_STAGED { })
+        (set @entity.reason (if (== @entity.op "parse") "" (if (and (array/every @entity.parsed (fn p (== @p.ok true))) (not @entity.bad)) "" (if (or (== @entity.op "compare") (== @entity.op "bump")) "invalid" (if (and (== @entity.op "satisfies") (== (array/nth (array/map @entity.parsed (fn p (if @p.ok 1 0))) 0) 0)) "invalid" "range")))))
+        (set @entity.cmps (array/map (let ((p0 (array/nth @entity.parsed 0)) (p1 (if (> (array/len @entity.parsed) 1) (array/nth @entity.parsed 1) (array/nth @entity.parsed 0)))) (if (== @entity.op "compare") (array/append [] [@p0, @p1]) (if (== @entity.op "minC") (array/flatten (array/map (array/range 0 (array/len @entity.prims)) (fn i (array/map (array/range 0 (array/len @entity.prims)) (fn j (let ((li (array/nth @entity.parsed @i)) (rj (array/nth @entity.parsed @j))) [@li, @rj])))))) (if (or (== @entity.op "satisfies") (or (== @entity.op "minA") (or (== @entity.op "minB") (== @entity.op "minD")))) (array/map (array/range 0 (array/len @entity.prims)) (fn i [@p0, (array/nth @entity.parsed (+ @i 1))])) (array/append [] [@p0, @p0]))))) (fn pr (let ((l (array/nth @pr 0)) (r (array/nth @pr 1))) (let ((d0 (math/sign (- @l.major @r.major))) (d1 (math/sign (- @l.minor @r.minor))) (d2 (math/sign (- @l.patch @r.patch)))) (let ((c (if (!= @d0 0) @d0 (if (!= @d1 0) @d1 @d2)))) (if (!= @c 0) @c (if (and (== (array/len @l.pre) 0) (== (array/len @r.pre) 0)) 0 (if (== (array/len @l.pre) 0) 1 (if (== (array/len @r.pre) 0) -1 (array/reduce (array/range 0 (math/max (array/len @l.pre) (array/len @r.pre))) 0 (fn acc i (if (!= @acc 0) @acc (let ((x (array/nth @l.pre @i)) (y (array/nth @r.pre @i))) (if (== @x null) -1 (if (== @y null) 1 (let ((xn (== (str/replace-pattern @x "[0-9]" "") "")) (yn (== (str/replace-pattern @y "[0-9]" "") ""))) (if (and @xn @yn) (math/sign (- (str/to-int @x) (str/to-int @y))) (if @xn -1 (if @yn 1 (if (< @x @y) -1 (if (> @x @y) 1 0))))))))))))))))))))))
+        (set @entity.satisfied (if (or (== @entity.op "satisfies") (or (== @entity.op "minA") (or (== @entity.op "minB") (== @entity.op "minD")))) (let ((v (array/nth @entity.parsed 0)) (n (array/len @entity.prims))) (if (array/some (array/range 0 @entity.nSets) (fn s (let ((idx (array/filter (array/range 0 @n) (fn i (== (array/nth (array/map @entity.prims (fn q @q.set)) @i) @s))))) (and (array/every @idx (fn i (let ((o (array/nth (array/map @entity.prims (fn q @q.op)) @i)) (c (array/nth @entity.cmps @i))) (if (== @o ">=") (>= @c 0) (if (== @o ">") (> @c 0) (if (== @o "<=") (<= @c 0) (if (== @o "<") (< @c 0) (== @c 0)))))))) (or (== (array/len @v.pre) 0) (array/some @idx (fn i (let ((cv (array/nth @entity.parsed (+ @i 1)))) (and (> (array/len @cv.pre) 0) (and (== @v.major @cv.major) (and (== @v.minor @cv.minor) (== @v.patch @cv.patch)))))))))))) true false)) false))
+        (emit SEMVER_STAGED { requestId: @entity.requestId })
 
       SEMVER_STAGED -> idle when (!= @entity.reason "")
-        (emit SEMVER_REFUSED { operation: @entity.op, reason: @entity.reason })
+        (emit SEMVER_REFUSED { requestId: @entity.requestId, operation: (if (str/startsWith @entity.op "min") "min" @entity.op), reason: @entity.reason })
 
       SEMVER_STAGED -> idle when (and (== @entity.reason "") (== @entity.op "parse"))
-        (emit SEMVER_PARSED { valid: (array/nth (array/map @entity.parsed (fn p @p.ok)) 0), major: (array/nth (array/map @entity.parsed (fn p @p.major)) 0), minor: (array/nth (array/map @entity.parsed (fn p @p.minor)) 0), patch: (array/nth (array/map @entity.parsed (fn p @p.patch)) 0), prerelease: (str/join (array/nth (array/map @entity.parsed (fn p @p.pre)) 0) "."), build: (array/nth (array/map @entity.parsed (fn p @p.build)) 0) })
+        (emit SEMVER_PARSED { requestId: @entity.requestId, valid: (array/nth (array/map @entity.parsed (fn p @p.ok)) 0), major: (array/nth (array/map @entity.parsed (fn p @p.major)) 0), minor: (array/nth (array/map @entity.parsed (fn p @p.minor)) 0), patch: (array/nth (array/map @entity.parsed (fn p @p.patch)) 0), prerelease: (str/join (array/nth (array/map @entity.parsed (fn p @p.pre)) 0) "."), build: (array/nth (array/map @entity.parsed (fn p @p.build)) 0) })
 
       SEMVER_STAGED -> idle when (and (== @entity.reason "") (== @entity.op "compare"))
-        (emit SEMVER_COMPARED { value: (array/nth @entity.cmps 0) })
-
-      SEMVER_STAGED -> idle when (and (== @entity.reason "") (== @entity.op "any"))
-        (emit SEMVER_SATISFIED { value: (== (array/len (array/nth (array/map @entity.parsed (fn p @p.pre)) 0)) 0) })
+        (emit SEMVER_COMPARED { requestId: @entity.requestId, value: (array/nth @entity.cmps 0) })
 
       SEMVER_STAGED -> idle when (and (== @entity.reason "") (== @entity.op "satisfies"))
-        (set @entity.satisfied (let ((v (array/nth @entity.parsed 0)) (lo (array/nth @entity.parsed 1)) (c0 (array/nth @entity.cmps 0)) (c1 (array/nth @entity.cmps 1))) (let ((inRange (if (or (== @entity.rangeOp "") (== @entity.rangeOp "=")) (== @c0 0) (if (== @entity.rangeOp ">=") (>= @c0 0) (if (== @entity.rangeOp ">") (> @c0 0) (if (== @entity.rangeOp "<=") (<= @c0 0) (if (== @entity.rangeOp "<") (< @c0 0) (and (>= @c0 0) (< @c1 0))))))))) (if (and @inRange (or (== (array/len @v.pre) 0) (and (> (array/len @lo.pre) 0) (and (== @v.major @lo.major) (and (== @v.minor @lo.minor) (== @v.patch @lo.patch)))))) true false))))
-        (emit SEMVER_SATISFIED { value: @entity.satisfied })
+        (emit SEMVER_SATISFIED { requestId: @entity.requestId, value: @entity.satisfied })
 
-      SEMVER_STAGED -> idle when (and (== @entity.reason "") (== @entity.op "min") (or (== @entity.rangeOp "<") (== @entity.rangeOp "<=")))
-        (emit SEMVER_REFUSED { operation: "min", reason: "range" })
+      SEMVER_STAGED -> idle when (and (== @entity.reason "") (and (== @entity.op "minA") @entity.satisfied))
+        (emit SEMVER_MINIMUM { requestId: @entity.requestId, version: "0.0.0" })
+      SEMVER_STAGED -> idle when (and (== @entity.reason "") (and (== @entity.op "minA") (not @entity.satisfied)))
+        (set @entity.op "minB")
+        (set @entity.cand "0.0.0-0")
+        (set @entity.inputs (array/prepend (array/map @entity.prims (fn q @q.v)) "0.0.0-0"))
+        (emit SEMVER_STAGE { requestId: @entity.requestId })
 
-      SEMVER_STAGED -> idle when (and (== @entity.reason "") (== @entity.op "min") (and (!= @entity.rangeOp "<") (!= @entity.rangeOp "<=")))
-        (set @entity.next (let ((p (array/nth @entity.parsed 0))) (if (== @entity.rangeOp ">") { ok: true, major: @p.major, minor: @p.minor, patch: (+ @p.patch 1), pre: [], build: "" } @p)))
-        (set @entity.version (str/concat @entity.next.major "." @entity.next.minor "." @entity.next.patch (if (> (array/len @entity.next.pre) 0) (str/concat "-" (str/join @entity.next.pre ".")) "")))
-        (emit SEMVER_MINIMUM { version: @entity.version })
+      SEMVER_STAGED -> idle when (and (== @entity.reason "") (and (== @entity.op "minB") @entity.satisfied))
+        (emit SEMVER_MINIMUM { requestId: @entity.requestId, version: "0.0.0-0" })
+      SEMVER_STAGED -> idle when (and (== @entity.reason "") (and (== @entity.op "minB") (not @entity.satisfied)))
+        (set @entity.op "minC")
+        (set @entity.inputs (array/map @entity.prims (fn q @q.lo)))
+        (emit SEMVER_STAGE { requestId: @entity.requestId })
+
+      SEMVER_STAGED -> idle when (and (== @entity.reason "") (== @entity.op "minC"))
+        (set @entity.cand (let ((n (array/len @entity.prims))) (let ((bests (array/filter (array/map (array/range 0 @entity.nSets) (fn s (let ((grp (array/filter (array/range 0 @n) (fn i (and (== (array/nth (array/map @entity.prims (fn q @q.set)) @i) @s) (array/nth (array/map @entity.prims (fn q @q.lb)) @i)))))) (array/find @grp (fn i (array/every @grp (fn j (>= (array/nth @entity.cmps (+ (* @i @n) @j)) 0)))))))) (fn b (!= @b null))))) (let ((ch (array/find @bests (fn c (array/every @bests (fn d (<= (array/nth @entity.cmps (+ (* @c @n) @d)) 0))))))) (if (== @ch null) "" (array/nth (array/map @entity.prims (fn q @q.lo)) @ch))))))
+        (emit SEMVER_PICKED { requestId: @entity.requestId })
+
+      SEMVER_PICKED -> idle when (== @entity.cand "")
+        (emit SEMVER_REFUSED { requestId: @entity.requestId, operation: "min", reason: "range" })
+      SEMVER_PICKED -> idle when (!= @entity.cand "")
+        (set @entity.op "minD")
+        (set @entity.inputs (array/prepend (array/map @entity.prims (fn q @q.v)) @entity.cand))
+        (emit SEMVER_STAGE { requestId: @entity.requestId })
+
+      SEMVER_STAGED -> idle when (and (== @entity.reason "") (and (== @entity.op "minD") @entity.satisfied))
+        (emit SEMVER_MINIMUM { requestId: @entity.requestId, version: @entity.cand })
+      SEMVER_STAGED -> idle when (and (== @entity.reason "") (and (== @entity.op "minD") (not @entity.satisfied)))
+        (emit SEMVER_REFUSED { requestId: @entity.requestId, operation: "min", reason: "range" })
 
       SEMVER_STAGED -> idle when (and (== @entity.reason "") (== @entity.op "bump"))
         (set @entity.next (let ((p (array/nth @entity.parsed 0))) (let ((hasPre (> (array/len @p.pre) 0))) (if (== @entity.kind "major") (if (and @hasPre (and (== @p.minor 0) (== @p.patch 0))) { ok: true, major: @p.major, minor: 0, patch: 0, pre: [], build: "" } { ok: true, major: (+ @p.major 1), minor: 0, patch: 0, pre: [], build: "" }) (if (== @entity.kind "minor") (if (and @hasPre (== @p.patch 0)) { ok: true, major: @p.major, minor: @p.minor, patch: 0, pre: [], build: "" } { ok: true, major: @p.major, minor: (+ @p.minor 1), patch: 0, pre: [], build: "" }) (if (== @entity.kind "patch") (if @hasPre { ok: true, major: @p.major, minor: @p.minor, patch: @p.patch, pre: [], build: "" } { ok: true, major: @p.major, minor: @p.minor, patch: (+ @p.patch 1), pre: [], build: "" }) (let ((bp (if @hasPre @p.patch (+ @p.patch 1))) (basePre (if @hasPre @p.pre []))) (let ((idx (array/reduce (array/range 0 (+ (array/len @basePre) 0)) -1 (fn acc i (if (and (!= (array/nth @basePre @i) null) (and (> (str/len (array/nth @basePre @i)) 0) (== (str/replace-pattern (array/nth @basePre @i) "[0-9]" "") ""))) @i @acc))))) (let ((inc (if (>= @idx 0) (array/map (array/range 0 (array/len @basePre)) (fn i (if (== @i @idx) (str/concat (+ (str/to-int (array/nth @basePre @i)) 1)) (array/nth @basePre @i)))) (array/append @basePre "0")))) { ok: true, major: @p.major, minor: @p.minor, patch: @bp, pre: (if (== @entity.identifier "") @inc (if (== (array/nth @inc 0) @entity.identifier) (if (and (!= (array/nth @inc 1) null) (and (> (str/len (array/nth @inc 1)) 0) (== (str/replace-pattern (array/nth @inc 1) "[0-9]" "") ""))) @inc (str/split (str/concat @entity.identifier ".0") ".")) (str/split (str/concat @entity.identifier ".0") "."))), build: "" })))))))))
         (set @entity.version (str/concat @entity.next.major "." @entity.next.minor "." @entity.next.patch (if (> (array/len @entity.next.pre) 0) (str/concat "-" (str/join @entity.next.pre ".")) "")))
-        (emit SEMVER_BUMPED { version: @entity.version })
+        (emit SEMVER_BUMPED { requestId: @entity.requestId, version: @entity.version })
     }
 
     emits {
-      SEMVER_STAGE -> internal { }
-      SEMVER_STAGED -> internal { }
+      SEMVER_DESUGAR -> internal { requestId : string! }
+      SEMVER_PICKED -> internal { requestId : string! }
+      SEMVER_STAGE -> internal { requestId : string! }
+      SEMVER_STAGED -> internal { requestId : string! }
       SEMVER_PARSED -> external {
+        requestId : string!
         valid : boolean!
         major : number!
         minor : number!
@@ -120,26 +162,31 @@ orbital SemverOrbital {
         @description "The parts of the version text; valid is false (parts zero) when it is not strict semver."
         @tier "primary"
       SEMVER_COMPARED -> external {
+        requestId : string!
         value : number!
       }
         @description "-1, 0 or 1: a is below, equal to or above b by semver precedence."
         @tier "primary"
       SEMVER_BUMPED -> external {
+        requestId : string!
         version : string!
       }
         @description "The version after the bump."
         @tier "primary"
       SEMVER_SATISFIED -> external {
+        requestId : string!
         value : boolean!
       }
         @description "Whether the version satisfies the range."
         @tier "primary"
       SEMVER_MINIMUM -> external {
+        requestId : string!
         version : string!
       }
         @description "The lowest version the range admits."
         @tier "primary"
       SEMVER_REFUSED -> external {
+        requestId : string!
         operation : string!
         reason : string!
       }
@@ -149,17 +196,20 @@ orbital SemverOrbital {
 
     listens {
       SEMVER_PARSE -> external {
+        requestId : string
         version : string!
       }
         @description "Parse this version text."
         @synonyms "parse semver, read version"
       SEMVER_COMPARE -> external {
+        requestId : string
         a : string!
         b : string!
       }
         @description "Compare two versions by semver precedence."
         @synonyms "compare versions, version order"
       SEMVER_BUMP -> external {
+        requestId : string
         version : string!
         kind : string!
         identifier : string
@@ -167,12 +217,14 @@ orbital SemverOrbital {
         @description "Increment a version: kind major, minor, patch or prerelease, with an optional prerelease identifier."
         @synonyms "next version, increment version"
       SEMVER_SATISFIES -> external {
+        requestId : string
         version : string!
         range : string!
       }
         @description "Whether the version falls in the range (exact, ^, ~, >=, >, <=, <, *)."
         @synonyms "version in range, range check"
       SEMVER_MIN -> external {
+        requestId : string
         range : string!
       }
         @description "The lowest version the range admits."

@@ -1,0 +1,374 @@
+{
+ "atom": "dev/atoms/std-log-levels.lolo",
+ "trait": "LogLevels",
+ "note": "Ported from packages/almadar-playground-runtime __tests__/logging-console.test.ts (toggleChanges, detailChanges, shownCount). A cleared level is level null. The namespace tree (buildNamespaceTree) is not ported yet.",
+ "cases": [
+  {
+   "id": "toggle-on-clears-below-and-sets-prefix",
+   "steps": [
+    {
+     "event": "LOG_TOGGLE",
+     "payload": {
+      "key": "almadar:integrations:knowledge",
+      "isNamespace": false,
+      "on": true,
+      "detail": false,
+      "overrides": [
+       {
+        "namespace": "almadar:integrations:knowledge:integration:paths",
+        "level": "WARN"
+       },
+       {
+        "namespace": "almadar:runtime:*",
+        "level": "INFO"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LOG_CHANGES",
+        "payload": {
+         "changes": [
+          {
+           "namespace": "almadar:integrations:knowledge:integration:paths",
+           "level": null
+          },
+          {
+           "namespace": "almadar:integrations:knowledge:*",
+           "level": "INFO"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "toggle-on-detail-sets-prefix-and-exact-name",
+   "steps": [
+    {
+     "event": "LOG_TOGGLE",
+     "payload": {
+      "key": "almadar:integrations",
+      "isNamespace": true,
+      "on": true,
+      "detail": true,
+      "overrides": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LOG_CHANGES",
+        "payload": {
+         "changes": [
+          {
+           "namespace": "almadar:integrations:*",
+           "level": "DEBUG"
+          },
+          {
+           "namespace": "almadar:integrations",
+           "level": "DEBUG"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "toggle-off-sets-warn",
+   "steps": [
+    {
+     "event": "LOG_TOGGLE",
+     "payload": {
+      "key": "almadar:integrations:knowledge",
+      "isNamespace": false,
+      "on": false,
+      "detail": false,
+      "overrides": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LOG_CHANGES",
+        "payload": {
+         "changes": [
+          {
+           "namespace": "almadar:integrations:knowledge:*",
+           "level": "WARN"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-own-prefix-override-not-cleared",
+   "steps": [
+    {
+     "event": "LOG_TOGGLE",
+     "payload": {
+      "key": "almadar:integrations:knowledge",
+      "isNamespace": false,
+      "on": true,
+      "detail": false,
+      "overrides": [
+       {
+        "namespace": "almadar:integrations:knowledge:*",
+        "level": "WARN"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LOG_CHANGES",
+        "payload": {
+         "changes": [
+          {
+           "namespace": "almadar:integrations:knowledge:*",
+           "level": "INFO"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-sibling-prefix-not-cleared",
+   "steps": [
+    {
+     "event": "LOG_TOGGLE",
+     "payload": {
+      "key": "almadar:integrations",
+      "isNamespace": false,
+      "on": true,
+      "detail": false,
+      "overrides": [
+       {
+        "namespace": "almadar:integrations2:x",
+        "level": "WARN"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LOG_CHANGES",
+        "payload": {
+         "changes": [
+          {
+           "namespace": "almadar:integrations:*",
+           "level": "INFO"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "detail-on-moves-shown-levels",
+   "steps": [
+    {
+     "event": "LOG_DETAIL",
+     "payload": {
+      "detail": true,
+      "overrides": [
+       {
+        "namespace": "almadar:integrations:*",
+        "level": "INFO"
+       },
+       {
+        "namespace": "almadar:runtime:*",
+        "level": "WARN"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LOG_CHANGES",
+        "payload": {
+         "changes": [
+          {
+           "namespace": "almadar:integrations:*",
+           "level": "DEBUG"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "detail-off-moves-debug-to-info",
+   "steps": [
+    {
+     "event": "LOG_DETAIL",
+     "payload": {
+      "detail": false,
+      "overrides": [
+       {
+        "namespace": "a:*",
+        "level": "DEBUG"
+       },
+       {
+        "namespace": "b:*",
+        "level": "ERROR"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LOG_CHANGES",
+        "payload": {
+         "changes": [
+          {
+           "namespace": "a:*",
+           "level": "INFO"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-detail-no-overrides",
+   "steps": [
+    {
+     "event": "LOG_DETAIL",
+     "payload": {
+      "detail": true,
+      "overrides": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LOG_CHANGES",
+        "payload": {
+         "changes": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "shown-counts-info-or-more-detailed",
+   "steps": [
+    {
+     "event": "LOG_SHOWN",
+     "payload": {
+      "namespaces": [
+       "almadar:integrations:knowledge:integration",
+       "almadar:integrations:knowledge:integration:paths",
+       "almadar:integrations:knowledge:vector:pathSearch"
+      ],
+      "levels": [
+       {
+        "namespace": "almadar:integrations:knowledge:integration",
+        "level": "INFO"
+       },
+       {
+        "namespace": "almadar:integrations:knowledge:integration:paths",
+        "level": "WARN"
+       },
+       {
+        "namespace": "almadar:integrations:knowledge:vector:pathSearch",
+        "level": "DEBUG"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LOG_SHOWN_COUNT",
+        "payload": {
+         "count": 2
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-unknown-level-not-shown",
+   "steps": [
+    {
+     "event": "LOG_SHOWN",
+     "payload": {
+      "namespaces": [
+       "a",
+       "b"
+      ],
+      "levels": [
+       {
+        "namespace": "a",
+        "level": "INFO"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LOG_SHOWN_COUNT",
+        "payload": {
+         "count": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-no-namespaces",
+   "steps": [
+    {
+     "event": "LOG_SHOWN",
+     "payload": {
+      "namespaces": [],
+      "levels": [
+       {
+        "namespace": "a",
+        "level": "INFO"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LOG_SHOWN_COUNT",
+        "payload": {
+         "count": 0
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

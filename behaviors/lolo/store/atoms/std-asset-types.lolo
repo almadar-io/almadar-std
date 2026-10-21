@@ -1,0 +1,41 @@
+app std-asset-types [
+  version: "1.0.0",
+  description: "std-asset-types — the one definition of the asset vocabulary. Entity Asset carries a visual asset (url, atlas, sprite, role, category, animations, style, fxKind, dimension, aspect, prompt, choreography); entity AssetPackManifest carries a board's pack (pack, version, base, assets keyed group/name). Boards and asset atoms compose these entities instead of redeclaring the shape."
+]
+orbital AssetTypesOrbital {
+  entity Asset [runtime] {
+    id : string!
+    key : string = ""
+    url : asset
+    atlas : asset
+    sprite : string = ""
+    name : string = ""
+    thumbnailUrl : string = ""
+    role : string = ""
+    category : string = ""
+    animations : [string]
+    style : "pixel" | "vector" | "hd" | "1-bit" | "isometric" | "lowpoly" = "pixel"
+    fxKind : "slash" | "puff" | "heal" | "trap" | "burst" = "burst"
+    dimension : "2d" | "3d" = "2d"
+    aspect : string = "1:1"
+    prompt : string = ""
+    choreography : Map string [string]
+  }
+
+  entity AssetPackManifest [runtime] {
+    id : string!
+    pack : string!
+    version : number!
+    base : string!
+    assets : [Asset]
+  }
+
+  trait AssetTypesHolder -> AssetPackManifest [lifecycle] {
+    initial: idle
+    state idle {
+      INIT -> idle
+    }
+  }
+
+  page "/asset-types" -> AssetTypesHolder
+}

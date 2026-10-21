@@ -1,0 +1,663 @@
+{
+ "atom": "store/atoms/std-owner-overlay.lolo",
+ "trait": "OwnerOverlay",
+ "note": "Ported from packages/almadar-playground-runtime __tests__/firestore-persistence-owner-overlay.test.ts; expected picks computed with python hashlib (sha256 of the owner id, first 4 bytes big-endian, modulo the sorted id count). The 'differs across owners' case is covered by pick-spreads-viewer-* naming distinct rows.",
+ "cases": [
+  {
+   "id": "pick-deterministic-first",
+   "steps": [
+    {
+     "event": "OVERLAY_PICK",
+     "payload": {
+      "rows": [
+       {
+        "id": "emp-1",
+        "name": "Alice",
+        "staffAccount": ""
+       },
+       {
+        "id": "emp-2",
+        "name": "Bob",
+        "staffAccount": ""
+       },
+       {
+        "id": "emp-3",
+        "name": "Carol",
+        "staffAccount": ""
+       }
+      ],
+      "ownerId": "viewer-42"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OVERLAY_PICKED",
+        "payload": {
+         "rowId": "emp-1",
+         "found": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pick-deterministic-repeat",
+   "steps": [
+    {
+     "event": "OVERLAY_PICK",
+     "payload": {
+      "rows": [
+       {
+        "id": "emp-1",
+        "name": "Alice",
+        "staffAccount": ""
+       },
+       {
+        "id": "emp-2",
+        "name": "Bob",
+        "staffAccount": ""
+       },
+       {
+        "id": "emp-3",
+        "name": "Carol",
+        "staffAccount": ""
+       }
+      ],
+      "ownerId": "viewer-42"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OVERLAY_PICKED",
+        "payload": {
+         "rowId": "emp-1",
+         "found": true
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "OVERLAY_PICK",
+     "payload": {
+      "rows": [
+       {
+        "id": "emp-1",
+        "name": "Alice",
+        "staffAccount": ""
+       },
+       {
+        "id": "emp-2",
+        "name": "Bob",
+        "staffAccount": ""
+       },
+       {
+        "id": "emp-3",
+        "name": "Carol",
+        "staffAccount": ""
+       }
+      ],
+      "ownerId": "viewer-42"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OVERLAY_PICKED",
+        "payload": {
+         "rowId": "emp-1",
+         "found": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pick-independent-of-read-order",
+   "steps": [
+    {
+     "event": "OVERLAY_PICK",
+     "payload": {
+      "rows": [
+       {
+        "id": "emp-3",
+        "name": "Carol",
+        "staffAccount": ""
+       },
+       {
+        "id": "emp-1",
+        "name": "Alice",
+        "staffAccount": ""
+       },
+       {
+        "id": "emp-2",
+        "name": "Bob",
+        "staffAccount": ""
+       }
+      ],
+      "ownerId": "viewer-7"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OVERLAY_PICKED",
+        "payload": {
+         "rowId": "emp-3",
+         "found": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pick-spreads-viewer-a",
+   "steps": [
+    {
+     "event": "OVERLAY_PICK",
+     "payload": {
+      "rows": [
+       {
+        "id": "emp-1",
+        "name": "Alice",
+        "staffAccount": ""
+       },
+       {
+        "id": "emp-2",
+        "name": "Bob",
+        "staffAccount": ""
+       },
+       {
+        "id": "emp-3",
+        "name": "Carol",
+        "staffAccount": ""
+       }
+      ],
+      "ownerId": "viewer-a"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OVERLAY_PICKED",
+        "payload": {
+         "rowId": "emp-1",
+         "found": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pick-spreads-viewer-b",
+   "steps": [
+    {
+     "event": "OVERLAY_PICK",
+     "payload": {
+      "rows": [
+       {
+        "id": "emp-1",
+        "name": "Alice",
+        "staffAccount": ""
+       },
+       {
+        "id": "emp-2",
+        "name": "Bob",
+        "staffAccount": ""
+       },
+       {
+        "id": "emp-3",
+        "name": "Carol",
+        "staffAccount": ""
+       }
+      ],
+      "ownerId": "viewer-b"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OVERLAY_PICKED",
+        "payload": {
+         "rowId": "emp-2",
+         "found": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pick-spreads-viewer-c",
+   "steps": [
+    {
+     "event": "OVERLAY_PICK",
+     "payload": {
+      "rows": [
+       {
+        "id": "emp-1",
+        "name": "Alice",
+        "staffAccount": ""
+       },
+       {
+        "id": "emp-2",
+        "name": "Bob",
+        "staffAccount": ""
+       },
+       {
+        "id": "emp-3",
+        "name": "Carol",
+        "staffAccount": ""
+       }
+      ],
+      "ownerId": "viewer-c"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OVERLAY_PICKED",
+        "payload": {
+         "rowId": "emp-3",
+         "found": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pick-spreads-viewer-d",
+   "steps": [
+    {
+     "event": "OVERLAY_PICK",
+     "payload": {
+      "rows": [
+       {
+        "id": "emp-1",
+        "name": "Alice",
+        "staffAccount": ""
+       },
+       {
+        "id": "emp-2",
+        "name": "Bob",
+        "staffAccount": ""
+       },
+       {
+        "id": "emp-3",
+        "name": "Carol",
+        "staffAccount": ""
+       }
+      ],
+      "ownerId": "viewer-d"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OVERLAY_PICKED",
+        "payload": {
+         "rowId": "emp-1",
+         "found": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pick-spreads-viewer-e",
+   "steps": [
+    {
+     "event": "OVERLAY_PICK",
+     "payload": {
+      "rows": [
+       {
+        "id": "emp-1",
+        "name": "Alice",
+        "staffAccount": ""
+       },
+       {
+        "id": "emp-2",
+        "name": "Bob",
+        "staffAccount": ""
+       },
+       {
+        "id": "emp-3",
+        "name": "Carol",
+        "staffAccount": ""
+       }
+      ],
+      "ownerId": "viewer-e"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OVERLAY_PICKED",
+        "payload": {
+         "rowId": "emp-1",
+         "found": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-empty-rows-found-false",
+   "steps": [
+    {
+     "event": "OVERLAY_PICK",
+     "payload": {
+      "rows": [],
+      "ownerId": "viewer-1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OVERLAY_PICKED",
+        "payload": {
+         "rowId": "",
+         "found": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-single-row-always-picked",
+   "steps": [
+    {
+     "event": "OVERLAY_PICK",
+     "payload": {
+      "rows": [
+       {
+        "id": "emp-2",
+        "name": "Bob",
+        "staffAccount": ""
+       }
+      ],
+      "ownerId": "viewer-9"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OVERLAY_PICKED",
+        "payload": {
+         "rowId": "emp-2",
+         "found": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "apply-stamps-only-picked-row",
+   "steps": [
+    {
+     "event": "OVERLAY_APPLY",
+     "payload": {
+      "rows": [
+       {
+        "id": "emp-1",
+        "name": "Alice",
+        "staffAccount": ""
+       },
+       {
+        "id": "emp-2",
+        "name": "Bob",
+        "staffAccount": ""
+       },
+       {
+        "id": "emp-3",
+        "name": "Carol",
+        "staffAccount": ""
+       }
+      ],
+      "fields": [
+       "staffAccount"
+      ],
+      "ownerId": "viewer-99"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OVERLAY_APPLIED",
+        "payload": {
+         "rows": [
+          {
+           "id": "emp-1",
+           "name": "Alice",
+           "staffAccount": ""
+          },
+          {
+           "id": "emp-2",
+           "name": "Bob",
+           "staffAccount": "viewer-99"
+          },
+          {
+           "id": "emp-3",
+           "name": "Carol",
+           "staffAccount": ""
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "apply-stamps-every-named-field",
+   "steps": [
+    {
+     "event": "OVERLAY_APPLY",
+     "payload": {
+      "rows": [
+       {
+        "id": "emp-1",
+        "name": "Alice",
+        "staffAccount": "",
+        "reviewer": ""
+       },
+       {
+        "id": "emp-2",
+        "name": "Bob",
+        "staffAccount": "",
+        "reviewer": ""
+       },
+       {
+        "id": "emp-3",
+        "name": "Carol",
+        "staffAccount": "",
+        "reviewer": ""
+       }
+      ],
+      "fields": [
+       "staffAccount",
+       "reviewer"
+      ],
+      "ownerId": "viewer-99"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OVERLAY_APPLIED",
+        "payload": {
+         "rows": [
+          {
+           "id": "emp-1",
+           "name": "Alice",
+           "staffAccount": "",
+           "reviewer": ""
+          },
+          {
+           "id": "emp-2",
+           "name": "Bob",
+           "staffAccount": "viewer-99",
+           "reviewer": "viewer-99"
+          },
+          {
+           "id": "emp-3",
+           "name": "Carol",
+           "staffAccount": "",
+           "reviewer": ""
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "apply-order-independent",
+   "steps": [
+    {
+     "event": "OVERLAY_APPLY",
+     "payload": {
+      "rows": [
+       {
+        "id": "emp-3",
+        "name": "Carol",
+        "staffAccount": ""
+       },
+       {
+        "id": "emp-1",
+        "name": "Alice",
+        "staffAccount": ""
+       },
+       {
+        "id": "emp-2",
+        "name": "Bob",
+        "staffAccount": ""
+       }
+      ],
+      "fields": [
+       "staffAccount"
+      ],
+      "ownerId": "viewer-7"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OVERLAY_APPLIED",
+        "payload": {
+         "rows": [
+          {
+           "id": "emp-3",
+           "name": "Carol",
+           "staffAccount": "viewer-7"
+          },
+          {
+           "id": "emp-1",
+           "name": "Alice",
+           "staffAccount": ""
+          },
+          {
+           "id": "emp-2",
+           "name": "Bob",
+           "staffAccount": ""
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-no-fields-unchanged",
+   "steps": [
+    {
+     "event": "OVERLAY_APPLY",
+     "payload": {
+      "rows": [
+       {
+        "id": "emp-1",
+        "name": "Alice",
+        "staffAccount": ""
+       },
+       {
+        "id": "emp-2",
+        "name": "Bob",
+        "staffAccount": ""
+       },
+       {
+        "id": "emp-3",
+        "name": "Carol",
+        "staffAccount": ""
+       }
+      ],
+      "fields": [],
+      "ownerId": "viewer-1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OVERLAY_APPLIED",
+        "payload": {
+         "rows": [
+          {
+           "id": "emp-1",
+           "name": "Alice",
+           "staffAccount": ""
+          },
+          {
+           "id": "emp-2",
+           "name": "Bob",
+           "staffAccount": ""
+          },
+          {
+           "id": "emp-3",
+           "name": "Carol",
+           "staffAccount": ""
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-no-rows-unchanged",
+   "steps": [
+    {
+     "event": "OVERLAY_APPLY",
+     "payload": {
+      "rows": [],
+      "fields": [
+       "staffAccount"
+      ],
+      "ownerId": "viewer-1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OVERLAY_APPLIED",
+        "payload": {
+         "rows": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

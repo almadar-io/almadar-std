@@ -20,6 +20,7 @@ type WorkspaceAccess = { user : string!, workspaces : [string]! }
 orbital WorkspaceOrbital {
   uses Storage from "std/behaviors/std-storage"
   uses Cli from "std/behaviors/std-cli"
+  uses Runner from "std/behaviors/std-step-runner"
   entity WorkspaceJob [runtime] {
     id : string!
     queue : [WorkspaceRequest] = []
@@ -42,11 +43,6 @@ orbital WorkspaceOrbital {
     outputs : [string] = []
     codes : [number] = []
     failures : [string] = []
-    argv : [string] = []
-    stepIn : string = ""
-    stepFeed : boolean = false
-    stdoutText : string = ""
-    stderrText : string = ""
     outValid : boolean = true
     entries : [WorkspaceEntry] = []
     paths : [string] = []
@@ -91,8 +87,6 @@ orbital WorkspaceOrbital {
     bstage : string = ""
     rawOuts : [bytes] = []
     stdoutBytes : bytes = ""
-    stepRaw : boolean = false
-    stepRawIn : bytes = ""
     since : string = ""
     incs : number = 0
     full : boolean = false
@@ -101,11 +95,19 @@ orbital WorkspaceOrbital {
 
   trait WorkspaceGit = Cli.traits.CliRunner {
     listens {
-      WorkspaceClient.WS_GIT_RUN -> CLI_RUN
+      WorkspaceSteps.STEP_CLI_RUN -> CLI_RUN
     }
     config {
       commands: ["git"]
       binaryOutput: true
+    }
+  }
+
+  trait WorkspaceSteps = Runner.traits.StepRunner {
+    listens {
+      WorkspaceClient.WS_STEPS_RUN -> STEPS_RUN
+      WorkspaceGit.CLI_DONE -> STEP_RAN
+      WorkspaceGit.CLI_FAILED -> STEP_CLI_FAILED
     }
   }
 
@@ -213,55 +215,19 @@ orbital WorkspaceOrbital {
         (emit WS_START { })
 
       WS_START -> working
-        (set @entity.cursor 0)
-        (set @entity.outputs [])
-        (set @entity.codes [])
-        (set @entity.failures [])
-        (set @entity.rawOuts [])
-        (emit WS_RUN { })
+        (emit WS_STEPS_RUN { requestId: "step", steps: @entity.steps, prefix: ["-c", "core.hooksPath=/dev/null", "-c", "core.fsmonitor=false", "-c", "protocol.allow=never"], env: (object/fromEntries [["PATH", @config.gitPath], ["LC_ALL", "C"], ["GIT_CEILING_DIRECTORIES", (os/path-dir @entity.dir)]]), rootDir: @config.root, repoDir: @entity.dir, dirFlag: "-C", rawInputs: @entity.rawInputs })
 
-      WS_RUN -> working
-        (set @entity.argv (array/concat ["-C", (if (== (object/get (array/nth @entity.steps @entity.cursor) scope) "root") @config.root @entity.dir), "-c", "core.hooksPath=/dev/null", "-c", "core.fsmonitor=false", "-c", "protocol.allow=never"] (object/get (array/nth @entity.steps @entity.cursor) args)))
-        (set @entity.stepIn (object/get (array/nth @entity.steps @entity.cursor) stdin))
-        (set @entity.stepFeed (object/get (array/nth @entity.steps @entity.cursor) feed))
-        (set @entity.stepRaw (object/get (array/nth @entity.steps @entity.cursor) raw))
-        (set @entity.stepRawIn (if (object/get (array/nth @entity.steps @entity.cursor) raw) (array/nth @entity.rawInputs @entity.cursor) (bytes/from-string "")))
-        (emit WS_EXEC { })
-
-      WS_EXEC -> working when (not @entity.stepFeed)
-        (emit WS_GIT_RUN { stage: "step", argv: @entity.argv, env: (object/fromEntries [["PATH", @config.gitPath], ["LC_ALL", "C"], ["GIT_CEILING_DIRECTORIES", (os/path-dir @entity.dir)]]) })
-      WS_EXEC -> working when @entity.stepFeed
-        (emit WS_GIT_RUN { stage: "step", argv: @entity.argv, env: (object/fromEntries [["PATH", @config.gitPath], ["LC_ALL", "C"], ["GIT_CEILING_DIRECTORIES", (os/path-dir @entity.dir)]]), stdin: (if @entity.stepRaw @entity.stepRawIn (bytes/from-string @entity.stepIn)) })
-      WS_GIT_RAN -> working when (and (!= @payload.exitCode 0) (not (object/get (array/nth @entity.steps @entity.cursor) tolerate)))
-        (set @entity.stdoutBytes @payload.stdoutBytes)
-        (set @entity.outValid (base64/valid @payload.stdoutBytes))
-        (set @entity.stdoutText (if (base64/valid @payload.stdoutBytes) (bytes/to-string @payload.stdoutBytes) ""))
-        (set @entity.stderrText @payload.stderr)
-        (emit WS_FAIL { code: "", message: (str/concat "git " (array/nth (object/get (array/nth @entity.steps @entity.cursor) args) 0) ": " (str/default (str/trim @entity.stderrText) (str/trim @entity.stdoutText))) })
-      WS_GIT_RAN -> working when (and (or (== @payload.exitCode 0) (object/get (array/nth @entity.steps @entity.cursor) tolerate)) (< (+ @entity.cursor 1) (array/len @entity.steps)))
-        (set @entity.stdoutBytes @payload.stdoutBytes)
-        (set @entity.outValid (base64/valid @payload.stdoutBytes))
-        (set @entity.stdoutText (if (base64/valid @payload.stdoutBytes) (bytes/to-string @payload.stdoutBytes) ""))
-        (set @entity.stderrText @payload.stderr)
-        (set @entity.outputs (array/append @entity.outputs @entity.stdoutText))
-        (set @entity.rawOuts (array/append @entity.rawOuts @entity.stdoutBytes))
-        (set @entity.codes (array/append @entity.codes @payload.exitCode))
-        (set @entity.failures (array/append @entity.failures @entity.stderrText))
-        (set @entity.cursor (+ @entity.cursor 1))
-        (emit WS_RUN { })
-      WS_GIT_RAN -> working when (and (or (== @payload.exitCode 0) (object/get (array/nth @entity.steps @entity.cursor) tolerate)) (>= (+ @entity.cursor 1) (array/len @entity.steps)))
-        (set @entity.stdoutBytes @payload.stdoutBytes)
-        (set @entity.outValid (base64/valid @payload.stdoutBytes))
-        (set @entity.stdoutText (if (base64/valid @payload.stdoutBytes) (bytes/to-string @payload.stdoutBytes) ""))
-        (set @entity.stderrText @payload.stderr)
-        (set @entity.outputs (array/append @entity.outputs @entity.stdoutText))
-        (set @entity.rawOuts (array/append @entity.rawOuts @entity.stdoutBytes))
-        (set @entity.codes (array/append @entity.codes @payload.exitCode))
-        (set @entity.failures (array/append @entity.failures @entity.stderrText))
+      WS_STEPS_DONE -> working
+        (set @entity.outputs @payload.outputs)
+        (set @entity.rawOuts @payload.rawOuts)
+        (set @entity.codes @payload.codes)
+        (set @entity.failures @payload.failures)
         (emit WS_SCRIPT_DONE { })
 
-      WS_GIT_FAILED -> working
-        (emit WS_FAIL { code: "SERVICE_ERROR", message: @payload.error })
+      WS_STEPS_FAILED -> working when (== @payload.code "step_failed")
+        (emit WS_FAIL { code: "", message: (str/concat "git " (array/nth (object/get (array/nth @entity.steps @payload.index) args) 0) ": " (str/default (str/trim @payload.stderr) (str/trim @payload.stdout))) })
+      WS_STEPS_FAILED -> working when (!= @payload.code "step_failed")
+        (emit WS_FAIL { code: "SERVICE_ERROR", message: @payload.stderr })
 
       WS_STEP_ERROR -> working
         (emit WS_FAIL { code: "SERVICE_ERROR", message: @payload.error })
@@ -892,17 +858,17 @@ orbital WorkspaceOrbital {
         @tier "internal"
       WS_START -> internal { }
         @tier "internal"
-      WS_RUN -> internal { }
-        @tier "internal"
-      WS_EXEC -> internal { }
-        @tier "internal"
-      WS_GIT_RUN {
-        stage : string!
-        argv : [string]!
-        env : Map string string
-        stdin : bytes
+      WS_STEPS_RUN {
+        requestId : string!
+        steps : [WorkspaceStep]!
+        prefix : [string]!
+        env : Map string string!
+        rootDir : string!
+        repoDir : string!
+        dirFlag : string!
+        rawInputs : [bytes]!
       }
-        @description "One git step, run by the WorkspaceGit sibling (std-cli)."
+        @description "One run of git steps, sequenced by the WorkspaceSteps sibling (std-step-runner)."
         @tier "internal"
       WS_SCRIPT_DONE -> internal { }
         @tier "internal"
@@ -1038,23 +1004,24 @@ orbital WorkspaceOrbital {
     }
 
     listens {
-      WS_GIT_RAN {
-        stage : string!
-        exitCode : number!
-        signal : number!
-        stdout : string!
-        stdoutBytes : bytes!
-        stderr : string!
+      WS_STEPS_DONE {
+        requestId : string!
+        outputs : [string]!
+        rawOuts : [bytes]!
+        codes : [number]!
+        failures : [string]!
       }
-        @description "std-cli's CLI_DONE: one git step exited, with its code and output."
-      WS_GIT_FAILED {
-        stage : string!
-        error : string!
+        @description "std-step-runner's STEPS_DONE: every step ran, with each step's output, bytes, code and stderr."
+      WS_STEPS_FAILED {
+        requestId : string!
+        index : number!
         code : string!
+        stderr : string!
+        stdout : string!
       }
-        @description "std-cli's CLI_FAILED: one git step could not be run."
-      WorkspaceGit.CLI_DONE -> WS_GIT_RAN
-      WorkspaceGit.CLI_FAILED -> WS_GIT_FAILED
+        @description "std-step-runner's STEPS_FAILED: a step failed untolerated, or git could not be run."
+      WorkspaceSteps.STEPS_DONE -> WS_STEPS_DONE
+      WorkspaceSteps.STEPS_FAILED -> WS_STEPS_FAILED
       WORKSPACE_TREE {
         workspace : string!
         path : string
@@ -1225,5 +1192,5 @@ orbital WorkspaceOrbital {
     }
   }
 
-  page "/workspace" as WorkspacePage -> WorkspaceClient, WorkspaceStore, WorkspaceGit
+  page "/workspace" as WorkspacePage -> WorkspaceClient, WorkspaceStore, WorkspaceGit, WorkspaceSteps
 }

@@ -1,0 +1,23 @@
+app log-levels [
+  version: "1.0.0",
+  description: "Design contract for the logging console's level changes. LOG_TOGGLE { key, isNamespace, on, detail, overrides } answers LOG_CHANGES { changes }: the level is DEBUG when on with detail, INFO when on, WARN when off; every explicit override strictly under key: (not key:* itself) is cleared (level absent), then key:* is set to the level, then key itself when a logger exists for exactly key. LOG_DETAIL { detail, overrides } answers LOG_CHANGES moving every shown (DEBUG or INFO) override to DEBUG with detail and INFO without, leaving WARN and ERROR alone. LOG_SHOWN { namespaces, levels } answers LOG_SHOWN_COUNT { count }: how many of the namespaces have a known level of INFO or more detailed. PENDING (waits on tree/fold): LOG_TREE { namespaces } answering LOG_TREE_BUILT { nodes } — the namespaces split on a colon into a tree of {key, label, isNamespace, children, namespaces}, single-child chains with no logger of their own merged into one row, siblings sorted, and a single shared top prefix opening onto its children labelled with their full key (cases: logging-console.test.ts buildNamespaceTree)."
+]
+
+type LevelEntry = { namespace : string!, level : string! }
+type LogChange = { namespace : string!, level : string }
+
+orbital LogLevelsSpec {
+  expects entity LogLevelsRun [runtime] {
+    id : string!
+    changes : [LogChange]
+    count : number
+  }
+  expects trait LogLevels {
+    state ready
+    emits {
+      LOG_CHANGES { changes : [LogChange]! }
+      LOG_SHOWN_COUNT { count : number! }
+    }
+  }
+  expects page "/log-levels" -> LogLevels
+}

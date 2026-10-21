@@ -1,11 +1,13 @@
 app std-crew-board-2d [
   version: "1.0.0",
   description: "2D multi-unit crew-management board FRAME: composes hero-nav (unit-by-id move authority, no combat) + fx-particles onto one shared GameState with a canvas-2d render and select/deselect/move intent. Games consume this molecule and supply only theme/assets/units/tiles via config."
+  egress: ["https://almadar-kflow-assets.web.app"]
 ]
 orbital CrewBoard2DOrbital {
   uses Nav from "std/behaviors/std-hero-nav"
   uses Particles from "std/behaviors/std-fx-particles"
   uses AnimTick from "std/behaviors/std-anim-tick"
+  uses Pack from "std/behaviors/std-asset-pack"
 
   type Asset = {
     url : asset
@@ -32,6 +34,7 @@ orbital CrewBoard2DOrbital {
     unitType : string
     name : string
     modelUrl : Asset
+    assetKey : string
   }
   type Tile = {
     id : string
@@ -41,6 +44,7 @@ orbital CrewBoard2DOrbital {
     terrain : string
     passable : boolean
     terrainSprite : Asset
+    assetKey : string
   }
   type Fx = {
     id : string!
@@ -85,6 +89,7 @@ orbital CrewBoard2DOrbital {
     z : number
     type : string
     assetUrl : Asset
+    assetKey : string
     color : string
     elevation : number
   }
@@ -93,18 +98,19 @@ orbital CrewBoard2DOrbital {
     units : Map string Asset
     features : Map string Asset
     effects : Map string Asset
+    ui : Map string Asset
   }
 
   entity GameState [runtime, shared] {
     id : string!
     units : [Unit] = [
-      { id: "c1", position: { x: 1, y: 1 }, x: 1, y: 1, z: 0, team: "player", health: 10, maxHealth: 10, unitType: "crew", name: "Crew", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png", role: "player", category: "unit", animations: ["idle"], style: "vector", dimension: "2d", aspect: "1:1", name: "crew-unit", thumbnailUrl: "" } }
+      { id: "c1", position: { x: 1, y: 1 }, x: 1, y: 1, z: 0, team: "player", health: 10, maxHealth: 10, unitType: "crew", name: "Crew", modelUrl: {}, assetKey: "unit-art/soldier" }
     ]
     tiles : [Tile] = [
-      { id: "t-0-0", x: 0, y: 0, z: 0, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png", role: "tile", category: "terrain", animations: ["static"], style: "vector", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } },
-      { id: "t-0-1", x: 0, y: 1, z: 0, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png", role: "tile", category: "terrain", animations: ["static"], style: "vector", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } },
-      { id: "t-1-0", x: 1, y: 0, z: 0, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png", role: "tile", category: "terrain", animations: ["static"], style: "vector", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } },
-      { id: "t-1-1", x: 1, y: 1, z: 0, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png", role: "tile", category: "terrain", animations: ["static"], style: "vector", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }
+      { id: "t-0-0", x: 0, y: 0, z: 0, terrain: "grass", passable: true, terrainSprite: {}, assetKey: "tile-art/grass" },
+      { id: "t-0-1", x: 0, y: 1, z: 0, terrain: "grass", passable: true, terrainSprite: {}, assetKey: "tile-art/grass" },
+      { id: "t-1-0", x: 1, y: 0, z: 0, terrain: "grass", passable: true, terrainSprite: {}, assetKey: "tile-art/grass" },
+      { id: "t-1-1", x: 1, y: 1, z: 0, terrain: "grass", passable: true, terrainSprite: {}, assetKey: "tile-art/grass" }
     ]
     movesLeft : number = 0
     fx : [Fx] = []
@@ -118,6 +124,11 @@ orbital CrewBoard2DOrbital {
     animUnitId : string = ""
     animState : string = "idle"
     animTicksLeft : number = 0
+    assetByKey : Map string Asset = {}
+    assetManifest : Map string Map string Asset = { terrains: {}, units: {}, features: {}, effects: {}, ui: {} }
+    assetPackStatus : string = "idle"
+    assetPackMissing : [string] = []
+    assetPackCursor : number = 0
   }
 
   trait CrewAuthority = Nav.traits.HeroNav -> GameState {
@@ -126,12 +137,12 @@ orbital CrewBoard2DOrbital {
       gridWidth: 7
       gridHeight: 7
       moveBudget: 999999
-      units: [ { id: "c1", position: { x: 1, y: 1 }, x: 1, y: 1, z: 0, team: "player", health: 10, maxHealth: 10, unitType: "crew", name: "Crew", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png", role: "player", category: "unit", animations: ["idle"], style: "vector", dimension: "2d", aspect: "1:1", name: "crew-unit", thumbnailUrl: "" } } ]
+      units: [ { id: "c1", position: { x: 1, y: 1 }, x: 1, y: 1, z: 0, team: "player", health: 10, maxHealth: 10, unitType: "crew", name: "Crew", modelUrl: {}, assetKey: "unit-art/soldier" } ]
       tiles: [
-        { id: "t-0-0", x: 0, y: 0, z: 0, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png", role: "tile", category: "terrain", animations: ["static"], style: "vector", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } },
-        { id: "t-0-1", x: 0, y: 1, z: 0, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png", role: "tile", category: "terrain", animations: ["static"], style: "vector", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } },
-        { id: "t-1-0", x: 1, y: 0, z: 0, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png", role: "tile", category: "terrain", animations: ["static"], style: "vector", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } },
-        { id: "t-1-1", x: 1, y: 1, z: 0, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png", role: "tile", category: "terrain", animations: ["static"], style: "vector", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }
+        { id: "t-0-0", x: 0, y: 0, z: 0, terrain: "grass", passable: true, terrainSprite: {}, assetKey: "tile-art/grass" },
+        { id: "t-0-1", x: 0, y: 1, z: 0, terrain: "grass", passable: true, terrainSprite: {}, assetKey: "tile-art/grass" },
+        { id: "t-1-0", x: 1, y: 0, z: 0, terrain: "grass", passable: true, terrainSprite: {}, assetKey: "tile-art/grass" },
+        { id: "t-1-1", x: 1, y: 1, z: 0, terrain: "grass", passable: true, terrainSprite: {}, assetKey: "tile-art/grass" }
       ]
     }
 
@@ -151,6 +162,16 @@ orbital CrewBoard2DOrbital {
     config { frames: [] }
   }
 
+  trait AssetPack = Pack.traits.AssetPackLoader -> GameState {
+    config {
+      assetPack: "kflow/std-board-demo"
+      transport: "http"
+      packPath: "/shared/std-board-demo/assets.json"
+      groups: ["tile-art", "unit-art"]
+      expectedKeys: ["tile-art/grass", "unit-art/soldier"]
+    }
+  }
+
   trait CrewIntent -> GameState [interaction, instance] {
     initial: playing
 
@@ -163,20 +184,20 @@ orbital CrewBoard2DOrbital {
         (set @entity.crewCount @config.crewCount)
         (render-ui main {
           type: game-shell
-          backgroundAsset: @config.backgroundAsset
-          hudBackgroundAsset: @config.hudBackgroundAsset
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Crew", value: @entity.crewCount, iconUrl: @config.crewIcon }, { label: "Oxygen", value: @entity.oxygen, iconUrl: @config.oxygenIcon } ] }, { type: stack, direction: horizontal, gap: xs, align: center, children: [ { type: typography, variant: caption, content: "Status" }, { type: badge, label: @entity.phase, variant: (if (== @entity.phase "movement") "info" "neutral") } ] }, { type: timer-display, value: @entity.oxygen, label: "O2" }, { type: button, action: CANCEL, label: "Cancel", iconAsset: @config.cancelIcon, variant: secondary } ] }
+          backgroundAsset: (if (!= @config.backgroundAssetKey "") (object/get @entity.assetByKey @config.backgroundAssetKey) @config.backgroundAsset)
+          hudBackgroundAsset: (if (!= @config.hudBackgroundAssetKey "") (object/get @entity.assetByKey @config.hudBackgroundAssetKey) @config.hudBackgroundAsset)
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Crew", value: @entity.crewCount, iconUrl: (if (!= @config.crewIconKey "") (object/get @entity.assetByKey @config.crewIconKey) @config.crewIcon) }, { label: "Oxygen", value: @entity.oxygen, iconUrl: (if (!= @config.oxygenIconKey "") (object/get @entity.assetByKey @config.oxygenIconKey) @config.oxygenIcon) } ] }, { type: stack, direction: horizontal, gap: xs, align: center, children: [ { type: typography, variant: caption, content: "Status" }, { type: badge, label: @entity.phase, variant: (if (== @entity.phase "movement") "info" "neutral") } ] }, { type: timer-display, value: @entity.oxygen, label: "O2" }, { type: button, action: CANCEL, label: "Cancel", iconAsset: (if (!= @config.cancelIconKey "") (object/get @entity.assetByKey @config.cancelIconKey) @config.cancelIcon), variant: secondary } ] }
           children: [ { type: canvas, camera: { zoom: (math/min 1 (/ 5 (+ 1 (math/max (array/max @entity.tiles "x") (array/max @entity.tiles "y"))))), pos: { x: (/ (+ (array/min @entity.tiles "x") (array/max @entity.tiles "x")) 2), y: (/ (+ (array/min @entity.tiles "y") (array/max @entity.tiles "y")) 2) } }, projection: @config.projection, showMinimap: @config.showMinimap, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, children: [
             { type: draw-shape-layer, items: (array/map @entity.tiles (fn t { type: draw-shape, shape: "cell", position: { x: (object/get @t x), y: (object/get @t y) }, fill: "#5c94fc", stroke: "rgba(255,255,255,0.35)", strokeWidth: 1 })) }
-            { type: draw-sprite-layer, items: (array/map @entity.tiles (fn t { type: draw-sprite, position: { x: (object/get @t x), y: (object/get @t y) }, asset: (if (validate/required (object/get (object/get @t terrainSprite) url)) (object/get @t terrainSprite) (object/get (object/get @config.assetManifest terrains) (object/get @t terrain))), anchor: "center", width: 1, height: 1 })) }
-            { type: draw-sprite-layer, items: (array/map @config.features (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y) }, asset: (object/get @f assetUrl), anchor: "ground", width: 1, height: 1 })) }
+            { type: draw-sprite-layer, items: (array/map @entity.tiles (fn t { type: draw-sprite, position: { x: (object/get @t x), y: (object/get @t y) }, asset: (if (validate/required (object/get (object/get @t terrainSprite) url)) (object/get @t terrainSprite) (if (and (validate/required (object/get @t assetKey)) (object/has @entity.assetByKey (object/get @t assetKey))) (object/get @entity.assetByKey (object/get @t assetKey)) (object/get (object/merge (object/get @config.assetManifest terrains) (object/get @entity.assetManifest terrains)) (object/get @t terrain)))), anchor: "center", width: 1, height: 1 })) }
+            { type: draw-sprite-layer, items: (array/map @config.features (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y) }, asset: (if (validate/required (object/get (object/get @f assetUrl) url)) (object/get @f assetUrl) (if (validate/required (object/get @f assetKey)) (object/get @entity.assetByKey (object/get @f assetKey)) (object/get (object/merge (object/get @config.assetManifest features) (object/get @entity.assetManifest features)) (object/get @f type)))), anchor: "ground", width: 1, height: 1 })) }
             { type: draw-shape-layer, items: (array/map @entity.validMoves (fn m { type: draw-shape, shape: "cell", position: { x: (object/get @m x), y: (object/get @m z) }, fill: "rgba(74,222,128,0.4)" })) }
             { type: draw-shape-layer, items: (array/map (array/filter @entity.units (fn u (== (object/get @u id) @entity.selectedUnitId))) (fn u { type: draw-shape, shape: "ellipse", position: (object/get @u position), radiusX: 0.5, radiusY: 0.2, stroke: "rgba(0,200,255,0.8)", strokeWidth: 3 })) }
-            { type: draw-sprite-layer, items: (array/filter (array/map @entity.units (fn u (let ((unitAsset (if (validate/required (object/get (object/get @u modelUrl) url)) (object/get @u modelUrl) (object/get (object/get @config.assetManifest units) (object/get @u unitType)))) (unitUrl (object/get @unitAsset url)) (unitAnim (if (== (object/get @u id) @entity.animUnitId) @entity.animState "idle"))) { type: draw-sprite, position: (object/get @u position), asset: (if (and @unitUrl (str/includes @unitUrl ".svg")) (object/merge @unitAsset { url: (str/concat (array/nth (str/split @unitUrl ".svg") 0) (str/concat "." (str/concat @unitAnim (str/concat "-" (str/concat (if (== @unitAnim "walk") (% @entity.animCounter 2) (if (== @unitAnim "idle") (% (math/floor (/ @entity.animCounter 3)) 4) 0))) ".svg")))) }) @unitAsset), id: (object/get @u id), anchor: "ground", width: 0.5, height: 0.5 }))) (fn s (validate/required (object/get (object/get @s asset) url)))) }
+            { type: draw-sprite-layer, items: (array/filter (array/map @entity.units (fn u (let ((unitAsset (if (validate/required (object/get (object/get @u modelUrl) url)) (object/get @u modelUrl) (if (validate/required (object/get @u assetKey)) (object/get @entity.assetByKey (object/get @u assetKey)) (object/get (object/merge (object/get @config.assetManifest units) (object/get @entity.assetManifest units)) (object/get @u unitType))))) (unitUrl (object/get @unitAsset url)) (unitAnim (if (== (object/get @u id) @entity.animUnitId) @entity.animState "idle"))) { type: draw-sprite, position: (object/get @u position), asset: (if (and @unitUrl (str/includes @unitUrl ".svg")) (object/merge @unitAsset { url: (str/concat (array/nth (str/split @unitUrl ".svg") 0) (str/concat "." (str/concat @unitAnim (str/concat "-" (str/concat (if (== @unitAnim "walk") (% @entity.animCounter 2) (if (== @unitAnim "idle") (% (math/floor (/ @entity.animCounter 3)) 4) 0))) ".svg")))) }) @unitAsset), id: (object/get @u id), anchor: "ground", width: 0.5, height: 0.5 }))) (fn s (validate/required (object/get (object/get @s asset) url)))) }
             { type: draw-shape-layer, items: (array/map @entity.units (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), anchor: "ground", offsetX: -0.25, offsetY: -0.6, width: 0.5, height: 0.12, fill: "rgba(0,0,0,0.6)" })) }
             { type: draw-shape-layer, items: (array/map @entity.units (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), anchor: "ground", offsetX: -0.25, offsetY: -0.6, width: (* 0.5 (/ (object/get @u health) (object/get @u maxHealth))), height: 0.12, fill: "#22c55e" })) }
             { type: draw-text-layer, items: (array/map @entity.units (fn u { type: draw-text, text: (object/get @u name), position: (object/get @u position), offsetY: -0.85, color: "#ffffff" })) }
-            { type: draw-fx-layer, items: @entity.fx, tickMs: 500, presets: @config.fxPresets, sprites: (object/get @config.assetManifest effects) }
+            { type: draw-fx-layer, items: @entity.fx, tickMs: 500, presets: @config.fxPresets, sprites: (object/merge (object/get @config.assetManifest effects) (object/get @entity.assetManifest effects)) }
             { type: draw-sprite-layer, items: (array/map (array/filter (array/flatten (array/map @entity.units (fn u (array/flatten (array/map [ ["idle", 4], ["walk", 2], ["attack", 1], ["hit", 1], ["death", 1] ] (fn st (array/map (array/range 0 (array/nth @st 1)) (fn i (if (and (validate/required (object/get (object/get @u modelUrl) url)) (str/includes (object/get (object/get @u modelUrl) url) ".svg")) (str/concat (array/nth (str/split (object/get (object/get @u modelUrl) url) ".svg") 0) (str/concat "." (str/concat (array/nth @st 0) (str/concat "-" (str/concat @i ".svg"))))) ""))))))))) (fn w (!= @w ""))) (fn warmUrl { type: draw-sprite, position: { x: 0, y: 0 }, asset: { url: @warmUrl }, opacity: 0, width: 0.5, height: 0.5 })) }
           ] } ]
         })
@@ -215,20 +236,20 @@ orbital CrewBoard2DOrbital {
         (set @entity.animUnitId (if (== @entity.animTicksLeft 0) "" @entity.animUnitId))
         (render-ui main {
           type: game-shell
-          backgroundAsset: @config.backgroundAsset
-          hudBackgroundAsset: @config.hudBackgroundAsset
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Crew", value: @entity.crewCount, iconUrl: @config.crewIcon }, { label: "Oxygen", value: @entity.oxygen, iconUrl: @config.oxygenIcon } ] }, { type: stack, direction: horizontal, gap: xs, align: center, children: [ { type: typography, variant: caption, content: "Status" }, { type: badge, label: @entity.phase, variant: (if (== @entity.phase "movement") "info" "neutral") } ] }, { type: timer-display, value: @entity.oxygen, label: "O2" }, { type: button, action: CANCEL, label: "Cancel", iconAsset: @config.cancelIcon, variant: secondary } ] }
+          backgroundAsset: (if (!= @config.backgroundAssetKey "") (object/get @entity.assetByKey @config.backgroundAssetKey) @config.backgroundAsset)
+          hudBackgroundAsset: (if (!= @config.hudBackgroundAssetKey "") (object/get @entity.assetByKey @config.hudBackgroundAssetKey) @config.hudBackgroundAsset)
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Crew", value: @entity.crewCount, iconUrl: (if (!= @config.crewIconKey "") (object/get @entity.assetByKey @config.crewIconKey) @config.crewIcon) }, { label: "Oxygen", value: @entity.oxygen, iconUrl: (if (!= @config.oxygenIconKey "") (object/get @entity.assetByKey @config.oxygenIconKey) @config.oxygenIcon) } ] }, { type: stack, direction: horizontal, gap: xs, align: center, children: [ { type: typography, variant: caption, content: "Status" }, { type: badge, label: @entity.phase, variant: (if (== @entity.phase "movement") "info" "neutral") } ] }, { type: timer-display, value: @entity.oxygen, label: "O2" }, { type: button, action: CANCEL, label: "Cancel", iconAsset: (if (!= @config.cancelIconKey "") (object/get @entity.assetByKey @config.cancelIconKey) @config.cancelIcon), variant: secondary } ] }
           children: [ { type: canvas, camera: { zoom: (math/min 1 (/ 5 (+ 1 (math/max (array/max @entity.tiles "x") (array/max @entity.tiles "y"))))), pos: { x: (/ (+ (array/min @entity.tiles "x") (array/max @entity.tiles "x")) 2), y: (/ (+ (array/min @entity.tiles "y") (array/max @entity.tiles "y")) 2) } }, projection: @config.projection, showMinimap: @config.showMinimap, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, children: [
             { type: draw-shape-layer, items: (array/map @entity.tiles (fn t { type: draw-shape, shape: "cell", position: { x: (object/get @t x), y: (object/get @t y) }, fill: "#5c94fc", stroke: "rgba(255,255,255,0.35)", strokeWidth: 1 })) }
-            { type: draw-sprite-layer, items: (array/map @entity.tiles (fn t { type: draw-sprite, position: { x: (object/get @t x), y: (object/get @t y) }, asset: (if (validate/required (object/get (object/get @t terrainSprite) url)) (object/get @t terrainSprite) (object/get (object/get @config.assetManifest terrains) (object/get @t terrain))), anchor: "center", width: 1, height: 1 })) }
-            { type: draw-sprite-layer, items: (array/map @config.features (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y) }, asset: (object/get @f assetUrl), anchor: "ground", width: 1, height: 1 })) }
+            { type: draw-sprite-layer, items: (array/map @entity.tiles (fn t { type: draw-sprite, position: { x: (object/get @t x), y: (object/get @t y) }, asset: (if (validate/required (object/get (object/get @t terrainSprite) url)) (object/get @t terrainSprite) (if (and (validate/required (object/get @t assetKey)) (object/has @entity.assetByKey (object/get @t assetKey))) (object/get @entity.assetByKey (object/get @t assetKey)) (object/get (object/merge (object/get @config.assetManifest terrains) (object/get @entity.assetManifest terrains)) (object/get @t terrain)))), anchor: "center", width: 1, height: 1 })) }
+            { type: draw-sprite-layer, items: (array/map @config.features (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y) }, asset: (if (validate/required (object/get (object/get @f assetUrl) url)) (object/get @f assetUrl) (if (validate/required (object/get @f assetKey)) (object/get @entity.assetByKey (object/get @f assetKey)) (object/get (object/merge (object/get @config.assetManifest features) (object/get @entity.assetManifest features)) (object/get @f type)))), anchor: "ground", width: 1, height: 1 })) }
             { type: draw-shape-layer, items: (array/map @entity.validMoves (fn m { type: draw-shape, shape: "cell", position: { x: (object/get @m x), y: (object/get @m z) }, fill: "rgba(74,222,128,0.4)" })) }
             { type: draw-shape-layer, items: (array/map (array/filter @entity.units (fn u (== (object/get @u id) @entity.selectedUnitId))) (fn u { type: draw-shape, shape: "ellipse", position: (object/get @u position), radiusX: 0.5, radiusY: 0.2, stroke: "rgba(0,200,255,0.8)", strokeWidth: 3 })) }
-            { type: draw-sprite-layer, items: (array/filter (array/map @entity.units (fn u (let ((unitAsset (if (validate/required (object/get (object/get @u modelUrl) url)) (object/get @u modelUrl) (object/get (object/get @config.assetManifest units) (object/get @u unitType)))) (unitUrl (object/get @unitAsset url)) (unitAnim (if (== (object/get @u id) @entity.animUnitId) @entity.animState "idle"))) { type: draw-sprite, position: (object/get @u position), asset: (if (and @unitUrl (str/includes @unitUrl ".svg")) (object/merge @unitAsset { url: (str/concat (array/nth (str/split @unitUrl ".svg") 0) (str/concat "." (str/concat @unitAnim (str/concat "-" (str/concat (if (== @unitAnim "walk") (% @entity.animCounter 2) (if (== @unitAnim "idle") (% (math/floor (/ @entity.animCounter 3)) 4) 0))) ".svg")))) }) @unitAsset), id: (object/get @u id), anchor: "ground", width: 0.5, height: 0.5 }))) (fn s (validate/required (object/get (object/get @s asset) url)))) }
+            { type: draw-sprite-layer, items: (array/filter (array/map @entity.units (fn u (let ((unitAsset (if (validate/required (object/get (object/get @u modelUrl) url)) (object/get @u modelUrl) (if (validate/required (object/get @u assetKey)) (object/get @entity.assetByKey (object/get @u assetKey)) (object/get (object/merge (object/get @config.assetManifest units) (object/get @entity.assetManifest units)) (object/get @u unitType))))) (unitUrl (object/get @unitAsset url)) (unitAnim (if (== (object/get @u id) @entity.animUnitId) @entity.animState "idle"))) { type: draw-sprite, position: (object/get @u position), asset: (if (and @unitUrl (str/includes @unitUrl ".svg")) (object/merge @unitAsset { url: (str/concat (array/nth (str/split @unitUrl ".svg") 0) (str/concat "." (str/concat @unitAnim (str/concat "-" (str/concat (if (== @unitAnim "walk") (% @entity.animCounter 2) (if (== @unitAnim "idle") (% (math/floor (/ @entity.animCounter 3)) 4) 0))) ".svg")))) }) @unitAsset), id: (object/get @u id), anchor: "ground", width: 0.5, height: 0.5 }))) (fn s (validate/required (object/get (object/get @s asset) url)))) }
             { type: draw-shape-layer, items: (array/map @entity.units (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), anchor: "ground", offsetX: -0.25, offsetY: -0.6, width: 0.5, height: 0.12, fill: "rgba(0,0,0,0.6)" })) }
             { type: draw-shape-layer, items: (array/map @entity.units (fn u { type: draw-shape, shape: "rect", position: (object/get @u position), anchor: "ground", offsetX: -0.25, offsetY: -0.6, width: (* 0.5 (/ (object/get @u health) (object/get @u maxHealth))), height: 0.12, fill: "#22c55e" })) }
             { type: draw-text-layer, items: (array/map @entity.units (fn u { type: draw-text, text: (object/get @u name), position: (object/get @u position), offsetY: -0.85, color: "#ffffff" })) }
-            { type: draw-fx-layer, items: @entity.fx, tickMs: 500, presets: @config.fxPresets, sprites: (object/get @config.assetManifest effects) }
+            { type: draw-fx-layer, items: @entity.fx, tickMs: 500, presets: @config.fxPresets, sprites: (object/merge (object/get @config.assetManifest effects) (object/get @entity.assetManifest effects)) }
             { type: draw-sprite-layer, items: (array/map (array/filter (array/flatten (array/map @entity.units (fn u (array/flatten (array/map [ ["idle", 4], ["walk", 2], ["attack", 1], ["hit", 1], ["death", 1] ] (fn st (array/map (array/range 0 (array/nth @st 1)) (fn i (if (and (validate/required (object/get (object/get @u modelUrl) url)) (str/includes (object/get (object/get @u modelUrl) url) ".svg")) (str/concat (array/nth (str/split (object/get (object/get @u modelUrl) url) ".svg") 0) (str/concat "." (str/concat (array/nth @st 0) (str/concat "-" (str/concat @i ".svg"))))) ""))))))))) (fn w (!= @w ""))) (fn warmUrl { type: draw-sprite, position: { x: 0, y: 0 }, asset: { url: @warmUrl }, opacity: 0, width: 0.5, height: 0.5 })) }
           ] } ]
         })
@@ -289,7 +310,7 @@ orbital CrewBoard2DOrbital {
         @label "Fx Presets"
         @description "This board's effect vocabulary — one look/recipe row per fx type; its composed mechanics currently emit none, so the channel is forward-compat only."
         @tier "presentation"
-      assetManifest : AssetManifest = { terrains: {}, units: {}, features: {}, effects: {} }
+      assetManifest : AssetManifest = { terrains: {}, units: {}, features: {}, effects: {}, ui: {} }
         @label "Asset Manifest"
         @description "Terrain/unit/feature/effect sprite manifest."
         @tier "presentation"
@@ -309,6 +330,26 @@ orbital CrewBoard2DOrbital {
         @label "HUD Background Asset"
         @description "HUD panel background sprite (theme chrome)."
         @tier "presentation"
+      backgroundAssetKey : string = ""
+        @label "backgroundAssetKey"
+        @description "Game-shell background sprite key in the loaded pack (assetByKey); empty uses backgroundAsset."
+        @tier "presentation"
+      hudBackgroundAssetKey : string = ""
+        @label "hudBackgroundAssetKey"
+        @description "HUD panel background key in the loaded pack; empty uses hudBackgroundAsset."
+        @tier "presentation"
+      crewIconKey : string = ""
+        @label "crewIconKey"
+        @description "Crew HUD icon key in the loaded pack; empty uses crewIcon."
+        @tier "presentation"
+      oxygenIconKey : string = ""
+        @label "oxygenIconKey"
+        @description "Oxygen HUD icon key in the loaded pack; empty uses oxygenIcon."
+        @tier "presentation"
+      cancelIconKey : string = ""
+        @label "cancelIconKey"
+        @description "Cancel button icon key in the loaded pack; empty uses cancelIcon."
+        @tier "presentation"
       crewIcon : Asset = {}
         @label "Crew Icon"
         @description "Icon asset for the Crew HUD stat."
@@ -324,5 +365,5 @@ orbital CrewBoard2DOrbital {
     }
   }
 
-  page "/crew-board-2d" as CrewBoard2DPage -> CrewAuthority, FxDecay, CrewIntent, AnimClock
+  page "/crew-board-2d" as CrewBoard2DPage -> CrewAuthority, FxDecay, CrewIntent, AnimClock, AssetPack
 }

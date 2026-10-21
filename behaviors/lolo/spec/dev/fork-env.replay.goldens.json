@@ -1,0 +1,364 @@
+{
+ "atom": "dev/atoms/std-fork-env.lolo",
+ "trait": "ForkEnv",
+ "note": "Captured from buildForkEnv and forkProjectRoot in packages/almadar-playground-runtime/src/launcher.ts via tsx; credentialVars is the real allCredentialEnvVars() of @almadar/shell-web. The TS takes the schema file path and dirnames it; the atom takes the directory.",
+ "cases": [
+  {
+   "id": "default-scrub-no-integration-env",
+   "steps": [
+    {
+     "event": "FORK_ENV",
+     "payload": {
+      "base": {
+       "PATH": "/usr/bin",
+       "GITHUB_TOKEN": "real-github-token",
+       "STRIPE_SECRET_KEY": "k",
+       "ALMADAR_CREDENTIAL_MASTER_KEY": "real-master-key",
+       "NODE_ENV": "production"
+      },
+      "credentialVars": [
+       "ALMADAR_CREDENTIAL_MASTER_KEY",
+       "ALMADAR_CREDENTIAL_MASTER_KEY_PREVIOUS"
+      ],
+      "allowReal": false,
+      "agentMock": false,
+      "mockLLM": false,
+      "integrationEnv": {}
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FORK_ENV_BUILT",
+        "payload": {
+         "env": {
+          "PATH": "/usr/bin",
+          "GITHUB_TOKEN": "real-github-token",
+          "STRIPE_SECRET_KEY": "k",
+          "NODE_ENV": "development",
+          "ALMADAR_INTEGRATIONS_MODE": "mock"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "integration-env-cannot-override-mock-pin",
+   "steps": [
+    {
+     "event": "FORK_ENV",
+     "payload": {
+      "base": {
+       "PATH": "/usr/bin",
+       "GITHUB_TOKEN": "real-github-token",
+       "STRIPE_SECRET_KEY": "k",
+       "ALMADAR_CREDENTIAL_MASTER_KEY": "real-master-key",
+       "NODE_ENV": "production"
+      },
+      "credentialVars": [
+       "ALMADAR_CREDENTIAL_MASTER_KEY",
+       "ALMADAR_CREDENTIAL_MASTER_KEY_PREVIOUS"
+      ],
+      "allowReal": false,
+      "agentMock": false,
+      "mockLLM": false,
+      "integrationEnv": {
+       "NODE_ENV": "production",
+       "ALMADAR_INTEGRATIONS_MODE": "live",
+       "FOO": "bar"
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FORK_ENV_BUILT",
+        "payload": {
+         "env": {
+          "PATH": "/usr/bin",
+          "GITHUB_TOKEN": "real-github-token",
+          "STRIPE_SECRET_KEY": "k",
+          "NODE_ENV": "development",
+          "ALMADAR_INTEGRATIONS_MODE": "mock",
+          "FOO": "bar"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "allow-real-keeps-credentials",
+   "steps": [
+    {
+     "event": "FORK_ENV",
+     "payload": {
+      "base": {
+       "PATH": "/usr/bin",
+       "GITHUB_TOKEN": "real-github-token",
+       "STRIPE_SECRET_KEY": "k",
+       "ALMADAR_CREDENTIAL_MASTER_KEY": "real-master-key",
+       "NODE_ENV": "production"
+      },
+      "credentialVars": [
+       "ALMADAR_CREDENTIAL_MASTER_KEY",
+       "ALMADAR_CREDENTIAL_MASTER_KEY_PREVIOUS"
+      ],
+      "allowReal": true,
+      "agentMock": false,
+      "mockLLM": false,
+      "integrationEnv": {}
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FORK_ENV_BUILT",
+        "payload": {
+         "env": {
+          "PATH": "/usr/bin",
+          "GITHUB_TOKEN": "real-github-token",
+          "STRIPE_SECRET_KEY": "k",
+          "ALMADAR_CREDENTIAL_MASTER_KEY": "real-master-key",
+          "NODE_ENV": "production"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "allow-real-integration-env-wins",
+   "steps": [
+    {
+     "event": "FORK_ENV",
+     "payload": {
+      "base": {
+       "PATH": "/usr/bin",
+       "GITHUB_TOKEN": "real-github-token",
+       "STRIPE_SECRET_KEY": "k",
+       "ALMADAR_CREDENTIAL_MASTER_KEY": "real-master-key",
+       "NODE_ENV": "production"
+      },
+      "credentialVars": [
+       "ALMADAR_CREDENTIAL_MASTER_KEY",
+       "ALMADAR_CREDENTIAL_MASTER_KEY_PREVIOUS"
+      ],
+      "allowReal": true,
+      "agentMock": false,
+      "mockLLM": false,
+      "integrationEnv": {
+       "NODE_ENV": "staging",
+       "EXTRA": "1"
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FORK_ENV_BUILT",
+        "payload": {
+         "env": {
+          "PATH": "/usr/bin",
+          "GITHUB_TOKEN": "real-github-token",
+          "STRIPE_SECRET_KEY": "k",
+          "ALMADAR_CREDENTIAL_MASTER_KEY": "real-master-key",
+          "NODE_ENV": "staging",
+          "EXTRA": "1"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "mock-flags",
+   "steps": [
+    {
+     "event": "FORK_ENV",
+     "payload": {
+      "base": {
+       "PATH": "/usr/bin",
+       "GITHUB_TOKEN": "real-github-token",
+       "STRIPE_SECRET_KEY": "k",
+       "ALMADAR_CREDENTIAL_MASTER_KEY": "real-master-key",
+       "NODE_ENV": "production"
+      },
+      "credentialVars": [
+       "ALMADAR_CREDENTIAL_MASTER_KEY",
+       "ALMADAR_CREDENTIAL_MASTER_KEY_PREVIOUS"
+      ],
+      "allowReal": false,
+      "agentMock": true,
+      "mockLLM": true,
+      "integrationEnv": {}
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FORK_ENV_BUILT",
+        "payload": {
+         "env": {
+          "PATH": "/usr/bin",
+          "GITHUB_TOKEN": "real-github-token",
+          "STRIPE_SECRET_KEY": "k",
+          "NODE_ENV": "development",
+          "AGENT_MOCK": "true",
+          "MOCK_LLM": "true",
+          "ALMADAR_INTEGRATIONS_MODE": "mock"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "integration-env-overrides-mock-flag",
+   "steps": [
+    {
+     "event": "FORK_ENV",
+     "payload": {
+      "base": {
+       "PATH": "/usr/bin",
+       "GITHUB_TOKEN": "real-github-token",
+       "STRIPE_SECRET_KEY": "k",
+       "ALMADAR_CREDENTIAL_MASTER_KEY": "real-master-key",
+       "NODE_ENV": "production"
+      },
+      "credentialVars": [
+       "ALMADAR_CREDENTIAL_MASTER_KEY",
+       "ALMADAR_CREDENTIAL_MASTER_KEY_PREVIOUS"
+      ],
+      "allowReal": false,
+      "agentMock": true,
+      "mockLLM": false,
+      "integrationEnv": {
+       "AGENT_MOCK": "false"
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FORK_ENV_BUILT",
+        "payload": {
+         "env": {
+          "PATH": "/usr/bin",
+          "GITHUB_TOKEN": "real-github-token",
+          "STRIPE_SECRET_KEY": "k",
+          "NODE_ENV": "development",
+          "AGENT_MOCK": "false",
+          "ALMADAR_INTEGRATIONS_MODE": "mock"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "root-explicit-project-root",
+   "steps": [
+    {
+     "event": "FORK_ROOT",
+     "payload": {
+      "env": {
+       "ALMADAR_PROJECT_ROOT": "/proj",
+       "ALMADAR_ROOT": "/mono"
+      },
+      "schemaDir": "/tmp/cache",
+      "cwd": "/Users/osamaalghanmi/kflow.ai.builder/packages/almadar-playground-runtime"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FORK_ROOT_RESOLVED",
+        "payload": {
+         "root": "/proj"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "root-monorepo-root-over-schema-dir",
+   "steps": [
+    {
+     "event": "FORK_ROOT",
+     "payload": {
+      "env": {
+       "ALMADAR_ROOT": "/mono"
+      },
+      "schemaDir": "/tmp/cache",
+      "cwd": "/Users/osamaalghanmi/kflow.ai.builder/packages/almadar-playground-runtime"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FORK_ROOT_RESOLVED",
+        "payload": {
+         "root": "/mono"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "root-schema-dir",
+   "steps": [
+    {
+     "event": "FORK_ROOT",
+     "payload": {
+      "env": {},
+      "schemaDir": "/work/app",
+      "cwd": "/Users/osamaalghanmi/kflow.ai.builder/packages/almadar-playground-runtime"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FORK_ROOT_RESOLVED",
+        "payload": {
+         "root": "/work/app"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "root-cwd-when-no-schema",
+   "steps": [
+    {
+     "event": "FORK_ROOT",
+     "payload": {
+      "env": {},
+      "schemaDir": "",
+      "cwd": "/Users/osamaalghanmi/kflow.ai.builder/packages/almadar-playground-runtime"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FORK_ROOT_RESOLVED",
+        "payload": {
+         "root": "/Users/osamaalghanmi/kflow.ai.builder/packages/almadar-playground-runtime"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,23 @@
+app owner-overlay [
+  version: "1.0.0",
+  description: "Design contract for the read-time owner overlay: shared rows carry an owner column nobody wrote, so each read stamps the viewer onto exactly one row, chosen by the viewer alone. OVERLAY_PICK { rows, ownerId } answers OVERLAY_PICKED { rowId, found }: the ids are sorted (read order never matters), the first four bytes of SHA-256 of the owner id read big-endian, modulo the row count, index the sorted ids; no rows is found false with an empty rowId. OVERLAY_APPLY { rows, fields, ownerId } answers OVERLAY_APPLIED { rows }: the picked row has every named field set to the owner id, every other row is returned as it came, and no fields or no rows returns the rows unchanged. Nothing is ever written back."
+]
+
+type OverlayRow = Map string string
+
+orbital OwnerOverlaySpec {
+  expects entity OverlayRun [runtime] {
+    id : string!
+    rowId : string
+    found : boolean
+    rows : [OverlayRow]
+  }
+  expects trait OwnerOverlay {
+    state ready
+    emits {
+      OVERLAY_PICKED { rowId : string!  found : boolean! }
+      OVERLAY_APPLIED { rows : [OverlayRow]! }
+    }
+  }
+  expects page "/owner-overlay" -> OwnerOverlay
+}

@@ -1,0 +1,200 @@
+app std-asset-pack [
+  version: "1.0.0",
+  description: "AssetPackLoader — SOLE writer of the asset-pack fields on a board frame's entity. A board declares its pack (assetPack, packPath, transport); at INIT the atom reads <packPath> (an AssetPackManifest: pack, version, base, assets keyed group/name) over http (origin knob, must be in the app's egress) or os/read-file (assetsRoot anchor), resolves every entry url against base, and publishes assetByKey (flat) plus assetManifest (nested by the groups knob). Until the load answers, and after a failed load, every expectedKeys entry is a visible placeholder; every key the pack lacks is a placeholder and gets one ASSET_PACK_MISSING { pack, key }.",
+  egress: ["https://almadar-kflow-assets.web.app"]
+]
+uses Spec from "almadar-std/asset-pack"
+
+orbital StdAssetPackOrbital {
+  type Asset = {
+    url : asset
+    atlas : asset
+    sprite : string
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+  type AssetPackManifest = {
+    pack : string!
+    version : number!
+    base : string!
+    assets : Map string Asset
+  }
+
+  entity StdAssetPack [runtime, shared] {
+    id : string!
+    assetByKey : Map string Asset = {}
+    assetManifest : Map string Map string Asset = {}
+    assetPackStatus : string = "idle"
+    assetPackMissing : [string] = []
+    assetPackCursor : number = 0
+  }
+
+  trait AssetPackLoader -> @rebindable StdAssetPack [integration] {
+    initial: idle
+
+    state idle {
+      INIT -> ready when (= @config.assetPack "")
+      INIT -> loading when (and (!= @config.assetPack "") (= @config.transport "http"))
+        (set @entity.assetPackStatus "loading")
+        (set @entity.assetByKey (object/fromEntries (array/map @config.expectedKeys (fn k [@k { url: @config.placeholderUrl, role: "loading", category: "loading", name: @k }]))))
+        (set @entity.assetManifest (object/fromEntries (array/map @config.groups (fn g [@g (object/fromEntries (array/map (array/filter (object/entries @entity.assetByKey) (fn e (str/startsWith (array/nth @e 0) (str/concat @g "/")))) (fn e [(str/replace (array/nth @e 0) (str/concat @g "/") "") (array/nth @e 1)])))]))))
+        (http GET @config.origin @config.packPath {
+          headers: { Accept: "application/json" },
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: PACK_HTTP_REPLIED, failure: PACK_LOAD_FAILED } })
+      INIT -> loading when (and (!= @config.assetPack "") (= @config.transport "file"))
+        (set @entity.assetPackStatus "loading")
+        (set @entity.assetByKey (object/fromEntries (array/map @config.expectedKeys (fn k [@k { url: @config.placeholderUrl, role: "loading", category: "loading", name: @k }]))))
+        (set @entity.assetManifest (object/fromEntries (array/map @config.groups (fn g [@g (object/fromEntries (array/map (array/filter (object/entries @entity.assetByKey) (fn e (str/startsWith (array/nth @e 0) (str/concat @g "/")))) (fn e [(str/replace (array/nth @e 0) (str/concat @g "/") "") (array/nth @e 1)])))]))))
+        (os/read-file { anchor: "cwd" path: (str/concat @config.assetsRoot @config.packPath) } { key: "pack" emit: { success: PACK_FILE_READ, failure: PACK_LOAD_FAILED } })
+    }
+
+    state loading {
+      INIT -> loading
+      PACK_HTTP_REPLIED -> loading when (and (= @payload.status 200) (json/valid @payload.body))
+        (emit PACK_TEXT { text: @payload.body })
+      PACK_HTTP_REPLIED -> failed when (not (and (= @payload.status 200) (json/valid @payload.body)))
+        (set @entity.assetPackStatus "failed")
+        (set @entity.assetPackMissing @config.expectedKeys)
+        (set @entity.assetPackCursor 0)
+        (set @entity.assetByKey (object/fromEntries (array/map @config.expectedKeys (fn k [@k { url: @config.placeholderUrl, role: "placeholder", category: "missing", name: @k }]))))
+        (emit ASSET_PACK_FAILED { pack: @config.assetPack, message: (str/concat "HTTP " (str/concat @payload.status " or invalid JSON at " @config.packPath)) })
+        (emit ASSET_PACK_PUBLISH { })
+      PACK_FILE_READ -> loading when (json/valid (bytes/to-string @payload.data))
+        (emit PACK_TEXT { text: (bytes/to-string @payload.data) })
+      PACK_FILE_READ -> failed when (not (json/valid (bytes/to-string @payload.data)))
+        (set @entity.assetPackStatus "failed")
+        (set @entity.assetPackMissing @config.expectedKeys)
+        (set @entity.assetPackCursor 0)
+        (set @entity.assetByKey (object/fromEntries (array/map @config.expectedKeys (fn k [@k { url: @config.placeholderUrl, role: "placeholder", category: "missing", name: @k }]))))
+        (emit ASSET_PACK_FAILED { pack: @config.assetPack, message: (str/concat "invalid JSON at " @config.packPath) })
+        (emit ASSET_PACK_PUBLISH { })
+      PACK_LOAD_FAILED -> failed
+        (set @entity.assetPackStatus "failed")
+        (set @entity.assetPackMissing @config.expectedKeys)
+        (set @entity.assetPackCursor 0)
+        (set @entity.assetByKey (object/fromEntries (array/map @config.expectedKeys (fn k [@k { url: @config.placeholderUrl, role: "placeholder", category: "missing", name: @k }]))))
+        (notify error (str/concat "Asset pack " (str/concat @config.assetPack (str/concat " failed to load: " @payload.error))))
+        (emit ASSET_PACK_FAILED { pack: @config.assetPack, message: @payload.error })
+        (emit ASSET_PACK_PUBLISH { })
+      PACK_TEXT -> reporting
+        (set @entity.assetByKey (object/fromEntries (array/map (object/entries (object/get (json/parse @payload.text AssetPackManifest) "assets")) (fn e [(array/nth @e 0) (object/merge (array/nth @e 1) (object/merge { url: (str/concat (object/get (json/parse @payload.text AssetPackManifest) "base") (object/get (array/nth @e 1) "url")) } (if (validate/required (object/get (array/nth @e 1) "atlas")) { atlas: (str/concat (object/get (json/parse @payload.text AssetPackManifest) "base") (object/get (array/nth @e 1) "atlas")) } {})))]))))
+        (set @entity.assetPackMissing (array/filter @config.expectedKeys (fn k (not (object/has @entity.assetByKey @k)))))
+        (set @entity.assetPackCursor 0)
+        (set @entity.assetByKey (object/merge @entity.assetByKey (object/fromEntries (array/map @entity.assetPackMissing (fn k [@k { url: @config.placeholderUrl, role: "placeholder", category: "missing", name: @k }])))))
+        (set @entity.assetManifest (object/fromEntries (array/map @config.groups (fn g [@g (object/fromEntries (array/map (array/filter (object/entries @entity.assetByKey) (fn e (str/startsWith (array/nth @e 0) (str/concat @g "/")))) (fn e [(str/replace (array/nth @e 0) (str/concat @g "/") "") (array/nth @e 1)])))]))))
+        (emit ASSET_PACK_REPORT_NEXT { cursor: 0 })
+    }
+
+    state failed {
+      INIT -> failed
+      ASSET_PACK_PUBLISH -> reporting
+        (set @entity.assetManifest (object/fromEntries (array/map @config.groups (fn g [@g (object/fromEntries (array/map (array/filter (object/entries @entity.assetByKey) (fn e (str/startsWith (array/nth @e 0) (str/concat @g "/")))) (fn e [(str/replace (array/nth @e 0) (str/concat @g "/") "") (array/nth @e 1)])))]))))
+        (emit ASSET_PACK_REPORT_NEXT { cursor: 0 })
+    }
+
+    state reporting {
+      INIT -> reporting
+      ASSET_PACK_REPORT_NEXT -> reporting when (< @payload.cursor (array/len @entity.assetPackMissing))
+        (emit ASSET_PACK_MISSING { pack: @config.assetPack, key: (array/nth @entity.assetPackMissing @payload.cursor) })
+        (set @entity.assetPackCursor (+ @payload.cursor 1))
+        (emit ASSET_PACK_REPORT_NEXT { cursor: (+ @payload.cursor 1) })
+      ASSET_PACK_REPORT_NEXT -> ready when (>= @payload.cursor (array/len @entity.assetPackMissing))
+        (set @entity.assetPackStatus (if (= @entity.assetPackStatus "failed") "failed" (if (> (array/len @entity.assetPackMissing) 0) "partial" "ready")))
+        (emit ASSET_PACK_SETTLED { pack: @config.assetPack, status: (if (= @entity.assetPackStatus "failed") "failed" (if (> (array/len @entity.assetPackMissing) 0) "partial" "ready")) })
+    }
+
+    state ready {
+      INIT -> ready
+    }
+
+    emits {
+      ASSET_PACK_MISSING -> external { pack : string!  key : string! }
+        @description "A key the board expects is absent from its asset pack (or the pack failed to load): the key renders as a visible placeholder. One per key per load."
+        @synonyms "asset missing, pack key missing"
+        @tier "primary"
+      ASSET_PACK_FAILED -> external { pack : string!  message : string! }
+        @description "The declared asset pack could not be read or parsed; every expected key renders as a placeholder."
+        @synonyms "asset pack load failed"
+        @tier "primary"
+      ASSET_PACK_SETTLED -> external { pack : string!  status : string! }
+        @description "The pack load finished (ready, partial or failed) and assetByKey/assetManifest hold the final values; fired once per load. A board that renders from the manifest listens to this to repaint."
+        @synonyms "asset pack loaded, asset pack ready"
+        @tier "primary"
+      ASSET_PACK_REPORT_NEXT { cursor : number! }
+        @description "Internal: report the next missing key."
+        @tier "internal"
+      ASSET_PACK_PUBLISH { }
+        @description "Internal: publish the placeholder manifest after a failed load."
+        @tier "internal"
+      PACK_TEXT { text : string! }
+        @description "Internal: the pack manifest text, from either transport."
+        @tier "internal"
+      PACK_HTTP_REPLIED { status : number!  headers : Map string string  body : string! }
+        @description "Internal: the http reply for the pack manifest."
+        @tier "internal"
+      PACK_FILE_READ { data : bytes! }
+        @description "Internal: the pack manifest file read."
+        @tier "internal"
+      PACK_LOAD_FAILED { error : string!  kind : string }
+        @description "Internal: the pack manifest could not be fetched or read."
+        @tier "internal"
+    }
+
+    listens {
+      PACK_HTTP_REPLIED { status : number!  headers : Map string string  body : string! }
+      PACK_FILE_READ { data : bytes! }
+      PACK_LOAD_FAILED { error : string!  kind : string }
+      PACK_TEXT { text : string! }
+      ASSET_PACK_PUBLISH { }
+      ASSET_PACK_REPORT_NEXT { cursor : number! }
+    }
+
+    config {
+      assetPack : string = ""
+        @label "Asset Pack"
+        @description "The pack id this board declares, <brand>/<board>. Empty = the board declares no pack and the atom does nothing."
+        @tier "domain"
+      transport : string = "http"
+        @label "Transport"
+        @description "http (web and any host with egress) or file (native/server hosts with the assets checkout)."
+        @tier "domain"
+      origin : url = "https://almadar-kflow-assets.web.app"
+        @label "Origin"
+        @description "http origin serving the pack; must be in the embedding app's egress."
+        @tier "domain"
+      assetsRoot : string = ""
+        @label "Assets Root"
+        @description "file transport: cwd-relative directory of the brand assets checkout (e.g. almadar-assets/kflow-assets)."
+        @tier "domain"
+      packPath : string = ""
+        @label "Pack Path"
+        @description "Path of the pack manifest under the origin or assetsRoot, starting with / (e.g. /shared/ui-battle-board/assets.json)."
+        @tier "domain"
+      timeoutMs : number = 8000
+        @label "Timeout (ms)"
+        @description "http timeout for the manifest request."
+        @tier "presentation"
+      groups : [string] = ["terrains", "units", "features", "effects", "ui"]
+        @label "Groups"
+        @description "Key prefixes the nested assetManifest is built from (key group/name -> assetManifest.group.name)."
+        @tier "presentation"
+      expectedKeys : [string] = []
+        @label "Expected Keys"
+        @description "The group/name keys the board draws. Absent from the pack = placeholder + ASSET_PACK_MISSING; all of them are placeholders while loading and after a failed load."
+        @tier "domain"
+      placeholderUrl : asset = "data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Crect width='64' height='64' fill='%23ff00ff'/%3E%3Cpath d='M0 0L64 64M64 0L0 64' stroke='%23000' stroke-width='4'/%3E%3C/svg%3E"
+        @label "Placeholder"
+        @description "Image drawn for a loading, missing or failed key (magenta cross by default)."
+        @tier "presentation"
+    }
+  }
+
+  page "/std-asset-pack" as StdAssetPackPage -> AssetPackLoader
+}

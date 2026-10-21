@@ -1,0 +1,75 @@
+app std-log-levels [
+  version: "1.0.0",
+  description: "std-log-levels — the logging console's level arithmetic as data. LOG_TOGGLE turns a namespace group on (INFO, DEBUG with detail) or off (WARN) by setting its key:* level, its exact name when a logger has it, and clearing every explicit level beneath it so the choice holds for all of them. LOG_DETAIL moves the shown explicit levels between INFO and DEBUG. LOG_SHOWN counts the namespaces logging at INFO or more detailed. Reading and applying the live levels is the host's.",
+  egress: []
+]
+;; @capabilities "log levels, logging console, namespace toggle, log detail, shown namespaces"
+uses Spec from "almadar-std/log-levels"
+
+type LevelEntry = { namespace : string!, level : string! }
+type LogChange = { namespace : string!, level : string }
+
+orbital LogLevelsOrbital {
+  entity LogLevelsRun [runtime] {
+    id : string!
+    changes : [LogChange] = []
+    count : number = 0
+  }
+
+  trait LogLevels -> LogLevelsRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+
+      LOG_TOGGLE -> ready
+        (let ((level (if @payload.on (if @payload.detail "DEBUG" "INFO") "WARN")))
+          (set @entity.changes
+            (array/concat
+              (array/map
+                (array/filter @payload.overrides (fn (o) (and (str/startsWith (object/get @o "namespace") (str/concat @payload.key ":")) (!= (object/get @o "namespace") (str/concat @payload.key ":*")))))
+                (fn (o) (json/parse (str/concat "{\"namespace\":" (json/stringify (object/get @o "namespace")) ",\"level\":null}") LogChange)))
+              (array/concat
+                [{ namespace: (str/concat @payload.key ":*"), level: @level }]
+                (if @payload.isNamespace [{ namespace: @payload.key, level: @level }] [])))))
+        (emit LOG_CHANGES { changes: @entity.changes })
+
+      LOG_DETAIL -> ready
+        (set @entity.changes
+          (array/map
+            (array/filter @payload.overrides (fn (o) (or (= (object/get @o "level") "DEBUG") (= (object/get @o "level") "INFO"))))
+            (fn (o) { namespace: (object/get @o "namespace"), level: (if @payload.detail "DEBUG" "INFO") })))
+        (emit LOG_CHANGES { changes: @entity.changes })
+
+      LOG_SHOWN -> ready
+        (set @entity.count
+          (array/len (array/filter @payload.namespaces (fn (ns)
+            (let ((hit (array/find @payload.levels (fn (l) (= (object/get @l "namespace") @ns)))))
+              (and (!= @hit null) (or (= (object/get @hit "level") "DEBUG") (= (object/get @hit "level") "INFO"))))))))
+        (emit LOG_SHOWN_COUNT { count: @entity.count })
+    }
+
+    emits {
+      LOG_CHANGES -> external { changes : [LogChange]! }
+        @description "The level changes a toggle or a detail switch makes; a change without a level clears the explicit level."
+        @tier "domain"
+      LOG_SHOWN_COUNT -> external { count : number! }
+        @description "How many of the namespaces log at INFO or more detailed."
+        @tier "domain"
+    }
+
+    listens {
+      LOG_TOGGLE -> external { key : string!, isNamespace : boolean!, on : boolean!, detail : boolean!, overrides : [LevelEntry]! }
+        @description "Turn a namespace group on or off, clearing the explicit levels beneath it."
+        @synonyms "logging toggle, namespace on off, log level change"
+      LOG_DETAIL -> external { detail : boolean!, overrides : [LevelEntry]! }
+        @description "Move every shown explicit level between INFO and DEBUG."
+        @synonyms "logging detail, debug detail switch"
+      LOG_SHOWN -> external { namespaces : [string]!, levels : [LevelEntry]! }
+        @description "Count the namespaces logging at INFO or more detailed."
+        @synonyms "shown count, logging console count"
+    }
+  }
+
+  page "/log-levels" as LogLevelsPage -> LogLevels
+}

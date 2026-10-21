@@ -1,0 +1,8761 @@
+{
+ "note": "Outcome goldens: operation events, refusals, per-step argv (read from STEPS_RUN: dirFlag + scope dir + prefix + step args) and hand-offs through STEPS_RUN / STEPS_DONE / STEPS_FAILED to std-step-runner. Replay limits: case-level entity seeding and @user cannot be seeded, so every flow starts from the operation event with from working and resumes at WS_ROOT_READY past the WS_BEGIN mkdir effect (WS_BEGIN itself always refuses AUTH_ERROR, covered by the signed-out cases). Firing a WORKSPACE_* operation with from idle loses the queue append under replay; this is most likely the program/step array-persistence defect (PS1), do not chase it here. Expectations record the replay's actual emits, including a premature lookup-stage hop whose extra WS_FAIL / empty *_LOADED are replay artifacts, not product behavior. Not covered: tree, read, write, remove and the bucket flows (os effects and config seeding).",
+ "atom": "ops/atoms/std-workspace.lolo",
+ "trait": "WorkspaceClient",
+ "cases": [
+  {
+   "id": "snapshot-commits-and-reports-head",
+   "steps": [
+    {
+     "event": "WORKSPACE_SNAPSHOT",
+     "payload": {
+      "workspace": "w",
+      "reason": "first"
+     },
+     "from": "working",
+     "expect": {}
+    },
+    {
+     "event": "WS_NEXT",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_BEGIN",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_ROOT_READY",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "."
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "grep",
+            "--no-index",
+            "-l",
+            "-F",
+            "-e",
+            "\"appId\": \"w\"",
+            "--",
+            ":(glob)/*/.almadar/app-marker.json"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "root",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "o/w/.almadar/app-marker.json\n"
+      ],
+      "rawOuts": [
+       "by93Ly5hbG1hZGFyL2FwcC1tYXJrZXIuanNvbgo="
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_FAIL",
+        "payload": {
+         "code": "",
+         "message": "git commit: "
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_OPENED",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "/var/lib/almadar/workspaces/o"
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "/var/lib/almadar/workspaces/o/w",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "add",
+            "-A"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": false
+          },
+          {
+           "args": [
+            "commit",
+            "-m",
+            "snapshot: first",
+            "--allow-empty-message",
+            "-m",
+            "Almadar-Kind: snapshot"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "",
+       ""
+      ],
+      "rawOuts": [
+       "",
+       ""
+      ],
+      "codes": [
+       0,
+       0
+      ],
+      "failures": [
+       "",
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "/var/lib/almadar/workspaces/o"
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "/var/lib/almadar/workspaces/o/w",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "rev-parse",
+            "HEAD"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "deadbeef\n"
+      ],
+      "rawOuts": [
+       "ZGVhZGJlZWYK"
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_FINISH",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WORKSPACE_SNAPSHOT_TAKEN",
+        "payload": {
+         "committed": true,
+         "oid": "deadbeef",
+         "workspace": "w"
+        }
+       },
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "snapshot-nothing-to-commit-reports-no-commit",
+   "steps": [
+    {
+     "event": "WORKSPACE_SNAPSHOT",
+     "payload": {
+      "workspace": "w",
+      "reason": "r"
+     },
+     "from": "working",
+     "expect": {}
+    },
+    {
+     "event": "WS_NEXT",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_BEGIN",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_ROOT_READY",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "."
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "grep",
+            "--no-index",
+            "-l",
+            "-F",
+            "-e",
+            "\"appId\": \"w\"",
+            "--",
+            ":(glob)/*/.almadar/app-marker.json"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "root",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "o/w/.almadar/app-marker.json\n"
+      ],
+      "rawOuts": [
+       "by93Ly5hbG1hZGFyL2FwcC1tYXJrZXIuanNvbgo="
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_FAIL",
+        "payload": {
+         "code": "",
+         "message": "git commit: "
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_OPENED",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "/var/lib/almadar/workspaces/o"
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "/var/lib/almadar/workspaces/o/w",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "add",
+            "-A"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": false
+          },
+          {
+           "args": [
+            "commit",
+            "-m",
+            "snapshot: r",
+            "--allow-empty-message",
+            "-m",
+            "Almadar-Kind: snapshot"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "",
+       "nothing to commit, working tree clean\n"
+      ],
+      "rawOuts": [
+       "",
+       "bm90aGluZyB0byBjb21taXQsIHdvcmtpbmcgdHJlZSBjbGVhbgo="
+      ],
+      "codes": [
+       0,
+       1
+      ],
+      "failures": [
+       "",
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_FINISH",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WORKSPACE_SNAPSHOT_TAKEN",
+        "payload": {
+         "committed": false,
+         "oid": "",
+         "workspace": "w"
+        }
+       },
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "snapshot-no-changes-added-reports-no-commit",
+   "steps": [
+    {
+     "event": "WORKSPACE_SNAPSHOT",
+     "payload": {
+      "workspace": "w",
+      "reason": "r"
+     },
+     "from": "working",
+     "expect": {}
+    },
+    {
+     "event": "WS_NEXT",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_BEGIN",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_ROOT_READY",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "."
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "grep",
+            "--no-index",
+            "-l",
+            "-F",
+            "-e",
+            "\"appId\": \"w\"",
+            "--",
+            ":(glob)/*/.almadar/app-marker.json"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "root",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "o/w/.almadar/app-marker.json\n"
+      ],
+      "rawOuts": [
+       "by93Ly5hbG1hZGFyL2FwcC1tYXJrZXIuanNvbgo="
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_FAIL",
+        "payload": {
+         "code": "",
+         "message": "git commit: "
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_OPENED",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "/var/lib/almadar/workspaces/o"
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "/var/lib/almadar/workspaces/o/w",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "add",
+            "-A"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": false
+          },
+          {
+           "args": [
+            "commit",
+            "-m",
+            "snapshot: r",
+            "--allow-empty-message",
+            "-m",
+            "Almadar-Kind: snapshot"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "",
+       ""
+      ],
+      "rawOuts": [
+       "",
+       ""
+      ],
+      "codes": [
+       0,
+       1
+      ],
+      "failures": [
+       "",
+       "no changes added to commit"
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_FINISH",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WORKSPACE_SNAPSHOT_TAKEN",
+        "payload": {
+         "committed": false,
+         "oid": "",
+         "workspace": "w"
+        }
+       },
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "snapshot-commit-error-fails",
+   "steps": [
+    {
+     "event": "WORKSPACE_SNAPSHOT",
+     "payload": {
+      "workspace": "w",
+      "reason": "r"
+     },
+     "from": "working",
+     "expect": {}
+    },
+    {
+     "event": "WS_NEXT",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_BEGIN",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_ROOT_READY",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "."
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "grep",
+            "--no-index",
+            "-l",
+            "-F",
+            "-e",
+            "\"appId\": \"w\"",
+            "--",
+            ":(glob)/*/.almadar/app-marker.json"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "root",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "o/w/.almadar/app-marker.json\n"
+      ],
+      "rawOuts": [
+       "by93Ly5hbG1hZGFyL2FwcC1tYXJrZXIuanNvbgo="
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_FAIL",
+        "payload": {
+         "code": "",
+         "message": "git commit: "
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_OPENED",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "/var/lib/almadar/workspaces/o"
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "/var/lib/almadar/workspaces/o/w",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "add",
+            "-A"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": false
+          },
+          {
+           "args": [
+            "commit",
+            "-m",
+            "snapshot: r",
+            "--allow-empty-message",
+            "-m",
+            "Almadar-Kind: snapshot"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "",
+       ""
+      ],
+      "rawOuts": [
+       "",
+       ""
+      ],
+      "codes": [
+       0,
+       1
+      ],
+      "failures": [
+       "",
+       "fatal: unable to write"
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_FAIL",
+        "payload": {
+         "code": "",
+         "message": "git commit: fatal: unable to write"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_FAIL",
+     "payload": {
+      "code": "",
+      "message": "git commit: fatal: unable to write"
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WORKSPACE_SNAPSHOT_FAILED",
+        "payload": {
+         "code": "",
+         "message": "git commit: fatal: unable to write",
+         "workspace": "w"
+        }
+       },
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "untolerated-step-failure-stops-the-run",
+   "steps": [
+    {
+     "event": "WORKSPACE_SNAPSHOT",
+     "payload": {
+      "workspace": "w",
+      "reason": "r"
+     },
+     "from": "working",
+     "expect": {}
+    },
+    {
+     "event": "WS_NEXT",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_BEGIN",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_ROOT_READY",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "."
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "grep",
+            "--no-index",
+            "-l",
+            "-F",
+            "-e",
+            "\"appId\": \"w\"",
+            "--",
+            ":(glob)/*/.almadar/app-marker.json"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "root",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "o/w/.almadar/app-marker.json\n"
+      ],
+      "rawOuts": [
+       "by93Ly5hbG1hZGFyL2FwcC1tYXJrZXIuanNvbgo="
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_FAIL",
+        "payload": {
+         "code": "",
+         "message": "git commit: "
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_OPENED",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "/var/lib/almadar/workspaces/o"
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "/var/lib/almadar/workspaces/o/w",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "add",
+            "-A"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": false
+          },
+          {
+           "args": [
+            "commit",
+            "-m",
+            "snapshot: r",
+            "--allow-empty-message",
+            "-m",
+            "Almadar-Kind: snapshot"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_FAILED",
+     "payload": {
+      "requestId": "step",
+      "index": 0,
+      "code": "step_failed",
+      "stderr": "fatal: bad",
+      "stdout": ""
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_FAIL",
+        "payload": {
+         "code": "",
+         "message": "git add: fatal: bad"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_FAIL",
+     "payload": {
+      "code": "",
+      "message": "git add: fatal: bad"
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WORKSPACE_SNAPSHOT_FAILED",
+        "payload": {
+         "code": "",
+         "message": "git add: fatal: bad",
+         "workspace": "w"
+        }
+       },
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "step-failure-message-falls-back-to-stdout",
+   "steps": [
+    {
+     "event": "WORKSPACE_SNAPSHOT",
+     "payload": {
+      "workspace": "w",
+      "reason": "r"
+     },
+     "from": "working",
+     "expect": {}
+    },
+    {
+     "event": "WS_NEXT",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_BEGIN",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_ROOT_READY",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "."
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "grep",
+            "--no-index",
+            "-l",
+            "-F",
+            "-e",
+            "\"appId\": \"w\"",
+            "--",
+            ":(glob)/*/.almadar/app-marker.json"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "root",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "o/w/.almadar/app-marker.json\n"
+      ],
+      "rawOuts": [
+       "by93Ly5hbG1hZGFyL2FwcC1tYXJrZXIuanNvbgo="
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_FAIL",
+        "payload": {
+         "code": "",
+         "message": "git commit: "
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_OPENED",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "/var/lib/almadar/workspaces/o"
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "/var/lib/almadar/workspaces/o/w",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "add",
+            "-A"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": false
+          },
+          {
+           "args": [
+            "commit",
+            "-m",
+            "snapshot: r",
+            "--allow-empty-message",
+            "-m",
+            "Almadar-Kind: snapshot"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_FAILED",
+     "payload": {
+      "requestId": "step",
+      "index": 0,
+      "code": "step_failed",
+      "stderr": "",
+      "stdout": "partial"
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_FAIL",
+        "payload": {
+         "code": "",
+         "message": "git add: partial"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "git-spawn-failure-is-service-error",
+   "steps": [
+    {
+     "event": "WORKSPACE_SNAPSHOT",
+     "payload": {
+      "workspace": "w",
+      "reason": "r"
+     },
+     "from": "working",
+     "expect": {}
+    },
+    {
+     "event": "WS_NEXT",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_BEGIN",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_ROOT_READY",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "."
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "grep",
+            "--no-index",
+            "-l",
+            "-F",
+            "-e",
+            "\"appId\": \"w\"",
+            "--",
+            ":(glob)/*/.almadar/app-marker.json"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "root",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "o/w/.almadar/app-marker.json\n"
+      ],
+      "rawOuts": [
+       "by93Ly5hbG1hZGFyL2FwcC1tYXJrZXIuanNvbgo="
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_FAIL",
+        "payload": {
+         "code": "",
+         "message": "git commit: "
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_OPENED",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "/var/lib/almadar/workspaces/o"
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "/var/lib/almadar/workspaces/o/w",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "add",
+            "-A"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": false
+          },
+          {
+           "args": [
+            "commit",
+            "-m",
+            "snapshot: r",
+            "--allow-empty-message",
+            "-m",
+            "Almadar-Kind: snapshot"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_FAILED",
+     "payload": {
+      "requestId": "step",
+      "index": 0,
+      "code": "cli_spawn_failed",
+      "stderr": "spawn denied",
+      "stdout": ""
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_FAIL",
+        "payload": {
+         "code": "SERVICE_ERROR",
+         "message": "spawn denied"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_FAIL",
+     "payload": {
+      "code": "SERVICE_ERROR",
+      "message": "spawn denied"
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WORKSPACE_SNAPSHOT_FAILED",
+        "payload": {
+         "code": "SERVICE_ERROR",
+         "message": "spawn denied",
+         "workspace": "w"
+        }
+       },
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "history-lists-newest-first",
+   "steps": [
+    {
+     "event": "WORKSPACE_HISTORY",
+     "payload": {
+      "workspace": "w"
+     },
+     "from": "working",
+     "expect": {}
+    },
+    {
+     "event": "WS_NEXT",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_BEGIN",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_ROOT_READY",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "."
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "grep",
+            "--no-index",
+            "-l",
+            "-F",
+            "-e",
+            "\"appId\": \"w\"",
+            "--",
+            ":(glob)/*/.almadar/app-marker.json"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "root",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "o/w/.almadar/app-marker.json\n"
+      ],
+      "rawOuts": [
+       "by93Ly5hbG1hZGFyL2FwcC1tYXJrZXIuanNvbgo="
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {}
+    },
+    {
+     "event": "WS_OPENED",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "/var/lib/almadar/workspaces/o"
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "/var/lib/almadar/workspaces/o/w",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "log",
+            "--format=%H%x1f%at%x1f%s%x1f%(trailers:only,unfold)%x1e",
+            "--",
+            "schema.orb",
+            ":(glob)orbitals/*",
+            ":(glob)**/*.lolo",
+            ":(glob).almadar/sessions/*/spec.json",
+            ":(exclude,glob).almadar/**/*.lolo",
+            ":(exclude)apps",
+            ":(exclude)node_modules"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "abc123\u001f1700000000\u001fsnapshot: first\u001fAlmadar-Kind: snapshot\u001e def456\u001f1700000100\u001fedit\u001f\u001e"
+      ],
+      "rawOuts": [
+       "YWJjMTIzHzE3MDAwMDAwMDAfc25hcHNob3Q6IGZpcnN0H0FsbWFkYXItS2luZDogc25hcHNob3QeIGRlZjQ1Nh8xNzAwMDAwMTAwH2VkaXQfHg=="
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WORKSPACE_HISTORY_LOADED",
+        "payload": {
+         "canRedo": false,
+         "canUndo": true,
+         "snapshots": [
+          {
+           "id": "abc123",
+           "kind": "snapshot",
+           "reason": "first",
+           "target": "",
+           "timestamp": 1700000000000
+          },
+          {
+           "id": "def456",
+           "kind": "",
+           "reason": "edit",
+           "target": "",
+           "timestamp": 1700000100000
+          }
+         ],
+         "workspace": "w"
+        }
+       },
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "history-limit-takes-newest",
+   "steps": [
+    {
+     "event": "WORKSPACE_HISTORY",
+     "payload": {
+      "workspace": "w",
+      "limit": 1
+     },
+     "from": "working",
+     "expect": {}
+    },
+    {
+     "event": "WS_NEXT",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_BEGIN",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_ROOT_READY",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "."
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "grep",
+            "--no-index",
+            "-l",
+            "-F",
+            "-e",
+            "\"appId\": \"w\"",
+            "--",
+            ":(glob)/*/.almadar/app-marker.json"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "root",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "o/w/.almadar/app-marker.json\n"
+      ],
+      "rawOuts": [
+       "by93Ly5hbG1hZGFyL2FwcC1tYXJrZXIuanNvbgo="
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {}
+    },
+    {
+     "event": "WS_OPENED",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "/var/lib/almadar/workspaces/o"
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "/var/lib/almadar/workspaces/o/w",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "log",
+            "--format=%H%x1f%at%x1f%s%x1f%(trailers:only,unfold)%x1e",
+            "--",
+            "schema.orb",
+            ":(glob)orbitals/*",
+            ":(glob)**/*.lolo",
+            ":(glob).almadar/sessions/*/spec.json",
+            ":(exclude,glob).almadar/**/*.lolo",
+            ":(exclude)apps",
+            ":(exclude)node_modules"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "abc123\u001f1700000000\u001fsnapshot: first\u001fAlmadar-Kind: snapshot\u001e def456\u001f1700000100\u001fedit\u001f\u001e"
+      ],
+      "rawOuts": [
+       "YWJjMTIzHzE3MDAwMDAwMDAfc25hcHNob3Q6IGZpcnN0H0FsbWFkYXItS2luZDogc25hcHNob3QeIGRlZjQ1Nh8xNzAwMDAwMTAwH2VkaXQfHg=="
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WORKSPACE_HISTORY_LOADED",
+        "payload": {
+         "canRedo": false,
+         "canUndo": true,
+         "snapshots": [
+          {
+           "id": "abc123",
+           "kind": "snapshot",
+           "reason": "first",
+           "target": "",
+           "timestamp": 1700000000000
+          }
+         ],
+         "workspace": "w"
+        }
+       },
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "history-git-failure-is-empty",
+   "steps": [
+    {
+     "event": "WORKSPACE_HISTORY",
+     "payload": {
+      "workspace": "w"
+     },
+     "from": "working",
+     "expect": {}
+    },
+    {
+     "event": "WS_NEXT",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_BEGIN",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_ROOT_READY",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "."
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "grep",
+            "--no-index",
+            "-l",
+            "-F",
+            "-e",
+            "\"appId\": \"w\"",
+            "--",
+            ":(glob)/*/.almadar/app-marker.json"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "root",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "o/w/.almadar/app-marker.json\n"
+      ],
+      "rawOuts": [
+       "by93Ly5hbG1hZGFyL2FwcC1tYXJrZXIuanNvbgo="
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {}
+    },
+    {
+     "event": "WS_OPENED",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "/var/lib/almadar/workspaces/o"
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "/var/lib/almadar/workspaces/o/w",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "log",
+            "--format=%H%x1f%at%x1f%s%x1f%(trailers:only,unfold)%x1e",
+            "--",
+            "schema.orb",
+            ":(glob)orbitals/*",
+            ":(glob)**/*.lolo",
+            ":(glob).almadar/sessions/*/spec.json",
+            ":(exclude,glob).almadar/**/*.lolo",
+            ":(exclude)apps",
+            ":(exclude)node_modules"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       ""
+      ],
+      "rawOuts": [
+       ""
+      ],
+      "codes": [
+       128
+      ],
+      "failures": [
+       "fatal"
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WORKSPACE_HISTORY_LOADED",
+        "payload": {
+         "canRedo": false,
+         "canUndo": false,
+         "snapshots": [],
+         "workspace": "w"
+        }
+       },
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "history-after-undo-offers-redo",
+   "steps": [
+    {
+     "event": "WORKSPACE_HISTORY",
+     "payload": {
+      "workspace": "w"
+     },
+     "from": "working",
+     "expect": {}
+    },
+    {
+     "event": "WS_NEXT",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_BEGIN",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_ROOT_READY",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "."
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "grep",
+            "--no-index",
+            "-l",
+            "-F",
+            "-e",
+            "\"appId\": \"w\"",
+            "--",
+            ":(glob)/*/.almadar/app-marker.json"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "root",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "o/w/.almadar/app-marker.json\n"
+      ],
+      "rawOuts": [
+       "by93Ly5hbG1hZGFyL2FwcC1tYXJrZXIuanNvbgo="
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {}
+    },
+    {
+     "event": "WS_OPENED",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "/var/lib/almadar/workspaces/o"
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "/var/lib/almadar/workspaces/o/w",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "log",
+            "--format=%H%x1f%at%x1f%s%x1f%(trailers:only,unfold)%x1e",
+            "--",
+            "schema.orb",
+            ":(glob)orbitals/*",
+            ":(glob)**/*.lolo",
+            ":(glob).almadar/sessions/*/spec.json",
+            ":(exclude,glob).almadar/**/*.lolo",
+            ":(exclude)apps",
+            ":(exclude)node_modules"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "u2\u001f1700000300\u001fundo: abc\u001fAlmadar-Kind: undo\nUndoes: u1\u001e u1\u001f1700000200\u001fedit\u001f\u001e"
+      ],
+      "rawOuts": [
+       "dTIfMTcwMDAwMDMwMB91bmRvOiBhYmMfQWxtYWRhci1LaW5kOiB1bmRvClVuZG9lczogdTEeIHUxHzE3MDAwMDAyMDAfZWRpdB8e"
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WORKSPACE_HISTORY_LOADED",
+        "payload": {
+         "canRedo": true,
+         "canUndo": false,
+         "snapshots": [
+          {
+           "id": "u2",
+           "kind": "undo",
+           "reason": "undo: abc",
+           "target": "u1",
+           "timestamp": 1700000300000
+          },
+          {
+           "id": "u1",
+           "kind": "",
+           "reason": "edit",
+           "target": "",
+           "timestamp": 1700000200000
+          }
+         ],
+         "workspace": "w"
+        }
+       },
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "changes-without-oid-is-empty",
+   "steps": [
+    {
+     "event": "WORKSPACE_CHANGES",
+     "payload": {
+      "oid": "",
+      "workspace": "w"
+     },
+     "from": "working",
+     "expect": {}
+    },
+    {
+     "event": "WS_NEXT",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_BEGIN",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_ROOT_READY",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "."
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "grep",
+            "--no-index",
+            "-l",
+            "-F",
+            "-e",
+            "\"appId\": \"w\"",
+            "--",
+            ":(glob)/*/.almadar/app-marker.json"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "root",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "o/w/.almadar/app-marker.json\n"
+      ],
+      "rawOuts": [
+       "by93Ly5hbG1hZGFyL2FwcC1tYXJrZXIuanNvbgo="
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_OPENED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_OPENED",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WORKSPACE_CHANGES_LOADED",
+        "payload": {
+         "changes": [],
+         "workspace": "w"
+        }
+       },
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "changes-unknown-oid-is-empty",
+   "steps": [
+    {
+     "event": "WORKSPACE_CHANGES",
+     "payload": {
+      "oid": "zz",
+      "workspace": "w"
+     },
+     "from": "working",
+     "expect": {}
+    },
+    {
+     "event": "WS_NEXT",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_BEGIN",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_ROOT_READY",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "."
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "grep",
+            "--no-index",
+            "-l",
+            "-F",
+            "-e",
+            "\"appId\": \"w\"",
+            "--",
+            ":(glob)/*/.almadar/app-marker.json"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "root",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "o/w/.almadar/app-marker.json\n"
+      ],
+      "rawOuts": [
+       "by93Ly5hbG1hZGFyL2FwcC1tYXJrZXIuanNvbgo="
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_OPENED",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "/var/lib/almadar/workspaces/o"
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "/var/lib/almadar/workspaces/o/w",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "rev-parse",
+            "--verify",
+            "--quiet",
+            "zz^{commit}"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       ""
+      ],
+      "rawOuts": [
+       ""
+      ],
+      "codes": [
+       1
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WORKSPACE_CHANGES_LOADED",
+        "payload": {
+         "changes": [],
+         "workspace": "w"
+        }
+       },
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "changes-reads-both-sides-of-each-file",
+   "steps": [
+    {
+     "event": "WORKSPACE_CHANGES",
+     "payload": {
+      "oid": "abc123",
+      "workspace": "w"
+     },
+     "from": "working",
+     "expect": {}
+    },
+    {
+     "event": "WS_NEXT",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_BEGIN",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_ROOT_READY",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "."
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "grep",
+            "--no-index",
+            "-l",
+            "-F",
+            "-e",
+            "\"appId\": \"w\"",
+            "--",
+            ":(glob)/*/.almadar/app-marker.json"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "root",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "o/w/.almadar/app-marker.json\n"
+      ],
+      "rawOuts": [
+       "by93Ly5hbG1hZGFyL2FwcC1tYXJrZXIuanNvbgo="
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_OPENED",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "/var/lib/almadar/workspaces/o"
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "/var/lib/almadar/workspaces/o/w",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "rev-parse",
+            "--verify",
+            "--quiet",
+            "abc123^{commit}"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "abc123\n"
+      ],
+      "rawOuts": [
+       "YWJjMTIzCg=="
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WORKSPACE_CHANGES_LOADED",
+        "payload": {
+         "changes": [],
+         "workspace": "w"
+        }
+       },
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "/var/lib/almadar/workspaces/o"
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "/var/lib/almadar/workspaces/o/w",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "rev-parse",
+            "--verify",
+            "--quiet",
+            "abc123^"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": true
+          },
+          {
+           "args": [
+            "diff-tree",
+            "--root",
+            "-r",
+            "--name-only",
+            "--no-commit-id",
+            "--no-renames",
+            "abc123",
+            "--",
+            "schema.orb",
+            ":(glob)orbitals/*",
+            ":(glob)**/*.lolo",
+            ":(glob).almadar/sessions/*/spec.json",
+            ":(exclude,glob).almadar/**/*.lolo",
+            ":(exclude)apps",
+            ":(exclude)node_modules"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "p1\n",
+       "b.lolo\na.lolo\n"
+      ],
+      "rawOuts": [
+       "cDEK",
+       "Yi5sb2xvCmEubG9sbwo="
+      ],
+      "codes": [
+       0,
+       0
+      ],
+      "failures": [
+       "",
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WORKSPACE_CHANGES_LOADED",
+        "payload": {
+         "changes": [
+          {
+           "after": "p1\n",
+           "before": "b.lolo\na.lolo\n",
+           "change": "modified",
+           "id": "a.lolo",
+           "path": "a.lolo"
+          },
+          {
+           "after": "",
+           "before": "",
+           "change": "added",
+           "id": "b.lolo",
+           "path": "b.lolo"
+          }
+         ],
+         "workspace": "w"
+        }
+       },
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "/var/lib/almadar/workspaces/o"
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "/var/lib/almadar/workspaces/o/w",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "show",
+            "abc123:a.lolo"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": true
+          },
+          {
+           "args": [
+            "show",
+            "p1:a.lolo"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": true
+          },
+          {
+           "args": [
+            "show",
+            "abc123:b.lolo"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": true
+          },
+          {
+           "args": [
+            "show",
+            "p1:b.lolo"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "new a",
+       "old a",
+       "new b",
+       ""
+      ],
+      "rawOuts": [
+       "bmV3IGE=",
+       "b2xkIGE=",
+       "bmV3IGI=",
+       ""
+      ],
+      "codes": [
+       0,
+       0,
+       0,
+       128
+      ],
+      "failures": [
+       "",
+       "",
+       "",
+       "fatal: path"
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WORKSPACE_CHANGES_LOADED",
+        "payload": {
+         "changes": [
+          {
+           "after": "new a",
+           "before": "old a",
+           "change": "modified",
+           "id": "a.lolo",
+           "path": "a.lolo"
+          },
+          {
+           "after": "new b",
+           "before": "",
+           "change": "added",
+           "id": "b.lolo",
+           "path": "b.lolo"
+          }
+         ],
+         "workspace": "w"
+        }
+       },
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "changes-root-commit-is-all-added",
+   "steps": [
+    {
+     "event": "WORKSPACE_CHANGES",
+     "payload": {
+      "oid": "abc123",
+      "workspace": "w"
+     },
+     "from": "working",
+     "expect": {}
+    },
+    {
+     "event": "WS_NEXT",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_BEGIN",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_ROOT_READY",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "."
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "grep",
+            "--no-index",
+            "-l",
+            "-F",
+            "-e",
+            "\"appId\": \"w\"",
+            "--",
+            ":(glob)/*/.almadar/app-marker.json"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "root",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "o/w/.almadar/app-marker.json\n"
+      ],
+      "rawOuts": [
+       "by93Ly5hbG1hZGFyL2FwcC1tYXJrZXIuanNvbgo="
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_OPENED",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "/var/lib/almadar/workspaces/o"
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "/var/lib/almadar/workspaces/o/w",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "rev-parse",
+            "--verify",
+            "--quiet",
+            "abc123^{commit}"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "abc123\n"
+      ],
+      "rawOuts": [
+       "YWJjMTIzCg=="
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WORKSPACE_CHANGES_LOADED",
+        "payload": {
+         "changes": [],
+         "workspace": "w"
+        }
+       },
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "/var/lib/almadar/workspaces/o"
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "/var/lib/almadar/workspaces/o/w",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "rev-parse",
+            "--verify",
+            "--quiet",
+            "abc123^"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": true
+          },
+          {
+           "args": [
+            "diff-tree",
+            "--root",
+            "-r",
+            "--name-only",
+            "--no-commit-id",
+            "--no-renames",
+            "abc123",
+            "--",
+            "schema.orb",
+            ":(glob)orbitals/*",
+            ":(glob)**/*.lolo",
+            ":(glob).almadar/sessions/*/spec.json",
+            ":(exclude,glob).almadar/**/*.lolo",
+            ":(exclude)apps",
+            ":(exclude)node_modules"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "",
+       "a.lolo\n"
+      ],
+      "rawOuts": [
+       "",
+       "YS5sb2xvCg=="
+      ],
+      "codes": [
+       1,
+       0
+      ],
+      "failures": [
+       "",
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WORKSPACE_CHANGES_LOADED",
+        "payload": {
+         "changes": [
+          {
+           "after": "",
+           "before": "",
+           "change": "added",
+           "id": "a.lolo",
+           "path": "a.lolo"
+          }
+         ],
+         "workspace": "w"
+        }
+       },
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "/var/lib/almadar/workspaces/o"
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "/var/lib/almadar/workspaces/o/w",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "show",
+            "abc123:a.lolo"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "new a"
+      ],
+      "rawOuts": [
+       "bmV3IGE="
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WORKSPACE_CHANGES_LOADED",
+        "payload": {
+         "changes": [
+          {
+           "after": "new a",
+           "before": "",
+           "change": "added",
+           "id": "a.lolo",
+           "path": "a.lolo"
+          }
+         ],
+         "workspace": "w"
+        }
+       },
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "changes-commit-with-no-app-files-is-empty",
+   "steps": [
+    {
+     "event": "WORKSPACE_CHANGES",
+     "payload": {
+      "oid": "abc123",
+      "workspace": "w"
+     },
+     "from": "working",
+     "expect": {}
+    },
+    {
+     "event": "WS_NEXT",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_BEGIN",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_ROOT_READY",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "."
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "grep",
+            "--no-index",
+            "-l",
+            "-F",
+            "-e",
+            "\"appId\": \"w\"",
+            "--",
+            ":(glob)/*/.almadar/app-marker.json"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "root",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "o/w/.almadar/app-marker.json\n"
+      ],
+      "rawOuts": [
+       "by93Ly5hbG1hZGFyL2FwcC1tYXJrZXIuanNvbgo="
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_OPENED",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "/var/lib/almadar/workspaces/o"
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "/var/lib/almadar/workspaces/o/w",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "rev-parse",
+            "--verify",
+            "--quiet",
+            "abc123^{commit}"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "abc123\n"
+      ],
+      "rawOuts": [
+       "YWJjMTIzCg=="
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WORKSPACE_CHANGES_LOADED",
+        "payload": {
+         "changes": [],
+         "workspace": "w"
+        }
+       },
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "/var/lib/almadar/workspaces/o"
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "/var/lib/almadar/workspaces/o/w",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "rev-parse",
+            "--verify",
+            "--quiet",
+            "abc123^"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": true
+          },
+          {
+           "args": [
+            "diff-tree",
+            "--root",
+            "-r",
+            "--name-only",
+            "--no-commit-id",
+            "--no-renames",
+            "abc123",
+            "--",
+            "schema.orb",
+            ":(glob)orbitals/*",
+            ":(glob)**/*.lolo",
+            ":(glob).almadar/sessions/*/spec.json",
+            ":(exclude,glob).almadar/**/*.lolo",
+            ":(exclude)apps",
+            ":(exclude)node_modules"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "p1\n",
+       "\n"
+      ],
+      "rawOuts": [
+       "cDEK",
+       "Cg=="
+      ],
+      "codes": [
+       0,
+       0
+      ],
+      "failures": [
+       "",
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WORKSPACE_CHANGES_LOADED",
+        "payload": {
+         "changes": [],
+         "workspace": "w"
+        }
+       },
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "restore-without-oid-finishes-unchanged",
+   "steps": [
+    {
+     "event": "WORKSPACE_RESTORE",
+     "payload": {
+      "oid": "",
+      "workspace": "w"
+     },
+     "from": "working",
+     "expect": {}
+    },
+    {
+     "event": "WS_NEXT",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_BEGIN",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_ROOT_READY",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "."
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "grep",
+            "--no-index",
+            "-l",
+            "-F",
+            "-e",
+            "\"appId\": \"w\"",
+            "--",
+            ":(glob)/*/.almadar/app-marker.json"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "root",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "o/w/.almadar/app-marker.json\n"
+      ],
+      "rawOuts": [
+       "by93Ly5hbG1hZGFyL2FwcC1tYXJrZXIuanNvbgo="
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_OPENED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_OPENED",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_FINISH",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WORKSPACE_HISTORY_STEPPED",
+        "payload": {
+         "changed": false,
+         "oid": "",
+         "workspace": "w"
+        }
+       },
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "restore-unknown-oid-finishes-unchanged",
+   "steps": [
+    {
+     "event": "WORKSPACE_RESTORE",
+     "payload": {
+      "oid": "zz",
+      "workspace": "w"
+     },
+     "from": "working",
+     "expect": {}
+    },
+    {
+     "event": "WS_NEXT",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_BEGIN",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_ROOT_READY",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "."
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "grep",
+            "--no-index",
+            "-l",
+            "-F",
+            "-e",
+            "\"appId\": \"w\"",
+            "--",
+            ":(glob)/*/.almadar/app-marker.json"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "root",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "o/w/.almadar/app-marker.json\n"
+      ],
+      "rawOuts": [
+       "by93Ly5hbG1hZGFyL2FwcC1tYXJrZXIuanNvbgo="
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STAGE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_OPENED",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "/var/lib/almadar/workspaces/o"
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "/var/lib/almadar/workspaces/o/w",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "rev-parse",
+            "--verify",
+            "--quiet",
+            "zz^{commit}"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       ""
+      ],
+      "rawOuts": [
+       ""
+      ],
+      "codes": [
+       1
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_FINISH",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WORKSPACE_HISTORY_STEPPED",
+        "payload": {
+         "changed": false,
+         "oid": "",
+         "workspace": "w"
+        }
+       },
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "restore-known-oid-restores-removes-and-commits",
+   "steps": [
+    {
+     "event": "WORKSPACE_RESTORE",
+     "payload": {
+      "oid": "abc123",
+      "workspace": "w"
+     },
+     "from": "working",
+     "expect": {}
+    },
+    {
+     "event": "WS_NEXT",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_BEGIN",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_ROOT_READY",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "."
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "grep",
+            "--no-index",
+            "-l",
+            "-F",
+            "-e",
+            "\"appId\": \"w\"",
+            "--",
+            ":(glob)/*/.almadar/app-marker.json"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "root",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "o/w/.almadar/app-marker.json\n"
+      ],
+      "rawOuts": [
+       "by93Ly5hbG1hZGFyL2FwcC1tYXJrZXIuanNvbgo="
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STAGE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_OPENED",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "/var/lib/almadar/workspaces/o"
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "/var/lib/almadar/workspaces/o/w",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "rev-parse",
+            "--verify",
+            "--quiet",
+            "abc123^{commit}"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "abc123\n"
+      ],
+      "rawOuts": [
+       "YWJjMTIzCg=="
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_APPLY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STAGE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "/var/lib/almadar/workspaces/o"
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "/var/lib/almadar/workspaces/o/w",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "diff",
+            "--name-status",
+            "--no-renames",
+            "abc123",
+            "--",
+            "schema.orb",
+            ":(glob)orbitals/*",
+            ":(glob)**/*.lolo",
+            ":(glob).almadar/sessions/*/spec.json",
+            ":(exclude,glob).almadar/**/*.lolo",
+            ":(exclude)apps",
+            ":(exclude)node_modules"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "M\ta.lolo\nA\tb.lolo\n"
+      ],
+      "rawOuts": [
+       "TQlhLmxvbG8KQQliLmxvbG8K"
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_APPLY",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "/var/lib/almadar/workspaces/o"
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "/var/lib/almadar/workspaces/o/w",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "restore",
+            "--source=abc123",
+            "--staged",
+            "--worktree",
+            "--",
+            "a.lolo"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": false
+          },
+          {
+           "args": [
+            "rm",
+            "-r",
+            "-q",
+            "-f",
+            "--ignore-unmatch",
+            "--",
+            "b.lolo"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": false
+          },
+          {
+           "args": [
+            "commit",
+            "-m",
+            "restore: abc123",
+            "--allow-empty-message",
+            "-m",
+            "Almadar-Kind: restore\nRestores: abc123"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": true
+          },
+          {
+           "args": [
+            "rev-parse",
+            "HEAD"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "",
+       "",
+       "",
+       "cafe01\n"
+      ],
+      "rawOuts": [
+       "",
+       "",
+       "",
+       "Y2FmZTAxCg=="
+      ],
+      "codes": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "failures": [
+       "",
+       "",
+       "",
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_FINISH",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WORKSPACE_HISTORY_STEPPED",
+        "payload": {
+         "changed": true,
+         "oid": "cafe01",
+         "workspace": "w"
+        }
+       },
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "restore-commit-error-fails",
+   "steps": [
+    {
+     "event": "WORKSPACE_RESTORE",
+     "payload": {
+      "oid": "abc123",
+      "workspace": "w"
+     },
+     "from": "working",
+     "expect": {}
+    },
+    {
+     "event": "WS_NEXT",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_BEGIN",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_ROOT_READY",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "."
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "grep",
+            "--no-index",
+            "-l",
+            "-F",
+            "-e",
+            "\"appId\": \"w\"",
+            "--",
+            ":(glob)/*/.almadar/app-marker.json"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "root",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "o/w/.almadar/app-marker.json\n"
+      ],
+      "rawOuts": [
+       "by93Ly5hbG1hZGFyL2FwcC1tYXJrZXIuanNvbgo="
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STAGE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_OPENED",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "/var/lib/almadar/workspaces/o"
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "/var/lib/almadar/workspaces/o/w",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "rev-parse",
+            "--verify",
+            "--quiet",
+            "abc123^{commit}"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "abc123\n"
+      ],
+      "rawOuts": [
+       "YWJjMTIzCg=="
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_APPLY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STAGE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "/var/lib/almadar/workspaces/o"
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "/var/lib/almadar/workspaces/o/w",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "diff",
+            "--name-status",
+            "--no-renames",
+            "abc123",
+            "--",
+            "schema.orb",
+            ":(glob)orbitals/*",
+            ":(glob)**/*.lolo",
+            ":(glob).almadar/sessions/*/spec.json",
+            ":(exclude,glob).almadar/**/*.lolo",
+            ":(exclude)apps",
+            ":(exclude)node_modules"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "M\ta.lolo\n"
+      ],
+      "rawOuts": [
+       "TQlhLmxvbG8K"
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_APPLY",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "/var/lib/almadar/workspaces/o"
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "/var/lib/almadar/workspaces/o/w",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "restore",
+            "--source=abc123",
+            "--staged",
+            "--worktree",
+            "--",
+            "a.lolo"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": false
+          },
+          {
+           "args": [
+            "commit",
+            "-m",
+            "restore: abc123",
+            "--allow-empty-message",
+            "-m",
+            "Almadar-Kind: restore\nRestores: abc123"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": true
+          },
+          {
+           "args": [
+            "rev-parse",
+            "HEAD"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "",
+       "",
+       "cafe01\n"
+      ],
+      "rawOuts": [
+       "",
+       "",
+       "Y2FmZTAxCg=="
+      ],
+      "codes": [
+       0,
+       1,
+       0
+      ],
+      "failures": [
+       "",
+       "fatal: boom",
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_FAIL",
+        "payload": {
+         "code": "",
+         "message": "git commit: fatal: boom"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_FAIL",
+     "payload": {
+      "code": "",
+      "message": "git commit: fatal: boom"
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WORKSPACE_STEP_FAILED",
+        "payload": {
+         "code": "",
+         "message": "git commit: fatal: boom",
+         "workspace": "w"
+        }
+       },
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "undo-reverts-the-latest-edit",
+   "steps": [
+    {
+     "event": "WORKSPACE_UNDO",
+     "payload": {
+      "workspace": "w"
+     },
+     "from": "working",
+     "expect": {}
+    },
+    {
+     "event": "WS_NEXT",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_BEGIN",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_ROOT_READY",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "."
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "grep",
+            "--no-index",
+            "-l",
+            "-F",
+            "-e",
+            "\"appId\": \"w\"",
+            "--",
+            ":(glob)/*/.almadar/app-marker.json"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "root",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "o/w/.almadar/app-marker.json\n"
+      ],
+      "rawOuts": [
+       "by93Ly5hbG1hZGFyL2FwcC1tYXJrZXIuanNvbgo="
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {}
+    },
+    {
+     "event": "WS_OPENED",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "/var/lib/almadar/workspaces/o"
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "/var/lib/almadar/workspaces/o/w",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "log",
+            "--format=%H%x1f%at%x1f%s%x1f%(trailers:only,unfold)%x1e",
+            "--",
+            "schema.orb",
+            ":(glob)orbitals/*",
+            ":(glob)**/*.lolo",
+            ":(glob).almadar/sessions/*/spec.json",
+            ":(exclude,glob).almadar/**/*.lolo",
+            ":(exclude)apps",
+            ":(exclude)node_modules"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "abc123\u001f1700000000\u001fsnapshot: first\u001fAlmadar-Kind: snapshot\u001e def456\u001f1700000100\u001fedit\u001f\u001e"
+      ],
+      "rawOuts": [
+       "YWJjMTIzHzE3MDAwMDAwMDAfc25hcHNob3Q6IGZpcnN0H0FsbWFkYXItS2luZDogc25hcHNob3QeIGRlZjQ1Nh8xNzAwMDAwMTAwH2VkaXQfHg=="
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STAGE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_TARGET",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "/var/lib/almadar/workspaces/o"
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "/var/lib/almadar/workspaces/o/w",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "rev-parse",
+            "--verify",
+            "--quiet",
+            "abc123^"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "p0\n"
+      ],
+      "rawOuts": [
+       "cDAK"
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_APPLY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STAGE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "/var/lib/almadar/workspaces/o"
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "/var/lib/almadar/workspaces/o/w",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "diff",
+            "--name-status",
+            "--no-renames",
+            "p0",
+            "--",
+            "schema.orb",
+            ":(glob)orbitals/*",
+            ":(glob)**/*.lolo",
+            ":(glob).almadar/sessions/*/spec.json",
+            ":(exclude,glob).almadar/**/*.lolo",
+            ":(exclude)apps",
+            ":(exclude)node_modules"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "M\ta.lolo\n"
+      ],
+      "rawOuts": [
+       "TQlhLmxvbG8K"
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_APPLY",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "/var/lib/almadar/workspaces/o"
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "/var/lib/almadar/workspaces/o/w",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "restore",
+            "--source=p0",
+            "--staged",
+            "--worktree",
+            "--",
+            "a.lolo"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": false
+          },
+          {
+           "args": [
+            "commit",
+            "-m",
+            "undo: abc123",
+            "--allow-empty-message",
+            "-m",
+            "Almadar-Kind: undo\nUndoes: abc123"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": true
+          },
+          {
+           "args": [
+            "rev-parse",
+            "HEAD"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "",
+       "",
+       "cafe02\n"
+      ],
+      "rawOuts": [
+       "",
+       "",
+       "Y2FmZTAyCg=="
+      ],
+      "codes": [
+       0,
+       0,
+       0
+      ],
+      "failures": [
+       "",
+       "",
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_FINISH",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WORKSPACE_HISTORY_STEPPED",
+        "payload": {
+         "changed": true,
+         "oid": "cafe02",
+         "workspace": "w"
+        }
+       },
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "undo-with-nothing-to-undo-finishes-unchanged",
+   "steps": [
+    {
+     "event": "WORKSPACE_UNDO",
+     "payload": {
+      "workspace": "w"
+     },
+     "from": "working",
+     "expect": {}
+    },
+    {
+     "event": "WS_NEXT",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_BEGIN",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_ROOT_READY",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "."
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "grep",
+            "--no-index",
+            "-l",
+            "-F",
+            "-e",
+            "\"appId\": \"w\"",
+            "--",
+            ":(glob)/*/.almadar/app-marker.json"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "root",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "o/w/.almadar/app-marker.json\n"
+      ],
+      "rawOuts": [
+       "by93Ly5hbG1hZGFyL2FwcC1tYXJrZXIuanNvbgo="
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {}
+    },
+    {
+     "event": "WS_OPENED",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "/var/lib/almadar/workspaces/o"
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "/var/lib/almadar/workspaces/o/w",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "log",
+            "--format=%H%x1f%at%x1f%s%x1f%(trailers:only,unfold)%x1e",
+            "--",
+            "schema.orb",
+            ":(glob)orbitals/*",
+            ":(glob)**/*.lolo",
+            ":(glob).almadar/sessions/*/spec.json",
+            ":(exclude,glob).almadar/**/*.lolo",
+            ":(exclude)apps",
+            ":(exclude)node_modules"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "u2\u001f1700000300\u001fundo: abc\u001fAlmadar-Kind: undo\nUndoes: u1\u001e u1\u001f1700000200\u001fedit\u001f\u001e"
+      ],
+      "rawOuts": [
+       "dTIfMTcwMDAwMDMwMB91bmRvOiBhYmMfQWxtYWRhci1LaW5kOiB1bmRvClVuZG9lczogdTEeIHUxHzE3MDAwMDAyMDAfZWRpdB8e"
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_TARGET",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_TARGET",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_FINISH",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WORKSPACE_HISTORY_STEPPED",
+        "payload": {
+         "changed": false,
+         "oid": "",
+         "workspace": "w"
+        }
+       },
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "undo-of-a-root-commit-removes-every-file",
+   "steps": [
+    {
+     "event": "WORKSPACE_UNDO",
+     "payload": {
+      "workspace": "w"
+     },
+     "from": "working",
+     "expect": {}
+    },
+    {
+     "event": "WS_NEXT",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_BEGIN",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_ROOT_READY",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "."
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "grep",
+            "--no-index",
+            "-l",
+            "-F",
+            "-e",
+            "\"appId\": \"w\"",
+            "--",
+            ":(glob)/*/.almadar/app-marker.json"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "root",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "o/w/.almadar/app-marker.json\n"
+      ],
+      "rawOuts": [
+       "by93Ly5hbG1hZGFyL2FwcC1tYXJrZXIuanNvbgo="
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {}
+    },
+    {
+     "event": "WS_OPENED",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "/var/lib/almadar/workspaces/o"
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "/var/lib/almadar/workspaces/o/w",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "log",
+            "--format=%H%x1f%at%x1f%s%x1f%(trailers:only,unfold)%x1e",
+            "--",
+            "schema.orb",
+            ":(glob)orbitals/*",
+            ":(glob)**/*.lolo",
+            ":(glob).almadar/sessions/*/spec.json",
+            ":(exclude,glob).almadar/**/*.lolo",
+            ":(exclude)apps",
+            ":(exclude)node_modules"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "abc123\u001f1700000000\u001fsnapshot: first\u001fAlmadar-Kind: snapshot\u001e def456\u001f1700000100\u001fedit\u001f\u001e"
+      ],
+      "rawOuts": [
+       "YWJjMTIzHzE3MDAwMDAwMDAfc25hcHNob3Q6IGZpcnN0H0FsbWFkYXItS2luZDogc25hcHNob3QeIGRlZjQ1Nh8xNzAwMDAwMTAwH2VkaXQfHg=="
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STAGE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_TARGET",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "/var/lib/almadar/workspaces/o"
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "/var/lib/almadar/workspaces/o/w",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "rev-parse",
+            "--verify",
+            "--quiet",
+            "abc123^"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       ""
+      ],
+      "rawOuts": [
+       ""
+      ],
+      "codes": [
+       1
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_APPLY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STAGE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "/var/lib/almadar/workspaces/o"
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "/var/lib/almadar/workspaces/o/w",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "ls-files",
+            "--",
+            "schema.orb",
+            ":(glob)orbitals/*",
+            ":(glob)**/*.lolo",
+            ":(glob).almadar/sessions/*/spec.json",
+            ":(exclude,glob).almadar/**/*.lolo",
+            ":(exclude)apps",
+            ":(exclude)node_modules"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "a.lolo\nb.lolo\n"
+      ],
+      "rawOuts": [
+       "YS5sb2xvCmIubG9sbwo="
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_APPLY",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "/var/lib/almadar/workspaces/o"
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "/var/lib/almadar/workspaces/o/w",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "rm",
+            "-r",
+            "-q",
+            "-f",
+            "--ignore-unmatch",
+            "--",
+            "a.lolo",
+            "b.lolo"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": false
+          },
+          {
+           "args": [
+            "commit",
+            "-m",
+            "undo: abc123",
+            "--allow-empty-message",
+            "-m",
+            "Almadar-Kind: undo\nUndoes: abc123"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": true
+          },
+          {
+           "args": [
+            "rev-parse",
+            "HEAD"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "",
+       "",
+       "cafe03\n"
+      ],
+      "rawOuts": [
+       "",
+       "",
+       "Y2FmZTAzCg=="
+      ],
+      "codes": [
+       0,
+       0,
+       0
+      ],
+      "failures": [
+       "",
+       "",
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "redo-replays-the-undone-commit",
+   "steps": [
+    {
+     "event": "WORKSPACE_REDO",
+     "payload": {
+      "workspace": "w"
+     },
+     "from": "working",
+     "expect": {}
+    },
+    {
+     "event": "WS_NEXT",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_BEGIN",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_ROOT_READY",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "."
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "grep",
+            "--no-index",
+            "-l",
+            "-F",
+            "-e",
+            "\"appId\": \"w\"",
+            "--",
+            ":(glob)/*/.almadar/app-marker.json"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "root",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "o/w/.almadar/app-marker.json\n"
+      ],
+      "rawOuts": [
+       "by93Ly5hbG1hZGFyL2FwcC1tYXJrZXIuanNvbgo="
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {}
+    },
+    {
+     "event": "WS_OPENED",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "/var/lib/almadar/workspaces/o"
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "/var/lib/almadar/workspaces/o/w",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "log",
+            "--format=%H%x1f%at%x1f%s%x1f%(trailers:only,unfold)%x1e",
+            "--",
+            "schema.orb",
+            ":(glob)orbitals/*",
+            ":(glob)**/*.lolo",
+            ":(glob).almadar/sessions/*/spec.json",
+            ":(exclude,glob).almadar/**/*.lolo",
+            ":(exclude)apps",
+            ":(exclude)node_modules"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "u2\u001f1700000300\u001fundo: abc\u001fAlmadar-Kind: undo\nUndoes: u1\u001e u1\u001f1700000200\u001fedit\u001f\u001e"
+      ],
+      "rawOuts": [
+       "dTIfMTcwMDAwMDMwMB91bmRvOiBhYmMfQWxtYWRhci1LaW5kOiB1bmRvClVuZG9lczogdTEeIHUxHzE3MDAwMDAyMDAfZWRpdB8e"
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STAGE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_TARGET",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "/var/lib/almadar/workspaces/o"
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "/var/lib/almadar/workspaces/o/w",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "rev-parse",
+            "--verify",
+            "--quiet",
+            "u2^"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "u1\n"
+      ],
+      "rawOuts": [
+       "dTEK"
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_APPLY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STAGE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "redo-with-nothing-undone-finishes-unchanged",
+   "steps": [
+    {
+     "event": "WORKSPACE_REDO",
+     "payload": {
+      "workspace": "w"
+     },
+     "from": "working",
+     "expect": {}
+    },
+    {
+     "event": "WS_NEXT",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_BEGIN",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_ROOT_READY",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "."
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "grep",
+            "--no-index",
+            "-l",
+            "-F",
+            "-e",
+            "\"appId\": \"w\"",
+            "--",
+            ":(glob)/*/.almadar/app-marker.json"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "root",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "o/w/.almadar/app-marker.json\n"
+      ],
+      "rawOuts": [
+       "by93Ly5hbG1hZGFyL2FwcC1tYXJrZXIuanNvbgo="
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {}
+    },
+    {
+     "event": "WS_OPENED",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_START",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_START",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "dirFlag": "-C",
+         "env": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+          "LC_ALL": "C",
+          "GIT_CEILING_DIRECTORIES": "/var/lib/almadar/workspaces/o"
+         },
+         "prefix": [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "core.fsmonitor=false",
+          "-c",
+          "protocol.allow=never"
+         ],
+         "rawInputs": [],
+         "repoDir": "/var/lib/almadar/workspaces/o/w",
+         "requestId": "step",
+         "rootDir": "/var/lib/almadar/workspaces",
+         "steps": [
+          {
+           "args": [
+            "log",
+            "--format=%H%x1f%at%x1f%s%x1f%(trailers:only,unfold)%x1e",
+            "--",
+            "schema.orb",
+            ":(glob)orbitals/*",
+            ":(glob)**/*.lolo",
+            ":(glob).almadar/sessions/*/spec.json",
+            ":(exclude,glob).almadar/**/*.lolo",
+            ":(exclude)apps",
+            ":(exclude)node_modules"
+           ],
+           "feed": false,
+           "raw": false,
+           "scope": "repo",
+           "stdin": "",
+           "tolerate": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_STEPS_DONE",
+     "payload": {
+      "requestId": "step",
+      "outputs": [
+       "abc123\u001f1700000000\u001fsnapshot: first\u001fAlmadar-Kind: snapshot\u001e def456\u001f1700000100\u001fedit\u001f\u001e"
+      ],
+      "rawOuts": [
+       "YWJjMTIzHzE3MDAwMDAwMDAfc25hcHNob3Q6IGZpcnN0H0FsbWFkYXItS2luZDogc25hcHNob3QeIGRlZjQ1Nh8xNzAwMDAwMTAwH2VkaXQfHg=="
+      ],
+      "codes": [
+       0
+      ],
+      "failures": [
+       ""
+      ]
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_SCRIPT_DONE",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_TARGET",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_TARGET",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "signed-out-tree-is-refused",
+   "steps": [
+    {
+     "event": "WORKSPACE_TREE",
+     "payload": {
+      "workspace": "w"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_NEXT",
+     "payload": {},
+     "from": "working",
+     "expect": {}
+    },
+    {
+     "event": "WS_BEGIN",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_FAIL",
+        "payload": {
+         "code": "AUTH_ERROR",
+         "message": "A workspace needs a signed-in caller"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_FAIL",
+     "payload": {
+      "code": "AUTH_ERROR",
+      "message": "A workspace needs a signed-in caller"
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WORKSPACE_TREE_FAILED",
+        "payload": {
+         "code": "AUTH_ERROR",
+         "message": "A workspace needs a signed-in caller",
+         "workspace": "w"
+        }
+       },
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "signed-out-read-file-is-refused",
+   "steps": [
+    {
+     "event": "WORKSPACE_READ_FILE",
+     "payload": {
+      "workspace": "w",
+      "path": "a.lolo"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_NEXT",
+     "payload": {},
+     "from": "working",
+     "expect": {}
+    },
+    {
+     "event": "WS_BEGIN",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_FAIL",
+        "payload": {
+         "code": "AUTH_ERROR",
+         "message": "A workspace needs a signed-in caller"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_FAIL",
+     "payload": {
+      "code": "AUTH_ERROR",
+      "message": "A workspace needs a signed-in caller"
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WORKSPACE_READ_FAILED",
+        "payload": {
+         "code": "AUTH_ERROR",
+         "message": "A workspace needs a signed-in caller",
+         "workspace": "w"
+        }
+       },
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "signed-out-write-file-is-refused",
+   "steps": [
+    {
+     "event": "WORKSPACE_WRITE_FILE",
+     "payload": {
+      "workspace": "w",
+      "path": "a.lolo",
+      "content": "x"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_NEXT",
+     "payload": {},
+     "from": "working",
+     "expect": {}
+    },
+    {
+     "event": "WS_BEGIN",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_FAIL",
+        "payload": {
+         "code": "AUTH_ERROR",
+         "message": "A workspace needs a signed-in caller"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_FAIL",
+     "payload": {
+      "code": "AUTH_ERROR",
+      "message": "A workspace needs a signed-in caller"
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WORKSPACE_WRITE_FAILED",
+        "payload": {
+         "code": "AUTH_ERROR",
+         "message": "A workspace needs a signed-in caller",
+         "workspace": "w"
+        }
+       },
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "signed-out-remove-file-is-refused",
+   "steps": [
+    {
+     "event": "WORKSPACE_REMOVE_FILE",
+     "payload": {
+      "workspace": "w",
+      "path": "a.lolo"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_NEXT",
+     "payload": {},
+     "from": "working",
+     "expect": {}
+    },
+    {
+     "event": "WS_BEGIN",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_FAIL",
+        "payload": {
+         "code": "AUTH_ERROR",
+         "message": "A workspace needs a signed-in caller"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_FAIL",
+     "payload": {
+      "code": "AUTH_ERROR",
+      "message": "A workspace needs a signed-in caller"
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WORKSPACE_REMOVE_FAILED",
+        "payload": {
+         "code": "AUTH_ERROR",
+         "message": "A workspace needs a signed-in caller",
+         "workspace": "w"
+        }
+       },
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "signed-out-snapshot-is-refused",
+   "steps": [
+    {
+     "event": "WORKSPACE_SNAPSHOT",
+     "payload": {
+      "workspace": "w",
+      "reason": "r"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_NEXT",
+     "payload": {},
+     "from": "working",
+     "expect": {}
+    },
+    {
+     "event": "WS_BEGIN",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_FAIL",
+        "payload": {
+         "code": "AUTH_ERROR",
+         "message": "A workspace needs a signed-in caller"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_FAIL",
+     "payload": {
+      "code": "AUTH_ERROR",
+      "message": "A workspace needs a signed-in caller"
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WORKSPACE_SNAPSHOT_FAILED",
+        "payload": {
+         "code": "AUTH_ERROR",
+         "message": "A workspace needs a signed-in caller",
+         "workspace": "w"
+        }
+       },
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "signed-out-history-is-refused",
+   "steps": [
+    {
+     "event": "WORKSPACE_HISTORY",
+     "payload": {
+      "workspace": "w"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_NEXT",
+     "payload": {},
+     "from": "working",
+     "expect": {}
+    },
+    {
+     "event": "WS_BEGIN",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_FAIL",
+        "payload": {
+         "code": "AUTH_ERROR",
+         "message": "A workspace needs a signed-in caller"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_FAIL",
+     "payload": {
+      "code": "AUTH_ERROR",
+      "message": "A workspace needs a signed-in caller"
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WORKSPACE_HISTORY_FAILED",
+        "payload": {
+         "code": "AUTH_ERROR",
+         "message": "A workspace needs a signed-in caller",
+         "workspace": "w"
+        }
+       },
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "signed-out-changes-is-refused",
+   "steps": [
+    {
+     "event": "WORKSPACE_CHANGES",
+     "payload": {
+      "oid": "abc",
+      "workspace": "w"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_NEXT",
+     "payload": {},
+     "from": "working",
+     "expect": {}
+    },
+    {
+     "event": "WS_BEGIN",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_FAIL",
+        "payload": {
+         "code": "AUTH_ERROR",
+         "message": "A workspace needs a signed-in caller"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_FAIL",
+     "payload": {
+      "code": "AUTH_ERROR",
+      "message": "A workspace needs a signed-in caller"
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WORKSPACE_CHANGES_FAILED",
+        "payload": {
+         "code": "AUTH_ERROR",
+         "message": "A workspace needs a signed-in caller",
+         "workspace": "w"
+        }
+       },
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "signed-out-restore-is-refused",
+   "steps": [
+    {
+     "event": "WORKSPACE_RESTORE",
+     "payload": {
+      "oid": "abc",
+      "workspace": "w"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_NEXT",
+     "payload": {},
+     "from": "working",
+     "expect": {}
+    },
+    {
+     "event": "WS_BEGIN",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_FAIL",
+        "payload": {
+         "code": "AUTH_ERROR",
+         "message": "A workspace needs a signed-in caller"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_FAIL",
+     "payload": {
+      "code": "AUTH_ERROR",
+      "message": "A workspace needs a signed-in caller"
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WORKSPACE_STEP_FAILED",
+        "payload": {
+         "code": "AUTH_ERROR",
+         "message": "A workspace needs a signed-in caller",
+         "workspace": "w"
+        }
+       },
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "signed-out-undo-is-refused",
+   "steps": [
+    {
+     "event": "WORKSPACE_UNDO",
+     "payload": {
+      "workspace": "w"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_NEXT",
+     "payload": {},
+     "from": "working",
+     "expect": {}
+    },
+    {
+     "event": "WS_BEGIN",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_FAIL",
+        "payload": {
+         "code": "AUTH_ERROR",
+         "message": "A workspace needs a signed-in caller"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_FAIL",
+     "payload": {
+      "code": "AUTH_ERROR",
+      "message": "A workspace needs a signed-in caller"
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WORKSPACE_STEP_FAILED",
+        "payload": {
+         "code": "AUTH_ERROR",
+         "message": "A workspace needs a signed-in caller",
+         "workspace": "w"
+        }
+       },
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "signed-out-redo-is-refused",
+   "steps": [
+    {
+     "event": "WORKSPACE_REDO",
+     "payload": {
+      "workspace": "w"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_NEXT",
+     "payload": {},
+     "from": "working",
+     "expect": {}
+    },
+    {
+     "event": "WS_BEGIN",
+     "payload": {},
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_FAIL",
+        "payload": {
+         "code": "AUTH_ERROR",
+         "message": "A workspace needs a signed-in caller"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "WS_FAIL",
+     "payload": {
+      "code": "AUTH_ERROR",
+      "message": "A workspace needs a signed-in caller"
+     },
+     "from": "working",
+     "expect": {
+      "emits": [
+       {
+        "event": "WORKSPACE_STEP_FAILED",
+        "payload": {
+         "code": "AUTH_ERROR",
+         "message": "A workspace needs a signed-in caller",
+         "workspace": "w"
+        }
+       },
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

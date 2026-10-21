@@ -9,6 +9,7 @@ A spec sits under the same folder path as the behavior it specs: the spec for `f
 | Spec | Satisfied by |
 |---|---|
 | `store/approval-gate.lolo` | `std-approval-gate` (bound) |
+| `connect/asset-pack.lolo` | `std-asset-pack` (bound; loading, missing and failed keys render placeholders and emit `ASSET_PACK_MISSING` once per key; replay goldens `connect/asset-pack.replay.goldens.json`) |
 | `store/audit-trail.lolo` | `std-audit-capture` |
 | `store/timeout.lolo` | `std-timeout` |
 | `store/retry.lolo` | `std-retry` (bound; composers that rename the trait, `std-webhook` and its realizations, owe it under their own name) |
@@ -17,7 +18,7 @@ A spec sits under the same folder path as the behavior it specs: the spec for `f
 | `store/stream-ticket.lolo` | `std-stream-ticket` (bound) |
 | `store/bearer-verify.lolo` | `std-bearer-verify` (unbound until WS-0 crypto operators land; `KeyDocument` persistent, verdicts emit `BEARER_VERIFIED { viewer }` / `BEARER_REFUSED { reason }`) |
 | `store/bigint.lolo` | `std-bigint` (bound; base-2^24 limb arrays, `MODPOW`/`MODINV` run on engine registers; one dispatch is capped at 2000 cascaded events by the kernel) |
-| `codec/semver.lolo` | `std-semver` (bound; strict parse, precedence compare, bump, single-comparator satisfies and min; 122 replay goldens generated from the semver npm package; workspace:/link:/file: pins refused)  |
+| `codec/semver.lolo` | `std-semver` (bound; strict parse, precedence compare, bump, node-semver ranges (^ ~ comparators, x-ranges, partials, hyphen, space-joined sets, `||`), min; optional `requestId` echoed on every answer; ~790 replay goldens generated from the semver npm package in `semver-*.replay.goldens.json`, sharded because the replay runner holds ~30 MB per case; workspace:/link:/file: pins refused) |
 | `store/rsa.lolo` | `std-rsa` (bound; RS256 verify over `std-bigint`, about 5 s per verify) |
 | `store/jws.lolo` | `std-jws` (bound; compact RS256 JWS verify over `std-rsa`, claim policy stays in `std-bearer-verify`) |
 | `ml/label-capture.lolo` | `std-ml-label-capture` |

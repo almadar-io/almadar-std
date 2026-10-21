@@ -10,7 +10,7 @@ This repo is one submodule of the Almadar monorepo (natural language → `.orb` 
 - **Kind:** `.lolo` behavior package — the public substrate standard library
 - **Published:** publicly, to npm as `@almadar/std`
 - **Upstream (this repo imports them):** `@almadar/core`
-- **Downstream (they import this repo):** `almadar-project`, `kflow-builder`, `@almadar/evaluator`, `@almadar/runtime`, `@almadar/ui`, `@almadar-io/skills`, `@almadar/extensions`, `@almadar-io/parity`, `@almadar/syntax`, `@almadar-io/converter-tool`, `@almadar-io/runtime-verify-tool`, `@almadar-io/playground-runtime`, `@almadar-io/rabit`, `@almadar-io/behaviors`, `@almadar-io/curation-core`, `@almadar-io/almadar-pattern-sync`, `@almadar-io/orbital-agent-cli`
+- **Downstream (they import this repo):** `almadar-project`, `kflow-builder`, `@almadar/evaluator`, `@almadar/runtime`, `@almadar/shell-web`, `@almadar-io/skills`, `@almadar/extensions`, `@almadar-io/parity`, `@almadar/syntax`, `@almadar-io/converter-tool`, `@almadar-io/runtime-verify-tool`, `@almadar-io/playground-runtime`, `@almadar-io/rabit`, `@almadar-io/behaviors`, `@almadar-io/curation-core`, `@almadar-io/almadar-pattern-sync`, `@almadar-io/orbital-agent-cli`
 - **Reference doc (monorepo only):** `docs/Almadar_Std.md`
 - **Git LFS:** yes. Run `git lfs pull` after cloning, or large files stay pointer stubs.
 
