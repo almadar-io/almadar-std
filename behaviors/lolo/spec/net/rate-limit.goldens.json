@@ -1,0 +1,152 @@
+{
+  "source": "orbital-rust/crates/orbital-server/src/http_layers.rs (RateWindows::hit, rate_limit)",
+  "spec": "spec/net/rate-limiter.lolo",
+  "note": "Rust: fixed window per client IP, /api paths only. First request of an IP opens its window; the window never rolls until a request arrives at or after start+window (lazy). allowed = ++count <= limit; remaining = limit - count saturating at 0; reset = (window - elapsed) in whole seconds. Defaults limit 300, window 900 s (std-http-server sets the same). ORB_DISABLE_RATE_LIMIT=1 disables. 429 body: text/plain, 'Too many requests, please try again later.'. Headers on EVERY /api answer (admitted and denied): ratelimit-policy '<limit>;w=<window>', ratelimit-limit, ratelimit-remaining, ratelimit-reset. No retry-after, no x-ratelimit-*. A request with no peer address or a path outside /api is not counted. Cases use limit 3, window 10 s for brevity; std-rate-limiter is configured requestsPerMinute 3, windowSeconds 10. std ticks are wall-clock and not stepable, so std rolls the window with WINDOW_ELAPSED and the golden resetIn mid-window is checked on the Rust side only.",
+  "limit": 3,
+  "window": 10,
+  "rust": [
+    {
+      "t": 0,
+      "ip": "A",
+      "allowed": true,
+      "status": 200,
+      "ratelimit-remaining": 2,
+      "ratelimit-reset": 10
+    },
+    {
+      "t": 0,
+      "ip": "A",
+      "allowed": true,
+      "status": 200,
+      "ratelimit-remaining": 1,
+      "ratelimit-reset": 10
+    },
+    {
+      "t": 0,
+      "ip": "A",
+      "allowed": true,
+      "status": 200,
+      "ratelimit-remaining": 0,
+      "ratelimit-reset": 10
+    },
+    {
+      "t": 0,
+      "ip": "A",
+      "allowed": false,
+      "status": 429,
+      "ratelimit-remaining": 0,
+      "ratelimit-reset": 10
+    },
+    {
+      "t": 4,
+      "ip": "A",
+      "allowed": false,
+      "status": 429,
+      "ratelimit-remaining": 0,
+      "ratelimit-reset": 6
+    },
+    {
+      "t": 4,
+      "ip": "B",
+      "allowed": true,
+      "status": 200,
+      "ratelimit-remaining": 2,
+      "ratelimit-reset": 10,
+      "note": "per-IP key: B has its own window"
+    },
+    {
+      "t": 10,
+      "ip": "A",
+      "allowed": true,
+      "status": 200,
+      "ratelimit-remaining": 2,
+      "ratelimit-reset": 10,
+      "note": "elapsed >= window opens a new window at this request"
+    }
+  ],
+  "headersEveryApiAnswer": {
+    "ratelimit-policy": "3;w=10",
+    "ratelimit-limit": "3"
+  },
+  "deniedBody": {
+    "status": 429,
+    "content-type": "text/plain; charset=utf-8",
+    "body": "Too many requests, please try again later."
+  },
+  "std": {
+    "atom": "std-rate-limiter-ip (trait RateKeyRateLimiter), composed by std-http-server as ServerRateLimiter; the single shared bucket atom std-rate-limiter stays for apps that count one bucket (std-api-gateway).",
+    "key": "ip from the router: the peer ('ip:port' from std-http1 REQUEST_RECEIVED) with the last ':port' dropped; carried on RATE_REQUEST { requestId, ip }. An IPv6 peer keeps its brackets (a key, not a parsed address).",
+    "eviction": "none; Rust RateWindows never removes an entry either.",
+    "config": {
+      "enabled": true,
+      "requestsPerMinute": 3,
+      "windowSeconds": 10
+    },
+    "steps": [
+      {
+        "ip": "A",
+        "requestId": 1,
+        "expect": {
+          "emit": "ADMITTED",
+          "remaining": 2,
+          "resetIn": 10
+        }
+      },
+      {
+        "ip": "B",
+        "requestId": 2,
+        "expect": {
+          "emit": "ADMITTED",
+          "remaining": 2,
+          "resetIn": 10
+        }
+      },
+      {
+        "ip": "B",
+        "requestId": 3,
+        "expect": {
+          "emit": "ADMITTED",
+          "remaining": 1
+        }
+      },
+      {
+        "ip": "B",
+        "requestId": 4,
+        "expect": {
+          "emit": "ADMITTED",
+          "remaining": 0
+        }
+      },
+      {
+        "ip": "B",
+        "requestId": 5,
+        "expect": {
+          "emit": "THROTTLED"
+        }
+      },
+      {
+        "ip": "A",
+        "requestId": 6,
+        "expect": {
+          "emit": "ADMITTED",
+          "remaining": 1,
+          "note": "A's window is its own"
+        }
+      },
+      {
+        "requestId": 7,
+        "expect": {
+          "emit": "ADMITTED",
+          "remaining": 3,
+          "note": "no ip: admitted, not counted"
+        }
+      }
+    ],
+    "result": "replayed with orb execute --steps: all expectations hold (steps 1-6 as above; the ip-less request is uncounted).",
+    "timeDerived": {
+      "resetIn": "math/floor((windowSeconds*1000 - (time/now - windowStart)) / 1000)",
+      "newWindow": "time/now - windowStart >= windowSeconds*1000 opens a fresh window at that request (count 1)",
+      "evaluated": "orb evaluate on windowStart = now - 0/4000/9999/10000/12000 ms (each call lags ~1 s of process start): reset 9,3,-5,-7,-11 and roll false,false,true,true,true; the rolled cases are the path where the arm resets instead of reporting reset. --steps cannot seed an entity or move the clock, so the t=4 and t=10 Rust rows are covered by this expression check, not replayed end to end."
+    }
+  }
+}

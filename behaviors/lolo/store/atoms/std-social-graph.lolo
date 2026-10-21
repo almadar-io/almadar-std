@@ -17,7 +17,7 @@ orbital SocialGraphOrbital {
     nodeKey : string @description "The node the member was on, as kind:id." @synonyms "topic key, node" = ""
     memberId : string @description "The member who was there." @synonyms "learner, user" = ""
     lastSeenOnNode : number @description "Epoch milliseconds of the last visit." @synonyms "last seen, presence" = 0
-    reqLearner : string @intrinsic = ""
+    reqMember : string @intrinsic = ""
     reqKey : string @intrinsic = ""
     reqStats : [SocialMemberStat] @intrinsic
     reqMembers : [NodePresence] @intrinsic
@@ -45,7 +45,7 @@ orbital SocialGraphOrbital {
     lastActivityAt : number @description "Epoch milliseconds of the last message or the opening." @synonyms "last activity" = 0
     archivedAt : number @description "Epoch milliseconds the connection archived; 0 while active." @synonyms "archived time" = 0
     reqOp : string @intrinsic = ""
-    reqLearner : string @intrinsic = ""
+    reqMember : string @intrinsic = ""
     reqConnection : string @intrinsic = ""
     reqBadge : string @intrinsic = ""
     reqContent : string @intrinsic = ""
@@ -65,7 +65,7 @@ orbital SocialGraphOrbital {
   entity SocialPending [runtime] {
     id : string! @description "The call key the request runs under; replies find the row by it." @synonyms "request key, correlation key"
     kind : string @description "badges or moderation." @synonyms "request kind" = ""
-    learnerId : string @description "The member who asked." @synonyms "caller" = ""
+    memberId : string @description "The member who asked." @synonyms "caller" = ""
     peerId : string @description "The peer a pending connection is for." @synonyms "other member" = ""
     originKind : string @description "The kind of node a pending connection came from." @synonyms "origin type" = ""
     originId : string @description "The node a pending connection came from." @synonyms "origin, topic" = ""
@@ -93,12 +93,12 @@ orbital SocialGraphOrbital {
       INIT -> idle
 
       SOCIAL_TOUCH -> touching when (array/some @config.nodeKinds (fn k (and (str/startsWith ?nodeKey (str/concat @k ":")) (> (str/len ?nodeKey) (+ (str/len @k) 1)))))
-        (persist upsert NodePresence { id: (str/concat ?nodeKey "|" ?learnerId), nodeKey: ?nodeKey, memberId: ?learnerId, lastSeenOnNode: @now } { emit: { success: PresenceStored, failure: PeerFailed } })
+        (persist upsert NodePresence { id: (str/concat ?nodeKey "|" ?memberId), nodeKey: ?nodeKey, memberId: ?memberId, lastSeenOnNode: @now } { emit: { success: PresenceStored, failure: PeerFailed } })
       SOCIAL_TOUCH -> idle when (not (array/some @config.nodeKinds (fn k (and (str/startsWith ?nodeKey (str/concat @k ":")) (> (str/len ?nodeKey) (+ (str/len @k) 1))))))
         (emit SOCIAL_REJECTED { reason: "bad-node-key" })
 
       SOCIAL_PEERS -> loadingMembers when (array/some @config.nodeKinds (fn k (and (str/startsWith ?nodeKey (str/concat @k ":")) (> (str/len ?nodeKey) (+ (str/len @k) 1)))))
-        (set @entity.reqLearner ?learnerId)
+        (set @entity.reqMember ?memberId)
         (set @entity.reqKey ?nodeKey)
         (set @entity.reqStats (if (= ?memberStats null) (json/parse "[]" SocialMemberStats) ?memberStats))
         (fetch NodePresence { filter: (and (= (object/get @entity nodeKey) ?nodeKey) (>= (object/get @entity lastSeenOnNode) (- @now (* @config.peerWindowDays 86400000)))), emit: { success: PresenceLoaded, failure: PeerFailed } })
@@ -117,11 +117,11 @@ orbital SocialGraphOrbital {
 
     state loadingMembers {
       INIT -> idle
-      PresenceLoaded -> idle when (= (array/len (array/filter ?data (fn m (!= (object/get @m memberId "") @entity.reqLearner)))) 0)
+      PresenceLoaded -> idle when (= (array/len (array/filter ?data (fn m (!= (object/get @m memberId "") @entity.reqMember)))) 0)
         (emit SOCIAL_PEERS_LISTED { peers: (json/parse "[]" SocialPeers) })
-      PresenceLoaded -> drawing when (> (array/len (array/filter ?data (fn m (!= (object/get @m memberId "") @entity.reqLearner)))) 0)
-        (set @entity.reqMembers (array/filter ?data (fn m (!= (object/get @m memberId "") @entity.reqLearner))))
-        (random-bytes (* @config.tokenBytes (array/len (array/filter ?data (fn m (!= (object/get @m memberId "") @entity.reqLearner))))) { key: "social-peer-tokens", emit: { success: TokensDrawn, failure: PeerFailed } })
+      PresenceLoaded -> drawing when (> (array/len (array/filter ?data (fn m (!= (object/get @m memberId "") @entity.reqMember)))) 0)
+        (set @entity.reqMembers (array/filter ?data (fn m (!= (object/get @m memberId "") @entity.reqMember))))
+        (random-bytes (* @config.tokenBytes (array/len (array/filter ?data (fn m (!= (object/get @m memberId "") @entity.reqMember))))) { key: "social-peer-tokens", emit: { success: TokensDrawn, failure: PeerFailed } })
       PeerFailed -> idle
         (emit SOCIAL_FAILED { error: ?error })
         (notify error (str/concat "The social step failed: " ?error))
@@ -131,7 +131,7 @@ orbital SocialGraphOrbital {
       INIT -> idle
       TokensDrawn -> issuing
         (set @entity.reqRandom ?value)
-        (persist batch (array/map (array/range 0 (array/len @entity.reqMembers)) (fn i ["create" "PeerToken" { id: (str/slice ?value (* @i (* @config.tokenBytes 4 (/ 1 3))) (* (+ @i 1) (* @config.tokenBytes 4 (/ 1 3)))), peerId: (object/get (array/nth @entity.reqMembers @i) memberId ""), issuedTo: @entity.reqLearner, nodeKey: @entity.reqKey, expiresAt: (+ @now @config.tokenTtlMs) }])) { emit: { success: TokensStored, failure: PeerFailed } })
+        (persist batch (array/map (array/range 0 (array/len @entity.reqMembers)) (fn i ["create" "PeerToken" { id: (str/slice ?value (* @i (* @config.tokenBytes 4 (/ 1 3))) (* (+ @i 1) (* @config.tokenBytes 4 (/ 1 3)))), peerId: (object/get (array/nth @entity.reqMembers @i) memberId ""), issuedTo: @entity.reqMember, nodeKey: @entity.reqKey, expiresAt: (+ @now @config.tokenTtlMs) }])) { emit: { success: TokensStored, failure: PeerFailed } })
       PeerFailed -> idle
         (emit SOCIAL_FAILED { error: ?error })
         (notify error (str/concat "The social step failed: " ?error))
@@ -205,14 +205,14 @@ orbital SocialGraphOrbital {
 
     listens {
       SOCIAL_TOUCH -> external {
-        learnerId : string!
+        memberId : string!
         nodeKey : string!
       }
         @description "Record that a member is on a node (kind:id) right now."
         @synonyms "touch node, presence, visit"
         @tier "domain"
       SOCIAL_PEERS -> external {
-        learnerId : string!
+        memberId : string!
         nodeKey : string!
         memberStats : [SocialMemberStat]
       }
@@ -268,7 +268,7 @@ orbital SocialGraphOrbital {
       INIT -> idle
 
       SOCIAL_OPEN -> loadingToken
-        (set @entity.reqLearner ?learnerId)
+        (set @entity.reqMember ?memberId)
         (set @entity.reqPeerRef ?peerRef)
         (set @entity.reqOriginKind ?originKind)
         (set @entity.reqOriginId ?originId)
@@ -276,20 +276,20 @@ orbital SocialGraphOrbital {
 
       SOCIAL_VIEW -> loadingConn
         (set @entity.reqOp "view")
-        (set @entity.reqLearner ?learnerId)
+        (set @entity.reqMember ?memberId)
         (set @entity.reqConnection ?connectionId)
         (fetch SocialConnection { filter: (= (object/get @entity id) ?connectionId), emit: { success: ConnLoaded, failure: ConnFailed } })
 
       SOCIAL_SET_BADGE -> loadingConn
         (set @entity.reqOp "badge")
-        (set @entity.reqLearner ?learnerId)
+        (set @entity.reqMember ?memberId)
         (set @entity.reqConnection ?connectionId)
         (set @entity.reqBadge ?badgeId)
         (fetch SocialConnection { filter: (= (object/get @entity id) ?connectionId), emit: { success: ConnLoaded, failure: ConnFailed } })
 
       SOCIAL_SEND -> loadingConn when (> (str/len (str/trim ?content)) 0)
         (set @entity.reqOp "send")
-        (set @entity.reqLearner ?learnerId)
+        (set @entity.reqMember ?memberId)
         (set @entity.reqConnection ?connectionId)
         (set @entity.reqContent ?content)
         (set @entity.reqBadge (if (= ?badgeId null) "" ?badgeId))
@@ -331,13 +331,13 @@ orbital SocialGraphOrbital {
       TokenLoaded -> idle when (and (> (array/len ?data) 0) (< (object/get (array/first ?data) expiresAt 0) @now))
         (persist delete PeerToken @entity.reqPeerRef { emit: { success: TokenDeleted, failure: ConnFailed } })
         (emit SOCIAL_CONNECTION_REJECTED { reason: "invalid-peer-ref" })
-      TokenLoaded -> idle when (and (> (array/len ?data) 0) (>= (object/get (array/first ?data) expiresAt 0) @now) (!= (object/get (array/first ?data) issuedTo "") @entity.reqLearner))
+      TokenLoaded -> idle when (and (> (array/len ?data) 0) (>= (object/get (array/first ?data) expiresAt 0) @now) (!= (object/get (array/first ?data) issuedTo "") @entity.reqMember))
         (emit SOCIAL_CONNECTION_REJECTED { reason: "invalid-peer-ref" })
-      TokenLoaded -> idle when (and (> (array/len ?data) 0) (>= (object/get (array/first ?data) expiresAt 0) @now) (= (object/get (array/first ?data) issuedTo "") @entity.reqLearner) (= (object/get (array/first ?data) peerId "") @entity.reqLearner))
+      TokenLoaded -> idle when (and (> (array/len ?data) 0) (>= (object/get (array/first ?data) expiresAt 0) @now) (= (object/get (array/first ?data) issuedTo "") @entity.reqMember) (= (object/get (array/first ?data) peerId "") @entity.reqMember))
         (emit SOCIAL_CONNECTION_REJECTED { reason: "self-connection" })
-      TokenLoaded -> idle when (and (> (array/len ?data) 0) (>= (object/get (array/first ?data) expiresAt 0) @now) (= (object/get (array/first ?data) issuedTo "") @entity.reqLearner) (!= (object/get (array/first ?data) peerId "") @entity.reqLearner) @config.badgesFromLlm)
-        (persist create SocialPending { id: (str/concat "social-badges:" @entity.reqPeerRef), kind: "badges", learnerId: @entity.reqLearner, peerId: (object/get (array/first ?data) peerId ""), originKind: @entity.reqOriginKind, originId: @entity.reqOriginId } { emit: { success: PendingStored, failure: ConnFailed } })
-      TokenLoaded -> opening when (and (> (array/len ?data) 0) (>= (object/get (array/first ?data) expiresAt 0) @now) (= (object/get (array/first ?data) issuedTo "") @entity.reqLearner) (!= (object/get (array/first ?data) peerId "") @entity.reqLearner) (not @config.badgesFromLlm))
+      TokenLoaded -> idle when (and (> (array/len ?data) 0) (>= (object/get (array/first ?data) expiresAt 0) @now) (= (object/get (array/first ?data) issuedTo "") @entity.reqMember) (!= (object/get (array/first ?data) peerId "") @entity.reqMember) @config.badgesFromLlm)
+        (persist create SocialPending { id: (str/concat "social-badges:" @entity.reqPeerRef), kind: "badges", memberId: @entity.reqMember, peerId: (object/get (array/first ?data) peerId ""), originKind: @entity.reqOriginKind, originId: @entity.reqOriginId } { emit: { success: PendingStored, failure: ConnFailed } })
+      TokenLoaded -> opening when (and (> (array/len ?data) 0) (>= (object/get (array/first ?data) expiresAt 0) @now) (= (object/get (array/first ?data) issuedTo "") @entity.reqMember) (!= (object/get (array/first ?data) peerId "") @entity.reqMember) (not @config.badgesFromLlm))
         (set @entity.reqPeerId (object/get (array/first ?data) peerId ""))
         (set @entity.pendingId "")
         (emit BadgesReady { labels: [@entity.reqOriginId] })
@@ -350,9 +350,9 @@ orbital SocialGraphOrbital {
       INIT -> idle
       BadgesReady -> saving
         (persist create SocialConnection {
-          callerId: @entity.reqLearner
+          callerId: @entity.reqMember
           peerId: @entity.reqPeerId
-          participants: [@entity.reqLearner @entity.reqPeerId]
+          participants: [@entity.reqMember @entity.reqPeerId]
           originKind: @entity.reqOriginKind
           originId: @entity.reqOriginId
           badges: (array/map (array/range 0 (array/len ?labels)) (fn i { id: (str/concat "b" @i), label: (array/nth ?labels @i), kind: "subtopic" }))
@@ -372,7 +372,7 @@ orbital SocialGraphOrbital {
         (emit SOCIAL_CONNECTION_REJECTED { reason: "unknown-key" })
       PendingLoaded -> opening when (and (> (array/len ?data) 0) (= @entity.reqOp "badges") (= (object/get (array/first ?data) kind "") "badges"))
         (set @entity.pendingId (object/get (array/first ?data) id ""))
-        (set @entity.reqLearner (object/get (array/first ?data) learnerId ""))
+        (set @entity.reqMember (object/get (array/first ?data) memberId ""))
         (set @entity.reqPeerId (object/get (array/first ?data) peerId ""))
         (set @entity.reqOriginKind (object/get (array/first ?data) originKind ""))
         (set @entity.reqOriginId (object/get (array/first ?data) originId ""))
@@ -399,13 +399,13 @@ orbital SocialGraphOrbital {
 
     state loadingConn {
       INIT -> idle
-      ConnLoaded -> idle when (not (and (> (array/len ?data) 0) (array/includes (object/get (array/first ?data) participants (json/parse "[]" SocialStrings)) @entity.reqLearner)))
+      ConnLoaded -> idle when (not (and (> (array/len ?data) 0) (array/includes (object/get (array/first ?data) participants (json/parse "[]" SocialStrings)) @entity.reqMember)))
         (emit SOCIAL_CONNECTION_REJECTED { reason: "not-found" })
-      ConnLoaded -> archiving when (and (and (> (array/len ?data) 0) (array/includes (object/get (array/first ?data) participants (json/parse "[]" SocialStrings)) @entity.reqLearner)) (and (= (object/get (array/first ?data) status "") "active") (>= (- @now (object/get (array/first ?data) lastActivityAt 0)) (* @config.dormantDays 86400000))))
+      ConnLoaded -> archiving when (and (and (> (array/len ?data) 0) (array/includes (object/get (array/first ?data) participants (json/parse "[]" SocialStrings)) @entity.reqMember)) (and (= (object/get (array/first ?data) status "") "active") (>= (- @now (object/get (array/first ?data) lastActivityAt 0)) (* @config.dormantDays 86400000))))
         (set @entity.scratchConn ?data)
         (set @entity.scratchStatus "archived")
         (persist update SocialConnection { id: @entity.reqConnection, status: "archived", archivedAt: @now } { emit: { success: ConnArchived, failure: ConnFailed } })
-      ConnLoaded -> routing when (and (and (> (array/len ?data) 0) (array/includes (object/get (array/first ?data) participants (json/parse "[]" SocialStrings)) @entity.reqLearner)) (not (and (= (object/get (array/first ?data) status "") "active") (>= (- @now (object/get (array/first ?data) lastActivityAt 0)) (* @config.dormantDays 86400000)))))
+      ConnLoaded -> routing when (and (and (> (array/len ?data) 0) (array/includes (object/get (array/first ?data) participants (json/parse "[]" SocialStrings)) @entity.reqMember)) (not (and (= (object/get (array/first ?data) status "") "active") (>= (- @now (object/get (array/first ?data) lastActivityAt 0)) (* @config.dormantDays 86400000)))))
         (set @entity.scratchConn ?data)
         (set @entity.scratchStatus (object/get (array/first ?data) status ""))
         (emit ConnReady)
@@ -438,7 +438,7 @@ orbital SocialGraphOrbital {
       ConnReady -> saving when (and (= @entity.reqOp "send") (!= @entity.scratchStatus "archived") (or (= @entity.reqBadge "") (array/some (object/get (array/first @entity.scratchConn) badges (json/parse "[]" SocialBadges)) (fn b (= (object/get @b id "") @entity.reqBadge)))))
         (persist create SocialMessage {
           connectionId: @entity.reqConnection
-          senderId: @entity.reqLearner
+          senderId: @entity.reqMember
           content: @entity.reqContent
           sentAt: @now
           badgeId: (if (= @entity.reqBadge "") (object/get (array/first @entity.scratchConn) activeBadgeId "") @entity.reqBadge)
@@ -458,11 +458,11 @@ orbital SocialGraphOrbital {
           (emit SOCIAL_VIEWED {
             connectionId: @entity.reqConnection
             status: @entity.scratchStatus
-            peerHandle: (str/concat "peer-" (str/slice (hash/sha256 (if (= (object/get @vconn callerId "") @entity.reqLearner) (object/get @vconn peerId "") (object/get @vconn callerId "")) "hex") 0 6))
+            peerHandle: (str/concat "peer-" (str/slice (hash/sha256 (if (= (object/get @vconn callerId "") @entity.reqMember) (object/get @vconn peerId "") (object/get @vconn callerId "")) "hex") 0 6))
             originKind: (object/get @vconn originKind "")
             originLabel: (object/get @vconn originId "")
             badges: (array/map (object/get @vconn badges (json/parse "[]" SocialBadges)) (fn b { id: (object/get @b id ""), label: (object/get @b label ""), kind: (object/get @b kind ""), active: (= (object/get @b id "") (object/get @vconn activeBadgeId "")) }))
-            messages: (array/map ?data (fn m { id: (object/get @m id ""), fromViewer: (= (object/get @m senderId "") @entity.reqLearner), content: (object/get @m content ""), createdAt: (object/get @m sentAt 0), flagged: (object/get @m flagged false), moderationReason: (object/get @m moderationReason "") }))
+            messages: (array/map ?data (fn m { id: (object/get @m id ""), fromViewer: (= (object/get @m senderId "") @entity.reqMember), content: (object/get @m content ""), createdAt: (object/get @m sentAt 0), flagged: (object/get @m flagged false), moderationReason: (object/get @m moderationReason "") }))
           }))
       ConnFailed -> idle
         (emit SOCIAL_CONNECTION_FAILED { error: ?error })
@@ -485,7 +485,7 @@ orbital SocialGraphOrbital {
         (emit SOCIAL_SENT { messageId: @entity.resultMessage })
       ActivityStored -> idle when @config.moderationFromLlm
         (emit SOCIAL_SENT { messageId: @entity.resultMessage })
-        (persist create SocialPending { id: (str/concat "social-moderation:" @entity.resultMessage), kind: "moderation", learnerId: @entity.reqLearner, messageId: @entity.resultMessage, content: @entity.reqContent, badgeLabel: (object/get (array/find (object/get (array/first @entity.scratchConn) badges (json/parse "[]" SocialBadges)) (fn b (= (object/get @b id "") (if (= @entity.reqBadge "") (object/get (array/first @entity.scratchConn) activeBadgeId "") @entity.reqBadge)))) label "") } { emit: { success: PendingStored, failure: ConnFailed } })
+        (persist create SocialPending { id: (str/concat "social-moderation:" @entity.resultMessage), kind: "moderation", memberId: @entity.reqMember, messageId: @entity.resultMessage, content: @entity.reqContent, badgeLabel: (object/get (array/find (object/get (array/first @entity.scratchConn) badges (json/parse "[]" SocialBadges)) (fn b (= (object/get @b id "") (if (= @entity.reqBadge "") (object/get (array/first @entity.scratchConn) activeBadgeId "") @entity.reqBadge)))) label "") } { emit: { success: PendingStored, failure: ConnFailed } })
       ConnFailed -> idle
         (emit SOCIAL_CONNECTION_FAILED { error: ?error })
         (notify error (str/concat "The social step failed: " ?error))
@@ -611,7 +611,7 @@ orbital SocialGraphOrbital {
 
     listens {
       SOCIAL_OPEN -> external {
-        learnerId : string!
+        memberId : string!
         peerRef : string!
         originKind : string!
         originId : string!
@@ -628,14 +628,14 @@ orbital SocialGraphOrbital {
         error : string
       }
       SOCIAL_VIEW -> external {
-        learnerId : string!
+        memberId : string!
         connectionId : string!
       }
         @description "Read a connection and its messages; only a participant may."
         @synonyms "open conversation, read thread"
         @tier "domain"
       SOCIAL_SET_BADGE -> external {
-        learnerId : string!
+        memberId : string!
         connectionId : string!
         badgeId : string!
       }
@@ -643,7 +643,7 @@ orbital SocialGraphOrbital {
         @synonyms "choose topic, pick badge"
         @tier "domain"
       SOCIAL_SEND -> external {
-        learnerId : string!
+        memberId : string!
         connectionId : string!
         content : string!
         badgeId : string

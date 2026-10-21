@@ -2710,7 +2710,7 @@
         "kind": "array",
         "of": "CatalogEntry"
       },
-      "description": "List the installed behaviors under registry folders (`<prefix>/<topic>[/<tier>]`), optionally narrowed by exposure. Each entry carries its traits as values and its shipped embedding vectors.",
+      "description": "List the installed behaviors under registry folders (`<prefix>/<topic>[/<tier>]`), optionally narrowed by exposure. Each entry carries its traits as values and its shipped embedding vectors; with `options.vectors: false` it carries none (`vectors: {}`, `model: \"\"`) and neither the vector store nor the embedding provider is read.",
       "module": "behavior",
       "hasSideEffects": true,
       "runsOn": "server",
@@ -2739,6 +2739,7 @@
             "kind": "object",
             "fields": {
               "key": "string",
+              "vectors": "boolean",
               "emit": {
                 "kind": "object",
                 "fields": {
@@ -2757,7 +2758,7 @@
             },
             "open": true
           },
-          "description": "Emit configuration ({ emit: { success, failure } })",
+          "description": "Emit configuration ({ emit: { success, failure } }); `vectors: false` omits the vectors",
           "optional": true
         }
       ],
@@ -2877,7 +2878,7 @@
         },
         "open": true
       },
-      "description": "Describe a trait value (its knobs, the events it emits and listens to, its transition events, and the shipped knob embedding vectors), or an orbital value or a whole behavior `{ behavior }` (its app knobs and, per orbital, its knobs, primary entity fields, the entities it borrows from sibling orbitals, its traits and pages).",
+      "description": "Describe a trait value (its knobs, the events it emits and listens to, and its transition events; with `options.knobVectors: true`, each knob also carries its embedding vector, a missing one embedded through the configured provider, as `orb behaviors describe --knob-vectors`), or an orbital value or a whole behavior `{ behavior }` (its app knobs and, per orbital, its knobs, primary entity fields, the entities it borrows from sibling orbitals, its traits and pages).",
       "module": "behavior",
       "hasSideEffects": true,
       "runsOn": "server",
@@ -2901,6 +2902,7 @@
             "kind": "object",
             "fields": {
               "key": "string",
+              "knobVectors": "boolean",
               "emit": {
                 "kind": "object",
                 "fields": {
@@ -2919,7 +2921,7 @@
             },
             "open": true
           },
-          "description": "Emit configuration ({ emit: { success, failure } })",
+          "description": "Emit configuration ({ emit: { success, failure } }); `knobVectors: true` attaches a trait's knob vectors",
           "optional": true
         }
       ],

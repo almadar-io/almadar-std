@@ -4,7 +4,7 @@ Design contracts for the generic substrate, written before the atom that satisfi
 
 Flow: spec → `almadar-std` atom → (organism) → `almadar-behaviors` spec → atom → organism. Keep these specs subject-agnostic; subject vocabulary belongs in `almadar-behaviors/spec`.
 
-A spec sits under the same folder path as the behavior it specs: the spec for `infra/atoms/std-retry.lolo` is `spec/infra/retry.lolo`, for `ui/game/atoms/std-score.lolo` it is `spec/ui/game/score.lolo`. The folder does not change binding (a spec still resolves by its file name).
+A spec sits under the same folder path as the behavior it specs: the spec for `flow/atoms/std-retry.lolo` is `spec/flow/retry.lolo`, for `ui/game/atoms/std-score.lolo` it is `spec/ui/game/score.lolo`. The folder does not change binding (a spec still resolves by its file name).
 
 | Spec | Satisfied by |
 |---|---|

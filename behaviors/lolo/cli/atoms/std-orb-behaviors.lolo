@@ -2,7 +2,7 @@ app std-orb-behaviors [
   version: "1.0.0",
   inbound: ["cli-behaviors-catalog", "cli-behaviors-describe", "cli-behaviors-source"],
   fs: { "/dev/fd/0": [read] },
-  description: "std-orb-behaviors — the `orb behaviors catalog|describe|source` commands over the behavior reflection operators. `catalog <scope…> [--exposure <e>]… [--json] [--no-vectors]` lists the installed behaviors under the scopes (`behavior/catalog`) as one table row each, or as JSON with --json; `describe <behavior>.traits.<Trait>|<behavior>|<behavior>.orbitals.<Orbital>|- [--json] [--knob-vectors]` prints the description as JSON (`behavior/describe`; `-` reads a trait or orbital value as JSON from stdin; `--knob-vectors` is answered as unavailable until the host op carries it); `source <behavior> [--json]` prints the behavior's program as JSON (`behavior/source`). Each answers status 200 (exit 0). Each subcommand is its own cli hook, so the other `orb behaviors` subcommands stay with the Rust command. A missing operand answers the usage (status 400, exit 2); a failed reflection answers its error (status 500, exit 1)."
+  description: "std-orb-behaviors — the `orb behaviors catalog|describe|source` commands over the behavior reflection operators. `catalog <scope…> [--exposure <e>]… [--json] [--no-vectors]` lists the installed behaviors under the scopes (`behavior/catalog`; `--no-vectors` is its `vectors: false` option, reading no vector store) as one table row each, or as JSON with --json; `describe <behavior>.traits.<Trait>|<behavior>|<behavior>.orbitals.<Orbital>|- [--json] [--knob-vectors]` prints the description as JSON (`behavior/describe`; `-` reads a trait or orbital value as JSON from stdin; `--knob-vectors` attaches each knob's embedding vector, `behavior/describe`'s `knobVectors` option); `source <behavior> [--json]` prints the behavior's program as JSON (`behavior/source`). Each answers status 200 (exit 0). Each subcommand is its own cli hook, so the other `orb behaviors` subcommands stay with the Rust command. A missing operand answers the usage (status 400, exit 2); a failed reflection answers its error (status 500, exit 1)."
 ]
 uses Spec from "almadar-std/orb-behaviors"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -27,6 +27,7 @@ type KnobField = {
   label : string
   description : string
   tier : string
+  vector : [number]
 }
 type TraitEvents = {
   emits : [string]!
@@ -55,6 +56,7 @@ orbital OrbBehaviorsOrbital {
     paths : [string] = []
     spec : string = ""
     noVectors : boolean = false
+    knobVectors : boolean = false
   }
 
   trait ArgsCli = Args.traits.ArgsParser {
@@ -93,12 +95,12 @@ orbital OrbBehaviorsOrbital {
         (set @entity.exposure (or (object/get @payload.flags "exposure") []))
         (set @entity.paths @payload.positionals)
         (emit BEHAVIORS_CATALOG { })
-      BEHAVIORS_ARGS_DONE -> ready when (and (= @entity.sub "describe") (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1) (!= (object/get @payload.flags "knob-vectors") null))
-        (emit BEHAVIORS_ANSWERED { status: 501, body: "orb behaviors describe --knob-vectors: not available in the program command; the host's behavior/describe attaches no knob vectors" })
-      BEHAVIORS_ARGS_DONE -> working when (and (= @entity.sub "describe") (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1) (= (object/get @payload.flags "knob-vectors") null) (!= (array/nth @payload.positionals 0) "-"))
+      BEHAVIORS_ARGS_DONE -> working when (and (= @entity.sub "describe") (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1) (!= (array/nth @payload.positionals 0) "-"))
+        (set @entity.knobVectors (!= (object/get @payload.flags "knob-vectors") null))
         (set @entity.spec (array/nth @payload.positionals 0))
         (emit BEHAVIORS_DESCRIBE { })
-      BEHAVIORS_ARGS_DONE -> working when (and (= @entity.sub "describe") (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1) (= (object/get @payload.flags "knob-vectors") null) (= (array/nth @payload.positionals 0) "-"))
+      BEHAVIORS_ARGS_DONE -> working when (and (= @entity.sub "describe") (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1) (= (array/nth @payload.positionals 0) "-"))
+        (set @entity.knobVectors (!= (object/get @payload.flags "knob-vectors") null))
         (emit BEHAVIORS_STDIN { })
       BEHAVIORS_ARGS_DONE -> working when (and (= @entity.sub "source") (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1))
         (set @entity.spec (array/nth @payload.positionals 0))
@@ -109,20 +111,24 @@ orbital OrbBehaviorsOrbital {
       INIT -> working
       BEHAVIORS_CATALOG -> working
         (behavior/catalog { paths: @entity.paths, exposure: @entity.exposure } {
+          vectors: (not @entity.noVectors)
           emit: { success: CATALOG_LISTED, failure: BEHAVIORS_FAILED }
         })
       BEHAVIORS_DESCRIBE -> working when (str/includes @entity.spec ".traits.")
         (behavior/describe { behavior: (array/first (str/split @entity.spec ".traits.")), trait: (array/nth (str/split @entity.spec ".traits.") 1) } {
+          knobVectors: @entity.knobVectors
           emit: { success: TRAIT_DESCRIBED, failure: BEHAVIORS_FAILED }
         })
       BEHAVIORS_DESCRIBE -> working when (not (str/includes @entity.spec ".traits."))
         (behavior/describe { behavior: @entity.spec } {
+          knobVectors: @entity.knobVectors
           emit: { success: BEHAVIOR_DESCRIBED, failure: BEHAVIORS_FAILED }
         })
       BEHAVIORS_STDIN -> working
         (os/read-file "/dev/fd/0" { emit: { success: STDIN_READ, failure: STDIN_FAILED } })
       STDIN_READ -> working
         (behavior/describe (json/parse (bytes/to-string @payload.data) DescribeValue) {
+          knobVectors: @entity.knobVectors
           emit: { success: TRAIT_DESCRIBED, failure: BEHAVIORS_FAILED }
         })
       BEHAVIORS_SOURCE -> working
@@ -130,7 +136,7 @@ orbital OrbBehaviorsOrbital {
           emit: { success: SOURCED, failure: BEHAVIORS_FAILED }
         })
       CATALOG_LISTED -> ready when @entity.json
-        (emit BEHAVIORS_ANSWERED { status: 200, body: (json/stringify (if @entity.noVectors (array/map @payload.result (fn e (object/merge @e { vectors: {} model: "" }))) @payload.result)) })
+        (emit BEHAVIORS_ANSWERED { status: 200, body: (json/stringify @payload.result) })
       CATALOG_LISTED -> ready when (not @entity.json)
         (emit BEHAVIORS_ANSWERED { status: 200, body: (str/join (array/map @payload.result (fn e (str/concat (str/padEnd (object/get @e behavior "") 48 " ") " " (str/padEnd (object/get @e level "") 9 " ") " " (str/padEnd (object/get @e exposure "-") 10 " ") " " (object/get @e description "")))) "\n") })
       TRAIT_DESCRIBED -> ready

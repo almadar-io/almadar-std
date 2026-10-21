@@ -15,7 +15,7 @@ function hostsIn(text: string): string[] {
 const RESERVED = /(^|\.)(example\.(com|org|net)|[a-z0-9-]+\.(test|example|invalid|localhost))$/;
 const isReserved = (host: string) => RESERVED.test(host);
 
-const atomsDir = resolve(__dirname, '../behaviors/lolo/infra/atoms');
+const atomsDir = resolve(__dirname, '../behaviors/lolo/connect/atoms');
 const pageAtoms = readdirSync(atomsDir).filter((f) => /^std-page-.*\.lolo$/.test(f));
 
 describe('std page atoms name no real site', () => {

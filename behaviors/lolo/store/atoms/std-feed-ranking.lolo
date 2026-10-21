@@ -1,9 +1,9 @@
 app std-feed-ranking [
   version: "1.0.0",
-  description: "std-feed-ranking — pages a ranked feed from candidates the caller supplies. FEED_RANK sorts the due items (most overdue first), the frontier (unlearned, every prerequisite learned enough, by layer then sequence then name) and the explore items into three buckets, lifts the neighbours of liked items, skips hidden and already-served items, interleaves the buckets by the mix and answers one page with a cursor for the next."
+  description: "std-feed-ranking — pages a ranked feed from candidates the caller supplies. FEED_RANK sorts the due items (most overdue first), the frontier (unlearned, every prerequisite learned enough, by tier then sequence then name) and the explore items into three buckets, lifts the neighbours of liked items, skips hidden and already-served items, interleaves the buckets by the mix and answers one page with a cursor for the next."
 ]
 type FeedStrings = [string]
-type FeedCandidate = { key : string, name : string, layer : number, sequence : number, mastery : number, dueAt : number?, prerequisites : [string], neighbours : [string], liked : boolean, hidden : boolean, lastSeen : number? }
+type FeedCandidate = { key : string, name : string, tier : number, sequence : number, level : number, dueAt : number?, prerequisites : [string], neighbours : [string], liked : boolean, hidden : boolean, lastSeen : number? }
 type FeedCandidates = [FeedCandidate]
 type FeedExploreItem = { key : string, name : string }
 type FeedExploreItems = [FeedExploreItem]
@@ -58,10 +58,10 @@ orbital FeedRankingOrbital {
                         (not (object/get @c hidden false))
                         (not (array/includes ?seen (object/get @c key "")))
                         (not (and (!= (object/get @c lastSeen null) null) (< (- ?asOf (object/get @c lastSeen 0)) @cooldownMs)))
-                        (= (object/get @c mastery 0) @config.frontierMastery)
+                        (= (object/get @c level 0) @config.frontierLevel)
                         (array/every (object/get @c prerequisites (json/parse "[]" FeedStrings))
-                          (fn p (>= (object/get (array/find ?candidates (fn x (= (object/get @x key "") @p))) mastery 0) @config.prerequisiteMastery))))))
-                      (fn c (object/merge @c { nameKey: (str/collate-key (object/get @c name "")) }))) nameKey asc) sequence asc) layer asc)))
+                          (fn p (>= (object/get (array/find ?candidates (fn x (= (object/get @x key "") @p))) level 0) @config.prerequisiteLevel))))))
+                      (fn c (object/merge @c { nameKey: (str/collate-key (object/get @c name "")) }))) nameKey asc) sequence asc) tier asc)))
                     (array/concat
                       (array/filter @ranked (fn c (array/includes @liftedKeys (object/get @c key ""))))
                       (array/reject @ranked (fn c (array/includes @liftedKeys (object/get @c key ""))))))))
@@ -174,15 +174,15 @@ orbital FeedRankingOrbital {
         @description "A frontier item seen more recently than this is held back."
         @synonyms "repeat gap, resurface delay"
         @tier "domain"
-      frontierMastery : number = 0
-        @label "Frontier mastery"
-        @description "The mastery level an item must be at to be a frontier item."
+      frontierLevel : number = 0
+        @label "Frontier level"
+        @description "The level an item must be at to be a frontier item."
         @synonyms "unlearned level"
         @tier "domain"
-      prerequisiteMastery : number = 2
-        @label "Prerequisite mastery"
-        @description "The mastery every prerequisite of a frontier item must have reached."
-        @synonyms "ready level, required mastery"
+      prerequisiteLevel : number = 2
+        @label "Prerequisite level"
+        @description "The level every prerequisite of a frontier item must have reached."
+        @synonyms "ready level, required level"
         @tier "domain"
     }
   }
