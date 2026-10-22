@@ -23,6 +23,15 @@ def qs(x): return '"'+x+'"'
 def string_default(value):
     return f'(let ((dd {value})) (if (validate/string @dd) (str/template "{{{{value}}}}" {{ value: @dd }}) ""))'
 
+def field_projection(spec):
+    def candidate(value, otherwise):
+        return (f'(let ((pr (object/get {value} "projectedFrom" null))) '
+                f'(if (validate/object @pr) '
+                f'(let ((pf (object/get @pr "field" null))) '
+                f'(if (and (validate/string @pf) (!= @pf "")) @pr {otherwise})) {otherwise}))')
+    item = candidate(f'(object/get {spec} "items" {{}})', 'null')
+    return candidate(spec, f'(if (= (object/get {spec} "type" "") "array") {item} null)')
+
 def sampler_step(P):
     RT,SD,NOW,EN,W=P['RT'],P['SD'],P['NOW'],P['EN'],P['WORDS']
     C=lambda kind,text='""',num='0',extra='': cell('@pa',kind,text,num,extra)
@@ -50,7 +59,7 @@ def sampler_step(P):
     mock_chain=(f'(if (and (> (array/len @vals) 0) (> {ncs} 0)) {res(mock_member)} (if (= @ty "behavior") {res(mock_beh)} '
                 f'(if (array/includes ["date", "datetime", "timestamp"] @ty) {res(mock_date)} {res(mock_typed)})))')
     mock_gate=f'(let ((cs {cands})) {mock_chain})'
-    projected='(or (object/has @sp "projectedFrom") (and (= @ty "array") (object/has (object/get @sp "items" {}) "projectedFrom")))'
+    projected=f'(!= {field_projection("@sp")} null)'
     vocab=C(qs('string'),'(array/nth @vals (math/mod (- @o 1) (array/len @vals)))')
     kid_frames=lambda n,spec,namex,idx,pathx: f'(array/map (array/range {n}) (fn ki {{ spec: {spec}, name: {namex}, index: {idx}, depth: (+ @dp 1), path: {pathx} }}))'
     arr_body=lambda n,s1: res(C(qs('array'),'""',n,f', kids: (array/map (array/range {n}) (fn ki (str/concat @pa "[" @ki "]")))'),

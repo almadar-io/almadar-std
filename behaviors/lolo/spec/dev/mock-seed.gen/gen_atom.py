@@ -11,7 +11,7 @@ P=dict(RT='?runtime',SD='?seeded',NOW='?nowMs',EN='?entityName',WORDS='@entity.w
 def keptf(fields_expr, seeded, ident, idx):
     return (f'(array/filter {fields_expr} (fn f (and (!= (object/get @f "name" "") "") (not (array/includes ["id", "createdAt", "updatedAt"] (object/get @f "name" ""))) '
             f'(not (and {seeded} (not {ident}) (not (object/get @f "required" false)) (not (object/has @f "default")) (!= (object/get @f "type" "") "relation") '
-            f'(not (or (object/has @f "projectedFrom") (and (= (object/get @f "type" "") "array") (object/has (object/get @f "items" {{}}) "projectedFrom")))) (= (math/mod {idx} 2) 0))))))')
+            f'(= {S.field_projection("@f")} null) (= (math/mod {idx} 2) 0))))))')
 def row_cell(kf): return f'[{{ path: "", kind: "row", text: "", num: 0, keys: (array/map {kf} (fn f (object/get @f "name"))), kids: (array/map {kf} (fn f (object/get @f "name"))) }}]'
 def frames(kf,idx): return f'(array/map {kf} (fn f {{ spec: @f, name: (object/get @f "name"), index: {idx}, depth: 0, path: (object/get @f "name") }}))'
 run_start=S.run(P,'[{ spec: ?spec, name: ?name, index: ?index, depth: 0, path: ?name }]','[]','@entity.rng',root='?name')
@@ -117,7 +117,7 @@ def PS(): return dict(RT='(object/get @reg "runtime")',SD='true',NOW='@entity.no
 RES_FIELDS='(object/get @reg "fields")'
 def kept2(fields,idx,ident='(object/get @reg "identity")'): return keptf(fields,'true',ident,idx)
 isoX=iso
-blank=lambda x:f'(or (not (object/has {x} "id")) (= (object/get {x} "id" "") ""))'
+blank=lambda x:f'(or (not (object/has {x} "id")) (and (validate/string (object/get {x} "id")) (= (object/get {x} "id") "")))'
 inst_rows=(f'(array/map (array/range (array/len (object/get @reg "instances"))) (fn i (let ((r (array/nth (object/get @reg "instances") @i))) (object/set (object/set (object/set @r "id" (if {blank("@r")} '
   f'(str/concat (str/upper (str/slice (object/get @reg "label") 0 1)) (str/slice (object/get @reg "label") 1 (str/len (object/get @reg "label"))) " Id " (+ @entity.dsMinted (+ 1 (array/len (array/filter (array/take (object/get @reg "instances") @i) (fn x {blank("@x")})))))) (object/get @r "id"))) '
   f'"createdAt" (if (or (not (object/has @r "createdAt")) (= (object/get @r "createdAt" "") "")) @entity.dsNowIso (object/get @r "createdAt"))) "updatedAt" (if (or (not (object/has @r "updatedAt")) (= (object/get @r "updatedAt" "") "")) @entity.dsNowIso (object/get @r "updatedAt"))))))')
@@ -220,7 +220,7 @@ def reg(d,seeds):
 regs_expr=(f'(let ((alld {defs}) (idd {iddef})) (array/concat (if (and (!= {idname} "") (not {has_inst("@idd")})) [{reg("@idd","true")}] []) '
            f'(array/map @alld (fn d {reg("@d",f"(and (not {has_inst(chr(64)+chr(100))}) {mock_seeds(chr(64)+chr(100))})")}))))')
 # ---- projections
-def proj_of(f): return f'(if (object/has {f} "projectedFrom") (object/get {f} "projectedFrom") (if (and (= (object/get {f} "type" "") "array") (object/has (object/get {f} "items" {{}}) "projectedFrom")) (object/get (object/get {f} "items") "projectedFrom") null))'
+def proj_of(f): return S.field_projection(f)
 projs_expr=(f'(array/flatten (array/map (array/unique (array/map {seedregs} (fn r (object/get @r "store")))) (fn st '
    f'(let ((flds (array/filter (array/flatten (array/map (array/filter {seedregs} (fn r (= (object/get @r "store") @st))) (fn r (object/get @r "fields")))) (fn f (!= {proj_of("@f")} null))))) '
    f'(array/map (array/unique (array/map @flds (fn f (object/get @f "name")))) (fn nm (let ((fd (array/find @flds (fn f (= (object/get @f "name") @nm))))) (let ((pr {proj_of("@fd")})) '
