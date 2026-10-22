@@ -3,6 +3,7 @@
 import os, re, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
+sys.dont_write_bytecode = True
 import sampler as S
 OUT = os.path.join(HERE, '..', '..', '..', 'dev', 'atoms', 'std-mock-seed.lolo')
 ROW='Map string MockValue?'
@@ -72,7 +73,9 @@ defs=f'(array/flatten (array/map {orbs} (fn o (array/concat (array/filter [(obje
 idprim=f'(array/filter {prim} (fn e (object/get @e "identity" false)))'
 idaux=f'(array/filter {aux} (fn e (object/get @e "identity" false)))'
 iddef=f'(if (> (array/len {idprim}) 0) (array/first {idprim}) (if (> (array/len {idaux}) 0) (array/first {idaux}) {{}}))'
-def has_inst(d): return f'(> (array/len (object/get {d} "instances" [])) 0)'
+def selected_instances(d):
+    return f'(object/get (object/get {d} "localeInstances" {{}}) @entity.dsLocale (object/get {d} "instances" []))'
+def has_inst(d): return f'(> (array/len {selected_instances(d)}) 0)'
 def storekey(d): return lower(f'(if (!= (object/get {d} "collection" "") (object/get {d} "collection" "")) "" (if (object/has {d} "collection") (object/get {d} "collection") (object/get {d} "name")))')
 def mock_seeds(d): return f'(or (not (object/get {d} "local" false)) (object/get {d} "seedMock" false))'
 idname='(object/get @idd "name" "")'
@@ -85,7 +88,7 @@ def owner_cols(d):
     mirror=f'(array/filter {decl_cols(f"(object/get {d} {chr(34)}collection{chr(34)} {chr(34)}{chr(34)})")} (fn c (array/includes (array/map (object/get {d} "fields" []) (fn f (object/get @f "name" ""))) @c)))'
     return f'(if (= {idname} "") [] (array/unique (array/concat {own} (if (!= (object/get {d} "collection" "") "") {mirror} []))))'
 def reg(d,seeds):
-    return (f'{{ label: (object/get {d} "name"), store: {storekey(d)}, fields: (object/get {d} "fields" []), identity: (object/get {d} "identity" false), runtime: (= (object/get {d} "persistence" "") "runtime"), seeds: {seeds}, ownerCols: {owner_cols(d)}, instances: (object/get {d} "instances" []) }}')
+    return (f'{{ label: (object/get {d} "name"), store: {storekey(d)}, fields: (object/get {d} "fields" []), identity: (object/get {d} "identity" false), runtime: (= (object/get {d} "persistence" "") "runtime"), seeds: {seeds}, ownerCols: {owner_cols(d)}, instances: {selected_instances(d)} }}')
 regs_expr=(f'(let ((alld {defs}) (idd {iddef})) (array/concat (if (and (!= {idname} "") (not {has_inst("@idd")})) [{reg("@idd","true")}] []) '
            f'(array/map @alld (fn d {reg("@d",f"(and (not {has_inst(chr(64)+chr(100))}) {mock_seeds(chr(64)+chr(100))})")}))))')
 
@@ -95,7 +98,7 @@ regs_expr=(f'(let ((alld {defs}) (idd {iddef})) (array/concat (if (and (!= {idna
 ALLR='@entity.dsRegsAll'
 seedregs=f'(array/filter {ALLR} (fn r (object/get @r "seeds")))'
 def store_of_entity(ename): 
-    return f'(let ((hit (array/find {seedregs} (fn r (= (str/lower (object/get @r "label")) (str/lower {ename})))))) (if (= @hit null) (str/lower {ename}) (object/get @hit "store")))'
+    return f'(let ((hit (array/find (if (= @entity.dsMode "restamp") @entity.dsRegsAll {seedregs}) (fn r (= (str/lower (object/get @r "label")) (str/lower {ename})))))) (if (= @hit null) (str/lower {ename}) (object/get @hit "store")))'
 card='(object/get (object/get @fd "relation" {}) "cardinality" "")'
 links_expr=(f'(array/flatten (array/map (array/unique (array/map {seedregs} (fn r (object/get @r "store")))) (fn st '
    f'(let ((flds (array/filter (array/flatten (array/map (array/filter {seedregs} (fn r (= (object/get @r "store") @st))) (fn r (object/get @r "fields")))) (fn f (and (= (object/get @f "type" "") "relation") (object/has @f "relation"))))) '
@@ -136,13 +139,23 @@ store_step=(f'(let ((reg {RG})) (if (> (array/len (object/get @reg "instances"))
    f'(if (not (object/get @reg "seeds")) {{ stores: @entity.dsStores, s: @entity.rng, minted: @entity.dsMinted }} '
    f'(let ((res2 (if (= (array/len {rows0}) 0) {seed_arm} {bf_arm}))) {{ stores: (object/set @entity.dsStores (object/get @reg "store") (object/get @res2 "rows")), s: (object/get @res2 "s"), minted: @entity.dsMinted }}))))')
 # --- links
+def relation_write(row, field, scalar, one, many):
+    return f'(if {scalar} (object/set {row} {field} {one}) (object/set {row} {field} {many}))'
+
 def link_fill():
-    lk='@lk'
-    return (f'(let ((rows (object/get @sm (object/get {lk} "store") [])) (trows (object/get @sm (object/get {lk} "target") []))) (if (= (array/len @trows) 0) @sm (object/set @sm (object/get {lk} "store") (array/map (array/range (array/len @rows)) (fn i (let ((row (array/nth @rows @i)) (f (object/get {lk} "field"))) '
-      f'(if (not (or (not (object/has @row @f)) (= (object/get @row @f "") "") (and (validate/array (object/get @row @f "")) (= (array/len (object/get @row @f "")) 0)))) @row '
-      f'(if (= (object/get {lk} "target") (object/get {lk} "store")) (object/set @row @f (if (object/get {lk} "isOwner") (object/get @row "id") (if (object/get {lk} "scalar") (if (= @i 0) "" (object/get (array/nth @rows (math/floor (/ (- @i 1) 2))) "id")) (array/map (array/filter [(+ (* 2 @i) 1), (+ (* 2 @i) 2)] (fn c (< @c (array/len @rows)))) (fn c (object/get (array/nth @rows @c) "id")))))) '
-      f'(let ((elig (if (object/get {lk} "isOwner") (array/map (array/filter (array/range (array/len @trows)) (fn j (array/nth @entity.dsAllows @j))) (fn j (object/get (array/nth @trows @j) "id"))) (array/map @trows (fn t (object/get @t "id")))))) '
-      f'(if (= (array/len @elig) 0) @row (object/set @row @f (if (object/get {lk} "scalar") (array/nth @elig (math/mod @i (array/len @elig))) (array/unique (array/map (array/range (math/min (array/len @elig) (+ 2 (math/mod @i 2)))) (fn o (array/nth @elig (math/mod (+ @i @o) (array/len @elig))))))))))))))))))')
+    parent = '(if (= @i 0) "" (object/get (array/nth @rows (math/floor (/ (- @i 1) 2))) "id"))'
+    children = '(array/map (array/filter [(+ (* 2 @i) 1), (+ (* 2 @i) 2)] (fn c (< @c (array/len @rows)))) (fn c (object/get (array/nth @rows @c) "id")))'
+    local = f'(if (object/get @lk "isOwner") (object/set @row @f (object/get @row "id")) {relation_write("@row", "@f", '(object/get @lk "scalar")', parent, children)})'
+    eligible = '(if (object/get @lk "isOwner") (array/map (array/filter (array/range (array/len @trows)) (fn j (array/nth @entity.dsAllows @j))) (fn j (object/get (array/nth @trows @j) "id"))) (array/map @trows (fn t (object/get @t "id"))))'
+    one = '(array/nth @elig (math/mod @i (array/len @elig)))'
+    many = '(array/unique (array/map (array/range (math/min (array/len @elig) (+ 2 (math/mod @i 2)))) (fn o (array/nth @elig (math/mod (+ @i @o) (array/len @elig))))))'
+    remote = f'(let ((elig {eligible})) (if (= (array/len @elig) 0) @row {relation_write("@row", "@f", '(object/get @lk "scalar")', one, many)}))'
+    filled = '(not (or (not (object/has @row @f)) (= (object/get @row @f "") "") (and (validate/array (object/get @row @f "")) (= (array/len (object/get @row @f "")) 0))))'
+    return (f'(let ((rows (object/get @sm (object/get @lk "store") [])) (trows (object/get @sm (object/get @lk "target") []))) '
+            f'(if (= (array/len @trows) 0) @sm (object/set @sm (object/get @lk "store") '
+            f'(array/map (array/range (array/len @rows)) (fn i (let ((row (array/nth @rows @i)) (f (object/get @lk "field"))) '
+            f'(if {filled} @row (if (= (object/get @lk "target") (object/get @lk "store")) {local} {remote}))))))))')
+
 links_fold=f'(array/reduce @entity.dsLinks @entity.dsStores (fn sm lk {link_fill()}))'
 DATASET=f'''      DATASET_START -> ready
         (set @entity.dsViewer ?viewerId)
@@ -178,9 +191,10 @@ DATASET=f'''      DATASET_START -> ready
 '''
 ROW='Map string MockValue?'
 # ---- owner columns: identity-typed relations + collection mirror + env pairs, id first
+owner_pieces='(array/filter (array/map (str/split @entity.dsOwns ",") (fn q (str/trim @q))) (fn q (and (str/includes @q ".") (!= (array/nth (str/split @q ".") 0) "") (!= (str/join (array/drop (str/split @q ".") 1) ".") ""))))'
+parsed_owner_pairs=f'(array/map {owner_pieces} (fn q {{ entity: (array/nth (str/split @q ".") 0), column: (str/join (array/drop (str/split @q ".") 1) ".") }}))'
 def env_cols(label):
-    pieces='(array/filter (array/map (str/split @entity.dsOwns ",") (fn q (str/trim @q))) (fn q (and (str/includes @q ".") (!= (array/nth (str/split @q ".") 0) "") (!= (str/join (array/drop (str/split @q ".") 1) ".") ""))))'
-    return f'(array/map (array/filter {pieces} (fn q (= (str/lower (array/nth (str/split @q ".") 0)) (str/lower {label})))) (fn q (str/join (array/drop (str/split @q ".") 1) ".")))'
+    return f'(array/map (array/filter @entity.dsOwnerPairs (fn q (= (str/lower (object/get @q "entity")) (str/lower {label})))) (fn q (object/get @q "column")))'
 def seq(a,lit): return f'(and (validate/string {a}) (= {a} {lit}))'
 def vid(x): return f'(or {seq(x,"(quote "+chr(34)+"@user.id"+chr(34)+")")} (and (validate/array {x}) (= (array/len {x}) 3) {seq("(array/nth "+x+" 0)",chr(34)+"object/get"+chr(34))} {seq("(array/nth "+x+" 1)","(quote "+chr(34)+"@user"+chr(34)+")")} {seq("(array/nth "+x+" 2)",chr(34)+"id"+chr(34))}))'
 def fref(x): return f'(if (validate/string {x}) (if (str/startsWith {x} (quote "@entity.")) (str/slice {x} 8 (str/len {x})) "") (if (and (validate/array {x}) (= (array/len {x}) 3) {seq("(array/nth "+x+" 0)",chr(34)+"object/get"+chr(34))} {seq("(array/nth "+x+" 1)","(quote "+chr(34)+"@entity"+chr(34)+")")} (validate/string (array/nth {x} 2))) (array/nth {x} 2) ""))'
@@ -197,7 +211,7 @@ def owner_cols(d):
     allc=f'(array/unique (array/concat {schema_cols} {env_cols("(object/get "+d+" "+chr(34)+"name"+chr(34)+")")}))'
     return f'(let ((oc {allc})) (array/concat (array/filter @oc (fn c (= @c "id"))) (array/filter @oc (fn c (!= @c "id")))))'
 def reg(d,seeds):
-    return (f'{{ label: (object/get {d} "name"), store: {storekey(d)}, fields: (object/get {d} "fields" []), identity: (object/get {d} "identity" false), runtime: (= (object/get {d} "persistence" "") "runtime"), seeds: {seeds}, ownerCols: {owner_cols(d)}, instances: (object/get {d} "instances" []) }}')
+    return (f'{{ label: (object/get {d} "name"), store: {storekey(d)}, fields: (object/get {d} "fields" []), identity: (object/get {d} "identity" false), runtime: (= (object/get {d} "persistence" "") "runtime"), seeds: {seeds}, ownerCols: {owner_cols(d)}, instances: {selected_instances(d)} }}')
 regs_expr=(f'(let ((alld {defs}) (idd {iddef})) (array/concat (if (and (!= {idname} "") (not {has_inst("@idd")})) [{reg("@idd","true")}] []) '
            f'(array/map @alld (fn d {reg("@d",f"(and (not {has_inst(chr(64)+chr(100))}) {mock_seeds(chr(64)+chr(100))})")}))))')
 # ---- projections
@@ -213,6 +227,8 @@ def proj_fill():
 links_fold=f'(array/reduce @entity.dsProjs (array/reduce @entity.dsLinks @entity.dsStores (fn sm lk {link_fill()})) (fn sm pj {proj_fill()}))'
 DERIVE='''      DERIVE_OWNERS -> ready
         (set @entity.dsOwns "")
+        (set @entity.dsOwnerPairs [])
+        (set @entity.dsLocale "")
         (set @entity.dsRegsAll @@REGS@@)
         (emit OWNERS_DERIVED { owners: (object/fromEntries (array/map (array/filter @entity.dsRegsAll (fn r (> (array/len (object/get @r "ownerCols")) 0))) (fn r [(str/lower (object/get @r "label")), (object/get @r "ownerCols")]))) })
 '''
@@ -229,7 +245,7 @@ def policy_owner(d):
 def reg(d,seeds):
     po=policy_owner(d)
     return (f'{{ label: (object/get {d} "name"), store: {storekey(d)}, fields: (object/get {d} "fields" []), identity: (object/get {d} "identity" false), runtime: (= (object/get {d} "persistence" "") "runtime"), seeds: {seeds}, ownerCols: {owner_cols(d)}, '
-            f'policyEntity: (let ((po {po})) (if (= @po null) (object/get {d} "name") (object/get @po "name"))), hasRead: (let ((po {po})) (if (= @po null) false (object/has @po "read_policy"))), instances: (object/get {d} "instances" []) }}')
+            f'policyEntity: (let ((po {po})) (if (= @po null) (object/get {d} "name") (object/get @po "name"))), hasRead: (let ((po {po})) (if (= @po null) false (object/has @po "read_policy"))), instances: {selected_instances(d)} }}')
 regs_expr=(f'(let ((alld {defs}) (idd {iddef})) (array/concat (if (and (!= {idname} "") (not {has_inst("@idd")})) [{reg("@idd","true")}] []) '
            f'(array/map @alld (fn d {reg("@d",f"(and (not {has_inst(chr(64)+chr(100))}) {mock_seeds(chr(64)+chr(100))})")}))))')
 seed_row=(f'(let ((smp {seed_sample}) (cm (- @entity.nowMs (math/floor (* {S.uu(S.nxt("(object/get @ra "+chr(34)+"s"+chr(34)+")"))} 31536000000))))) '
@@ -249,7 +265,7 @@ _lf=_lf.replace(_old,'(if (object/get @lk "isOwner") @row (let ((elig (array/map
 _lf=_lf+')'
 links_fold=f'(array/reduce @entity.dsLinks @entity.dsStores (fn sm lk {_lf}))'
 projs_only=f'(array/reduce @entity.dsProjs @entity.dsStores (fn sm pj {proj_fill()}))'
-VIEWER_ROW='(let ((vr (array/find (object/get @entity.dsStores @entity.dsIdStore []) (fn t (= (object/get @t "id" "") @entity.dsViewer))))) (if (= @vr null) { id: @entity.dsViewer } @vr))'
+VIEWER_ROW='(if @entity.dsHasViewerRecord @entity.dsViewerRecord (let ((vr (array/find (object/get @entity.dsStores @entity.dsIdStore []) (fn t (= (object/get @t "id" "") @entity.dsViewer))))) (if (= @vr null) { id: @entity.dsViewer } @vr)))'
 def mk(action,colval,viewer,col):
     return f'{{ entity: (object/get @reg "policyEntity"), action: "{action}", row: (object/set @row {col} {colval}), viewer: {viewer} }}'
 Q='"'
@@ -262,11 +278,11 @@ def reqs(read,rel,viewer_req,col):
     if viewer_req: parts.append(f'(array/append [] {mk("create","@entity.dsViewer",VIEWER_ROW,col)})')
     return '(array/concat '+' '.join(parts)+')'
 SEEDREGS='(array/filter @entity.dsRegsAll (fn r (object/get @r "seeds")))'
-def reg_of(storex): return f'(array/find {SEEDREGS} (fn r (= (object/get @r "store") {storex})))'
+def reg_of(storex): return f'(array/find (if (= @entity.dsMode "restamp") @entity.dsRegsAll {SEEDREGS}) (fn r (= (object/get @r "store") {storex})))'
 G_=lambda o,k: f'(object/get {o} "{k}")'
 stamp_plan=(f'(let ((st (array/first @entity.dsStamps))) (let ((reg {reg_of(G_("@st","store"))}) (col {G_("@st","col")})) '
   f'(let ((fld (array/find (object/get @reg "fields") (fn f (= (object/get @f "name") @col))))) '
-  f'(let ((rel (and (!= @fld null) (= (object/get @fld "type" "") "relation"))) (row (array/nth (object/get @entity.dsStores {G_("@st","store")} []) {G_("@st","i")}))) '
+  f'(let ((rel (and (!= @fld null) (= (object/get @fld "type" "") "relation") (not (and (= @entity.dsMode "restamp") (= @col "id"))))) (row (array/nth (object/get @entity.dsStores {G_("@st","store")} []) {G_("@st","i")}))) '
   f'(let ((tst (if @rel {store_of_entity(G_(G_("@fld","relation"),"entity"))} ""))) '
   f'(let ((idrows (object/get @entity.dsStores @tst []))) (let ((rd (and (object/get @reg "hasRead") @rel (!= @col "id")))) '
   f'{{ queue: {reqs("@rd","@rel",True,"@col")}, n: (array/len @idrows), read: @rd, rel: @rel, ids: (array/map @idrows (fn t (str/concat "" (object/get @t "id")))), viewer: true }})))))))')
@@ -284,13 +300,45 @@ decode=(f'(let ((ro {ro}) (rb {rb}) (cr {cr}) (cv {cv})) '
   f'(let ((readers (if @scoped (array/map (array/filter (array/range {N}) (fn j (array/nth @ro @j))) (fn j (array/nth @entity.acIds @j))) [])) '
   f'(creators (array/map (array/filter (array/range {N}) (fn j (array/nth @cr @j))) (fn j (array/nth @entity.acIds @j))))) '
   f'(let ((elig (if @scoped @readers @creators))) (let ((vmay (if @scoped (array/includes @readers @entity.dsViewer) @cv))) '
-  f'{{ hit: (or @vmay (> (array/len @elig) 0)), owner: (if @vmay @entity.dsViewer (if (> (array/len @elig) 0) (array/first @elig) "")), elig: @elig }})))))')
+  f'{{ hit: (or @vmay (> (array/len @elig) 0)), owner: (if @vmay @entity.dsViewer (if (> (array/len @elig) 0) (array/first @elig) "")), elig: @elig, viewer: @vmay }})))))')
 olinks_expr=('(array/flatten (array/map (array/filter @entity.dsLinks (fn lk (and (object/get @lk "isOwner") (!= (object/get @lk "target") (object/get @lk "store"))))) (fn lk '
   '(array/map (array/filter (array/range (array/len (object/get @entity.dsStores (object/get @lk "store") []))) (fn i (let ((v (object/get (array/nth (object/get @entity.dsStores (object/get @lk "store") []) @i) (object/get @lk "field") ""))) (or (= @v "") (and (validate/array @v) (= (array/len @v) 0)))))) '
   '(fn i { store: (object/get @lk "store"), field: (object/get @lk "field"), i: @i, target: (object/get @lk "target"), scalar: (object/get @lk "scalar") })))))')
+def journal_cells(descriptors):
+    return f'(array/map {descriptors} (fn st {{ store: (object/get @st "store"), id: (str/template "{{{{id}}}}" {{ id: (object/get (array/nth (object/get @entity.dsStores (object/get @st "store") []) (object/get @st "i")) "id") }}), column: (object/get @st "col") }}))'
+journal=f'{{ viewerId: @entity.dsViewer, stamped: {journal_cells("@entity.dsStamped")}, deferred: {journal_cells("@entity.dsDeferred")} }}'
+def same_cell(candidate, stamp):
+    return f'(and (= (object/get {candidate} "store") (object/get {stamp} "store")) (= (object/get {candidate} "id") (object/get {stamp} "id")) (= (object/get {candidate} "column") (object/get {stamp} "col")))'
+def queue_cell(c, deferred):
+    return f'{{ store: (object/get {c} "store"), id: (object/get {c} "id"), col: (object/get {c} "column"), wasDeferred: {deferred}, i: (array/findIndex (object/get @entity.dsStores (object/get {c} "store") []) (fn r (= (object/get @r "id") (object/get {c} "id")))) }}'
+restamp_queue=f'(array/concat (array/map @entity.rsJournal.stamped (fn c {queue_cell("@c", "false")})) (array/map @entity.rsJournal.deferred (fn c {queue_cell("@c", "true")})))'
+first='(array/first @entity.dsStamps)'
+remaining_deferred=f'(array/filter @entity.rsJournal.deferred (fn c (not {same_cell("@c", first)})))'
+current_cell=f'{{ store: (object/get {first} "store"), id: (object/get {first} "id"), column: (object/get {first} "col") }}'
+restamp_journal=f'(if (and @entity.rsApplied (object/get {first} "wasDeferred" false)) (object/set (object/set @entity.rsJournal "stamped" (array/append @entity.rsJournal.stamped {current_cell})) "deferred" {remaining_deferred}) @entity.rsJournal)'
+def rekey_cells(cells):
+    return f'(array/map {cells} (fn c (if (and (= (object/get @c "store") (object/get {first} "store")) (= (object/get @c "id") (object/get {first} "id"))) (object/set @c "id" (object/get @entity.acOut "owner")) @c)))'
+rekey_journal=f'(object/set (object/set @entity.rsJournal "stamped" {rekey_cells("@entity.rsJournal.stamped")}) "deferred" {rekey_cells("@entity.rsJournal.deferred")})'
+rekey_candidate=f'(if (= (object/get @r "id") (object/get {first} "id")) (object/set @r "id" (object/get @entity.acOut "owner")) @r)'
+rekey_hit='(array/findIndex @rows (fn q (= (object/get @q "id") (object/get @next "id"))))'
+rekey_merge='(if (< @hit 0) (array/append @rows @next) (array/map (array/range (array/len @rows)) (fn i (if (= @i @hit) @next (array/nth @rows @i)))))'
+rekey_rows=f'(array/reduce (object/get @entity.dsStores (object/get {first} "store") []) [] (fn rows r (let ((next {rekey_candidate})) (let ((hit {rekey_hit})) {rekey_merge}))))'
+
+set_rows=f'(array/map (object/get @entity.dsStores (object/get {first} "store") []) (fn r (if (= (object/get @r "id") (object/get {first} "id")) (object/set @r (object/get {first} "col") (object/get @entity.acOut "owner")) @r)))'
+restamp_stores=f'(if @entity.rsWrite (object/set @entity.dsStores (object/get {first} "store") (if (= (object/get {first} "col") "id") {rekey_rows} {set_rows})) @entity.dsStores)'
+restamp_change=f'{{ kind: (if (= (object/get {first} "col") "id") "rekey" "set"), store: (object/get {first} "store"), id: (object/get {first} "id"), column: (object/get {first} "col"), ownerId: (object/get @entity.acOut "owner") }}'
+refreshed_id=f'(if (and @entity.rsWrite (= (object/get {first} "col") "id") (= (object/get @c "store") (object/get {first} "store")) (= (object/get @c "id") (object/get {first} "id"))) (object/get @entity.acOut "owner") (object/get @c "id"))'
+restamp_remaining=f'(array/map (array/drop @entity.dsStamps 1) (fn c (let ((id {refreshed_id})) (object/set (object/set @c "id" @id) "i" (array/findIndex (object/get @entity.dsStores (object/get @c "store") []) (fn r (= (object/get @r "id") @id)))))))'
+owner_link_write = relation_write('@rw', '(object/get @lk "field")', '(object/get @lk "scalar")',
+    '(array/nth @el (math/mod @j (array/len @el)))',
+    '(array/unique (array/map (array/range (math/min (array/len @el) (+ 2 (math/mod @j 2)))) (fn o (array/nth @el (math/mod (+ @j @o) (array/len @el))))))')
 STORE_AFTER=f'''      DS_STAMP -> ready when (= (array/len @entity.dsStamps) 0)
-        (emit DS_STORE {{ at: (array/len @entity.dsRegs) }})
-      DS_STAMP -> ready when (> (array/len @entity.dsStamps) 0)
+        (if (= @entity.dsMode "restamp") (emit RESTAMP_DONE {{ journal: @entity.rsJournal, changes: @entity.rsChanges }}) (emit DS_STORE {{ at: (array/len @entity.dsRegs) }}))
+      DS_STAMP -> ready when (and (> (array/len @entity.dsStamps) 0) (< (object/get (array/first @entity.dsStamps) "i") 0))
+        (set @entity.rsJournal (if (object/get (array/first @entity.dsStamps) "wasDeferred" false) (object/set @entity.rsJournal "deferred" {remaining_deferred}) @entity.rsJournal))
+        (set @entity.dsStamps (array/drop @entity.dsStamps 1))
+        (emit DS_STAMP {{ at: (array/len @entity.dsStamps) }})
+      DS_STAMP -> ready when (and (> (array/len @entity.dsStamps) 0) (>= (object/get (array/first @entity.dsStamps) "i") 0))
         (set @entity.acPlan {stamp_plan})
         (set @entity.acQueue (object/get @entity.acPlan "queue"))
         (set @entity.acN (object/get @entity.acPlan "n"))
@@ -327,22 +375,68 @@ STORE_AFTER=f'''      DS_STAMP -> ready when (= (array/len @entity.dsStamps) 0)
         (set @entity.acQueue (array/drop @entity.acQueue 1))
         (notify error (str/concat "Access check failed and counted as denied: " ?error))
         (emit AC_ASK {{ at: (array/len @entity.acQueue) }})
-      AC_DONE -> ready when (= @entity.acPurpose "stamp")
+      AC_DONE -> ready when (and (= @entity.acPurpose "stamp") (= @entity.dsMode "seed"))
         (set @entity.acOut {decode})
+        (set @entity.dsStamped (if (object/get @entity.acOut "hit") (array/append @entity.dsStamped (array/first @entity.dsStamps)) @entity.dsStamped))
+        (set @entity.dsDeferred (if (object/get @entity.acOut "hit") @entity.dsDeferred (array/append @entity.dsDeferred (array/first @entity.dsStamps))))
         (set @entity.dsStores (let ((st (array/first @entity.dsStamps))) (if (object/get @entity.acOut "hit") (object/set @entity.dsStores (object/get @st "store") (array/map (array/range (array/len (object/get @entity.dsStores (object/get @st "store") []))) (fn j (let ((rw (array/nth (object/get @entity.dsStores (object/get @st "store") []) @j))) (if (= @j (object/get @st "i")) (object/set @rw (object/get @st "col") (object/get @entity.acOut "owner")) @rw))))) @entity.dsStores)))
         (set @entity.dsStamps (array/drop @entity.dsStamps 1))
         (emit DS_STAMP {{ at: (array/len @entity.dsStamps) }})
+      AC_DONE -> ready when (and (= @entity.acPurpose "stamp") (= @entity.dsMode "restamp"))
+        (set @entity.acOut {decode})
+        (set @entity.rsApplied (if (object/get (array/first @entity.dsStamps) "wasDeferred" false) (object/get @entity.acOut "viewer") (object/get @entity.acOut "hit")))
+        (set @entity.rsWrite (and @entity.rsApplied (or (!= (object/get (array/first @entity.dsStamps) "col") "id") (!= (object/get (array/first @entity.dsStamps) "id") (object/get @entity.acOut "owner")))))
+        (set @entity.dsStores {restamp_stores})
+        (set @entity.rsJournal {restamp_journal})
+        (set @entity.rsJournal (if (and @entity.rsWrite (= (object/get (array/first @entity.dsStamps) "col") "id")) {rekey_journal} @entity.rsJournal))
+        (set @entity.rsChanges (if @entity.rsWrite (array/append @entity.rsChanges {restamp_change}) @entity.rsChanges))
+        (set @entity.dsStamps {restamp_remaining})
+        (emit DS_STAMP {{ at: (array/len @entity.dsStamps) }})
       AC_DONE -> ready when (= @entity.acPurpose "link")
         (set @entity.acOut {decode})
-        (set @entity.dsStores (let ((lk (array/first @entity.dsOlinks))) (if (> (array/len (object/get @entity.acOut "elig")) 0) (object/set @entity.dsStores (object/get @lk "store") (array/map (array/range (array/len (object/get @entity.dsStores (object/get @lk "store") []))) (fn j (let ((rw (array/nth (object/get @entity.dsStores (object/get @lk "store") []) @j)) (el (object/get @entity.acOut "elig"))) (if (= @j (object/get @lk "i")) (object/set @rw (object/get @lk "field") (if (object/get @lk "scalar") (array/nth @el (math/mod @j (array/len @el))) (array/unique (array/map (array/range (math/min (array/len @el) (+ 2 (math/mod @j 2)))) (fn o (array/nth @el (math/mod (+ @j @o) (array/len @el)))))))) @rw))))) @entity.dsStores)))
+        (set @entity.dsStores (let ((lk (array/first @entity.dsOlinks))) (if (> (array/len (object/get @entity.acOut "elig")) 0) (object/set @entity.dsStores (object/get @lk "store") (array/map (array/range (array/len (object/get @entity.dsStores (object/get @lk "store") []))) (fn j (let ((rw (array/nth (object/get @entity.dsStores (object/get @lk "store") []) @j)) (el (object/get @entity.acOut "elig"))) (if (= @j (object/get @lk "i")) {owner_link_write} @rw))))) @entity.dsStores)))
         (set @entity.dsOlinks (array/drop @entity.dsOlinks 1))
         (emit DS_OLINK {{ at: (array/len @entity.dsOlinks) }})
       DS_PROJS -> ready
         (set @entity.dsStores {projs_only})
-        (emit DATASET_DONE {{ stores: @entity.dsStores }})
+        (emit DATASET_DONE {{ stores: @entity.dsStores, journal: {journal} }})
 '''
 
-DATASET=f'''      DATASET_START -> ready
+DATASET=f'''      RESTAMP_INPUT -> ready
+        (set @entity.dsMode "restamp")
+        (set @entity.dsOwnerPairs [])
+        (set @entity.dsLocale "")
+        (set @entity.dsViewerRecord {{ id: "" }})
+        (set @entity.dsViewerRecord (or ?viewer @entity.dsViewerRecord))
+        (set @entity.dsHasViewerRecord true)
+        (set @entity.dsViewer (object/get @entity.dsViewerRecord "id"))
+        (set @entity.dsStores ?stores)
+        (set @entity.rsJournal (object/set ?journal "viewerId" @entity.dsViewer))
+        (set @entity.rsChanges [])
+        (set @entity.dsStamps (if (or (= @entity.dsViewer "") (= @entity.dsViewer (object/get ?journal "viewerId"))) [] {restamp_queue}))
+        (emit DS_PROGRAM_READ {{ result: ?program }})
+      DATASET_INPUT -> ready
+        (set @entity.dsMode "seed")
+        (set @entity.dsHasViewerRecord false)
+        (set @entity.dsViewer ?viewerId)
+        (set @entity.dsCount ?count)
+        (set @entity.dsSource "")
+        (set @entity.dsOwns "")
+        (set @entity.dsOwnerPairs ?ownerPairs)
+        (set @entity.dsLocale (or ?locale ""))
+        (set @entity.nowMs ?nowMs)
+        (set @entity.dsNowIso {iso("?nowMs")})
+        (set @entity.rng (math/mod ?seed 4294967296))
+        (set @entity.dsMinted 0)
+        (set @entity.dsStores {{}})
+        (set @entity.dsStamped [])
+        (set @entity.dsDeferred [])
+        (emit DS_PROGRAM_READ {{ result: ?program }})
+      DATASET_START -> ready
+        (set @entity.dsMode "seed")
+        (set @entity.dsHasViewerRecord false)
+        (set @entity.dsOwnerPairs [])
+        (set @entity.dsLocale "")
         (set @entity.dsViewer ?viewerId)
         (set @entity.dsCount ?count)
         (set @entity.dsSource ?source)
@@ -351,12 +445,16 @@ DATASET=f'''      DATASET_START -> ready
         (set @entity.rng (math/mod ?seed 4294967296))
         (set @entity.dsMinted 0)
         (set @entity.dsStores {{}})
+        (set @entity.dsStamped [])
+        (set @entity.dsDeferred [])
         (os/getenv "ALMADAR_PERSONA_OWNS" {{ emit: {{ success: DS_OWNS_ENV, failure: DS_OWNS_ENV_FAILED }} }})
       DS_OWNS_ENV -> ready
         (set @entity.dsOwns (object/get @payload "value" ""))
+        (set @entity.dsOwnerPairs {parsed_owner_pairs})
         (program/read @entity.dsSource {{ emit: {{ success: DS_PROGRAM_READ, failure: DS_PROGRAM_FAILED }} }})
       DS_OWNS_ENV_FAILED -> ready
         (set @entity.dsOwns "")
+        (set @entity.dsOwnerPairs [])
         (program/read @entity.dsSource {{ emit: {{ success: DS_PROGRAM_READ, failure: DS_PROGRAM_FAILED }} }})
       DS_PROGRAM_FAILED -> ready
         (emit DATASET_FAILED {{ error: ?error }})
@@ -366,7 +464,7 @@ DATASET=f'''      DATASET_START -> ready
         (set @entity.dsLinks {links_expr})
         (set @entity.dsProjs {projs_expr})
         (set @entity.dsIdStore {iddef_store})
-        (emit DS_STORE {{ at: (array/len @entity.dsRegs) }})
+        (if (= @entity.dsMode "restamp") (emit DS_STAMP {{ at: (array/len @entity.dsStamps) }}) (emit DS_STORE {{ at: (array/len @entity.dsRegs) }}))
       DS_STORE -> ready when (= (array/len @entity.dsRegs) 0)
         (emit DS_LINKS {{ at: 0 }})
       DS_STORE -> ready when (> (array/len @entity.dsRegs) 0)
@@ -394,6 +492,8 @@ L+=w('ROWS_NEXT','at : number','Sample the next row.','next row')
 L+=w('WALKED','cells : [MockWalkCell]  value : MockValue?','A walk finished.','walked')
 L+=w('SEED_STREAM','seed : number!  nowMs : number!','Start a store stream: reset it to a seed and the clock the stamps and relative dates draw against.','start stream')
 L+=w('SEED_ROW','fields : [MockFieldSpec]!  label : string!  n : number!  index : number!  identity : boolean!  runtime : boolean!  nowMs : number!','Seed one row of a mock store the way the kernel does: the Label Id n id, createdAt and updatedAt drawn first from the stream, then the seeded fields.','seed row, mock store row')
+L+=w('RESTAMP_INPUT','program : SeedProgram!  stores : Map string [Map string MockValue?]!  journal : SeedOwnerJournal!  viewer : Viewer','Restamp only retained seed-owner cells against current rows and the full current viewer, retaining legacy fallback and rekey behavior.','restamp seed owners, switch seed persona')
+L+=w('DATASET_INPUT','program : SeedProgram!  count : number!  seed : number!  nowMs : number!  viewerId : string!  ownerPairs : [SeedOwnerPair]!  locale : string','Seed an already-resolved program with explicit owner pairs and optional locale, without reading program text or environment variables.','seed resolved dataset, embedded mock dataset')
 L+=w('DATASET_START','source : string!  count : number!  seed : number!  nowMs : number!  viewerId : string!','Seed a whole mock dataset from a program the way the kernel does: read the program, derive the store order, owner columns and relation links from it, seed the identity store first, then each store with stamps drawn from one stream, owner columns stamped for the viewer, later registrants backfilled, and relations and projected fields linked.','seed dataset, mock dataset')
 L+=w('DS_OWNS_ENV','value : string','The ALMADAR_PERSONA_OWNS value.','owner env')
 L+=w('DS_OWNS_ENV_FAILED','error : string','The owner environment variable could not be read.','owner env failed')
@@ -417,7 +517,8 @@ E+=ext('WALKED',['cells : [MockWalkCell]','value : MockValue?'],'A field or row 
 E+=ext('ROWS_DONE',['rows : [Map string MockValue?]'],'The sampled rows of an entity, each with its Name-n id.')
 E+=ext('SEED_ROW_DONE',['row : Map string MockValue?'],'A seeded store row: its Name Id n id, created and updated stamps drawn from the stream, then its fields.')
 E+=ext('STREAM_SEEDED',['seed : number','nowMs : number'],'The stream was reset to a seed and clock.')
-E+=ext('DATASET_DONE',['stores : Map string [Map string MockValue?]'],'The whole seeded dataset: every store rows, identity first, owner columns stamped and relations linked.')
+E+=ext('RESTAMP_DONE',['journal : SeedOwnerJournal!', 'changes : [SeedOwnerChange]!'],'The updated owner journal and ordered owner-cell writes or row-key moves, with no reseeding.')
+E+=ext('DATASET_DONE',['stores : Map string [Map string MockValue?]', 'journal : SeedOwnerJournal!'],'The whole seeded dataset: every store rows, identity first, owner columns stamped and relations linked.')
 E+=ext('OWNERS_DERIVED',['owners : Map string [string]'],'The owner columns of each entity, by lower-case entity name.')
 E+=''.join(f"      {n} {{ {f} }}\n        @description \"Internal: {d}\"\n        @tier \"internal\"\n" for n,f,d in [('DS_STAMP','at : number','the next owner stamp'),('DS_OLINK','at : number','the next owner link'),('DS_PROJS','at : number','the projected fields'),('AC_ASK','at : number','ask the next access check'),('AC_ANSWER','allowed : boolean','an access check verdict'),('AC_FAILED','error : string','an access check could not be evaluated'),('AC_DONE','at : number','all checks answered')])
 E+=ext('DATASET_FAILED',['error : string'],'The program could not be read.')
@@ -444,6 +545,15 @@ fields='''    id : string!
     rowFields : [MockFieldSpec] @description "The entity declared fields." = []
     rowName : string @description "The entity name, which prefixes the row ids." = ""
     inRows : boolean @description "Whether a multi-row sample is in progress." = false
+    dsMode : string @description "Whether the shared admission queue is seeding or restamping." = "seed"
+    dsHasViewerRecord : boolean = false
+    dsViewerRecord : Viewer = { id: "" }
+    rsJournal : SeedOwnerJournal = { viewerId: "", stamped: [], deferred: [] }
+    rsChanges : [SeedOwnerChange] = []
+    rsApplied : boolean = false
+    rsWrite : boolean = false
+    dsStamped : [DsStamp] @description "Seed-owned cells successfully stamped, indexed until final row ids are known." = []
+    dsDeferred : [DsStamp] @description "Seed-owned cells denied without an eligible owner, indexed until final row ids are known." = []
     dsStamps : [DsStamp] @description "The owner columns still to stamp." = []
     dsOlinks : [DsOlink] @description "The owner relations still to fill." = []
     acQueue : [AccessReq] @description "The access checks still to ask, next first." = []
@@ -455,8 +565,10 @@ fields='''    id : string!
     acViewer : boolean @description "Whether a viewer create check is queued last." = false
     acIds : [string] @description "The identity row ids the checks cover." = []
     acPlan : AcPlan @description "The queued checks and their shape." = { queue: [], n: 0, read: false, rel: false, ids: [], viewer: false }
-    acOut : AcOut @description "The decoded verdicts." = { hit: false, owner: "", elig: [] }
+    acOut : AcOut @description "The decoded verdicts." = { hit: false, owner: "", elig: [], viewer: false }
     dsSource : string @description "The program text the dataset is derived from." = ""
+    dsOwnerPairs : [SeedOwnerPair] @description "Explicit entity and owner-column pairs, or parsed environment pairs." = []
+    dsLocale : string @description "The locale selecting authored instances, or empty for defaults." = ""
     dsOwns : string @description "The ALMADAR_PERSONA_OWNS pairs." = ""
     dsRegsAll : [DatasetReg] @description "Every store registration derived from the program, in seed order." = []
     dsRegs : [DatasetReg] @description "The store registrations still to run, next first." = []
@@ -473,7 +585,7 @@ fields='''    id : string!
 head='''app std-mock-seed [
   version: "1.0.0",
   env: ["ALMADAR_PERSONA_OWNS"],
-  description: "std-mock-seed — mock rows from declared fields, as pure expressions over a stack machine. WALK_START samples one field by walking its declared field tree (arrays, objects, tuples, unions), WALK_ROW and SAMPLE_ROWS sample rows, SEED_ROW seeds a store row with its Name Id n id and created and updated stamps drawn from the stream, and DATASET_START seeds a whole dataset from a program: it reads the program, derives the store order, owner columns, relation links and projected fields, seeds the identity store first, owner-stamps the viewer, backfills later registrants of a store and links relations. The index strategy derives a value from the row ordinal alone; the seeded strategy threads one linear congruential generator state (the std-mock-random stream) through the walk, so the draw order is the walk order. Gates in order: an intrinsic field takes its default or is omitted, a default is honored where it is a claim about every row, a declared mock is rotated by row or typed, a projected field is a placeholder, a vocabulary rotates one-based, then the type."
+  description: "std-mock-seed — mock rows from declared fields, as pure expressions over a stack machine. WALK_START samples one field by walking its declared field tree (arrays, objects, tuples, unions), WALK_ROW and SAMPLE_ROWS sample rows, SEED_ROW seeds a store row with its Name Id n id and created and updated stamps drawn from the stream, and DATASET_INPUT seeds an already-resolved program with explicit owner pairs and optional locale while DATASET_START reads a source program: it reads the program, derives the store order, owner columns, relation links and projected fields, seeds the identity store first, owner-stamps the viewer, backfills later registrants of a store and links relations. The index strategy derives a value from the row ordinal alone; the seeded strategy threads one linear congruential generator state (the std-mock-random stream) through the walk, so the draw order is the walk order. Gates in order: an intrinsic field takes its default or is omitted, a default is honored where it is a claim about every row, a declared mock is rotated by row or typed, a projected field is a placeholder, a vocabulary rotates one-based, then the type."
 ]
 ;; Generated by spec/dev/mock-seed.gen/gen_atom.py; regenerate, never hand-edit.
 uses Spec from "almadar-std/mock-seed"
@@ -481,7 +593,11 @@ uses Rand from "std/behaviors/std-mock-random"
 
 '''
 types='''type Expr = string | number | boolean | [Expr] | Map string Expr
-type SeedEntity = { name : string, persistence : string, collection : string, identity : boolean, local : boolean, seedMock : boolean, fields : [MockFieldSpec], instances : [Map string MockValue?], read_policy : Expr, create_policy : Expr, update_policy : Expr, delete_policy : Expr }
+type SeedOwnerPair = { entity : string!, column : string! }
+type SeedOwnerCell = { store : string!, id : string!, column : string! }
+type SeedOwnerJournal = { viewerId : string!, stamped : [SeedOwnerCell]!, deferred : [SeedOwnerCell]! }
+type SeedOwnerChange = { kind : "set" | "rekey", store : string!, id : string!, column : string!, ownerId : string! }
+type SeedEntity = { name : string, persistence : string, collection : string, identity : boolean, local : boolean, seedMock : boolean, fields : [MockFieldSpec], instances : [Map string MockValue?], localeInstances : Map string [Map string MockValue?], read_policy : Expr, create_policy : Expr, update_policy : Expr, delete_policy : Expr }
 type SeedOrbital = { entity : SeedEntity, auxiliaryEntities : [SeedEntity] }
 type SeedProgram = { orbitals : [SeedOrbital] }
 type MockValue = string | number | boolean | [MockValue?] | Map string MockValue?
@@ -490,11 +606,11 @@ type MockProjection = { type : string, field : string }
 type MockFieldSpec = { name : string, type : string!, values : [string], mock : string, default : MockValue?, intrinsic : boolean, required : boolean, relation : MockRelation, projectedFrom : MockProjection, items : MockFieldSpec, properties : Map string MockFieldSpec, slots : [MockFieldSpec] }
 type MockWalkCell = { path : string!, kind : string!, text : string, num : number, url : string, mime : string, kids : [string], keys : [string], val : MockValue? }
 type WalkOut = { cells : [MockWalkCell], s : number, value : MockValue? }
-type DsStamp = { store : string!, i : number!, col : string! }
+type DsStamp = { store : string!, i : number!, col : string!, id : string, wasDeferred : boolean }
 type DsOlink = { store : string!, field : string!, i : number!, target : string!, scalar : boolean! }
 type AccessReq = { entity : string!, action : string!, row : Map string MockValue?, viewer : Map string MockValue? }
 type AcPlan = { queue : [AccessReq], n : number, read : boolean, rel : boolean, ids : [string], viewer : boolean }
-type AcOut = { hit : boolean, owner : string, elig : [string] }
+type AcOut = { hit : boolean, owner : string, elig : [string], viewer : boolean }
 type DsOut = { stores : Map string [Map string MockValue?], s : number, minted : number, stamps : [DsStamp] }
 type DatasetReg = { label : string!, store : string!, fields : [MockFieldSpec]!, identity : boolean!, runtime : boolean!, seeds : boolean!, ownerCols : [string]!, policyEntity : string!, hasRead : boolean!, instances : [Map string MockValue?]! }
 type DatasetLink = { store : string!, field : string!, target : string!, scalar : boolean!, isOwner : boolean! }

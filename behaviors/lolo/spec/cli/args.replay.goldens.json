@@ -1,453 +1,1276 @@
 {
- "atom": "cli/atoms/std-args.lolo",
- "trait": "ArgsParser",
- "cases": [
-  {
-   "id": "bare-optional-flag-takes-its-default",
-   "steps": [
+  "atom": "cli/atoms/std-args.lolo",
+  "trait": "ArgsParser",
+  "cases": [
     {
-     "event": "ARGS_PARSE",
-     "payload": {
-      "stage": "t",
-      "argv": [
-       "--dry-run",
-       "--release-orbital-rust"
-      ],
-      "flags": [
-       {
-        "name": "dry-run",
-        "aliases": [],
-        "takesValue": false,
-        "repeatable": false
-       },
-       {
-        "name": "scope",
-        "aliases": [],
-        "takesValue": true,
-        "repeatable": false
-       },
-       {
-        "name": "release-orbital-rust",
-        "aliases": [],
-        "takesValue": true,
-        "repeatable": false,
-        "defaultValue": "minor",
-        "choices": [
-         "patch",
-         "minor",
-         "major"
-        ]
-       }
-      ]
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "ARGS_PARSED",
-        "payload": {
-         "stage": "t",
-         "flags": {
-          "dry-run": [
-           "true"
-          ],
-          "release-orbital-rust": [
-           "minor"
-          ]
-         },
-         "positionals": [],
-         "errors": [],
-         "words": [
-          "--dry-run",
-          "--release-orbital-rust",
-          "minor"
-         ]
+      "id": "bare-optional-flag-takes-its-default",
+      "steps": [
+        {
+          "event": "ARGS_PARSE",
+          "payload": {
+            "stage": "t",
+            "argv": [
+              "--dry-run",
+              "--release-orbital-rust"
+            ],
+            "flags": [
+              {
+                "name": "dry-run",
+                "aliases": [],
+                "takesValue": false,
+                "repeatable": false
+              },
+              {
+                "name": "scope",
+                "aliases": [],
+                "takesValue": true,
+                "repeatable": false
+              },
+              {
+                "name": "release-orbital-rust",
+                "aliases": [],
+                "takesValue": true,
+                "repeatable": false,
+                "defaultValue": "minor",
+                "choices": [
+                  "patch",
+                  "minor",
+                  "major"
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ARGS_PARSED",
+                "payload": {
+                  "stage": "t",
+                  "flags": {
+                    "dry-run": [
+                      "true"
+                    ],
+                    "release-orbital-rust": [
+                      "minor"
+                    ]
+                  },
+                  "positionals": [],
+                  "errors": [],
+                  "words": [
+                    "--dry-run",
+                    "--release-orbital-rust",
+                    "minor"
+                  ]
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "optional-flag-takes-a-following-choice",
-   "steps": [
+    },
     {
-     "event": "ARGS_PARSE",
-     "payload": {
-      "stage": "t",
-      "argv": [
-       "--release-orbital-rust",
-       "patch",
-       "--dry-run"
-      ],
-      "flags": [
-       {
-        "name": "dry-run",
-        "aliases": [],
-        "takesValue": false,
-        "repeatable": false
-       },
-       {
-        "name": "scope",
-        "aliases": [],
-        "takesValue": true,
-        "repeatable": false
-       },
-       {
-        "name": "release-orbital-rust",
-        "aliases": [],
-        "takesValue": true,
-        "repeatable": false,
-        "defaultValue": "minor",
-        "choices": [
-         "patch",
-         "minor",
-         "major"
-        ]
-       }
-      ]
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "ARGS_PARSED",
-        "payload": {
-         "stage": "t",
-         "flags": {
-          "release-orbital-rust": [
-           "patch"
-          ],
-          "dry-run": [
-           "true"
-          ]
-         },
-         "positionals": [],
-         "errors": [],
-         "words": [
-          "--release-orbital-rust",
-          "patch",
-          "--dry-run"
-         ]
+      "id": "optional-flag-takes-a-following-choice",
+      "steps": [
+        {
+          "event": "ARGS_PARSE",
+          "payload": {
+            "stage": "t",
+            "argv": [
+              "--release-orbital-rust",
+              "patch",
+              "--dry-run"
+            ],
+            "flags": [
+              {
+                "name": "dry-run",
+                "aliases": [],
+                "takesValue": false,
+                "repeatable": false
+              },
+              {
+                "name": "scope",
+                "aliases": [],
+                "takesValue": true,
+                "repeatable": false
+              },
+              {
+                "name": "release-orbital-rust",
+                "aliases": [],
+                "takesValue": true,
+                "repeatable": false,
+                "defaultValue": "minor",
+                "choices": [
+                  "patch",
+                  "minor",
+                  "major"
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ARGS_PARSED",
+                "payload": {
+                  "stage": "t",
+                  "flags": {
+                    "release-orbital-rust": [
+                      "patch"
+                    ],
+                    "dry-run": [
+                      "true"
+                    ]
+                  },
+                  "positionals": [],
+                  "errors": [],
+                  "words": [
+                    "--release-orbital-rust",
+                    "patch",
+                    "--dry-run"
+                  ]
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "optional-flag-before-another-flag-takes-its-default",
-   "steps": [
+    },
     {
-     "event": "ARGS_PARSE",
-     "payload": {
-      "stage": "t",
-      "argv": [
-       "--release-orbital-rust",
-       "--dry-run"
-      ],
-      "flags": [
-       {
-        "name": "dry-run",
-        "aliases": [],
-        "takesValue": false,
-        "repeatable": false
-       },
-       {
-        "name": "scope",
-        "aliases": [],
-        "takesValue": true,
-        "repeatable": false
-       },
-       {
-        "name": "release-orbital-rust",
-        "aliases": [],
-        "takesValue": true,
-        "repeatable": false,
-        "defaultValue": "minor",
-        "choices": [
-         "patch",
-         "minor",
-         "major"
-        ]
-       }
-      ]
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "ARGS_PARSED",
-        "payload": {
-         "stage": "t",
-         "flags": {
-          "release-orbital-rust": [
-           "minor"
-          ],
-          "dry-run": [
-           "true"
-          ]
-         },
-         "positionals": [],
-         "errors": [],
-         "words": [
-          "--release-orbital-rust",
-          "minor",
-          "--dry-run"
-         ]
+      "id": "optional-flag-before-another-flag-takes-its-default",
+      "steps": [
+        {
+          "event": "ARGS_PARSE",
+          "payload": {
+            "stage": "t",
+            "argv": [
+              "--release-orbital-rust",
+              "--dry-run"
+            ],
+            "flags": [
+              {
+                "name": "dry-run",
+                "aliases": [],
+                "takesValue": false,
+                "repeatable": false
+              },
+              {
+                "name": "scope",
+                "aliases": [],
+                "takesValue": true,
+                "repeatable": false
+              },
+              {
+                "name": "release-orbital-rust",
+                "aliases": [],
+                "takesValue": true,
+                "repeatable": false,
+                "defaultValue": "minor",
+                "choices": [
+                  "patch",
+                  "minor",
+                  "major"
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ARGS_PARSED",
+                "payload": {
+                  "stage": "t",
+                  "flags": {
+                    "release-orbital-rust": [
+                      "minor"
+                    ],
+                    "dry-run": [
+                      "true"
+                    ]
+                  },
+                  "positionals": [],
+                  "errors": [],
+                  "words": [
+                    "--release-orbital-rust",
+                    "minor",
+                    "--dry-run"
+                  ]
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "optional-flag-leaves-a-non-choice-word-alone",
-   "steps": [
+    },
     {
-     "event": "ARGS_PARSE",
-     "payload": {
-      "stage": "t",
-      "argv": [
-       "--release-orbital-rust",
-       "core"
-      ],
-      "flags": [
-       {
-        "name": "dry-run",
-        "aliases": [],
-        "takesValue": false,
-        "repeatable": false
-       },
-       {
-        "name": "scope",
-        "aliases": [],
-        "takesValue": true,
-        "repeatable": false
-       },
-       {
-        "name": "release-orbital-rust",
-        "aliases": [],
-        "takesValue": true,
-        "repeatable": false,
-        "defaultValue": "minor",
-        "choices": [
-         "patch",
-         "minor",
-         "major"
-        ]
-       }
-      ]
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "ARGS_PARSED",
-        "payload": {
-         "stage": "t",
-         "flags": {
-          "release-orbital-rust": [
-           "minor"
-          ]
-         },
-         "positionals": [
-          "core"
-         ],
-         "errors": [],
-         "words": [
-          "--release-orbital-rust",
-          "minor",
-          "core"
-         ]
+      "id": "optional-flag-leaves-a-non-choice-word-alone",
+      "steps": [
+        {
+          "event": "ARGS_PARSE",
+          "payload": {
+            "stage": "t",
+            "argv": [
+              "--release-orbital-rust",
+              "core"
+            ],
+            "flags": [
+              {
+                "name": "dry-run",
+                "aliases": [],
+                "takesValue": false,
+                "repeatable": false
+              },
+              {
+                "name": "scope",
+                "aliases": [],
+                "takesValue": true,
+                "repeatable": false
+              },
+              {
+                "name": "release-orbital-rust",
+                "aliases": [],
+                "takesValue": true,
+                "repeatable": false,
+                "defaultValue": "minor",
+                "choices": [
+                  "patch",
+                  "minor",
+                  "major"
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ARGS_PARSED",
+                "payload": {
+                  "stage": "t",
+                  "flags": {
+                    "release-orbital-rust": [
+                      "minor"
+                    ]
+                  },
+                  "positionals": [
+                    "core"
+                  ],
+                  "errors": [],
+                  "words": [
+                    "--release-orbital-rust",
+                    "minor",
+                    "core"
+                  ]
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "optional-flag-equals-form-wins",
-   "steps": [
+    },
     {
-     "event": "ARGS_PARSE",
-     "payload": {
-      "stage": "t",
-      "argv": [
-       "--release-orbital-rust=1.2.3"
-      ],
-      "flags": [
-       {
-        "name": "dry-run",
-        "aliases": [],
-        "takesValue": false,
-        "repeatable": false
-       },
-       {
-        "name": "scope",
-        "aliases": [],
-        "takesValue": true,
-        "repeatable": false
-       },
-       {
-        "name": "release-orbital-rust",
-        "aliases": [],
-        "takesValue": true,
-        "repeatable": false,
-        "defaultValue": "minor",
-        "choices": [
-         "patch",
-         "minor",
-         "major"
-        ]
-       }
-      ]
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "ARGS_PARSED",
-        "payload": {
-         "stage": "t",
-         "flags": {
-          "release-orbital-rust": [
-           "1.2.3"
-          ]
-         },
-         "positionals": [],
-         "errors": [],
-         "words": [
-          "--release-orbital-rust",
-          "1.2.3"
-         ]
+      "id": "optional-flag-equals-form-wins",
+      "steps": [
+        {
+          "event": "ARGS_PARSE",
+          "payload": {
+            "stage": "t",
+            "argv": [
+              "--release-orbital-rust=1.2.3"
+            ],
+            "flags": [
+              {
+                "name": "dry-run",
+                "aliases": [],
+                "takesValue": false,
+                "repeatable": false
+              },
+              {
+                "name": "scope",
+                "aliases": [],
+                "takesValue": true,
+                "repeatable": false
+              },
+              {
+                "name": "release-orbital-rust",
+                "aliases": [],
+                "takesValue": true,
+                "repeatable": false,
+                "defaultValue": "minor",
+                "choices": [
+                  "patch",
+                  "minor",
+                  "major"
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ARGS_PARSED",
+                "payload": {
+                  "stage": "t",
+                  "flags": {
+                    "release-orbital-rust": [
+                      "1.2.3"
+                    ]
+                  },
+                  "positionals": [],
+                  "errors": [],
+                  "words": [
+                    "--release-orbital-rust",
+                    "1.2.3"
+                  ]
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-flag-without-default-still-reports-missing-value",
-   "steps": [
+    },
     {
-     "event": "ARGS_PARSE",
-     "payload": {
-      "stage": "t",
-      "argv": [
-       "--scope"
-      ],
-      "flags": [
-       {
-        "name": "dry-run",
-        "aliases": [],
-        "takesValue": false,
-        "repeatable": false
-       },
-       {
-        "name": "scope",
-        "aliases": [],
-        "takesValue": true,
-        "repeatable": false
-       },
-       {
-        "name": "release-orbital-rust",
-        "aliases": [],
-        "takesValue": true,
-        "repeatable": false,
-        "defaultValue": "minor",
-        "choices": [
-         "patch",
-         "minor",
-         "major"
-        ]
-       }
-      ]
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "ARGS_PARSED",
-        "payload": {
-         "stage": "t",
-         "flags": {
-          "scope": []
-         },
-         "positionals": [],
-         "errors": [
-          "missing value for --scope"
-         ],
-         "words": [
-          "--scope"
-         ]
+      "id": "control-flag-without-default-still-reports-missing-value",
+      "steps": [
+        {
+          "event": "ARGS_PARSE",
+          "payload": {
+            "stage": "t",
+            "argv": [
+              "--scope"
+            ],
+            "flags": [
+              {
+                "name": "dry-run",
+                "aliases": [],
+                "takesValue": false,
+                "repeatable": false
+              },
+              {
+                "name": "scope",
+                "aliases": [],
+                "takesValue": true,
+                "repeatable": false
+              },
+              {
+                "name": "release-orbital-rust",
+                "aliases": [],
+                "takesValue": true,
+                "repeatable": false,
+                "defaultValue": "minor",
+                "choices": [
+                  "patch",
+                  "minor",
+                  "major"
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ARGS_PARSED",
+                "payload": {
+                  "stage": "t",
+                  "flags": {
+                    "scope": []
+                  },
+                  "positionals": [],
+                  "errors": [
+                    "missing value for --scope"
+                  ],
+                  "words": [
+                    "--scope"
+                  ]
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-flag-without-default-takes-the-next-word-whatever-it-is",
-   "steps": [
+    },
     {
-     "event": "ARGS_PARSE",
-     "payload": {
-      "stage": "t",
-      "argv": [
-       "--scope",
-       "patch"
-      ],
-      "flags": [
-       {
-        "name": "dry-run",
-        "aliases": [],
-        "takesValue": false,
-        "repeatable": false
-       },
-       {
-        "name": "scope",
-        "aliases": [],
-        "takesValue": true,
-        "repeatable": false
-       },
-       {
-        "name": "release-orbital-rust",
-        "aliases": [],
-        "takesValue": true,
-        "repeatable": false,
-        "defaultValue": "minor",
-        "choices": [
-         "patch",
-         "minor",
-         "major"
-        ]
-       }
-      ]
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "ARGS_PARSED",
-        "payload": {
-         "stage": "t",
-         "flags": {
-          "scope": [
-           "patch"
-          ]
-         },
-         "positionals": [],
-         "errors": [],
-         "words": [
-          "--scope",
-          "patch"
-         ]
+      "id": "control-flag-without-default-takes-the-next-word-whatever-it-is",
+      "steps": [
+        {
+          "event": "ARGS_PARSE",
+          "payload": {
+            "stage": "t",
+            "argv": [
+              "--scope",
+              "patch"
+            ],
+            "flags": [
+              {
+                "name": "dry-run",
+                "aliases": [],
+                "takesValue": false,
+                "repeatable": false
+              },
+              {
+                "name": "scope",
+                "aliases": [],
+                "takesValue": true,
+                "repeatable": false
+              },
+              {
+                "name": "release-orbital-rust",
+                "aliases": [],
+                "takesValue": true,
+                "repeatable": false,
+                "defaultValue": "minor",
+                "choices": [
+                  "patch",
+                  "minor",
+                  "major"
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ARGS_PARSED",
+                "payload": {
+                  "stage": "t",
+                  "flags": {
+                    "scope": [
+                      "patch"
+                    ]
+                  },
+                  "positionals": [],
+                  "errors": [],
+                  "words": [
+                    "--scope",
+                    "patch"
+                  ]
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
+    },
+    {
+      "id": "space-value-form",
+      "steps": [
+        {
+          "event": "ARGS_PARSE",
+          "payload": {
+            "stage": "t",
+            "argv": [
+              "--output",
+              "a.orb"
+            ],
+            "flags": [
+              {
+                "name": "output",
+                "aliases": [
+                  "-o"
+                ],
+                "takesValue": true,
+                "repeatable": false
+              },
+              {
+                "name": "query",
+                "aliases": [],
+                "takesValue": true,
+                "repeatable": false
+              },
+              {
+                "name": "ai",
+                "aliases": [],
+                "takesValue": false,
+                "repeatable": false
+              },
+              {
+                "name": "tag",
+                "aliases": [],
+                "takesValue": true,
+                "repeatable": true
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ARGS_PARSED",
+                "payload": {
+                  "stage": "t",
+                  "flags": {
+                    "output": [
+                      "a.orb"
+                    ]
+                  },
+                  "positionals": [],
+                  "errors": [],
+                  "words": [
+                    "--output",
+                    "a.orb"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "equals-value-form",
+      "steps": [
+        {
+          "event": "ARGS_PARSE",
+          "payload": {
+            "stage": "t",
+            "argv": [
+              "--output=a.orb"
+            ],
+            "flags": [
+              {
+                "name": "output",
+                "aliases": [
+                  "-o"
+                ],
+                "takesValue": true,
+                "repeatable": false
+              },
+              {
+                "name": "query",
+                "aliases": [],
+                "takesValue": true,
+                "repeatable": false
+              },
+              {
+                "name": "ai",
+                "aliases": [],
+                "takesValue": false,
+                "repeatable": false
+              },
+              {
+                "name": "tag",
+                "aliases": [],
+                "takesValue": true,
+                "repeatable": true
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ARGS_PARSED",
+                "payload": {
+                  "stage": "t",
+                  "flags": {
+                    "output": [
+                      "a.orb"
+                    ]
+                  },
+                  "positionals": [],
+                  "errors": [],
+                  "words": [
+                    "--output",
+                    "a.orb"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "equals-value-keeps-inner-equals",
+      "steps": [
+        {
+          "event": "ARGS_PARSE",
+          "payload": {
+            "stage": "t",
+            "argv": [
+              "--query=a=b"
+            ],
+            "flags": [
+              {
+                "name": "output",
+                "aliases": [
+                  "-o"
+                ],
+                "takesValue": true,
+                "repeatable": false
+              },
+              {
+                "name": "query",
+                "aliases": [],
+                "takesValue": true,
+                "repeatable": false
+              },
+              {
+                "name": "ai",
+                "aliases": [],
+                "takesValue": false,
+                "repeatable": false
+              },
+              {
+                "name": "tag",
+                "aliases": [],
+                "takesValue": true,
+                "repeatable": true
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ARGS_PARSED",
+                "payload": {
+                  "stage": "t",
+                  "flags": {
+                    "query": [
+                      "a=b"
+                    ]
+                  },
+                  "positionals": [],
+                  "errors": [],
+                  "words": [
+                    "--query",
+                    "a=b"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "explicit-empty-value",
+      "steps": [
+        {
+          "event": "ARGS_PARSE",
+          "payload": {
+            "stage": "t",
+            "argv": [
+              "--output="
+            ],
+            "flags": [
+              {
+                "name": "output",
+                "aliases": [
+                  "-o"
+                ],
+                "takesValue": true,
+                "repeatable": false
+              },
+              {
+                "name": "query",
+                "aliases": [],
+                "takesValue": true,
+                "repeatable": false
+              },
+              {
+                "name": "ai",
+                "aliases": [],
+                "takesValue": false,
+                "repeatable": false
+              },
+              {
+                "name": "tag",
+                "aliases": [],
+                "takesValue": true,
+                "repeatable": true
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ARGS_PARSED",
+                "payload": {
+                  "stage": "t",
+                  "flags": {
+                    "output": [
+                      ""
+                    ]
+                  },
+                  "positionals": [],
+                  "errors": [],
+                  "words": [
+                    "--output",
+                    ""
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "short-alias-value",
+      "steps": [
+        {
+          "event": "ARGS_PARSE",
+          "payload": {
+            "stage": "t",
+            "argv": [
+              "-o",
+              "a.orb"
+            ],
+            "flags": [
+              {
+                "name": "output",
+                "aliases": [
+                  "-o"
+                ],
+                "takesValue": true,
+                "repeatable": false
+              },
+              {
+                "name": "query",
+                "aliases": [],
+                "takesValue": true,
+                "repeatable": false
+              },
+              {
+                "name": "ai",
+                "aliases": [],
+                "takesValue": false,
+                "repeatable": false
+              },
+              {
+                "name": "tag",
+                "aliases": [],
+                "takesValue": true,
+                "repeatable": true
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ARGS_PARSED",
+                "payload": {
+                  "stage": "t",
+                  "flags": {
+                    "output": [
+                      "a.orb"
+                    ]
+                  },
+                  "positionals": [],
+                  "errors": [],
+                  "words": [
+                    "-o",
+                    "a.orb"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "valueless-flag-refuses-equals-value",
+      "steps": [
+        {
+          "event": "ARGS_PARSE",
+          "payload": {
+            "stage": "t",
+            "argv": [
+              "--ai=x"
+            ],
+            "flags": [
+              {
+                "name": "output",
+                "aliases": [
+                  "-o"
+                ],
+                "takesValue": true,
+                "repeatable": false
+              },
+              {
+                "name": "query",
+                "aliases": [],
+                "takesValue": true,
+                "repeatable": false
+              },
+              {
+                "name": "ai",
+                "aliases": [],
+                "takesValue": false,
+                "repeatable": false
+              },
+              {
+                "name": "tag",
+                "aliases": [],
+                "takesValue": true,
+                "repeatable": true
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ARGS_PARSED",
+                "payload": {
+                  "stage": "t",
+                  "flags": {},
+                  "positionals": [],
+                  "errors": [
+                    "flag takes no value: --ai"
+                  ],
+                  "words": [
+                    "--ai",
+                    "x"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "nonrepeatable-flag-refuses-second-value",
+      "steps": [
+        {
+          "event": "ARGS_PARSE",
+          "payload": {
+            "stage": "t",
+            "argv": [
+              "--ai",
+              "--ai"
+            ],
+            "flags": [
+              {
+                "name": "output",
+                "aliases": [
+                  "-o"
+                ],
+                "takesValue": true,
+                "repeatable": false
+              },
+              {
+                "name": "query",
+                "aliases": [],
+                "takesValue": true,
+                "repeatable": false
+              },
+              {
+                "name": "ai",
+                "aliases": [],
+                "takesValue": false,
+                "repeatable": false
+              },
+              {
+                "name": "tag",
+                "aliases": [],
+                "takesValue": true,
+                "repeatable": true
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ARGS_PARSED",
+                "payload": {
+                  "stage": "t",
+                  "flags": {
+                    "ai": [
+                      "true"
+                    ]
+                  },
+                  "positionals": [],
+                  "errors": [
+                    "repeated flag: --ai"
+                  ],
+                  "words": [
+                    "--ai",
+                    "--ai"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "repeatable-values-retain-order",
+      "steps": [
+        {
+          "event": "ARGS_PARSE",
+          "payload": {
+            "stage": "t",
+            "argv": [
+              "--tag",
+              "one",
+              "--tag=two"
+            ],
+            "flags": [
+              {
+                "name": "output",
+                "aliases": [
+                  "-o"
+                ],
+                "takesValue": true,
+                "repeatable": false
+              },
+              {
+                "name": "query",
+                "aliases": [],
+                "takesValue": true,
+                "repeatable": false
+              },
+              {
+                "name": "ai",
+                "aliases": [],
+                "takesValue": false,
+                "repeatable": false
+              },
+              {
+                "name": "tag",
+                "aliases": [],
+                "takesValue": true,
+                "repeatable": true
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ARGS_PARSED",
+                "payload": {
+                  "stage": "t",
+                  "flags": {
+                    "tag": [
+                      "one",
+                      "two"
+                    ]
+                  },
+                  "positionals": [],
+                  "errors": [],
+                  "words": [
+                    "--tag",
+                    "one",
+                    "--tag",
+                    "two"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "unknown-flag-is-not-a-positional",
+      "steps": [
+        {
+          "event": "ARGS_PARSE",
+          "payload": {
+            "stage": "t",
+            "argv": [
+              "before",
+              "--bad",
+              "after"
+            ],
+            "flags": [
+              {
+                "name": "output",
+                "aliases": [
+                  "-o"
+                ],
+                "takesValue": true,
+                "repeatable": false
+              },
+              {
+                "name": "query",
+                "aliases": [],
+                "takesValue": true,
+                "repeatable": false
+              },
+              {
+                "name": "ai",
+                "aliases": [],
+                "takesValue": false,
+                "repeatable": false
+              },
+              {
+                "name": "tag",
+                "aliases": [],
+                "takesValue": true,
+                "repeatable": true
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ARGS_PARSED",
+                "payload": {
+                  "stage": "t",
+                  "flags": {},
+                  "positionals": [
+                    "before",
+                    "after"
+                  ],
+                  "errors": [
+                    "unknown flag: --bad"
+                  ],
+                  "words": [
+                    "before",
+                    "--bad",
+                    "after"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "value-flag-accepts-leading-dash-value",
+      "steps": [
+        {
+          "event": "ARGS_PARSE",
+          "payload": {
+            "stage": "t",
+            "argv": [
+              "--output",
+              "-file"
+            ],
+            "flags": [
+              {
+                "name": "output",
+                "aliases": [
+                  "-o"
+                ],
+                "takesValue": true,
+                "repeatable": false
+              },
+              {
+                "name": "query",
+                "aliases": [],
+                "takesValue": true,
+                "repeatable": false
+              },
+              {
+                "name": "ai",
+                "aliases": [],
+                "takesValue": false,
+                "repeatable": false
+              },
+              {
+                "name": "tag",
+                "aliases": [],
+                "takesValue": true,
+                "repeatable": true
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ARGS_PARSED",
+                "payload": {
+                  "stage": "t",
+                  "flags": {
+                    "output": [
+                      "-file"
+                    ]
+                  },
+                  "positionals": [],
+                  "errors": [],
+                  "words": [
+                    "--output",
+                    "-file"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "no-flags-keeps-positionals",
+      "steps": [
+        {
+          "event": "ARGS_PARSE",
+          "payload": {
+            "stage": "t",
+            "argv": [
+              "one",
+              "two"
+            ],
+            "flags": [
+              {
+                "name": "output",
+                "aliases": [
+                  "-o"
+                ],
+                "takesValue": true,
+                "repeatable": false
+              },
+              {
+                "name": "query",
+                "aliases": [],
+                "takesValue": true,
+                "repeatable": false
+              },
+              {
+                "name": "ai",
+                "aliases": [],
+                "takesValue": false,
+                "repeatable": false
+              },
+              {
+                "name": "tag",
+                "aliases": [],
+                "takesValue": true,
+                "repeatable": true
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ARGS_PARSED",
+                "payload": {
+                  "stage": "t",
+                  "flags": {},
+                  "positionals": [
+                    "one",
+                    "two"
+                  ],
+                  "errors": [],
+                  "words": [
+                    "one",
+                    "two"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "repeat-parse-resets-flags-positionals-errors-and-pending",
+      "steps": [
+        {
+          "event": "ARGS_PARSE",
+          "payload": {
+            "stage": "t",
+            "argv": [
+              "--output"
+            ],
+            "flags": [
+              {
+                "name": "output",
+                "aliases": [
+                  "-o"
+                ],
+                "takesValue": true,
+                "repeatable": false
+              },
+              {
+                "name": "query",
+                "aliases": [],
+                "takesValue": true,
+                "repeatable": false
+              },
+              {
+                "name": "ai",
+                "aliases": [],
+                "takesValue": false,
+                "repeatable": false
+              },
+              {
+                "name": "tag",
+                "aliases": [],
+                "takesValue": true,
+                "repeatable": true
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ARGS_PARSED",
+                "payload": {
+                  "stage": "t",
+                  "flags": {
+                    "output": []
+                  },
+                  "positionals": [],
+                  "errors": [
+                    "missing value for --output"
+                  ],
+                  "words": [
+                    "--output"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "ARGS_PARSE",
+          "payload": {
+            "stage": "next",
+            "argv": [
+              "fresh"
+            ],
+            "flags": [
+              {
+                "name": "output",
+                "aliases": [
+                  "-o"
+                ],
+                "takesValue": true,
+                "repeatable": false
+              },
+              {
+                "name": "query",
+                "aliases": [],
+                "takesValue": true,
+                "repeatable": false
+              },
+              {
+                "name": "ai",
+                "aliases": [],
+                "takesValue": false,
+                "repeatable": false
+              },
+              {
+                "name": "tag",
+                "aliases": [],
+                "takesValue": true,
+                "repeatable": true
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ARGS_PARSED",
+                "payload": {
+                  "stage": "next",
+                  "flags": {},
+                  "positionals": [
+                    "fresh"
+                  ],
+                  "errors": [],
+                  "words": [
+                    "fresh"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
-   ]
-  }
- ]
+  ]
 }

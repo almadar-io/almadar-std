@@ -1,0 +1,100 @@
+app std-stdio-lines [
+  version: "1.0.0",
+  stdio: [in, out],
+  description: "UTF-8 line transport over native standard input and output. INPUT_START begins reading; INPUT_NEXT acknowledges each INPUT_LINE before another line is delivered or another read is requested. Bytes are buffered until LF before decoding, preserving fragmented UTF-8, empty lines and multiple lines per read. The LF is removed; all other bytes, including CR, are preserved. EOF delivers a nonempty unterminated final line before STDIO_CLOSED. WRITE_LINE appends one LF without interpreting its content."
+]
+
+orbital StdioLinesOrbital {
+  entity StdioLinesSession [runtime] {
+    id : string!
+    inputBuffer : bytes = ""
+    inputEof : boolean = false
+    awaitingAck : boolean = false
+  }
+
+  trait StdioLines -> StdioLinesSession [integration] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      INPUT_START -> active
+        (os/stdin-read @config.chunkBytes { key: "stdio-input" emit: { success: STDIO_READ, failure: STDIO_FAILED } })
+      WRITE_LINE -> idle
+        (os/stdout-write (bytes/from-string (str/concat @payload.line "\n")) { emit: { failure: STDIO_FAILED } })
+      STDIO_FAILED -> closed
+        (emit STDIO_ERROR { error: @payload.error })
+    }
+
+    state active {
+      INIT -> active
+      STDIO_READ -> active
+        (set @entity.inputBuffer (bytes/concat [@entity.inputBuffer @payload.data]))
+        (set @entity.inputEof @payload.eof)
+        (emit STDIO_PUMP {})
+      INPUT_NEXT -> active when @entity.awaitingAck
+        (set @entity.awaitingAck false)
+        (emit STDIO_PUMP {})
+      STDIO_PUMP -> active when (and (not @entity.awaitingAck) (>= (bytes/index-of @entity.inputBuffer (bytes/from-string "\n")) 0))
+        (emit INPUT_LINE { line: (bytes/to-string (bytes/slice @entity.inputBuffer 0 (bytes/index-of @entity.inputBuffer (bytes/from-string "\n")))) })
+        (set @entity.inputBuffer (bytes/slice @entity.inputBuffer (+ (bytes/index-of @entity.inputBuffer (bytes/from-string "\n")) 1)))
+        (set @entity.awaitingAck true)
+      STDIO_PUMP -> active when (and (not @entity.awaitingAck) (= (bytes/index-of @entity.inputBuffer (bytes/from-string "\n")) -1) @entity.inputEof (> (bytes/length @entity.inputBuffer) 0))
+        (emit INPUT_LINE { line: (bytes/to-string @entity.inputBuffer) })
+        (set @entity.inputBuffer (bytes/from-string ""))
+        (set @entity.awaitingAck true)
+      STDIO_PUMP -> closed when (and (not @entity.awaitingAck) @entity.inputEof (= (bytes/length @entity.inputBuffer) 0))
+        (emit STDIO_CLOSED {})
+      STDIO_PUMP -> active when (and (not @entity.awaitingAck) (not @entity.inputEof) (= (bytes/index-of @entity.inputBuffer (bytes/from-string "\n")) -1))
+        (os/stdin-read @config.chunkBytes { key: "stdio-input" emit: { success: STDIO_READ, failure: STDIO_FAILED } })
+      WRITE_LINE -> active
+        (os/stdout-write (bytes/from-string (str/concat @payload.line "\n")) { emit: { failure: STDIO_FAILED } })
+      STDIO_FAILED -> closed
+        (emit STDIO_ERROR { error: @payload.error })
+    }
+
+    state closed {
+      INIT -> closed
+      WRITE_LINE -> closed
+        (os/stdout-write (bytes/from-string (str/concat @payload.line "\n")) { emit: { failure: STDIO_FAILED } })
+      STDIO_FAILED -> closed
+        (emit STDIO_ERROR { error: @payload.error })
+    }
+
+    emits {
+      INPUT_LINE -> external { line : string! }
+        @description "One UTF-8 line without its LF delimiter; acknowledge with INPUT_NEXT after processing."
+      STDIO_ERROR -> external { error : string! }
+        @description "A native standard input or output operation failed."
+      STDIO_CLOSED -> external {}
+        @description "EOF reached and every delivered line has been acknowledged."
+      STDIO_PUMP {}
+        @description "Internal: deliver the next buffered line or request more bytes."
+        @tier "internal"
+      STDIO_READ { data : bytes! eof : boolean! }
+        @description "Internal: one native input read."
+        @tier "internal"
+      STDIO_FAILED { error : string! kind : string }
+        @description "Internal: a native standard stream operation failed."
+        @tier "internal"
+    }
+
+    listens {
+      INPUT_START {}
+        @description "Begin the standard input session once."
+      INPUT_NEXT {}
+        @description "Acknowledge the previous INPUT_LINE and permit the next delivery."
+      WRITE_LINE { line : string! }
+        @description "Write this complete line followed by one LF."
+      STDIO_PUMP {}
+      STDIO_READ { data : bytes! eof : boolean! }
+      STDIO_FAILED { error : string! kind : string }
+    }
+
+    config {
+      chunkBytes : number = 4096
+        @description "Maximum bytes requested per read; framing retains every byte across read boundaries."
+    }
+  }
+
+  page "/std-stdio-lines" as StdioLinesPage -> StdioLines
+}

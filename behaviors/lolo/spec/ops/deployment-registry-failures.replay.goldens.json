@@ -1,0 +1,276 @@
+{
+  "atom": "ops/atoms/std-deployment-registry.lolo",
+  "trait": "DeploymentRegistrar",
+  "cases": [
+    {
+      "id": "rollback-not-found-keeps-the-failure-meaning",
+      "steps": [
+        {
+          "event": "ROLLBACK_ABSENT",
+          "entity": {
+            "artifact": "acme/shop",
+            "version": 3
+          },
+          "payload": {
+            "code": "not-found",
+            "error": "not here"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ROLLBACK_FAILED",
+                "payload": {
+                  "artifact": "acme/shop",
+                  "code": "not-recorded"
+                }
+              }
+            ],
+            "neverEmits": [
+              "ROLLED_BACK"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "rollback-access-denied-keeps-the-failure-meaning",
+      "steps": [
+        {
+          "event": "ROLLBACK_ABSENT",
+          "entity": {
+            "artifact": "acme/shop",
+            "version": 3
+          },
+          "payload": {
+            "code": "access-denied",
+            "error": "reader cannot access deployments"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ROLLBACK_FAILED",
+                "payload": {
+                  "artifact": "acme/shop",
+                  "code": "failed",
+                  "message": "reader cannot access deployments"
+                }
+              }
+            ],
+            "neverEmits": [
+              "ROLLED_BACK"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "rollback-unavailable-keeps-the-failure-meaning",
+      "steps": [
+        {
+          "event": "ROLLBACK_ABSENT",
+          "entity": {
+            "artifact": "acme/shop",
+            "version": 3
+          },
+          "payload": {
+            "code": "unavailable",
+            "error": "store connection refused"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ROLLBACK_FAILED",
+                "payload": {
+                  "artifact": "acme/shop",
+                  "code": "failed",
+                  "message": "store connection refused"
+                }
+              }
+            ],
+            "neverEmits": [
+              "ROLLED_BACK"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "resolve-access-denied-answers-an-explicit-failure",
+      "steps": [
+        {
+          "event": "RESOLVE_ABSENT",
+          "entity": {
+            "artifact": "acme/shop"
+          },
+          "payload": {
+            "code": "access-denied",
+            "error": "denied by policy"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "RESOLVE_FAILED",
+                "payload": {
+                  "artifact": "acme/shop",
+                  "code": "access-denied",
+                  "message": "denied by policy"
+                }
+              }
+            ],
+            "neverEmits": [
+              "RESOLVED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "resolve-unavailable-answers-an-explicit-failure",
+      "steps": [
+        {
+          "event": "RESOLVE_ABSENT",
+          "entity": {
+            "artifact": "acme/shop"
+          },
+          "payload": {
+            "code": "unavailable",
+            "error": "store connection refused"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "RESOLVE_FAILED",
+                "payload": {
+                  "artifact": "acme/shop",
+                  "code": "unavailable",
+                  "message": "store connection refused"
+                }
+              }
+            ],
+            "neverEmits": [
+              "RESOLVED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "resolve-real-absence-remains-success",
+      "steps": [
+        {
+          "event": "RESOLVE_ABSENT",
+          "entity": {
+            "artifact": "acme/shop"
+          },
+          "payload": {
+            "code": "not-found",
+            "error": "row absent"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "RESOLVED",
+                "payload": {
+                  "artifact": "acme/shop",
+                  "found": false
+                }
+              }
+            ],
+            "neverEmits": [
+              "RESOLVE_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "history-access-denied-answers-an-explicit-failure",
+      "steps": [
+        {
+          "event": "HISTORY_UNREADABLE",
+          "entity": {
+            "artifact": "acme/shop"
+          },
+          "payload": {
+            "code": "access-denied",
+            "error": "denied by policy"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HISTORY_FAILED",
+                "payload": {
+                  "artifact": "acme/shop",
+                  "code": "access-denied",
+                  "message": "denied by policy"
+                }
+              }
+            ],
+            "neverEmits": [
+              "HISTORY_ANSWERED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "history-unavailable-answers-an-explicit-failure",
+      "steps": [
+        {
+          "event": "HISTORY_UNREADABLE",
+          "entity": {
+            "artifact": "acme/shop"
+          },
+          "payload": {
+            "code": "unavailable",
+            "error": "store connection refused"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HISTORY_FAILED",
+                "payload": {
+                  "artifact": "acme/shop",
+                  "code": "unavailable",
+                  "message": "store connection refused"
+                }
+              }
+            ],
+            "neverEmits": [
+              "HISTORY_ANSWERED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "history-real-absence-remains-success",
+      "steps": [
+        {
+          "event": "HISTORY_UNREADABLE",
+          "entity": {
+            "artifact": "acme/shop"
+          },
+          "payload": {
+            "code": "not-found",
+            "error": "row absent"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HISTORY_ANSWERED",
+                "payload": {
+                  "artifact": "acme/shop",
+                  "deployments": []
+                }
+              }
+            ],
+            "neverEmits": [
+              "HISTORY_FAILED"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

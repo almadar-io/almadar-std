@@ -6,7 +6,7 @@ app std-http1 [
 uses Spec from "almadar-std/http1"
 type Http1Header = { name : string!, value : string! }
 type Http1Reason = { status : number!, text : string! }
-type Http1Conn = { sock : number!, key : string!, peer : string!, buf : string!, headLen : number!, need : number!, refuse : number!, method : string!, path : string!, query : string!, headers : [Http1Header]!, te : boolean!, dec : string!, dstate : string!, phase : string!, keepAlive : boolean!, http10 : boolean!, chunked : boolean!, served : number!, idle : number!, sends : number! }
+type Http1Conn = { sock : number!, key : string!, peer : string!, buf : bytes!, headLen : number!, need : number!, refuse : number!, method : string!, path : string!, query : string!, headers : [Http1Header]!, te : boolean!, dec : bytes!, dstate : string!, phase : string!, keepAlive : boolean!, http10 : boolean!, chunked : boolean!, served : number!, idle : number!, sends : number! }
 
 orbital Http1Orbital {
   entity Http1Server [runtime] {
@@ -128,7 +128,7 @@ orbital Http1Orbital {
       LISTEN -> serving
 
       CONN_ACCEPTED -> serving
-        (set @entity.conns (array/append @entity.conns { sock: @payload.sock, key: (str/concat "conn-" @payload.sock), peer: @payload.peer, buf: "", headLen: 0, need: 0, refuse: 0, method: "", path: "", query: "", headers: [], te: false, dec: "", dstate: "", phase: "reading", keepAlive: false, http10: false, chunked: false, served: 0, idle: 0, sends: 0 }))
+        (set @entity.conns (array/append @entity.conns { sock: @payload.sock, key: (str/concat "conn-" @payload.sock), peer: @payload.peer, buf: (bytes/from-string ""), headLen: 0, need: 0, refuse: 0, method: "", path: "", query: "", headers: [], te: false, dec: (bytes/from-string ""), dstate: "", phase: "reading", keepAlive: false, http10: false, chunked: false, served: 0, idle: 0, sends: 0 }))
         (os/recv @payload.sock @config.recvBytes { key: (str/concat "conn-" @payload.sock) emit: { success: CHUNK_READ failure: CONN_FAILED } })
 
       CHUNK_READ -> serving when (and (!= (array/find @entity.conns (fn c (= @c.key @payload.key))) null) (!= (object/get (array/find @entity.conns (fn c (= @c.key @payload.key))) "phase") "streaming") @payload.eof)
@@ -172,7 +172,7 @@ orbital Http1Orbital {
         (emit WANT_MORE { sock: @payload.sock })
       HEAD_SEARCHED -> serving when (>= @payload.value 0)
         (set @entity.conns (array/map @entity.conns (fn c (if (= @c.sock @payload.sock)
-          (let ((ascii (validate/pattern (bytes/slice @c.buf 0 @payload.value) @config.asciiPattern))
+          (let ((ascii (validate/pattern (str/template "{{value}}" { value: (bytes/slice @c.buf 0 @payload.value) }) @config.asciiPattern))
                 (lines (if @ascii (str/split (bytes/to-string (bytes/slice @c.buf 0 @payload.value)) "\r\n") [""]))
                 (parts (str/split (array/first @lines) " "))
                 (rows (array/drop @lines 1))
@@ -291,7 +291,7 @@ orbital Http1Orbital {
         (set @entity.conns (array/filter @entity.conns (fn c (not (str/startsWith @payload.key (str/concat "send-" @c.sock "-"))))))
       RESPONSE_SENT -> serving when (and (!= (array/find @entity.conns (fn c (str/startsWith @payload.key (str/concat "send-" @c.sock "-")))) null) (object/get (array/find @entity.conns (fn c (str/startsWith @payload.key (str/concat "send-" @c.sock "-")))) "keepAlive"))
         (emit RESPONDED { requestId: (object/get (array/find @entity.conns (fn c (str/startsWith @payload.key (str/concat "send-" @c.sock "-")))) "sock"), bytes: @payload.bytes })
-        (set @entity.conns (array/map @entity.conns (fn c (if (str/startsWith @payload.key (str/concat "send-" @c.sock "-")) (object/merge @c { buf: (bytes/slice @c.buf (+ @c.headLen @c.need) (bytes/length @c.buf)), headLen: 0, need: 0, refuse: 0, method: "", path: "", query: "", headers: [], te: false, dec: "", dstate: "", phase: "reading", keepAlive: false, http10: false, chunked: false, served: (+ @c.served 1), idle: 0 }) @c))))
+        (set @entity.conns (array/map @entity.conns (fn c (if (str/startsWith @payload.key (str/concat "send-" @c.sock "-")) (object/merge @c { buf: (bytes/slice @c.buf (+ @c.headLen @c.need) (bytes/length @c.buf)), headLen: 0, need: 0, refuse: 0, method: "", path: "", query: "", headers: [], te: false, dec: (bytes/from-string ""), dstate: "", phase: "reading", keepAlive: false, http10: false, chunked: false, served: (+ @c.served 1), idle: 0 }) @c))))
         (emit CONN_ADVANCE { sock: (object/get (array/find @entity.conns (fn c (str/startsWith @payload.key (str/concat "send-" @c.sock "-")))) "sock") })
       RESPONSE_FAILED -> serving when (!= (array/find @entity.conns (fn c (str/startsWith @payload.key (str/concat "send-" @c.sock "-")))) null)
         (os/close (object/get (array/find @entity.conns (fn c (str/startsWith @payload.key (str/concat "send-" @c.sock "-")))) "sock"))

@@ -1,6 +1,6 @@
 app deployment-registry-spec [
   version: "1.0.0",
-  description: "Design contract for a registry of versioned deployments of named artifacts: each deployment of an artifact gets the next version number (from 1, per artifact) and is kept in its history; a deployment that may serve becomes the artifact's active one, a rollback re-activates an earlier one that may serve, a withdrawal leaves nothing active and keeps the history, and resolving an artifact answers its active deployment or that there is none."
+  description: "Design contract for a registry of versioned deployments of named artifacts: each deployment of an artifact gets the next version number (from 1, per artifact) and is kept in its history; a deployment that may serve becomes the artifact's active one, a rollback re-activates an earlier one that may serve, a withdrawal leaves nothing active and keeps the history, and resolving an artifact answers its active deployment or that there is none. Resolve and history report denied or unavailable reads through RESOLVE_FAILED and HISTORY_FAILED with the original storage code and message; genuine not-found remains successful absence or empty history. Rollback distinguishes an unrecorded version (not-recorded) from a denied or unavailable deployment read (failed with its original error)."
 ]
 
 orbital DeploymentRegistrySpec {
@@ -35,6 +35,8 @@ orbital DeploymentRegistrySpec {
       DEPLOY_FAILED { artifact : string!  code : string  message : string! }
       RESOLVED { artifact : string!  found : boolean! }
       HISTORY_ANSWERED { artifact : string! }
+      RESOLVE_FAILED { artifact : string!  code : string  message : string! }
+      HISTORY_FAILED { artifact : string!  code : string  message : string! }
     }
   }
   expects page "/deployment-registry" -> DeploymentRegistrar

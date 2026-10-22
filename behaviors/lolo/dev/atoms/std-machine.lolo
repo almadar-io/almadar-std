@@ -8,6 +8,7 @@ uses Spec from "almadar-std/machine"
 type MachineField = { name : string!, type : string!, required : boolean, values : [string], entity : string }
 type MachineEventDecl = { key : string!, payloadSchema : [MachineField] }
 type MachineArm = { from : (string | [string])!, event : string!, to : string!, guard : SExpr }
+type MachineSources = [string]
 type MachineGraph = { events : [MachineEventDecl], transitions : [MachineArm] }
 type MachineTrait = { name : string!, stateMachine : MachineGraph }
 type MachineOrbital = { name : string!, traits : [MachineTrait] }
@@ -30,7 +31,7 @@ orbital MachineOrbital {
         (set @entity.rows (array/flatten (array/map (object/get (json/parse (json/stringify @payload.program) MachineProgram) "orbitals") (fn o
           (array/flatten (array/map (array/filter (object/get @o "traits") (fn t (object/has @t "stateMachine"))) (fn t
             (let ((arms (array/flatten (array/map (object/get (object/get @t "stateMachine") "transitions") (fn a
-                          (array/map (let ((raw (object/get @a "from"))) (if (str/startsWith (json/stringify @raw) "[") @raw [@raw])) (fn f
+                          (array/map (let ((raw (object/get @a "from"))) (if (validate/array @raw) (json/parse (json/stringify @raw) MachineSources) (json/parse (str/concat "[" (json/stringify @raw) "]") MachineSources))) (fn f
                             { from: @f, event: (object/get @a "event"), to: (object/get @a "to"), guarded: (object/has @a "guard") }))))))
                   (events (object/get (object/get @t "stateMachine") "events" [])))
               (array/flatten (array/map (array/unique (array/map @arms (fn a (str/concat (object/get @a "from") "\n" (object/get @a "event")))))

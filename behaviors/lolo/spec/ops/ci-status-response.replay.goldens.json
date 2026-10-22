@@ -1,0 +1,37 @@
+{
+  "atom": "ops/atoms/std-ci-status.lolo",
+  "trait": "CiStatus",
+  "note": "Complete the actual composed GitHub client and observe its routed board result, rather than injecting CI_GQL_ANSWERED or CI_GQL_FAILED directly.",
+  "cases": [
+    {
+      "id": "malformed-github-success-makes-the-board-stale",
+      "steps": [
+        { "event": "CI_STATUS_LOAD", "payload": {} },
+        {
+          "trait": "CiGithub",
+          "event": "GITHUB_GRAPHQL_REPLIED",
+          "payload": { "status": 200, "body": "<html>upstream unavailable</html>" },
+          "expect": {
+            "emits": [{ "event": "GITHUB_GRAPHQL_FAILED", "payload": { "status": 200, "code": "PARSE_ERROR" } }, { "event": "CI_STATUS", "payload": { "runs": [], "stale": true } }],
+            "neverEmits": ["GITHUB_GRAPHQL_ANSWERED"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "valid-empty-github-success-makes-the-board-fresh",
+      "steps": [
+        { "event": "CI_STATUS_LOAD", "payload": {} },
+        {
+          "trait": "CiGithub",
+          "event": "GITHUB_GRAPHQL_REPLIED",
+          "payload": { "status": 200, "body": "{\"data\":{\"organization\":{\"repositories\":{\"nodes\":[],\"pageInfo\":{\"hasNextPage\":false,\"endCursor\":\"\"}}}}}" },
+          "expect": {
+            "emits": [{ "event": "CI_STATUS", "payload": { "runs": [], "stale": false } }],
+            "neverEmits": ["GITHUB_GRAPHQL_FAILED"]
+          }
+        }
+      ]
+    }
+  ]
+}

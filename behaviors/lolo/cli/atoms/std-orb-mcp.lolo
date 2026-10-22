@@ -5,10 +5,11 @@ app std-orb-mcp [
   exec: ["orb"],
   stdio: [in, out],
   fs: { cwd: "**": [read], "~/.orb/**": [read] },
-  description: "std-orb-mcp — the `orb mcp [--program <file>]` command: the MCP server as a std program (spec/cli/mcp-server.lolo). The hook cli-mcp takes argv; `--program <file>` names the program whose inbound hooks are served as tools beside the language's. The server version is what `orb --version` answers (`orb X.Y.Z`), run from PATH (os/spawn takes a literal command, so the running binary's own path cannot be spawned). Stdin is read through os/stdin-read keyed mcp-stdin, split on newlines into a queue, and each line is answered in order (one at a time: a tool that does I/O holds the queue until it answers) with one compact JSON line on stdout; stdin eof ends the command. Protocol: initialize, ping, tools/list, tools/call, prompts/list, prompts/get; a parse error is code -32700 with the text `parse error: invalid JSON` (the Rust server's serde wording is not reproduced), an unknown method -32601, an unknown prompt -32602, an unknown tool a tool result with isError. Tools served: validate, format (without write), behaviors (with scopes), describe_behavior, read_behavior ({ path, source } through behavior/source file: true), play, operators, patterns, evaluate (the expression in a one-transition program built with quasiquote, played through program/step with the request entity and payload). Pending, answered with isError naming the reason: complete (the lolo completion rules are not ported), test (result shape), format with write, behaviors without scopes. Hook tools from --program are listed from program/inputs and called by program/dispatch with inbound; the guest-binding gap is recorded in the std ledger."
+  description: "std-orb-mcp — the `orb mcp [--program <file>]` command: the MCP server as a std program (spec/cli/mcp-server.lolo). The hook cli-mcp takes argv; `--program <file>` names the program whose inbound hooks are served as tools beside the language's. The server version is what `orb --version` answers (`orb X.Y.Z`), run from PATH (os/spawn takes a literal command, so the running binary's own path cannot be spawned). Stdin line framing is owned by std-stdio-lines; each line is acknowledged only after its tool answers, preserving serial requests, fragmented UTF-8 and the final unterminated line. Replies are compact JSON lines on stdout; EOF ends the command after every request is answered. Protocol: initialize, ping, tools/list, tools/call, prompts/list, prompts/get; a parse error is code -32700 with the text `parse error: invalid JSON` (the Rust server's serde wording is not reproduced), an unknown method -32601, an unknown prompt -32602, an unknown tool a tool result with isError. Tools served: validate, format (without write), behaviors (with scopes), describe_behavior, read_behavior ({ path, source } through behavior/source file: true), play, operators, patterns, evaluate (the expression in a one-transition program built with quasiquote, played through program/step with the request entity and payload). Pending, answered with isError naming the reason: complete (the lolo completion rules are not ported), test (result shape), format with write, behaviors without scopes. Hook tools from --program are listed from program/inputs and called by program/dispatch with inbound; the guest-binding gap is recorded in the std ledger."
 ]
 uses Spec from "almadar-std/mcp-server"
 uses Args from "std/behaviors/std-args"
+uses Lines from "std/behaviors/std-stdio-lines"
 uses Complete from "std/behaviors/std-orb-complete"
 uses Reference from "std/behaviors/std-orb-reference"
 uses Test from "std/behaviors/std-orb-test"
@@ -36,8 +37,6 @@ orbital OrbMcpOrbital {
     pid : number = 0
     pending : string! = ""
     version : string = ""
-    buffer : string = ""
-    queue : [string] = []
     reply : string = ""
     rid : McpJson = 0
     tool : string = ""
@@ -49,6 +48,14 @@ orbital OrbMcpOrbital {
     hookNames : [string] = []
     instructions : string = ""
     tools : [McpJson] = []
+  }
+
+  trait McpTransport = Lines.traits.StdioLines {
+    listens {
+      McpServer.MCP_INPUT_START -> INPUT_START
+      McpServer.MCP_INPUT_NEXT -> INPUT_NEXT
+      McpServer.MCP_LINE_OUT -> WRITE_LINE
+    }
   }
 
   trait ArgsCli = Args.traits.ArgsParser {
@@ -196,82 +203,57 @@ orbital OrbMcpOrbital {
       MCP_INPUTS -> versioning
         (set @entity.hookNames (array/map (object/get @payload.result "inputs") (fn i (object/get @i "event"))))
         (emit MCP_LISTEN { })
-      MCP_CHUNK -> versioning
-        (set @entity.buffer (str/concat @entity.buffer (bytes/to-string @payload.data)))
-        (set @entity.queue (array/concat @entity.queue (array/slice (str/split @entity.buffer "\n") 0 (- (array/len (str/split @entity.buffer "\n")) 1))))
-        (set @entity.buffer (array/last (str/split @entity.buffer "\n")))
       MCP_LISTEN -> serving
-        (os/stdin-read { key: "mcp-stdin" emit: { onMessage: MCP_CHUNK, success: MCP_EOF, failure: MCP_START_FAILED } })
-        (emit MCP_PUMP { })
+        (emit MCP_INPUT_START {})
     }
 
     state serving {
       INIT -> serving
-      MCP_STDOUT_FAILED -> starting
-        (emit MCP_ANSWERED { status: 500, body: (str/concat "orb mcp: " @payload.error) })
       MCP_START_FAILED -> starting
         (emit MCP_ANSWERED { status: 500, body: (str/concat "orb mcp: " @payload.error) })
       MCP_EOF -> starting
         (emit MCP_ANSWERED { status: 200, body: "" })
-      MCP_CHUNK -> serving
-        (set @entity.buffer (str/concat @entity.buffer (bytes/to-string @payload.data)))
-        (set @entity.queue (array/concat @entity.queue (array/slice (str/split @entity.buffer "\n") 0 (- (array/len (str/split @entity.buffer "\n")) 1))))
-        (set @entity.buffer (array/last (str/split @entity.buffer "\n")))
-        (emit MCP_PUMP { })
-      MCP_PUMP -> serving when (> (array/len @entity.queue) 0)
-        (emit MCP_LINE_IN { line: (array/first @entity.queue) })
-        (set @entity.queue (array/drop @entity.queue 1))
+      MCP_PUMP -> serving
+        (emit MCP_INPUT_NEXT {})
       MCP_LINE_IN -> serving when (= (str/trim @payload.line) "")
         (emit MCP_PUMP { })
       MCP_LINE_IN -> serving when (and (!= (str/trim @payload.line) "") (not (json/valid @payload.line)))
         (set @entity.reply (json/stringify { jsonrpc: "2.0" id: null error: { code: -32700 message: "parse error: invalid JSON" } }))
         (emit MCP_LINE_OUT { line: @entity.reply })
-        (os/stdout-write (bytes/from-string (str/concat @entity.reply "\n")) { key: "mcp-stdout" emit: { failure: MCP_STDOUT_FAILED } })
         (emit MCP_PUMP { })
       MCP_LINE_IN -> serving when (and (json/valid @payload.line) (not (object/has (json/parse @payload.line McpMessage) "id")))
         (emit MCP_PUMP { })
       MCP_LINE_IN -> serving when (and (json/valid @payload.line) (object/has (json/parse @payload.line McpMessage) "id") (= (object/get (json/parse @payload.line McpMessage) "method") "initialize"))
         (set @entity.reply (json/stringify { jsonrpc: "2.0" id: (object/get (json/parse @payload.line McpMessage) "id") result: { protocolVersion: (if (array/includes ["2025-06-18", "2025-03-26", "2024-11-05"] (object/get (object/get (json/parse @payload.line McpMessage) "params") "protocolVersion")) (object/get (object/get (json/parse @payload.line McpMessage) "params") "protocolVersion") "2025-06-18") capabilities: { tools: (json/parse "{}" McpJson) prompts: (json/parse "{}" McpJson) } serverInfo: { name: "orb" version: @entity.version } instructions: @entity.instructions } }))
         (emit MCP_LINE_OUT { line: @entity.reply })
-        (os/stdout-write (bytes/from-string (str/concat @entity.reply "\n")) { key: "mcp-stdout" emit: { failure: MCP_STDOUT_FAILED } })
         (emit MCP_PUMP { })
       MCP_LINE_IN -> serving when (and (json/valid @payload.line) (object/has (json/parse @payload.line McpMessage) "id") (= (object/get (json/parse @payload.line McpMessage) "method") "ping"))
         (set @entity.reply (json/stringify { jsonrpc: "2.0" id: (object/get (json/parse @payload.line McpMessage) "id") result: (json/parse "{}" McpJson) }))
         (emit MCP_LINE_OUT { line: @entity.reply })
-        (os/stdout-write (bytes/from-string (str/concat @entity.reply "\n")) { key: "mcp-stdout" emit: { failure: MCP_STDOUT_FAILED } })
         (emit MCP_PUMP { })
       MCP_LINE_IN -> serving when (and (json/valid @payload.line) (object/has (json/parse @payload.line McpMessage) "id") (= (object/get (json/parse @payload.line McpMessage) "method") "tools/list"))
         (set @entity.reply (json/stringify { jsonrpc: "2.0" id: (object/get (json/parse @payload.line McpMessage) "id") result: { tools: @entity.tools } }))
         (emit MCP_LINE_OUT { line: @entity.reply })
-        (os/stdout-write (bytes/from-string (str/concat @entity.reply "\n")) { key: "mcp-stdout" emit: { failure: MCP_STDOUT_FAILED } })
         (emit MCP_PUMP { })
       MCP_LINE_IN -> serving when (and (json/valid @payload.line) (object/has (json/parse @payload.line McpMessage) "id") (= (object/get (json/parse @payload.line McpMessage) "method") "prompts/list"))
         (set @entity.reply (json/stringify { jsonrpc: "2.0" id: (object/get (json/parse @payload.line McpMessage) "id") result: { prompts: [{ name: "build" description: "Build an app in Orb, from finding behaviors to a program that validates 0/0" arguments: [{ name: "app" description: "What to build" required: false }] }] } }))
         (emit MCP_LINE_OUT { line: @entity.reply })
-        (os/stdout-write (bytes/from-string (str/concat @entity.reply "\n")) { key: "mcp-stdout" emit: { failure: MCP_STDOUT_FAILED } })
         (emit MCP_PUMP { })
       MCP_LINE_IN -> serving when (and (json/valid @payload.line) (object/has (json/parse @payload.line McpMessage) "id") (= (object/get (json/parse @payload.line McpMessage) "method") "prompts/get") (!= (object/get (object/get (json/parse @payload.line McpMessage) "params") "name") "build"))
         (set @entity.reply (json/stringify { jsonrpc: "2.0" id: (object/get (json/parse @payload.line McpMessage) "id") error: { code: -32602 message: (str/concat "unknown prompt " (json/stringify (object/get (object/get (json/parse @payload.line McpMessage) "params") "name"))) } }))
         (emit MCP_LINE_OUT { line: @entity.reply })
-        (os/stdout-write (bytes/from-string (str/concat @entity.reply "\n")) { key: "mcp-stdout" emit: { failure: MCP_STDOUT_FAILED } })
         (emit MCP_PUMP { })
       MCP_LINE_IN -> serving when (and (json/valid @payload.line) (object/has (json/parse @payload.line McpMessage) "id") (= (object/get (json/parse @payload.line McpMessage) "method") "prompts/get") (= (object/get (object/get (json/parse @payload.line McpMessage) "params") "name") "build"))
         (set @entity.reply (json/stringify { jsonrpc: "2.0" id: (object/get (json/parse @payload.line McpMessage) "id") result: { description: "Build an app in Orb" messages: [{ role: "user" content: { type: "text" text: (str/concat "Build " (or (object/get (object/get (object/get (json/parse @payload.line McpMessage) "params") "arguments") "app") "the app the user asked for") " in Orb.\n\n" @entity.instructions) } }] } }))
         (emit MCP_LINE_OUT { line: @entity.reply })
-        (os/stdout-write (bytes/from-string (str/concat @entity.reply "\n")) { key: "mcp-stdout" emit: { failure: MCP_STDOUT_FAILED } })
         (emit MCP_PUMP { })
       MCP_LINE_IN -> serving when (and (json/valid @payload.line) (object/has (json/parse @payload.line McpMessage) "id") (not (array/includes ["initialize", "ping", "tools/list", "tools/call", "prompts/list", "prompts/get"] (object/get (json/parse @payload.line McpMessage) "method"))))
         (set @entity.reply (json/stringify { jsonrpc: "2.0" id: (object/get (json/parse @payload.line McpMessage) "id") error: { code: -32601 message: (str/concat "method not found: " (object/get (json/parse @payload.line McpMessage) "method")) } }))
         (emit MCP_LINE_OUT { line: @entity.reply })
-        (os/stdout-write (bytes/from-string (str/concat @entity.reply "\n")) { key: "mcp-stdout" emit: { failure: MCP_STDOUT_FAILED } })
         (emit MCP_PUMP { })
       MCP_LINE_IN -> serving when (and (json/valid @payload.line) (object/has (json/parse @payload.line McpMessage) "id") (= (object/get (json/parse @payload.line McpMessage) "method") "tools/call") (not (array/includes ["validate", "complete", "format", "operators", "patterns", "behaviors", "describe_behavior", "read_behavior", "play", "test", "reference", "evaluate"] (object/get (object/get (json/parse @payload.line McpMessage) "params") "name"))) (not (array/includes @entity.hookNames (object/get (object/get (json/parse @payload.line McpMessage) "params") "name"))))
         (set @entity.reply (json/stringify { jsonrpc: "2.0" id: (object/get (json/parse @payload.line McpMessage) "id") result: { content: [{ type: "text" text: (str/concat "orb has no tool `" (object/get (object/get (json/parse @payload.line McpMessage) "params") "name") "`") }] isError: true } }))
         (emit MCP_LINE_OUT { line: @entity.reply })
-        (os/stdout-write (bytes/from-string (str/concat @entity.reply "\n")) { key: "mcp-stdout" emit: { failure: MCP_STDOUT_FAILED } })
-        (emit MCP_PUMP { })
-        (emit MCP_LINE_OUT { line: @entity.reply })
-        (os/stdout-write (bytes/from-string (str/concat @entity.reply "\n")) { key: "mcp-stdout" emit: { failure: MCP_STDOUT_FAILED } })
         (emit MCP_PUMP { })
       MCP_LINE_IN -> working when (and (json/valid @payload.line) (object/has (json/parse @payload.line McpMessage) "id") (= (object/get (json/parse @payload.line McpMessage) "method") "tools/call") (or (array/includes ["validate", "format", "behaviors", "describe_behavior", "read_behavior", "play", "operators", "patterns", "evaluate", "complete", "reference", "test"] (object/get (object/get (json/parse @payload.line McpMessage) "params") "name")) (array/includes @entity.hookNames (object/get (object/get (json/parse @payload.line McpMessage) "params") "name"))))
         (set @entity.rid (object/get (json/parse @payload.line McpMessage) "id"))
@@ -283,10 +265,6 @@ orbital OrbMcpOrbital {
 
     state working {
       INIT -> working
-      MCP_CHUNK -> working
-        (set @entity.buffer (str/concat @entity.buffer (bytes/to-string @payload.data)))
-        (set @entity.queue (array/concat @entity.queue (array/slice (str/split @entity.buffer "\n") 0 (- (array/len (str/split @entity.buffer "\n")) 1))))
-        (set @entity.buffer (array/last (str/split @entity.buffer "\n")))
       MCP_EOF -> starting
         (emit MCP_ANSWERED { status: 200, body: "" })
       MCP_RUN -> working when (or (= @entity.tool "validate") (= @entity.tool "format") (= @entity.tool "play"))
@@ -361,12 +339,10 @@ orbital OrbMcpOrbital {
       MCP_TOOL_DONE -> serving
         (set @entity.reply (json/stringify { jsonrpc: "2.0" id: @entity.rid result: { content: [{ type: "text" text: (json/stringify (if (object/has @payload.result "__none") @payload.result @payload.result)) }] structuredContent: (if (object/has @payload.result "__none") @payload.result @payload.result) isError: false } }))
         (emit MCP_LINE_OUT { line: @entity.reply })
-        (os/stdout-write (bytes/from-string (str/concat @entity.reply "\n")) { key: "mcp-stdout" emit: { failure: MCP_STDOUT_FAILED } })
         (emit MCP_PUMP { })
       MCP_TOOL_FAILED -> serving
         (set @entity.reply (json/stringify { jsonrpc: "2.0" id: @entity.rid result: { content: [{ type: "text" text: @payload.error }] isError: true } }))
         (emit MCP_LINE_OUT { line: @entity.reply })
-        (os/stdout-write (bytes/from-string (str/concat @entity.reply "\n")) { key: "mcp-stdout" emit: { failure: MCP_STDOUT_FAILED } })
         (emit MCP_PUMP { })
     }
 
@@ -382,13 +358,12 @@ orbital OrbMcpOrbital {
       }
         @description "One JSON-RPC reply line, written to stdout."
         @tier "internal"
+      MCP_INPUT_START {}
+        @description "Start the composed standard input line transport."
+      MCP_INPUT_NEXT {}
+        @description "Acknowledge the processed request and permit the next line."
       MCP_PUMP { }
-        @description "Internal: take the next queued line."
-        @tier "internal"
-      MCP_LINE_IN {
-        line : string!
-      }
-        @description "Internal: one stdin line to answer."
+        @description "Internal: acknowledge the processed request."
         @tier "internal"
       MCP_LISTEN { }
         @description "Internal: start reading stdin."
@@ -438,19 +413,6 @@ orbital OrbMcpOrbital {
         error : string
       }
         @description "os/read-file or os/stdin-read failed."
-        @tier "internal"
-      MCP_STDOUT_FAILED {
-        error : string
-      }
-        @description "os/stdout-write failed."
-        @tier "internal"
-      MCP_CHUNK {
-        data : bytes!
-      }
-        @description "os/stdin-read: a chunk of stdin."
-        @tier "internal"
-      MCP_EOF { }
-        @description "os/stdin-read: stdin ended."
         @tier "internal"
       MCP_INPUTS {
         result : McpJson
@@ -549,6 +511,13 @@ orbital OrbMcpOrbital {
         words : [string]!
       }
         @description "std-args's ARGS_PARSED."
+      MCP_LINE_IN { line : string! }
+        @description "One framed input line from the transport."
+      MCP_EOF {}
+        @description "The transport reached EOF after all requests were acknowledged."
+      McpTransport.INPUT_LINE -> MCP_LINE_IN
+      McpTransport.STDIO_CLOSED -> MCP_EOF
+      McpTransport.STDIO_ERROR -> MCP_START_FAILED
       ArgsCli.ARGS_PARSED -> MCP_ARGS_DONE
       CompleteEngine.COMPLETE_ANSWERED -> MCP_COMPLETE_ANSWERED
       ReferenceEngine.REFERENCE_ANSWERED -> MCP_REFERENCE_ANSWERED
@@ -556,5 +525,5 @@ orbital OrbMcpOrbital {
     }
   }
 
-  page "/mcp" as OrbMcpPage -> McpServer, ArgsCli, CompleteEngine, ReferenceEngine, TestEngine, TestWalk, TestMachine, TestPlan, TestJudge, TestCreditor, MockSeed, MockStream
+  page "/mcp" as OrbMcpPage -> McpServer, McpTransport, ArgsCli, CompleteEngine, ReferenceEngine, TestEngine, TestWalk, TestMachine, TestPlan, TestJudge, TestCreditor, MockSeed, MockStream
 }

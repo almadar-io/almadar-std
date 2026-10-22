@@ -194,8 +194,10 @@ orbital GithubOrbital {
           auth: { scheme: bearer, credential: @config.token },
           timeoutMs: @config.timeoutMs
         } { emit: { success: GITHUB_GRAPHQL_REPLIED, failure: GITHUB_GRAPHQL_UNREACHABLE } })
-      GITHUB_GRAPHQL_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
+      GITHUB_GRAPHQL_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (json/valid @payload.body))
         (emit GITHUB_GRAPHQL_ANSWERED { body: @payload.body })
+      GITHUB_GRAPHQL_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (not (json/valid @payload.body)))
+        (emit GITHUB_GRAPHQL_FAILED { status: @payload.status, code: "PARSE_ERROR", message: "GitHub answered a GraphQL body that is not JSON" })
       GITHUB_GRAPHQL_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (emit GITHUB_GRAPHQL_FAILED { status: @payload.status, code: (if (= @payload.status 429) "RATE_LIMIT_ERROR" (if (or (= @payload.status 401) (= @payload.status 403)) "AUTH_ERROR" "SERVICE_ERROR")), message: (if (= @payload.status 429) "GitHub API rate limit exceeded" (str/concat (if (or (= @payload.status 401) (= @payload.status 403)) "GitHub API authentication failed: " "GitHub API request failed: ") (if (!= (object/get (json/parse @payload.body GithubError) message "") "") (object/get (json/parse @payload.body GithubError) message "") (object/get @config.statusText (str/concat @payload.status) "")))) })
       GITHUB_GRAPHQL_UNREACHABLE -> idle

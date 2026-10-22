@@ -44,7 +44,8 @@ orbital ProgramHostOrbital {
         (emit HOST_COMMAND_ANSWERED { status: 400, body: "host: a grant flag names a kind the guestGrants knob does not hold" })
       HOST_ARGS_DONE -> reading when (and (= (array/len @payload.errors) 0) (> (array/len @payload.positionals) 0) (= (array/len (array/filter (or (object/get @payload.flags "grant") []) (fn k (not (object/has @config.guestGrants @k))))) 0))
         (set @entity.path (array/first @payload.positionals))
-        (set @entity.grants (if (= (array/len (or (object/get @payload.flags "grant") [])) 0) @config.guestGrants (object/pick @config.guestGrants (object/get @payload.flags "grant"))))
+        (set @entity.grants @config.guestGrants)
+        (set @entity.grants (if (= (array/len (or (object/get @payload.flags "grant") [])) 0) @entity.grants (object/pick @entity.grants (object/get @payload.flags "grant"))))
         (os/read-file { anchor: "cwd" path: (array/first @payload.positionals) } { key: "file" emit: { success: HOST_FILE_READ, failure: HOST_LOAD_FAILED } })
     }
 

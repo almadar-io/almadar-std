@@ -1,6 +1,6 @@
 app std-deployment-registry [
   version: "1.0.0",
-  description: "std-deployment-registry — the versioned deployments of named artifacts (an app, a package, a site). DEPLOY { artifact, activates, details } records the artifact's next deployment, numbered from 1 per artifact, with its details (the caller's own fields: a commit, a target, who published it); one that activates (it may serve) becomes the artifact's active deployment, one that does not (an export run elsewhere) is only kept in the history. The counter, the deployment row and the active pointer are written as one atomic batch, and two deploys racing for one number retry on the next one (up to the maxRetries knob). ROLLBACK { artifact, version } re-activates an earlier deployment that may serve; WITHDRAW { artifact } leaves nothing active and keeps the history; RESOLVE { artifact } answers the active deployment or that there is none; HISTORY { artifact } answers every deployment, oldest first."
+  description: "std-deployment-registry — the versioned deployments of named artifacts (an app, a package, a site). DEPLOY { artifact, activates, details } records the artifact's next deployment, numbered from 1 per artifact, with its details (the caller's own fields: a commit, a target, who published it); one that activates (it may serve) becomes the artifact's active deployment, one that does not (an export run elsewhere) is only kept in the history. The counter, the deployment row and the active pointer are written as one atomic batch, and two deploys racing for one number retry on the next one (up to the maxRetries knob). ROLLBACK { artifact, version } re-activates an earlier deployment that may serve; WITHDRAW { artifact } leaves nothing active and keeps the history; RESOLVE { artifact } answers the active deployment or that there is none; HISTORY { artifact } answers every deployment, oldest first. Denied or unavailable resolve/history reads answer RESOLVE_FAILED/HISTORY_FAILED with the original storage code and message; only genuine absence answers an empty success."
 ]
 uses Spec from "almadar-std/deployment-registry"
 type DeploymentDetails = Map string (string | number)
@@ -118,9 +118,12 @@ orbital DeploymentRegistryOrbital {
       ROLLBACK_LOADED -> idle when @payload.data.activates
         (set @entity.details (or @payload.data.details {}))
         (fetch ActiveDeployment { id: @entity.artifact, emit: { success: ROLLBACK_ACTIVE_LOADED, failure: ROLLBACK_ACTIVE_ABSENT } })
-      ROLLBACK_ABSENT -> idle
+      ROLLBACK_ABSENT -> idle when (= @payload.code "not-found")
         (emit ROLLBACK_FAILED { artifact: @entity.artifact, code: "not-recorded", message: (str/concat @entity.artifact " has no recorded version " @entity.version) })
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat @entity.artifact " has no recorded version " @entity.version ".") })
+      ROLLBACK_ABSENT -> idle when (!= @payload.code "not-found")
+        (emit ROLLBACK_FAILED { artifact: @entity.artifact, code: "failed", message: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Rollback failed: " @payload.error) })
       ROLLBACK_ACTIVE_LOADED -> idle
         (persist update ActiveDeployment { id: @entity.artifact, version: @entity.version, recordedAt: @now, details: @entity.details } { emit: { success: ROLLBACK_WRITTEN, failure: ROLLBACK_NOT_WRITTEN } })
       ROLLBACK_ACTIVE_ABSENT -> idle when (!= @payload.code "not-found")
@@ -153,17 +156,22 @@ orbital DeploymentRegistryOrbital {
         (fetch ActiveDeployment { id: @payload.artifact, emit: { success: RESOLVE_LOADED, failure: RESOLVE_ABSENT } })
       RESOLVE_LOADED -> idle
         (emit RESOLVED { artifact: @entity.artifact, found: true, version: @payload.data.version, recordedAt: @payload.data.recordedAt, details: (or @payload.data.details {}) })
-      RESOLVE_ABSENT -> idle
+      RESOLVE_ABSENT -> idle when (= @payload.code "not-found")
         (emit RESOLVED { artifact: @entity.artifact, found: false, version: 0, recordedAt: 0, details: {} })
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat @entity.artifact " has nothing active.") })
+      RESOLVE_ABSENT -> idle when (!= @payload.code "not-found")
+        (emit RESOLVE_FAILED { artifact: @entity.artifact, code: @payload.code, message: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Resolve failed: " @payload.error) })
 
       HISTORY -> idle
         (set @entity.artifact @payload.artifact)
         (fetch Deployment { filter: (= (object/get @entity artifact) @payload.artifact), emit: { success: HISTORY_LOADED, failure: HISTORY_UNREADABLE } })
       HISTORY_LOADED -> idle
         (emit HISTORY_ANSWERED { artifact: @entity.artifact, deployments: (array/sort @payload.data "version") })
-      HISTORY_UNREADABLE -> idle
+      HISTORY_UNREADABLE -> idle when (= @payload.code "not-found")
         (emit HISTORY_ANSWERED { artifact: @entity.artifact, deployments: (array/take [{ id: "", artifact: "", version: 0, activates: false, recordedAt: 0, details: {} }] 0) })
+      HISTORY_UNREADABLE -> idle when (!= @payload.code "not-found")
+        (emit HISTORY_FAILED { artifact: @entity.artifact, code: @payload.code, message: @payload.error })
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "History unavailable: " @payload.error) })
     }
 
@@ -219,6 +227,20 @@ orbital DeploymentRegistryOrbital {
         deployments : [Deployment]!
       }
         @description "Every recorded deployment of the artifact, oldest first."
+        @tier "primary"
+      RESOLVE_FAILED -> external {
+        artifact : string!
+        code : string
+        message : string!
+      }
+        @description "The active deployment could not be read; carries the original storage failure."
+        @tier "primary"
+      HISTORY_FAILED -> external {
+        artifact : string!
+        code : string
+        message : string!
+      }
+        @description "The deployment history could not be read; carries the original storage failure."
         @tier "primary"
       DEPLOY_NEXT -> internal { }
         @tier "internal"

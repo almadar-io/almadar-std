@@ -2,7 +2,7 @@ app std-orb-gaps [
   version: "1.0.0",
   inbound: ["cli-gaps"],
   fs: { "~/.almadar/gaps-out/**": [write, create], cwd: "**": [read, write] },
-  description: "std-orb-gaps — the `orb gaps` command, (check, sync, rollup). `check` reads docs/Almadar_Gaps.md under the directory the command runs in (the cwd grant anchor) and every repo ledger its generated roll-up names, then reports duplicate gap codes, repo ledgers without a Next code counter, unreadable ledgers and entries without a [mechanical], [architectural] or [owner-decision] tag, one line each (status 500, exit 1); a clean tree answers `gaps: clean` (status 200, exit 0). `sync` and `status` reconcile the master with the repo ledgers by gap code: the repos come from the .gitmodules files, fenced code blocks never count, a three-way merge against the baseline knob file (.almadar/gaps-sync-state.json) decides which side wins per entry and refuses divergent edits, a repo's Next code never decreases, and the preview names every change; --write saves the ledger files and the baseline, --out <dir> saves the proposed files and the baseline under the outRoot knob (~/.almadar/gaps-out, the out grant), --check fails while any ledger file would change, --from master|repos makes one side authoritative. `rollup` rebuilds the master's generated roll-up from the repo ledgers. Any unknown command answers the usage (status 400, exit 2)."
+  description: "std-orb-gaps — the `orb gaps` command, (check, sync, rollup). `check` reads docs/Almadar_Gaps.md under the directory the command runs in (the cwd grant anchor) and every repo ledger its generated roll-up names, then reports duplicate gap codes, repo ledgers without a Next code counter, unreadable ledgers and entries without a [mechanical], [architectural] or [owner-decision] tag, one line each (status 500, exit 1); a clean tree answers `gaps: clean` (status 200, exit 0). `sync` and `status` reconcile the master with the repo ledgers by gap code: the owners come from the .gitmodules files and the explicit foldedLedgers paths, fenced code blocks never count, a three-way merge against the baseline knob file (.almadar/gaps-sync-state.json) decides which side wins per entry and refuses divergent edits, a repo's Next code never decreases, and the preview names every change; --write saves the ledger files and the baseline, --out <dir> saves the proposed files and the baseline under the outRoot knob (~/.almadar/gaps-out, the out grant), --check fails while any ledger file would change, --from master|repos makes one side authoritative. `rollup` rebuilds the master's generated roll-up from the repo ledgers. Any unknown command answers the usage (status 400, exit 2)."
 ]
 uses Spec from "almadar-std/orb-gaps"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -20,7 +20,7 @@ type GapDirEntry = { name : string!, kind : string! }
 type GapSortKey = { sort : string!, path : string! }
 type GapSig = { code : string!, side : string!, repo : string!, heading : string!, body : string! }
 type GapRow = { code : string!, side : string!, m : string!, l : string!, p : string!, pRepo : string!, eRepo : string!, eHeading : string!, eBody : string! }
-type GapBaseline = { version : number!, entries : [SExpr]! }
+type GapBaseline = { version : number!, entries : [[string, { repo : string!, heading : string!, body : string! }]]! }
 
 orbital OrbGapsOrbital {
   uses Args from "std/behaviors/std-args"
@@ -57,6 +57,7 @@ orbital OrbGapsOrbital {
     curBegin : number = 0
     findings : [string] = []
     codeRefs : [GapCodeRef] = []
+    codeGroups : Map string [GapCodeRef] = {}
     mOwn : [string] = []
     lOwn : [string] = []
     markB : [GapMark] = []
@@ -158,6 +159,7 @@ orbital OrbGapsOrbital {
         (set @entity.curBegin 0)
         (set @entity.findings [])
         (set @entity.codeRefs [])
+        (set @entity.codeGroups {})
         (set @entity.mOwn [])
         (set @entity.lOwn [])
         (set @entity.markB [])
@@ -207,7 +209,7 @@ orbital OrbGapsOrbital {
         (set @entity.stage "c1")
         (emit GAPS_READ { })
       GAPS_PARSED -> probing when (and (= @entity.fail "") (!= @entity.cmd "check"))
-        (set @entity.work [{ path: ".", nested: false }])
+        (set @entity.work (array/concat [{ path: ".", nested: false }] (array/map @config.foldedLedgers (fn p { path: @p, nested: true }))))
         (emit GAPS_PROBE { })
     }
 
@@ -320,14 +322,14 @@ orbital OrbGapsOrbital {
           { lo: (object/get (array/nth @entity.curCand @k) "at"),
             hi: (let ((j (array/find (array/range (+ @k 1) (array/len @entity.curCand)) (fn j (= (array/nth @entity.curFences @j) ""))))) (if (= @j null) @entity.curN (object/get (array/nth @entity.curCand @j) "at"))) })))
         (set @entity.curFlags (array/map (array/range 0 @entity.curN) (fn i (not (array/some @entity.curSpans (fn sp (and (<= (object/get @sp "lo") @i) (<= @i (object/get @sp "hi")))))))))
-        (set @entity.curBounds (array/filter (array/map (array/zip @entity.curLines @entity.curFlags) (fn p (if (and (array/nth @p 1) (validate/pattern (array/nth @p 0) "^(?:#{1,4} |[-*+] |Next (?:cross-repo )?code:|_No open gaps\\._|---\\s*$|<!--)")) @index -1))) (fn i (>= @i 0))))
-        (set @entity.curSecs (array/filter (array/map (array/zip @entity.curLines @entity.curFlags) (fn p (if (and (array/nth @p 1) (validate/pattern (array/nth @p 0) "^#{1,4} ")) { at: @index, text: (array/nth @p 0) } { at: -1, text: "" }))) (fn m (>= (object/get @m "at") 0))))
-        (set @entity.curStarts (array/filter (array/map (array/zip @entity.curLines @entity.curFlags) (fn p (if (and (array/nth @p 1) (validate/pattern (array/nth @p 0) "^- \\*\\*G-[A-Z0-9_-]+-\\d+\\*\\*")) { at: @index, text: (array/nth @p 0) } { at: -1, text: "" }))) (fn m (>= (object/get @m "at") 0))))
+        (set @entity.curBounds (array/filter (array/map (array/range 0 (min (array/len @entity.curLines) (array/len @entity.curFlags))) (fn i (if (and (array/nth @entity.curFlags @i) (validate/pattern (array/nth @entity.curLines @i) "^(?:#{1,4} |[-*+] |Next (?:cross-repo )?code:|_No open gaps\\._|---\\s*$|<!--)")) @index -1))) (fn i (>= @i 0))))
+        (set @entity.curSecs (array/filter (array/map (array/range 0 (min (array/len @entity.curLines) (array/len @entity.curFlags))) (fn i (if (and (array/nth @entity.curFlags @i) (validate/pattern (array/nth @entity.curLines @i) "^#{1,4} ")) { at: @index, text: (array/nth @entity.curLines @i) } { at: -1, text: "" }))) (fn m (>= (object/get @m "at") 0))))
+        (set @entity.curStarts (array/filter (array/map (array/range 0 (min (array/len @entity.curLines) (array/len @entity.curFlags))) (fn i (if (and (array/nth @entity.curFlags @i) (validate/pattern (array/nth @entity.curLines @i) "^- \\*\\*G-[A-Z0-9_-]+-\\d+\\*\\*")) { at: @index, text: (array/nth @entity.curLines @i) } { at: -1, text: "" }))) (fn m (>= (object/get @m "at") 0))))
         (set @entity.scans (array/append @entity.scans {
           key: @entity.curKey,
           lines: (if (or (= @entity.cursor 0) (= @entity.curKey "__body__") (= @entity.curKey "__u__")) @entity.curLines (array/take [""] 0)),
           flags: (if (or (= @entity.cursor 0) (= @entity.curKey "__body__") (= @entity.curKey "__u__")) @entity.curFlags (array/take [true] 0)),
-          gapLines: (array/filter (array/map (array/zip @entity.curLines @entity.curFlags) (fn p (if (and (array/nth @p 1) (str/startsWith (array/nth @p 0) "- **G-") (or (< @entity.curBegin 0) (< @index @entity.curBegin))) { code: (array/nth (str/split (array/nth @p 0) "**") 1), line: (array/nth @p 0), path: @entity.curKey } { code: "", line: "", path: "" }))) (fn r (!= (object/get @r "code") ""))),
+          gapLines: (array/filter (array/map (array/range 0 (min (array/len @entity.curLines) (array/len @entity.curFlags))) (fn i (if (and (array/nth @entity.curFlags @i) (str/startsWith (array/nth @entity.curLines @i) "- **G-") (or (< @entity.curBegin 0) (< @index @entity.curBegin))) { code: (array/nth (str/split (array/nth @entity.curLines @i) "**") 1), line: (array/nth @entity.curLines @i), path: @entity.curKey } { code: "", line: "", path: "" }))) (fn r (!= (object/get @r "code") ""))),
           entries: (array/map @entity.curStarts (fn m
             (let ((s (object/get @m "at"))
                   (e (math/default (array/nth @entity.curBounds (+ (array/indexOf @entity.curBounds (object/get @m "at")) 1)) @entity.curN))
@@ -355,7 +357,7 @@ orbital OrbGapsOrbital {
         (emit GAPS_SCAN { })
       GAPS_SCAN -> reading when (and (>= @entity.cursor (array/len @entity.jobs)) (= @entity.stage "c2"))
         (set @entity.jobs [])
-        (set @entity.queue (array/concat (str/split "docs/Almadar_Gaps.md" "|") (array/map (array/filter (array/zip (object/get (array/first @entity.scans) "lines") (object/get (array/first @entity.scans) "flags")) (fn p (and (array/nth @p 1) (str/startsWith (array/nth @p 0) "## `")))) (fn p (str/concat (array/nth (str/split (array/nth @p 0) "`") 1) "/Almadar_Gaps.md")))))
+        (set @entity.queue (array/concat (str/split "docs/Almadar_Gaps.md" "|") (array/map (array/filter (array/range 0 (min (array/len (object/get (array/first @entity.scans) "lines")) (array/len (object/get (array/first @entity.scans) "flags")))) (fn i (and (array/nth (object/get (array/first @entity.scans) "flags") @i) (str/startsWith (array/nth (object/get (array/first @entity.scans) "lines") @i) "## `")))) (fn i (str/concat (array/nth (str/split (array/nth (object/get (array/first @entity.scans) "lines") @i) "`") 1) "/Almadar_Gaps.md")))))
         (set @entity.cursor 1)
         (set @entity.stage "c3")
         (emit GAPS_READ { })
@@ -379,9 +381,10 @@ orbital OrbGapsOrbital {
         (set @entity.codeRefs (array/flatten (array/map @entity.scans (fn s (object/get @s "gapLines")))))
         (emit GAPS_REPORT { })
       GAPS_REPORT -> ready
+        (set @entity.codeGroups (array/groupBy @entity.codeRefs "code"))
         (set @entity.findings (array/concat
           (array/map (array/filter (array/range 1 (array/len @entity.reads)) (fn i (not (object/get (array/nth @entity.reads @i) "ok")))) (fn i (str/concat "UNREADABLE " (object/get (array/nth @entity.reads @i) "path"))))
-          (array/map (array/filter (object/entries (array/groupBy @entity.codeRefs "code")) (fn kv (> (array/len (array/nth @kv 1)) 1))) (fn kv (str/concat "DUPLICATE " (array/nth @kv 0))))
+          (array/map (array/filter (object/keys @entity.codeGroups) (fn code (> (array/len (object/get @entity.codeGroups @code)) 1))) (fn code (str/concat "DUPLICATE " @code)))
           (array/map (array/filter (array/range 1 (array/len @entity.reads)) (fn i (and (object/get (array/nth @entity.reads @i) "ok") (not (str/includes (object/get (array/nth @entity.reads @i) "text") "code: `G-"))))) (fn i (str/concat "NO_COUNTER " (object/get (array/nth @entity.reads @i) "path"))))
           (array/map (array/filter @entity.codeRefs (fn r (and (not (str/includes (object/get @r "line") "[mechanical")) (not (str/includes (object/get @r "line") "[architectural")) (not (str/includes (object/get @r "line") "[owner-decision"))))) (fn r (str/concat "NO_TAG " (object/get @r "code") " (" (object/get @r "path") ")")))))
         (emit GAPS_ANSWERED { status: (if (= (array/len @entity.findings) 0) 200 500), body: (if (= (array/len @entity.findings) 0) "gaps: clean" (str/join @entity.findings "\n")) })
@@ -391,8 +394,8 @@ orbital OrbGapsOrbital {
         (set @entity.curLines (object/get (array/first @entity.scans) "lines"))
         (set @entity.curFlags (object/get (array/first @entity.scans) "flags"))
         (set @entity.curN (array/len @entity.curLines))
-        (set @entity.markB (array/filter (array/map (array/zip @entity.curLines @entity.curFlags) (fn p (if (and (array/nth @p 1) (validate/pattern (array/nth @p 0) "^<!-- BEGIN GENERATED ROLL-UP:.*-->$")) { at: @index, text: (array/nth @p 0) } { at: -1, text: "" }))) (fn m (>= (object/get @m "at") 0))))
-        (set @entity.markE (array/filter (array/map (array/zip @entity.curLines @entity.curFlags) (fn p (if (and (array/nth @p 1) (validate/pattern (array/nth @p 0) "^<!-- END GENERATED ROLL-UP -->$")) { at: @index, text: (array/nth @p 0) } { at: -1, text: "" }))) (fn m (>= (object/get @m "at") 0))))
+        (set @entity.markB (array/filter (array/map (array/range 0 (min (array/len @entity.curLines) (array/len @entity.curFlags))) (fn i (if (and (array/nth @entity.curFlags @i) (validate/pattern (array/nth @entity.curLines @i) "^<!-- BEGIN GENERATED ROLL-UP:.*-->$")) { at: @index, text: (array/nth @entity.curLines @i) } { at: -1, text: "" }))) (fn m (>= (object/get @m "at") 0))))
+        (set @entity.markE (array/filter (array/map (array/range 0 (min (array/len @entity.curLines) (array/len @entity.curFlags))) (fn i (if (and (array/nth @entity.curFlags @i) (validate/pattern (array/nth @entity.curLines @i) "^<!-- END GENERATED ROLL-UP -->$")) { at: @index, text: (array/nth @entity.curLines @i) } { at: -1, text: "" }))) (fn m (>= (object/get @m "at") 0))))
         (set @entity.fail (if (or (!= (array/len @entity.markB) 1) (!= (array/len @entity.markE) 1)) "docs/Almadar_Gaps.md needs exactly one ordered roll-up marker pair" (if (< (object/get (array/first @entity.markE) "at") (object/get (array/first @entity.markB) "at")) "docs/Almadar_Gaps.md needs exactly one ordered roll-up marker pair" "")))
         (emit GAPS_S3B { })
       GAPS_S3B -> analyzing when (!= @entity.fail "")
@@ -411,12 +414,16 @@ orbital OrbGapsOrbital {
       GAPS_S4 -> analyzing
         (set @entity.curLines (object/get (array/find @entity.scans (fn s (= (object/get @s "key") "__body__"))) "lines"))
         (set @entity.curFlags (object/get (array/find @entity.scans (fn s (= (object/get @s "key") "__body__"))) "flags"))
-        (set @entity.markB (array/filter (array/map (array/zip @entity.curLines @entity.curFlags) (fn p (if (and (array/nth @p 1) (validate/pattern (array/nth @p 0) "^## `[^`]+` \\(source: `[^`]+`\\)$")) { at: @index, text: (array/nth @p 0) } { at: -1, text: "" }))) (fn m (>= (object/get @m "at") 0))))
+        (set @entity.markB (array/filter (array/map (array/range 0 (min (array/len @entity.curLines) (array/len @entity.curFlags))) (fn i (if (and (array/nth @entity.curFlags @i) (validate/pattern (array/nth @entity.curLines @i) "^## `[^`]+` \\(source: `[^`]+`\\)$")) { at: @index, text: (array/nth @entity.curLines @i) } { at: -1, text: "" }))) (fn m (>= (object/get @m "at") 0))))
         (set @entity.hdrIdx (array/map @entity.markB (fn m (object/get @m "at"))))
-        (set @entity.hdrRepos (array/map @entity.markB (fn m (array/nth (str/split (object/get @m "text") "`") 1))))
-        (set @entity.hdrSrcs (array/map @entity.markB (fn m (array/nth (str/split (object/get @m "text") "`") 3))))
+        (set @entity.hdrRepos (array/map @entity.markB (fn m (let ((r (array/nth (str/split (object/get @m "text") "`") 1))) (object/get @config.ownerMoves @r @r)))))
+        (set @entity.hdrSrcs (array/map @entity.markB (fn m (let ((p (array/nth (str/split (object/get @m "text") "`") 3))) (str/concat (object/get @config.ownerMoves (os/path-dir @p) (os/path-dir @p)) "/" (os/path-base @p))))))
         (set @entity.mEntries (array/map (object/get (array/find @entity.scans (fn s (= (object/get @s "key") "__body__"))) "entries") (fn e
           (object/set @e "repo" (let ((hs (array/filter @entity.hdrIdx (fn j (< @j (object/get @e "at")))))) (if (= (array/len @hs) 0) "" (array/nth @entity.hdrRepos (- (array/len @hs) 1))))))))
+        (set @entity.mEntries (array/filter @entity.mEntries (fn e (not (array/includes @config.deprecated (object/get @e "repo"))))))
+        (set @entity.hdrSrcs (array/map (array/filter (array/range 0 (array/len @entity.hdrRepos)) (fn i (not (array/includes @config.deprecated (array/nth @entity.hdrRepos @i))))) (fn i (array/nth @entity.hdrSrcs @i))))
+        (set @entity.hdrIdx (array/map (array/filter (array/range 0 (array/len @entity.hdrRepos)) (fn i (not (array/includes @config.deprecated (array/nth @entity.hdrRepos @i))))) (fn i (array/nth @entity.hdrIdx @i))))
+        (set @entity.hdrRepos (array/filter @entity.hdrRepos (fn r (not (array/includes @config.deprecated @r)))))
         (set @entity.lEntries (array/flatten (array/map @entity.ledgerRepos (fn r (object/get (array/find @entity.scans (fn s (= (object/get @s "key") (str/concat @r "/Almadar_Gaps.md")))) "entries")))))
         (set @entity.rEntries (object/get (array/find @entity.scans (fn s (= (object/get @s "key") "__root__"))) "entries"))
         (set @entity.mCodes (array/map @entity.mEntries (fn e (object/get @e "code"))))
@@ -427,7 +434,7 @@ orbital OrbGapsOrbital {
         (set @entity.hasBaseline (array/some @entity.reads (fn r (and (= (object/get @r "path") @config.baseline) (object/get @r "ok")))))
         (set @entity.bEntries (if @entity.hasBaseline
           (array/map (object/get (json/parse (object/get (array/find @entity.reads (fn r (= (object/get @r "path") @config.baseline))) "text") GapBaseline) "entries")
-            (fn p { code: (object/get @p "0"), repo: (object/get @p "1.repo"), heading: (object/get @p "1.heading"), body: (object/get @p "1.body"), at: 0, endAt: 0 }))
+            (fn p { code: (object/get @p "0"), repo: (let ((r (object/get @p "1.repo"))) (object/get @config.ownerMoves @r @r)), heading: (object/get @p "1.heading"), body: (object/get @p "1.body"), at: 0, endAt: 0 }))
           (array/take @entity.mEntries 0)))
         (set @entity.errs [
           (str/default (array/find (array/map (array/range 0 (array/len @entity.hdrIdx)) (fn h
@@ -579,7 +586,7 @@ orbital OrbGapsOrbital {
       GAPS_UPD_INSERT -> updating
         (set @entity.curLines (object/get (array/last @entity.scans) "lines"))
         (set @entity.curFlags (object/get (array/last @entity.scans) "flags"))
-        (set @entity.markB (array/filter (array/map (array/zip @entity.curLines @entity.curFlags) (fn p (if (and (array/nth @p 1) (validate/pattern (array/nth @p 0) "^#{2,3} .+$")) { at: @index, text: (array/nth @p 0) } { at: -1, text: "" }))) (fn m (>= (object/get @m "at") 0))))
+        (set @entity.markB (array/filter (array/map (array/range 0 (min (array/len @entity.curLines) (array/len @entity.curFlags))) (fn i (if (and (array/nth @entity.curFlags @i) (validate/pattern (array/nth @entity.curLines @i) "^#{2,3} .+$")) { at: @index, text: (array/nth @entity.curLines @i) } { at: -1, text: "" }))) (fn m (>= (object/get @m "at") 0))))
         (set @entity.uText (let ((en (array/nth @entity.uPend @entity.upc)))
           (let ((hl (if (= (object/get @en "heading") "") "## Open gaps" (str/concat "### " (object/get @en "heading")))))
             (let ((si (array/findIndex @entity.markB (fn m (= (object/get @m "text") @hl)))))
@@ -811,12 +818,18 @@ orbital OrbGapsOrbital {
       outRoot : string = "~/.almadar/gaps-out"
         @label "Out root"
         @description "Directory --out <dir> writes under; the out grant covers it."
-      order : [string] = ["packages/almadar-eslint", "orbital-rust/crates/orbital-shell-typescript/core", "packages/almadar-logger", "packages/almadar-std", "packages/almadar-behaviors", "packages/almadar-syntax", "packages/almadar-runtime", "packages/almadar-server", "packages/almadar-verify", "packages/almadar-tools", "tools/almadar-pattern-sync", "tools/runtime-verify", "packages/almadar-playground-runtime", "tools/asset-workflow", "apps/builder", "apps/kflow", "apps/nata", "apps/rawi", "almadar", "orbital-rust", "orbital-rust/crates/orbital-shell-typescript"]
+      foldedLedgers : [string] = ["orbital-rust/crates/orbital-shell-typescript/core", "orbital-rust/crates/orbital-shell-typescript/runtime/logger", "orbital-rust/crates/orbital-shell-typescript/tooling/eslint", "orbital-rust/crates/orbital-shell-typescript/tooling/syntax", "orbital-rust/crates/orbital-shell-typescript/src/chrome"]
+        @label "Folded ledgers"
+        @description "Explicit ledger owner directories folded into an active repository; no archive tree is scanned."
+      order : [string] = ["orbital-rust/crates/orbital-shell-typescript/tooling/eslint", "orbital-rust/crates/orbital-shell-typescript/core", "orbital-rust/crates/orbital-shell-typescript/runtime/logger", "packages/almadar-std", "packages/almadar-behaviors", "orbital-rust/crates/orbital-shell-typescript/tooling/syntax", "apps/builder", "apps/kflow", "apps/nata", "apps/rawi", "almadar", "orbital-rust", "orbital-rust/crates/orbital-core", "orbital-rust/crates/orbital-canvas", "orbital-rust/crates/orbital-ffi", "orbital-rust/crates/orbital-wasm", "orbital-rust/crates/orbital-shell-typescript", "orbital-rust/crates/orbital-shell-typescript/src/chrome", "orbital-rust/crates/orbital-shell-python", "orbital-rust/crates/orbital-shell-rust", "orbital-rust/crates/orbital-shell-ios", "orbital-rust/crates/orbital-shell-android"]
         @label "Repo order"
         @description "Upstream to downstream order of the repos in the roll-up, per the root CLAUDE.md dependency map; unlisted repos follow alphabetically."
-      deprecated : [string] = ["packages/almadar-agent"]
+      ownerMoves : Map string string = { "packages/almadar-core": "orbital-rust/crates/orbital-shell-typescript/core", "packages/almadar-logger": "orbital-rust/crates/orbital-shell-typescript/runtime/logger", "packages/almadar-eslint": "orbital-rust/crates/orbital-shell-typescript/tooling/eslint", "packages/almadar-syntax": "orbital-rust/crates/orbital-shell-typescript/tooling/syntax" }
+        @label "Relocated owners"
+        @description "Exact old-to-active ledger owner paths, applied to master and baseline before merging."
+      deprecated : [string] = ["packages/almadar-agent", "packages/almadar-runtime", "packages/almadar-server", "packages/almadar-verify", "packages/almadar-tools", "tools/almadar-pattern-sync", "tools/runtime-verify", "packages/almadar-playground-runtime", "tools/asset-workflow", "packages/almadar-auth", "packages/almadar-db"]
         @label "Retired repos"
-        @description "Submodule paths whose ledgers are no longer read."
+        @description "Exact retired owner paths excluded from discovery and the active master roll-up; prior baseline entries are skipped when absent on both active sides."
     }
 
     listens {

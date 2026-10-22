@@ -15,15 +15,20 @@ def isoparts(ms):
     return d,dt
 def draws(n,s0): return f'(array/reduce (array/range {n}) [{s0}] (fn da dj (array/append @da {nxt("(array/last @da)")})))'
 def cell(path,kind,text='""',num='0',extra=''): return f'{{ path: {path}, kind: {kind}, text: {text}, num: {num}{extra} }}'
-def res(cellx,push='[]',s='@s0'): return f'{{ cell: {cellx}, push: {push}, s: {s} }}'
+def res(cellx,push='[]',s='@s0'):
+    cells = '[]' if cellx is None else f'[{cellx}]'
+    return f'{{ cells: {cells}, push: {push}, s: {s} }}'
 def qs(x): return '"'+x+'"'
+
+def string_default(value):
+    return f'(let ((dd {value})) (if (validate/string @dd) (str/template "{{{{value}}}}" {{ value: @dd }}) ""))'
 
 def sampler_step(P):
     RT,SD,NOW,EN,W=P['RT'],P['SD'],P['NOW'],P['EN'],P['WORDS']
     C=lambda kind,text='""',num='0',extra='': cell('@pa',kind,text,num,extra)
     dflt='(object/get @sp "default" null)'
     dk=f'(let ((dd {dflt})) (if (validate/string @dd) "string" (if (validate/array @dd) "array" (if (validate/object @dd) "object" (if (validate/boolean @dd) "boolean" (if (validate/number @dd) "number" "null"))))))'
-    ds=f'(let ((dd {dflt})) (if (validate/string @dd) (str/concat @dd "") ""))'
+    ds=string_default(dflt)
     honored=f'(and @hasdef (or {RT} (array/includes ["array", "object"] {dk}) (and (= {dk} "string") (if (= {ds} "") (array/includes @vals "") (= (array/len @vals) 0)))))'
     mockv='(object/get @sp "mock" "")'
     cands=f'(array/filter (array/map (str/split {mockv} ",") (fn p (str/trim @p))) (fn p (!= @p "")))'
@@ -62,8 +67,7 @@ def sampler_step(P):
     uni_cell_none=res(C(qs('omit')))
     uni_push=f'[{{ spec: (object/get {props} (array/nth (object/get @sp "values" []) 0)), name: @nm, index: @ix, depth: (+ @dp 1), path: @pa }}]'
     uni=(f'(if (or (>= @dp 3) (= (array/len (object/get @sp "values" [])) 0) (not (object/has {props} (array/nth (object/get @sp "values" []) 0)))) {uni_cell_none} '
-         f'{res("null",uni_push)})')
-    # union: no cell is appended for the union itself -> handled by cell null marker below
+         f'{res(None,uni_push)})')
     sgx=slug('@nm')
     imgname=f'(array/includes {IMG} (str/lower @nm))'
     def imgurl(x): return f'(str/concat "https://picsum.photos/seed/" (str/encode-uri-component (str/concat {EN} "-" @nm "-" {x})) "/400/400")'
@@ -118,25 +122,33 @@ def sampler_step(P):
            f'(if @hasmock {mock_gate} '
            f'(if {projected} {res(C(chr(40)+"if (= @ty "+qs("array")+") "+qs("relation-many")+" "+qs("string")+")"))} '
            f'(if (> (array/len @vals) 0) {res(vocab)} {typed_dispatch})))))')
-    # a union appends no cell of its own: its result carries cell null and is skipped on append
     body=(f'(let ((fr (array/first (object/get @acc "stack")))) (let ((rest (array/drop (object/get @acc "stack") 1)) (s0 (object/get @acc "s")) (sp (object/get @fr "spec")) (nm (object/get @fr "name")) (ix (object/get @fr "index")) (dp (object/get @fr "depth")) (pa (object/get @fr "path"))) '
           f'(let ((ty (object/get @sp "type")) (o (if {RT} 1 @ix))) (let ((vals (if (= @ty "union") [] (object/get @sp "values" []))) (hasdef (object/has @sp "default")) (hasmock (object/has @sp "mock"))) '
-          f'(let ((rr {chain})) {{ stack: (array/concat (object/get @rr "push") @rest), cells: (if (= (object/get @rr "cell") null) (object/get @acc "cells") (array/append (object/get @acc "cells") (object/get @rr "cell"))), s: (object/get @rr "s") }})))))')
+          f'(let ((rr {chain})) {{ stack: (array/concat (object/get @rr "push") @rest), cells: (array/concat (object/get @acc "cells") (object/get @rr "cells")), s: (object/get @rr "s") }})))))')
     return f'(fn acc kk (if (= (array/len (object/get @acc "stack")) 0) @acc {body}))'
 
 def build_expr(cells_expr, root_path_expr='""'):
-    """vals map by reverse reduce; returns the root value."""
-    kinds_value = ('(let ((kd (object/get @cl "kind")) (ks (object/get @cl "kids" []))) '
-      '(if (or (= @kd "array") (= @kd "tuple")) (array/map @ks (fn p (object/get @vm @p))) '
-      '(if (= @kd "row") (object/fromEntries (array/map (array/filter (array/range (array/len @ks)) (fn i (!= (object/get (array/find @allc (fn c (= (object/get @c "path") (array/nth @ks @i)))) "kind") "omit"))) (fn i [(array/nth (object/get @cl "keys" []) @i), (object/get @vm (array/nth @ks @i))]))) '
-      '(if (= @kd "object") (object/fromEntries (array/map (array/range (array/len @ks)) (fn i [(array/nth (object/get @cl "keys" []) @i), (object/get @vm (array/nth @ks @i))]))) '
-      '(if (= @kd "default") (object/get @cl "val" null) '
-      '(if (= @kd "behavior") { behavior: (object/get @cl "text" "") } '
-      '(if (= @kd "file") { name: (object/get @cl "text" ""), url: (object/get @cl "url" ""), mimeType: (object/get @cl "mime" ""), sizeBytes: (object/get @cl "num" 0) } '
-      '(if (or (= @kd "number") (= @kd "money")) (object/get @cl "num" 0) '
-      '(if (= @kd "boolean") (= (object/get @cl "text" "") "true") '
-      '(if (= @kd "relation-one") "" (if (= @kd "relation-many") [] (if (or (= @kd "null") (= @kd "omit")) null (object/get @cl "text" ""))))))))))))')
-    return (f'(let ((allc {cells_expr})) (let ((vm (array/reduce (array/range (array/len @allc)) {{}} (fn vm j (let ((cl (array/nth @allc (- (array/len @allc) (+ @j 1))))) (object/set @vm (object/get @cl "path") {kinds_value}))))))) (object/get @vm {root_path_expr} null)))')
+    """Build each value into the reverse walk's map accumulator."""
+    def put(value):
+        return f'(object/set @vm (object/get @cl "path") {value})'
+    cases = [
+        ('(or (= @kd "array") (= @kd "tuple"))', '(array/map @ks (fn p (object/get @vm @p)))'),
+        ('(= @kd "row")', '(object/fromEntries (array/map (array/filter (array/range (array/len @ks)) (fn i (!= (object/get (array/find @allc (fn c (= (object/get @c "path") (array/nth @ks @i)))) "kind") "omit"))) (fn i [(array/nth (object/get @cl "keys" []) @i), (object/get @vm (array/nth @ks @i))])))'),
+        ('(= @kd "object")', '(object/fromEntries (array/map (array/range (array/len @ks)) (fn i [(array/nth (object/get @cl "keys" []) @i), (object/get @vm (array/nth @ks @i))])))'),
+        ('(= @kd "default")', '(object/get @cl "val" null)'),
+        ('(= @kd "behavior")', '{ behavior: (object/get @cl "text" "") }'),
+        ('(= @kd "file")', '{ name: (object/get @cl "text" ""), url: (object/get @cl "url" ""), mimeType: (object/get @cl "mime" ""), sizeBytes: (object/get @cl "num" 0) }'),
+        ('(or (= @kd "number") (= @kd "money"))', '(object/get @cl "num" 0)'),
+        ('(= @kd "boolean")', '(= (object/get @cl "text" "") "true")'),
+        ('(= @kd "relation-one")', '""'),
+        ('(= @kd "relation-many")', '[]'),
+        ('(or (= @kd "null") (= @kd "omit"))', 'null'),
+    ]
+    step = put('(object/get @cl "text" "")')
+    for condition, value in reversed(cases):
+        step = f'(if {condition} {put(value)} {step})'
+    step = f'(let ((kd (object/get @cl "kind")) (ks (object/get @cl "kids" []))) {step})'
+    return (f'(let ((allc {cells_expr})) (let ((vm (array/reduce (array/range (array/len @allc)) {{}} (fn vm j (let ((cl (array/nth @allc (- (array/len @allc) (+ @j 1))))) {step}))))) (object/get @vm {root_path_expr} null)))')
 
 def run(P, stack_expr, cells_init, s_expr, root='""', K=400):
     """returns an expression: {cells, s, value}"""

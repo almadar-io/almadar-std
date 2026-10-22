@@ -1,0 +1,176 @@
+app std-graph-layout [
+  version: "1.0.0",
+  description: "Generic measured directed graph layout. Stable input ids are preserved, including parallel edges and self loops. Reachability identifies strongly connected groups; declaration order breaks cycles inside a group. Rank relaxation, barycenter ordering, measured placement and exterior orthogonal channels produce renderer-independent coordinates. Measurements use the renderer's units."
+]
+uses Spec from "almadar-std/graph-layout"
+;; @capabilities "directed graph layout, measured nodes, orthogonal routes, cycles, parallel edges"
+
+type LayoutPoint = { x : number!, y : number! }
+type LayoutNode = { id : string!, label : string!, width : number!, height : number! }
+type LayoutEdge = { id : string!, source : string!, target : string!, label : string!, labelWidth : number!, labelHeight : number! }
+type LayoutPlacedNode = { id : string!, label : string!, width : number!, height : number!, x : number!, y : number!, rank : number! }
+type LayoutRoutedEdge = { id : string!, source : string!, target : string!, label : string!, labelWidth : number!, labelHeight : number!, points : [LayoutPoint]!, labelX : number!, labelY : number!, reversed : boolean! }
+type LayoutDirectedEdge = { id : string!, source : string!, target : string!, start : string!, end : string!, reversed : boolean! }
+type LayoutReach = Map string [string]
+type LayoutNumbers = Map string number
+
+orbital GraphLayoutOrbital {
+  entity LayoutRun [runtime] {
+    id : string!
+    nodes : [LayoutNode] = []
+    edges : [LayoutEdge] = []
+    directed : [LayoutDirectedEdge] = []
+    ranks : LayoutNumbers = {}
+    order : LayoutNumbers = {}
+    placed : [LayoutPlacedNode]! = []
+    routed : [LayoutRoutedEdge]! = []
+    rankTops : [number] = []
+    rankHeights : [number] = []
+    channelStep : number = 0
+    inChannels : [number] = []
+    outChannels : [number] = []
+    laneStep : number = 0
+    bodyWidth : number = 0
+    width : number = 0
+    height : number = 0
+  }
+
+  trait GraphLayout -> LayoutRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LAYOUT_REQUEST -> ready when (or
+          (array/some ?nodes (fn n (or (= @n.id "") (<= @n.width 0) (<= @n.height 0))))
+          (array/some ?edges (fn e (or (= @e.id "") (< @e.labelWidth 0) (< @e.labelHeight 0))))
+          (!= (array/len ?nodes) (array/len (array/unique (array/map ?nodes (fn n @n.id)))))
+          (!= (array/len ?edges) (array/len (array/unique (array/map ?edges (fn e @e.id))))))
+        (emit LAYOUT_REJECTED { reason: "invalid-measurement-or-duplicate-id", ids: (array/concat (array/map ?nodes (fn n @n.id)) (array/map ?edges (fn e @e.id))) })
+      LAYOUT_REQUEST -> ready when (and
+          (array/every ?nodes (fn n (and (!= @n.id "") (> @n.width 0) (> @n.height 0))))
+          (array/every ?edges (fn e (and (!= @e.id "") (>= @e.labelWidth 0) (>= @e.labelHeight 0))))
+          (= (array/len ?nodes) (array/len (array/unique (array/map ?nodes (fn n @n.id)))))
+          (= (array/len ?edges) (array/len (array/unique (array/map ?edges (fn e @e.id)))))
+          (array/some ?edges (fn e (or (not (array/some ?nodes (fn n (= @n.id @e.source)))) (not (array/some ?nodes (fn n (= @n.id @e.target))))))))
+        (emit LAYOUT_REJECTED { reason: "missing-endpoint", ids: (array/map (array/filter ?edges (fn e (or (not (array/some ?nodes (fn n (= @n.id @e.source)))) (not (array/some ?nodes (fn n (= @n.id @e.target))))))) (fn e @e.id)) })
+      LAYOUT_REQUEST -> ready when (and
+          (array/every ?nodes (fn n (and (!= @n.id "") (> @n.width 0) (> @n.height 0))))
+          (array/every ?edges (fn e (and (!= @e.id "") (>= @e.labelWidth 0) (>= @e.labelHeight 0))))
+          (= (array/len ?nodes) (array/len (array/unique (array/map ?nodes (fn n @n.id)))))
+          (= (array/len ?edges) (array/len (array/unique (array/map ?edges (fn e @e.id)))))
+          (array/every ?edges (fn e (and (array/some ?nodes (fn n (= @n.id @e.source))) (array/some ?nodes (fn n (= @n.id @e.target)))))))
+        (set @entity.nodes (array/map ?nodes (fn n { id: @n.id, label: @n.label, width: (if (array/includes ["right", "left"] @config.direction) @n.height @n.width), height: (if (array/includes ["right", "left"] @config.direction) @n.width @n.height) })))
+        (set @entity.edges (array/map ?edges (fn e { id: @e.id, source: @e.source, target: @e.target, label: @e.label, labelWidth: (if (array/includes ["right", "left"] @config.direction) @e.labelHeight @e.labelWidth), labelHeight: (if (array/includes ["right", "left"] @config.direction) @e.labelWidth @e.labelHeight) })))
+        (let ((indices (array/reduce (array/range 0 (array/len ?nodes)) (json/parse "{}" LayoutNumbers) (fn (a i) (object/set @a (object/get (array/nth ?nodes @i) "id") @i))))
+              (reach (array/reduce (array/range 0 (array/len ?nodes))
+                (array/reduce ?nodes (json/parse "{}" LayoutReach) (fn (a n) (object/set @a @n.id [@n.id])))
+                (fn (a i) (array/reduce ?nodes @a (fn (b n)
+                  (object/set @b @n.id (array/unique (array/concat (object/get @a @n.id [])
+                    (array/flatten (array/map (array/filter ?edges (fn e (= @e.source @n.id))) (fn e (object/get @a @e.target [])))))))))))))
+          (do
+            (set @entity.order @indices)
+            (set @entity.directed (array/map ?edges (fn e
+              (let ((reverse (and (!= @e.source @e.target) (array/includes (object/get @reach @e.target []) @e.source) (> (object/get @indices @e.source) (object/get @indices @e.target)))))
+                { id: @e.id, source: @e.source, target: @e.target, start: (if @reverse @e.target @e.source), end: (if @reverse @e.source @e.target), reversed: @reverse }))))
+            (set @entity.ranks (array/reduce (array/range 0 (array/len ?nodes))
+              (array/reduce ?nodes (json/parse "{}" LayoutNumbers) (fn (a n) (object/set @a @n.id 0)))
+              (fn (a i) (array/reduce @entity.directed @a (fn (b e)
+                (if (= @e.start @e.end) @b (object/set @b @e.end (math/max (object/get @b @e.end) (+ (object/get @b @e.start) 1)))))))))
+            (emit LAYOUT_ORDER { })))
+
+      LAYOUT_ORDER -> ready
+        (set @entity.order (array/reduce (array/range 0 @config.crossingSweeps) @entity.order
+          (fn (a sweep) (array/reduce
+            (let ((rs (array/range 0 (+ 1 (array/reduce (object/values @entity.ranks) 0 (fn (m r) (math/max @m @r)))))))
+              (if (= (math/mod @sweep 2) 0) @rs (array/reverse @rs)))
+            @a
+            (fn (b rank)
+              (let ((sorted (array/sort (array/map (array/filter @entity.nodes (fn n (= (object/get @entity.ranks @n.id) @rank)))
+                (fn n
+                  (let ((neighbors (array/map (array/filter @entity.directed (fn e
+                    (if (= (math/mod @sweep 2) 0) (= @e.end @n.id) (= @e.start @n.id))))
+                    (fn e (object/get @b (if (= (math/mod @sweep 2) 0) @e.start @e.end))))))
+                    { id: @n.id, score: (if (= (array/len @neighbors) 0) (object/get @b @n.id) (/ (array/reduce @neighbors 0 (fn (sum v) (+ @sum @v))) (array/len @neighbors))) }))) "score" "asc")))
+                (array/reduce (array/range 0 (array/len @sorted)) @b (fn (c i) (object/set @c (object/get (array/nth @sorted @i) "id") @i)))))))))
+        (emit LAYOUT_PLACE { })
+
+      LAYOUT_PLACE -> ready
+        (set @entity.channelStep (+ @config.edgeGap (array/reduce @entity.edges 1 (fn (m e) (math/max @m (math/ceil @e.labelHeight))))))
+        (set @entity.laneStep (+ @config.edgeGap (array/reduce @entity.edges 1 (fn (m e) (math/max @m (math/ceil @e.labelWidth))))))
+        (set @entity.rankHeights (array/map (array/range 0 (if (= (array/len @entity.nodes) 0) 0 (+ 1 (array/reduce (object/values @entity.ranks) 0 (fn (m r) (math/max @m @r))))))
+          (fn r (array/reduce (array/filter @entity.nodes (fn n (= (object/get @entity.ranks @n.id) @r))) 0 (fn (m n) (math/max @m (math/ceil @n.height)))))))
+        (set @entity.inChannels (array/map (array/range 0 (array/len @entity.rankHeights)) (fn r (* @entity.channelStep (array/len (array/filter @entity.edges (fn e (= (object/get @entity.ranks @e.target) @r))))))))
+        (set @entity.outChannels (array/map (array/range 0 (array/len @entity.rankHeights)) (fn r (* @entity.channelStep (array/len (array/filter @entity.edges (fn e (= (object/get @entity.ranks @e.source) @r))))))))
+        (set @entity.rankTops (array/map (array/range 0 (array/len @entity.rankHeights)) (fn r
+          (+ @config.padding (* @r @config.rankGap) (array/reduce (array/take @entity.inChannels (+ @r 1)) 0 (fn (sum h) (+ @sum @h))) (array/reduce (array/take @entity.outChannels @r) 0 (fn (sum h) (+ @sum @h))) (array/reduce (array/take @entity.rankHeights @r) 0 (fn (sum h) (+ @sum @h)))))))
+        (set @entity.placed (array/flatten (array/map (array/range 0 (array/len @entity.rankHeights)) (fn r
+          (let ((row (array/sort (array/map (array/filter @entity.nodes (fn n (= (object/get @entity.ranks @n.id) @r))) (fn n (object/set @n "order" (object/get @entity.order @n.id)))) "order" "asc")))
+            (array/map (array/range 0 (array/len @row)) (fn i
+              (let ((n (array/nth @row @i)))
+                { id: (object/get @n "id"), label: (object/get @n "label"), width: (math/ceil (object/get @n "width")), height: (math/ceil (object/get @n "height")), rank: @r,
+                  x: (+ @config.padding (* @i @config.nodeGap) (array/reduce (array/take @row @i) 0 (fn (sum p) (+ @sum (math/ceil (object/get @p "width")))))), y: (array/nth @entity.rankTops @r) }))))))))
+        (set @entity.bodyWidth (array/reduce @entity.placed @config.padding (fn (m n) (math/max @m (+ @n.x @n.width)))))
+        (set @entity.height (+ @config.padding (array/reduce @entity.edges 0 (fn (m e) (math/max @m (math/ceil @e.labelHeight)))) (if (= (array/len @entity.outChannels) 0) 0 (array/last @entity.outChannels)) (array/reduce @entity.placed @config.padding (fn (m n) (math/max @m (+ @n.y @n.height))))))
+        (set @entity.width (+ @entity.bodyWidth @config.padding (* (+ (array/len @entity.edges) 1) @entity.laneStep)))
+        (emit LAYOUT_ROUTE { })
+
+      LAYOUT_ROUTE -> ready
+        (set @entity.routed (array/map (array/range 0 (array/len @entity.edges)) (fn i
+          (let ((e (array/nth @entity.edges @i)))
+            (let ((s (array/find @entity.placed (fn n (= @n.id (object/get @e "source")))))
+                  (t (array/find @entity.placed (fn n (= @n.id (object/get @e "target")))))
+                  (lane (+ @entity.bodyWidth (* (+ @i 1) @entity.laneStep))))
+              (let ((sx (+ (object/get @s "x") (math/floor (/ (object/get @s "width") 2))))
+                    (tx (+ (object/get @t "x") (math/floor (/ (object/get @t "width") 2))))
+                    (sy (+ (array/nth @entity.rankTops (object/get @s "rank")) (array/nth @entity.rankHeights (object/get @s "rank")) (* (+ 1 (array/len (array/filter (array/take @entity.edges @i) (fn p (= (object/get @entity.ranks @p.source) (object/get @s "rank")))))) @entity.channelStep)))
+                    (ty (- (object/get @t "y") (* (+ 1 (array/len (array/filter (array/take @entity.edges @i) (fn p (= (object/get @entity.ranks @p.target) (object/get @t "rank")))))) @entity.channelStep))))
+                { id: (object/get @e "id"), source: (object/get @e "source"), target: (object/get @e "target"), label: (object/get @e "label"), labelWidth: (math/ceil (object/get @e "labelWidth")), labelHeight: (math/ceil (object/get @e "labelHeight")),
+                  points: [{ x: @sx, y: (+ (object/get @s "y") (object/get @s "height")) }, { x: @sx, y: @sy }, { x: @lane, y: @sy }, { x: @lane, y: @ty }, { x: @tx, y: @ty }, { x: @tx, y: (object/get @t "y") }],
+                  labelX: (+ @lane @config.edgeGap), labelY: @sy,
+                  reversed: (object/get (array/find @entity.directed (fn d (= @d.id (object/get @e "id")))) "reversed") }))))))
+        (emit LAYOUT_TRANSFORM { })
+
+      LAYOUT_TRANSFORM -> ready
+        (when (array/includes ["right", "left"] @config.direction) (do
+          (set @entity.placed (array/map @entity.placed (fn n { id: @n.id, label: @n.label, width: @n.height, height: @n.width, x: @n.y, y: @n.x, rank: @n.rank })))
+          (set @entity.routed (array/map @entity.routed (fn e { id: @e.id, source: @e.source, target: @e.target, label: @e.label, labelWidth: @e.labelHeight, labelHeight: @e.labelWidth, points: (array/map @e.points (fn p { x: @p.y, y: @p.x })), labelX: @e.labelY, labelY: @e.labelX, reversed: @e.reversed })))
+          (let ((oldWidth @entity.width)) (do (set @entity.width @entity.height) (set @entity.height @oldWidth)))))
+        (when (= @config.direction "up") (do
+          (set @entity.placed (array/map @entity.placed (fn n (object/set @n "y" (- (- @entity.height @n.y) @n.height)))))
+          (set @entity.routed (array/map @entity.routed (fn e (object/set (object/set @e "labelY" (- (- @entity.height @e.labelY) @e.labelHeight)) "points" (array/map @e.points (fn p { x: @p.x, y: (- @entity.height @p.y) }))))))))
+        (when (= @config.direction "left") (do
+          (set @entity.placed (array/map @entity.placed (fn n (object/set @n "x" (- (- @entity.width @n.x) @n.width)))))
+          (set @entity.routed (array/map @entity.routed (fn e (object/set (object/set @e "labelX" (- (- @entity.width @e.labelX) @e.labelWidth)) "points" (array/map @e.points (fn p { x: (- @entity.width @p.x), y: @p.y }))))))))
+        (emit LAYOUT_READY { nodes: @entity.placed, edges: @entity.routed, width: @entity.width, height: @entity.height })
+    }
+
+    config {
+      direction : "down" | "up" | "right" | "left" = down
+      nodeGap : number = 4
+      rankGap : number = 4
+      edgeGap : number = 2
+      padding : number = 2
+      crossingSweeps : number = 4
+    }
+
+    listens {
+      LAYOUT_REQUEST -> external { nodes : [LayoutNode]!, edges : [LayoutEdge]! }
+        @description "Lay out measured nodes and directed labeled edges."
+      LAYOUT_ORDER { }
+      LAYOUT_PLACE { }
+      LAYOUT_ROUTE { }
+      LAYOUT_TRANSFORM { }
+    }
+
+    emits {
+      LAYOUT_ORDER -> internal { }
+      LAYOUT_PLACE -> internal { }
+      LAYOUT_ROUTE -> internal { }
+      LAYOUT_TRANSFORM -> internal { }
+      LAYOUT_READY -> external { nodes : [LayoutPlacedNode]!, edges : [LayoutRoutedEdge]!, width : number!, height : number! }
+        @description "Measured layout with stable identities and orthogonal edge routes."
+      LAYOUT_REJECTED -> external { reason : string!, ids : [string]! }
+        @description "The graph cannot be laid out because its declared input is invalid."
+    }
+  }
+}

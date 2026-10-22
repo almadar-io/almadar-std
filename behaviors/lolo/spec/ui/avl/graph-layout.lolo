@@ -1,0 +1,21 @@
+app graph-layout-spec [
+  version: "1.0.0",
+  description: "Measured directed graph layout preserves every supplied node and edge identity, including cycles, self loops, parallel edges and disconnected nodes. Nodes and labels have explicit renderer measurements. Routes are orthogonal and avoid node interiors. Direction is down, up, right or left; node and label dimensions retain their authored orientation. Invalid ids, dimensions and missing endpoints answer a rejection. Declaration order is the deterministic tie breaker."
+]
+type LayoutPoint = { x : number!, y : number! }
+type LayoutPlacedNode = { id : string!, label : string!, width : number!, height : number!, x : number!, y : number!, rank : number! }
+type LayoutRoutedEdge = { id : string!, source : string!, target : string!, label : string!, labelWidth : number!, labelHeight : number!, points : [LayoutPoint]!, labelX : number!, labelY : number!, reversed : boolean! }
+orbital GraphLayoutSpec {
+  expects entity LayoutRun [runtime] {
+    id : string!
+    placed : [LayoutPlacedNode]!
+    routed : [LayoutRoutedEdge]!
+  }
+  expects trait GraphLayout {
+    state ready
+    emits {
+      LAYOUT_READY { nodes : [LayoutPlacedNode]!, edges : [LayoutRoutedEdge]!, width : number!, height : number! }
+      LAYOUT_REJECTED { reason : string!, ids : [string]! }
+    }
+  }
+}

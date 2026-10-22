@@ -24,13 +24,13 @@ const EMIT_OPTIONS: NonNullable<StdOperatorMeta['params']>[number] = { name: 'op
 export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
   'program/read': {
     module: 'program', category: 'std-program',
-    minArity: 1, maxArity: 2,
-    description: 'Parse `.lolo` source text into a quoted program.',
+    minArity: 1, maxArity: 3,
+    description: 'Parse `.lolo` source text into a quoted program. With inspect:true and an absolute path, return the resolved program, original-source anchors and imported source provenance; version identifies the editor document.',
     hasSideEffects: true,
     runsOn: 'server',
     host: 'program',
     returnType: 'sexpr',
-    params: [{ name: 'text', type: 'string', description: '`.lolo` source' }, EMIT_OPTIONS],
+    params: [{ name: 'text', type: 'string', description: '`.lolo` source' }, { name: 'inspection', type: openShape({ inspect: BOOLEAN, path: STRING, version: NUMBER }), description: 'Optional inspection request with original absolute source path and document version', optional: true }, EMIT_OPTIONS],
     example: '["program/read", "@entity.draft", { "emit": { "success": "READ", "failure": "READ_FAILED" } }]',
   },
   'program/print': {
