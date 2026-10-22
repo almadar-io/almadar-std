@@ -196,18 +196,21 @@ orbital HttpDispatchOrbital {
 
       DISPATCH_ANSWERED -> serving when (and (!= (or @payload.key "") "") (array/some @entity.pending (fn q (and (= @q.dispatchKey @payload.key) (not @q.stream)))))
         (let ((p (array/find @entity.pending (fn q (= @q.dispatchKey @payload.key)))))
-          (emit RESPOND { requestId: (object/get @p "requestId"), status: (if (array/some @payload.result.rejections (fn r (or (= @r.code "not-an-external-input") (= @r.code "inbound-only-event")))) 403 200), headers: (array/append (object/get @p "responseHeaders") { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify @payload.result)) }))
+          (emit RESPOND { requestId: (object/get @p "requestId"), status: (if (array/some (or @payload.result.rejections []) (fn r (or (= @r.code "not-an-external-input") (= @r.code "inbound-only-event")))) 403 200), headers: (array/append (object/get @p "responseHeaders") { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify @payload.result)) }))
         (set @entity.pending (array/filter @entity.pending (fn q (!= @q.dispatchKey @payload.key))))
         (emit DISPATCH_DONE {})
 
       DISPATCH_ANSWERED -> serving when (and (!= (or @payload.key "") "") (array/some @entity.pending (fn q (and (= @q.dispatchKey @payload.key) @q.stream))))
-        (let ((id (object/get (array/find @entity.pending (fn q (= @q.dispatchKey @payload.key))) "requestId")))
+        (if (!= @payload.result.items null)
           (do
-            (set @entity.frames (array/append @entity.frames { requestId: @id, frames: (array/map @payload.result.items (fn item (json/stringify @item))) }))
-            (emit SSE_OPEN { requestId: @id })
-            (emit FRAME_NEXT { requestId: @id })))
-        (set @entity.pending (array/filter @entity.pending (fn q (!= @q.dispatchKey @payload.key))))
-        (emit DISPATCH_DONE {})
+            (let ((id (object/get (array/find @entity.pending (fn q (= @q.dispatchKey @payload.key))) "requestId")))
+              (do
+                (set @entity.frames (array/append @entity.frames { requestId: @id, frames: (array/map @payload.result.items (fn item (json/stringify @item))) }))
+                (emit SSE_OPEN { requestId: @id })
+                (emit FRAME_NEXT { requestId: @id })))
+            (set @entity.pending (array/filter @entity.pending (fn q (!= @q.dispatchKey @payload.key))))
+            (emit DISPATCH_DONE {}))
+          (emit DISPATCH_FAILED { key: @payload.key, error: "Streamed dispatch response is missing items" }))
 
       FRAME_NEXT -> serving when (let ((f (array/find @entity.frames (fn q (= @q.requestId @payload.requestId))))) (and (!= @f null) (> (array/len (object/get @f "frames")) 0)))
         (emit SSE_SEND { requestId: @payload.requestId, data: (array/first (object/get (array/find @entity.frames (fn q (= @q.requestId @payload.requestId))) "frames")) })

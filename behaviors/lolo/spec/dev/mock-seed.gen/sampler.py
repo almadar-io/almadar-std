@@ -127,13 +127,14 @@ def sampler_step(P):
           f'(let ((rr {chain})) {{ stack: (array/concat (object/get @rr "push") @rest), cells: (array/concat (object/get @acc "cells") (object/get @rr "cells")), s: (object/get @rr "s") }})))))')
     return f'(fn acc kk (if (= (array/len (object/get @acc "stack")) 0) @acc {body}))'
 
-def build_expr(cells_expr, root_path_expr='""'):
+def build_expr(cells_expr, root_path_expr='""', row_root=False):
     """Build each value into the reverse walk's map accumulator."""
     def put(value):
         return f'(object/set @vm (object/get @cl "path") {value})'
+    row_value='(object/fromEntries (array/map (array/filter (array/range (array/len @ks)) (fn i (!= (object/get (array/find @allc (fn c (= (object/get @c "path") (array/nth @ks @i)))) "kind") "omit"))) (fn i [(array/nth (object/get @cl "keys" []) @i), (object/get @vm (array/nth @ks @i))])))'
     cases = [
         ('(or (= @kd "array") (= @kd "tuple"))', '(array/map @ks (fn p (object/get @vm @p)))'),
-        ('(= @kd "row")', '(object/fromEntries (array/map (array/filter (array/range (array/len @ks)) (fn i (!= (object/get (array/find @allc (fn c (= (object/get @c "path") (array/nth @ks @i)))) "kind") "omit"))) (fn i [(array/nth (object/get @cl "keys" []) @i), (object/get @vm (array/nth @ks @i))])))'),
+        ('(= @kd "row")', row_value),
         ('(= @kd "object")', '(object/fromEntries (array/map (array/range (array/len @ks)) (fn i [(array/nth (object/get @cl "keys" []) @i), (object/get @vm (array/nth @ks @i))])))'),
         ('(= @kd "default")', '(object/get @cl "val" null)'),
         ('(= @kd "behavior")', '{ behavior: (object/get @cl "text" "") }'),
@@ -148,10 +149,15 @@ def build_expr(cells_expr, root_path_expr='""'):
     for condition, value in reversed(cases):
         step = f'(if {condition} {put(value)} {step})'
     step = f'(let ((kd (object/get @cl "kind")) (ks (object/get @cl "kids" []))) {step})'
-    return (f'(let ((allc {cells_expr})) (let ((vm (array/reduce (array/range (array/len @allc)) {{}} (fn vm j (let ((cl (array/nth @allc (- (array/len @allc) (+ @j 1))))) {step}))))) (object/get @vm {root_path_expr} null)))')
+    if row_root:
+        step=f'(if (= (object/get @cl "path") {root_path_expr}) @vm {step})'
+        result=f'(let ((cl (array/find @allc (fn c (= (object/get @c "path") {root_path_expr}))))) (let ((ks (object/get @cl "kids" []))) {row_value}))'
+    else:
+        result=f'(object/get @vm {root_path_expr} null)'
+    return (f'(let ((allc {cells_expr}) (initialValues : SampleValueMap {{}})) (let ((vm (array/reduce (array/range (array/len @allc)) @initialValues (fn vm j (let ((cl (array/nth @allc (- (array/len @allc) (+ @j 1))))) {step}))))) {result}))')
 
-def run(P, stack_expr, cells_init, s_expr, root='""', K=400):
+def run(P, stack_expr, cells_init, s_expr, root='""', K=400, row_root=False):
     """returns an expression: {cells, s, value}"""
     step=sampler_step(P)
     return (f'(let ((fin (array/reduce (array/range {K}) {{ stack: {stack_expr}, cells: {cells_init}, s: {s_expr} }} {step}))) '
-            f'{{ cells: (object/get @fin "cells"), s: (object/get @fin "s"), value: {build_expr("(object/get @fin "+chr(34)+"cells"+chr(34)+")", root)} }})')
+            f'{{ cells: (object/get @fin "cells"), s: (object/get @fin "s"), value: {build_expr("(object/get @fin "+chr(34)+"cells"+chr(34)+")", root, row_root=row_root)} }})')

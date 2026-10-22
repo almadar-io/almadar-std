@@ -33,9 +33,11 @@ orbital GzipOrbital {
         (set @entity.result (gzip/decompress @payload.data (if (= @payload.maxBytes null) @config.maxBytes @payload.maxBytes) { result: true }))
         (emit GUNZIP_CHECKED {})
       GUNZIP_CHECKED -> idle when @entity.result.ok
-        (set @entity.size (bytes/length @entity.result.data))
-        (set @entity.crc @entity.result.crc)
-        (emit GUNZIP_ANSWERED { data: @entity.result.data, size: @entity.size, crc: @entity.crc })
+        (when (!= @entity.result.data null)
+          (do
+            (set @entity.size (bytes/length @entity.result.data))
+            (set @entity.crc @entity.result.crc)
+            (emit GUNZIP_ANSWERED { data: @entity.result.data, size: @entity.size, crc: @entity.crc })))
       GUNZIP_CHECKED -> idle when (not @entity.result.ok)
         (emit GZIP_REFUSED { reason: @entity.result.code })
     }

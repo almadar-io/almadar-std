@@ -9,7 +9,7 @@ export const OS_NET_OPERATORS: Record<string, StdOperatorMeta> = {
     example: '["os/tcp-connect", "db.internal", 5432, { "emit": { "success": "SOCK_OPENED", "failure": "NET_FAILED" } }]',
   }),
   'os/tcp-listen': osEffect({
-    description: 'Listen for TCP connections (grant net: listen). The first answer is { sock }; each connection arrives on the onMessage route as { sock, peer }. An accepted sock takes any number of os/send and os/recv until os/close (keep-alive, streamed replies); a keyed os/recv armed on it reports a client abort as { eof: true } or a closed failure, and os/close with that read pending ends the connection at once.',
+    description: 'Listen for TCP connections (grant net: listen). The first answer is { sock, address, port }, with the actual bound address and port (including an assigned ephemeral port); each connection arrives on the onMessage route as { sock, peer }. An accepted sock takes any number of os/send and os/recv until os/close (keep-alive, streamed replies); a keyed os/recv armed on it reports a client abort as { eof: true } or a closed failure, and os/close with that read pending ends the connection at once.',
     params: [arg('host', OS_HOST, 'Address to bind'), arg('port', OS_PORT, 'Port')],
     stream: true,
     example: '["os/tcp-listen", "0.0.0.0", 8080, { "key": "listener", "emit": { "success": "LISTENING", "failure": "NET_FAILED", "onMessage": "SOCK_ACCEPTED" } }]',

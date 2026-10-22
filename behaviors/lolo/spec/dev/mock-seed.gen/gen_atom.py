@@ -16,7 +16,7 @@ def row_cell(kf): return f'[{{ path: "", kind: "row", text: "", num: 0, keys: (a
 def frames(kf,idx): return f'(array/map {kf} (fn f {{ spec: @f, name: (object/get @f "name"), index: {idx}, depth: 0, path: (object/get @f "name") }}))'
 run_start=S.run(P,'[{ spec: ?spec, name: ?name, index: ?index, depth: 0, path: ?name }]','[]','@entity.rng',root='?name')
 kf1=keptf('?fields','?seeded','?identity','?index')
-run_row=S.run(P,frames(kf1,'?index'),row_cell(kf1),'@entity.rng')
+run_row=S.run(P,frames(kf1,'?index'),row_cell(kf1),'@entity.rng',row_root=True)
 iso=lambda f:f'(str/concat (time/format {f} "YYYY-MM-DD") "T" (time/format {f} "HH:mm:ss") "." (str/padStart (str/concat "" (math/mod (math/floor {f}) 1000)) 3 "0") "Z")'
 nx=S.nxt
 NEW=f'''      CORPUS_IS -> ready
@@ -26,9 +26,12 @@ NEW=f'''      CORPUS_IS -> ready
         (set @entity.rng (object/get @entity.out "s"))
         (emit WALKED {{ cells: (object/get @entity.out "cells"), value: (object/get @entity.out "value") }})
       WALK_ROW -> ready
-        (set @entity.out {run_row})
-        (set @entity.rng (object/get @entity.out "s"))
-        (emit WALKED {{ cells: (object/get @entity.out "cells"), value: (object/get @entity.out "value") }})
+        (let ((sampled {run_row}))
+          (do
+          (set @entity.out @sampled)
+          (set @entity.rng (object/get @sampled "s"))
+          (emit WALKED {{ cells: (object/get @sampled "cells"), value: (object/get @sampled "value") }})
+          (emit ROW_WALKED {{ row: (object/get @sampled "value") }})))
       SEED_STREAM -> ready
         (set @entity.rng (math/mod ?seed 4294967296))
         (set @entity.nowMs ?nowMs)
@@ -36,9 +39,11 @@ NEW=f'''      CORPUS_IS -> ready
       SEED_ROW -> ready
         (set @entity.createdMs (- ?nowMs (math/floor (* {S.uu(nx("@entity.rng"))} 31536000000))))
         (set @entity.updatedMs (math/min (+ @entity.createdMs (* {S.rint(nx(nx("@entity.rng")),0,30)} 86400000)) ?nowMs))
-        (set @entity.out {S.run(dict(P,SD='true',NOW='?nowMs',EN='?label'),frames(keptf('?fields','true','?identity','?index'),'?index'),row_cell(keptf('?fields','true','?identity','?index')),nx(nx('@entity.rng')))})
-        (set @entity.rng (object/get @entity.out "s"))
-        (emit SEED_ROW_DONE {{ row: (object/set (object/set (object/set (object/get @entity.out "value") "id" (str/concat (str/upper (str/slice ?label 0 1)) (str/slice ?label 1 (str/len ?label)) " Id " ?n)) "createdAt" {iso("@entity.createdMs")}) "updatedAt" {iso("@entity.updatedMs")}) }})
+        (let ((sampled {S.run(dict(P,SD='true',NOW='?nowMs',EN='?label'),frames(keptf('?fields','true','?identity','?index'),'?index'),row_cell(keptf('?fields','true','?identity','?index')),nx(nx('@entity.rng')),row_root=True)}))
+          (do
+          (set @entity.out @sampled)
+          (set @entity.rng (object/get @sampled "s"))
+          (emit SEED_ROW_DONE {{ row: (object/set (object/set (object/set (object/get @sampled "value") "id" (str/concat (str/upper (str/slice ?label 0 1)) (str/slice ?label 1 (str/len ?label)) " Id " ?n)) "createdAt" {iso("@entity.createdMs")}) "updatedAt" {iso("@entity.updatedMs")}) }})))
       SAMPLE_ROWS -> ready
         (set @entity.rowFields ?fields)
         (set @entity.rowName ?name)
@@ -56,8 +61,8 @@ NEW=f'''      CORPUS_IS -> ready
       ROWS_NEXT -> ready when (> @entity.rowIdx @entity.rowCount)
         (set @entity.inRows false)
         (emit ROWS_DONE {{ rows: @entity.rows }})
-      WALKED -> ready when @entity.inRows
-        (set @entity.rows (array/append @entity.rows (object/set @payload.value "id" (str/concat @entity.rowName "-" @entity.rowIdx))))
+      ROW_WALKED -> ready when @entity.inRows
+        (set @entity.rows (array/append @entity.rows (object/set @payload.row "id" (str/concat @entity.rowName "-" @entity.rowIdx))))
         (set @entity.rowIdx (+ @entity.rowIdx 1))
         (emit ROWS_NEXT {{ at: @entity.rowIdx }})
 @@DATASET@@'''
@@ -98,7 +103,7 @@ regs_expr=(f'(let ((alld {defs}) (idd {iddef})) (array/concat (if (and (!= {idna
 ALLR='@entity.dsRegsAll'
 seedregs=f'(array/filter {ALLR} (fn r (object/get @r "seeds")))'
 def store_of_entity(ename): 
-    return f'(let ((hit (array/find (if (= @entity.dsMode "restamp") @entity.dsRegsAll {seedregs}) (fn r (= (str/lower (object/get @r "label")) (str/lower {ename})))))) (if (= @hit null) (str/lower {ename}) (object/get @hit "store")))'
+    return f'(let ((hit (array/find @entity.dsRegsAll (fn r (= (str/lower (object/get @r "label")) (str/lower {ename})))))) (if (= @hit null) "" (object/get @hit "store")))'
 card='(object/get (object/get @fd "relation" {}) "cardinality" "")'
 links_expr=(f'(array/flatten (array/map (array/unique (array/map {seedregs} (fn r (object/get @r "store")))) (fn st '
    f'(let ((flds (array/filter (array/flatten (array/map (array/filter {seedregs} (fn r (= (object/get @r "store") @st))) (fn r (object/get @r "fields")))) (fn f (and (= (object/get @f "type" "") "relation") (object/has @f "relation"))))) '
@@ -119,7 +124,7 @@ inst_rows=(f'(array/map (array/range (array/len (object/get @reg "instances"))) 
 STORES='@entity.dsStores'
 rows0='(object/get @entity.dsStores (object/get @reg "store") [])'
 # --- seed arm
-seed_sample=S.run(PS(),frames(kept2(RES_FIELDS,'(+ @ri 1)'),'(+ @ri 1)'),row_cell(kept2(RES_FIELDS,'(+ @ri 1)')),S.nxt(S.nxt('(object/get @ra "s")')))
+seed_sample=S.run(PS(),frames(kept2(RES_FIELDS,'(+ @ri 1)'),'(+ @ri 1)'),row_cell(kept2(RES_FIELDS,'(+ @ri 1)')),S.nxt(S.nxt('(object/get @ra "s")')),row_root=True)
 idrows='(object/get @entity.dsStores @entity.dsIdStore [])'
 owner_val=(f'(if @entity.dsViewerMay @entity.dsViewer (let ((k (array/findIndex @entity.dsAllows (fn a @a)))) (if (>= @k 0) (str/concat "" (object/get (array/nth {idrows} @k) "id")) "")))')
 owner_hit='(or @entity.dsViewerMay (> (array/len (array/filter @entity.dsAllows (fn a @a))) 0))'
@@ -130,7 +135,7 @@ seed_row=(f'(let ((smp {seed_sample}) (cm (- @entity.nowMs (math/floor (* {S.uu(
 seed_arm=f'(array/reduce (array/range (if (object/get @reg "runtime") 1 @entity.dsCount)) {{ rows: {rows0}, s: @entity.rng }} (fn ra ri {seed_row}))'
 # --- backfill arm
 absent='(array/filter (object/get @reg "fields") (fn f (and (not (array/includes ["id", "createdAt", "updatedAt"] (object/get @f "name" ""))) (not (object/has @row (object/get @f "name" ""))))))'
-bf_sample=S.run(PS(),frames(kept2('@absent','(+ @ri 1)'),'(+ @ri 1)'),row_cell(kept2('@absent','(+ @ri 1)')),'(object/get @ra "s")')
+bf_sample=S.run(PS(),frames(kept2('@absent','(+ @ri 1)'),'(+ @ri 1)'),row_cell(kept2('@absent','(+ @ri 1)')),'(object/get @ra "s")',row_root=True)
 bf_row=(f'(let ((row (array/nth {rows0} @ri))) (let ((absent {absent})) (if (= (array/len @absent) 0) {{ rows: (array/append (object/get @ra "rows") @row), s: (object/get @ra "s") }} '
         f'(let ((smp {bf_sample})) {{ rows: (array/append (object/get @ra "rows") (object/merge @row (object/get @smp "value"))), s: (object/get @smp "s") }}))))')
 bf_arm=f'(array/reduce (array/range (array/len {rows0})) {{ rows: [], s: @entity.rng }} (fn ra ri {bf_row}))'
@@ -280,16 +285,30 @@ def reqs(read,rel,viewer_req,col):
 SEEDREGS='(array/filter @entity.dsRegsAll (fn r (object/get @r "seeds")))'
 def reg_of(storex): return f'(array/find (if (= @entity.dsMode "restamp") @entity.dsRegsAll {SEEDREGS}) (fn r (= (object/get @r "store") {storex})))'
 G_=lambda o,k: f'(object/get {o} "{k}")'
-stamp_plan=(f'(let ((st (array/first @entity.dsStamps))) (let ((reg {reg_of(G_("@st","store"))}) (col {G_("@st","col")})) '
+stamp_context=(f'(let ((st (array/first @entity.dsStamps))) (let ((reg {reg_of(G_("@st","store"))}) (col {G_("@st","col")})) '
   f'(let ((fld (array/find (object/get @reg "fields") (fn f (= (object/get @f "name") @col))))) '
   f'(let ((rel (and (!= @fld null) (= (object/get @fld "type" "") "relation") (not (and (= @entity.dsMode "restamp") (= @col "id"))))) (row (array/nth (object/get @entity.dsStores {G_("@st","store")} []) {G_("@st","i")}))) '
   f'(let ((tst (if @rel {store_of_entity(G_(G_("@fld","relation"),"entity"))} ""))) '
   f'(let ((idrows (object/get @entity.dsStores @tst []))) (let ((rd (and (object/get @reg "hasRead") @rel (!= @col "id")))) '
-  f'{{ queue: {reqs("@rd","@rel",True,"@col")}, n: (array/len @idrows), read: @rd, rel: @rel, ids: (array/map @idrows (fn t (str/concat "" (object/get @t "id")))), viewer: true }})))))))')
-olink_plan=(f'(let ((lk (array/first @entity.dsOlinks))) (let ((reg {reg_of(G_("@lk","store"))}) (col {G_("@lk","field")})) '
+  f'@@BODY@@)))))))')
+olink_context=(f'(let ((lk (array/first @entity.dsOlinks))) (let ((reg {reg_of(G_("@lk","store"))}) (col {G_("@lk","field")})) '
   f'(let ((row (array/nth (object/get @entity.dsStores {G_("@lk","store")} []) {G_("@lk","i")})) (idrows (object/get @entity.dsStores {G_("@lk","target")} []))) '
   f'(let ((rd (object/get @reg "hasRead"))) '
-  f'{{ queue: {reqs("@rd","true",False,"@col")}, n: (array/len @idrows), read: @rd, rel: true, ids: (array/map @idrows (fn t (str/concat "" (object/get @t "id")))), viewer: false }}))))')
+  f'@@BODY@@))))')
+scalar_ids='(array/map @idrows (fn t (str/template "{{id}}" { id: (object/get @t "id") })))'
+stamp_plan=stamp_context.replace('@@BODY@@',f'{{ queue: {reqs("@rd","@rel",True,"@col")}, n: (array/len @idrows), read: @rd, rel: @rel, ids: {scalar_ids}, viewer: true }}')
+olink_plan=olink_context.replace('@@BODY@@',f'{{ queue: {reqs("@rd","true",False,"@col")}, n: (array/len @idrows), read: @rd, rel: true, ids: {scalar_ids}, viewer: false }}')
+bad_id='(not (or (= (object/get @t "id") null) (validate/string (object/get @t "id")) (validate/number (object/get @t "id")) (validate/boolean (object/get @t "id"))))'
+bad_ids=f'(array/filter @idrows (fn t {bad_id}))'
+stamp_bad=stamp_context.replace('@@BODY@@',bad_ids)
+olink_bad=olink_context.replace('@@BODY@@',bad_ids)
+def reject_ids(candidates):
+    return f'''        (emit DATASET_FAILED {{ error: (str/concat "Type mismatch: expected string | number | boolean | date | datetime, got " (if (validate/array (object/get (array/first {candidates}) "id")) "array" "object")) }})
+        (set @entity.dsMode "failed")
+        (set @entity.dsStamps [])
+        (set @entity.dsOlinks [])
+        (set @entity.acQueue [])
+        (set @entity.acPurpose "")'''
 A='@entity.acAnswers'; N='@entity.acN'
 ro=f'(array/slice {A} 0 {N})'; rb=f'(array/slice {A} {N} (* 2 {N}))'
 croff=f'(if @entity.acRead (* 2 {N}) 0)'
@@ -338,7 +357,9 @@ STORE_AFTER=f'''      DS_STAMP -> ready when (= (array/len @entity.dsStamps) 0)
         (set @entity.rsJournal (if (object/get (array/first @entity.dsStamps) "wasDeferred" false) (object/set @entity.rsJournal "deferred" {remaining_deferred}) @entity.rsJournal))
         (set @entity.dsStamps (array/drop @entity.dsStamps 1))
         (emit DS_STAMP {{ at: (array/len @entity.dsStamps) }})
-      DS_STAMP -> ready when (and (> (array/len @entity.dsStamps) 0) (>= (object/get (array/first @entity.dsStamps) "i") 0))
+      DS_STAMP -> ready when (and (> (array/len @entity.dsStamps) 0) (>= (object/get (array/first @entity.dsStamps) "i") 0) (> (array/len {stamp_bad}) 0))
+{reject_ids(stamp_bad)}
+      DS_STAMP -> ready when (and (> (array/len @entity.dsStamps) 0) (>= (object/get (array/first @entity.dsStamps) "i") 0) (= (array/len {stamp_bad}) 0))
         (set @entity.acPlan {stamp_plan})
         (set @entity.acQueue (object/get @entity.acPlan "queue"))
         (set @entity.acN (object/get @entity.acPlan "n"))
@@ -351,7 +372,9 @@ STORE_AFTER=f'''      DS_STAMP -> ready when (= (array/len @entity.dsStamps) 0)
         (emit AC_ASK {{ at: (array/len @entity.acQueue) }})
       DS_OLINK -> ready when (= (array/len @entity.dsOlinks) 0)
         (emit DS_PROJS {{ at: 0 }})
-      DS_OLINK -> ready when (> (array/len @entity.dsOlinks) 0)
+      DS_OLINK -> ready when (and (> (array/len @entity.dsOlinks) 0) (> (array/len {olink_bad}) 0))
+{reject_ids(olink_bad)}
+      DS_OLINK -> ready when (and (> (array/len @entity.dsOlinks) 0) (= (array/len {olink_bad}) 0))
         (set @entity.acPlan {olink_plan})
         (set @entity.acQueue (object/get @entity.acPlan "queue"))
         (set @entity.acN (object/get @entity.acPlan "n"))
@@ -480,6 +503,19 @@ DATASET=f'''      RESTAMP_INPUT -> ready
         (set @entity.dsOlinks {olinks_expr})
         (emit DS_OLINK {{ at: (array/len @entity.dsOlinks) }})
 {STORE_AFTER}'''
+continuations={'DS_OWNS_ENV', 'DS_OWNS_ENV_FAILED', 'DS_PROGRAM_FAILED', 'DS_PROGRAM_READ',
+               'DS_STORE', 'DS_LINKS', 'DS_STAMP', 'DS_OLINK', 'DS_PROJS',
+               'AC_ASK', 'AC_ANSWER', 'AC_FAILED', 'AC_DONE'}
+dataset_lines=[]
+for line in DATASET.splitlines():
+    if line.strip().split(' ', 1)[0] in continuations and ' -> ready' in line:
+        if ' when ' in line:
+            head, condition=line.split(' when ', 1)
+            line=head+' when (and (!= @entity.dsMode "failed") '+condition+')'
+        else:
+            line+=' when (!= @entity.dsMode "failed")'
+    dataset_lines.append(line)
+DATASET='\n'.join(dataset_lines)+'\n'
 body=NEW.replace('@@DATASET@@',DATASET+DERIVE.replace('@@REGS@@',regs_expr))
 body=body.replace('      CORPUS_IS -> ready','      INIT -> ready\n        (emit CORPUS_ASK { })\n      CORPUS_IS -> ready',1)
 # ---- assemble the file
@@ -489,7 +525,7 @@ L+=w('WALK_START','spec : MockFieldSpec!  name : string!  entityName : string!  
 L+=w('WALK_ROW','fields : [MockFieldSpec]!  entityName : string  index : number  seeded : boolean  identity : boolean  runtime : boolean  nowMs : number','Sample one row of an entity fields: reserved keys skipped, optional undefaulted fields left unset on even seeded rows.','sample row')
 L+=w('SAMPLE_ROWS','fields : [MockFieldSpec]!  name : string!  count : number!  runtime : boolean!  identity : boolean!','Sample an entity rows by the index strategy: one row for a runtime singleton, else count rows, each with its Name-n id.','sample rows, mock rows')
 L+=w('ROWS_NEXT','at : number','Sample the next row.','next row')
-L+=w('WALKED','cells : [MockWalkCell]  value : MockValue?','A walk finished.','walked')
+L+=w('ROW_WALKED','row : Map string MockValue?','Internal: a declared row root completed the shared assembler.','row sampled')
 L+=w('SEED_STREAM','seed : number!  nowMs : number!','Start a store stream: reset it to a seed and the clock the stamps and relative dates draw against.','start stream')
 L+=w('SEED_ROW','fields : [MockFieldSpec]!  label : string!  n : number!  index : number!  identity : boolean!  runtime : boolean!  nowMs : number!','Seed one row of a mock store the way the kernel does: the Label Id n id, createdAt and updatedAt drawn first from the stream, then the seeded fields.','seed row, mock store row')
 L+=w('RESTAMP_INPUT','program : SeedProgram!  stores : Map string [Map string MockValue?]!  journal : SeedOwnerJournal!  viewer : Viewer','Restamp only retained seed-owner cells against current rows and the full current viewer, retaining legacy fallback and rekey behavior.','restamp seed owners, switch seed persona')
@@ -515,13 +551,14 @@ def ext(n,fields,desc,tier='domain'):
     return f'      {n} -> external {{\n'+''.join(f'        {f}\n' for f in fields)+f'      }}\n        @description "{desc}"\n        @tier "{tier}"\n'
 E+=ext('WALKED',['cells : [MockWalkCell]','value : MockValue?'],'A field or row walk finished: the sampled cells in pre-order and the assembled value.')
 E+=ext('ROWS_DONE',['rows : [Map string MockValue?]'],'The sampled rows of an entity, each with its Name-n id.')
+E+='      ROW_WALKED -> internal { row : Map string MockValue? }\n        @description "A declared row root assembled once for the row collection callback."\n        @tier "internal"\n'
 E+=ext('SEED_ROW_DONE',['row : Map string MockValue?'],'A seeded store row: its Name Id n id, created and updated stamps drawn from the stream, then its fields.')
 E+=ext('STREAM_SEEDED',['seed : number','nowMs : number'],'The stream was reset to a seed and clock.')
 E+=ext('RESTAMP_DONE',['journal : SeedOwnerJournal!', 'changes : [SeedOwnerChange]!'],'The updated owner journal and ordered owner-cell writes or row-key moves, with no reseeding.')
 E+=ext('DATASET_DONE',['stores : Map string [Map string MockValue?]', 'journal : SeedOwnerJournal!'],'The whole seeded dataset: every store rows, identity first, owner columns stamped and relations linked.')
 E+=ext('OWNERS_DERIVED',['owners : Map string [string]'],'The owner columns of each entity, by lower-case entity name.')
 E+=''.join(f"      {n} {{ {f} }}\n        @description \"Internal: {d}\"\n        @tier \"internal\"\n" for n,f,d in [('DS_STAMP','at : number','the next owner stamp'),('DS_OLINK','at : number','the next owner link'),('DS_PROJS','at : number','the projected fields'),('AC_ASK','at : number','ask the next access check'),('AC_ANSWER','allowed : boolean','an access check verdict'),('AC_FAILED','error : string','an access check could not be evaluated'),('AC_DONE','at : number','all checks answered')])
-E+=ext('DATASET_FAILED',['error : string'],'The program could not be read.')
+E+=ext('DATASET_FAILED',['error : string'],'The program could not be read or a consumed identity ID was not a primitive; the request stops without a success journal.')
 E+='      CORPUS_ASK { }\n        @description "Internal: ask the stream for its word corpus."\n        @tier "internal"\n'
 E+='      ROWS_NEXT { at : number }\n        @description "Internal: sample the next row."\n        @tier "internal"\n'
 E+='      DS_STORE { at : number }\n        @description "Internal: run the next store registration."\n        @tier "internal"\n'
@@ -545,7 +582,7 @@ fields='''    id : string!
     rowFields : [MockFieldSpec] @description "The entity declared fields." = []
     rowName : string @description "The entity name, which prefixes the row ids." = ""
     inRows : boolean @description "Whether a multi-row sample is in progress." = false
-    dsMode : string @description "Whether the shared admission queue is seeding or restamping." = "seed"
+    dsMode : string @description "The shared request lifecycle: seed, restamp or terminal failed." = "seed"
     dsHasViewerRecord : boolean = false
     dsViewerRecord : Viewer = { id: "" }
     rsJournal : SeedOwnerJournal = { viewerId: "", stamped: [], deferred: [] }
@@ -601,6 +638,7 @@ type SeedEntity = { name : string, persistence : string, collection : string, id
 type SeedOrbital = { entity : SeedEntity, auxiliaryEntities : [SeedEntity] }
 type SeedProgram = { orbitals : [SeedOrbital] }
 type MockValue = string | number | boolean | [MockValue?] | Map string MockValue?
+type SampleValueMap = Map string MockValue?
 type MockRelation = { entity : string, cardinality : string }
 type MockProjection = { type : string, field : string }
 type MockFieldSpec = { name : string, type : string!, values : [string], mock : string, default : MockValue?, intrinsic : boolean, required : boolean, relation : MockRelation, projectedFrom : MockProjection, items : MockFieldSpec, properties : Map string MockFieldSpec, slots : [MockFieldSpec] }
@@ -610,7 +648,7 @@ type DsStamp = { store : string!, i : number!, col : string!, id : string, wasDe
 type DsOlink = { store : string!, field : string!, i : number!, target : string!, scalar : boolean! }
 type AccessReq = { entity : string!, action : string!, row : Map string MockValue?, viewer : Map string MockValue? }
 type AcPlan = { queue : [AccessReq], n : number, read : boolean, rel : boolean, ids : [string], viewer : boolean }
-type AcOut = { hit : boolean, owner : string, elig : [string], viewer : boolean }
+type AcOut = { hit : boolean!, owner : string!, elig : [string]!, viewer : boolean! }
 type DsOut = { stores : Map string [Map string MockValue?], s : number, minted : number, stamps : [DsStamp] }
 type DatasetReg = { label : string!, store : string!, fields : [MockFieldSpec]!, identity : boolean!, runtime : boolean!, seeds : boolean!, ownerCols : [string]!, policyEntity : string!, hasRead : boolean!, instances : [Map string MockValue?]! }
 type DatasetLink = { store : string!, field : string!, target : string!, scalar : boolean!, isOwner : boolean! }

@@ -1,11 +1,12 @@
 app mock-seed-spec [
   version: "1.0.0",
-  description: "Design contract for mock row synthesis from declared fields: a field tree walked into cells and a nested value, the gates in order (intrinsic, honored default, declared mock, projection, vocabulary, type), relative mock dates resolved against the stream clock, the same row ordinal always yielding the same index-strategy value, and a whole dataset derived from a program: identity store first, rows with stamps from one stream, owner columns stamped for the viewer, later registrants backfilled, relations and projected fields linked; owner provenance retained and restamped against current rows without reseeding."
+  description: "Design contract for mock row synthesis from declared fields: a field tree walked into cells and a nested value, the gates in order (intrinsic, honored default, declared mock, projection, vocabulary, type), relative mock dates resolved against the stream clock, the same row ordinal always yielding the same index-strategy value, and a whole dataset derived from a program: identity store first, rows with stamps from one stream, owner columns stamped for the viewer, later registrants backfilled, relations and projected fields linked; owner provenance retained and restamped against current rows without reseeding. At the stamp/link consumer, string, number, boolean and null identity IDs retain native text formatting; array/object identity IDs answer DATASET_FAILED with the native primitive refusal reason. Consumed-ID failure stops pending request continuations and emits no success dataset or restamp journal; a fresh request resets, and independent sampler/owner operations remain usable. Declared row roots retain the map built by the shared cell assembler; WALK_ROW emits the unchanged generic WALKED before its internal typed ROW_WALKED collection callback. Relation stores come from all declared registrations, including authored rows, never a guessed store name."
 ]
 
 type SeedOwnerCell = { store : string!, id : string!, column : string! }
 type SeedOwnerJournal = { viewerId : string!, stamped : [SeedOwnerCell]!, deferred : [SeedOwnerCell]! }
 type SeedOwnerChange = { kind : "set" | "rekey", store : string!, id : string!, column : string!, ownerId : string! }
+type MockValue = string | number | boolean | [MockValue?] | Map string MockValue?
 
 orbital MockSeedSpec {
   expects entity MockCell [runtime] {
@@ -15,15 +16,16 @@ orbital MockSeedSpec {
   }
   expects trait MockSeed {
     state ready
-    state ready { INIT -> ready  CORPUS_IS -> ready  WALK_START -> ready  WALK_ROW -> ready  SEED_STREAM -> ready  SEED_ROW -> ready  SAMPLE_ROWS -> ready  ROWS_NEXT -> ready  WALKED -> ready  RESTAMP_INPUT -> ready  DATASET_INPUT -> ready  DATASET_START -> ready  DS_OWNS_ENV -> ready  DS_OWNS_ENV_FAILED -> ready  DS_PROGRAM_FAILED -> ready  DS_PROGRAM_READ -> ready  DS_STORE -> ready  DS_LINKS -> ready  DS_STAMP -> ready  DS_OLINK -> ready  DS_PROJS -> ready  AC_ASK -> ready  AC_ANSWER -> ready  AC_FAILED -> ready  AC_DONE -> ready  DERIVE_OWNERS -> ready }
+    state ready { INIT -> ready  CORPUS_IS -> ready  WALK_START -> ready  WALK_ROW -> ready  SEED_STREAM -> ready  SEED_ROW -> ready  SAMPLE_ROWS -> ready  ROWS_NEXT -> ready  ROW_WALKED -> ready  RESTAMP_INPUT -> ready  DATASET_INPUT -> ready  DATASET_START -> ready  DS_OWNS_ENV -> ready  DS_OWNS_ENV_FAILED -> ready  DS_PROGRAM_FAILED -> ready  DS_PROGRAM_READ -> ready  DS_STORE -> ready  DS_LINKS -> ready  DS_STAMP -> ready  DS_OLINK -> ready  DS_PROJS -> ready  AC_ASK -> ready  AC_ANSWER -> ready  AC_FAILED -> ready  AC_DONE -> ready  DERIVE_OWNERS -> ready }
     emits {
       WALKED
+      ROW_WALKED { row : Map string MockValue? }
       ROWS_DONE
       SEED_ROW_DONE
       STREAM_SEEDED
       DATASET_DONE { journal : SeedOwnerJournal! }
       RESTAMP_DONE { journal : SeedOwnerJournal!, changes : [SeedOwnerChange]! }
-      DATASET_FAILED
+      DATASET_FAILED { error : string }
       OWNERS_DERIVED
     }
   }
