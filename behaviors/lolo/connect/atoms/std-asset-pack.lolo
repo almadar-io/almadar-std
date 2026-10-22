@@ -49,7 +49,7 @@ orbital StdAssetPackOrbital {
         (http GET @config.origin @config.packPath {
           headers: { Accept: "application/json" },
           timeoutMs: @config.timeoutMs
-        } { emit: { success: PACK_HTTP_REPLIED, failure: PACK_LOAD_FAILED } })
+        } { key: "pack", emit: { success: PACK_HTTP_REPLIED, failure: PACK_LOAD_FAILED } })
       INIT -> loading when (and (!= @config.assetPack "") (= @config.transport "file"))
         (set @entity.assetPackStatus "loading")
         (set @entity.assetByKey (object/fromEntries (array/map @config.expectedKeys (fn k [@k { url: @config.placeholderUrl, role: "loading", category: "loading", name: @k }]))))

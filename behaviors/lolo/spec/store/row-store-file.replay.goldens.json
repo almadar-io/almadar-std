@@ -1,0 +1,205 @@
+{
+  "atom": "store/atoms/std-row-store-file.lolo",
+  "trait": "RowStoreDriver",
+  "cases": [
+    {
+      "id": "control-malformed-json-is-refused",
+      "steps": [
+        {
+          "event": "ROW_READ",
+          "payload": {
+            "key": "k",
+            "entityType": "Invoice",
+            "id": "a"
+          }
+        },
+        {
+          "event": "FILE_READ",
+          "from": "loading",
+          "payload": {
+            "data": "ew=="
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "STORE_FAILED",
+                "payload": {
+                  "key": "k",
+                  "message": "the rows file must be JSON of the shape { rows, changes }; a bare array (the retired format) or malformed JSON is not accepted, recreate the file"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "good-file-control-a-row-and-a-change-both-fit",
+      "steps": [
+        {
+          "event": "ROW_READ",
+          "payload": {
+            "key": "k",
+            "entityType": "Invoice",
+            "id": "a"
+          }
+        },
+        {
+          "event": "FILE_READ",
+          "from": "loading",
+          "payload": {
+            "data": "eyJyb3dzIjogW3siaWQiOiAiYSIsICJuIjogMX1dLCAiY2hhbmdlcyI6IFt7Im9wIjogImNyZWF0ZSIsICJlbnRpdHlUeXBlIjogIkludm9pY2UiLCAiaWQiOiAiYSIsICJyb3ciOiB7ImlkIjogImEiLCAibiI6IDF9LCAiYXQiOiAiMjAyNi0wMS0wMSJ9XX0="
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ROW_FOUND",
+                "payload": {
+                  "key": "k",
+                  "row": {
+                    "id": "a",
+                    "n": 1
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "note": "control: both lists fit RowFile, the row is read"
+    },
+    {
+      "id": "bad-row-a-non-object-row-is-refused",
+      "steps": [
+        {
+          "event": "ROW_READ",
+          "payload": {
+            "key": "k",
+            "entityType": "Invoice",
+            "id": "a"
+          }
+        },
+        {
+          "event": "FILE_READ",
+          "from": "loading",
+          "payload": {
+            "data": "eyJyb3dzIjogWzFdLCAiY2hhbmdlcyI6IFtdfQ=="
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "STORE_FAILED",
+                "payload": {
+                  "key": "k",
+                  "message": "the rows file must be JSON of the shape { rows, changes }; a bare array (the retired format) or malformed JSON is not accepted, recreate the file"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "note": "json/parse RowFile answers null for a row that is not a Row"
+    },
+    {
+      "id": "bad-change-an-op-outside-create-update-delete-is-refused",
+      "steps": [
+        {
+          "event": "ROW_READ",
+          "payload": {
+            "key": "k",
+            "entityType": "Invoice",
+            "id": "a"
+          }
+        },
+        {
+          "event": "FILE_READ",
+          "from": "loading",
+          "payload": {
+            "data": "eyJyb3dzIjogW10sICJjaGFuZ2VzIjogW3sib3AiOiAiZXhwbG9kZSIsICJlbnRpdHlUeXBlIjogIkludm9pY2UiLCAiaWQiOiAiYSIsICJhdCI6ICJ0In1dfQ=="
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "STORE_FAILED",
+                "payload": {
+                  "key": "k",
+                  "message": "the rows file must be JSON of the shape { rows, changes }; a bare array (the retired format) or malformed JSON is not accepted, recreate the file"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "note": "json/parse RowFile answers null for a change record whose op is not create|update|delete"
+    },
+    {
+      "id": "bad-file-a-missing-changes-list-is-refused",
+      "steps": [
+        {
+          "event": "ROW_READ",
+          "payload": {
+            "key": "k",
+            "entityType": "Invoice",
+            "id": "a"
+          }
+        },
+        {
+          "event": "FILE_READ",
+          "from": "loading",
+          "payload": {
+            "data": "eyJyb3dzIjogW3siaWQiOiAiYSIsICJuIjogMX1dfQ=="
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "STORE_FAILED",
+                "payload": {
+                  "key": "k",
+                  "message": "the rows file must be JSON of the shape { rows, changes }; a bare array (the retired format) or malformed JSON is not accepted, recreate the file"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "note": "changes is required in RowFile"
+    },
+    {
+      "id": "control-the-retired-bare-array-format-is-refused",
+      "steps": [
+        {
+          "event": "ROW_READ",
+          "payload": {
+            "key": "k",
+            "entityType": "Invoice",
+            "id": "a"
+          }
+        },
+        {
+          "event": "FILE_READ",
+          "from": "loading",
+          "payload": {
+            "data": "W10="
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "STORE_FAILED",
+                "payload": {
+                  "key": "k",
+                  "message": "the rows file must be JSON of the shape { rows, changes }; a bare array (the retired format) or malformed JSON is not accepted, recreate the file"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "note": "the retired bare-array format: refused by the null parse; passed under the old hand-written guard, red on the installed orb until the reinstall"
+    }
+  ]
+}

@@ -109,12 +109,11 @@
       "found": []
      },
      "expect": {
-      "emits": [
+      "effects": [
        {
-        "event": "UN_ENV_FAILED",
-        "payload": {
-         "key": "ci"
-        }
+        "type": "os/getenv",
+        "key": "ci",
+        "optionsAt": 1
        }
       ]
      }
@@ -182,12 +181,11 @@
       "found": []
      },
      "expect": {
-      "emits": [
+      "effects": [
        {
-        "event": "UN_ENV_FAILED",
-        "payload": {
-         "key": "tty"
-        }
+        "type": "os/isatty",
+        "key": "tty",
+        "optionsAt": 1
        }
       ]
      }
@@ -257,12 +255,11 @@
       "found": []
      },
      "expect": {
-      "emits": [
+      "effects": [
        {
-        "event": "UN_CACHE_ABSENT",
-        "payload": {
-         "key": "cache"
-        }
+        "type": "os/read-file",
+        "key": "cache",
+        "optionsAt": 1
        }
       ]
      }
@@ -302,7 +299,7 @@
         "payload": {
          "status": 200,
          "body": "",
-         "stderr": "orb: updates available (@almadar/core 1.2.0 → 1.10.0, @almadar/std 3.0.0 → 3.1.4); run `orb update --global`"
+         "stderr": "orb: updates available (@almadar/core 1.2.0 \u2192 1.10.0, @almadar/std 3.0.0 \u2192 3.1.4); run `orb update --global`"
         }
        }
       ],
@@ -380,12 +377,6 @@
        {
         "event": "UN_DUE",
         "payload": {}
-       },
-       {
-        "event": "UN_MANIFEST_ABSENT",
-        "payload": {
-         "key": "manifest"
-        }
        }
       ]
      }
@@ -417,11 +408,12 @@
      "expect": {
       "emits": [
        {
-        "event": "UN_MANIFEST_ABSENT",
-        "payload": {
-         "key": "manifest"
-        }
+        "event": "UN_DUE",
+        "payload": {}
        }
+      ],
+      "neverEmits": [
+       "UPDATE_NOTICE_ANSWERED"
       ]
      }
     }
@@ -495,12 +487,6 @@
        {
         "event": "UN_DUE",
         "payload": {}
-       },
-       {
-        "event": "UN_MANIFEST_ABSENT",
-        "payload": {
-         "key": "manifest"
-        }
        }
       ]
      }
@@ -534,12 +520,6 @@
        {
         "event": "UN_DUE",
         "payload": {}
-       },
-       {
-        "event": "UN_MANIFEST_ABSENT",
-        "payload": {
-         "key": "manifest"
-        }
        }
       ]
      }
@@ -573,12 +553,6 @@
        {
         "event": "UN_NEXT",
         "payload": {}
-       },
-       {
-        "event": "UN_PKG_ABSENT",
-        "payload": {
-         "key": "installed"
-        }
        }
       ]
      }
@@ -858,12 +832,8 @@
         }
        },
        {
-        "event": "UPDATE_NOTICE_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "",
-         "stderr": "orb: updates available (@almadar/core 1.2.0 → 1.10.0); run `orb update --global`"
-        }
+        "event": "UN_WRITE",
+        "payload": {}
        }
       ]
      }
@@ -967,12 +937,8 @@
         }
        },
        {
-        "event": "UPDATE_NOTICE_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "",
-         "stderr": ""
-        }
+        "event": "UN_WRITE",
+        "payload": {}
        }
       ]
      }
@@ -1026,12 +992,8 @@
         }
        },
        {
-        "event": "UPDATE_NOTICE_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "",
-         "stderr": ""
-        }
+        "event": "UN_WRITE",
+        "payload": {}
        }
       ]
      }
@@ -1086,12 +1048,8 @@
         "payload": {}
        },
        {
-        "event": "UPDATE_NOTICE_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "",
-         "stderr": ""
-        }
+        "event": "UN_WRITE",
+        "payload": {}
        }
       ],
       "neverEmits": [
@@ -1152,12 +1110,8 @@
         }
        },
        {
-        "event": "UPDATE_NOTICE_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "",
-         "stderr": "orb: updates available (@almadar/core 1.2.0 → 1.4.0); run `orb update --global`"
-        }
+        "event": "UN_WRITE",
+        "payload": {}
        }
       ]
      }
@@ -1202,12 +1156,8 @@
         "payload": {}
        },
        {
-        "event": "UPDATE_NOTICE_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "",
-         "stderr": ""
-        }
+        "event": "UN_WRITE",
+        "payload": {}
        }
       ],
       "neverEmits": [
@@ -1250,7 +1200,7 @@
         "payload": {
          "status": 200,
          "body": "",
-         "stderr": "orb: updates available (@almadar/core 1.2.0 → 1.10.0); run `orb update --global`"
+         "stderr": "orb: updates available (@almadar/core 1.2.0 \u2192 1.10.0); run `orb update --global`"
         }
        }
       ]
@@ -1381,16 +1331,179 @@
         "payload": {}
        },
        {
-        "event": "UPDATE_NOTICE_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "",
-         "stderr": ""
-        }
+        "event": "UN_WRITE",
+        "payload": {}
        }
       ],
       "neverEmits": [
        "UN_CMP"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "stale-cache-asks-for-the-manifest",
+   "steps": [
+    {
+     "event": "UN_DUE",
+     "payload": {},
+     "from": "reading",
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": []
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "os/read-file",
+        "key": "manifest",
+        "optionsAt": 1
+       }
+      ],
+      "neverEmits": [
+       "UPDATE_NOTICE_ANSWERED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-fresh-cache-asks-for-no-manifest",
+   "steps": [
+    {
+     "event": "UN_DUE",
+     "payload": {},
+     "from": "reading",
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 99000,
+      "cached": [],
+      "deps": [],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UPDATE_NOTICE_ANSWERED",
+        "payload": {
+         "status": 200
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "next-package-asks-for-its-installed-manifest",
+   "steps": [
+    {
+     "event": "UN_NEXT",
+     "payload": {},
+     "from": "scanning",
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [
+       {
+        "name": "@almadar/core",
+        "range": "^1.2.0"
+       }
+      ],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": []
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "os/read-file",
+        "key": "installed",
+        "optionsAt": 1
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "write-asks-for-the-orb-directory",
+   "steps": [
+    {
+     "event": "UN_WRITE",
+     "payload": {},
+     "from": "writing",
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": []
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "os/mkdir",
+        "key": "dir"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "directory-ready-writes-the-cache-file",
+   "steps": [
+    {
+     "event": "UN_DIR",
+     "payload": {},
+     "from": "writing",
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": []
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "os/write-file",
+        "key": "cache"
+       }
       ]
      }
     }

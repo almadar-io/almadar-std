@@ -2,7 +2,7 @@ app std-orb-lint-entity-shape [
   version: "1.0.0",
   inbound: ["cli-lint-entity-shape"],
   fs: { cwd: "**": [read] },
-  description: "std-orb-lint-entity-shape — the `orb lint entity-shape <file>` command, the port. It lowers the file with program/read and reports an entity with no name (ORB_E_MISSING_NAME) and an entity with no fields (ORB_E_NO_FIELDS), the validate_entity checks, for every orbital's inline entity, with the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint entity-shape: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  description: "std-orb-lint-entity-shape — the `orb lint entity-shape <file>` command, the port. It lowers the file with program/read and reports an entity with no name (ORB_E_MISSING_NAME) and an entity with no fields (ORB_E_NO_FIELDS), the validate_entity checks, for every orbital's inline entity, with the Rust path, message and suggestion (status 500, exit 1). Orbitals marked `spec` are skipped, as validate_all_entities skips them. Clean answers `lint entity-shape: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-entity-shape"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -34,7 +34,7 @@ orbital OrbLintEntityShapeOrbital {
         (set @entity.findings (let ((orbitals (object/get @payload.result "orbitals")))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
             (let ((ent (object/get (array/nth @orbitals @oi) "entity" {})))
-              (if (validate/object @ent) (array/concat
+              (if (and (validate/object @ent) (not (object/get (array/nth @orbitals @oi) "spec" false))) (array/concat
                 (if (= (object/get @ent "name" "") "")
                   [{ code: "ORB_E_MISSING_NAME", path: (str/concat "orbitals[" @oi "].entity.name"), message: "Entity name is required", suggestion: "Add a name for your entity using PascalCase (e.g., 'Task', 'User')", severity: "error" }]
                   [])

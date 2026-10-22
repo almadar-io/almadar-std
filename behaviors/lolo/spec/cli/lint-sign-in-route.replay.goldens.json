@@ -1,7 +1,7 @@
 {
  "atom": "cli/atoms/std-orb-lint-sign-in-route.lolo",
  "trait": "OrbLintSignInRoute",
- "note": "Expected findings are the code, path, message and suggestion `orb validate` (the Rust validator) reports for the same program. Added cases follow validate_sign_in_route (page.rs; it has no Rust test): the host route is exempt, paths compare normalized, a lazy page counts, and every page on the reserved route is its own finding.",
+ "note": "Expected findings are the code, path, message and suggestion `orb validate` (the Rust validator) reports for the same program. Added cases follow validate_sign_in_route (page.rs; it has no Rust test): the host route is exempt, paths compare normalized, a lazy page counts, and every page on the reserved route is its own finding. Added cases copy tests/page_modifier_validation.rs edge_a_lazy_page_on_the_hosts_sign_in_route_fails, control_a_page_on_a_route_merely_starting_with_login_passes, a_page_declared_on_the_hosts_sign_in_route_fails (the signIn variant) and a_sign_in_route_that_is_no_page_fails. The real-program-shape cases feed a lowered std atom to the rule: the rule must reach LINT_FINISH (a runtime type error in the findings expression leaves the transition without it).",
  "cases": [
   {
    "id": "page-on-the-host-login-route",
@@ -73,7 +73,13 @@
      },
      "expect": {
       "fired": true,
-      "state": "ready"
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
      },
      "trait": "OrbLintSignInRoute"
     },
@@ -176,7 +182,13 @@
      },
      "expect": {
       "fired": true,
-      "state": "ready"
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
      },
      "trait": "OrbLintSignInRoute"
     },
@@ -280,7 +292,13 @@
      },
      "expect": {
       "fired": true,
-      "state": "ready"
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
      },
      "trait": "OrbLintSignInRoute"
     },
@@ -393,7 +411,13 @@
      },
      "expect": {
       "fired": true,
-      "state": "ready"
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
      },
      "trait": "OrbLintSignInRoute"
     },
@@ -488,7 +512,13 @@
      },
      "expect": {
       "fired": true,
-      "state": "ready"
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
      },
      "trait": "OrbLintSignInRoute"
     },
@@ -511,7 +541,7 @@
    ]
   },
   {
-   "id": "control-sign-in-matches-a-page-after-path-normalization",
+   "id": "control-sign-in-param-names-compare-as-one-segment",
    "steps": [
     {
      "event": "LINT_PROGRAM_READ",
@@ -566,7 +596,7 @@
          "pages": [
           {
            "name": "P_in_",
-           "path": "/in/",
+           "path": "/in/:id",
            "traits": [
             {
              "ref": "T"
@@ -577,13 +607,19 @@
         }
        ],
        "site": {
-        "signIn": "/in"
+        "signIn": "/in/:slug"
        }
       }
      },
      "expect": {
       "fired": true,
-      "state": "ready"
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
      },
      "trait": "OrbLintSignInRoute"
     },
@@ -689,7 +725,13 @@
      },
      "expect": {
       "fired": true,
-      "state": "ready"
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
      },
      "trait": "OrbLintSignInRoute"
     },
@@ -790,7 +832,13 @@
      },
      "expect": {
       "fired": true,
-      "state": "ready"
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
      },
      "trait": "OrbLintSignInRoute"
     },
@@ -901,7 +949,13 @@
      },
      "expect": {
       "fired": true,
-      "state": "ready"
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
      },
      "trait": "OrbLintSignInRoute"
     },
@@ -916,6 +970,3460 @@
          "rule": "sign-in-route",
          "findings": []
         }
+       }
+      ]
+     },
+     "trait": "OrbLintSignInRoute"
+    }
+   ]
+  },
+  {
+   "id": "edge-a-lazy-page-on-the-hosts-sign-in-route-fails",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P_",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "lazyPages": [
+        {
+         "path": "/login/",
+         "orbital": "Auth",
+         "orbRef": "./auth.orb"
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintSignInRoute"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "sign-in-route",
+         "findings": [
+          {
+           "code": "ORB_P_HOST_RESERVED_ROUTE",
+           "path": "/login/",
+           "message": "'/login/' is the host's own sign-in route; no page may be declared on it",
+           "suggestion": "move this page to another route; name `signIn: \"/login\"` to send viewers to the host's sign-in",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintSignInRoute"
+    }
+   ]
+  },
+  {
+   "id": "control-a-page-on-a-route-merely-starting-with-login-passes",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P_login-help",
+           "path": "/login-help",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          },
+          {
+           "name": "P_login_:step",
+           "path": "/login/:step",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintSignInRoute"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "sign-in-route",
+         "findings": []
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintSignInRoute"
+    }
+   ]
+  },
+  {
+   "id": "a-page-declared-on-the-hosts-route-fails-with-a-sign-in-route-too",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P_login",
+           "path": "/login",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ],
+           "access": "public"
+          }
+         ]
+        }
+       ],
+       "site": {
+        "signIn": "/login"
+       }
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintSignInRoute"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "sign-in-route",
+         "findings": [
+          {
+           "code": "ORB_P_HOST_RESERVED_ROUTE",
+           "path": "/login",
+           "message": "'/login' is the host's own sign-in route; no page may be declared on it",
+           "suggestion": "move this page to another route; name `signIn: \"/login\"` to send viewers to the host's sign-in",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintSignInRoute"
+    }
+   ]
+  },
+  {
+   "id": "a-sign-in-route-that-is-no-page-fails-with-authenticated-pages",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": []
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P_me",
+           "path": "/me",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ],
+           "access": "authenticated"
+          }
+         ]
+        }
+       ],
+       "site": {
+        "signIn": "/enter"
+       }
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintSignInRoute"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "sign-in-route",
+         "findings": [
+          {
+           "code": "ORB_P_SIGN_IN_UNKNOWN_ROUTE",
+           "path": "site.signIn",
+           "message": "the `signIn` route '/enter' is no page of this app",
+           "suggestion": "point `signIn:` at a page anonymous viewers can open",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintSignInRoute"
+    }
+   ]
+  },
+  {
+   "id": "real-program-shape-reminder-scheduler-answers",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "std-reminder-scheduler",
+       "version": "1.1.0",
+       "description": "std-reminder-scheduler — deadline reminders for a target entity. A periodic tick scans the target for records whose `dateField` deadline (a ms-epoch number or an ISO datetime string) is within `offsetHours` of now and that have not been reminded yet, and emits `ReminderDue` for each — every matching record, via a self-driving scan loop. `direction` picks which side of now the scan matches: 'future' (default) fires for deadlines up to `offsetHours` ahead; 'past' fires once a record's date is at least `offsetHours` behind now. Marks each record `remindedAt` so it isn't reminded twice — and only when the record actually matched the scan, so records outside the window stay eligible for later passes. Compose alongside std-notify-on-event to deliver the reminder.",
+       "orbitals": [
+        {
+         "name": "ReminderSchedulerOrbital",
+         "id": "orb_6ZVJ0PFM7HT3RR40BZM02K4EM7",
+         "entity": {
+          "name": "ReminderRunLog",
+          "id": "ent_68ASJ8J2J5192GV607C9Q6VMCW",
+          "collection": "reminder_runs",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "targetEntity",
+            "type": "string",
+            "default": "",
+            "description": "The entity to which the reminder applies.",
+            "synonyms": "subject, referenced entity, related object"
+           },
+           {
+            "name": "recordCount",
+            "type": "number",
+            "default": 0.0,
+            "description": "The number of records processed during this run.",
+            "synonyms": "count, total, size"
+           },
+           {
+            "name": "ranAt",
+            "type": "number",
+            "default": 0.0,
+            "description": "Timestamp indicating when the process was executed.",
+            "synonyms": "execution time, timestamp, run time"
+           },
+           {
+            "name": "errors",
+            "type": "string",
+            "default": "",
+            "description": "Records any errors encountered during processing.",
+            "synonyms": "error, problem, fault"
+           },
+           {
+            "name": "dueAt",
+            "type": "number",
+            "default": 0.0,
+            "description": "Deadline timestamp (also lets the standalone default target validate).",
+            "synonyms": "deadline, due, expiry"
+           },
+           {
+            "name": "remindedAt",
+            "type": "number",
+            "default": 0.0,
+            "description": "When this record was last reminded — the dedup marker; 0 = not yet reminded.",
+            "synonyms": "notified at, last reminder"
+           },
+           {
+            "name": "headId",
+            "type": "string",
+            "default": "",
+            "description": "Scratch: id of the record the scan loop is currently reminding.",
+            "synonyms": "current id, cursor"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "ReminderScheduler",
+           "id": "trt_VQ6JV68GEZ87FKXGR7MZN1R5BK",
+           "entityRebindable": true,
+           "entityContract": {
+            "requires": [],
+            "provides": [
+             "headId"
+            ]
+           },
+           "effectRow": [
+            {
+             "kind": "emit",
+             "resource": "ReminderDue"
+            },
+            {
+             "kind": "fetch",
+             "resource": "@config.targetEntity",
+             "resolved": false
+            },
+            {
+             "kind": "fetch",
+             "resource": "@config.targetEntity",
+             "resolved": false,
+             "site": "tick"
+            },
+            {
+             "kind": "persist",
+             "resource": "@config.targetEntity",
+             "resolved": false
+            },
+            {
+             "kind": "render-ui",
+             "resource": "toast"
+            },
+            {
+             "kind": "set",
+             "resource": "@entity.headId"
+            },
+            {
+             "kind": "ticks",
+             "site": "tick"
+            }
+           ],
+           "category": "lifecycle",
+           "linkedEntity": "ReminderRunLog",
+           "linkedEntityId": "ent_68ASJ8J2J5192GV607C9Q6VMCW",
+           "entityRefIds": {
+            "ReminderRunLog": "ent_68ASJ8J2J5192GV607C9Q6VMCW"
+           },
+           "emits": [
+            {
+             "event": "ReminderDue",
+             "eventId": "evt_STS3GYE76Q3KBP1VA54J9SG50Z",
+             "scope": "external",
+             "payloadSchema": [
+              {
+               "name": "entityId",
+               "type": "string"
+              },
+              {
+               "name": "severity",
+               "type": "string"
+              },
+              {
+               "name": "template",
+               "type": "string"
+              }
+             ]
+            },
+            {
+             "event": "ScanRecordsLoaded",
+             "eventId": "evt_P2S2STQNWGTY88TXCSKSVQCSGG",
+             "payloadSchema": [
+              {
+               "name": "data",
+               "type": "[@entity(targetEntity)]",
+               "required": true
+              }
+             ]
+            },
+            {
+             "event": "ScanFailed",
+             "eventId": "evt_QBZYC4PPYSBFCP0XCA1TASDT93",
+             "payloadSchema": [
+              {
+               "name": "error",
+               "type": "string"
+              },
+              {
+               "name": "code",
+               "type": "string"
+              }
+             ]
+            },
+            {
+             "event": "ReminderStepped",
+             "eventId": "evt_7305B7G0F407JBZ9NC62Q6NC86",
+             "payloadSchema": [
+              {
+               "name": "id",
+               "type": "string"
+              }
+             ]
+            }
+           ],
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "scanning"
+             }
+            ],
+            "events": [
+             {
+              "key": "INIT",
+              "id": "evt_NKSTNTX7V4KXJEPZACF2RGN436",
+              "name": "Initialize"
+             },
+             {
+              "key": "ScanRecordsLoaded",
+              "id": "evt_P2S2STQNWGTY88TXCSKSVQCSGG",
+              "name": "Scan records loaded",
+              "payloadSchema": [
+               {
+                "name": "data",
+                "type": "[@entity(targetEntity)]",
+                "required": true
+               }
+              ],
+              "listened": true
+             },
+             {
+              "key": "ScanFailed",
+              "id": "evt_QBZYC4PPYSBFCP0XCA1TASDT93",
+              "name": "Scan failed",
+              "payloadSchema": [
+               {
+                "name": "error",
+                "type": "string"
+               },
+               {
+                "name": "code",
+                "type": "string"
+               }
+              ],
+              "listened": true
+             },
+             {
+              "key": "ReminderStepped",
+              "id": "evt_7305B7G0F407JBZ9NC62Q6NC86",
+              "name": "Reminder stepped",
+              "payloadSchema": [
+               {
+                "name": "id",
+                "type": "string"
+               }
+              ],
+              "listened": true
+             },
+             {
+              "key": "ReminderDue",
+              "id": "evt_STS3GYE76Q3KBP1VA54J9SG50Z",
+              "name": "Reminder due",
+              "payloadSchema": [
+               {
+                "name": "entityId",
+                "type": "string"
+               },
+               {
+                "name": "severity",
+                "type": "string"
+               },
+               {
+                "name": "template",
+                "type": "string"
+               }
+              ]
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "eventId": "evt_NKSTNTX7V4KXJEPZACF2RGN436"
+             },
+             {
+              "from": "idle",
+              "to": "scanning",
+              "event": "ScanRecordsLoaded",
+              "eventId": "evt_P2S2STQNWGTY88TXCSKSVQCSGG",
+              "guard": [
+               "and",
+               "@config.enabled",
+               [
+                ">",
+                [
+                 "array/len",
+                 "@payload.data"
+                ],
+                0.0
+               ]
+              ],
+              "effects": [
+               [
+                "set",
+                "@entity.headId",
+                [
+                 "object/get",
+                 [
+                  "array/first",
+                  "@payload.data"
+                 ],
+                 "id"
+                ]
+               ],
+               [
+                "emit",
+                "ReminderDue",
+                {
+                 "entityId": "@entity.headId",
+                 "severity": "@config.severity",
+                 "template": "@config.template"
+                }
+               ],
+               [
+                "persist",
+                "update",
+                "@config.targetEntity",
+                {
+                 "id": "@entity.headId",
+                 "remindedAt": "@now"
+                },
+                {
+                 "emit": {
+                  "failure": "ScanFailed",
+                  "success": "ReminderStepped"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "ScanRecordsLoaded",
+              "eventId": "evt_P2S2STQNWGTY88TXCSKSVQCSGG",
+              "guard": [
+               "=",
+               [
+                "array/len",
+                "@payload.data"
+               ],
+               0.0
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "ScanRecordsLoaded",
+              "eventId": "evt_P2S2STQNWGTY88TXCSKSVQCSGG",
+              "guard": [
+               "=",
+               "@config.enabled",
+               false
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "ScanFailed",
+              "eventId": "evt_QBZYC4PPYSBFCP0XCA1TASDT93",
+              "effects": [
+               [
+                "render-ui",
+                "toast",
+                {
+                 "type": "alert",
+                 "variant": "error",
+                 "message": [
+                  "str/concat",
+                  "Couldn't scan for reminders — ",
+                  "@payload.error"
+                 ],
+                 "dismissible": true
+                }
+               ]
+              ]
+             },
+             {
+              "from": "scanning",
+              "to": "idle",
+              "event": "INIT",
+              "eventId": "evt_NKSTNTX7V4KXJEPZACF2RGN436"
+             },
+             {
+              "from": "scanning",
+              "to": "scanning",
+              "event": "ReminderStepped",
+              "eventId": "evt_7305B7G0F407JBZ9NC62Q6NC86",
+              "effects": [
+               [
+                "fetch",
+                "@config.targetEntity",
+                {
+                 "emit": {
+                  "failure": "ScanFailed",
+                  "success": "ScanRecordsLoaded"
+                 },
+                 "filter": [
+                  "and",
+                  [
+                   "=",
+                   [
+                    "object/get",
+                    "@entity",
+                    "remindedAt"
+                   ],
+                   0.0
+                  ],
+                  [
+                   "or",
+                   [
+                    "and",
+                    [
+                     "=",
+                     "@config.direction",
+                     "future"
+                    ],
+                    [
+                     ">",
+                     [
+                      "time/parse",
+                      [
+                       "object/get",
+                       "@entity",
+                       "@config.dateField"
+                      ]
+                     ],
+                     "@now"
+                    ],
+                    [
+                     "<",
+                     [
+                      "-",
+                      [
+                       "time/parse",
+                       [
+                        "object/get",
+                        "@entity",
+                        "@config.dateField"
+                       ]
+                      ],
+                      "@now"
+                     ],
+                     [
+                      "*",
+                      "@config.offsetHours",
+                      3600000.0
+                     ]
+                    ]
+                   ],
+                   [
+                    "and",
+                    [
+                     "=",
+                     "@config.direction",
+                     "past"
+                    ],
+                    [
+                     ">",
+                     [
+                      "-",
+                      "@now",
+                      [
+                       "time/parse",
+                       [
+                        "object/get",
+                        "@entity",
+                        "@config.dateField"
+                       ]
+                      ]
+                     ],
+                     [
+                      "*",
+                      "@config.offsetHours",
+                      3600000.0
+                     ]
+                    ]
+                   ]
+                  ]
+                 ]
+                }
+               ]
+              ]
+             },
+             {
+              "from": "scanning",
+              "to": "scanning",
+              "event": "ScanRecordsLoaded",
+              "eventId": "evt_P2S2STQNWGTY88TXCSKSVQCSGG",
+              "guard": [
+               ">",
+               [
+                "array/len",
+                "@payload.data"
+               ],
+               0.0
+              ],
+              "effects": [
+               [
+                "set",
+                "@entity.headId",
+                [
+                 "object/get",
+                 [
+                  "array/first",
+                  "@payload.data"
+                 ],
+                 "id"
+                ]
+               ],
+               [
+                "emit",
+                "ReminderDue",
+                {
+                 "entityId": "@entity.headId",
+                 "severity": "@config.severity",
+                 "template": "@config.template"
+                }
+               ],
+               [
+                "persist",
+                "update",
+                "@config.targetEntity",
+                {
+                 "id": "@entity.headId",
+                 "remindedAt": "@now"
+                },
+                {
+                 "emit": {
+                  "failure": "ScanFailed",
+                  "success": "ReminderStepped"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "scanning",
+              "to": "idle",
+              "event": "ScanRecordsLoaded",
+              "eventId": "evt_P2S2STQNWGTY88TXCSKSVQCSGG",
+              "guard": [
+               "=",
+               [
+                "array/len",
+                "@payload.data"
+               ],
+               0.0
+              ]
+             },
+             {
+              "from": "scanning",
+              "to": "idle",
+              "event": "ScanFailed",
+              "eventId": "evt_QBZYC4PPYSBFCP0XCA1TASDT93",
+              "effects": [
+               [
+                "render-ui",
+                "toast",
+                {
+                 "type": "alert",
+                 "variant": "error",
+                 "message": [
+                  "str/concat",
+                  "Couldn't scan for reminders — ",
+                  "@payload.error"
+                 ],
+                 "dismissible": true
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "ticks": [
+            {
+             "name": "scanCycle",
+             "interval": "*/15 * * * *",
+             "effects": [
+              [
+               "fetch",
+               "@config.targetEntity",
+               {
+                "emit": {
+                 "failure": "ScanFailed",
+                 "success": "ScanRecordsLoaded"
+                },
+                "filter": [
+                 "and",
+                 [
+                  "=",
+                  [
+                   "object/get",
+                   "@entity",
+                   "remindedAt"
+                  ],
+                  0.0
+                 ],
+                 [
+                  "or",
+                  [
+                   "and",
+                   [
+                    "=",
+                    "@config.direction",
+                    "future"
+                   ],
+                   [
+                    ">",
+                    [
+                     "time/parse",
+                     [
+                      "object/get",
+                      "@entity",
+                      "@config.dateField"
+                     ]
+                    ],
+                    "@now"
+                   ],
+                   [
+                    "<",
+                    [
+                     "-",
+                     [
+                      "time/parse",
+                      [
+                       "object/get",
+                       "@entity",
+                       "@config.dateField"
+                      ]
+                     ],
+                     "@now"
+                    ],
+                    [
+                     "*",
+                     "@config.offsetHours",
+                     3600000.0
+                    ]
+                   ]
+                  ],
+                  [
+                   "and",
+                   [
+                    "=",
+                    "@config.direction",
+                    "past"
+                   ],
+                   [
+                    ">",
+                    [
+                     "-",
+                     "@now",
+                     [
+                      "time/parse",
+                      [
+                       "object/get",
+                       "@entity",
+                       "@config.dateField"
+                      ]
+                     ]
+                    ],
+                    [
+                     "*",
+                     "@config.offsetHours",
+                     3600000.0
+                    ]
+                   ]
+                  ]
+                 ]
+                ]
+               }
+              ]
+             ],
+             "runsInBackground": true
+            }
+           ],
+           "config": {
+            "offsetHours": {
+             "type": "number",
+             "default": 24.0,
+             "label": "How many hours before the deadline to remind?",
+             "description": "A reminder fires once the deadline is within this many hours of now.",
+             "synonyms": "advance notice, lead time, heads up, early warning hours, how far ahead",
+             "tier": "infra"
+            },
+            "enabled": {
+             "type": "boolean",
+             "default": false,
+             "label": "Send deadline reminders",
+             "description": "Automatically remind about upcoming deadlines. Off by default.",
+             "synonyms": "enable, turn on, activate, switch on, reminders, deadline reminders, due-date reminders, advance notice, heads up, nudge before due",
+             "tier": "infra"
+            },
+            "direction": {
+             "type": "string",
+             "default": "future",
+             "label": "Scan which side of now?",
+             "description": "'future' (default) matches records whose dateField is still ahead, up to offsetHours out — upcoming-deadline reminders. 'past' matches records whose dateField is at least offsetHours behind now — act-after-the-fact policies. The emitted event and the dedup marker are identical either way.",
+             "synonyms": "direction, past due, overdue, after the deadline, look back, backward scan, past-window",
+             "tier": "infra",
+             "values": [
+              "future",
+              "past"
+             ]
+            },
+            "targetEntity": {
+             "type": "entity",
+             "default": "ReminderRunLog",
+             "label": "Target entity",
+             "description": "Entity to scan for upcoming deadlines (e.g. 'Task', 'ClassSession'). Defaults to the atom's own log so the standalone validates; rebind per composition. Typed `entity`, so a rename of the bound entity threads through to this value automatically.",
+             "synonyms": "entity to monitor, entity to watch, record type, object type",
+             "tier": "internal",
+             "refId": "ent_68ASJ8J2J5192GV607C9Q6VMCW"
+            },
+            "severity": {
+             "type": "string",
+             "default": "info",
+             "label": "How urgent are the reminders?",
+             "description": "Severity passed to the notifier: info / warning / error.",
+             "synonyms": "urgency level, priority, importance, alert level, how urgent",
+             "tier": "infra"
+            },
+            "template": {
+             "type": "string",
+             "default": "",
+             "label": "What should the reminder message say?",
+             "description": "Message body passed to the notifier.",
+             "synonyms": "message text, reminder body, notification copy, alert message, what to say",
+             "tier": "presentation"
+            },
+            "dateField": {
+             "type": "string",
+             "default": "dueAt",
+             "label": "Which date field is the deadline?",
+             "description": "Field on the target entity holding the deadline (e.g. 'dueAt', 'startsAt'). Accepts a ms-epoch number or an ISO datetime string; both are coerced to ms-epoch for comparison.",
+             "synonyms": "due date field, timestamp field, cutoff field, expiry field, when it's due",
+             "tier": "internal"
+            }
+           },
+           "scope": "instance"
+          }
+         ],
+         "pages": [
+          {
+           "name": "ReminderSchedulerPage",
+           "id": "pag_TJNBFPKZN0ZTGD8V08CAGSB434",
+           "path": "/reminders/scheduler",
+           "traits": [
+            {
+             "ref": "ReminderScheduler",
+             "refId": "trt_VQ6JV68GEZ87FKXGR7MZN1R5BK"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "ledger": {
+        "schemaVersion": 1,
+        "entries": {
+         "ent_68ASJ8J2J5192GV607C9Q6VMCW": {
+          "id": "ent_68ASJ8J2J5192GV607C9Q6VMCW",
+          "kind": "entity",
+          "bakedName": "ReminderRunLog",
+          "curName": "ReminderRunLog",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "evt_7305B7G0F407JBZ9NC62Q6NC86": {
+          "id": "evt_7305B7G0F407JBZ9NC62Q6NC86",
+          "kind": "event",
+          "bakedName": "ReminderStepped",
+          "curName": "ReminderStepped",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_VQ6JV68GEZ87FKXGR7MZN1R5BK"
+         },
+         "evt_NKSTNTX7V4KXJEPZACF2RGN436": {
+          "id": "evt_NKSTNTX7V4KXJEPZACF2RGN436",
+          "kind": "event",
+          "bakedName": "INIT",
+          "curName": "INIT",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_VQ6JV68GEZ87FKXGR7MZN1R5BK"
+         },
+         "evt_P2S2STQNWGTY88TXCSKSVQCSGG": {
+          "id": "evt_P2S2STQNWGTY88TXCSKSVQCSGG",
+          "kind": "event",
+          "bakedName": "ScanRecordsLoaded",
+          "curName": "ScanRecordsLoaded",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_VQ6JV68GEZ87FKXGR7MZN1R5BK"
+         },
+         "evt_QBZYC4PPYSBFCP0XCA1TASDT93": {
+          "id": "evt_QBZYC4PPYSBFCP0XCA1TASDT93",
+          "kind": "event",
+          "bakedName": "ScanFailed",
+          "curName": "ScanFailed",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_VQ6JV68GEZ87FKXGR7MZN1R5BK"
+         },
+         "evt_STS3GYE76Q3KBP1VA54J9SG50Z": {
+          "id": "evt_STS3GYE76Q3KBP1VA54J9SG50Z",
+          "kind": "event",
+          "bakedName": "ReminderDue",
+          "curName": "ReminderDue",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_VQ6JV68GEZ87FKXGR7MZN1R5BK"
+         },
+         "orb_6ZVJ0PFM7HT3RR40BZM02K4EM7": {
+          "id": "orb_6ZVJ0PFM7HT3RR40BZM02K4EM7",
+          "kind": "orbital",
+          "bakedName": "ReminderSchedulerOrbital",
+          "curName": "ReminderSchedulerOrbital",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "pag_TJNBFPKZN0ZTGD8V08CAGSB434": {
+          "id": "pag_TJNBFPKZN0ZTGD8V08CAGSB434",
+          "kind": "page",
+          "bakedName": "ReminderSchedulerPage",
+          "curName": "ReminderSchedulerPage",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "trt_VQ6JV68GEZ87FKXGR7MZN1R5BK": {
+          "id": "trt_VQ6JV68GEZ87FKXGR7MZN1R5BK",
+          "kind": "trait",
+          "bakedName": "ReminderScheduler",
+          "curName": "ReminderScheduler",
+          "renames": [],
+          "owner": "workspace"
+         }
+        }
+       }
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintSignInRoute"
+    }
+   ]
+  },
+  {
+   "id": "real-program-shape-notification-center-answers",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "std-notification-center",
+       "version": "1.0.0",
+       "description": "std-notification-center — per-user notification preferences, web-push subscriptions, and the digest drain for suppressed notifications. Owns the two owner-scoped stores std-notify-on-event consults at dispatch time: NotificationPreference rows (per event key: mode instant/digest/off, channel override, per-user quiet hours) and PushSubscription rows (captured via the browser/push-subscribe flow — the shared service worker + PushManager subscription, persisted as flat endpoint/p256dh/auth credentials). The DigestDrain trait is the delivery half of every suppression std-notify-on-event records: an hourly cron tick scans NotificationRecord audit rows left undispatched for digest/quiet-hours reasons and at least `minAgeHours` old, delivers each by email (the digest channel), and marks it dispatched — the reminder-scheduler self-driving scan loop verbatim. Compose alongside std-notify-on-event: the listener suppresses and records, this atom captures subscriptions, edits preferences, and drains.",
+       "orbitals": [
+        {
+         "name": "NotificationCenterOrbital",
+         "id": "orb_VQBZ2YWY5WF2Y8S3JJE6BQNW4C",
+         "uses": [
+          {
+           "from": "std/behaviors/ui-button",
+           "as": "Button"
+          },
+          {
+           "from": "std/behaviors/std-email",
+           "as": "Email"
+          }
+         ],
+         "entity": {
+          "name": "NotificationPreference",
+          "id": "ent_9SFC0KCE6M73AB0CQWSWX8NTYX",
+          "collection": "notificationPreferences",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "personId",
+            "type": "string",
+            "required": true,
+            "description": "Owner of this preference row — rows are meant to be private to their owner. Access predicates need an [identity] roster, so the binding organism (which declares one) owns the @read/@update scoping; the generic atom cannot.",
+            "synonyms": "user, owner, account"
+           },
+           {
+            "name": "eventKey",
+            "type": "string",
+            "default": "",
+            "description": "Event key this preference applies to (matches a listener's eventKey); blank = all events.",
+            "synonyms": "event, trigger, subscription, topic"
+           },
+           {
+            "name": "channel",
+            "type": "string",
+            "default": "in_app",
+            "values": [
+             "in_app",
+             "email",
+             "push",
+             "slack",
+             "sms",
+             "webhook"
+            ],
+            "description": "Channel override for this user.",
+            "synonyms": "preferred channel, delivery method"
+           },
+           {
+            "name": "mode",
+            "type": "string",
+            "default": "instant",
+            "values": [
+             "instant",
+             "digest",
+             "off"
+            ],
+            "description": "Delivery mode: instant (default), digest (deferred to the drain cycle), or off (muted).",
+            "synonyms": "delivery mode, frequency, cadence, mute, defer"
+           },
+           {
+            "name": "quietHours",
+            "type": "string",
+            "default": "",
+            "description": "Per-user quiet-hours window as \"HH:MM-HH:MM\" (e.g. 22:00-07:00); blank = disabled.",
+            "synonyms": "do not disturb, quiet window, night mode"
+           },
+           {
+            "name": "createdAt",
+            "type": "number",
+            "default": 0.0,
+            "description": "Timestamp indicating when this preference row was created.",
+            "synonyms": "creation time, created"
+           },
+           {
+            "name": "updatedAt",
+            "type": "number",
+            "default": 0.0,
+            "description": "Timestamp indicating when this preference row was last updated.",
+            "synonyms": "modified, last updated"
+           }
+          ]
+         },
+         "auxiliaryEntities": [
+          {
+           "name": "PushSubscription",
+           "id": "ent_KEFWKMB0F6G7KDEHSF7QYPNGR0",
+           "collection": "pushSubscriptions",
+           "persistence": "persistent",
+           "fields": [
+            {
+             "name": "id",
+             "type": "string",
+             "required": true
+            },
+            {
+             "name": "userId",
+             "type": "string",
+             "default": "",
+             "description": "Owner of this browser push subscription. Owner-scoped access predicates belong to the binding organism's [identity] roster, as with NotificationPreference.",
+             "synonyms": "user, owner, account"
+            },
+            {
+             "name": "endpoint",
+             "type": "string",
+             "default": "",
+             "description": "Push service endpoint URL for this subscription.",
+             "synonyms": "push url, subscription endpoint"
+            },
+            {
+             "name": "p256dh",
+             "type": "string",
+             "default": "",
+             "description": "Client public key (p256dh) of the subscription.",
+             "synonyms": "public key"
+            },
+            {
+             "name": "auth",
+             "type": "string",
+             "default": "",
+             "description": "Auth secret of the subscription.",
+             "synonyms": "auth secret"
+            },
+            {
+             "name": "createdAt",
+             "type": "number",
+             "default": 0.0,
+             "description": "When this subscription was captured.",
+             "synonyms": "subscribed at, created"
+            },
+            {
+             "name": "lastError",
+             "type": "string",
+             "default": "",
+             "description": "Scratch: last subscribe-flow failure shown to the user; blank = none.",
+             "synonyms": "subscribe error, failure reason"
+            }
+           ]
+          },
+          {
+           "name": "NotificationRecord",
+           "id": "ent_FMK1JWJGPW8BE3XNDTRY5SPCFA",
+           "collection": "notifications",
+           "persistence": "persistent",
+           "fields": [
+            {
+             "name": "id",
+             "type": "string",
+             "required": true
+            },
+            {
+             "name": "recipient",
+             "type": "string",
+             "default": "",
+             "description": "The identifier of the entity receiving the notification.",
+             "synonyms": "user, target, receiver, destination"
+            },
+            {
+             "name": "channel",
+             "type": "string",
+             "default": "in-app",
+             "description": "The delivery method for the notification (e.g., email, SMS, in-app).",
+             "synonyms": "delivery, medium, type"
+            },
+            {
+             "name": "message",
+             "type": "string",
+             "default": "",
+             "description": "The content of the notification message.",
+             "synonyms": "text, content, body"
+            },
+            {
+             "name": "severity",
+             "type": "string",
+             "default": "info",
+             "description": "Indicates the importance or urgency level of the notification.",
+             "synonyms": "priority, level, importance"
+            },
+            {
+             "name": "dispatched",
+             "type": "boolean",
+             "default": false,
+             "description": "Indicates whether the notification has been successfully sent.",
+             "synonyms": "sent, delivered, status"
+            },
+            {
+             "name": "error",
+             "type": "string",
+             "default": "",
+             "description": "Suppression reason or delivery failure detail when dispatched is false.",
+             "synonyms": "error message, failure reason, dispatch error"
+            },
+            {
+             "name": "recordedAt",
+             "type": "number",
+             "default": 0.0,
+             "description": "Timestamp indicating when the notification record was created.",
+             "synonyms": "creation time, timestamp, date, when"
+            }
+           ]
+          },
+          {
+           "name": "DigestRunView",
+           "id": "ent_DBFXWY8RGDC86T95F4RG0HDD8R",
+           "persistence": "runtime",
+           "fields": [
+            {
+             "name": "id",
+             "type": "string",
+             "required": true
+            },
+            {
+             "name": "headId",
+             "type": "string",
+             "default": "",
+             "description": "Scratch: id of the audit row the drain loop is currently delivering.",
+             "synonyms": "current id, cursor"
+            },
+            {
+             "name": "headRecipient",
+             "type": "string",
+             "default": "",
+             "description": "Scratch: recipient of the row being delivered.",
+             "synonyms": "current recipient"
+            },
+            {
+             "name": "headMessage",
+             "type": "string",
+             "default": "",
+             "description": "Scratch: message of the row being delivered.",
+             "synonyms": "current message"
+            },
+            {
+             "name": "drainedCount",
+             "type": "number",
+             "default": 0.0,
+             "description": "Number of rows delivered in the current drain cycle.",
+             "synonyms": "delivered count, processed"
+            },
+            {
+             "name": "lastError",
+             "type": "string",
+             "default": "",
+             "description": "Last drain failure; blank = none.",
+             "synonyms": "drain error, failure"
+            }
+           ]
+          }
+         ],
+         "traits": [
+          {
+           "name": "PushSubscriber",
+           "id": "trt_FSVH6CVH0HRG8Z80X8JNESK8C6",
+           "effectRow": [
+            {
+             "kind": "browser/push-subscribe"
+            },
+            {
+             "kind": "persist",
+             "resource": "PushSubscription"
+            },
+            {
+             "kind": "render-ui",
+             "resource": "toast"
+            },
+            {
+             "kind": "set",
+             "resource": "@entity.lastError"
+            }
+           ],
+           "category": "lifecycle",
+           "linkedEntity": "PushSubscription",
+           "linkedEntityId": "ent_KEFWKMB0F6G7KDEHSF7QYPNGR0",
+           "entityRefIds": {
+            "PushSubscription": "ent_KEFWKMB0F6G7KDEHSF7QYPNGR0"
+           },
+           "emits": [
+            {
+             "event": "PUSH_SUBSCRIBED",
+             "eventId": "evt_XBWMRCYPTFBD7W3E14AEKGW7RB",
+             "description": "browser/push-subscribe resolved; the subscription credentials arrive flat on the payload",
+             "tier": "secondary",
+             "payloadSchema": [
+              {
+               "name": "endpoint",
+               "type": "string"
+              },
+              {
+               "name": "p256dh",
+               "type": "string"
+              },
+              {
+               "name": "auth",
+               "type": "string"
+              }
+             ]
+            },
+            {
+             "event": "PUSH_SUBSCRIBE_FAILED",
+             "eventId": "evt_BJHQT1N5MTJTDAZERH3GP9SWF9",
+             "description": "Push API unavailable, permission denied, or the host has no VAPID key",
+             "tier": "secondary",
+             "payloadSchema": [
+              {
+               "name": "error",
+               "type": "string",
+               "required": true
+              }
+             ]
+            },
+            {
+             "event": "PUSH_SAVED",
+             "eventId": "evt_02FYV6VPY8VF42SDDY7XMTT2Z7",
+             "description": "Subscription row persisted for the current user",
+             "tier": "secondary",
+             "payloadSchema": [
+              {
+               "name": "id",
+               "type": "string",
+               "required": true
+              }
+             ]
+            },
+            {
+             "event": "PUSH_SAVE_FAILED",
+             "eventId": "evt_XMPZH31MBKT5SW1GT8EX0REXJK",
+             "description": "Persisting the subscription row failed",
+             "tier": "secondary",
+             "payloadSchema": [
+              {
+               "name": "error",
+               "type": "string",
+               "required": true
+              }
+             ]
+            }
+           ],
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "SUBSCRIBE_PUSH",
+              "id": "evt_B4FRJE2Z2KFH9YW4SGYQ8TAKYN",
+              "name": "Subscribe Push",
+              "listened": true
+             },
+             {
+              "key": "PUSH_SUBSCRIBED",
+              "id": "evt_XBWMRCYPTFBD7W3E14AEKGW7RB",
+              "name": "Push Subscribed",
+              "description": "browser/push-subscribe resolved; the subscription credentials arrive flat on the payload",
+              "tier": "secondary",
+              "payloadSchema": [
+               {
+                "name": "endpoint",
+                "type": "string"
+               },
+               {
+                "name": "p256dh",
+                "type": "string"
+               },
+               {
+                "name": "auth",
+                "type": "string"
+               }
+              ]
+             },
+             {
+              "key": "PUSH_SAVED",
+              "id": "evt_02FYV6VPY8VF42SDDY7XMTT2Z7",
+              "name": "Push Saved",
+              "description": "Subscription row persisted for the current user",
+              "tier": "secondary",
+              "payloadSchema": [
+               {
+                "name": "id",
+                "type": "string",
+                "required": true
+               }
+              ]
+             },
+             {
+              "key": "PUSH_SUBSCRIBE_FAILED",
+              "id": "evt_BJHQT1N5MTJTDAZERH3GP9SWF9",
+              "name": "Push Subscribe Failed",
+              "description": "Push API unavailable, permission denied, or the host has no VAPID key",
+              "tier": "secondary",
+              "payloadSchema": [
+               {
+                "name": "error",
+                "type": "string",
+                "required": true
+               }
+              ]
+             },
+             {
+              "key": "PUSH_SAVE_FAILED",
+              "id": "evt_XMPZH31MBKT5SW1GT8EX0REXJK",
+              "name": "Push Save Failed",
+              "description": "Persisting the subscription row failed",
+              "tier": "secondary",
+              "payloadSchema": [
+               {
+                "name": "error",
+                "type": "string",
+                "required": true
+               }
+              ]
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "SUBSCRIBE_PUSH",
+              "eventId": "evt_B4FRJE2Z2KFH9YW4SGYQ8TAKYN",
+              "effects": [
+               [
+                "browser/push-subscribe",
+                {
+                 "emit": {
+                  "failure": "PUSH_SUBSCRIBE_FAILED",
+                  "success": "PUSH_SUBSCRIBED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "PUSH_SUBSCRIBED",
+              "eventId": "evt_XBWMRCYPTFBD7W3E14AEKGW7RB",
+              "effects": [
+               [
+                "set",
+                "@entity.lastError",
+                ""
+               ],
+               [
+                "persist",
+                "create",
+                "PushSubscription",
+                {
+                 "auth": "@payload.auth",
+                 "createdAt": "@now",
+                 "endpoint": "@payload.endpoint",
+                 "p256dh": "@payload.p256dh",
+                 "userId": "@user.id"
+                },
+                {
+                 "emit": {
+                  "failure": "PUSH_SAVE_FAILED",
+                  "success": "PUSH_SAVED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "PUSH_SAVED",
+              "eventId": "evt_02FYV6VPY8VF42SDDY7XMTT2Z7",
+              "effects": [
+               [
+                "render-ui",
+                "toast",
+                {
+                 "type": "alert",
+                 "variant": "success",
+                 "message": "Push notifications enabled on this browser",
+                 "dismissible": true
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "PUSH_SUBSCRIBE_FAILED",
+              "eventId": "evt_BJHQT1N5MTJTDAZERH3GP9SWF9",
+              "effects": [
+               [
+                "set",
+                "@entity.lastError",
+                "@payload.error"
+               ],
+               [
+                "render-ui",
+                "toast",
+                {
+                 "type": "alert",
+                 "variant": "warning",
+                 "message": "Could not enable push notifications",
+                 "dismissible": true
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "PUSH_SAVE_FAILED",
+              "eventId": "evt_XMPZH31MBKT5SW1GT8EX0REXJK",
+              "effects": [
+               [
+                "set",
+                "@entity.lastError",
+                "@payload.error"
+               ],
+               [
+                "render-ui",
+                "toast",
+                {
+                 "type": "alert",
+                 "variant": "warning",
+                 "message": "Could not save the push subscription",
+                 "dismissible": true
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "scope": "instance"
+          },
+          {
+           "ref": "Button.traits.ButtonRender",
+           "id": "trt_ECT5YP16VDKDPSJVZKHG7RAGJJ",
+           "name": "PreferenceEditorButtonSubscribe",
+           "linkedEntity": "NotificationPreference",
+           "linkedEntityId": "ent_9SFC0KCE6M73AB0CQWSWX8NTYX",
+           "config": {
+            "action": {
+             "type": "unknown",
+             "default": "OPEN_SUBSCRIBE"
+            },
+            "label": {
+             "type": "unknown",
+             "default": "Enable push notifications"
+            }
+           }
+          },
+          {
+           "ref": "Button.traits.ButtonRender",
+           "id": "trt_NASW4TMBG95R4P7MF2KSWDSDGS",
+           "name": "PreferenceEditorButtonDigest",
+           "linkedEntity": "NotificationPreference",
+           "linkedEntityId": "ent_9SFC0KCE6M73AB0CQWSWX8NTYX",
+           "config": {
+            "action": {
+             "type": "unknown",
+             "default": "OPEN_DIGEST"
+            },
+            "label": {
+             "type": "unknown",
+             "default": "View notification digest"
+            }
+           }
+          },
+          {
+           "name": "PreferenceEditor",
+           "id": "trt_WE0GEX3SSNWWTQZARWCHC54WG1",
+           "effectRow": [
+            {
+             "kind": "fetch",
+             "resource": "NotificationPreference"
+            },
+            {
+             "kind": "navigate",
+             "resource": "/notifications/digest"
+            },
+            {
+             "kind": "navigate",
+             "resource": "/notifications/subscribe"
+            },
+            {
+             "kind": "persist",
+             "resource": "NotificationPreference"
+            },
+            {
+             "kind": "render-ui",
+             "resource": "main"
+            },
+            {
+             "kind": "render-ui",
+             "resource": "toast"
+            }
+           ],
+           "category": "lifecycle",
+           "linkedEntity": "NotificationPreference",
+           "linkedEntityId": "ent_9SFC0KCE6M73AB0CQWSWX8NTYX",
+           "entityRefIds": {
+            "NotificationPreference": "ent_9SFC0KCE6M73AB0CQWSWX8NTYX"
+           },
+           "traitEmbedIds": {
+            "PreferenceEditorButtonSubscribe": "trt_ECT5YP16VDKDPSJVZKHG7RAGJJ",
+            "PreferenceEditorButtonDigest": "trt_NASW4TMBG95R4P7MF2KSWDSDGS"
+           },
+           "emits": [
+            {
+             "event": "PREFERENCE_SAVED",
+             "eventId": "evt_EABFA0HMM4TA2DWFVK5HDGYNHD",
+             "description": "Preference row persisted",
+             "tier": "secondary",
+             "payloadSchema": [
+              {
+               "name": "id",
+               "type": "string",
+               "required": true
+              }
+             ]
+            },
+            {
+             "event": "PREFERENCE_DELETED",
+             "eventId": "evt_ETABRCXEVGQDR46ND53X4K9N8V",
+             "description": "Preference row removed",
+             "tier": "secondary",
+             "payloadSchema": [
+              {
+               "name": "id",
+               "type": "string",
+               "required": true
+              }
+             ]
+            },
+            {
+             "event": "PREFERENCE_SAVE_FAILED",
+             "eventId": "evt_G1MQDDFQ94VMJCY9XEG4AJZ332",
+             "description": "Preference persist failed",
+             "tier": "secondary",
+             "payloadSchema": [
+              {
+               "name": "error",
+               "type": "string",
+               "required": true
+              }
+             ]
+            }
+           ],
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "INIT",
+              "id": "evt_KSEC1W3JF2S7H05MM1PXSEQMTB",
+              "name": "Initialize"
+             },
+             {
+              "key": "OPEN_SUBSCRIBE",
+              "id": "evt_YN990M6AX75EKMP7T414N16ZH9",
+              "name": "Open Subscribe"
+             },
+             {
+              "key": "OPEN_DIGEST",
+              "id": "evt_6V616VEXANENAZRHZV49765EKV",
+              "name": "Open Digest"
+             },
+             {
+              "key": "SAVE_PREFERENCE",
+              "id": "evt_3EQG1K8SQ2CVH7FEBBNR3EKG1Y",
+              "name": "Save Preference",
+              "payloadSchema": [
+               {
+                "name": "eventKey",
+                "type": "string"
+               },
+               {
+                "name": "mode",
+                "type": "string"
+               },
+               {
+                "name": "channel",
+                "type": "string"
+               },
+               {
+                "name": "quietHours",
+                "type": "string"
+               }
+              ],
+              "listened": true
+             },
+             {
+              "key": "UPDATE_PREFERENCE",
+              "id": "evt_JS6T49PD376HKJAX6S5QZNNJ2X",
+              "name": "Update Preference",
+              "payloadSchema": [
+               {
+                "name": "id",
+                "type": "string"
+               },
+               {
+                "name": "eventKey",
+                "type": "string"
+               },
+               {
+                "name": "mode",
+                "type": "string"
+               },
+               {
+                "name": "channel",
+                "type": "string"
+               },
+               {
+                "name": "quietHours",
+                "type": "string"
+               }
+              ],
+              "listened": true
+             },
+             {
+              "key": "DELETE_PREFERENCE",
+              "id": "evt_JZGRDCWK4H9J8T6R3A0Z6TCP01",
+              "name": "Delete Preference",
+              "payloadSchema": [
+               {
+                "name": "id",
+                "type": "string"
+               }
+              ],
+              "listened": true
+             },
+             {
+              "key": "PREFERENCE_SAVED",
+              "id": "evt_EABFA0HMM4TA2DWFVK5HDGYNHD",
+              "name": "Preference Saved",
+              "description": "Preference row persisted",
+              "tier": "secondary",
+              "payloadSchema": [
+               {
+                "name": "id",
+                "type": "string",
+                "required": true
+               }
+              ]
+             },
+             {
+              "key": "PREFERENCE_DELETED",
+              "id": "evt_ETABRCXEVGQDR46ND53X4K9N8V",
+              "name": "Preference Deleted",
+              "description": "Preference row removed",
+              "tier": "secondary",
+              "payloadSchema": [
+               {
+                "name": "id",
+                "type": "string",
+                "required": true
+               }
+              ]
+             },
+             {
+              "key": "PREFERENCE_SAVE_FAILED",
+              "id": "evt_G1MQDDFQ94VMJCY9XEG4AJZ332",
+              "name": "Preference Save Failed",
+              "description": "Preference persist failed",
+              "tier": "secondary",
+              "payloadSchema": [
+               {
+                "name": "error",
+                "type": "string",
+                "required": true
+               }
+              ]
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "eventId": "evt_KSEC1W3JF2S7H05MM1PXSEQMTB",
+              "effects": [
+               [
+                "fetch",
+                "NotificationPreference"
+               ],
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "direction": "vertical",
+                 "gap": "md",
+                 "children": [
+                  "@trait.PreferenceEditorButtonSubscribe",
+                  "@trait.PreferenceEditorButtonDigest"
+                 ]
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "OPEN_SUBSCRIBE",
+              "eventId": "evt_YN990M6AX75EKMP7T414N16ZH9",
+              "effects": [
+               [
+                "navigate",
+                "/notifications/subscribe"
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "OPEN_DIGEST",
+              "eventId": "evt_6V616VEXANENAZRHZV49765EKV",
+              "effects": [
+               [
+                "navigate",
+                "/notifications/digest"
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "SAVE_PREFERENCE",
+              "eventId": "evt_3EQG1K8SQ2CVH7FEBBNR3EKG1Y",
+              "effects": [
+               [
+                "persist",
+                "create",
+                "NotificationPreference",
+                {
+                 "channel": "@payload.channel",
+                 "createdAt": "@now",
+                 "eventKey": "@payload.eventKey",
+                 "mode": "@payload.mode",
+                 "personId": "@user.id",
+                 "quietHours": "@payload.quietHours",
+                 "updatedAt": "@now"
+                },
+                {
+                 "emit": {
+                  "failure": "PREFERENCE_SAVE_FAILED",
+                  "success": "PREFERENCE_SAVED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "UPDATE_PREFERENCE",
+              "eventId": "evt_JS6T49PD376HKJAX6S5QZNNJ2X",
+              "effects": [
+               [
+                "persist",
+                "update",
+                "NotificationPreference",
+                {
+                 "id": "@payload.id",
+                 "channel": "@payload.channel",
+                 "eventKey": "@payload.eventKey",
+                 "mode": "@payload.mode",
+                 "quietHours": "@payload.quietHours",
+                 "updatedAt": "@now"
+                },
+                {
+                 "emit": {
+                  "failure": "PREFERENCE_SAVE_FAILED",
+                  "success": "PREFERENCE_SAVED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "DELETE_PREFERENCE",
+              "eventId": "evt_JZGRDCWK4H9J8T6R3A0Z6TCP01",
+              "effects": [
+               [
+                "persist",
+                "delete",
+                "NotificationPreference",
+                "@payload.id",
+                {
+                 "emit": {
+                  "failure": "PREFERENCE_SAVE_FAILED",
+                  "success": "PREFERENCE_DELETED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "PREFERENCE_SAVED",
+              "eventId": "evt_EABFA0HMM4TA2DWFVK5HDGYNHD",
+              "effects": [
+               [
+                "render-ui",
+                "toast",
+                {
+                 "type": "alert",
+                 "variant": "success",
+                 "message": "Notification preference saved",
+                 "dismissible": true
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "PREFERENCE_DELETED",
+              "eventId": "evt_ETABRCXEVGQDR46ND53X4K9N8V",
+              "effects": [
+               [
+                "render-ui",
+                "toast",
+                {
+                 "type": "alert",
+                 "variant": "info",
+                 "message": "Notification preference removed",
+                 "dismissible": true
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "PREFERENCE_SAVE_FAILED",
+              "eventId": "evt_G1MQDDFQ94VMJCY9XEG4AJZ332",
+              "effects": [
+               [
+                "render-ui",
+                "toast",
+                {
+                 "type": "alert",
+                 "variant": "warning",
+                 "message": "Could not save the notification preference",
+                 "dismissible": true
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "scope": "instance"
+          },
+          {
+           "ref": "Email.traits.EmailSender",
+           "id": "trt_1XQ59DN704KG22B7RCBV3FM8XW",
+           "name": "DigestMailer",
+           "listens": [
+            {
+             "event": "EMAIL_SEND",
+             "triggers": "EMAIL_SEND",
+             "source": {
+              "kind": "trait",
+              "trait": "DigestDrain"
+             }
+            }
+           ]
+          },
+          {
+           "name": "DigestDrain",
+           "id": "trt_5X2W3SXQXCVYP32AHS6JS0YEE9",
+           "effectRow": [
+            {
+             "kind": "emit",
+             "resource": "EMAIL_SEND"
+            },
+            {
+             "kind": "fetch",
+             "resource": "NotificationRecord"
+            },
+            {
+             "kind": "fetch",
+             "resource": "NotificationRecord",
+             "site": "tick"
+            },
+            {
+             "kind": "persist",
+             "resource": "NotificationRecord"
+            },
+            {
+             "kind": "render-ui",
+             "resource": "toast"
+            },
+            {
+             "kind": "set",
+             "resource": "@entity.drainedCount"
+            },
+            {
+             "kind": "set",
+             "resource": "@entity.headId"
+            },
+            {
+             "kind": "set",
+             "resource": "@entity.headMessage"
+            },
+            {
+             "kind": "set",
+             "resource": "@entity.headRecipient"
+            },
+            {
+             "kind": "set",
+             "resource": "@entity.lastError"
+            },
+            {
+             "kind": "ticks",
+             "site": "tick"
+            }
+           ],
+           "category": "lifecycle",
+           "linkedEntity": "DigestRunView",
+           "linkedEntityId": "ent_DBFXWY8RGDC86T95F4RG0HDD8R",
+           "entityRefIds": {
+            "DigestRunView": "ent_DBFXWY8RGDC86T95F4RG0HDD8R",
+            "NotificationRecord": "ent_FMK1JWJGPW8BE3XNDTRY5SPCFA"
+           },
+           "emits": [
+            {
+             "event": "DIGEST_ROWS_LOADED",
+             "eventId": "evt_0S7GWCNVT7XX3NNBX64XYAG6AT",
+             "description": "Undispatched digest/quiet-hours audit rows past minAgeHours, oldest batch first",
+             "tier": "secondary",
+             "payloadSchema": [
+              {
+               "name": "data",
+               "type": "[object]",
+               "properties": [
+                {
+                 "name": "id",
+                 "type": "string"
+                },
+                {
+                 "name": "recipient",
+                 "type": "string"
+                },
+                {
+                 "name": "channel",
+                 "type": "string"
+                },
+                {
+                 "name": "message",
+                 "type": "string"
+                },
+                {
+                 "name": "severity",
+                 "type": "string"
+                },
+                {
+                 "name": "dispatched",
+                 "type": "boolean"
+                },
+                {
+                 "name": "error",
+                 "type": "string"
+                },
+                {
+                 "name": "recordedAt",
+                 "type": "number"
+                }
+               ],
+               "entity": "NotifRow"
+              }
+             ]
+            },
+            {
+             "event": "EMAIL_SEND",
+             "eventId": "evt_G8BM5E4PNCBAP5H07BMPRMJ2HA",
+             "description": "Send the current digest row by email",
+             "tier": "secondary",
+             "scope": "external",
+             "payloadSchema": [
+              {
+               "name": "to",
+               "type": "string",
+               "required": true
+              },
+              {
+               "name": "subject",
+               "type": "string",
+               "required": true
+              },
+              {
+               "name": "body",
+               "type": "string",
+               "required": true
+              }
+             ]
+            },
+            {
+             "event": "DIGEST_STEPPED",
+             "eventId": "evt_0DFRN2S936MHK8TVVWE6X0GCGS",
+             "description": "Current row marked dispatched; drives the next loop pass",
+             "tier": "secondary",
+             "payloadSchema": [
+              {
+               "name": "id",
+               "type": "string",
+               "required": true
+              }
+             ]
+            },
+            {
+             "event": "DIGEST_FAILED",
+             "eventId": "evt_9A59DJKXNSYTWVG1WZ84NX5CWK",
+             "description": "Digest scan / delivery / persist failed — the cycle stops until the next tick",
+             "tier": "secondary",
+             "payloadSchema": [
+              {
+               "name": "error",
+               "type": "string",
+               "required": true
+              }
+             ]
+            }
+           ],
+           "listens": [
+            {
+             "event": "EMAIL_SENT",
+             "triggers": "DIGEST_ITEM_SENT",
+             "triggersId": "evt_ZWA78MWCPN6BAJJJP53M8CZPMD",
+             "source": {
+              "kind": "trait",
+              "trait": "DigestMailer",
+              "traitId": "trt_1XQ59DN704KG22B7RCBV3FM8XW"
+             }
+            },
+            {
+             "event": "EMAIL_SEND_FAILED",
+             "triggers": "DIGEST_MAIL_FAILED",
+             "triggersId": "evt_5CVKFEN5GGJR809EE3ZKCEQ3GC",
+             "source": {
+              "kind": "trait",
+              "trait": "DigestMailer",
+              "traitId": "trt_1XQ59DN704KG22B7RCBV3FM8XW"
+             }
+            }
+           ],
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "draining"
+             }
+            ],
+            "events": [
+             {
+              "key": "DIGEST_ROWS_LOADED",
+              "id": "evt_0S7GWCNVT7XX3NNBX64XYAG6AT",
+              "name": "Digest Rows Loaded",
+              "description": "Undispatched digest/quiet-hours audit rows past minAgeHours, oldest batch first",
+              "tier": "secondary",
+              "payloadSchema": [
+               {
+                "name": "data",
+                "type": "[object]",
+                "properties": [
+                 {
+                  "name": "id",
+                  "type": "string"
+                 },
+                 {
+                  "name": "recipient",
+                  "type": "string"
+                 },
+                 {
+                  "name": "channel",
+                  "type": "string"
+                 },
+                 {
+                  "name": "message",
+                  "type": "string"
+                 },
+                 {
+                  "name": "severity",
+                  "type": "string"
+                 },
+                 {
+                  "name": "dispatched",
+                  "type": "boolean"
+                 },
+                 {
+                  "name": "error",
+                  "type": "string"
+                 },
+                 {
+                  "name": "recordedAt",
+                  "type": "number"
+                 }
+                ]
+               }
+              ],
+              "listened": true
+             },
+             {
+              "key": "DIGEST_FAILED",
+              "id": "evt_9A59DJKXNSYTWVG1WZ84NX5CWK",
+              "name": "Digest Failed",
+              "description": "Digest scan / delivery / persist failed — the cycle stops until the next tick",
+              "tier": "secondary",
+              "payloadSchema": [
+               {
+                "name": "error",
+                "type": "string",
+                "required": true
+               }
+              ],
+              "listened": true
+             },
+             {
+              "key": "DIGEST_ITEM_SENT",
+              "id": "evt_ZWA78MWCPN6BAJJJP53M8CZPMD",
+              "name": "Digest Item Sent",
+              "payloadSchema": [
+               {
+                "name": "id",
+                "type": "string"
+               },
+               {
+                "name": "status",
+                "type": "string",
+                "required": true
+               }
+              ],
+              "listened": true
+             },
+             {
+              "key": "DIGEST_STEPPED",
+              "id": "evt_0DFRN2S936MHK8TVVWE6X0GCGS",
+              "name": "Digest Stepped",
+              "description": "Current row marked dispatched; drives the next loop pass",
+              "tier": "secondary",
+              "payloadSchema": [
+               {
+                "name": "id",
+                "type": "string",
+                "required": true
+               }
+              ],
+              "listened": true
+             },
+             {
+              "key": "DIGEST_MAIL_FAILED",
+              "id": "evt_5CVKFEN5GGJR809EE3ZKCEQ3GC",
+              "name": "Digest Mail Failed",
+              "payloadSchema": [
+               {
+                "name": "message",
+                "type": "string",
+                "required": true
+               }
+              ],
+              "listened": true
+             },
+             {
+              "key": "EMAIL_SEND",
+              "id": "evt_G8BM5E4PNCBAP5H07BMPRMJ2HA",
+              "name": "Email Send",
+              "description": "Send the current digest row by email",
+              "tier": "secondary",
+              "payloadSchema": [
+               {
+                "name": "to",
+                "type": "string",
+                "required": true
+               },
+               {
+                "name": "subject",
+                "type": "string",
+                "required": true
+               },
+               {
+                "name": "body",
+                "type": "string",
+                "required": true
+               }
+              ]
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "draining",
+              "event": "DIGEST_ROWS_LOADED",
+              "eventId": "evt_0S7GWCNVT7XX3NNBX64XYAG6AT",
+              "guard": [
+               "and",
+               "@config.digestEnabled",
+               [
+                ">",
+                [
+                 "array/len",
+                 "@payload.data"
+                ],
+                0.0
+               ]
+              ],
+              "effects": [
+               [
+                "set",
+                "@entity.headId",
+                [
+                 "object/get",
+                 [
+                  "array/first",
+                  "@payload.data"
+                 ],
+                 "id"
+                ]
+               ],
+               [
+                "set",
+                "@entity.headRecipient",
+                [
+                 "object/get",
+                 [
+                  "array/first",
+                  "@payload.data"
+                 ],
+                 "recipient"
+                ]
+               ],
+               [
+                "set",
+                "@entity.headMessage",
+                [
+                 "object/get",
+                 [
+                  "array/first",
+                  "@payload.data"
+                 ],
+                 "message"
+                ]
+               ],
+               [
+                "emit",
+                "EMAIL_SEND",
+                {
+                 "body": "@entity.headMessage",
+                 "subject": "@config.digestSubject",
+                 "to": "@entity.headRecipient"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "DIGEST_ROWS_LOADED",
+              "eventId": "evt_0S7GWCNVT7XX3NNBX64XYAG6AT",
+              "guard": [
+               "=",
+               [
+                "array/len",
+                "@payload.data"
+               ],
+               0.0
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "DIGEST_FAILED",
+              "eventId": "evt_9A59DJKXNSYTWVG1WZ84NX5CWK",
+              "effects": [
+               [
+                "set",
+                "@entity.lastError",
+                "@payload.error"
+               ],
+               [
+                "render-ui",
+                "toast",
+                {
+                 "type": "alert",
+                 "variant": "error",
+                 "message": [
+                  "str/concat",
+                  "Couldn't send the notification digest — ",
+                  "@payload.error"
+                 ],
+                 "dismissible": true
+                }
+               ]
+              ]
+             },
+             {
+              "from": "draining",
+              "to": "draining",
+              "event": "DIGEST_ITEM_SENT",
+              "eventId": "evt_ZWA78MWCPN6BAJJJP53M8CZPMD",
+              "effects": [
+               [
+                "set",
+                "@entity.drainedCount",
+                [
+                 "+",
+                 "@entity.drainedCount",
+                 1.0
+                ]
+               ],
+               [
+                "persist",
+                "update",
+                "NotificationRecord",
+                {
+                 "id": "@entity.headId",
+                 "dispatched": true
+                },
+                {
+                 "emit": {
+                  "failure": "DIGEST_FAILED",
+                  "success": "DIGEST_STEPPED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "draining",
+              "to": "draining",
+              "event": "DIGEST_STEPPED",
+              "eventId": "evt_0DFRN2S936MHK8TVVWE6X0GCGS",
+              "effects": [
+               [
+                "fetch",
+                "NotificationRecord",
+                {
+                 "emit": {
+                  "failure": "DIGEST_FAILED",
+                  "success": "DIGEST_ROWS_LOADED"
+                 },
+                 "filter": [
+                  "and",
+                  [
+                   "=",
+                   [
+                    "object/get",
+                    "@entity",
+                    "dispatched"
+                   ],
+                   false
+                  ],
+                  [
+                   "or",
+                   [
+                    "=",
+                    [
+                     "object/get",
+                     "@entity",
+                     "error"
+                    ],
+                    "digest-deferred"
+                   ],
+                   [
+                    "=",
+                    [
+                     "object/get",
+                     "@entity",
+                     "error"
+                    ],
+                    "quiet-hours"
+                   ]
+                  ],
+                  [
+                   "<",
+                   [
+                    "object/get",
+                    "@entity",
+                    "recordedAt"
+                   ],
+                   [
+                    "-",
+                    "@now",
+                    [
+                     "*",
+                     "@config.minAgeHours",
+                     3600000.0
+                    ]
+                   ]
+                  ]
+                 ]
+                }
+               ]
+              ]
+             },
+             {
+              "from": "draining",
+              "to": "draining",
+              "event": "DIGEST_ROWS_LOADED",
+              "eventId": "evt_0S7GWCNVT7XX3NNBX64XYAG6AT",
+              "guard": [
+               ">",
+               [
+                "array/len",
+                "@payload.data"
+               ],
+               0.0
+              ],
+              "effects": [
+               [
+                "set",
+                "@entity.headId",
+                [
+                 "object/get",
+                 [
+                  "array/first",
+                  "@payload.data"
+                 ],
+                 "id"
+                ]
+               ],
+               [
+                "set",
+                "@entity.headRecipient",
+                [
+                 "object/get",
+                 [
+                  "array/first",
+                  "@payload.data"
+                 ],
+                 "recipient"
+                ]
+               ],
+               [
+                "set",
+                "@entity.headMessage",
+                [
+                 "object/get",
+                 [
+                  "array/first",
+                  "@payload.data"
+                 ],
+                 "message"
+                ]
+               ],
+               [
+                "emit",
+                "EMAIL_SEND",
+                {
+                 "body": "@entity.headMessage",
+                 "subject": "@config.digestSubject",
+                 "to": "@entity.headRecipient"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "draining",
+              "to": "idle",
+              "event": "DIGEST_ROWS_LOADED",
+              "eventId": "evt_0S7GWCNVT7XX3NNBX64XYAG6AT",
+              "guard": [
+               "=",
+               [
+                "array/len",
+                "@payload.data"
+               ],
+               0.0
+              ]
+             },
+             {
+              "from": "draining",
+              "to": "idle",
+              "event": "DIGEST_FAILED",
+              "eventId": "evt_9A59DJKXNSYTWVG1WZ84NX5CWK",
+              "effects": [
+               [
+                "set",
+                "@entity.lastError",
+                "@payload.error"
+               ],
+               [
+                "render-ui",
+                "toast",
+                {
+                 "type": "alert",
+                 "variant": "error",
+                 "message": [
+                  "str/concat",
+                  "Couldn't send the notification digest — ",
+                  "@payload.error"
+                 ],
+                 "dismissible": true
+                }
+               ]
+              ]
+             },
+             {
+              "from": "draining",
+              "to": "idle",
+              "event": "DIGEST_MAIL_FAILED",
+              "eventId": "evt_5CVKFEN5GGJR809EE3ZKCEQ3GC",
+              "effects": [
+               [
+                "set",
+                "@entity.lastError",
+                "@payload.message"
+               ],
+               [
+                "render-ui",
+                "toast",
+                {
+                 "type": "alert",
+                 "variant": "error",
+                 "message": [
+                  "str/concat",
+                  "Couldn't send the notification digest — ",
+                  "@payload.message"
+                 ],
+                 "dismissible": true
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "ticks": [
+            {
+             "name": "digestCycle",
+             "interval": "0 * * * *",
+             "effects": [
+              [
+               "fetch",
+               "NotificationRecord",
+               {
+                "emit": {
+                 "failure": "DIGEST_FAILED",
+                 "success": "DIGEST_ROWS_LOADED"
+                },
+                "filter": [
+                 "and",
+                 [
+                  "=",
+                  [
+                   "object/get",
+                   "@entity",
+                   "dispatched"
+                  ],
+                  false
+                 ],
+                 [
+                  "or",
+                  [
+                   "=",
+                   [
+                    "object/get",
+                    "@entity",
+                    "error"
+                   ],
+                   "digest-deferred"
+                  ],
+                  [
+                   "=",
+                   [
+                    "object/get",
+                    "@entity",
+                    "error"
+                   ],
+                   "quiet-hours"
+                  ]
+                 ],
+                 [
+                  "<",
+                  [
+                   "object/get",
+                   "@entity",
+                   "recordedAt"
+                  ],
+                  [
+                   "-",
+                   "@now",
+                   [
+                    "*",
+                    "@config.minAgeHours",
+                    3600000.0
+                   ]
+                  ]
+                 ]
+                ]
+               }
+              ]
+             ],
+             "runsInBackground": true
+            }
+           ],
+           "config": {
+            "digestSubject": {
+             "type": "string",
+             "default": "Notification digest",
+             "label": "Digest email subject",
+             "description": "Subject line for drained digest deliveries.",
+             "synonyms": "digest title, summary subject, email subject",
+             "tier": "presentation"
+            },
+            "minAgeHours": {
+             "type": "number",
+             "default": 1.0,
+             "label": "Minimum age (hours)",
+             "description": "Only drain audit rows at least this many hours old, so quiet-hours suppressions are not redelivered inside their window.",
+             "synonyms": "delay, drain delay, hold for, batch window",
+             "tier": "infra"
+            },
+            "digestEnabled": {
+             "type": "boolean",
+             "default": false,
+             "label": "Deliver digests",
+             "description": "Drain suppressed notifications (digest-deferred and quiet-hours audit rows) on the hourly cycle. Off by default.",
+             "synonyms": "enable digest, digest mode, batch notifications, daily summary, drain suppressed",
+             "tier": "infra"
+            }
+           },
+           "scope": "instance"
+          }
+         ],
+         "pages": [
+          {
+           "name": "NotificationPreferencesPage",
+           "id": "pag_VKQFW1D1GPGRB94S1T6VV0V8VN",
+           "path": "/notifications/preferences",
+           "traits": [
+            {
+             "ref": "PreferenceEditor",
+             "refId": "trt_WE0GEX3SSNWWTQZARWCHC54WG1"
+            },
+            {
+             "ref": "PreferenceEditorButtonSubscribe",
+             "refId": "trt_ECT5YP16VDKDPSJVZKHG7RAGJJ"
+            },
+            {
+             "ref": "PreferenceEditorButtonDigest",
+             "refId": "trt_NASW4TMBG95R4P7MF2KSWDSDGS"
+            }
+           ]
+          },
+          {
+           "name": "PushSubscribePage",
+           "id": "pag_ZC96H4NF3MQHTF08P3AGC73TNK",
+           "path": "/notifications/subscribe",
+           "traits": [
+            {
+             "ref": "PushSubscriber",
+             "refId": "trt_FSVH6CVH0HRG8Z80X8JNESK8C6"
+            }
+           ]
+          },
+          {
+           "name": "NotificationDigestPage",
+           "id": "pag_CKB79DYPGWB8E36MH5PB83EEK1",
+           "path": "/notifications/digest",
+           "traits": [
+            {
+             "ref": "DigestDrain",
+             "refId": "trt_5X2W3SXQXCVYP32AHS6JS0YEE9"
+            },
+            {
+             "ref": "DigestMailer",
+             "refId": "trt_1XQ59DN704KG22B7RCBV3FM8XW"
+            }
+           ]
+          }
+         ],
+         "types": {
+          "NotifRow": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "recipient",
+            "type": "string"
+           },
+           {
+            "name": "channel",
+            "type": "string"
+           },
+           {
+            "name": "message",
+            "type": "string"
+           },
+           {
+            "name": "severity",
+            "type": "string"
+           },
+           {
+            "name": "dispatched",
+            "type": "boolean"
+           },
+           {
+            "name": "error",
+            "type": "string"
+           },
+           {
+            "name": "recordedAt",
+            "type": "number"
+           }
+          ],
+          "PushCreds": [
+           {
+            "name": "endpoint",
+            "type": "string"
+           },
+           {
+            "name": "p256dh",
+            "type": "string"
+           },
+           {
+            "name": "auth",
+            "type": "string"
+           }
+          ]
+         }
+        }
+       ],
+       "egress": [
+        "https://api.sendgrid.com",
+        "https://api.resend.com"
+       ],
+       "schemaVersion": 1,
+       "ledger": {
+        "schemaVersion": 1,
+        "entries": {
+         "ent_9SFC0KCE6M73AB0CQWSWX8NTYX": {
+          "id": "ent_9SFC0KCE6M73AB0CQWSWX8NTYX",
+          "kind": "entity",
+          "bakedName": "NotificationPreference",
+          "curName": "NotificationPreference",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "ent_DBFXWY8RGDC86T95F4RG0HDD8R": {
+          "id": "ent_DBFXWY8RGDC86T95F4RG0HDD8R",
+          "kind": "entity",
+          "bakedName": "DigestRunView",
+          "curName": "DigestRunView",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "ent_FMK1JWJGPW8BE3XNDTRY5SPCFA": {
+          "id": "ent_FMK1JWJGPW8BE3XNDTRY5SPCFA",
+          "kind": "entity",
+          "bakedName": "NotificationRecord",
+          "curName": "NotificationRecord",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "ent_KEFWKMB0F6G7KDEHSF7QYPNGR0": {
+          "id": "ent_KEFWKMB0F6G7KDEHSF7QYPNGR0",
+          "kind": "entity",
+          "bakedName": "PushSubscription",
+          "curName": "PushSubscription",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "evt_02FYV6VPY8VF42SDDY7XMTT2Z7": {
+          "id": "evt_02FYV6VPY8VF42SDDY7XMTT2Z7",
+          "kind": "event",
+          "bakedName": "PUSH_SAVED",
+          "curName": "PUSH_SAVED",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_FSVH6CVH0HRG8Z80X8JNESK8C6"
+         },
+         "evt_0DFRN2S936MHK8TVVWE6X0GCGS": {
+          "id": "evt_0DFRN2S936MHK8TVVWE6X0GCGS",
+          "kind": "event",
+          "bakedName": "DIGEST_STEPPED",
+          "curName": "DIGEST_STEPPED",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_5X2W3SXQXCVYP32AHS6JS0YEE9"
+         },
+         "evt_0S7GWCNVT7XX3NNBX64XYAG6AT": {
+          "id": "evt_0S7GWCNVT7XX3NNBX64XYAG6AT",
+          "kind": "event",
+          "bakedName": "DIGEST_ROWS_LOADED",
+          "curName": "DIGEST_ROWS_LOADED",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_5X2W3SXQXCVYP32AHS6JS0YEE9"
+         },
+         "evt_3EQG1K8SQ2CVH7FEBBNR3EKG1Y": {
+          "id": "evt_3EQG1K8SQ2CVH7FEBBNR3EKG1Y",
+          "kind": "event",
+          "bakedName": "SAVE_PREFERENCE",
+          "curName": "SAVE_PREFERENCE",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_WE0GEX3SSNWWTQZARWCHC54WG1"
+         },
+         "evt_5CVKFEN5GGJR809EE3ZKCEQ3GC": {
+          "id": "evt_5CVKFEN5GGJR809EE3ZKCEQ3GC",
+          "kind": "event",
+          "bakedName": "DIGEST_MAIL_FAILED",
+          "curName": "DIGEST_MAIL_FAILED",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_5X2W3SXQXCVYP32AHS6JS0YEE9"
+         },
+         "evt_6V616VEXANENAZRHZV49765EKV": {
+          "id": "evt_6V616VEXANENAZRHZV49765EKV",
+          "kind": "event",
+          "bakedName": "OPEN_DIGEST",
+          "curName": "OPEN_DIGEST",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_WE0GEX3SSNWWTQZARWCHC54WG1"
+         },
+         "evt_9A59DJKXNSYTWVG1WZ84NX5CWK": {
+          "id": "evt_9A59DJKXNSYTWVG1WZ84NX5CWK",
+          "kind": "event",
+          "bakedName": "DIGEST_FAILED",
+          "curName": "DIGEST_FAILED",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_5X2W3SXQXCVYP32AHS6JS0YEE9"
+         },
+         "evt_B4FRJE2Z2KFH9YW4SGYQ8TAKYN": {
+          "id": "evt_B4FRJE2Z2KFH9YW4SGYQ8TAKYN",
+          "kind": "event",
+          "bakedName": "SUBSCRIBE_PUSH",
+          "curName": "SUBSCRIBE_PUSH",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_FSVH6CVH0HRG8Z80X8JNESK8C6"
+         },
+         "evt_BJHQT1N5MTJTDAZERH3GP9SWF9": {
+          "id": "evt_BJHQT1N5MTJTDAZERH3GP9SWF9",
+          "kind": "event",
+          "bakedName": "PUSH_SUBSCRIBE_FAILED",
+          "curName": "PUSH_SUBSCRIBE_FAILED",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_FSVH6CVH0HRG8Z80X8JNESK8C6"
+         },
+         "evt_EABFA0HMM4TA2DWFVK5HDGYNHD": {
+          "id": "evt_EABFA0HMM4TA2DWFVK5HDGYNHD",
+          "kind": "event",
+          "bakedName": "PREFERENCE_SAVED",
+          "curName": "PREFERENCE_SAVED",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_WE0GEX3SSNWWTQZARWCHC54WG1"
+         },
+         "evt_ETABRCXEVGQDR46ND53X4K9N8V": {
+          "id": "evt_ETABRCXEVGQDR46ND53X4K9N8V",
+          "kind": "event",
+          "bakedName": "PREFERENCE_DELETED",
+          "curName": "PREFERENCE_DELETED",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_WE0GEX3SSNWWTQZARWCHC54WG1"
+         },
+         "evt_G1MQDDFQ94VMJCY9XEG4AJZ332": {
+          "id": "evt_G1MQDDFQ94VMJCY9XEG4AJZ332",
+          "kind": "event",
+          "bakedName": "PREFERENCE_SAVE_FAILED",
+          "curName": "PREFERENCE_SAVE_FAILED",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_WE0GEX3SSNWWTQZARWCHC54WG1"
+         },
+         "evt_G8BM5E4PNCBAP5H07BMPRMJ2HA": {
+          "id": "evt_G8BM5E4PNCBAP5H07BMPRMJ2HA",
+          "kind": "event",
+          "bakedName": "EMAIL_SEND",
+          "curName": "EMAIL_SEND",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_5X2W3SXQXCVYP32AHS6JS0YEE9"
+         },
+         "evt_JS6T49PD376HKJAX6S5QZNNJ2X": {
+          "id": "evt_JS6T49PD376HKJAX6S5QZNNJ2X",
+          "kind": "event",
+          "bakedName": "UPDATE_PREFERENCE",
+          "curName": "UPDATE_PREFERENCE",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_WE0GEX3SSNWWTQZARWCHC54WG1"
+         },
+         "evt_JZGRDCWK4H9J8T6R3A0Z6TCP01": {
+          "id": "evt_JZGRDCWK4H9J8T6R3A0Z6TCP01",
+          "kind": "event",
+          "bakedName": "DELETE_PREFERENCE",
+          "curName": "DELETE_PREFERENCE",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_WE0GEX3SSNWWTQZARWCHC54WG1"
+         },
+         "evt_KSEC1W3JF2S7H05MM1PXSEQMTB": {
+          "id": "evt_KSEC1W3JF2S7H05MM1PXSEQMTB",
+          "kind": "event",
+          "bakedName": "INIT",
+          "curName": "INIT",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_WE0GEX3SSNWWTQZARWCHC54WG1"
+         },
+         "evt_XBWMRCYPTFBD7W3E14AEKGW7RB": {
+          "id": "evt_XBWMRCYPTFBD7W3E14AEKGW7RB",
+          "kind": "event",
+          "bakedName": "PUSH_SUBSCRIBED",
+          "curName": "PUSH_SUBSCRIBED",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_FSVH6CVH0HRG8Z80X8JNESK8C6"
+         },
+         "evt_XMPZH31MBKT5SW1GT8EX0REXJK": {
+          "id": "evt_XMPZH31MBKT5SW1GT8EX0REXJK",
+          "kind": "event",
+          "bakedName": "PUSH_SAVE_FAILED",
+          "curName": "PUSH_SAVE_FAILED",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_FSVH6CVH0HRG8Z80X8JNESK8C6"
+         },
+         "evt_YN990M6AX75EKMP7T414N16ZH9": {
+          "id": "evt_YN990M6AX75EKMP7T414N16ZH9",
+          "kind": "event",
+          "bakedName": "OPEN_SUBSCRIBE",
+          "curName": "OPEN_SUBSCRIBE",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_WE0GEX3SSNWWTQZARWCHC54WG1"
+         },
+         "evt_ZWA78MWCPN6BAJJJP53M8CZPMD": {
+          "id": "evt_ZWA78MWCPN6BAJJJP53M8CZPMD",
+          "kind": "event",
+          "bakedName": "DIGEST_ITEM_SENT",
+          "curName": "DIGEST_ITEM_SENT",
+          "renames": [],
+          "owner": "workspace",
+          "parent": "trt_5X2W3SXQXCVYP32AHS6JS0YEE9"
+         },
+         "orb_VQBZ2YWY5WF2Y8S3JJE6BQNW4C": {
+          "id": "orb_VQBZ2YWY5WF2Y8S3JJE6BQNW4C",
+          "kind": "orbital",
+          "bakedName": "NotificationCenterOrbital",
+          "curName": "NotificationCenterOrbital",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "pag_CKB79DYPGWB8E36MH5PB83EEK1": {
+          "id": "pag_CKB79DYPGWB8E36MH5PB83EEK1",
+          "kind": "page",
+          "bakedName": "NotificationDigestPage",
+          "curName": "NotificationDigestPage",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "pag_VKQFW1D1GPGRB94S1T6VV0V8VN": {
+          "id": "pag_VKQFW1D1GPGRB94S1T6VV0V8VN",
+          "kind": "page",
+          "bakedName": "NotificationPreferencesPage",
+          "curName": "NotificationPreferencesPage",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "pag_ZC96H4NF3MQHTF08P3AGC73TNK": {
+          "id": "pag_ZC96H4NF3MQHTF08P3AGC73TNK",
+          "kind": "page",
+          "bakedName": "PushSubscribePage",
+          "curName": "PushSubscribePage",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "trt_1XQ59DN704KG22B7RCBV3FM8XW": {
+          "id": "trt_1XQ59DN704KG22B7RCBV3FM8XW",
+          "kind": "trait",
+          "bakedName": "DigestMailer",
+          "curName": "DigestMailer",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "trt_5X2W3SXQXCVYP32AHS6JS0YEE9": {
+          "id": "trt_5X2W3SXQXCVYP32AHS6JS0YEE9",
+          "kind": "trait",
+          "bakedName": "DigestDrain",
+          "curName": "DigestDrain",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "trt_ECT5YP16VDKDPSJVZKHG7RAGJJ": {
+          "id": "trt_ECT5YP16VDKDPSJVZKHG7RAGJJ",
+          "kind": "trait",
+          "bakedName": "PreferenceEditorButtonSubscribe",
+          "curName": "PreferenceEditorButtonSubscribe",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "trt_FSVH6CVH0HRG8Z80X8JNESK8C6": {
+          "id": "trt_FSVH6CVH0HRG8Z80X8JNESK8C6",
+          "kind": "trait",
+          "bakedName": "PushSubscriber",
+          "curName": "PushSubscriber",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "trt_NASW4TMBG95R4P7MF2KSWDSDGS": {
+          "id": "trt_NASW4TMBG95R4P7MF2KSWDSDGS",
+          "kind": "trait",
+          "bakedName": "PreferenceEditorButtonDigest",
+          "curName": "PreferenceEditorButtonDigest",
+          "renames": [],
+          "owner": "workspace"
+         },
+         "trt_WE0GEX3SSNWWTQZARWCHC54WG1": {
+          "id": "trt_WE0GEX3SSNWWTQZARWCHC54WG1",
+          "kind": "trait",
+          "bakedName": "PreferenceEditor",
+          "curName": "PreferenceEditor",
+          "renames": [],
+          "owner": "workspace"
+         }
+        }
+       }
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
        }
       ]
      },

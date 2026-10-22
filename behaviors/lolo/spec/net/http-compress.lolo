@@ -1,0 +1,36 @@
+app http-compress-spec [
+  version: "1.0.0",
+  description: "Design contract for the response compression of an HTTP server program, bound by net/atoms/std-http-compress. Rust twin: orbital-server http_layers.rs CompressionLayer (br and gzip above 1024 bytes, every content type except text/event-stream, a preflight untouched). An answer ANSWER { requestId, status, headers, body } leaves as RESPOND { requestId, status, headers, body }: untouched without a recorded request, for a 204 or 304, an empty body or a content-encoding of its own; otherwise the policy verdict decides, and an encoding is applied only when the encoded body is strictly smaller (content-encoding and vary: accept-encoding added), else identity."
+]
+
+type CompressHeader = { name : string!, value : string! }
+type CompressReq = { requestId : number!, method : string!, path : string!, headers : [CompressHeader]! }
+type CompressJob = { requestId : number!, status : number!, headers : [CompressHeader]!, body : bytes!, accept : string!, encoding : string!, stage : string! }
+
+orbital HttpCompressSpec {
+  expects entity CompressRun [runtime] {
+    id : string!
+    reqs : [CompressReq]
+    jobs : [CompressJob]
+  }
+  expects trait HttpCompress {
+    state serving {
+      REQUEST_RECEIVED -> serving
+      STREAM_CLOSED -> serving
+      ANSWER -> serving
+      HTTP_DECIDED -> serving
+      ENCODE_NEXT -> serving
+      GZIP_ANSWERED -> serving
+      GZIP_REFUSED -> serving
+      BROTLI_ANSWERED -> serving
+      CANDIDATE -> serving
+    }
+    emits {
+      RESPOND { requestId : number!  status : number!  headers : [CompressHeader]!  body : bytes! }
+      HTTP_DECIDE { requestId : number!  method : string!  path : string!  headers : [CompressHeader]!  responseSize : number  responseType : string }
+      GZIP { data : bytes! }
+      BROTLI { data : bytes! }
+    }
+  }
+  expects page "/http-compress" -> HttpCompress
+}

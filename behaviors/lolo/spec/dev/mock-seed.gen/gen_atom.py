@@ -181,12 +181,13 @@ ROW='Map string MockValue?'
 def env_cols(label):
     pieces='(array/filter (array/map (str/split @entity.dsOwns ",") (fn q (str/trim @q))) (fn q (and (str/includes @q ".") (!= (array/nth (str/split @q ".") 0) "") (!= (str/join (array/drop (str/split @q ".") 1) ".") ""))))'
     return f'(array/map (array/filter {pieces} (fn q (= (str/lower (array/nth (str/split @q ".") 0)) (str/lower {label})))) (fn q (str/join (array/drop (str/split @q ".") 1) ".")))'
-def vid(x): return f'(or (= {x} (quote "@user.id")) (and (validate/array {x}) (= (array/len {x}) 3) (= (array/nth {x} 0) "object/get") (= (array/nth {x} 1) (quote "@user")) (= (array/nth {x} 2) "id")))'
-def fref(x): return f'(if (validate/string {x}) (if (str/startsWith {x} (quote "@entity.")) (str/slice {x} 8 (str/len {x})) "") (if (and (validate/array {x}) (= (array/len {x}) 3) (= (array/nth {x} 0) "object/get") (= (array/nth {x} 1) (quote "@entity")) (validate/string (array/nth {x} 2))) (array/nth {x} 2) ""))'
-fold_step=(f'(fn (n k) (array/concat (if (and (validate/array @n) (= (array/len @n) 3) (array/includes ["=", "=="] (array/nth @n 0))) '
+def seq(a,lit): return f'(and (validate/string {a}) (= {a} {lit}))'
+def vid(x): return f'(or {seq(x,"(quote "+chr(34)+"@user.id"+chr(34)+")")} (and (validate/array {x}) (= (array/len {x}) 3) {seq("(array/nth "+x+" 0)",chr(34)+"object/get"+chr(34))} {seq("(array/nth "+x+" 1)","(quote "+chr(34)+"@user"+chr(34)+")")} {seq("(array/nth "+x+" 2)",chr(34)+"id"+chr(34))}))'
+def fref(x): return f'(if (validate/string {x}) (if (str/startsWith {x} (quote "@entity.")) (str/slice {x} 8 (str/len {x})) "") (if (and (validate/array {x}) (= (array/len {x}) 3) {seq("(array/nth "+x+" 0)",chr(34)+"object/get"+chr(34))} {seq("(array/nth "+x+" 1)","(quote "+chr(34)+"@entity"+chr(34)+")")} (validate/string (array/nth {x} 2))) (array/nth {x} 2) ""))'
+fold_step=(f'(fn (n k) (array/concat (if (and (validate/array @n) (= (array/len @n) 3) (validate/string (array/nth @n 0)) (array/includes ["=", "=="] (array/nth @n 0))) '
            f'(let ((fa (array/nth @n 1)) (fb (array/nth @n 2))) (let ((fc (if {vid("@fb")} {fref("@fa")} (if {vid("@fa")} {fref("@fb")} "")))) (if (!= @fc "") (array/append [] @fc) []))) []) '
            f'(if (validate/array @n) (array/flatten @k) [])))')
-def pcols(d,key): return f'(if (object/has {d} "{key}") (array/unique (array/flatten (tree/fold (object/get {d} "{key}") {fold_step} "Expr"))) [])'
+def pcols(d,key): return f'(if (object/has {d} "{key}") (array/unique (tree/fold (object/get {d} "{key}") {fold_step} "Expr")) [])'
 def owner_cols(d):
     own=own_rel_cols(d)
     mirror=f'(array/filter {decl_cols(f"(object/get {d} {chr(34)}collection{chr(34)} {chr(34)}{chr(34)})")} (fn c (array/includes (array/map (object/get {d} "fields" []) (fn f (object/get @f "name" ""))) @c)))'
@@ -220,10 +221,129 @@ RO='''      READ_OWNERS -> ready
         (set @entity.roIds (if @entity.roHit (array/map (array/filter (array/range (array/len ?ids)) (fn i (array/nth ?admitsOwn @i))) (fn i (array/nth ?ids @i))) []))
         (emit READ_OWNERS_FOUND { ids: @entity.roIds, hit: @entity.roHit })
 '''
+# ======================= access-check wiring (G-STD-114) =======================
+POLKEYS=['read_policy','create_policy','update_policy','delete_policy']
+def has_dir(e): return '(or '+' '.join(f'(object/has {e} "{k}")' for k in POLKEYS)+')'
+def policy_owner(d):
+    return f'(array/find @alld (fn e (and (= {storekey("@e")} {storekey(d)}) {has_dir("@e")})))'
+def reg(d,seeds):
+    po=policy_owner(d)
+    return (f'{{ label: (object/get {d} "name"), store: {storekey(d)}, fields: (object/get {d} "fields" []), identity: (object/get {d} "identity" false), runtime: (= (object/get {d} "persistence" "") "runtime"), seeds: {seeds}, ownerCols: {owner_cols(d)}, '
+            f'policyEntity: (let ((po {po})) (if (= @po null) (object/get {d} "name") (object/get @po "name"))), hasRead: (let ((po {po})) (if (= @po null) false (object/has @po "read_policy"))), instances: (object/get {d} "instances" []) }}')
+regs_expr=(f'(let ((alld {defs}) (idd {iddef})) (array/concat (if (and (!= {idname} "") (not {has_inst("@idd")})) [{reg("@idd","true")}] []) '
+           f'(array/map @alld (fn d {reg("@d",f"(and (not {has_inst(chr(64)+chr(100))}) {mock_seeds(chr(64)+chr(100))})")}))))')
+seed_row=(f'(let ((smp {seed_sample}) (cm (- @entity.nowMs (math/floor (* {S.uu(S.nxt("(object/get @ra "+chr(34)+"s"+chr(34)+")"))} 31536000000))))) '
+  f'(let ((um (math/min (+ @cm (* {S.rint(S.nxt(S.nxt("(object/get @ra "+chr(34)+"s"+chr(34)+")")),0,30)} 86400000)) @entity.nowMs))) '
+  f'{{ rows: (array/append (object/get @ra "rows") (object/set (object/set (object/set (object/get @smp "value") "id" (str/concat (str/upper (str/slice (object/get @reg "label") 0 1)) (str/slice (object/get @reg "label") 1 (str/len (object/get @reg "label"))) " Id " (+ (array/len (object/get @ra "rows")) 1))) "createdAt" {isoX("@cm")}) "updatedAt" {isoX("@um")})), s: (object/get @smp "s") }}))')
+seed_arm=f'(array/reduce (array/range (if (object/get @reg "runtime") 1 @entity.dsCount)) {{ rows: {rows0}, s: @entity.rng }} (fn ra ri {seed_row}))'
+stamp_list=('(if (= @entity.dsViewer "") [] (array/flatten (array/map (array/range (array/len (object/get @res2 "rows"))) (fn si (array/map (array/filter (object/get @reg "ownerCols") (fn col (if (= @col "id") (= @si 0) (= (math/mod @si 2) 0)))) (fn col { store: (object/get @reg "store"), i: @si, col: @col }))))))')
+store_step=(f'(let ((reg {RG})) (if (> (array/len (object/get @reg "instances")) 0) '
+   f'{{ stores: (object/set @entity.dsStores (object/get @reg "store") (array/concat {rows0} {inst_rows})), s: @entity.rng, minted: (+ @entity.dsMinted (array/len (array/filter (object/get @reg "instances") (fn x {blank("@x")})))), stamps: [] }} '
+   f'(if (not (object/get @reg "seeds")) {{ stores: @entity.dsStores, s: @entity.rng, minted: @entity.dsMinted, stamps: [] }} '
+   f'(if (> (array/len {rows0}) 0) (let ((res2 {bf_arm})) {{ stores: (object/set @entity.dsStores (object/get @reg "store") (object/get @res2 "rows")), s: (object/get @res2 "s"), minted: @entity.dsMinted, stamps: [] }}) '
+   f'(let ((res2 {seed_arm})) {{ stores: (object/set @entity.dsStores (object/get @reg "store") (object/get @res2 "rows")), s: (object/get @res2 "s"), minted: @entity.dsMinted, stamps: {stamp_list} }}))))) ')
+_lf=link_fill()
+_old='(let ((elig (if (object/get @lk "isOwner") (array/map (array/filter (array/range (array/len @trows)) (fn j (array/nth @entity.dsAllows @j))) (fn j (object/get (array/nth @trows @j) "id"))) (array/map @trows (fn t (object/get @t "id")))))) '
+assert _old in _lf
+_lf=_lf.replace(_old,'(if (object/get @lk "isOwner") @row (let ((elig (array/map @trows (fn t (object/get @t "id"))))) ')
+_lf=_lf+')'
+links_fold=f'(array/reduce @entity.dsLinks @entity.dsStores (fn sm lk {_lf}))'
+projs_only=f'(array/reduce @entity.dsProjs @entity.dsStores (fn sm pj {proj_fill()}))'
+VIEWER_ROW='(let ((vr (array/find (object/get @entity.dsStores @entity.dsIdStore []) (fn t (= (object/get @t "id" "") @entity.dsViewer))))) (if (= @vr null) { id: @entity.dsViewer } @vr))'
+def mk(action,colval,viewer,col):
+    return f'{{ entity: (object/get @reg "policyEntity"), action: "{action}", row: (object/set @row {col} {colval}), viewer: {viewer} }}'
+Q='"'
+def reqs(read,rel,viewer_req,col):
+    idj='(object/get (array/nth @idrows @j) "id")'
+    parts=[]
+    parts.append(f'(if {read} (array/map (array/range (array/len @idrows)) (fn j {mk("read",idj,"(array/nth @idrows @j)",col)})) [])')
+    parts.append(f'(if {read} (array/map (array/range (array/len @idrows)) (fn j {mk("read",Q+Q,"(array/nth @idrows @j)",col)})) [])')
+    parts.append(f'(if {rel} (array/map (array/range (array/len @idrows)) (fn j {mk("create",idj,"(array/nth @idrows @j)",col)})) [])')
+    if viewer_req: parts.append(f'(array/append [] {mk("create","@entity.dsViewer",VIEWER_ROW,col)})')
+    return '(array/concat '+' '.join(parts)+')'
+SEEDREGS='(array/filter @entity.dsRegsAll (fn r (object/get @r "seeds")))'
+def reg_of(storex): return f'(array/find {SEEDREGS} (fn r (= (object/get @r "store") {storex})))'
+G_=lambda o,k: f'(object/get {o} "{k}")'
+stamp_plan=(f'(let ((st (array/first @entity.dsStamps))) (let ((reg {reg_of(G_("@st","store"))}) (col {G_("@st","col")})) '
+  f'(let ((fld (array/find (object/get @reg "fields") (fn f (= (object/get @f "name") @col))))) '
+  f'(let ((rel (and (!= @fld null) (= (object/get @fld "type" "") "relation"))) (row (array/nth (object/get @entity.dsStores {G_("@st","store")} []) {G_("@st","i")}))) '
+  f'(let ((tst (if @rel {store_of_entity(G_(G_("@fld","relation"),"entity"))} ""))) '
+  f'(let ((idrows (object/get @entity.dsStores @tst []))) (let ((rd (and (object/get @reg "hasRead") @rel (!= @col "id")))) '
+  f'{{ queue: {reqs("@rd","@rel",True,"@col")}, n: (array/len @idrows), read: @rd, rel: @rel, ids: (array/map @idrows (fn t (str/concat "" (object/get @t "id")))), viewer: true }})))))))')
+olink_plan=(f'(let ((lk (array/first @entity.dsOlinks))) (let ((reg {reg_of(G_("@lk","store"))}) (col {G_("@lk","field")})) '
+  f'(let ((row (array/nth (object/get @entity.dsStores {G_("@lk","store")} []) {G_("@lk","i")})) (idrows (object/get @entity.dsStores {G_("@lk","target")} []))) '
+  f'(let ((rd (object/get @reg "hasRead"))) '
+  f'{{ queue: {reqs("@rd","true",False,"@col")}, n: (array/len @idrows), read: @rd, rel: true, ids: (array/map @idrows (fn t (str/concat "" (object/get @t "id")))), viewer: false }}))))')
+A='@entity.acAnswers'; N='@entity.acN'
+ro=f'(array/slice {A} 0 {N})'; rb=f'(array/slice {A} {N} (* 2 {N}))'
+croff=f'(if @entity.acRead (* 2 {N}) 0)'
+cr=f'(array/slice {A} {croff} (+ {croff} {N}))'
+cv=f'(if @entity.acViewer (array/last {A}) false)'
+decode=(f'(let ((ro {ro}) (rb {rb}) (cr {cr}) (cv {cv})) '
+  f'(let ((scoped (and @entity.acRead (> (array/len (array/filter (array/range {N}) (fn j (and (array/nth @ro @j) (not (array/nth @rb @j)))))) 0)))) '
+  f'(let ((readers (if @scoped (array/map (array/filter (array/range {N}) (fn j (array/nth @ro @j))) (fn j (array/nth @entity.acIds @j))) [])) '
+  f'(creators (array/map (array/filter (array/range {N}) (fn j (array/nth @cr @j))) (fn j (array/nth @entity.acIds @j))))) '
+  f'(let ((elig (if @scoped @readers @creators))) (let ((vmay (if @scoped (array/includes @readers @entity.dsViewer) @cv))) '
+  f'{{ hit: (or @vmay (> (array/len @elig) 0)), owner: (if @vmay @entity.dsViewer (if (> (array/len @elig) 0) (array/first @elig) "")), elig: @elig }})))))')
+olinks_expr=('(array/flatten (array/map (array/filter @entity.dsLinks (fn lk (and (object/get @lk "isOwner") (!= (object/get @lk "target") (object/get @lk "store"))))) (fn lk '
+  '(array/map (array/filter (array/range (array/len (object/get @entity.dsStores (object/get @lk "store") []))) (fn i (let ((v (object/get (array/nth (object/get @entity.dsStores (object/get @lk "store") []) @i) (object/get @lk "field") ""))) (or (= @v "") (and (validate/array @v) (= (array/len @v) 0)))))) '
+  '(fn i { store: (object/get @lk "store"), field: (object/get @lk "field"), i: @i, target: (object/get @lk "target"), scalar: (object/get @lk "scalar") })))))')
+STORE_AFTER=f'''      DS_STAMP -> ready when (= (array/len @entity.dsStamps) 0)
+        (emit DS_STORE {{ at: (array/len @entity.dsRegs) }})
+      DS_STAMP -> ready when (> (array/len @entity.dsStamps) 0)
+        (set @entity.acPlan {stamp_plan})
+        (set @entity.acQueue (object/get @entity.acPlan "queue"))
+        (set @entity.acN (object/get @entity.acPlan "n"))
+        (set @entity.acRead (object/get @entity.acPlan "read"))
+        (set @entity.acRel (object/get @entity.acPlan "rel"))
+        (set @entity.acIds (object/get @entity.acPlan "ids"))
+        (set @entity.acViewer (object/get @entity.acPlan "viewer"))
+        (set @entity.acAnswers [])
+        (set @entity.acPurpose "stamp")
+        (emit AC_ASK {{ at: (array/len @entity.acQueue) }})
+      DS_OLINK -> ready when (= (array/len @entity.dsOlinks) 0)
+        (emit DS_PROJS {{ at: 0 }})
+      DS_OLINK -> ready when (> (array/len @entity.dsOlinks) 0)
+        (set @entity.acPlan {olink_plan})
+        (set @entity.acQueue (object/get @entity.acPlan "queue"))
+        (set @entity.acN (object/get @entity.acPlan "n"))
+        (set @entity.acRead (object/get @entity.acPlan "read"))
+        (set @entity.acRel (object/get @entity.acPlan "rel"))
+        (set @entity.acIds (object/get @entity.acPlan "ids"))
+        (set @entity.acViewer (object/get @entity.acPlan "viewer"))
+        (set @entity.acAnswers [])
+        (set @entity.acPurpose "link")
+        (emit AC_ASK {{ at: (array/len @entity.acQueue) }})
+      AC_ASK -> ready when (> (array/len @entity.acQueue) 0)
+        (access-check {{ entity: (object/get (array/first @entity.acQueue) "entity"), action: (object/get (array/first @entity.acQueue) "action"), row: (object/get (array/first @entity.acQueue) "row"), viewer: (object/get (array/first @entity.acQueue) "viewer") }} {{ emit: {{ success: AC_ANSWER, failure: AC_FAILED }} }})
+      AC_ASK -> ready when (= (array/len @entity.acQueue) 0)
+        (emit AC_DONE {{ at: 0 }})
+      AC_ANSWER -> ready
+        (set @entity.acAnswers (array/append @entity.acAnswers ?allowed))
+        (set @entity.acQueue (array/drop @entity.acQueue 1))
+        (emit AC_ASK {{ at: (array/len @entity.acQueue) }})
+      AC_FAILED -> ready
+        (set @entity.acAnswers (array/append @entity.acAnswers false))
+        (set @entity.acQueue (array/drop @entity.acQueue 1))
+        (notify error (str/concat "Access check failed and counted as denied: " ?error))
+        (emit AC_ASK {{ at: (array/len @entity.acQueue) }})
+      AC_DONE -> ready when (= @entity.acPurpose "stamp")
+        (set @entity.acOut {decode})
+        (set @entity.dsStores (let ((st (array/first @entity.dsStamps))) (if (object/get @entity.acOut "hit") (object/set @entity.dsStores (object/get @st "store") (array/map (array/range (array/len (object/get @entity.dsStores (object/get @st "store") []))) (fn j (let ((rw (array/nth (object/get @entity.dsStores (object/get @st "store") []) @j))) (if (= @j (object/get @st "i")) (object/set @rw (object/get @st "col") (object/get @entity.acOut "owner")) @rw))))) @entity.dsStores)))
+        (set @entity.dsStamps (array/drop @entity.dsStamps 1))
+        (emit DS_STAMP {{ at: (array/len @entity.dsStamps) }})
+      AC_DONE -> ready when (= @entity.acPurpose "link")
+        (set @entity.acOut {decode})
+        (set @entity.dsStores (let ((lk (array/first @entity.dsOlinks))) (if (> (array/len (object/get @entity.acOut "elig")) 0) (object/set @entity.dsStores (object/get @lk "store") (array/map (array/range (array/len (object/get @entity.dsStores (object/get @lk "store") []))) (fn j (let ((rw (array/nth (object/get @entity.dsStores (object/get @lk "store") []) @j)) (el (object/get @entity.acOut "elig"))) (if (= @j (object/get @lk "i")) (object/set @rw (object/get @lk "field") (if (object/get @lk "scalar") (array/nth @el (math/mod @j (array/len @el))) (array/unique (array/map (array/range (math/min (array/len @el) (+ 2 (math/mod @j 2)))) (fn o (array/nth @el (math/mod (+ @j @o) (array/len @el)))))))) @rw))))) @entity.dsStores)))
+        (set @entity.dsOlinks (array/drop @entity.dsOlinks 1))
+        (emit DS_OLINK {{ at: (array/len @entity.dsOlinks) }})
+      DS_PROJS -> ready
+        (set @entity.dsStores {projs_only})
+        (emit DATASET_DONE {{ stores: @entity.dsStores }})
+'''
+
 DATASET=f'''      DATASET_START -> ready
         (set @entity.dsViewer ?viewerId)
-        (set @entity.dsViewerMay ?viewerMayCreate)
-        (set @entity.dsAllows ?createAllows)
         (set @entity.dsCount ?count)
         (set @entity.dsSource ?source)
         (set @entity.nowMs ?nowMs)
@@ -254,13 +374,15 @@ DATASET=f'''      DATASET_START -> ready
         (set @entity.dsStores (object/get @entity.dsOut "stores"))
         (set @entity.rng (object/get @entity.dsOut "s"))
         (set @entity.dsMinted (object/get @entity.dsOut "minted"))
+        (set @entity.dsStamps (object/get @entity.dsOut "stamps"))
         (set @entity.dsRegs (array/drop @entity.dsRegs 1))
-        (emit DS_STORE {{ at: (array/len @entity.dsRegs) }})
+        (emit DS_STAMP {{ at: (array/len @entity.dsStamps) }})
       DS_LINKS -> ready
         (set @entity.dsStores {links_fold})
-        (emit DATASET_DONE {{ stores: @entity.dsStores }})
-'''
-body=NEW.replace('@@DATASET@@',DATASET+RO+DERIVE.replace('@@REGS@@',regs_expr))
+        (set @entity.dsOlinks {olinks_expr})
+        (emit DS_OLINK {{ at: (array/len @entity.dsOlinks) }})
+{STORE_AFTER}'''
+body=NEW.replace('@@DATASET@@',DATASET+DERIVE.replace('@@REGS@@',regs_expr))
 body=body.replace('      CORPUS_IS -> ready','      INIT -> ready\n        (emit CORPUS_ASK { })\n      CORPUS_IS -> ready',1)
 # ---- assemble the file
 w=lambda n,f,d,syn: f'      {n} {{ {f} }}\n        @description "{d}"\n        @synonyms "{syn}"\n'
@@ -272,15 +394,21 @@ L+=w('ROWS_NEXT','at : number','Sample the next row.','next row')
 L+=w('WALKED','cells : [MockWalkCell]  value : MockValue?','A walk finished.','walked')
 L+=w('SEED_STREAM','seed : number!  nowMs : number!','Start a store stream: reset it to a seed and the clock the stamps and relative dates draw against.','start stream')
 L+=w('SEED_ROW','fields : [MockFieldSpec]!  label : string!  n : number!  index : number!  identity : boolean!  runtime : boolean!  nowMs : number!','Seed one row of a mock store the way the kernel does: the Label Id n id, createdAt and updatedAt drawn first from the stream, then the seeded fields.','seed row, mock store row')
-L+=w('DATASET_START','source : string!  count : number!  seed : number!  nowMs : number!  viewerId : string!  viewerMayCreate : boolean!  createAllows : [boolean]!','Seed a whole mock dataset from a program the way the kernel does: read the program, derive the store order, owner columns and relation links from it, seed the identity store first, then each store with stamps drawn from one stream, owner columns stamped for the viewer, later registrants backfilled, and relations and projected fields linked.','seed dataset, mock dataset')
+L+=w('DATASET_START','source : string!  count : number!  seed : number!  nowMs : number!  viewerId : string!','Seed a whole mock dataset from a program the way the kernel does: read the program, derive the store order, owner columns and relation links from it, seed the identity store first, then each store with stamps drawn from one stream, owner columns stamped for the viewer, later registrants backfilled, and relations and projected fields linked.','seed dataset, mock dataset')
 L+=w('DS_OWNS_ENV','value : string','The ALMADAR_PERSONA_OWNS value.','owner env')
 L+=w('DS_OWNS_ENV_FAILED','error : string','The owner environment variable could not be read.','owner env failed')
-L+=w('DS_PROGRAM_READ','result : string','The program lowered by program/read.','program read')
+L+=w('DS_PROGRAM_READ','result : SeedProgram','The program lowered by program/read.','program read')
 L+=w('DS_PROGRAM_FAILED','error : string','The program could not be read.','program failed')
 L+=w('DS_STORE','at : number','Run the next store registration.','next store')
 L+=w('DS_LINKS','at : number','Fill the relation links and projected fields.','links')
-L+=w('DERIVE_OWNERS','result : string!','Derive the owner columns of a lowered program: identity-typed relations, a self-identity id, columns an update, delete or read policy compares to the viewer id, and same-collection siblings by name.','owner columns, owner fields')
-L+=w('READ_OWNERS','column : string!  hasReadPolicy : boolean!  targetKnown : boolean!  ids : [string]!  admitsOwn : [boolean]!  admitsBlank : [boolean]!','The identities a read policy lets own a column, or hit false when the read policy does not scope it by ownership (the admission verdicts are inputs until the access check is exposed).','read owners')
+L+=w('DERIVE_OWNERS','result : SeedProgram!','Derive the owner columns of a lowered program: identity-typed relations, a self-identity id, columns an update, delete or read policy compares to the viewer id, and same-collection siblings by name.','owner columns, owner fields')
+L+=w('DS_STAMP','at : number','Stamp the next owner column the access checks decide.','owner stamp')
+L+=w('DS_OLINK','at : number','Fill the next owner relation the access checks decide.','owner link')
+L+=w('DS_PROJS','at : number','Fill the projected fields.','projections')
+L+=w('AC_ASK','at : number','Ask the next access check.','access ask')
+L+=w('AC_FAILED','error : string','An access check could not be evaluated, which counts as denied and is reported.','access failed')
+L+=w('AC_ANSWER','allowed : boolean','An access check was answered: allowed or denied.','access verdict')
+L+=w('AC_DONE','at : number','Every queued access check was answered.','access done')
 L+=w('CORPUS_IS','words : [string]','The stream word corpus.','corpus')
 E=''
 def ext(n,fields,desc,tier='domain'):
@@ -291,13 +419,13 @@ E+=ext('SEED_ROW_DONE',['row : Map string MockValue?'],'A seeded store row: its 
 E+=ext('STREAM_SEEDED',['seed : number','nowMs : number'],'The stream was reset to a seed and clock.')
 E+=ext('DATASET_DONE',['stores : Map string [Map string MockValue?]'],'The whole seeded dataset: every store rows, identity first, owner columns stamped and relations linked.')
 E+=ext('OWNERS_DERIVED',['owners : Map string [string]'],'The owner columns of each entity, by lower-case entity name.')
-E+=ext('READ_OWNERS_FOUND',['ids : [string]','hit : boolean'],'The identities a read policy lets own a column.')
+E+=''.join(f"      {n} {{ {f} }}\n        @description \"Internal: {d}\"\n        @tier \"internal\"\n" for n,f,d in [('DS_STAMP','at : number','the next owner stamp'),('DS_OLINK','at : number','the next owner link'),('DS_PROJS','at : number','the projected fields'),('AC_ASK','at : number','ask the next access check'),('AC_ANSWER','allowed : boolean','an access check verdict'),('AC_FAILED','error : string','an access check could not be evaluated'),('AC_DONE','at : number','all checks answered')])
 E+=ext('DATASET_FAILED',['error : string'],'The program could not be read.')
 E+='      CORPUS_ASK { }\n        @description "Internal: ask the stream for its word corpus."\n        @tier "internal"\n'
 E+='      ROWS_NEXT { at : number }\n        @description "Internal: sample the next row."\n        @tier "internal"\n'
 E+='      DS_STORE { at : number }\n        @description "Internal: run the next store registration."\n        @tier "internal"\n'
 E+='      WALK_ROW { fields : [MockFieldSpec]  entityName : string  index : number  seeded : boolean  identity : boolean  runtime : boolean  nowMs : number }\n        @description "Internal: sample one row of fields."\n        @tier "internal"\n'
-E+='      DS_OWNS_ENV { value : string }\n        @description "Internal: the owner environment variable answered."\n        @tier "internal"\n      DS_OWNS_ENV_FAILED { error : string }\n        @description "Internal: the owner environment variable could not be read."\n        @tier "internal"\n      DS_PROGRAM_READ { result : string }\n        @description "Internal: the program was lowered."\n        @tier "internal"\n      DS_PROGRAM_FAILED { error : string }\n        @description "Internal: the program could not be lowered."\n        @tier "internal"\n'
+E+='      DS_OWNS_ENV { value : string }\n        @description "Internal: the owner environment variable answered."\n        @tier "internal"\n      DS_OWNS_ENV_FAILED { error : string }\n        @description "Internal: the owner environment variable could not be read."\n        @tier "internal"\n      DS_PROGRAM_READ { result : SeedProgram }\n        @description "Internal: the program was lowered."\n        @tier "internal"\n      DS_PROGRAM_FAILED { error : string }\n        @description "Internal: the program could not be lowered."\n        @tier "internal"\n'
 E+='      DS_LINKS { at : number }\n        @description "Internal: fill the relation links."\n        @tier "internal"\n'
 fields='''    id : string!
     entityName : string @description "The owning entity's name." = ""
@@ -316,8 +444,18 @@ fields='''    id : string!
     rowFields : [MockFieldSpec] @description "The entity declared fields." = []
     rowName : string @description "The entity name, which prefixes the row ids." = ""
     inRows : boolean @description "Whether a multi-row sample is in progress." = false
-    roHit : boolean @description "Whether the read policy scopes the column by ownership." = false
-    roIds : [string] @description "The identities the read policy lets own the column." = []
+    dsStamps : [DsStamp] @description "The owner columns still to stamp." = []
+    dsOlinks : [DsOlink] @description "The owner relations still to fill." = []
+    acQueue : [AccessReq] @description "The access checks still to ask, next first." = []
+    acAnswers : [boolean] @description "The verdicts of the asked checks, in order." = []
+    acPurpose : string @description "Whether the checks decide an owner stamp or an owner link." = ""
+    acN : number @description "How many identity rows the checks cover." = 0
+    acRead : boolean @description "Whether read-admission checks are queued." = false
+    acRel : boolean @description "Whether the owner column is a relation to the identity store." = false
+    acViewer : boolean @description "Whether a viewer create check is queued last." = false
+    acIds : [string] @description "The identity row ids the checks cover." = []
+    acPlan : AcPlan @description "The queued checks and their shape." = { queue: [], n: 0, read: false, rel: false, ids: [], viewer: false }
+    acOut : AcOut @description "The decoded verdicts." = { hit: false, owner: "", elig: [] }
     dsSource : string @description "The program text the dataset is derived from." = ""
     dsOwns : string @description "The ALMADAR_PERSONA_OWNS pairs." = ""
     dsRegsAll : [DatasetReg] @description "Every store registration derived from the program, in seed order." = []
@@ -325,10 +463,8 @@ fields='''    id : string!
     dsLinks : [DatasetLink] @description "The relation links to fill." = []
     dsProjs : [DatasetProj] @description "The projected fields to fill." = []
     dsStores : Map string [Map string MockValue?] @description "The rows of each store key." = {}
-    dsOut : DsOut @description "The last store step result." = { stores: {}, s: 42, minted: 0 }
+    dsOut : DsOut @description "The last store step result." = { stores: {}, s: 42, minted: 0, stamps: [] }
     dsViewer : string @description "The viewer id owner columns are stamped for, or empty." = ""
-    dsViewerMay : boolean @description "Whether the viewer passes the create gate of the store." = false
-    dsAllows : [boolean] @description "Whether each identity row passes the create gate, in roster order." = []
     dsIdStore : string @description "The store key of the identity entity." = ""
     dsCount : number @description "The seed count the host named." = 0
     dsMinted : number @description "Ids minted so far for id-less authored instances." = 0
@@ -344,15 +480,23 @@ uses Spec from "almadar-std/mock-seed"
 uses Rand from "std/behaviors/std-mock-random"
 
 '''
-types='''type Expr = string | number | boolean | [Expr]
+types='''type Expr = string | number | boolean | [Expr] | Map string Expr
+type SeedEntity = { name : string, persistence : string, collection : string, identity : boolean, local : boolean, seedMock : boolean, fields : [MockFieldSpec], instances : [Map string MockValue?], read_policy : Expr, create_policy : Expr, update_policy : Expr, delete_policy : Expr }
+type SeedOrbital = { entity : SeedEntity, auxiliaryEntities : [SeedEntity] }
+type SeedProgram = { orbitals : [SeedOrbital] }
 type MockValue = string | number | boolean | [MockValue?] | Map string MockValue?
 type MockRelation = { entity : string, cardinality : string }
 type MockProjection = { type : string, field : string }
 type MockFieldSpec = { name : string, type : string!, values : [string], mock : string, default : MockValue?, intrinsic : boolean, required : boolean, relation : MockRelation, projectedFrom : MockProjection, items : MockFieldSpec, properties : Map string MockFieldSpec, slots : [MockFieldSpec] }
 type MockWalkCell = { path : string!, kind : string!, text : string, num : number, url : string, mime : string, kids : [string], keys : [string], val : MockValue? }
 type WalkOut = { cells : [MockWalkCell], s : number, value : MockValue? }
-type DsOut = { stores : Map string [Map string MockValue?], s : number, minted : number }
-type DatasetReg = { label : string!, store : string!, fields : [MockFieldSpec]!, identity : boolean!, runtime : boolean!, seeds : boolean!, ownerCols : [string]!, instances : [Map string MockValue?]! }
+type DsStamp = { store : string!, i : number!, col : string! }
+type DsOlink = { store : string!, field : string!, i : number!, target : string!, scalar : boolean! }
+type AccessReq = { entity : string!, action : string!, row : Map string MockValue?, viewer : Map string MockValue? }
+type AcPlan = { queue : [AccessReq], n : number, read : boolean, rel : boolean, ids : [string], viewer : boolean }
+type AcOut = { hit : boolean, owner : string, elig : [string] }
+type DsOut = { stores : Map string [Map string MockValue?], s : number, minted : number, stamps : [DsStamp] }
+type DatasetReg = { label : string!, store : string!, fields : [MockFieldSpec]!, identity : boolean!, runtime : boolean!, seeds : boolean!, ownerCols : [string]!, policyEntity : string!, hasRead : boolean!, instances : [Map string MockValue?]! }
 type DatasetLink = { store : string!, field : string!, target : string!, scalar : boolean!, isOwner : boolean! }
 type DatasetProj = { store : string!, field : string!, target : string!, targetField : string!, isArray : boolean! }
 
@@ -362,3 +506,27 @@ atom=(head+types+'orbital MockSeedOrbital {\n  entity MockCell [runtime] {\n'+fi
  '  trait MockSeed -> @rebindable MockCell [lifecycle, instance] {\n    initial: ready\n\n    state ready {\n'+body+'    }\n\n    emits {\n'+E+'    }\n\n    listens {\n'+L+'      MockStream.CORPUS_IS -> CORPUS_IS\n    }\n  }\n\n  page "/mock-seed" as MockSeedPage -> MockSeed, MockStream\n}\n')
 open(OUT, 'w').write(atom)
 print('wrote dev/atoms/std-mock-seed.lolo', len(atom))
+
+# ---- the access-check replay fixture: access-check answers only for entities of the running program
+FIX_OUT = os.path.join(HERE, '..', 'mock-seed-access.fixture.lolo')
+def host_entity(name, coll, policies='', extra=''):
+    tag = f'persistent: {coll}, identity' if name == 'FixtureViewer' else f'persistent: {coll}'
+    return f'  entity {name} [{tag}] {{\n{policies}    id : string!\n{extra}  }}\n'
+CREATE_HR='    @create (= @user.role "hr")\n'
+ents=[
+ ('FixtureViewer','fixtureviewers','','    role : string\n'),
+ ('Ticket','tickets','    @create (= @user.role "agent")\n'),
+ ('Task','tasks',''),
+ ('Doc','docs','    @read (= @user.id (object/get @entity authorId))\n','    authorId : FixtureViewer\n'),
+ ('DocControl','doccontrols','    @read none "the control only gates creation"\n    @create (= @user.id (object/get @entity authorId))\n','    authorId : FixtureViewer\n'),
+ ('EmployeeSelf','employeeselves','    @read (= @entity.id @user.id)\n'),
+ ('HrOwn','hrown',CREATE_HR+'    @read (or (= @user.role "hr") (= @user.role "manager") (= (object/get @entity staffAccount) @user.id))\n','    staffAccount : FixtureViewer\n'),
+ ('HrPlain','hrplain','    @read none "no read policy: the create authority decides"\n'+CREATE_HR,'    staffAccount : FixtureViewer\n'),
+ ('HrRoleOnly','hrroleonly',CREATE_HR+'    @read (= @user.role "hr")\n','    staffAccount : FixtureViewer\n'),
+]
+fixture=('app mock-seed-access-fixture [\n  version: "1.0.0",\n  env: ["ALMADAR_PERSONA_OWNS"],\n  description: "Replay fixture for std-mock-seed access-check wiring: composes the seeding traits over a host cell and declares the entities, with their access policies, whose rows the dataset goldens stamp, because access-check answers only for entities of the running program."\n]\n'
+ ';; Generated by spec/dev/mock-seed.gen/gen_atom.py; regenerate, never hand-edit.\n\n'+types+'\norbital MockSeedHostOrbital {\n  uses Seed from "std/behaviors/std-mock-seed"\n\n  entity MockCell [runtime] {\n'+fields+'  }\n\n'
+ '  trait MockStream = Seed.traits.MockStream -> MockCell { }\n\n  trait MockSeed = Seed.traits.MockSeed -> MockCell { }\n\n  page "/mock-seed" as MockSeedHostPage -> MockSeed, MockStream\n\n'
+ +'\n'.join(host_entity(*e) for e in ents)+'}\n')
+open(FIX_OUT,'w').write(fixture)
+print('wrote spec/dev/mock-seed-access.fixture.lolo', len(fixture))

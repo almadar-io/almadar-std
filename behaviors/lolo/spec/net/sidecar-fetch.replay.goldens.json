@@ -2,7 +2,7 @@
  "atom": "net/atoms/std-sidecar-fetch.lolo",
  "trait": "SidecarFetch",
  "source": "orbital-cli/src/commands/sidecar_fetch.rs tests",
- "note": "Byte payloads are base64. The replay kernel answers every os and http call with an unsupported failure, so a step's cascade runs through those failure events; the digest is computed for real by std-sha256.",
+ "note": "Byte payloads are base64. The replay kernel answers every os and http call with an unsupported failure, so a step's cascade runs through those failure events; the digest is computed for real by std-sha256. A keyed os effect is reported by program/step and neither run nor failed (G-ORB-459), so the store-step cases assert the reported effect (type and key) with expect.effects.",
  "cases": [
   {
    "id": "cache-hit-does-not-fetch",
@@ -359,14 +359,11 @@
          "requestId": "r1",
          "digest": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
         }
-       },
-       {
-        "event": "SC_STORE_FAILED",
-        "payload": {
-         "kind": "unsupported",
-         "key": "dir"
-        }
        }
+      ],
+      "neverEmits": [
+       "SIDECAR_REFUSED",
+       "SIDECAR_RESOLVED"
       ]
      }
     }
@@ -461,6 +458,75 @@
    ]
   },
   {
+   "id": "matching-digest-asks-for-the-store-directory",
+   "steps": [
+    {
+     "event": "SC_DIGESTED",
+     "payload": {
+      "digest": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+     },
+     "from": "verifying",
+     "entity": {
+      "id": "s",
+      "requestId": "r1",
+      "name": "pkg-a",
+      "version": "1.0.0",
+      "declared": "dist/vectors.vec",
+      "sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+      "url": "https://storage.googleapis.com/o/x?token=TOPSECRETTOKEN",
+      "body": "YWJj"
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "os/mkdir",
+        "key": "dir"
+       }
+      ],
+      "neverEmits": [
+       "SIDECAR_REFUSED",
+       "SIDECAR_RESOLVED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-different-digest-asks-for-no-directory",
+   "steps": [
+    {
+     "event": "SC_DIGESTED",
+     "payload": {
+      "digest": "007816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+     },
+     "from": "verifying",
+     "entity": {
+      "id": "s",
+      "requestId": "r1",
+      "name": "pkg-a",
+      "version": "1.0.0",
+      "declared": "dist/vectors.vec",
+      "sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+      "url": "https://storage.googleapis.com/o/x?token=TOPSECRETTOKEN",
+      "body": "YWJj"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SIDECAR_REFUSED",
+        "payload": {
+         "code": "hash-mismatch"
+        }
+       }
+      ],
+      "neverEmits": [
+       "SIDECAR_RESOLVED"
+      ]
+     }
+    }
+   ]
+  },
+  {
    "id": "verified-file-is-written-to-a-part-file-first",
    "steps": [
     {
@@ -478,15 +544,15 @@
       "body": "YWJj"
      },
      "expect": {
-      "emits": [
+      "effects": [
        {
-        "event": "SC_STORE_FAILED",
-        "payload": {
-         "key": "part"
-        }
+        "type": "os/write-file",
+        "key": "part"
        }
       ],
+      "fired": true,
       "neverEmits": [
+       "SIDECAR_REFUSED",
        "SIDECAR_RESOLVED"
       ]
      }
@@ -513,15 +579,15 @@
       "body": "YWJj"
      },
      "expect": {
-      "emits": [
+      "effects": [
        {
-        "event": "SC_STORE_FAILED",
-        "payload": {
-         "key": "final"
-        }
+        "type": "os/rename",
+        "key": "final"
        }
       ],
+      "fired": true,
       "neverEmits": [
+       "SIDECAR_REFUSED",
        "SIDECAR_RESOLVED"
       ]
      }

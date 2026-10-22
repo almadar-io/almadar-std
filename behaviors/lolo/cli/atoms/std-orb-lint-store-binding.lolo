@@ -6,6 +6,7 @@ app std-orb-lint-store-binding [
 ]
 uses Spec from "almadar-std/lint-store-binding"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type StoreShape = string | number | boolean | [StoreShape] | Map string StoreShape
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
 orbital OrbLintStoreBindingOrbital {
@@ -33,6 +34,7 @@ orbital OrbLintStoreBindingOrbital {
       LINT_PROGRAM_READ -> ready
         (set @entity.findings (let ((orbitals (object/get @payload.result "orbitals")))
           (let ((names (array/map @orbitals (fn o (object/get @o "name")))))
+            (array/concat
             (let ((bound (array/concat
                            (if (object/has @payload.result "store") [{ path: "store", driver: (object/get @payload.result "store"), bad: false, label: "" }] [])
                            (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
@@ -54,7 +56,37 @@ orbital OrbLintStoreBindingOrbital {
                             (let ((missing (array/filter ["ROW_READ", "ROW_LIST", "ROWS_QUERY", "ROWS_WRITE"] (fn v (not (array/includes @handled @v))))))
                               (if (= (array/len @missing) 0)
                                 []
-                                [{ code: "ORB_STORE_DRIVER_CONTRACT", path: (object/get @b "path"), message: (str/concat "store driver " @d " has no trait handling [" (str/join (array/map @missing (fn v (str/concat "\"" @v "\""))) ", ") "] (spec/store/row-store.lolo RowStoreDriver)"), suggestion: "Compose a std store driver atom, or give the driver a trait that answers every row verb", severity: "error" }])))))))))))))))
+                                [{ code: "ORB_STORE_DRIVER_CONTRACT", path: (object/get @b "path"), message: (str/concat "store driver " @d " has no trait handling [" (str/join (array/map @missing (fn v (str/concat "\"" @v "\""))) ", ") "] (spec/store/row-store.lolo RowStoreDriver)"), suggestion: "Compose a std store driver atom, or give the driver a trait that answers every row verb", severity: "error" }]))))))))))))
+(let ((bnd (array/flatten (array/map @orbitals (fn o
+                     (array/flatten (array/map (array/filter (array/concat [(object/get @o "entity" {})] (object/get @o "auxiliaryEntities" [])) (fn xe (validate/object @xe))) (fn e
+                       (if (and (!= (object/get @e "persistence" "") "runtime") (not (object/get @e "local" false)))
+                         (let ((dv (if (object/has @e "store") (object/get @e "store") (if (object/has @payload.result "store") (object/get @payload.result "store") ""))))
+                           (if (= @dv "") [] [{ name: (object/get @e "name" ""), driver: @dv }]))
+                         [])))))))))
+              (if (= (array/len @bnd) 0)
+                []
+                (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+                  (let ((orb (array/nth @orbitals @oi)))
+                    (array/flatten (array/map (array/range 0 (array/len (object/get @orb "traits" []))) (fn ti
+                      (let ((td (array/nth (object/get @orb "traits" []) @ti)))
+                        (array/flatten (array/map (object/get (object/get @td "stateMachine" {}) "transitions" []) (fn tr
+                          (array/flatten (array/map (object/get @tr "effects" []) (fn ef
+                            (array/flatten (array/map
+                              (tree/fold @ef (fn (n k)
+                                (if (validate/array @n)
+                                  (array/concat
+                                    (if (validate/string (array/nth @n 0)) (if (= (array/nth @n 0) "persist") (if (validate/string (array/nth @n 1)) (if (or (= (array/nth @n 1) "delete") (= (array/nth @n 1) "update")) (if (validate/string (array/nth @n 2)) [(array/nth @n 2)] []) []) []) []) [])
+                                    (array/flatten (array/filter @k (fn r (validate/array @r)))))
+                                  [])) StoreShape)
+                              (fn en
+                                (let ((hits (array/filter @bnd (fn x (= (object/get @x "name") @en)))))
+                                  (if (= (array/len @hits) 0)
+                                    []
+                                    (let ((dv (object/get (array/last @hits) "driver")))
+                                      (let ((drv (array/filter @orbitals (fn o (= (object/get @o "name") @dv)))))
+                                        (if (and (> (array/len @drv) 0) (= (object/get (object/get (object/get (object/get (array/first @drv) "config" {}) "writeCapabilities" {}) "default" {}) "conditional" null) false))
+                                          [{ code: "ORB_STORE_DRIVER_NOT_CONDITIONAL", path: (str/concat "orbitals[" @oi " (" (object/get @orb "name") ")].traits[" @ti " (" (object/get @td "name") ")]"), message: (str/concat "persist on " @en " is one conditional op (EXEC-STEP-8), and its store driver " @dv " declares writeCapabilities.conditional false"), suggestion: "Bind the entity to a driver that writes conditionally, or take rows through a persist batch", severity: "error" }]
+                                          []))))))))))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FILE_UNREAD -> ready
         (emit LINT_UNREAD { rule: "store-binding" })

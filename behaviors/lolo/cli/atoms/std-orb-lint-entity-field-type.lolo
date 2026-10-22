@@ -2,7 +2,7 @@ app std-orb-lint-entity-field-type [
   version: "1.0.0",
   inbound: ["cli-lint-entity-field-type"],
   fs: { cwd: "**": [read] },
-  description: "std-orb-lint-entity-field-type — the `orb lint entity-field-type <file>` command, the port. It lowers the file with program/read and reports each top-level field with an empty name (ORB_E_INVALID_FIELD_NAME), a type outside the valid field types (ORB_E_INVALID_FIELD_TYPE) or a relation type with no relation configuration (ORB_E_INVALID_RELATION), the validate_field checks, with the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint entity-field-type: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  description: "std-orb-lint-entity-field-type — the `orb lint entity-field-type <file>` command, the port. It lowers the file with program/read and reports each top-level field with an empty name (ORB_E_INVALID_FIELD_NAME), a type outside the valid field types (ORB_E_INVALID_FIELD_TYPE) or a relation type with no relation configuration (ORB_E_INVALID_RELATION), the validate_field checks, with the Rust path, message and suggestion (status 500, exit 1). Orbitals marked `spec` are skipped, as validate_all_entities skips them. Clean answers `lint entity-field-type: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-entity-field-type"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -34,7 +34,7 @@ orbital OrbLintEntityFieldTypeOrbital {
         (set @entity.findings (let ((orbitals (object/get @payload.result "orbitals")))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
             (let ((ent (object/get (array/nth @orbitals @oi) "entity" {})))
-              (if (validate/object @ent) (let ((fields (object/get @ent "fields" [])))
+              (if (and (validate/object @ent) (not (object/get (array/nth @orbitals @oi) "spec" false))) (let ((fields (object/get @ent "fields" [])))
                 (array/flatten (array/map (array/range 0 (array/len @fields)) (fn fi
                   (let ((f (array/nth @fields @fi)))
                     (array/concat

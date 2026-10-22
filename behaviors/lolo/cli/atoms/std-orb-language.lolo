@@ -1,6 +1,7 @@
 app std-orb-language [
   version: "1.0.0",
   inbound: ["cli-language"],
+  env: ["PATH"],
   exec: ["orb"],
   fs: { "/**": [read], "~/.orb/node_modules/**": [read] },
   description: "std-orb-language — two traits: OrbLanguage (the cli-language hook and its arguments) and OrbLanguageEngine (the scan, which std-orb-i18n composes alone: LANG_SCAN { cwd } answers SCAN_ANSWERED, LANGUAGE_ROW per core/std row, LANGUAGE_PACK_VOCAB per checked pack, LANGUAGE_PACKS_DONE { problem }). the `orb language which` command (spec/cli/orb-language.lolo; golden: orbital-cli language.rs run_which). The running orb version is what `orb --version` answers. One row per language package (@almadar/core, @almadar/std) resolved node-style: the working directory's node_modules, each parent's, then ~/.orb/node_modules, nearest first: `<package>@<version> → <canonical root>`, or `<package> → <CODE>: <problem>` when it is not installed, its package.json lacks the orbLanguage block or its compiler range, the range is not a single-comparator semver range, or the running orb does not satisfy it (std-semver; ORB_LANGUAGE_DATA_INCOMPATIBLE). Then one row per installed language pack (package.json declares orbVocabulary), sorted by name: `<pack>@<version> → <canonical root>`; a pack with no compiler or vocabulary field, an unsatisfied compiler range, an unreadable or unparseable vocabulary file, a language code claimed twice or the code en makes ONE `language packs → <CODE>: <problem>` row instead of the pack rows. Any other argument answers the usage. Not ported: the pack-vs-English coverage rules of validate_packs (the English table is not an installed file, G-STD-098) and the exact serde and OS error texts."
@@ -139,11 +140,13 @@ orbital OrbLanguageOrbital {
         (set @entity.lines [])
         (set @entity.packLines [])
         (set @entity.packProblem "")
-        (os/spawn "orb" ["--version"] { cwd: null env: null stdin: "null" stdout: "pipe" stderr: "null" detached: false } { key: "spawn" emit: { success: LANG_SPAWNED, failure: LANG_START_FAILED } })
+        (os/getenv "PATH" { key: "path" emit: { success: LANG_PATH_READ, failure: LANG_START_FAILED } })
     }
 
     state versioning {
       INIT -> versioning
+      LANG_PATH_READ -> versioning
+        (os/spawn "orb" ["--version"] { cwd: null env: { PATH: (or @payload.value "") } stdin: "null" stdout: "pipe" stderr: "null" detached: false } { key: "spawn" emit: { success: LANG_SPAWNED, failure: LANG_START_FAILED } })
       LANG_START_FAILED -> idle
         (emit SCAN_ANSWERED { status: 500, body: "", stderr: (str/concat "orb language: " @payload.error) })
       LANG_SPAWNED -> versioning
@@ -343,6 +346,9 @@ orbital OrbLanguageOrbital {
         @tier "internal"
       LANG_START_FAILED { kind : string  error : string }
         @description "Internal: a host call failed."
+        @tier "internal"
+      LANG_PATH_READ { value : string }
+        @description "Internal: the PATH the orb --version child is given."
         @tier "internal"
       LANG_SPAWNED { pid : number!  stdout : number! }
         @description "Internal: orb --version started."

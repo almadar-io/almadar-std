@@ -2,10 +2,11 @@ app std-orb-lint-tick-requires-runtime [
   version: "1.0.0",
   inbound: ["cli-lint-tick-requires-runtime"],
   fs: { cwd: "**": [read] },
-  description: "std-orb-lint-tick-requires-runtime — the `orb lint tick-requires-runtime <file>` command, the port of ORB_TICK_REQUIRES_RUNTIME (entity_mutation.rs validate_trait_tick_guards). It lowers the file with program/read and, for every inline trait that declares at least one non-cron tick (a numeric interval; the lowerer keeps a cron schedule as a string and refuses a malformed one, so a string interval is cron) and is linked to a persistent entity (no persistence mode, or `persistent`; the last entity of that name in the program wins, auxiliary entities included), reports the trait once at `...ticks` with the Rust message and suggestion (status 500, exit 1). The ORB_TICK_ASYNC_EFFECT half walks the tick effect tree and is not part of this rule. Clean answers `lint tick-requires-runtime: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  description: "std-orb-lint-tick-requires-runtime — the `orb lint tick-requires-runtime <file>` command, the port of ORB_TICK_REQUIRES_RUNTIME (entity_mutation.rs validate_trait_tick_guards). It lowers the file with program/read and, for every inline trait that declares at least one non-cron tick (a numeric interval, or a string that is not a valid 5-field cron expression, as `orbital_core_base::cron::is_valid_cron_expression` decides) and is linked to a persistent entity (no persistence mode, or `persistent`; the last entity of that name in the program wins, auxiliary entities included), reports the trait once at `...ticks` with the Rust message and suggestion (status 500, exit 1). It also reports ORB_TICK_ASYNC_EFFECT for each effect of a non-cron tick whose tree calls an operator of the registry's std-llm category (llm/call-tools, llm/compact, llm/embed, llm/generate, llm/switch, llm/token-count), found with tree/fold, at `...ticks[i].effects[j]`. Clean answers `lint tick-requires-runtime: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-tick-requires-runtime"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type TickShape = string | number | boolean | [TickShape] | Map string TickShape
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
 orbital OrbLintTickRequiresRuntimeOrbital {
@@ -31,20 +32,38 @@ orbital OrbLintTickRequiresRuntimeOrbital {
       LINT_FILE_READ -> reading
         (program/read (bytes/to-string @payload.data) { emit: { success: LINT_PROGRAM_READ, failure: LINT_FILE_UNREAD } })
       LINT_PROGRAM_READ -> ready
-        (set @entity.findings (let ((orbitals (object/get @payload.result "orbitals" [])))
+        (set @entity.findings (let ((orbitals (object/get @payload.result "orbitals" [])) (llm ["llm/call-tools" "llm/compact" "llm/embed" "llm/generate" "llm/switch" "llm/token-count"]))
           (let ((ents (array/flatten (array/map @orbitals (fn o (array/filter (array/concat (array/append [] (object/get @o "entity" null)) (object/get @o "auxiliaryEntities" [])) (fn e (validate/object @e))))))))
             (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
               (let ((orb (array/nth @orbitals @oi)))
                 (array/flatten (array/map (array/range 0 (array/len (object/get @orb "traits" []))) (fn ti
                   (let ((td (array/nth (object/get @orb "traits" []) @ti)))
-                    (let ((ticks (object/get @td "ticks" [])) (linked (object/get @td "linkedEntity" "")))
-                      (if (or (= (array/len @ticks) 0) (not (array/some @ticks (fn k (validate/number (object/get @k "interval" null))))) (= @linked ""))
-                        []
-                        (let ((owners (array/filter @ents (fn e (= (object/get @e "name" "") @linked)))))
-                          (if (or (= (array/len @owners) 0) (!= (object/get (array/last @owners) "persistence" "persistent") "persistent"))
+                    (let ((ticks (object/get @td "ticks" [])) (linked (object/get @td "linkedEntity" "")) (tn (object/get @td "name" "")) (where (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].traits[" @ti " (" (object/get @td "name" "") ")]")))
+                      (let ((tks (array/map (array/range 0 (array/len @ticks)) (fn i (let ((k (array/nth @ticks @i)) (sx (object/get (array/nth @ticks @i) "interval" ""))) { k: @k, i: @i, nc: (if (validate/number (object/get @k "interval" null)) true (not (let ((fs (str/split (str/replace-pattern (str/trim @sx) "\\s+" " ") " "))) (and (= (array/len @fs) 5) (array/every @fs (fn fl (array/every (str/split @fl ",") (fn pt (validate/pattern @pt "^(\\*|[0-9]+|[0-9]+-[0-9]+|(\\*|[0-9]+)/[0-9]*[1-9][0-9]*)$"))))))))) }))))) 
+                        (array/concat
+                          (if (or (= (array/len @ticks) 0) (not (array/some @tks (fn t (object/get @t "nc")))) (= @linked ""))
                             []
-                            (let ((tn (object/get @td "name" "")) (where (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].traits[" @ti " (" (object/get @td "name" "") ")]")))
-                              [{ code: "ORB_TICK_REQUIRES_RUNTIME", path: (str/concat @where ".ticks"), message: (str/concat "trait \"" @tn "\" runs a non-cron tick against entity \"" @linked "\", which is Persistent — a persistent entity mutated on every tick is usually meant to be [runtime]"), suggestion: (str/concat "Mark entity \"" @linked "\" [runtime], or switch the tick to a Cron interval if it's a server-scheduled job"), severity: "error" }]))))))))))))))))
+                            (let ((owners (array/filter @ents (fn e (= (object/get @e "name" "") @linked)))))
+                              (if (or (= (array/len @owners) 0) (!= (object/get (array/last @owners) "persistence" "persistent") "persistent"))
+                                []
+                                [{ code: "ORB_TICK_REQUIRES_RUNTIME", path: (str/concat @where ".ticks"), message: (str/concat "trait \"" @tn "\" runs a non-cron tick against entity \"" @linked "\", which is Persistent — a persistent entity mutated on every tick is usually meant to be [runtime]"), suggestion: (str/concat "Mark entity \"" @linked "\" [runtime], or switch the tick to a Cron interval if it's a server-scheduled job"), severity: "error" }])))
+                          (array/flatten (array/map @tks (fn t
+                            (let ((tk (object/get @t "k")) (i (object/get @t "i")))
+                              (if (not (object/get @t "nc"))
+                                []
+                                (array/flatten (array/map (array/range 0 (array/len (object/get @tk "effects" []))) (fn j
+                                  (let ((ef (array/nth (object/get @tk "effects" []) @j)))
+                                    (let ((op (let ((fd (tree/fold @ef (fn (n k)
+                                      (if (validate/array @n)
+                                        (array/concat
+                                          (if (validate/string (array/nth @n 0)) (if (array/includes @llm (array/nth @n 0)) [(array/nth @n 0)] []) [])
+                                          (array/flatten (array/filter @k (fn r (validate/array @r)))))
+                                        (if (validate/object @n)
+                                          (array/flatten (array/filter (array/map (object/entries @k) (fn e (array/nth @e 1))) (fn r (validate/array @r))))
+                                          []))) TickShape))) (if (> (array/len @fd) 0) (array/first @fd) ""))))
+                                      (if (= @op "")
+                                        []
+                                        [{ code: "ORB_TICK_ASYNC_EFFECT", path: (str/concat @where ".ticks[" @i "].effects[" @j "]"), message: (str/concat "trait \"" @tn "\" tick '" (object/get @tk "name" "") "' calls server-async operator '" @op "' on a non-cron interval — repeated per-tick agent/LLM calls can pile up"), suggestion: "Trigger the async call from an explicit event-driven transition, or use a Cron-scheduled tick", severity: "error" }])))))))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FILE_UNREAD -> ready
         (emit LINT_UNREAD { rule: "tick-requires-runtime" })

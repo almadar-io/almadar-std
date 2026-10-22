@@ -1,0 +1,73 @@
+app std-live-feed [
+  version: "1.0.0",
+  description: "std-live-feed — the live event fan-out of an HTTP server program, between std-http-router and std-sse: what orb serve's GET /api/events carries, so a change made in one tab reaches the others. STREAM_AUTHORIZED { requestId, viewer, clientId } subscribes the opened stream to the host's live broadcast with a keyed program/live { viewer, clientId } (key live-<requestId>, EXEC-QUEUE-13): each item the connection would receive (a peer's row only when the viewer may read it, never the client's own) arrives as LIVE_ITEM and is written to the stream as SSE_SEND { requestId, data } whose data is the JSON text of { type: bus, event, payload?, source, timestamp }, the /api/events frame, in arrival order. SSE_CLOSED from std-sse (the client went away or the server closed it) cancels the stream's key with cancel-call, so nothing more is written; a stream it never subscribed is left alone. LIVE_FAILED (the host refused the subscription) closes the stream with SSE_CLOSE. Bound to spec/net/live-feed.lolo."
+]
+uses Spec from "almadar-std/live-feed"
+type LiveJson = string | number | boolean | [LiveJson] | Map string LiveJson
+orbital LiveFeedOrbital {
+  entity LiveFeeds [runtime] {
+    id : string!
+    open : [number] @description "Request ids of the streams subscribed and not yet closed." = []
+  }
+
+  trait LiveFeed -> LiveFeeds [integration, instance] {
+    initial: serving
+
+    state serving {
+      INIT -> serving
+
+      STREAM_AUTHORIZED -> serving
+        (set @entity.open (array/append @entity.open @payload.requestId))
+        (program/live { viewer: @payload.viewer, clientId: @payload.clientId } { key: (str/concat "live-" @payload.requestId), emit: { onMessage: LIVE_ITEM, failure: LIVE_FAILED } })
+
+      LIVE_ITEM -> serving when (array/includes @entity.open (str/to-int (str/replace @payload.key "live-" "")))
+        (emit SSE_SEND { requestId: (str/to-int (str/replace @payload.key "live-" "")), data: (json/stringify (if (= @payload.payload null) { type: "bus", event: @payload.event, source: @payload.source, timestamp: @now } { type: "bus", event: @payload.event, payload: @payload.payload, source: @payload.source, timestamp: @now })) })
+
+      LIVE_FAILED -> serving when (array/includes @entity.open (str/to-int (str/replace @payload.key "live-" "")))
+        (set @entity.open (array/filter @entity.open (fn r (!= @r (str/to-int (str/replace @payload.key "live-" ""))))))
+        (emit SSE_CLOSE { requestId: (str/to-int (str/replace @payload.key "live-" "")) })
+
+      SSE_CLOSED -> serving when (array/includes @entity.open @payload.requestId)
+        (set @entity.open (array/filter @entity.open (fn r (!= @r @payload.requestId))))
+        (cancel-call (str/concat "live-" @payload.requestId))
+    }
+
+    emits {
+      SSE_SEND -> external {
+        requestId : number!
+        data : string!
+      }
+        @description "One live item, written to its stream by std-sse."
+        @tier "secondary"
+      SSE_CLOSE -> external {
+        requestId : number!
+      }
+        @description "The host refused the subscription; end the stream."
+        @tier "secondary"
+    }
+
+    listens {
+      STREAM_AUTHORIZED {
+        requestId : number!
+        viewer : Viewer!
+        clientId : string!
+      }
+      LIVE_ITEM {
+        event : string!
+        payload : LiveJson
+        source : LiveJson!
+        key : string!
+      }
+      LIVE_FAILED {
+        error : string!
+        key : string!
+      }
+      SSE_CLOSED {
+        requestId : number!
+        reason : string!
+      }
+    }
+  }
+
+  page "/live-feed" as LiveFeedPage -> LiveFeed
+}

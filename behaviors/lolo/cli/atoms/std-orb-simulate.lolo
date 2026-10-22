@@ -6,6 +6,16 @@ app std-orb-simulate [
 ]
 uses Spec from "almadar-std/orb-simulate"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type Expr = string | number | boolean | [Expr] | Map string Expr
+type SimFrom = string | [string]
+type SimTransition = { from : SimFrom, to : string, event : string, guard : Expr, effects : [Expr] }
+type SimState = { name : string, isInitial : boolean }
+type SimMachine = { states : [SimState], transitions : [SimTransition] }
+type SimTrait = { name : string, stateMachine : SimMachine }
+type SimTraitRef = { ref : string, name : string }
+type SimPage = { name : string, path : string, traits : [SimTraitRef] }
+type SimOrbital = { traits : [SimTrait], pages : [SimPage] }
+type SimProgram = { orbitals : [SimOrbital] }
 
 orbital OrbSimulateOrbital {
   entity OrbSimulateRun [runtime] {
@@ -61,7 +71,7 @@ orbital OrbSimulateOrbital {
                                               (array/flatten (array/map @rends (fn e
                                                 (let ((slot (if (validate/string (array/nth @e 1)) (array/nth @e 1) "?"))
                                                       (pat (array/nth @e 2)))
-                                                  (let ((isObj (validate/object @pat)) (isClear (= @pat null)))
+                                                  (let ((isObj (validate/object @pat)) (isClear (and (= @pat null) (> (array/len @e) 2))))
                                                     (let ((ptype (if @isObj (if (validate/string (object/get @pat "type" null)) (object/get @pat "type") "?") (if @isClear "null (clear)" "?")))
                                                           (props (if @isObj (array/filter (object/keys @pat) (fn k (!= @k "type"))) [])))
                                                       (array/concat
@@ -94,7 +104,7 @@ orbital OrbSimulateOrbital {
       SIMULATE_UNREAD { error : string }
         @description "The file could not be read or lowered."
         @tier "internal"
-      SIMULATE_PROGRAM_READ { result : string }
+      SIMULATE_PROGRAM_READ { result : SimProgram }
         @description "The file lowered by program/read."
         @tier "internal"
     }

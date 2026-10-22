@@ -32,6 +32,8 @@ orbital OrbLintPageEmptyTraitsOrbital {
         (program/read (bytes/to-string @payload.data) { emit: { success: LINT_PROGRAM_READ, failure: LINT_FILE_UNREAD } })
       LINT_PROGRAM_READ -> ready
         (set @entity.findings (let ((orbitals (object/get @payload.result "orbitals")))
+         (let ((inl (array/flatten (array/map @orbitals (fn o (object/get @o "traits" []))))))
+         (let ((tnames (array/map @inl (fn t (object/get @t "name" (object/get @t "ref" ""))))) (tids (array/filter (array/map @inl (fn t (object/get @t "id" ""))) (fn i (!= @i "")))))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
             (let ((pgList (if (object/get (array/nth @orbitals @oi) "spec" false) [] (object/get (array/nth @orbitals @oi) "pages" []))))
               (array/flatten (array/map (array/range 0 (array/len @pgList)) (fn pj
@@ -45,7 +47,22 @@ orbital OrbLintPageEmptyTraitsOrbital {
                       [])
                     (if (and (object/has @pg "viewType") (not (array/some ["list" "detail" "create" "edit" "dashboard" "custom"] (fn vt (= @vt (object/get @pg "viewType"))))))
                       [{ code: "ORB_P_INVALID_VIEW_TYPE", path: (str/concat "orbitals[" @oi "].pages[" @pj "].viewType"), message: (str/concat "Invalid view type: '" (object/get @pg "viewType") "'"), suggestion: "", severity: "error" }]
-                      [])])))))))))))
+                      [])
+                    (array/flatten (array/map (array/range 0 (array/len (object/get @pg "traits" []))) (fn ti
+                      (let ((tr (array/nth (object/get @pg "traits" []) @ti)))
+                        (let ((tp (str/concat "orbitals[" @oi "].pages[" @pj "].traits[" @ti " (" (if (object/has @tr "stateMachine") (object/get @tr "name" "") (if (object/has @tr "ref") (object/get @tr "ref") (if (object/has @tr "name") (object/get @tr "name") "<anonymous>"))) ")]")))
+                          (if (object/has @tr "stateMachine")
+                            (if (= (object/get @tr "name" "") "")
+                              [{ code: "ORB_P_INVALID_TRAIT_REF", path: @tp, message: "Inline trait must have a name", suggestion: "Add a name property to the inline trait", severity: "error" }]
+                              [])
+                            (if (and (object/has @tr "refId") (array/includes @tids (object/get @tr "refId")))
+                              []
+                              (if (or (object/has @tr "ref") (object/has @tr "name"))
+                                (let ((nm (if (object/has @tr "ref") (object/get @tr "ref") (object/get @tr "name"))))
+                                  (if (or (array/includes @tnames @nm) (str/startsWith @nm "std/"))
+                                    []
+                                    [{ code: "ORB_P_INVALID_TRAIT_REF", path: @tp, message: (str/concat "Trait '" @nm "' referenced on page does not exist"), suggestion: "Define traits inline within orbitals or use a std trait", severity: "error" }]))
+                                [{ code: "ORB_P_INVALID_TRAIT_REF", path: @tp, message: "Page trait reference must have 'ref' or 'name' property", suggestion: "Add ref: 'TraitName' to reference a trait", severity: "error" }]))))))))])))))))))))))
         (emit LINT_FINISH { })
       LINT_FILE_UNREAD -> ready
         (emit LINT_UNREAD { rule: "page-empty-traits" })

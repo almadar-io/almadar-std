@@ -2,7 +2,7 @@
  "atom": "net/atoms/std-http-dispatch.lolo",
  "trait": "ServerDispatch",
  "source": "orbital-rust/crates/orbital-server/tests/external_inputs_route.rs",
- "note": "Twin of orbital-server tests/external_inputs_route.rs. The host answers (program/inputs, program/dispatch wire) are played as steps. Hook cases and the schema detail route are pending. Replay limits found: the entity round-trips between steps without its bytes type, so DISPATCH_RUN cannot be asserted after the request is stored (preparedExpect records the intended DISPATCH_PREPARED); a RESPOND payload expectation (requestId, status) does not match even when the event is emitted, so expectedResponse records the intended status and the step asserts only that RESPOND is emitted.",
+ "note": "Twin of orbital-server tests/external_inputs_route.rs. The host answers (program/inputs, program/dispatch wire) are played as steps. The end-to-end hook cases and the schema detail route are pending. Replay limits found: the entity round-trips between steps without its bytes type, so DISPATCH_RUN cannot be asserted after the request is stored (preparedExpect records the intended DISPATCH_PREPARED); a RESPOND payload expectation (requestId, status) does not match even when the event is emitted, so expectedResponse records the intended status and the step asserts only that RESPOND is emitted.",
  "cases": [
   {
    "id": "lists-the-declared-inputs",
@@ -182,7 +182,8 @@
        "emittedEvents": [],
        "clientEffects": [],
        "rejections": []
-      }
+      },
+      "key": "dispatch-2"
      },
      "expect": {
       "emits": [
@@ -295,7 +296,8 @@
         }
        ],
        "error": "TaskPersistor.OPEN is not a declared external input"
-      }
+      },
+      "key": "dispatch-3"
      },
      "expect": {
       "emits": [
@@ -410,7 +412,8 @@
         }
        ],
        "error": "TaskPersistor.DO_CREATE is not a declared external input"
-      }
+      },
+      "key": "dispatch-4"
      },
      "expect": {
       "emits": [
@@ -518,7 +521,8 @@
        "emittedEvents": [],
        "clientEffects": [],
        "rejections": []
-      }
+      },
+      "key": "dispatch-5"
      },
      "expect": {
       "emits": [
@@ -537,37 +541,37 @@
   },
   {
    "id": "inbound-hook-unset-credential-leaves-channel-unchecked",
-   "skip": "pending: no operator delivers an inbound hook yet (HOOK_DELIVERED); the dispatch atom answers /api/hooks/:name as 501 NOT_IMPLEMENTED",
+   "skip": "pending: each case boots a HooksApp program and checks the host's answer end to end; the atom hands /api/hooks/:name to program/dispatch { inbound } (server-dispatch.replay.goldens.json plays the answers), and replay has no host to deliver it",
    "steps": [],
    "note": "pending spec: {\"expected\": {\"body\": \"{\\\"ok\\\":true,\\\"dispatched\\\":false}\", \"headers\": {\"content-type\": \"application/json\"}, \"status\": 200}, \"fixture\": {\"schema\": \"HooksApp inbound [google-calendar]; orbital CalOrbital trait Push, event PUSH inbound { name google-calendar, answers PUSH_ANSWERED, verifies header x-goog-channel-token against credential env }\"}, \"request\": {\"env\": {\"ORB_TEST_INBOUND_CHANNEL_TOKEN\": null}, \"headers\": {\"x-goog-resource-state\": \"sync\"}, \"method\": \"POST\", \"path\": \"/api/hooks/google-calendar\"}}"
   },
   {
    "id": "inbound-hook-valid-token-is-answered",
-   "skip": "pending: no operator delivers an inbound hook yet (HOOK_DELIVERED); the dispatch atom answers /api/hooks/:name as 501 NOT_IMPLEMENTED",
+   "skip": "pending: each case boots a HooksApp program and checks the host's answer end to end; the atom hands /api/hooks/:name to program/dispatch { inbound } (server-dispatch.replay.goldens.json plays the answers), and replay has no host to deliver it",
    "steps": [],
    "note": "pending spec: {\"expected\": {\"body\": \"{\\\"ok\\\":true,\\\"dispatched\\\":false}\", \"status\": 200}, \"fixture\": {\"schema\": \"HooksApp inbound [google-calendar]; orbital CalOrbital trait Push, event PUSH inbound { name google-calendar, answers PUSH_ANSWERED, verifies header x-goog-channel-token against credential env }\"}, \"request\": {\"env\": {\"ORB_TEST_INBOUND_CHANNEL_TOKEN\": \"s3cret\"}, \"headers\": {\"x-goog-channel-token\": \"s3cret\", \"x-goog-resource-state\": \"sync\"}, \"method\": \"POST\", \"path\": \"/api/hooks/google-calendar\"}}"
   },
   {
    "id": "inbound-hook-wrong-token-is-400",
-   "skip": "pending: no operator delivers an inbound hook yet (HOOK_DELIVERED); the dispatch atom answers /api/hooks/:name as 501 NOT_IMPLEMENTED",
+   "skip": "pending: each case boots a HooksApp program and checks the host's answer end to end; the atom hands /api/hooks/:name to program/dispatch { inbound } (server-dispatch.replay.goldens.json plays the answers), and replay has no host to deliver it",
    "steps": [],
    "note": "pending spec: {\"expected\": {\"body\": \"{\\\"error\\\":\\\"bad-token\\\"}\", \"status\": 400}, \"fixture\": {\"schema\": \"HooksApp inbound [google-calendar]; orbital CalOrbital trait Push, event PUSH inbound { name google-calendar, answers PUSH_ANSWERED, verifies header x-goog-channel-token against credential env }\"}, \"request\": {\"env\": {\"ORB_TEST_INBOUND_CHANNEL_TOKEN\": \"s3cret\"}, \"headers\": {\"x-goog-channel-token\": \"guess\", \"x-goog-resource-state\": \"sync\"}, \"method\": \"POST\", \"path\": \"/api/hooks/google-calendar\"}}"
   },
   {
    "id": "inbound-hook-missing-token-is-400",
-   "skip": "pending: no operator delivers an inbound hook yet (HOOK_DELIVERED); the dispatch atom answers /api/hooks/:name as 501 NOT_IMPLEMENTED",
+   "skip": "pending: each case boots a HooksApp program and checks the host's answer end to end; the atom hands /api/hooks/:name to program/dispatch { inbound } (server-dispatch.replay.goldens.json plays the answers), and replay has no host to deliver it",
    "steps": [],
    "note": "pending spec: {\"expected\": {\"status\": 400}, \"fixture\": {\"schema\": \"HooksApp inbound [google-calendar]; orbital CalOrbital trait Push, event PUSH inbound { name google-calendar, answers PUSH_ANSWERED, verifies header x-goog-channel-token against credential env }\"}, \"request\": {\"env\": {\"ORB_TEST_INBOUND_CHANNEL_TOKEN\": \"s3cret\"}, \"headers\": {\"x-goog-resource-state\": \"sync\"}, \"method\": \"POST\", \"path\": \"/api/hooks/google-calendar\"}}"
   },
   {
    "id": "control-undeclared-hook-name-is-404",
-   "skip": "pending: no operator delivers an inbound hook yet (HOOK_DELIVERED); the dispatch atom answers /api/hooks/:name as 501 NOT_IMPLEMENTED",
+   "skip": "pending: each case boots a HooksApp program and checks the host's answer end to end; the atom hands /api/hooks/:name to program/dispatch { inbound } (server-dispatch.replay.goldens.json plays the answers), and replay has no host to deliver it",
    "steps": [],
    "note": "pending spec: {\"expected\": {\"body\": \"{\\\"error\\\":\\\"Unknown hook provider: google-calendar\\\"}\", \"status\": 404}, \"fixture\": {\"schema\": \"HooksApp inbound []\"}, \"request\": {\"method\": \"POST\", \"path\": \"/api/hooks/google-calendar\"}}"
   },
   {
    "id": "control-arm-that-does-not-fire-is-500-inbound-unanswered",
-   "skip": "pending: no operator delivers an inbound hook yet (HOOK_DELIVERED); the dispatch atom answers /api/hooks/:name as 501 NOT_IMPLEMENTED",
+   "skip": "pending: each case boots a HooksApp program and checks the host's answer end to end; the atom hands /api/hooks/:name to program/dispatch { inbound } (server-dispatch.replay.goldens.json plays the answers), and replay has no host to deliver it",
    "steps": [],
    "note": "pending spec: {\"expected\": {\"body\": \"{\\\"error\\\":\\\"inbound-unanswered\\\"}\", \"status\": 500}, \"fixture\": {\"schema\": \"HooksApp inbound [google-calendar]; orbital CalOrbital trait Push, event PUSH inbound { name google-calendar, answers PUSH_ANSWERED, verifies header x-goog-channel-token against credential env }\"}, \"request\": {\"headers\": {\"x-goog-resource-state\": \"exists\"}, \"method\": \"POST\", \"path\": \"/api/hooks/google-calendar\"}}"
   },
@@ -667,7 +671,8 @@
         }
        ],
        "error": "PUSH is inbound only: deliver it through /api/hooks/google-calendar"
-      }
+      },
+      "key": "dispatch-10"
      },
      "expect": {
       "emits": [
@@ -780,7 +785,8 @@
         }
        ],
        "error": "PUSH is inbound only: deliver it through /api/hooks/google-calendar"
-      }
+      },
+      "key": "dispatch-11"
      },
      "expect": {
       "emits": [
@@ -893,7 +899,8 @@
         }
        ],
        "error": "PUSH is inbound only: deliver it through /api/hooks/google-calendar"
-      }
+      },
+      "key": "dispatch-12"
      },
      "expect": {
       "emits": [
@@ -999,7 +1006,8 @@
        "emittedEvents": [],
        "clientEffects": [],
        "rejections": []
-      }
+      },
+      "key": "dispatch-13"
      },
      "expect": {
       "emits": [

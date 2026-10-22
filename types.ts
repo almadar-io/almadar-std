@@ -183,6 +183,8 @@ export const STD_MODULES = [
   'base64',
   'hash',
   'hmac',
+  'gzip',
+  'brotli',
   'xml',
 ] as const;
 

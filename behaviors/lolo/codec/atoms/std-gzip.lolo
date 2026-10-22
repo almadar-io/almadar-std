@@ -1,6 +1,6 @@
 app std-gzip [
-  version: "1.2.0",
-  description: "std-gzip — unpack gzip (RFC 1952) over bytes/*, array/*, object literals and math/*. GUNZIP { data } answers GUNZIP_ANSWERED { data, size, crc } when every member parses and checks, and GZIP_REFUSED { reason } otherwise: magic, method, flags (a reserved FLG bit, 0xE0), header-crc (FHCRC mismatch), truncated, block, crc, size, trailing (bytes after a member that do not start another). Members are concatenated; FEXTRA, FNAME, FCOMMENT are skipped and FHCRC is verified. DEFLATE (RFC 1951): stored, fixed and dynamic blocks, any number. Header stages, the block loop and the CRC32 subroutine are events (GZ_*) over one entity; a symbol run is one array/reduce over a bounded range (a symbol takes at least one bit) whose accumulator is the GzDecoder record. Huffman decoding is the canonical count/first/index walk. CRC32 is table driven with the XOR written as a 32-step bit sum, since the language has no XOR operator."
+  version: "1.3.0",
+  description: "std-gzip — pack and unpack gzip. GZIP { data } answers GZIP_ANSWERED { data, size, crc }: a greedy LZ77 match finder over a hash chain (3-byte key, 32 KB window, matches 3 to 258, the chain knob bounds the walk), one fixed-Huffman DEFLATE block (RFC 1951 3.2.6) and the RFC 1952 header and CRC32/ISIZE trailer; every member round-trips through GUNZIP and gzip -d. Unpack gzip (RFC 1952) over bytes/*, array/*, object literals and math/*. GUNZIP { data } answers GUNZIP_ANSWERED { data, size, crc } when every member parses and checks, and GZIP_REFUSED { reason } otherwise: magic, method, flags (a reserved FLG bit, 0xE0), header-crc (FHCRC mismatch), truncated, block, crc, size, trailing (bytes after a member that do not start another). Members are concatenated; FEXTRA, FNAME, FCOMMENT are skipped and FHCRC is verified. DEFLATE (RFC 1951): stored, fixed and dynamic blocks, any number. Header stages, the block loop and the CRC32 subroutine are events (GZ_*) over one entity; a symbol run is one array/reduce over a bounded range (a symbol takes at least one bit) whose accumulator is the GzDecoder record. Huffman decoding is the canonical count/first/index walk. CRC32 is table driven with the XOR written as a 32-step bit sum, since the language has no XOR operator."
 ]
 uses Spec from "almadar-std/gzip"
 
@@ -75,6 +75,11 @@ orbital GzipOrbital {
         @label "Base64 alphabet"
         @description "The 64 characters of standard base64, in sextet order."
         @synonyms "base64 table"
+        @tier "domain"
+      chain : number = 16
+        @label "Match chain length"
+        @description "The most earlier positions the encoder tries for one match (the hash chain walk bound)."
+        @synonyms "deflate effort, lz77 chain"
         @tier "domain"
       codeLengthOrder : [number] = [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15]
         @label "Code-length order"
@@ -516,6 +521,99 @@ orbital GzipOrbital {
                           (fn k (bytes/write-uint (array/nth @entity.out @k) 1 "be"))))))
             size: @entity.size,
             crc: @entity.crc })
+
+      ;; ---- encoder: GZIP -> LZ77 (hash chain) -> fixed-Huffman block (RFC 1951 3.2.6) -> CRC32 -> gzip member (RFC 1952) ----
+      GZIP -> idle
+        (set @entity.size (bytes/length @payload.data))
+        (set @entity.bs (array/map (array/range 0 (bytes/length @payload.data)) (fn j (bytes/at @payload.data @j))))
+        (emit GZ_ENC_LZ { })
+
+      GZ_ENC_LZ -> idle
+        (set @entity.lens
+          (let ((bs @entity.bs) (n (array/len @entity.bs)))
+            (object/get
+              (array/reduce (array/range 0 @n) { next: 0, toks: [], head: {}, prev: [] }
+                (fn acc i
+                  (let ((key (if (< (+ @i 2) @n)
+                               (str/concat "k" (+ (+ (* (array/nth @bs @i) 65536) (* (array/nth @bs (+ @i 1)) 256)) (array/nth @bs (+ @i 2))))
+                               "")))
+                    (let ((cand (- (if (== @key "") 0 (or (object/get @acc.head @key) 0)) 1)))
+                      (let ((best (if (and (>= @i @acc.next) (>= @cand 0))
+                                    (array/reduce (array/range 0 @config.chain) { c: @cand, bl: 0, bd: 0 }
+                                      (fn s k
+                                        (if (or (< @s.c 0) (> (- @i @s.c) 32768))
+                                          { c: -1, bl: @s.bl, bd: @s.bd }
+                                          (let ((m (array/reduce (array/range 0 (math/min 258 (- @n @i))) { len: 0, go: true }
+                                                     (fn a k2
+                                                       (if (and @a.go (== (array/nth @bs (+ @s.c @k2)) (array/nth @bs (+ @i @k2))))
+                                                         { len: (+ @k2 1), go: true }
+                                                         { len: @a.len, go: false })))))
+                                            { c: (array/nth @acc.prev @s.c),
+                                              bl: (if (> @m.len @s.bl) @m.len @s.bl),
+                                              bd: (if (> @m.len @s.bl) (- @i @s.c) @s.bd) }))))
+                                    { c: -1, bl: 0, bd: 0 })))
+                        (let ((useM (and (>= @i @acc.next) (>= @best.bl 3))))
+                          { next: (if @useM (+ @i @best.bl) (if (>= @i @acc.next) (+ @i 1) @acc.next)),
+                            toks: (if @useM
+                                    (array/append @acc.toks (+ (* @best.bl 65536) @best.bd))
+                                    (if (>= @i @acc.next) (array/append @acc.toks (array/nth @bs @i)) @acc.toks)),
+                            head: (if (== @key "") @acc.head (object/set @acc.head @key (+ @i 1))),
+                            prev: (array/append @acc.prev @cand) }))))))
+              "toks")))
+        (emit GZ_ENC_BITS { })
+
+      ;; a literal/length code is 7-9 bits written most significant first, extra bits least significant first, a distance code is 5 bits most significant first
+      GZ_ENC_BITS -> idle
+        (set @entity.bits
+          (array/concat
+            [1, 1, 0]
+            (array/flatten
+              (array/map @entity.lens
+                (fn t
+                  (let ((len (math/floor (/ @t 65536))) (dist (math/mod @t 65536)))
+                    (let ((li (- (array/len (array/filter @config.lengthBase (fn x (<= @x @len)))) 1))
+                          (di (- (array/len (array/filter @config.distBase (fn x (<= @x @dist)))) 1)))
+                      (let ((sym (if (< @t 256) @t (+ 257 @li))))
+                        (let ((code (if (<= @sym 143) (+ 48 @sym) (if (<= @sym 255) (+ 400 (- @sym 144)) (if (<= @sym 279) (- @sym 256) (+ 192 (- @sym 280))))))
+                              (w (if (<= @sym 143) 8 (if (<= @sym 255) 9 (if (<= @sym 279) 7 8)))))
+                          (array/concat
+                            (array/map (array/range 0 @w) (fn k (math/mod (math/floor (/ @code (math/pow 2 (- (- @w 1) @k)))) 2)))
+                            (if (< @t 256) []
+                              (array/concat
+                                (array/map (array/range 0 (array/nth @config.lengthExtra @li))
+                                  (fn k (math/mod (math/floor (/ (- @len (array/nth @config.lengthBase @li)) (math/pow 2 @k))) 2)))
+                                (array/map (array/range 0 5) (fn k (math/mod (math/floor (/ @di (math/pow 2 (- 4 @k)))) 2)))
+                                (array/map (array/range 0 (array/nth @config.distExtra @di))
+                                  (fn k (math/mod (math/floor (/ (- @dist (array/nth @config.distBase @di)) (math/pow 2 @k))) 2)))))))))))))
+            [0, 0, 0, 0, 0, 0, 0]))
+        (emit GZ_ENC_CRC { })
+
+      GZ_ENC_CRC -> idle
+        (set @entity.crc
+          (let ((table (array/map (array/range 0 256)
+                         (fn i (array/reduce (array/range 0 8) @i
+                                 (fn c k (if (== (math/mod @c 2) 1) (bit/xor 3988292384 (bit/shr @c 1)) (bit/shr @c 1))))))))
+            (bit/xor 4294967295
+              (array/reduce @entity.bs 4294967295
+                (fn c b (bit/xor (array/nth @table (bit/and (bit/xor @c @b) 255)) (bit/shr @c 8)))))))
+        (emit GZ_ENC_PACK { })
+
+      GZ_ENC_PACK -> idle
+        (set @entity.out
+          (let ((nb (array/len @entity.bits)))
+            (let ((padded (array/concat @entity.bits (array/map (array/range 0 (math/mod (- 8 (math/mod @nb 8)) 8)) (fn z 0)))))
+              (array/concat
+                [31, 139, 8, 0, 0, 0, 0, 0, 0, 255]
+                (array/map (array/range 0 (/ (array/len @padded) 8))
+                  (fn j (array/reduce (array/range 0 8) 0
+                          (fn sum k (+ @sum (* (array/nth @padded (+ (* 8 @j) @k)) (math/pow 2 @k)))))))))))
+        (emit GZIP_ANSWERED {
+          data: (bytes/concat
+                  [(bytes/concat (array/map @entity.out (fn x (bytes/write-uint @x 1 "be"))))
+                   (bytes/write-uint @entity.crc 4 "le")
+                   (bytes/write-uint @entity.size 4 "le")]),
+          size: @entity.size,
+          crc: @entity.crc })
     }
 
     emits {
@@ -527,6 +625,10 @@ orbital GzipOrbital {
       GZ_H_HCRC -> internal { }
       GZ_CRC -> internal { }
       GZ_CRC_DONE -> internal { }
+      GZ_ENC_LZ -> internal { }
+      GZ_ENC_BITS -> internal { }
+      GZ_ENC_CRC -> internal { }
+      GZ_ENC_PACK -> internal { }
       GZ_BEGIN -> internal { }
       GZ_BLOCK -> internal { }
       GZ_TYPED -> internal { }
@@ -545,6 +647,13 @@ orbital GzipOrbital {
       }
         @description "The unpacked bytes of every member, their length and the CRC32 of the last member."
         @tier "primary"
+      GZIP_ANSWERED -> external {
+        data : bytes!
+        size : number!
+        crc : number!
+      }
+        @description "The gzip member: one fixed-Huffman DEFLATE block, the input length and its CRC32."
+        @tier "primary"
       GZIP_REFUSED -> external {
         reason : string!
       }
@@ -553,6 +662,11 @@ orbital GzipOrbital {
     }
 
     listens {
+      GZIP -> external {
+        data : bytes!
+      }
+        @description "Pack these bytes as a gzip member."
+        @synonyms "gzip, compress gzip, deflate, pack gzip"
       GUNZIP -> external {
         data : bytes!
       }

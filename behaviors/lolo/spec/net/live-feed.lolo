@@ -1,0 +1,24 @@
+app live-feed-spec [
+  version: "1.0.0",
+  description: "Design contract for the live event fan-out of an HTTP server program. STREAM_AUTHORIZED { requestId, viewer, clientId } subscribes that stream to the host's live broadcast with a keyed program/live for the viewer and client (key live-<requestId>), so each item the connection would receive arrives as LIVE_ITEM { event, payload?, source, key } and is written as SSE_SEND { requestId, data } whose data is the JSON text of { type: bus, event, payload?, source, timestamp }, in arrival order. SSE_CLOSED { requestId } of a subscribed stream cancels its key, so no later item is written; for a stream it never subscribed it does nothing. LIVE_FAILED { key, error } of a subscribed stream closes it with SSE_CLOSE { requestId }."
+]
+
+orbital LiveFeedSpec {
+  expects entity LiveFeeds [runtime] {
+    id : string!
+    open : [number]
+  }
+  expects trait LiveFeed {
+    state serving {
+      STREAM_AUTHORIZED -> serving
+      LIVE_ITEM -> serving
+      LIVE_FAILED -> serving
+      SSE_CLOSED -> serving
+    }
+    emits {
+      SSE_SEND { requestId : number!  data : string! }
+      SSE_CLOSE { requestId : number! }
+    }
+  }
+  expects page "/live-feed" -> LiveFeed
+}

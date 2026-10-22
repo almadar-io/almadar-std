@@ -2,7 +2,7 @@ app std-orb-lint-entity-duplicate-field [
   version: "1.0.0",
   inbound: ["cli-lint-entity-duplicate-field"],
   fs: { cwd: "**": [read] },
-  description: "std-orb-lint-entity-duplicate-field — the `orb lint entity-duplicate-field <file>` command, the port. It lowers the file with program/read and, for every orbital's inline entity, reports each field whose non-empty name an earlier field of the same entity already uses, with the Rust path, message and suggestion (status 500, exit 1). Unnamed fields are skipped. Clean answers `lint entity-duplicate-field: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  description: "std-orb-lint-entity-duplicate-field — the `orb lint entity-duplicate-field <file>` command, the port. It lowers the file with program/read and, for every orbital's inline entity, reports each field whose non-empty name an earlier field of the same entity already uses, with the Rust path, message and suggestion (status 500, exit 1). Orbitals marked `spec` are skipped, as validate_all_entities skips them. Unnamed fields are skipped. Clean answers `lint entity-duplicate-field: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-entity-duplicate-field"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -34,7 +34,7 @@ orbital OrbLintEntityDuplicateFieldOrbital {
         (set @entity.findings (let ((orbitals (object/get @payload.result "orbitals")))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
             (let ((ent (object/get (array/nth @orbitals @oi) "entity" {})))
-              (if (validate/object @ent) (let ((fields (object/get @ent "fields" [])))
+              (if (and (validate/object @ent) (not (object/get (array/nth @orbitals @oi) "spec" false))) (let ((fields (object/get @ent "fields" [])))
                 (let ((names (array/map @fields (fn f (object/get @f "name" "")))))
                   (array/flatten (array/map (array/range 0 (array/len @names)) (fn fi
                     (let ((nm (array/nth @names @fi)))

@@ -2,7 +2,7 @@ app std-orb-lint-sign-in-route [
   version: "1.0.0",
   inbound: ["cli-lint-sign-in-route"],
   fs: { cwd: "**": [read] },
-  description: "std-orb-lint-sign-in-route — the `orb lint sign-in-route <file>` command, the port of validate_sign_in_route. It lowers the file with program/read and reports ORB_P_HOST_RESERVED_ROUTE for any page declared on the host's own `/login` route, and ORB_P_SIGN_IN_UNKNOWN_ROUTE when the app's `signIn:` route (other than `/login`) is no page of the program or is itself `access: authenticated` (route params compare as one `:` segment), each with its path and suggestion (status 500, exit 1). Pages recorded by `uses lazy` are not visible to this port. Clean answers `lint sign-in-route: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  description: "std-orb-lint-sign-in-route — the `orb lint sign-in-route <file>` command, the port of validate_sign_in_route. It lowers the file with program/read and reports ORB_P_HOST_RESERVED_ROUTE for any page declared on the host's own `/login` route, and ORB_P_SIGN_IN_UNKNOWN_ROUTE when the app's `signIn:` route (other than `/login`) is no page of the program or is itself `access: authenticated` (route params compare as one `:` segment), each with its path and suggestion (status 500, exit 1). Pages recorded by `uses lazy` (the program's lazyPages) count as pages for both checks, but a lazy page's own access is not read. Clean answers `lint sign-in-route: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-sign-in-route"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -31,17 +31,18 @@ orbital OrbLintSignInRouteOrbital {
       LINT_FILE_READ -> reading
         (program/read (bytes/to-string @payload.data) { emit: { success: LINT_PROGRAM_READ, failure: LINT_FILE_UNREAD } })
       LINT_PROGRAM_READ -> ready
-        (set @entity.findings (let ((sgi (if (object/has @payload.result "site") (object/get (object/get @payload.result "site") "signIn" "") "")) (allp (array/flatten (array/map (object/get @payload.result "orbitals") (fn orb (object/get @orb "pages" []))))))
+        (set @entity.findings (let ((sgi (if (object/has @payload.result "site") (object/get (object/get @payload.result "site") "signIn" "") "")) (allp (array/flatten (array/map (object/get @payload.result "orbitals") (fn orb (object/get @orb "pages" [])))))
+        (lazyp (object/get @payload.result "lazyPages" [])))
           (array/flatten [
-            (array/flatten (array/map (array/filter @allp (fn pg (or (= (object/get @pg "path" "") "/login") (= (object/get @pg "path" "") "/login/")))) (fn pg
+            (array/flatten (array/map (array/filter (array/concat @allp @lazyp) (fn pg (or (= (object/get @pg "path" "") "/login") (= (object/get @pg "path" "") "/login/")))) (fn pg
               [{ code: "ORB_P_HOST_RESERVED_ROUTE", path: (object/get @pg "path"), message: (str/concat "'" (object/get @pg "path") "' is the host's own sign-in route; no page may be declared on it"), suggestion: "move this page to another route; name `signIn: \"/login\"` to send viewers to the host's sign-in", severity: "error" }])))
             (if (or (= @sgi "") (= @sgi "/login") (= @sgi "/login/"))
               []
               (let ((tgt (str/join (array/map (str/split @sgi "/") (fn seg (if (str/startsWith @seg ":") ":" @seg))) "/")))
                 (let ((hits (array/filter @allp (fn pg (= (str/join (array/map (str/split (object/get @pg "path" "") "/") (fn seg (if (str/startsWith @seg ":") ":" @seg))) "/") @tgt)))))
-                  (if (= (array/len @hits) 0)
+                  (if (and (= (array/len @hits) 0) (= (array/len (array/filter @lazyp (fn pg (= (str/join (array/map (str/split (object/get @pg "path" "") "/") (fn seg (if (str/startsWith @seg ":") ":" @seg))) "/") @tgt)))) 0))
                     [{ code: "ORB_P_SIGN_IN_UNKNOWN_ROUTE", path: "site.signIn", message: (str/concat "the `signIn` route '" @sgi "' is no page of this app"), suggestion: "point `signIn:` at a page anonymous viewers can open", severity: "error" }]
-                    (if (= (object/get (array/first @hits) "access" "") "authenticated")
+                    (if (and (> (array/len @hits) 0) (= (object/get (array/first @hits) "access" "") "authenticated"))
                       [{ code: "ORB_P_SIGN_IN_UNKNOWN_ROUTE", path: "site.signIn", message: (str/concat "the `signIn` route '" @sgi "' is itself `access: authenticated`"), suggestion: "point `signIn:` at a page anonymous viewers can open", severity: "error" }]
                       [])))))])))
         (emit LINT_FINISH { })

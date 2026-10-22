@@ -10,7 +10,7 @@ type GoldenValue = string | number | boolean | [GoldenValue] | Map string Golden
 type GoldenPayload = Map string GoldenValue
 type GoldenEmit = { event : string!, payload : GoldenPayload }
 type GoldenEmitted = { type : string!, payload : GoldenPayload }
-type GoldenExpect = { fired : boolean, state : string, emits : [GoldenEmit], neverEmits : [string], exactEmits : [GoldenEmit], emitCounts : Map string number, entity : GoldenPayload }
+type GoldenExpect = { fired : boolean, state : string, emits : [GoldenEmit], neverEmits : [string], exactEmits : [GoldenEmit], emitCounts : Map string number, effects : [GoldenPayload], entity : GoldenPayload }
 type GoldenStep = { keep : string, keepField : string, now : number, entity : GoldenPayload, trait : string, orbital : string, from : string, event : string!, payload : GoldenPayload, expect : GoldenExpect }
 type GoldenCase = { note : string, golden : string, skip : string, entity : GoldenPayload, config : GoldenPayload, now : number, id : string!, steps : [GoldenStep]! }
 type GoldenFile = { atom : string!, trait : string!, orbital : string, cases : [GoldenCase]! }
@@ -109,7 +109,7 @@ orbital GoldensOrbital {
           (array/flatten (array/reduce (object/get (json/parse @entity.curCase GoldenCase) "steps") [] (fn acc s
             (array/append @acc (array/concat
               (array/map (array/filter (object/keys @s) (fn k (not (array/includes ["keep", "keepField", "now", "entity", "trait", "orbital", "from", "event", "payload", "expect"] @k)))) (fn k (str/concat "step " (array/len @acc) ": unknown step key: " @k)))
-              (array/map (array/filter (object/keys (object/get @s "expect" {})) (fn k (not (array/includes ["fired", "state", "emits", "neverEmits", "exactEmits", "emitCounts", "entity"] @k)))) (fn k (str/concat "step " (array/len @acc) ": unknown expect key: " @k)))
+              (array/map (array/filter (object/keys (object/get @s "expect" {})) (fn k (not (array/includes ["fired", "state", "emits", "neverEmits", "exactEmits", "emitCounts", "effects", "entity"] @k)))) (fn k (str/concat "step " (array/len @acc) ": unknown expect key: " @k)))
               (if (object/has (object/get @s "expect" {}) "entity") [(str/concat "step " (array/len @acc) ": expect.entity cannot be checked: program/step answers no post-step entity row")] []))))))))
         (emit GOLDENS_PREFLIGHT {})
       GOLDENS_PREFLIGHT -> running when (> (array/len @entity.fails) 0)
@@ -155,6 +155,11 @@ orbital GoldensOrbital {
                 (let ((want (object/get @ex "emits" [])) (hit (object/get (array/reduce @allEm { k: 0 } (fn m a (if (and (< (object/get @m "k") (array/len (object/get @ex "emits" []))) (let ((x (array/nth (object/get @ex "emits" []) (object/get @m "k")))) (and (= (object/get @a "type") (object/get @x "event")) (array/every (object/keys (object/get @x "payload" {})) (fn key (let ((av (object/get (object/get @a "payload" {}) @key)) (xv (object/get (object/get @x "payload" {}) @key))) (or (= (json/stringify @av) (json/stringify @xv)) (and (str/startsWith (json/stringify @av) "{") (str/startsWith (json/stringify @xv) "{") (= @av @xv)) (and (str/startsWith (json/stringify @av) "[") (str/startsWith (json/stringify @xv) "[") (= @av @xv))))))))) { k: (+ (object/get @m "k") 1) } @m))) "k")))
                   (if (< @hit (array/len @want)) [(str/concat "step " (array/len @acc) ": emit " @hit " " (object/get (array/nth @want @hit) "event") " " (json/stringify (object/get (array/nth @want @hit) "payload" {})) " not found in order; actual: " (if (= (array/len @allEm) 0) (str/concat "nothing emitted, answer " (json/stringify (object/pick @rr ["transitionFired", "guard", "firedArm", "state"]))) (str/join (array/map @allEm (fn a (str/concat (object/get @a "type") " " (json/stringify (object/get @a "payload" {}))))) "; ")))] []))
                 (array/map (array/filter (object/keys (object/get @ex "emitCounts" {})) (fn n (!= (array/len (array/filter @allEm (fn em (= (object/get @em "type") @n)))) (object/get (object/get @ex "emitCounts") @n)))) (fn n (str/concat "step " (array/len @acc) ": emitCounts " @n " expected " (object/get (object/get @ex "emitCounts") @n) " got " (array/len (array/filter @allEm (fn em (= (object/get @em "type") @n)))))))
+                (let ((wantE (object/get @ex "effects" null)) (gotE (object/get @rr "effects" [])))
+                  (if (== @wantE null)
+                    []
+                    (let ((hitE (object/get (array/reduce @gotE { k: 0 } (fn m e (if (and (< (object/get @m "k") (array/len @wantE)) (let ((x (array/nth @wantE (object/get @m "k")))) (array/every (array/filter (object/keys @x) (fn key (!= @key "optionsAt"))) (fn key (= (json/stringify (if (= @key "key") (object/get (array/nth (object/get @e "args") (object/get @x "optionsAt" 2)) "key") (if (str/startsWith @key "arg") (array/nth (object/get @e "args") (str/to-number (str/slice @key 3 (str/len @key)))) (object/get @e @key)))) (json/stringify (object/get @x @key))))))) { k: (+ (object/get @m "k") 1) } @m))) "k")))
+                      (if (< @hitE (array/len @wantE)) [(str/concat "step " (array/len @acc) ": effect " @hitE " " (json/stringify (array/nth @wantE @hitE)) " not found in order; actual effects: " (json/stringify @gotE))] []))))
                 (let ((wantX (object/get @ex "exactEmits" null)))
                   (if (== @wantX null)
                     []

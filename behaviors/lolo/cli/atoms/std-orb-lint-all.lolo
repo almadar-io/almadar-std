@@ -1,15 +1,19 @@
 app std-orb-lint-all [
   version: "1.0.0",
   inbound: ["cli-lint-all"],
-  fs: { cwd: "**": [read] },
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
   description: "std-orb-lint-all — the `orb lint all <file> [--json]` umbrella. It holds no rule logic: it composes every file-taking std-orb-lint-* rule trait (shared-types is left out: it walks the std and io behavior trees and takes no file), broadcasts LINT_RUN { file } and collects LINT_FOUND { rule, findings } from each. Each rule answers its findings as { code, path, message, suggestion, severity } records, which the umbrella collects as they are (every ported Rust code is an error; ORB_AUTH_GUARD_CLIENT_ONLY, ORB_O_EXTEND_FIELD_UNREAD, ORB_LISTEN_WILDCARD_UNKEYED, ORB_OS_GRANT_UNUSED and ORB_EMIT_REPEATS_IDENTICALLY are the Rust warnings, so a rule porting one answers severity warning). It prints the rules with findings grouped and a total, or with --json a { findings } object of the structured findings, and exits 1 when any error-severity finding exists."
 ]
 uses Spec from "almadar-std/lint-all"
+uses Language from "std/behaviors/std-orb-language"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 type RuleFound = { rule : string!, findings : [OrbFinding]! }
 
 orbital OrbLintAllOrbital {
+  uses Semver from "std/behaviors/std-semver"
   uses CollectionPolicy from "std/behaviors/std-orb-lint-collection-policy"
   uses CrossDuplicateEntity from "std/behaviors/std-orb-lint-cross-duplicate-entity"
   uses EmitConfigRef from "std/behaviors/std-orb-lint-emit-config-ref"
@@ -226,6 +230,24 @@ orbital OrbLintAllOrbital {
     }
   }
 
+  trait Versions = Semver.traits.Semver {
+    listens {
+      Packs.LANG_SEMVER -> SEMVER_SATISFIES
+    }
+  }
+
+  trait Packs = Language.traits.OrbLanguageEngine {
+    listens {
+      OrbLintPagePath.LINT_PACKS_RUN -> LANG_SCAN
+      LANG_SAT { requestId : string!  value : boolean! }
+        @description "std-semver's SEMVER_SATISFIED: the range check answered."
+      LANG_SAT_REFUSED { requestId : string!  operation : string!  reason : string! }
+        @description "std-semver's SEMVER_REFUSED: the range check refused."
+      Versions.SEMVER_SATISFIED -> LANG_SAT
+      Versions.SEMVER_REFUSED -> LANG_SAT_REFUSED
+    }
+  }
+
   trait OrbLintCollectionPolicy = CollectionPolicy.traits.OrbLintCollectionPolicy {
     listens { OrbLintAll.LINT_RUN -> LINT_RUN }
   }
@@ -305,7 +327,18 @@ orbital OrbLintAllOrbital {
     listens { OrbLintAll.LINT_RUN -> LINT_RUN }
   }
   trait OrbLintPagePath = PagePath.traits.OrbLintPagePath {
-    listens { OrbLintAll.LINT_RUN -> LINT_RUN }
+    listens {
+      OrbLintAll.LINT_RUN -> LINT_RUN
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
   }
   trait OrbLintPagePathUniqueness = PagePathUniqueness.traits.OrbLintPagePathUniqueness {
     listens { OrbLintAll.LINT_RUN -> LINT_RUN }
@@ -365,5 +398,5 @@ orbital OrbLintAllOrbital {
     listens { OrbLintAll.LINT_RUN -> LINT_RUN }
   }
 
-  page "/orb-lint-all" as OrbLintAllPage -> OrbLintAll, OrbLintCollectionPolicy, OrbLintCrossDuplicateEntity, OrbLintEmitConfigRef, OrbLintEntityBrowserStorage, OrbLintEntityDuplicateField, OrbLintEntityEmptyEnum, OrbLintEntityFieldType, OrbLintEntityLocaleInstances, OrbLintEntityMockMember, OrbLintEntityPersistence, OrbLintEntitySeedSource, OrbLintEntitySemanticDefault, OrbLintEntityShape, OrbLintHttpEgressEntry, OrbLintGenericTypes, OrbLintIdentityUnique, OrbLintInbound, OrbLintInitCoverage, OrbLintEventIdUniqueness, OrbLintListenTrigger, OrbLintLiteralDefault, OrbLintOrbitalDuplicateName, OrbLintOrbitalMissingPages, OrbLintPageEmptyTraits, OrbLintPageModifiers, OrbLintIdRefs, OrbLintPagePath, OrbLintPagePathUniqueness, OrbLintPayloadFieldName, OrbLintRelationTargets, OrbLintSignInRoute, OrbLintStoreBinding, OrbLintTraitIdUniqueness, OrbLintUntypedArray, OrbLintSchemaHeader, OrbLintDuplicateTransition, OrbLintStateShape, OrbLintEmptyEventName, OrbLintSlot, OrbLintTransitionRefs, OrbLintStateUnreachable, OrbLintMissingOrbitalName, OrbLintDuplicateUseAlias, OrbLintThemePinContradictsApp, OrbLintTickRequiresRuntime, OrbLintAssetInlineUrl
+  page "/orb-lint-all" as OrbLintAllPage -> OrbLintAll, OrbLintCollectionPolicy, OrbLintCrossDuplicateEntity, OrbLintEmitConfigRef, OrbLintEntityBrowserStorage, OrbLintEntityDuplicateField, OrbLintEntityEmptyEnum, OrbLintEntityFieldType, OrbLintEntityLocaleInstances, OrbLintEntityMockMember, OrbLintEntityPersistence, OrbLintEntitySeedSource, OrbLintEntitySemanticDefault, OrbLintEntityShape, OrbLintHttpEgressEntry, OrbLintGenericTypes, OrbLintIdentityUnique, OrbLintInbound, OrbLintInitCoverage, OrbLintEventIdUniqueness, OrbLintListenTrigger, OrbLintLiteralDefault, OrbLintOrbitalDuplicateName, OrbLintOrbitalMissingPages, OrbLintPageEmptyTraits, OrbLintPageModifiers, OrbLintIdRefs, OrbLintPagePath, OrbLintPagePathUniqueness, OrbLintPayloadFieldName, OrbLintRelationTargets, OrbLintSignInRoute, OrbLintStoreBinding, OrbLintTraitIdUniqueness, OrbLintUntypedArray, OrbLintSchemaHeader, OrbLintDuplicateTransition, OrbLintStateShape, OrbLintEmptyEventName, OrbLintSlot, OrbLintTransitionRefs, OrbLintStateUnreachable, OrbLintMissingOrbitalName, OrbLintDuplicateUseAlias, OrbLintThemePinContradictsApp, OrbLintTickRequiresRuntime, OrbLintAssetInlineUrl, Versions, Packs
 }

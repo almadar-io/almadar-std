@@ -1,0 +1,142 @@
+app std-http-compress [
+  version: "1.0.0",
+  description: "std-http-compress — response compression for an HTTP server program, between the answer emitters (router, dispatch, static-files) and std-http1, bound to spec/net/http-compress.lolo. It records REQUEST_RECEIVED { requestId, method, path, headers } per request and hears each answer as ANSWER { requestId, status, headers, body } (the organism renames the emitters' RESPOND to ANSWER); it re-emits RESPOND { requestId, status, headers, body } for std-http1 to write. An answer passes through untouched when it has no recorded request, a 204 or 304 status, an empty body, or a content-encoding of its own. Any other answer asks the policy (HTTP_DECIDE with the real responseSize and responseType, answered HTTP_DECIDED { compress }): none, a preflight, an event stream and a body under the policy minimum send the identity body; br tries BROTLI and gzip tries GZIP, one encoder run at a time since neither answer carries a request id. An encoding is applied only when the encoded body is strictly smaller than the original, then the answer carries content-encoding and vary: accept-encoding; anything that does not shrink, br included, sends identity, so serving never grows a body. A refused GZIP sends identity. Server-sent events do not pass through this atom: std-sse writes RESPOND_HEAD, RESPOND_CHUNK and RESPOND_END to std-http1 directly, and STREAM_CLOSED drops the request record of a stream."
+]
+uses Spec from "almadar-std/http-compress"
+type CompressHeader = { name : string!, value : string! }
+type CompressReq = { requestId : number!, method : string!, path : string!, headers : [CompressHeader]! }
+type CompressJob = { requestId : number!, status : number!, headers : [CompressHeader]!, body : bytes!, accept : string!, encoding : string!, stage : string! }
+
+orbital HttpCompressOrbital {
+  entity CompressRun [runtime] {
+    id : string!
+    reqs : [CompressReq] @description "Requests received and not yet answered, each with the method, path and headers the policy is asked about." = []
+    jobs : [CompressJob] @description "Answers held for a policy verdict or an encoder, oldest first; stage is deciding, queued or encoding." = []
+  }
+
+  trait HttpCompress -> CompressRun [integration, instance] {
+    initial: serving
+
+    state serving {
+      INIT -> serving
+
+      REQUEST_RECEIVED -> serving
+        (set @entity.reqs (array/append (array/filter @entity.reqs (fn r (!= @r.requestId @payload.requestId))) { requestId: @payload.requestId, method: @payload.method, path: @payload.path, headers: (array/map (object/keys @payload.headers) (fn k { name: @k, value: (object/get @payload.headers @k) })) }))
+
+      STREAM_CLOSED -> serving
+        (set @entity.reqs (array/filter @entity.reqs (fn r (!= @r.requestId @payload.requestId))))
+
+      ANSWER -> serving when (let ((req (array/find @entity.reqs (fn r (= @r.requestId @payload.requestId))))) (or (== @req null) (array/includes [204, 304] @payload.status) (= (bytes/length @payload.body) 0) (array/some @payload.headers (fn h (= (str/lower @h.name) "content-encoding")))))
+        (emit RESPOND { requestId: @payload.requestId, status: @payload.status, headers: @payload.headers, body: @payload.body })
+        (set @entity.reqs (array/filter @entity.reqs (fn r (!= @r.requestId @payload.requestId))))
+      ANSWER -> serving when (let ((req (array/find @entity.reqs (fn r (= @r.requestId @payload.requestId))))) (not (or (== @req null) (array/includes [204, 304] @payload.status) (= (bytes/length @payload.body) 0) (array/some @payload.headers (fn h (= (str/lower @h.name) "content-encoding"))))))
+        (let ((req (array/find @entity.reqs (fn r (= @r.requestId @payload.requestId))))
+              (accept (array/find (object/get (array/find @entity.reqs (fn r (= @r.requestId @payload.requestId))) "headers") (fn h (= (str/lower @h.name) "accept-encoding"))))
+              (ctype (array/find @payload.headers (fn h (= (str/lower @h.name) "content-type")))))
+          (do
+            (set @entity.jobs (array/append @entity.jobs { requestId: @payload.requestId, status: @payload.status, headers: @payload.headers, body: @payload.body, accept: (if (== @accept null) "" (str/lower @accept.value)), encoding: "", stage: "deciding" }))
+            (set @entity.reqs (array/filter @entity.reqs (fn r (!= @r.requestId @payload.requestId))))
+            (emit HTTP_DECIDE { requestId: @payload.requestId, method: @req.method, path: @req.path, headers: @req.headers, responseSize: (bytes/length @payload.body), responseType: (if (== @ctype null) "" @ctype.value) })))
+
+      HTTP_DECIDED -> serving when (and (array/some @entity.jobs (fn j (and (= @j.requestId @payload.requestId) (= @j.stage "deciding")))) (= @payload.compress "none"))
+        (let ((job (array/find @entity.jobs (fn j (= @j.requestId @payload.requestId)))))
+          (emit RESPOND { requestId: @payload.requestId, status: @job.status, headers: @job.headers, body: @job.body }))
+        (set @entity.jobs (array/filter @entity.jobs (fn j (!= @j.requestId @payload.requestId))))
+      HTTP_DECIDED -> serving when (and (array/some @entity.jobs (fn j (and (= @j.requestId @payload.requestId) (= @j.stage "deciding")))) (!= @payload.compress "none"))
+        (set @entity.jobs (array/map @entity.jobs (fn j (if (= @j.requestId @payload.requestId) (object/merge @j { encoding: @payload.compress, stage: "queued" }) @j))))
+        (emit ENCODE_NEXT {})
+
+      ENCODE_NEXT -> serving when (and (not (array/some @entity.jobs (fn j (= @j.stage "encoding")))) (let ((q (array/find @entity.jobs (fn j (= @j.stage "queued"))))) (and (!= @q null) (= @q.encoding "gzip"))))
+        (let ((q (array/find @entity.jobs (fn j (= @j.stage "queued")))))
+          (do
+            (set @entity.jobs (array/map @entity.jobs (fn j (if (= @j.requestId @q.requestId) (object/merge @j { stage: "encoding" }) @j))))
+            (emit GZIP { data: @q.body })))
+      ENCODE_NEXT -> serving when (and (not (array/some @entity.jobs (fn j (= @j.stage "encoding")))) (let ((q (array/find @entity.jobs (fn j (= @j.stage "queued"))))) (and (!= @q null) (= @q.encoding "br"))))
+        (let ((q (array/find @entity.jobs (fn j (= @j.stage "queued")))))
+          (do
+            (set @entity.jobs (array/map @entity.jobs (fn j (if (= @j.requestId @q.requestId) (object/merge @j { stage: "encoding" }) @j))))
+            (emit BROTLI { data: @q.body })))
+
+      GZIP_ANSWERED -> serving when (array/some @entity.jobs (fn j (= @j.stage "encoding")))
+        (emit CANDIDATE { requestId: (object/get (array/find @entity.jobs (fn j (= @j.stage "encoding"))) "requestId"), encoding: "gzip", data: @payload.data })
+      GZIP_REFUSED -> serving when (array/some @entity.jobs (fn j (= @j.stage "encoding")))
+        (emit CANDIDATE { requestId: (object/get (array/find @entity.jobs (fn j (= @j.stage "encoding"))) "requestId"), encoding: "gzip", data: (object/get (array/find @entity.jobs (fn j (= @j.stage "encoding"))) "body") })
+      BROTLI_ANSWERED -> serving when (array/some @entity.jobs (fn j (= @j.stage "encoding")))
+        (emit CANDIDATE { requestId: (object/get (array/find @entity.jobs (fn j (= @j.stage "encoding"))) "requestId"), encoding: "br", data: @payload.data })
+
+      CANDIDATE -> serving when (< (bytes/length @payload.data) (bytes/length (object/get (array/find @entity.jobs (fn j (= @j.requestId @payload.requestId))) "body")))
+        (let ((job (array/find @entity.jobs (fn j (= @j.requestId @payload.requestId)))))
+          (emit RESPOND { requestId: @payload.requestId, status: @job.status, headers: (array/concat @job.headers [{ name: "content-encoding", value: @payload.encoding }, { name: "vary", value: "accept-encoding" }]), body: @payload.data }))
+        (set @entity.jobs (array/filter @entity.jobs (fn j (!= @j.requestId @payload.requestId))))
+        (emit ENCODE_NEXT {})
+      CANDIDATE -> serving when (>= (bytes/length @payload.data) (bytes/length (object/get (array/find @entity.jobs (fn j (= @j.requestId @payload.requestId))) "body")))
+        (let ((job (array/find @entity.jobs (fn j (= @j.requestId @payload.requestId)))))
+          (emit RESPOND { requestId: @payload.requestId, status: @job.status, headers: @job.headers, body: @job.body }))
+        (set @entity.jobs (array/filter @entity.jobs (fn j (!= @j.requestId @payload.requestId))))
+        (emit ENCODE_NEXT {})
+    }
+
+    emits {
+      RESPOND -> external {
+        requestId : number!
+        status : number!
+        headers : [CompressHeader]!
+        body : bytes!
+      }
+      HTTP_DECIDE -> external {
+        requestId : number!
+        method : string!
+        path : string!
+        headers : [CompressHeader]!
+        responseSize : number
+        responseType : string
+      }
+      GZIP -> external {
+        data : bytes!
+      }
+      BROTLI -> external {
+        data : bytes!
+      }
+      ENCODE_NEXT -> internal {
+      }
+      CANDIDATE -> internal {
+        requestId : number!
+        encoding : string!
+        data : bytes!
+      }
+    }
+
+    listens {
+      REQUEST_RECEIVED {
+        requestId : number!
+        method : string!
+        path : string!
+        headers : Map string string
+      }
+      STREAM_CLOSED {
+        requestId : number!
+      }
+      ANSWER {
+        requestId : number!
+        status : number!
+        headers : [CompressHeader]!
+        body : bytes!
+      }
+      HTTP_DECIDED {
+        requestId : number!
+        compress : string!
+      }
+      GZIP_ANSWERED {
+        data : bytes!
+      }
+      GZIP_REFUSED {
+        reason : string!
+      }
+      BROTLI_ANSWERED {
+        data : bytes!
+      }
+    }
+  }
+
+  page "/http-compress" as HttpCompressPage -> HttpCompress
+}

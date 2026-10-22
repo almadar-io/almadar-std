@@ -2,7 +2,7 @@ app std-orb-lint-entity-locale-instances [
   version: "1.0.0",
   inbound: ["cli-lint-entity-locale-instances"],
   fs: { cwd: "**": [read] },
-  description: "std-orb-lint-entity-locale-instances — the `orb lint entity-locale-instances <file>` command, the port of ORB_E_LOCALE_INSTANCES_NOT_LOCAL, ORB_E_LOCALE_INSTANCES_UNKNOWN_LOCALE and ORB_E_LOCALE_INSTANCES_INCOMPLETE (entity.rs validate_all_locale_instances; the per-row type check ORB_E_INSTANCE_INVALID is not ported, it needs the field types). It lowers the file with program/read and, for every inline primary and auxiliary entity that writes per-locale rows, reports a non-browser-stored entity, a block for an undeclared or default locale, a missing default `instances` block and a missing block for a declared non-default locale, each with the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint entity-locale-instances: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  description: "std-orb-lint-entity-locale-instances — the `orb lint entity-locale-instances <file>` command, the port of ORB_E_LOCALE_INSTANCES_NOT_LOCAL, ORB_E_LOCALE_INSTANCES_UNKNOWN_LOCALE and ORB_E_LOCALE_INSTANCES_INCOMPLETE (entity.rs validate_all_locale_instances), plus ORB_E_INSTANCE_INVALID (entity.rs check_instance_rows) for the default `instances` rows and every locale block: a row key that is no field, a missing required field with no default, and, on a browser-stored entity, a row without an `id`. It lowers the file with program/read and, for every inline primary and auxiliary entity that writes per-locale rows, reports a non-browser-stored entity, a block for an undeclared or default locale, a missing default `instances` block and a missing block for a declared non-default locale, each with the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint entity-locale-instances: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-entity-locale-instances"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -32,21 +32,23 @@ orbital OrbLintEntityLocaleInstancesOrbital {
         (program/read (bytes/to-string @payload.data) { emit: { success: LINT_PROGRAM_READ, failure: LINT_FILE_UNREAD } })
       LINT_PROGRAM_READ -> ready
         (set @entity.findings (let ((orbitals (object/get @payload.result "orbitals")) (decl (object/get @payload.result "locales" [])))
-          (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
-            (let ((orb (array/nth @orbitals @oi)))
-              (let ((aux (object/get @orb "auxiliaryEntities" [])))
-                (array/flatten (array/map
-                  (array/concat [{ pth: (str/concat "orbitals[" @oi "].entity"), ee: (object/get @orb "entity" {}) }]
-                    (array/map (array/filter (array/range 0 (array/len @aux)) (fn ai (validate/object (array/nth @aux @ai)))) (fn ai { pth: (str/concat "orbitals[" @oi "].auxiliaryEntities[" @ai "]"), ee: (array/nth @aux @ai) })))
-                  (fn it
-                    (let ((ee (object/get @it "ee")))
-                      (if (not (validate/object @ee))
-                        []
-                        (let ((pth (object/get @it "pth")) (nm (object/get @ee "name" "")) (blocks (object/get @ee "localeInstances" {})) (dflt (if (> (array/len @decl) 0) (array/first @decl) "")))
-                          (let ((keys (object/keys @blocks)) (bp (str/concat @pth ".localeInstances")))
-                            (if (= (array/len @keys) 0)
-                              []
-                              (array/flatten [
+          (let ((ents (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+                  (let ((aux (object/get (array/nth @orbitals @oi) "auxiliaryEntities" [])))
+                    (array/filter
+                      (array/concat [{ pth: (str/concat "orbitals[" @oi "].entity"), ee: (object/get (array/nth @orbitals @oi) "entity" {}) }]
+                        (array/map (array/range 0 (array/len @aux)) (fn ai { pth: (str/concat "orbitals[" @oi "].auxiliaryEntities[" @ai "]"), ee: (array/nth @aux @ai) })))
+                      (fn it (validate/object (object/get @it "ee"))))))))))
+            (let ((jobs (array/flatten (array/map @ents (fn it
+                    (array/concat [{ ee: (object/get @it "ee"), rows: (object/get (object/get @it "ee") "instances" []), rp: (str/concat (object/get @it "pth") ".instances") }]
+                      (array/map (object/keys (object/get (object/get @it "ee") "localeInstances" {})) (fn k { ee: (object/get @it "ee"), rows: (object/get (object/get (object/get @it "ee") "localeInstances") @k), rp: (str/concat (object/get @it "pth") ".localeInstances." @k) }))))))))
+              (array/concat
+                (array/flatten (array/map @ents (fn it
+                  (let ((ee (object/get @it "ee")))
+                    (let ((pth (object/get @it "pth")) (nm (object/get @ee "name" "")) (blocks (object/get @ee "localeInstances" {})) (dflt (if (> (array/len @decl) 0) (array/first @decl) "")))
+                      (let ((keys (object/keys @blocks)) (bp (str/concat @pth ".localeInstances")))
+                        (if (= (array/len @keys) 0)
+                          []
+                          (array/flatten [
                                 (if (object/get @ee "local" false) [] [{ code: "ORB_E_LOCALE_INSTANCES_NOT_LOCAL", path: @bp, message: (str/concat "Entity '" @nm "' writes rows per locale but its rows are not browser-stored; a server's rows are shared by every viewer"), suggestion: "Add `local` (`[persistent: <collection>, local]`) or keep one `instances` block.", severity: "error" }])
                                 (array/flatten (array/map (array/filter @keys (fn k (or (not (array/includes @decl @k)) (and (> (array/len @decl) 0) (= @k @dflt))))) (fn k
                                   [{ code: "ORB_E_LOCALE_INSTANCES_UNKNOWN_LOCALE", path: (str/concat @bp "." @k), message: (if (and (> (array/len @decl) 0) (= @k @dflt))
@@ -54,7 +56,19 @@ orbital OrbLintEntityLocaleInstancesOrbital {
                                       (str/concat "Entity '" @nm "' writes `instances " @k "`, but the app declares locales [" (str/join (array/map @decl (fn d (json/stringify @d))) ", ") "]")), suggestion: "Write one block per declared locale other than the first; declare the locale in the app's `locales [ … ]`.", severity: "error" }])))
                                 (if (> (array/len (object/get @ee "instances" [])) 0) [] [{ code: "ORB_E_LOCALE_INSTANCES_INCOMPLETE", path: (str/concat @pth ".instances"), message: (str/concat "Entity '" @nm "' writes rows per locale but no default `instances` block for its default locale"), suggestion: "Add `instances [ … ]` with the default locale's rows.", severity: "error" }])
                                 (array/map (array/filter (array/drop @decl 1) (fn l (not (array/includes @keys @l)))) (fn l
-                                  { code: "ORB_E_LOCALE_INSTANCES_INCOMPLETE", path: @bp, message: (str/concat "Entity '" @nm "' writes rows per locale but has no `instances " @l "` block"), suggestion: "Write a block for every declared locale once any is written.", severity: "error" }))]))))))))))))))))
+                                  { code: "ORB_E_LOCALE_INSTANCES_INCOMPLETE", path: @bp, message: (str/concat "Entity '" @nm "' writes rows per locale but has no `instances " @l "` block"), suggestion: "Write a block for every declared locale once any is written.", severity: "error" }))]))))))))
+                (array/flatten (array/map @jobs (fn jb
+                  (let ((ee (object/get @jb "ee")) (rows (object/get @jb "rows")) (rp (object/get @jb "rp")))
+                (array/flatten (array/map (array/range 0 (array/len @rows)) (fn i
+                  (let ((row (array/nth @rows @i)) (rpi (str/concat @rp "[" @i "]")) (nm (object/get @ee "name" "")) (fields (object/get @ee "fields" [])))
+                    (array/concat
+                      (array/map (array/filter (object/keys @row) (fn key (not (array/some @fields (fn fd (= (object/get @fd "name" null) @key)))))) (fn key
+                        { code: "ORB_E_INSTANCE_INVALID", path: (str/concat @rpi "." @key), message: (str/concat "Row " @i " of '" @nm "' sets '" @key "', which is not a field of the entity"), suggestion: "", severity: "error" }))
+                      (array/map (array/filter @fields (fn fd (and (object/get @fd "required" false) (not (object/has @fd "default")) (validate/string (object/get @fd "name" null)) (not (object/has @row (object/get @fd "name")))))) (fn fd
+                        { code: "ORB_E_INSTANCE_INVALID", path: @rpi, message: (str/concat "Row " @i " of '" @nm "' is missing required field '" (object/get @fd "name") "'"), suggestion: "", severity: "error" }))
+                      (if (and (object/get @ee "local" false) (not (object/has @row "id")))
+                        [{ code: "ORB_E_INSTANCE_INVALID", path: @rpi, message: (str/concat "Row " @i " of browser-stored '" @nm "' has no `id` — seeded rows need stable ids across reloads"), suggestion: "Give every written-out row an `id`.", severity: "error" }]
+                        [])))))))))))))))
         (emit LINT_FINISH { })
       LINT_FILE_UNREAD -> ready
         (emit LINT_UNREAD { rule: "entity-locale-instances" })

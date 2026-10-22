@@ -1,7 +1,7 @@
 {
  "atom": "net/atoms/std-http-dispatch.lolo",
  "trait": "ServerDispatch",
- "note": "Route table, 501/400 answers and queueing of the dispatch atom. The kernel cascades each step's emits and expect reads only that step's own emits, so later hops are played as direct steps. CORS carry-through is checked with orb execute --steps (RESPOND headers hold the ROUTE_EXTERNAL responseHeaders then content-type). Bodies are base64 bytes.",
+ "note": "Route table, hook delivery, 501/400 answers and queueing of the dispatch atom. The kernel cascades each step's emits and expect reads only that step's own emits, so later hops are played as direct steps. CORS carry-through is checked with orb execute --steps (RESPOND headers hold the ROUTE_EXTERNAL responseHeaders then content-type). Bodies are base64 bytes.",
  "cases": [
   {
    "id": "routes-events",
@@ -298,17 +298,19 @@
    ]
   },
   {
-   "id": "hook-is-501-until-an-inbound-operator-exists",
+   "id": "hook-is-delivered-to-its-inbound-handler",
+   "note": "The route names the hook and hands its body and headers to program/dispatch { inbound } keyed hook-<requestId>; the replay host answers no substrate op, so the delivery itself is not asserted here (orbital-shell-rust host/runtime.rs a_keyed_inbound_program_dispatch_* deliver through the host).",
    "steps": [
     {
      "event": "REQUEST_RECEIVED",
      "payload": {
       "requestId": 7,
       "method": "POST",
-      "path": "/api/hooks/file-drop",
+      "path": "/api/hooks/google-calendar",
       "query": "",
       "headers": {
-       "content-type": "application/json"
+       "content-type": "application/json",
+       "x-goog-resource-state": "sync"
       },
       "body": "e30=",
       "peer": "127.0.0.1:5000"
@@ -326,16 +328,289 @@
         "event": "HOOK_DELIVERED",
         "payload": {
          "requestId": 7,
-         "name": "file-drop"
+         "name": "google-calendar",
+         "headers": [
+          {
+           "name": "content-type",
+           "value": "application/json"
+          },
+          {
+           "name": "x-goog-resource-state",
+           "value": "sync"
+          }
+         ]
         }
-       },
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-hook-answer-is-the-response",
+   "note": "The handler's { status, body } is the response, as application/json.",
+   "entity": {
+    "inflight": 0,
+    "waiting": [],
+    "frames": [],
+    "pending": [
+     {
+      "requestId": 7,
+      "kind": "hook",
+      "orbital": "",
+      "traitName": "",
+      "entityId": "",
+      "stream": false,
+      "authorization": "",
+      "body": "e30=",
+      "hookName": "google-calendar",
+      "hookKey": "hook-7",
+      "hookHeaders": {
+       "x-goog-resource-state": "sync"
+      },
+      "responseHeaders": [
+       {
+        "name": "access-control-allow-origin",
+        "value": "https://app.example"
+       }
+      ]
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "HOOK_ANSWERED",
+     "payload": {
+      "result": {
+       "status": 200,
+       "body": "{\"ok\":true,\"dispatched\":false}"
+      },
+      "text": "{\"status\":200,\"body\":\"{\\\"ok\\\":true,\\\"dispatched\\\":false}\"}",
+      "key": "hook-7"
+     },
+     "expect": {
+      "emits": [
        {
         "event": "RESPOND",
         "payload": {
          "requestId": 7,
-         "status": 501
+         "status": 200
         }
        }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-an-unserved-hook-answers-404",
+   "note": "The host's refusal for a hook the program does not serve is the response.",
+   "entity": {
+    "inflight": 0,
+    "waiting": [],
+    "frames": [],
+    "pending": [
+     {
+      "requestId": 7,
+      "kind": "hook",
+      "orbital": "",
+      "traitName": "",
+      "entityId": "",
+      "stream": false,
+      "authorization": "",
+      "body": "e30=",
+      "hookName": "google-calendar",
+      "hookKey": "hook-7",
+      "hookHeaders": {
+       "x-goog-resource-state": "sync"
+      },
+      "responseHeaders": [
+       {
+        "name": "access-control-allow-origin",
+        "value": "https://app.example"
+       }
+      ]
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "HOOK_ANSWERED",
+     "payload": {
+      "result": {
+       "status": 404,
+       "body": "{\"error\":\"Unknown hook provider: google-calendar\"}"
+      },
+      "text": "{\"status\":404,\"body\":\"{\\\"error\\\":\\\"Unknown hook provider: google-calendar\\\"}\"}",
+      "key": "hook-7"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 7,
+         "status": 404
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-an-unanswered-hook-answers-500",
+   "note": "A handler that answers nothing in its delivering dispatch is the host's inbound-unanswered 500.",
+   "entity": {
+    "inflight": 0,
+    "waiting": [],
+    "frames": [],
+    "pending": [
+     {
+      "requestId": 7,
+      "kind": "hook",
+      "orbital": "",
+      "traitName": "",
+      "entityId": "",
+      "stream": false,
+      "authorization": "",
+      "body": "e30=",
+      "hookName": "google-calendar",
+      "hookKey": "hook-7",
+      "hookHeaders": {
+       "x-goog-resource-state": "sync"
+      },
+      "responseHeaders": [
+       {
+        "name": "access-control-allow-origin",
+        "value": "https://app.example"
+       }
+      ]
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "HOOK_ANSWERED",
+     "payload": {
+      "result": {
+       "status": 500,
+       "body": "{\"error\":\"inbound-unanswered\"}"
+      },
+      "text": "{\"status\":500,\"body\":\"{\\\"error\\\":\\\"inbound-unanswered\\\"}\"}",
+      "key": "hook-7"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 7,
+         "status": 500
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-failed-hook-delivery-is-500",
+   "note": "A delivery the host could not run is 500 HOOK_DELIVERY_FAILED.",
+   "entity": {
+    "inflight": 0,
+    "waiting": [],
+    "frames": [],
+    "pending": [
+     {
+      "requestId": 7,
+      "kind": "hook",
+      "orbital": "",
+      "traitName": "",
+      "entityId": "",
+      "stream": false,
+      "authorization": "",
+      "body": "e30=",
+      "hookName": "google-calendar",
+      "hookKey": "hook-7",
+      "hookHeaders": {
+       "x-goog-resource-state": "sync"
+      },
+      "responseHeaders": [
+       {
+        "name": "access-control-allow-origin",
+        "value": "https://app.example"
+       }
+      ]
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "HOOK_FAILED",
+     "payload": {
+      "error": "program/dispatch: the host is asked for { inbound, body, headers }",
+      "key": "hook-7"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 7,
+         "status": 500
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-hook-answer-for-another-request-answers-nothing",
+   "note": "An answer whose key names no pending hook answers nothing.",
+   "entity": {
+    "inflight": 0,
+    "waiting": [],
+    "frames": [],
+    "pending": [
+     {
+      "requestId": 7,
+      "kind": "hook",
+      "orbital": "",
+      "traitName": "",
+      "entityId": "",
+      "stream": false,
+      "authorization": "",
+      "body": "e30=",
+      "hookName": "google-calendar",
+      "hookKey": "hook-7",
+      "hookHeaders": {
+       "x-goog-resource-state": "sync"
+      },
+      "responseHeaders": [
+       {
+        "name": "access-control-allow-origin",
+        "value": "https://app.example"
+       }
+      ]
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "HOOK_ANSWERED",
+     "payload": {
+      "result": {
+       "status": 200,
+       "body": "{}"
+      },
+      "text": "{\"status\":200,\"body\":\"{}\"}",
+      "key": "hook-8"
+     },
+     "expect": {
+      "neverEmits": [
+       "RESPOND"
       ]
      }
     }

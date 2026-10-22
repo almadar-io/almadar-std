@@ -1,440 +1,576 @@
 {
- "atom": "spec/connect/asset-pack.fixture.lolo",
- "trait": "AssetPack",
- "note": "Runs the loader through spec/connect/asset-pack.fixture.lolo (the runner does not apply per-case config). no-pack-declared is covered by the atom default and has no case here.",
- "cases": [
-  {
-   "id": "loading-state",
-   "steps": [
+  "atom": "spec/connect/asset-pack.fixture.lolo",
+  "trait": "AssetPack",
+  "note": "Runs the loader through spec/connect/asset-pack.fixture.lolo (the runner does not apply per-case config). no-pack-declared is covered by the atom default and has no case here.",
+  "cases": [
     {
-     "event": "INIT",
-     "payload": {},
-     "from": "idle",
-     "expect": {
-      "state": "loading",
-      "neverEmits": [
-       "ASSET_PACK_MISSING",
-       "ASSET_PACK_FAILED"
+      "id": "loading-state",
+      "steps": [
+        {
+          "event": "INIT",
+          "payload": {},
+          "from": "idle",
+          "expect": {
+            "state": "loading",
+            "neverEmits": [
+              "ASSET_PACK_MISSING",
+              "ASSET_PACK_FAILED"
+            ],
+            "effects": [
+              {
+                "type": "http",
+                "key": "pack",
+                "optionsAt": 4
+              }
+            ]
+          }
+        }
+      ],
+      "note": "INIT issues the keyed (http GET origin packPath) ask and sets every expected key to a loading placeholder in assetByKey/assetManifest; the step reports the http effect (key pack) and the replay asserts it"
+    },
+    {
+      "id": "load-answered",
+      "steps": [
+        {
+          "event": "PACK_HTTP_REPLIED",
+          "payload": {
+            "status": 200,
+            "body": "{\"pack\": \"kflow/x\", \"version\": 1, \"base\": \"https://h\", \"assets\": [{\"key\": \"units/a\", \"url\": \"/u/a.png\", \"role\": \"npc\"}, {\"key\": \"units/b\", \"url\": \"/u/b.png\", \"role\": \"npc\"}, {\"key\": \"ui/c\", \"url\": \"/ui/c.png\", \"role\": \"ui\"}]}"
+          },
+          "from": "loading",
+          "expect": {
+            "emits": [
+              {
+                "event": "PACK_TEXT",
+                "payload": {
+                  "text": "{\"pack\": \"kflow/x\", \"version\": 1, \"base\": \"https://h\", \"assets\": [{\"key\": \"units/a\", \"url\": \"/u/a.png\", \"role\": \"npc\"}, {\"key\": \"units/b\", \"url\": \"/u/b.png\", \"role\": \"npc\"}, {\"key\": \"ui/c\", \"url\": \"/ui/c.png\", \"role\": \"ui\"}]}"
+                }
+              }
+            ],
+            "state": "loading"
+          }
+        },
+        {
+          "event": "PACK_TEXT",
+          "payload": {
+            "text": "{\"pack\": \"kflow/x\", \"version\": 1, \"base\": \"https://h\", \"assets\": [{\"key\": \"units/a\", \"url\": \"/u/a.png\", \"role\": \"npc\"}, {\"key\": \"units/b\", \"url\": \"/u/b.png\", \"role\": \"npc\"}, {\"key\": \"ui/c\", \"url\": \"/ui/c.png\", \"role\": \"ui\"}]}"
+          },
+          "from": "loading",
+          "expect": {
+            "emits": [
+              {
+                "event": "ASSET_PACK_REPORT_NEXT",
+                "payload": {
+                  "cursor": 0
+                }
+              }
+            ],
+            "state": "reporting"
+          }
+        },
+        {
+          "event": "ASSET_PACK_REPORT_NEXT",
+          "payload": {
+            "cursor": 0
+          },
+          "expect": {
+            "neverEmits": [
+              "ASSET_PACK_MISSING"
+            ],
+            "state": "ready",
+            "emits": [
+              {
+                "event": "ASSET_PACK_SETTLED",
+                "payload": {
+                  "pack": "kflow/x",
+                  "status": "ready"
+                }
+              }
+            ]
+          },
+          "from": "reporting"
+        }
       ]
-     }
-    }
-   ],
-   "note": "INIT issues (http GET origin packPath) and sets every expected key to a loading placeholder in assetByKey/assetManifest; the replay does not observe the effect args"
-  },
-  {
-   "id": "load-answered",
-   "steps": [
-    {
-     "event": "PACK_HTTP_REPLIED",
-     "payload": {
-      "status": 200,
-      "body": "{\"pack\": \"kflow/x\", \"version\": 1, \"base\": \"https://h\", \"assets\": [{\"key\": \"units/a\", \"url\": \"/u/a.png\", \"role\": \"npc\"}, {\"key\": \"units/b\", \"url\": \"/u/b.png\", \"role\": \"npc\"}, {\"key\": \"ui/c\", \"url\": \"/ui/c.png\", \"role\": \"ui\"}]}"
-     },
-     "from": "loading",
-     "expect": {
-      "emits": [
-       {
-        "event": "PACK_TEXT",
-        "payload": {
-         "text": "{\"pack\": \"kflow/x\", \"version\": 1, \"base\": \"https://h\", \"assets\": [{\"key\": \"units/a\", \"url\": \"/u/a.png\", \"role\": \"npc\"}, {\"key\": \"units/b\", \"url\": \"/u/b.png\", \"role\": \"npc\"}, {\"key\": \"ui/c\", \"url\": \"/ui/c.png\", \"role\": \"ui\"}]}"
-        }
-       }
-      ],
-      "state": "loading"
-     }
     },
     {
-     "event": "PACK_TEXT",
-     "payload": {
-      "text": "{\"pack\": \"kflow/x\", \"version\": 1, \"base\": \"https://h\", \"assets\": [{\"key\": \"units/a\", \"url\": \"/u/a.png\", \"role\": \"npc\"}, {\"key\": \"units/b\", \"url\": \"/u/b.png\", \"role\": \"npc\"}, {\"key\": \"ui/c\", \"url\": \"/ui/c.png\", \"role\": \"ui\"}]}"
-     },
-     "from": "loading",
-     "expect": {
-      "emits": [
-       {
-        "event": "ASSET_PACK_REPORT_NEXT",
-        "payload": {
-         "cursor": 0
+      "id": "load-failed-http-404",
+      "steps": [
+        {
+          "event": "PACK_HTTP_REPLIED",
+          "payload": {
+            "status": 404,
+            "body": "nope"
+          },
+          "from": "loading",
+          "expect": {
+            "emits": [
+              {
+                "event": "ASSET_PACK_FAILED",
+                "payload": {
+                  "pack": "kflow/x",
+                  "message": "HTTP 404 or invalid JSON at /shared/x/assets.json"
+                }
+              },
+              {
+                "event": "ASSET_PACK_PUBLISH",
+                "payload": {}
+              }
+            ],
+            "state": "failed"
+          }
         }
-       }
-      ],
-      "state": "reporting"
-     }
-    },
-    {
-     "event": "ASSET_PACK_REPORT_NEXT",
-     "payload": {
-      "cursor": 0
-     },
-     "expect": {
-      "neverEmits": [
-       "ASSET_PACK_MISSING"
-      ],
-      "state": "ready",
-      "emits": [
-       {
-        "event": "ASSET_PACK_SETTLED",
-        "payload": {
-         "pack": "kflow/x",
-         "status": "ready"
-        }
-       }
       ]
-     },
-     "from": "reporting"
-    }
-   ]
-  },
-  {
-   "id": "load-failed-http-404",
-   "steps": [
-    {
-     "event": "PACK_HTTP_REPLIED",
-     "payload": {
-      "status": 404,
-      "body": "nope"
-     },
-     "from": "loading",
-     "expect": {
-      "emits": [
-       {
-        "event": "ASSET_PACK_FAILED",
-        "payload": {
-         "pack": "kflow/x",
-         "message": "HTTP 404 or invalid JSON at /shared/x/assets.json"
-        }
-       },
-       {
-        "event": "ASSET_PACK_PUBLISH",
-        "payload": {}
-       }
-      ],
-      "state": "failed"
-     }
-    }
-   ]
-  },
-  {
-   "id": "missing-key",
-   "note": "units/b is absent: reported once",
-   "steps": [
-    {
-     "event": "PACK_TEXT",
-     "payload": {
-      "text": "{\"pack\": \"kflow/x\", \"version\": 1, \"base\": \"https://h\", \"assets\": [{\"key\": \"units/a\", \"url\": \"/u/a.png\", \"role\": \"npc\"}, {\"key\": \"ui/c\", \"url\": \"/ui/c.png\", \"role\": \"ui\"}]}"
-     },
-     "from": "loading",
-     "expect": {
-      "emits": [
-       {
-        "event": "ASSET_PACK_REPORT_NEXT",
-        "payload": {
-         "cursor": 0
-        }
-       }
-      ],
-      "state": "reporting"
-     }
     },
     {
-     "event": "ASSET_PACK_REPORT_NEXT",
-     "payload": {
-      "cursor": 0
-     },
-     "from": "reporting",
-     "expect": {
-      "emits": [
-       {
-        "event": "ASSET_PACK_MISSING",
-        "payload": {
-         "pack": "kflow/x",
-         "key": "units/b"
+      "id": "missing-key",
+      "note": "units/b is absent: reported once",
+      "steps": [
+        {
+          "event": "PACK_TEXT",
+          "payload": {
+            "text": "{\"pack\": \"kflow/x\", \"version\": 1, \"base\": \"https://h\", \"assets\": [{\"key\": \"units/a\", \"url\": \"/u/a.png\", \"role\": \"npc\"}, {\"key\": \"ui/c\", \"url\": \"/ui/c.png\", \"role\": \"ui\"}]}"
+          },
+          "from": "loading",
+          "expect": {
+            "emits": [
+              {
+                "event": "ASSET_PACK_REPORT_NEXT",
+                "payload": {
+                  "cursor": 0
+                }
+              }
+            ],
+            "state": "reporting"
+          }
+        },
+        {
+          "event": "ASSET_PACK_REPORT_NEXT",
+          "payload": {
+            "cursor": 0
+          },
+          "from": "reporting",
+          "expect": {
+            "emits": [
+              {
+                "event": "ASSET_PACK_MISSING",
+                "payload": {
+                  "pack": "kflow/x",
+                  "key": "units/b"
+                }
+              },
+              {
+                "event": "ASSET_PACK_REPORT_NEXT",
+                "payload": {
+                  "cursor": 1
+                }
+              }
+            ],
+            "state": "reporting"
+          }
+        },
+        {
+          "event": "ASSET_PACK_REPORT_NEXT",
+          "payload": {
+            "cursor": 1
+          },
+          "from": "reporting",
+          "expect": {
+            "neverEmits": [
+              "ASSET_PACK_MISSING"
+            ],
+            "state": "ready",
+            "emits": [
+              {
+                "event": "ASSET_PACK_SETTLED",
+                "payload": {
+                  "pack": "kflow/x",
+                  "status": "partial"
+                }
+              }
+            ]
+          }
         }
-       },
-       {
-        "event": "ASSET_PACK_REPORT_NEXT",
-        "payload": {
-         "cursor": 1
-        }
-       }
-      ],
-      "state": "reporting"
-     }
-    },
-    {
-     "event": "ASSET_PACK_REPORT_NEXT",
-     "payload": {
-      "cursor": 1
-     },
-     "from": "reporting",
-     "expect": {
-      "neverEmits": [
-       "ASSET_PACK_MISSING"
-      ],
-      "state": "ready",
-      "emits": [
-       {
-        "event": "ASSET_PACK_SETTLED",
-        "payload": {
-         "pack": "kflow/x",
-         "status": "partial"
-        }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "load-failed-network",
-   "note": "every expected key is a placeholder and reported once",
-   "steps": [
-    {
-     "event": "PACK_LOAD_FAILED",
-     "payload": {
-      "error": "boom",
-      "kind": "network"
-     },
-     "from": "loading",
-     "expect": {
-      "emits": [
-       {
-        "event": "ASSET_PACK_FAILED",
-        "payload": {
-         "pack": "kflow/x",
-         "message": "boom"
-        }
-       },
-       {
-        "event": "ASSET_PACK_PUBLISH",
-        "payload": {}
-       }
-      ],
-      "state": "failed"
-     }
     },
     {
-     "event": "ASSET_PACK_PUBLISH",
-     "payload": {},
-     "from": "failed",
-     "expect": {
-      "emits": [
-       {
-        "event": "ASSET_PACK_REPORT_NEXT",
-        "payload": {
-         "cursor": 0
+      "id": "load-failed-network",
+      "note": "every expected key is a placeholder and reported once",
+      "steps": [
+        {
+          "event": "PACK_LOAD_FAILED",
+          "payload": {
+            "error": "boom",
+            "kind": "network"
+          },
+          "from": "loading",
+          "expect": {
+            "emits": [
+              {
+                "event": "ASSET_PACK_FAILED",
+                "payload": {
+                  "pack": "kflow/x",
+                  "message": "boom"
+                }
+              },
+              {
+                "event": "ASSET_PACK_PUBLISH",
+                "payload": {}
+              }
+            ],
+            "state": "failed"
+          }
+        },
+        {
+          "event": "ASSET_PACK_PUBLISH",
+          "payload": {},
+          "from": "failed",
+          "expect": {
+            "emits": [
+              {
+                "event": "ASSET_PACK_REPORT_NEXT",
+                "payload": {
+                  "cursor": 0
+                }
+              }
+            ],
+            "state": "reporting"
+          }
+        },
+        {
+          "event": "ASSET_PACK_REPORT_NEXT",
+          "payload": {
+            "cursor": 0
+          },
+          "from": "reporting",
+          "expect": {
+            "emits": [
+              {
+                "event": "ASSET_PACK_MISSING",
+                "payload": {
+                  "pack": "kflow/x",
+                  "key": "units/a"
+                }
+              },
+              {
+                "event": "ASSET_PACK_REPORT_NEXT",
+                "payload": {
+                  "cursor": 1
+                }
+              }
+            ],
+            "state": "reporting"
+          }
+        },
+        {
+          "event": "ASSET_PACK_REPORT_NEXT",
+          "payload": {
+            "cursor": 1
+          },
+          "from": "reporting",
+          "expect": {
+            "emits": [
+              {
+                "event": "ASSET_PACK_MISSING",
+                "payload": {
+                  "pack": "kflow/x",
+                  "key": "units/b"
+                }
+              },
+              {
+                "event": "ASSET_PACK_REPORT_NEXT",
+                "payload": {
+                  "cursor": 2
+                }
+              }
+            ],
+            "state": "reporting"
+          }
+        },
+        {
+          "event": "ASSET_PACK_REPORT_NEXT",
+          "payload": {
+            "cursor": 2
+          },
+          "from": "reporting",
+          "expect": {
+            "emits": [
+              {
+                "event": "ASSET_PACK_MISSING",
+                "payload": {
+                  "pack": "kflow/x",
+                  "key": "ui/c"
+                }
+              },
+              {
+                "event": "ASSET_PACK_REPORT_NEXT",
+                "payload": {
+                  "cursor": 3
+                }
+              }
+            ],
+            "state": "reporting"
+          }
+        },
+        {
+          "event": "ASSET_PACK_REPORT_NEXT",
+          "payload": {
+            "cursor": 3
+          },
+          "from": "reporting",
+          "expect": {
+            "neverEmits": [
+              "ASSET_PACK_MISSING"
+            ],
+            "state": "ready",
+            "emits": [
+              {
+                "event": "ASSET_PACK_SETTLED",
+                "payload": {
+                  "pack": "kflow/x",
+                  "status": "failed"
+                }
+              }
+            ]
+          }
         }
-       }
-      ],
-      "state": "reporting"
-     }
-    },
-    {
-     "event": "ASSET_PACK_REPORT_NEXT",
-     "payload": {
-      "cursor": 0
-     },
-     "from": "reporting",
-     "expect": {
-      "emits": [
-       {
-        "event": "ASSET_PACK_MISSING",
-        "payload": {
-         "pack": "kflow/x",
-         "key": "units/a"
-        }
-       },
-       {
-        "event": "ASSET_PACK_REPORT_NEXT",
-        "payload": {
-         "cursor": 1
-        }
-       }
-      ],
-      "state": "reporting"
-     }
-    },
-    {
-     "event": "ASSET_PACK_REPORT_NEXT",
-     "payload": {
-      "cursor": 1
-     },
-     "from": "reporting",
-     "expect": {
-      "emits": [
-       {
-        "event": "ASSET_PACK_MISSING",
-        "payload": {
-         "pack": "kflow/x",
-         "key": "units/b"
-        }
-       },
-       {
-        "event": "ASSET_PACK_REPORT_NEXT",
-        "payload": {
-         "cursor": 2
-        }
-       }
-      ],
-      "state": "reporting"
-     }
-    },
-    {
-     "event": "ASSET_PACK_REPORT_NEXT",
-     "payload": {
-      "cursor": 2
-     },
-     "from": "reporting",
-     "expect": {
-      "emits": [
-       {
-        "event": "ASSET_PACK_MISSING",
-        "payload": {
-         "pack": "kflow/x",
-         "key": "ui/c"
-        }
-       },
-       {
-        "event": "ASSET_PACK_REPORT_NEXT",
-        "payload": {
-         "cursor": 3
-        }
-       }
-      ],
-      "state": "reporting"
-     }
-    },
-    {
-     "event": "ASSET_PACK_REPORT_NEXT",
-     "payload": {
-      "cursor": 3
-     },
-     "from": "reporting",
-     "expect": {
-      "neverEmits": [
-       "ASSET_PACK_MISSING"
-      ],
-      "state": "ready",
-      "emits": [
-       {
-        "event": "ASSET_PACK_SETTLED",
-        "payload": {
-         "pack": "kflow/x",
-         "status": "failed"
-        }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "duplicate-key",
-   "note": "two rows share units/a: the whole pack is refused",
-   "steps": [
+    },
     {
-     "event": "PACK_TEXT",
-     "payload": {
-      "text": "{\"pack\": \"kflow/x\", \"version\": 1, \"base\": \"https://h\", \"assets\": [{\"key\": \"units/a\", \"url\": \"/u/a.png\"}, {\"key\": \"units/a\", \"url\": \"/u/a2.png\"}]}"
-     },
-     "from": "loading",
-     "expect": {
-      "state": "failed",
-      "emits": [
-       {
-        "event": "ASSET_PACK_FAILED",
-        "payload": {
-         "pack": "kflow/x",
-         "message": "duplicate asset key in /shared/x/assets.json"
+      "id": "duplicate-key",
+      "note": "two rows share units/a: the whole pack is refused",
+      "steps": [
+        {
+          "event": "PACK_TEXT",
+          "payload": {
+            "text": "{\"pack\": \"kflow/x\", \"version\": 1, \"base\": \"https://h\", \"assets\": [{\"key\": \"units/a\", \"url\": \"/u/a.png\"}, {\"key\": \"units/a\", \"url\": \"/u/a2.png\"}]}"
+          },
+          "from": "loading",
+          "expect": {
+            "state": "failed",
+            "emits": [
+              {
+                "event": "ASSET_PACK_FAILED",
+                "payload": {
+                  "pack": "kflow/x",
+                  "message": "duplicate asset key in /shared/x/assets.json"
+                }
+              },
+              {
+                "event": "ASSET_PACK_PUBLISH",
+                "payload": {}
+              },
+              {
+                "event": "ASSET_PACK_SETTLED",
+                "payload": {
+                  "pack": "kflow/x",
+                  "status": "failed"
+                }
+              }
+            ]
+          }
         }
-       },
-       {
-        "event": "ASSET_PACK_PUBLISH",
-        "payload": {}
-       },
-       {
-        "event": "ASSET_PACK_SETTLED",
-        "payload": {
-         "pack": "kflow/x",
-         "status": "failed"
-        }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "missing-key-field",
-   "note": "a row without key: the whole pack is refused",
-   "steps": [
+    },
     {
-     "event": "PACK_TEXT",
-     "payload": {
-      "text": "{\"pack\": \"kflow/x\", \"version\": 1, \"base\": \"https://h\", \"assets\": [{\"key\": \"units/a\", \"url\": \"/u/a.png\"}, {\"url\": \"/u/b.png\"}]}"
-     },
-     "from": "loading",
-     "expect": {
-      "state": "failed",
-      "emits": [
-       {
-        "event": "ASSET_PACK_FAILED",
-        "payload": {
-         "pack": "kflow/x",
-         "message": "asset row without key in /shared/x/assets.json"
+      "id": "empty-key-row-is-refused-by-the-key-guard",
+      "steps": [
+        {
+          "event": "PACK_TEXT",
+          "payload": {
+            "text": "{\"pack\": \"kflow/x\", \"version\": 1, \"base\": \"https://h\", \"assets\": [{\"key\": \"units/a\", \"url\": \"/u/a.png\"}, {\"key\": \"\", \"url\": \"/u/b.png\"}]}"
+          },
+          "from": "loading",
+          "expect": {
+            "state": "failed",
+            "emits": [
+              {
+                "event": "ASSET_PACK_FAILED",
+                "payload": {
+                  "pack": "kflow/x",
+                  "message": "asset row without key in /shared/x/assets.json"
+                }
+              },
+              {
+                "event": "ASSET_PACK_PUBLISH",
+                "payload": {}
+              },
+              {
+                "event": "ASSET_PACK_SETTLED",
+                "payload": {
+                  "pack": "kflow/x",
+                  "status": "failed"
+                }
+              }
+            ]
+          }
         }
-       },
-       {
-        "event": "ASSET_PACK_PUBLISH",
-        "payload": {}
-       },
-       {
-        "event": "ASSET_PACK_SETTLED",
-        "payload": {
-         "pack": "kflow/x",
-         "status": "failed"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "invalid-style",
-   "note": "style outside pixel|vector|hd|1-bit|isometric|lowpoly: refused",
-   "steps": [
+      ],
+      "note": "an empty key fits the type and is refused by the key guard"
+    },
     {
-     "event": "PACK_TEXT",
-     "payload": {
-      "text": "{\"pack\": \"kflow/x\", \"version\": 1, \"base\": \"https://h\", \"assets\": [{\"key\": \"units/a\", \"url\": \"/u/a.png\", \"style\": \"watercolor\"}]}"
-     },
-     "from": "loading",
-     "expect": {
-      "state": "failed",
-      "emits": [
-       {
-        "event": "ASSET_PACK_FAILED",
-        "payload": {
-         "pack": "kflow/x",
-         "message": "asset row with invalid style in /shared/x/assets.json"
+      "id": "good-rows-control-a-listed-style-loads",
+      "steps": [
+        {
+          "event": "PACK_TEXT",
+          "payload": {
+            "text": "{\"pack\": \"kflow/x\", \"version\": 1, \"base\": \"https://h\", \"assets\": [{\"key\": \"units/a\", \"url\": \"/u/a.png\", \"style\": \"pixel\"}]}"
+          },
+          "from": "loading",
+          "expect": {
+            "state": "reporting",
+            "emits": [
+              {
+                "event": "ASSET_PACK_REPORT_NEXT",
+                "payload": {
+                  "cursor": 0
+                }
+              }
+            ]
+          }
         }
-       },
-       {
-        "event": "ASSET_PACK_PUBLISH",
-        "payload": {}
-       },
-       {
-        "event": "ASSET_PACK_SETTLED",
-        "payload": {
-         "pack": "kflow/x",
-         "status": "failed"
-        }
-       }
       ]
-     }
+    },
+    {
+      "id": "bad-style-row-is-refused-by-the-parse",
+      "steps": [
+        {
+          "event": "PACK_TEXT",
+          "payload": {
+            "text": "{\"pack\": \"kflow/x\", \"version\": 1, \"base\": \"https://h\", \"assets\": [{\"key\": \"units/a\", \"url\": \"/u/a.png\", \"style\": \"watercolor\"}]}"
+          },
+          "from": "loading",
+          "expect": {
+            "state": "failed",
+            "emits": [
+              {
+                "event": "ASSET_PACK_FAILED",
+                "payload": {
+                  "pack": "kflow/x",
+                  "message": "invalid asset pack manifest in /shared/x/assets.json"
+                }
+              },
+              {
+                "event": "ASSET_PACK_PUBLISH",
+                "payload": {}
+              },
+              {
+                "event": "ASSET_PACK_SETTLED",
+                "payload": {
+                  "pack": "kflow/x",
+                  "status": "failed"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "note": "style is the Asset.style union: the typed parse answers null"
+    },
+    {
+      "id": "bad-row-missing-key-field-is-refused-by-the-parse",
+      "steps": [
+        {
+          "event": "PACK_TEXT",
+          "payload": {
+            "text": "{\"pack\": \"kflow/x\", \"version\": 1, \"base\": \"https://h\", \"assets\": [{\"key\": \"units/a\", \"url\": \"/u/a.png\"}, {\"url\": \"/u/b.png\"}]}"
+          },
+          "from": "loading",
+          "expect": {
+            "state": "failed",
+            "emits": [
+              {
+                "event": "ASSET_PACK_FAILED",
+                "payload": {
+                  "pack": "kflow/x",
+                  "message": "invalid asset pack manifest in /shared/x/assets.json"
+                }
+              },
+              {
+                "event": "ASSET_PACK_PUBLISH",
+                "payload": {}
+              },
+              {
+                "event": "ASSET_PACK_SETTLED",
+                "payload": {
+                  "pack": "kflow/x",
+                  "status": "failed"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "note": "key is required in Asset"
+    },
+    {
+      "id": "bad-row-key-of-the-wrong-type-is-refused-by-the-parse",
+      "steps": [
+        {
+          "event": "PACK_TEXT",
+          "payload": {
+            "text": "{\"pack\": \"kflow/x\", \"version\": 1, \"base\": \"https://h\", \"assets\": [{\"key\": 7, \"url\": \"/u/a.png\"}]}"
+          },
+          "from": "loading",
+          "expect": {
+            "state": "failed",
+            "emits": [
+              {
+                "event": "ASSET_PACK_FAILED",
+                "payload": {
+                  "pack": "kflow/x",
+                  "message": "invalid asset pack manifest in /shared/x/assets.json"
+                }
+              },
+              {
+                "event": "ASSET_PACK_PUBLISH",
+                "payload": {}
+              },
+              {
+                "event": "ASSET_PACK_SETTLED",
+                "payload": {
+                  "pack": "kflow/x",
+                  "status": "failed"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "bad-manifest-without-a-base-is-refused-by-the-parse",
+      "steps": [
+        {
+          "event": "PACK_TEXT",
+          "payload": {
+            "text": "{\"pack\": \"kflow/x\", \"version\": 1, \"assets\": []}"
+          },
+          "from": "loading",
+          "expect": {
+            "state": "failed",
+            "emits": [
+              {
+                "event": "ASSET_PACK_FAILED",
+                "payload": {
+                  "pack": "kflow/x",
+                  "message": "invalid asset pack manifest in /shared/x/assets.json"
+                }
+              },
+              {
+                "event": "ASSET_PACK_PUBLISH",
+                "payload": {}
+              },
+              {
+                "event": "ASSET_PACK_SETTLED",
+                "payload": {
+                  "pack": "kflow/x",
+                  "status": "failed"
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
-   ]
-  }
- ]
+  ]
 }

@@ -4,7 +4,7 @@ app std-http-server [
   egress: ["https://www.googleapis.com"],
   fs: { cwd: "dist/client/**": [read] },
   net: { "127.0.0.1:3000": [listen] },
-  description: "std-http-server — the HTTP server program that replaces orbital-server, first slice, composed from atoms and owning no topology of its own. std-http-boot-gate reads the declared environment at boot and asks std-boot-env-check what keeps it from working in production: under NODE_ENV=production a problem refuses the boot (BOOT_REFUSED, the listener never starts), elsewhere it only warns (BOOT_WARNED); the missing-credential lines of the host's boot check are not asked yet, no operator hands the credential catalog or store to a program. std-http-policy reads CORS_ORIGIN at boot (a comma list, trimmed, blanks dropped) and answers CORS_CONFIGURED; once the gate has heard that and a cleared check it answers BOOT_CLEARED, which tells std-http1 to bind the host and port knobs. std-http1 reads each connection and delivers one typed request; std-http-router asks std-http-policy to decide it (a preflight and a 413 are answered at once), counts an /api request in std-rate-limiter unless the rateLimit knob is false (ADMITTED or THROTTLED, a throttled one is 429 with ratelimit-* headers), routes it by method and path (GET /api/health answers 200 { status, version }, every other path 404 { error, code }) and hands the answer back to std-http1 as RESPOND. Requests are correlated by requestId, so any number are in flight at once. Bound to spec/net/server.lolo. GET /api/events?ticket=<t> is the live stream: the router asks std-stream-ticket to spend the ticket, TICKET_TAKEN opens the stream through std-sse and std-http1 (RESPOND_HEAD/RESPOND_CHUNK/RESPOND_END, heartbeats, close on client disconnect), a missing or bad ticket is 401 { error, code }. POST /api/events/ticket mints a ticket for the anonymous viewer and answers 200 { ticket } (503 if the mint fails). The stream is opened, held and closed with only the retry frame and heartbeats; pushing the kernel broadcast feed is a later item. A bearer starting with the API key prefix goes only to std-api-key-verifier (prefix-exclusive, as the Rust WithApiKeys), anything else only to the JWT path; neither falls back. POST/GET under /api/orbitals (events, entity events, inputs, resolve-rows 501) are left by the router (externalPrefix) to std-http-dispatch, which dispatches through program/dispatch and answers the EventResponse wire; /api/hooks is 501 there until an inbound-delivery operator exists."
+  description: "std-http-server — the HTTP server program that replaces orbital-server, first slice, composed from atoms and owning no topology of its own. std-http-boot-gate reads the declared environment at boot and asks std-boot-env-check what keeps it from working in production: under NODE_ENV=production a problem refuses the boot (BOOT_REFUSED, the listener never starts), elsewhere it only warns (BOOT_WARNED); the missing-credential lines of the host's boot check are not asked yet, no operator hands the credential catalog or store to a program. std-http-policy reads CORS_ORIGIN at boot (a comma list, trimmed, blanks dropped) and answers CORS_CONFIGURED; once the gate has heard that and a cleared check it answers BOOT_CLEARED, which tells std-http1 to bind the host and port knobs. std-http1 reads each connection and delivers one typed request; std-http-router asks std-http-policy to decide it (a preflight and a 413 are answered at once), counts an /api request in std-rate-limiter unless the rateLimit knob is false (ADMITTED or THROTTLED, a throttled one is 429 with ratelimit-* headers), routes it by method and path (GET /api/health answers 200 { status, version }, every other path 404 { error, code }) and hands the answer back to std-http1 as RESPOND. Requests are correlated by requestId, so any number are in flight at once. Bound to spec/net/server.lolo. GET /api/events?ticket=<t> is the live stream: the router asks std-stream-ticket to spend the ticket, TICKET_TAKEN opens the stream through std-sse and std-http1 (RESPOND_HEAD/RESPOND_CHUNK/RESPOND_END, heartbeats, close on client disconnect), a missing or bad ticket is 401 { error, code }. POST /api/events/ticket mints a ticket for the anonymous viewer and answers 200 { ticket } (503 if the mint fails). std-live-feed then subscribes the opened stream to the host's live broadcast (a keyed program/live for the ticket's viewer and the ?clientId= tab) and writes each item as a { type: bus, event, payload?, source, timestamp } frame, so a change made in one tab reaches the others; the stream's close cancels the subscription. A bearer starting with the API key prefix goes only to std-api-key-verifier (prefix-exclusive, as the Rust WithApiKeys), anything else only to the JWT path; neither falls back. POST/GET under /api/orbitals (events, entity events, inputs, resolve-rows 501) are left by the router (externalPrefix) to std-http-dispatch, which dispatches through program/dispatch and answers the EventResponse wire; /api/hooks is 501 there until an inbound-delivery operator exists."
 ]
 uses Spec from "almadar-std/server"
 uses H1 from "std/behaviors/std-http1"
@@ -17,6 +17,10 @@ uses Router from "std/behaviors/std-http-router"
 uses Dispatch from "std/behaviors/std-http-dispatch"
 uses Static from "std/behaviors/std-static-files"
 uses Sse from "std/behaviors/std-sse"
+uses Feed from "std/behaviors/std-live-feed"
+uses Compress from "std/behaviors/std-http-compress"
+uses Gzip from "std/behaviors/std-gzip"
+uses Brotli from "std/behaviors/std-brotli"
 uses Ticket from "std/behaviors/std-stream-ticket"
 uses Bearer from "std/behaviors/std-bearer-verify"
 uses KeyVerifier from "std/behaviors/std-api-key-verifier"
@@ -64,12 +68,45 @@ orbital HttpServerOrbital {
   trait Http1 = H1.traits.Http1 {
     listens {
       BootGuard.BOOT_CLEARED -> LISTEN
-      ServerRouter.RESPOND -> RESPOND
-      ServerStatic.RESPOND -> RESPOND
-      ServerDispatch.RESPOND -> RESPOND
+      ServerCompress.RESPOND -> SEND_RESPONSE
       ServerSse.RESPOND_HEAD -> RESPOND_HEAD
       ServerSse.RESPOND_CHUNK -> RESPOND_CHUNK
       ServerSse.RESPOND_END -> RESPOND_END
+    }
+  }
+
+  trait ServerCompress = Compress.traits.HttpCompress {
+    listens {
+      Http1.REQUEST_RECEIVED -> REQUEST_RECEIVED
+      Http1.STREAM_CLOSED -> STREAM_CLOSED
+      ServerRouter.RESPOND -> ANSWER
+      ServerStatic.RESPOND -> ANSWER
+      ServerDispatch.RESPOND -> ANSWER
+      CompressPolicy.HTTP_DECIDED -> HTTP_DECIDED
+      CompressGzip.GZIP_ANSWERED -> GZIP_ANSWERED
+      CompressGzip.GZIP_REFUSED -> GZIP_REFUSED
+      CompressBrotli.BROTLI_ANSWERED -> BROTLI_ANSWERED
+    }
+  }
+
+  trait CompressPolicy = Policy.traits.HttpPolicy {
+    config {
+      originsFromEnv: false
+    }
+    listens {
+      ServerCompress.HTTP_DECIDE -> HTTP_DECIDE
+    }
+  }
+
+  trait CompressGzip = Gzip.traits.Gunzip {
+    listens {
+      ServerCompress.GZIP -> GZIP
+    }
+  }
+
+  trait CompressBrotli = Brotli.traits.Brotli {
+    listens {
+      ServerCompress.BROTLI -> BROTLI
     }
   }
 
@@ -82,6 +119,7 @@ orbital HttpServerOrbital {
       BootCheck.ENV_CHECKED -> ENV_CHECKED
       BootCreds.CRED_ADMIN_OWED -> CRED_ADMIN_OWED
       ServerPolicy.CORS_CONFIGURED -> CORS_CONFIGURED
+      CompressPolicy.CORS_CONFIGURED -> CORS_CONFIGURED
     }
   }
 
@@ -242,10 +280,19 @@ orbital HttpServerOrbital {
       ServerDispatch.SSE_OPEN -> SSE_OPEN
       ServerDispatch.SSE_SEND -> SSE_SEND
       ServerDispatch.SSE_CLOSE -> SSE_CLOSE
+      ServerLiveFeed.SSE_SEND -> SSE_SEND
+      ServerLiveFeed.SSE_CLOSE -> SSE_CLOSE
       Http1.STREAM_IDLE -> STREAM_IDLE
       Http1.STREAM_CLOSED -> STREAM_CLOSED
     }
   }
 
-  page "/server" as HttpServerPage -> BootGuard, BootCreds, BootCheck, Http1, ServerPolicy, ServerRateLimiter, ServerRouter, ServerDispatch, ServerStatic, StreamTicketer, ServerSse, ServerBearer, ApiKeys, BearerJws, BearerX509, BearerRsa, BearerBig, BearerEc, BearerEcBig
+  trait ServerLiveFeed = Feed.traits.LiveFeed {
+    listens {
+      ServerRouter.STREAM_AUTHORIZED -> STREAM_AUTHORIZED
+      ServerSse.SSE_CLOSED -> SSE_CLOSED
+    }
+  }
+
+  page "/server" as HttpServerPage -> BootGuard, BootCreds, BootCheck, Http1, ServerPolicy, ServerRateLimiter, ServerRouter, ServerDispatch, ServerStatic, ServerCompress, CompressPolicy, CompressGzip, CompressBrotli, StreamTicketer, ServerSse, ServerLiveFeed, ServerBearer, ApiKeys, BearerJws, BearerX509, BearerRsa, BearerBig, BearerEc, BearerEcBig
 }

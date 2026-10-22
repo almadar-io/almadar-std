@@ -1,9 +1,10 @@
 app std-orb-lint-page-path [
   version: "1.0.0",
   inbound: ["cli-lint-page-path"],
+  env: ["PATH"],
   exec: ["orb"],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
-  description: "std-orb-lint-page-path — the `orb lint page-path <file>` command, the port. It lowers the file with program/read and, for every inline page, reports an empty path, a path that does not start with '/', and a path starting with '/api', each with the Rust path, message and suggestion (status 500, exit 1). The character-set check (letters, numbers, hyphens, underscores, colons and slashes) applies only to an English program, as in the compiler: the program's language is decided from the raw file against the installed language packs (a .orb document by its top-level keys, a .lolo source by its first token), the packs being scanned by std-orb-language's engine. Clean answers `lint page-path: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  description: "std-orb-lint-page-path — the `orb lint page-path <file>` command, the port. It lowers the file with program/read and, for every inline page, reports a missing or non-PascalCase page name (the PascalCase check applies to an English program only), an empty path, a path that does not start with '/', and a path starting with '/api', each with the Rust path, message and suggestion (status 500, exit 1). The character-set check (letters, numbers, hyphens, underscores, colons and slashes) applies only to an English program, as in the compiler: the program's language is decided from the raw file against the installed language packs (a .orb document by its top-level keys, a .lolo source by its first token), the packs being scanned by std-orb-language's engine. Clean answers `lint page-path: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-page-path"
 uses Language from "std/behaviors/std-orb-language"
@@ -84,6 +85,13 @@ orbital OrbLintPagePathOrbital {
             (let ((pgList (object/get (array/nth @orbitals @oi) "pages" [])))
               (array/flatten (array/map (array/range 0 (array/len @pgList)) (fn pj
                 (let ((pg (array/nth @pgList @pj)))
+                 (array/concat
+                  (let ((nm (object/get @pg "name" "")))
+                    (if (= @nm "")
+                      [{ code: "ORB_P_MISSING_NAME", path: (str/concat "orbitals[" @oi "].pages[" @pj "].name"), message: "Page name is required", suggestion: "Add a PascalCase name for the page (e.g., 'TaskList', 'UserProfile')", severity: "error" }]
+                      (if (and @entity.latin (not (validate/pattern @nm "^[A-Z][a-zA-Z0-9]*$")))
+                        [{ code: "ORB_P_MISSING_NAME", path: (str/concat "orbitals[" @oi "].pages[" @pj "].name"), message: (str/concat "Page name '" @nm "' should be PascalCase"), suggestion: "Use PascalCase for page names (e.g., 'TaskList', 'Dashboard')", severity: "error" }]
+                        [])))
                   (if (not (object/has @pg "path"))
                     []
                     (let ((route (object/get @pg "path")))
@@ -92,7 +100,7 @@ orbital OrbLintPagePathOrbital {
                           (if (= @route "") [{ code: "ORB_P_MISSING_PATH", path: @where, message: "Page path is required", suggestion: "Add a path starting with / (e.g., '/tasks', '/users/:id')", severity: "error" }] [])
                           (if (and (!= @route "") (not (str/startsWith @route "/"))) [{ code: "ORB_P_INVALID_PATH", path: @where, message: (str/concat "Page path must start with '/': '" @route "'"), suggestion: "Prefix the path with / (e.g., '/tasks' instead of 'tasks')", severity: "error" }] [])
                           (if (and (!= @route "") @entity.latin (not (validate/pattern @route "^/[a-zA-Z0-9\\-_/:]*$"))) [{ code: "ORB_P_INVALID_PATH", path: @where, message: (str/concat "Invalid page path format: '" @route "'"), suggestion: "Use valid path characters: letters, numbers, hyphens, underscores, and colons for params", severity: "error" }] [])
-                          (if (str/startsWith @route "/api") [{ code: "ORB_P_INVALID_PATH", path: @where, message: (str/concat "Page path '" @route "' starts with '/api' which collides with the API server proxy"), suggestion: "Choose a different path that doesn't start with '/api' (e.g., '/requests' instead of '/apirequests')", severity: "error" }] [])]))))))))))))))
+                          (if (str/startsWith @route "/api") [{ code: "ORB_P_INVALID_PATH", path: @where, message: (str/concat "Page path '" @route "' starts with '/api' which collides with the API server proxy"), suggestion: "Choose a different path that doesn't start with '/api' (e.g., '/requests' instead of '/apirequests')", severity: "error" }] [])])))))))))))))))
         (emit LINT_FINISH { })
       LINT_FILE_UNREAD -> ready
         (emit LINT_UNREAD { rule: "page-path" })

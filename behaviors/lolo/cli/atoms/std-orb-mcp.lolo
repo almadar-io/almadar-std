@@ -1,6 +1,6 @@
 app std-orb-mcp [
   version: "1.0.0",
-  env: ["ALMADAR_PERSONA_OWNS"],
+  env: ["ALMADAR_PERSONA_OWNS", "PATH"],
   inbound: ["cli-mcp"],
   exec: ["orb"],
   stdio: [in, out],
@@ -137,11 +137,13 @@ orbital OrbMcpOrbital {
         (emit MCP_ANSWERED { status: 400, body: "usage: orb mcp [--program <file>]" })
       MCP_ARGS_DONE -> versioning when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0))
         (set @entity.program (array/first (or (object/get @payload.flags "program") [])))
-        (os/spawn "orb" ["--version"] { cwd: null env: null stdin: "null" stdout: "pipe" stderr: "null" detached: false } { key: "spawn" emit: { success: MCP_SPAWNED, failure: MCP_START_FAILED } })
+        (os/getenv "PATH" { key: "path" emit: { success: MCP_PATH_READ, failure: MCP_START_FAILED } })
     }
 
     state versioning {
       INIT -> versioning
+      MCP_PATH_READ -> versioning
+        (os/spawn "orb" ["--version"] { cwd: null env: { PATH: (or @payload.value "") } stdin: "null" stdout: "pipe" stderr: "null" detached: false } { key: "spawn" emit: { success: MCP_SPAWNED, failure: MCP_START_FAILED } })
       MCP_START_FAILED -> starting
         (emit MCP_ANSWERED { status: 500, body: (str/concat "orb mcp: " @payload.error) })
       MCP_SPAWNED -> versioning
@@ -195,7 +197,7 @@ orbital OrbMcpOrbital {
         (set @entity.hookNames (array/map (object/get @payload.result "inputs") (fn i (object/get @i "event"))))
         (emit MCP_LISTEN { })
       MCP_CHUNK -> versioning
-        (set @entity.buffer (str/concat @entity.buffer @payload.data))
+        (set @entity.buffer (str/concat @entity.buffer (bytes/to-string @payload.data)))
         (set @entity.queue (array/concat @entity.queue (array/slice (str/split @entity.buffer "\n") 0 (- (array/len (str/split @entity.buffer "\n")) 1))))
         (set @entity.buffer (array/last (str/split @entity.buffer "\n")))
       MCP_LISTEN -> serving
@@ -212,7 +214,7 @@ orbital OrbMcpOrbital {
       MCP_EOF -> starting
         (emit MCP_ANSWERED { status: 200, body: "" })
       MCP_CHUNK -> serving
-        (set @entity.buffer (str/concat @entity.buffer @payload.data))
+        (set @entity.buffer (str/concat @entity.buffer (bytes/to-string @payload.data)))
         (set @entity.queue (array/concat @entity.queue (array/slice (str/split @entity.buffer "\n") 0 (- (array/len (str/split @entity.buffer "\n")) 1))))
         (set @entity.buffer (array/last (str/split @entity.buffer "\n")))
         (emit MCP_PUMP { })
@@ -282,7 +284,7 @@ orbital OrbMcpOrbital {
     state working {
       INIT -> working
       MCP_CHUNK -> working
-        (set @entity.buffer (str/concat @entity.buffer @payload.data))
+        (set @entity.buffer (str/concat @entity.buffer (bytes/to-string @payload.data)))
         (set @entity.queue (array/concat @entity.queue (array/slice (str/split @entity.buffer "\n") 0 (- (array/len (str/split @entity.buffer "\n")) 1))))
         (set @entity.buffer (array/last (str/split @entity.buffer "\n")))
       MCP_EOF -> starting
@@ -410,6 +412,11 @@ orbital OrbMcpOrbital {
         table : Map string McpJson!
       }
         @description "Internal: an installed language table is parsed."
+        @tier "internal"
+      MCP_PATH_READ {
+        value : string
+      }
+        @description "os/getenv: the PATH the --version child is given."
         @tier "internal"
       MCP_SPAWNED {
         pid : number!

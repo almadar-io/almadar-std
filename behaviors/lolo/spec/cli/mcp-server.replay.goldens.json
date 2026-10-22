@@ -370,13 +370,68 @@
      "from": "serving",
      "event": "MCP_CHUNK",
      "payload": {
-      "data": "a\nb\nc"
+      "data": "YQpiCmM="
      },
      "expect": {
       "emits": [
        {
         "event": "MCP_PUMP",
         "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "chunk-data-is-decoded-bytes-and-a-line-split-across-chunks-is-joined",
+   "steps": [
+    {
+     "trait": "McpServer",
+     "from": "serving",
+     "event": "MCP_CHUNK",
+     "payload": {
+      "data": "eyJqc29ucnBjIjoiMi4wIiwiaWQ="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MCP_PUMP",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "MCP_LINE_IN"
+      ]
+     }
+    },
+    {
+     "trait": "McpServer",
+     "event": "MCP_PUMP",
+     "payload": {},
+     "expect": {
+      "neverEmits": [
+       "MCP_LINE_IN"
+      ]
+     }
+    },
+    {
+     "trait": "McpServer",
+     "event": "MCP_CHUNK",
+     "payload": {
+      "data": "Ijo3LCJtZXRob2QiOiJwaW5nIn0K"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MCP_PUMP",
+        "payload": {}
+       },
+       {
+        "event": "MCP_LINE_IN",
+        "payload": {
+         "line": "{\"jsonrpc\":\"2.0\",\"id\":7,\"method\":\"ping\"}"
+        }
        }
       ]
      }
@@ -866,6 +921,45 @@
         "event": "MCP_LINE_OUT",
         "payload": {
          "line": "{\"id\":7,\"jsonrpc\":\"2.0\",\"result\":{\"content\":[{\"text\":\"{\\\"path\\\":\\\"/p/std-x.lolo\\\",\\\"source\\\":\\\"app std-x [ version: \\\\\\\"1.0.0\\\\\\\" ]\\\"}\",\"type\":\"text\"}],\"isError\":false,\"structuredContent\":{\"path\":\"/p/std-x.lolo\",\"source\":\"app std-x [ version: \\\"1.0.0\\\" ]\"}}}"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "version-probe-spawn-carries-the-path-in-its-env",
+   "entity": {
+    "id": "s"
+   },
+   "steps": [
+    {
+     "trait": "McpServer",
+     "from": "versioning",
+     "event": "MCP_PATH_READ",
+     "payload": {
+      "value": "/usr/bin:/bin"
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "os/spawn",
+        "key": "spawn",
+        "optionsAt": 3,
+        "arg2": {
+         "cwd": null,
+         "detached": false,
+         "env": {
+          "PATH": [
+           "or",
+           "@payload.value",
+           ""
+          ]
+         },
+         "stderr": "null",
+         "stdin": "null",
+         "stdout": "pipe"
         }
        }
       ]

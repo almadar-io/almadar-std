@@ -130,3 +130,59 @@ export const HMAC_OPERATORS: Record<string, StdOperatorMeta> = {
     example: '["hmac/sha256", "Jefe", "what do ya want for nothing?", "hex"] // => "5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843"',
   },
 };
+
+const BYTES_LIMIT: NonNullable<StdOperatorMeta['params']>[number] = {
+  name: 'maxBytes',
+  type: NUMBER,
+  description: 'The largest output accepted, in bytes; a larger output fails with kind invalid (the decompression-bomb guard)',
+};
+
+export const GZIP_OPERATORS: Record<string, StdOperatorMeta> = {
+  'gzip/compress': {
+    module: 'gzip',
+    category: 'std-codec',
+    minArity: 1,
+    maxArity: 1,
+    description: 'gzip (RFC 1952) of bytes at the default level, through the flate2 crate (a bytes value is a standard padded base64 string at run time)',
+    hasSideEffects: false,
+    returnType: BYTES,
+    params: [{ name: 'data', type: BYTES, description: 'The bytes to compress' }],
+    example: '["gzip/compress", "aGVsbG8="] // => gzip bytes',
+  },
+  'gzip/decompress': {
+    module: 'gzip',
+    category: 'std-codec',
+    minArity: 2,
+    maxArity: 2,
+    description: 'Decompress every gzip member (as gzip -d reads them), through the flate2 crate. An output past maxBytes, corrupt input or a maxBytes that is not a whole number from 0 fails with kind invalid',
+    hasSideEffects: false,
+    returnType: BYTES,
+    params: [{ name: 'data', type: BYTES, description: 'The gzip bytes' }, BYTES_LIMIT],
+    example: '["gzip/decompress", "H4sIAAAAAAAAA8tIzcnJV8hAkACAiPnlEQAAAA==", 1024] // => "aGVsbG8gaGVsbG8gaGVsbG8="',
+  },
+};
+
+export const BROTLI_OPERATORS: Record<string, StdOperatorMeta> = {
+  'brotli/compress': {
+    module: 'brotli',
+    category: 'std-codec',
+    minArity: 1,
+    maxArity: 1,
+    description: 'brotli (RFC 7932) of bytes at the brotli CLI defaults (quality 11, window 22), through the brotli crate (a bytes value is a standard padded base64 string at run time)',
+    hasSideEffects: false,
+    returnType: BYTES,
+    params: [{ name: 'data', type: BYTES, description: 'The bytes to compress' }],
+    example: '["brotli/compress", "aGVsbG8="] // => brotli bytes',
+  },
+  'brotli/decompress': {
+    module: 'brotli',
+    category: 'std-codec',
+    minArity: 2,
+    maxArity: 2,
+    description: 'Decompress one brotli stream through the brotli crate. An output past maxBytes, corrupt input or a maxBytes that is not a whole number from 0 fails with kind invalid',
+    hasSideEffects: false,
+    returnType: BYTES,
+    params: [{ name: 'data', type: BYTES, description: 'The brotli bytes' }, BYTES_LIMIT],
+    example: '["brotli/decompress", "HxAA+I2Ubt5EVYaWbCBvAU8cYBw=", 1024] // => "aGVsbG8gaGVsbG8gaGVsbG8="',
+  },
+};

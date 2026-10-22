@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-10-21T13:25:32.722Z",
+  "generated": "2026-10-21T17:59:34.371Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -3595,6 +3595,52 @@
       ],
       "examples": [
         "(bit/xor 305419896 2596069104) // => 2290649224"
+      ],
+      "docsSource": "generated"
+    },
+    "brotli/compress": {
+      "category": "std-codec",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "bytes",
+      "description": "brotli (RFC 7932) of bytes at the brotli CLI defaults (quality 11, window 22), through the brotli crate (a bytes value is a standard padded base64 string at run time)",
+      "module": "brotli",
+      "params": [
+        {
+          "name": "data",
+          "type": "bytes",
+          "description": "The bytes to compress",
+          "rejectsNull": true
+        }
+      ],
+      "examples": [
+        "(brotli/compress \"aGVsbG8=\") // => brotli bytes"
+      ],
+      "docsSource": "generated"
+    },
+    "brotli/decompress": {
+      "category": "std-codec",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "bytes",
+      "description": "Decompress one brotli stream through the brotli crate. An output past maxBytes, corrupt input or a maxBytes that is not a whole number from 0 fails with kind invalid",
+      "module": "brotli",
+      "params": [
+        {
+          "name": "data",
+          "type": "bytes",
+          "description": "The brotli bytes",
+          "rejectsNull": true
+        },
+        {
+          "name": "maxBytes",
+          "type": "number",
+          "description": "The largest output accepted, in bytes; a larger output fails with kind invalid (the decompression-bomb guard)",
+          "rejectsNull": true
+        }
+      ],
+      "examples": [
+        "(brotli/decompress \"HxAA+I2Ubt5EVYaWbCBvAU8cYBw=\" 1024) // => \"aGVsbG8gaGVsbG8gaGVsbG8=\""
       ],
       "docsSource": "generated"
     },
@@ -8487,6 +8533,52 @@
       ],
       "examples": [
         "(grid/to-world 10 15) // => 150"
+      ],
+      "docsSource": "generated"
+    },
+    "gzip/compress": {
+      "category": "std-codec",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "bytes",
+      "description": "gzip (RFC 1952) of bytes at the default level, through the flate2 crate (a bytes value is a standard padded base64 string at run time)",
+      "module": "gzip",
+      "params": [
+        {
+          "name": "data",
+          "type": "bytes",
+          "description": "The bytes to compress",
+          "rejectsNull": true
+        }
+      ],
+      "examples": [
+        "(gzip/compress \"aGVsbG8=\") // => gzip bytes"
+      ],
+      "docsSource": "generated"
+    },
+    "gzip/decompress": {
+      "category": "std-codec",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "bytes",
+      "description": "Decompress every gzip member (as gzip -d reads them), through the flate2 crate. An output past maxBytes, corrupt input or a maxBytes that is not a whole number from 0 fails with kind invalid",
+      "module": "gzip",
+      "params": [
+        {
+          "name": "data",
+          "type": "bytes",
+          "description": "The gzip bytes",
+          "rejectsNull": true
+        },
+        {
+          "name": "maxBytes",
+          "type": "number",
+          "description": "The largest output accepted, in bytes; a larger output fails with kind invalid (the decompression-bomb guard)",
+          "rejectsNull": true
+        }
+      ],
+      "examples": [
+        "(gzip/decompress \"H4sIAAAAAAAAA8tIzcnJV8hAkACAiPnlEQAAAA==\" 1024) // => \"aGVsbG8gaGVsbG8gaGVsbG8=\""
       ],
       "docsSource": "generated"
     },
@@ -20288,7 +20380,7 @@
         },
         "open": true
       },
-      "description": "Dispatch one declared external input AS THE CURRENT USER, through the ordinary dispatch: its guards, grants and entity policies apply, never a bypass. The address is `EVENT`, `Trait.EVENT` or `Orbital.Trait.EVENT` (resolved from the calling trait) and must name a declared external input; the arguments are the payload object or its JSON text (absent or empty is `{}`). An optional `{ schema: [field] }` holds the arguments to a stated payload before dispatch. Success carries `{ result, text }`, the outcome the model is answered with: `{ ok: true, emitted: [{ event, payload? }] }`, or `{ ok: false, error }` for a refusal (an undeclared input, arguments that are not a JSON object, `{ error, issues }` when they miss the schema) or a dispatch that did not take effect (a rejection code, a failed guard, a failed effect, no transition). Given one options object `{ inbound: name, body?, headers? }` in place of the address, it instead delivers `body` (text) and `headers` (`{ name: text }`) to the program's inbound handler `name` through the kernel's inbound route, credential check and answer path, as a request to `/api/hooks/<name>` is delivered, and success carries the handler's answer `{ status, body }` (an undeclared name is the kernel's 404 answer, not a failure). The delivery runs inside the asking dispatch, so an answer only a later completion would carry is not waited for: the answer is what the delivering dispatch settled. The options may instead describe an event request, as the HTTP dispatch routes carry it: `orbital` and `event` (required, and the address must be `orbital.targetTrait.event`), `targetTrait` (absent: the orbital's handlers are discovered, or `traits: [{ trait, from, event? }]` run as declared, an empty list being the inert `no-dispatchable-traits` rejection), `entityId` (default `default`), `mount: [{ trait, event }]` (a lifecycle batch), `input: true` (only a declared external input runs, otherwise the `not-an-external-input` rejection), `clientId` (the origin left out of the live broadcast), `locale`, `delivery` and `dispatchLog` (continuing a client-begun dispatch) and `viewer` (the dispatch's `@user`). Such a request is not limited to declared inputs; an empty text, record or mount list counts as absent. `wire: true` answers the whole `EventResponse` instead of the outcome. A failure carries `errors: [{ code, status }]`: `ORBITAL_NOT_FOUND` 404, `LOCALE_NOT_DECLARED` 400, `NO_TRAIT` 400, `INVALID_REQUEST` 400, `EVENT_PROCESSING_ERROR`.",
+      "description": "Dispatch one declared external input AS THE CURRENT USER, through the ordinary dispatch: its guards, grants and entity policies apply, never a bypass. The address is `EVENT`, `Trait.EVENT` or `Orbital.Trait.EVENT` (resolved from the calling trait) and must name a declared external input; the arguments are the payload object or its JSON text (absent or empty is `{}`). An optional `{ schema: [field] }` holds the arguments to a stated payload before dispatch. Success carries `{ result, text }`, the outcome the model is answered with: `{ ok: true, emitted: [{ event, payload? }] }`, or `{ ok: false, error }` for a refusal (an undeclared input, arguments that are not a JSON object, `{ error, issues }` when they miss the schema) or a dispatch that did not take effect (a rejection code, a failed guard, a failed effect, no transition). Given one options object `{ inbound: name, body?, headers? }` in place of the address, it instead delivers `body` (text) and `headers` (`{ name: text }`) to the program's inbound handler `name` through the kernel's inbound route, credential check and answer path, as a request to `/api/hooks/<name>` is delivered, and success carries the handler's answer `{ status, body }` (an undeclared name is the kernel's 404 answer, not a failure). The delivery runs inside the asking dispatch, so an answer only a later completion would carry is not waited for: the answer is what the delivering dispatch settled. The options may instead describe an event request, as the HTTP dispatch routes carry it: `orbital` and `event` (required, and the address must be `orbital.targetTrait.event`), `targetTrait` (absent: the orbital's handlers are discovered, or `traits: [{ trait, from, event? }]` run as declared, an empty list being the inert `no-dispatchable-traits` rejection), `entityId` (default `default`), `mount: [{ trait, event }]` (a lifecycle batch), `input: true` (only a declared external input runs, otherwise the `not-an-external-input` rejection), `clientId` (the origin left out of the live broadcast), `locale`, `delivery` and `dispatchLog` (continuing a client-begun dispatch) and `viewer` (the dispatch's `@user`). Such a request is not limited to declared inputs; an empty text, record or mount list counts as absent. `wire: true` answers the whole `EventResponse` instead of the outcome, and `stream: true` (with `wire`) adds `items: [{ type: event|effect|complete, data, timestamp }]`, the dispatch's emitted events and client effects in execution order followed by the response. A failure carries `errors: [{ code, status }]`: `ORBITAL_NOT_FOUND` 404, `LOCALE_NOT_DECLARED` 400, `NO_TRAIT` 400, `INVALID_REQUEST` 400, `EVENT_PROCESSING_ERROR`.",
       "module": "program",
       "hasSideEffects": true,
       "runsOn": "server",
@@ -20304,13 +20396,32 @@
                 "kind": "object",
                 "fields": {
                   "inbound": "string",
-                  "body": "string",
+                  "body": {
+                    "kind": "union",
+                    "of": [
+                      "string",
+                      {
+                        "kind": "literal",
+                        "value": null
+                      }
+                    ]
+                  },
                   "headers": {
-                    "kind": "map",
-                    "key": "string",
-                    "value": "string"
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "map",
+                        "key": "string",
+                        "value": "string"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": null
+                      }
+                    ]
                   }
-                }
+                },
+                "open": true
               }
             ]
           },
@@ -20337,11 +20448,92 @@
                   },
                   "open": true
                 }
+              },
+              "wire": "boolean",
+              "input": "boolean",
+              "orbital": "string",
+              "targetTrait": "string",
+              "entityId": "string",
+              "event": "string",
+              "traits": {
+                "kind": "union",
+                "of": [
+                  {
+                    "kind": "array",
+                    "of": {
+                      "kind": "object",
+                      "fields": {
+                        "trait": "string",
+                        "from": "string"
+                      },
+                      "open": true
+                    }
+                  },
+                  {
+                    "kind": "literal",
+                    "value": null
+                  }
+                ]
+              },
+              "mount": {
+                "kind": "array",
+                "of": {
+                  "kind": "object",
+                  "fields": {
+                    "trait": "string",
+                    "event": "string"
+                  }
+                }
+              },
+              "clientId": "string",
+              "locale": "string",
+              "delivery": {
+                "kind": "object",
+                "fields": {
+                  "event": "string"
+                },
+                "open": true
+              },
+              "dispatchLog": {
+                "kind": "object",
+                "fields": {
+                  "prevEvents": {
+                    "kind": "array",
+                    "of": {
+                      "kind": "object",
+                      "fields": {
+                        "event": "string"
+                      },
+                      "open": true
+                    }
+                  },
+                  "prevStates": {
+                    "kind": "array",
+                    "of": "string"
+                  }
+                },
+                "open": true
+              },
+              "viewer": {
+                "kind": "union",
+                "of": [
+                  {
+                    "kind": "object",
+                    "fields": {
+                      "id": "string"
+                    },
+                    "open": true
+                  },
+                  {
+                    "kind": "literal",
+                    "value": null
+                  }
+                ]
               }
             },
             "open": true
           },
-          "description": "An optional stated payload (`schema`) the arguments are checked against before dispatch",
+          "description": "An optional stated payload (`schema`) the arguments are checked against before dispatch, and the event-request options (`wire`, `input`, `orbital`, `targetTrait`, `entityId`, `event`, `traits`, `mount`, `clientId`, `locale`, `delivery`, `dispatchLog`, `viewer`)",
           "optional": true
         },
         {
@@ -20633,6 +20825,81 @@
       ],
       "docsSource": "generated"
     },
+    "program/live": {
+      "category": "std-program",
+      "minArity": 0,
+      "maxArity": 2,
+      "returnType": {
+        "kind": "object",
+        "fields": {
+          "event": "string"
+        },
+        "open": true
+      },
+      "description": "Subscribe to the host's live broadcast, the feed `orb serve`'s `/api/events` stream carries (the success emits of `persist` and running calls' messages, EXEC-QUEUE-13). Keyed with an `onMessage` route, each item a connection would receive arrives as that event `{ event, payload?, source, key }`, in order, until `cancel-call` names the key: a peer's row only when `viewer` may read it (an absent or `null` viewer receives every row, as a sign-in-free ticket does), never an item `clientId`'s own request produced. Unkeyed, it is refused. For a server program pushing the feed to its clients; who may subscribe is the program's own gate.",
+      "module": "program",
+      "hasSideEffects": true,
+      "runsOn": "server",
+      "host": "program",
+      "params": [
+        {
+          "name": "subscription",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "viewer": {
+                "kind": "union",
+                "of": [
+                  {
+                    "kind": "object",
+                    "fields": {
+                      "id": "string"
+                    },
+                    "open": true
+                  },
+                  {
+                    "kind": "literal",
+                    "value": null
+                  }
+                ]
+              },
+              "clientId": "string"
+            },
+            "open": true
+          },
+          "description": "Whose feed it is: the `viewer` whose `@read` filters peers' rows, and the `clientId` whose own items are left out",
+          "optional": true
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "onMessage": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "The stream key (required) and its routes: { key, emit: { onMessage, failure } }; cancel-call with the key ends the stream",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(program/live {\"viewer\":\"@payload.viewer\",\"clientId\":\"@payload.clientId\"} {\"key\":\"@payload.streamKey\",\"emit\":{\"onMessage\":\"LIVE_ITEM\",\"failure\":\"LIVE_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
     "program/print": {
       "category": "std-program",
       "minArity": 1,
@@ -20827,7 +21094,7 @@
         "kind": "array",
         "of": "PlayedStep"
       },
-      "description": "Play transitions of a program in one run of the kernel, each from the state it names, and return each request played: the request with its `result` circuit step — whether it fired, the arm that fired, every guard tried, each effect of the fired arm (`routed` when its failure went to its declared `emit.failure`), the events it emitted, and each `@ensures` of the arm judged by the kernel (`held`, `broken` with its counterexample bindings, or `inconclusive` with the reason). It also carries `outcomes`: every trait the dispatch cascade moved, in dispatch order, each `{ orbital, trait, event, from, to, arm, fired, emitted }` (`event` is the event that trait handled, `arm` the arm that fired or null; the first is the requested trait, equal to the top-level fields). A request may seed its trait's entity row (`entity`: fields merged over the row before the event), override its trait's knobs (`config`: values over the declared config defaults, for that trait and that request only) and pin the clock (`now`: the ms-epoch `@now` its dispatch reads); without them the request plays as before. Each result also carries `entityAfter`: the requested trait's entity row after the request. A keyed os/* or http ask a step makes is left pending, reported among the effects and neither run nor failed, so no completion route fires; a later request plays its answer event (an unkeyed one fails, as with no host). With `options.render`, each result also carries `rendered`: the slots its trait filled, walked by the kernel's render probe as typed node facts (pattern, renderer coverage, entity binding, `@trait` references).",
+      "description": "Play transitions of a program in one run of the kernel, each from the state it names, and return each request played: the request with its `result` circuit step — whether it fired, the arm that fired, every guard tried, each effect of the fired arm (`routed` when its failure went to its declared `emit.failure`), the events it emitted, and each `@ensures` of the arm judged by the kernel (`held`, `broken` with its counterexample bindings, or `inconclusive` with the reason). It also carries `outcomes`: every trait the dispatch cascade moved, in dispatch order, each `{ orbital, trait, event, from, to, arm, fired, emitted }` (`event` is the event that trait handled, `arm` the arm that fired or null; the first is the requested trait, equal to the top-level fields). A request may seed its trait's entity row (`entity`: fields merged over the row before the event), override its trait's knobs (`config`: values over the declared config defaults, for that trait and the whole call, since `@config` folds into the program; two requests giving one knob different values are refused), dispatch as a user (`viewer`: a user object, or null for nobody) and pin the clock (`now`: the ms-epoch `@now` its dispatch reads); without them the request plays as before. Each result also carries `entityAfter`: the requested trait's entity row after the request. A keyed os/* or http ask a step makes is left pending, reported among the effects and neither run nor failed, so no completion route fires; a later request plays its answer event (an unkeyed one fails, as with no host). With `options.live: true` the requests run on the native program host instead: their os/* and http asks are answered by this machine, and each request waits for its open calls to end; a request's `settleMs` cancels a call still open after that many milliseconds (live only), and without it the request waits with no cutoff. With `options.render`, each result also carries `rendered`: the slots its trait filled, walked by the kernel's render probe as typed node facts (pattern, renderer coverage, entity binding, `@trait` references).",
       "module": "program",
       "hasSideEffects": true,
       "runsOn": "server",
@@ -20855,7 +21122,7 @@
               "open": true
             }
           },
-          "description": "The transitions to play: `{ orbital, trait, from, event, payload, entity?, config?, now? }` each"
+          "description": "The transitions to play: `{ orbital, trait, from, event, payload, entity?, config?, viewer?, now?, settleMs? }` each"
         },
         {
           "name": "options",
@@ -20864,6 +21131,7 @@
             "fields": {
               "key": "string",
               "render": "boolean",
+              "live": "boolean",
               "emit": {
                 "kind": "object",
                 "fields": {
@@ -20882,7 +21150,7 @@
             },
             "open": true
           },
-          "description": "Emit configuration ({ emit: { success, failure } }); `render: true` adds each result's `rendered` slot facts",
+          "description": "Emit configuration ({ emit: { success, failure } }); `render: true` adds each result's `rendered` slot facts; `live: true` runs the requests on the native host",
           "optional": true
         }
       ],

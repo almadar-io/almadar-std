@@ -1,0 +1,179 @@
+{
+ "atom": "net/atoms/std-live-feed.lolo",
+ "trait": "LiveFeed",
+ "note": "Design contract spec/net/live-feed.lolo. The subscription itself (STREAM_AUTHORIZED's keyed program/live and the items it delivers in order until cancel-call) is pinned on the Rust-shell host: orbital-shell-rust host::runtime::tests::a_keyed_live_subscribe_receives_each_broadcast_in_order_until_cancelled and control_an_unkeyed_live_subscribe_is_refused. The frame's data is the kernel's json/stringify text, whose keys come out sorted.",
+ "cases": [
+  {
+   "id": "a-subscribed-stream-writes-each-item-as-a-bus-frame",
+   "entity": {
+    "open": [
+     7
+    ]
+   },
+   "now": 1700000000000,
+   "steps": [
+    {
+     "from": "serving",
+     "event": "LIVE_ITEM",
+     "payload": {
+      "event": "SAVED",
+      "payload": {
+       "id": "n1"
+      },
+      "source": {
+       "trait": "Saver"
+      },
+      "key": "live-7"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "SSE_SEND",
+        "payload": {
+         "requestId": 7,
+         "data": "{\"event\":\"SAVED\",\"payload\":{\"id\":\"n1\"},\"source\":{\"trait\":\"Saver\"},\"timestamp\":1700000000000,\"type\":\"bus\"}"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-an-item-with-no-payload-is-framed-without-one",
+   "entity": {
+    "open": [
+     7
+    ]
+   },
+   "now": 1700000000000,
+   "steps": [
+    {
+     "from": "serving",
+     "event": "LIVE_ITEM",
+     "payload": {
+      "event": "PINGED",
+      "source": {
+       "trait": "Saver"
+      },
+      "key": "live-7"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "SSE_SEND",
+        "payload": {
+         "requestId": 7,
+         "data": "{\"event\":\"PINGED\",\"source\":{\"trait\":\"Saver\"},\"timestamp\":1700000000000,\"type\":\"bus\"}"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-an-item-for-a-stream-never-subscribed-writes-nothing",
+   "entity": {
+    "open": []
+   },
+   "now": 1700000000000,
+   "steps": [
+    {
+     "from": "serving",
+     "event": "LIVE_ITEM",
+     "payload": {
+      "event": "SAVED",
+      "payload": {
+       "id": "n1"
+      },
+      "source": {
+       "trait": "Saver"
+      },
+      "key": "live-7"
+     },
+     "expect": {
+      "fired": false
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-refused-subscription-closes-its-stream",
+   "entity": {
+    "open": [
+     7
+    ]
+   },
+   "steps": [
+    {
+     "from": "serving",
+     "event": "LIVE_FAILED",
+     "payload": {
+      "error": "program/live streams to its onMessage route: give it a key and an onMessage route",
+      "key": "live-7"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "SSE_CLOSE",
+        "payload": {
+         "requestId": 7
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-closed-subscribed-stream-is-cancelled-and-writes-nothing",
+   "entity": {
+    "open": [
+     7
+    ]
+   },
+   "steps": [
+    {
+     "from": "serving",
+     "event": "SSE_CLOSED",
+     "payload": {
+      "requestId": 7,
+      "reason": "client"
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "SSE_SEND",
+       "SSE_CLOSE"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-close-of-a-stream-never-subscribed-is-left-alone",
+   "entity": {
+    "open": [
+     3
+    ]
+   },
+   "steps": [
+    {
+     "from": "serving",
+     "event": "SSE_CLOSED",
+     "payload": {
+      "requestId": 7,
+      "reason": "client"
+     },
+     "expect": {
+      "fired": false
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -2,7 +2,7 @@ app std-orb-lint-entity-seed-source [
   version: "1.0.0",
   inbound: ["cli-lint-entity-seed-source"],
   fs: { cwd: "**": [read] },
-  description: "std-orb-lint-entity-seed-source — the `orb lint entity-seed-source <file>` command, the port of ORB_E_SEED_SOURCE_CONFLICT (entity.rs validate_browser_storage). It lowers the file with program/read and reports, per orbital entity, a `mock` seed declared together with written-out instances or locale instances, with the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint entity-seed-source: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  description: "std-orb-lint-entity-seed-source — the `orb lint entity-seed-source <file>` command, the port of ORB_E_SEED_SOURCE_CONFLICT (entity.rs validate_browser_storage; primary and auxiliary entities). It lowers the file with program/read and reports, per orbital entity, a `mock` seed declared together with written-out instances or locale instances, with the Rust path, message and suggestion (status 500, exit 1). Orbitals marked `spec` are skipped, as validate_all_entities skips them. Clean answers `lint entity-seed-source: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-entity-seed-source"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -33,11 +33,16 @@ orbital OrbLintEntitySeedSourceOrbital {
       LINT_PROGRAM_READ -> ready
         (set @entity.findings (let ((orbitals (object/get @payload.result "orbitals")))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
-            (let ((ent (object/get (array/nth @orbitals @oi) "entity" {})))
-              (if (validate/object @ent) (let ((rows (object/get @ent "instances" [])) (locRows (object/get @ent "localeInstances" {})))
+            (let ((auxs (object/get (array/nth @orbitals @oi) "auxiliaryEntities" [])))
+             (array/flatten (array/map
+              (array/concat [{ ent: (object/get (array/nth @orbitals @oi) "entity" {}), base: (str/concat "orbitals[" @oi "].entity") }]
+                (array/map (array/range 0 (array/len @auxs)) (fn ai { ent: (array/nth @auxs @ai), base: (str/concat "orbitals[" @oi "].auxiliaryEntities[" @ai "]") })))
+              (fn eb
+            (let ((ent (object/get @eb "ent")))
+              (if (and (validate/object @ent) (not (object/get (array/nth @orbitals @oi) "spec" false))) (let ((rows (object/get @ent "instances" [])) (locRows (object/get @ent "localeInstances" {})))
                 (if (and (object/get @ent "seedMock" false) (or (> (array/len @rows) 0) (> (array/len (object/keys @locRows)) 0)))
-                  [{ code: "ORB_E_SEED_SOURCE_CONFLICT", path: (str/concat "orbitals[" @oi "].entity.instances"), message: (str/concat "Entity '" (object/get @ent "name" "") "' declares both `mock` seeding and written-out `instances` — exactly one seed source"), suggestion: "Keep the written-out rows, or drop them and keep `mock`.", severity: "error" }]
-                  [])) [])))))))
+                  [{ code: "ORB_E_SEED_SOURCE_CONFLICT", path: (str/concat (object/get @eb "base") ".instances"), message: (str/concat "Entity '" (object/get @ent "name" "") "' declares both `mock` seeding and written-out `instances` — exactly one seed source"), suggestion: "Keep the written-out rows, or drop them and keep `mock`.", severity: "error" }]
+                  [])) [])))))))))))
         (emit LINT_FINISH { })
       LINT_FILE_UNREAD -> ready
         (emit LINT_UNREAD { rule: "entity-seed-source" })
