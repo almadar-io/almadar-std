@@ -1,0 +1,162 @@
+app std-orb-shell-check [
+  version: "1.0.0",
+  inbound: ["cli-shell-check"],
+  fs: { cwd: "**": [read] },
+  description: "Check the declared shell layout with `orb shell check [ROOT] [--json]`. The typed config is the canonical layout contract. Every tagged pack declares its role in shell-role.json; no package-name or source-language inference. Role roots may directly contain a pack or immediate named packs. Optional roles remain absent, never empty."
+]
+uses Spec from "almadar-std/orb-shell-check"
+type ShellRole = "core" | "bridge" | "runtime" | "host" | "renderer" | "tooling"
+type ShellRoleRule = { directory : string! role : ShellRole! }
+type ShellRoleDescriptor = { role : string! }
+type ShellLayoutPack = { path : string! role : string! empty : boolean! }
+type ShellLayoutEntry = { name : string! kind : string! }
+type ShellLayoutTask = { path : string! pack : boolean! }
+type OrbCommandArgs = { argv : [string]! cwd : string! }
+type ArgFlag = { name : string! aliases : [string]! takesValue : boolean! repeatable : boolean! }
+
+orbital OrbShellCheckOrbital {
+  uses Args from "std/behaviors/std-args"
+
+  entity ShellCheckRun [runtime] {
+    id : string!
+    root : string = "."
+    json : boolean = false
+    roots : [string] = []
+    tasks : [ShellLayoutTask] = []
+    current : ShellLayoutTask = { path: "", pack: false }
+    entries : [ShellLayoutEntry] = []
+    packs : [ShellLayoutPack] = []
+    errors : [string] = []
+  }
+
+  trait ArgsCli = Args.traits.ArgsParser {
+    listens {
+      OrbShellCheck.SC_ARGS_PARSE -> ARGS_PARSE
+    }
+  }
+
+  trait OrbShellCheck -> ShellCheckRun [integration] {
+    initial: ready
+
+    config {
+      roleRules : [ShellRoleRule] = [
+        { directory: "core", role: "core" },
+        { directory: "bridges", role: "bridge" },
+        { directory: "runtime", role: "runtime" },
+        { directory: "hosts", role: "host" },
+        { directory: "renderers", role: "renderer" },
+        { directory: "tooling", role: "tooling" }
+      ]
+      fixedRoots : [string] = ["src", "templates", "tests"]
+      metadataRoots : [string] = [".github", ".cargo"]
+      ignoredDirectories : [string] = [".git", "node_modules", "target", "dist", ".turbo", ".vite", ".cache", "__pycache__"]
+      containerMetadata : [string] = ["README.md", "LICENSE", ".gitignore"]
+      descriptor : string = "shell-role.json"
+    }
+
+    state ready {
+      INIT -> ready
+      SC_CALLED -> parsing
+        (emit SC_ARGS_PARSE { stage: "shell-check", argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv"), flags: [{ name: "json", aliases: [], takesValue: false, repeatable: false }] })
+      SHELL_LAYOUT_EVALUATE -> ready
+        (set @entity.errors (array/concat
+          (array/map (array/filter @payload.roots (fn dir (not (or (array/includes @config.fixedRoots @dir) (array/includes @config.metadataRoots @dir) (array/includes (array/map @config.roleRules (fn rule (object/get @rule "directory"))) @dir))))) (fn dir (str/concat "unexpected root directory: " @dir)))
+          (array/flatten (array/map @payload.packs (fn item
+            (let ((path (object/get @item "path")) (role (object/get @item "role")) (root (array/first (str/split (object/get @item "path") "/"))))
+              (array/concat
+                (if (object/get @item "empty") [(str/concat "empty layout directory: " @path)] [])
+                (if (> (array/len (str/split @path "/")) 2) [(str/concat "pack exceeds role/name depth: " @path)] [])
+                (if (object/get @item "empty") []
+                  (let ((rules (array/filter @config.roleRules (fn rule (= (object/get @rule "directory") @root)))))
+                    (if (= (array/len @rules) 0)
+                      (if (= @role "") [] [(str/concat "tagged pack has no role root: " @path)])
+                      (if (= @role "") [(str/concat "missing role descriptor: " @path)]
+                        (if (= @role (object/get (array/first @rules) "role")) [] [(str/concat "role " @role " is misplaced at " @path)]))))))))))))
+        (emit SHELL_CHECK_ANSWERED { status: (if (= (array/len @entity.errors) 0) 200 500), body: (if @entity.json (json/stringify { ok: (= (array/len @entity.errors) 0), errors: @entity.errors }) (if (= (array/len @entity.errors) 0) (str/concat "shell layout OK: " @entity.root) (str/join @entity.errors "\n"))), errors: @entity.errors })
+    }
+
+    state parsing {
+      INIT -> parsing
+      SC_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (> (array/len @payload.positionals) 1))
+        (emit SHELL_CHECK_ANSWERED { status: 400, body: "usage: orb shell check [ROOT] [--json]", errors: [] })
+      SC_ARGS_DONE -> listingRoot when (and (= (array/len @payload.errors) 0) (<= (array/len @payload.positionals) 1))
+        (set @entity.root (if (= (array/len @payload.positionals) 0) "." (array/first @payload.positionals)))
+        (set @entity.json (> (array/len (or (object/get @payload.flags "json") [])) 0))
+        (set @entity.packs [])
+        (os/list-dir { anchor: "cwd", path: @entity.root } { key: "root", emit: { success: SC_ROOT_LISTED, failure: SC_IO_FAILED } })
+    }
+
+    state listingRoot {
+      INIT -> listingRoot
+      SC_IO_FAILED -> ready
+        (emit SHELL_CHECK_ANSWERED { status: 500, body: (str/concat "shell layout read failed: " @payload.error), errors: [(str/concat "shell layout read failed: " @payload.error)] })
+      SC_ROOT_LISTED -> scanning
+        (set @entity.roots (array/sort (array/map (array/filter @payload.entries (fn entry (and (= (object/get @entry "kind") "dir") (not (array/includes @config.ignoredDirectories (object/get @entry "name")))))) (fn entry (object/get @entry "name")))))
+        (set @entity.tasks (array/map (array/filter @entity.roots (fn dir (or (array/includes @config.fixedRoots @dir) (array/includes (array/map @config.roleRules (fn rule (object/get @rule "directory"))) @dir)))) (fn dir { path: @dir, pack: false })))
+        (emit SC_NEXT { })
+    }
+
+    state scanning {
+      INIT -> scanning
+      SC_NEXT -> ready when (= (array/len @entity.tasks) 0)
+        (emit SHELL_LAYOUT_EVALUATE { roots: @entity.roots, packs: @entity.packs })
+      SC_NEXT -> listingPack when (> (array/len @entity.tasks) 0)
+        (set @entity.current (array/first @entity.tasks))
+        (set @entity.tasks (array/drop @entity.tasks 1))
+        (os/list-dir { anchor: "cwd", path: (str/concat @entity.root "/" (object/get @entity.current "path")) } { key: "pack", emit: { success: SC_PACK_LISTED, failure: SC_IO_FAILED } })
+    }
+
+    state listingPack {
+      INIT -> listingPack
+      SC_IO_FAILED -> ready
+        (emit SHELL_CHECK_ANSWERED { status: 500, body: (str/concat "shell layout read failed: " @payload.error), errors: [(str/concat "shell layout read failed: " @payload.error)] })
+      SC_PACK_LISTED -> inspecting
+        (set @entity.entries (array/filter @payload.entries (fn entry (not (and (= (object/get @entry "kind") "dir") (array/includes @config.ignoredDirectories (object/get @entry "name")))))))
+        (emit SC_INSPECT { })
+    }
+
+    state inspecting {
+      INIT -> inspecting
+      SC_INSPECT -> readingDescriptor when (array/some @entity.entries (fn entry (= (object/get @entry "name") @config.descriptor)))
+        (os/read-file { anchor: "cwd", path: (str/concat @entity.root "/" (object/get @entity.current "path") "/" @config.descriptor) } { key: "role", emit: { success: SC_ROLE_READ, failure: SC_IO_FAILED } })
+      SC_INSPECT -> scanning when (and (not (array/some @entity.entries (fn entry (= (object/get @entry "name") @config.descriptor)))) (array/includes @config.fixedRoots (object/get @entity.current "path")))
+        (set @entity.packs (array/append @entity.packs { path: (object/get @entity.current "path"), role: "", empty: (= (array/len @entity.entries) 0) }))
+        (emit SC_NEXT { })
+      SC_INSPECT -> scanning when (and (not (array/some @entity.entries (fn entry (= (object/get @entry "name") @config.descriptor)))) (not (array/includes @config.fixedRoots (object/get @entity.current "path"))) (not (object/get @entity.current "pack")) (array/some @entity.entries (fn entry (= (object/get @entry "kind") "dir"))) (not (array/some @entity.entries (fn entry (and (!= (object/get @entry "kind") "dir") (not (array/includes @config.containerMetadata (object/get @entry "name"))))))))
+        (set @entity.tasks (array/concat (array/map (array/filter @entity.entries (fn entry (= (object/get @entry "kind") "dir"))) (fn entry { path: (str/concat (object/get @entity.current "path") "/" (object/get @entry "name")), pack: true })) @entity.tasks))
+        (emit SC_NEXT { })
+      SC_INSPECT -> scanning when (and (not (array/some @entity.entries (fn entry (= (object/get @entry "name") @config.descriptor)))) (not (array/includes @config.fixedRoots (object/get @entity.current "path"))) (or (object/get @entity.current "pack") (not (array/some @entity.entries (fn entry (= (object/get @entry "kind") "dir")))) (array/some @entity.entries (fn entry (and (!= (object/get @entry "kind") "dir") (not (array/includes @config.containerMetadata (object/get @entry "name"))))))))
+        (set @entity.packs (array/append @entity.packs { path: (object/get @entity.current "path"), role: "", empty: (= (array/len @entity.entries) 0) }))
+        (emit SC_NEXT { })
+    }
+
+    state readingDescriptor {
+      INIT -> readingDescriptor
+      SC_IO_FAILED -> ready
+        (emit SHELL_CHECK_ANSWERED { status: 500, body: (str/concat "shell layout read failed: " @payload.error), errors: [(str/concat "shell layout read failed: " @payload.error)] })
+      SC_ROLE_READ -> scanning
+        (set @entity.packs (array/append @entity.packs { path: (object/get @entity.current "path"), role: (str/default (object/get (json/parse (bytes/to-string @payload.data) ShellRoleDescriptor) "role") ""), empty: (= (array/len (array/filter @entity.entries (fn entry (!= (object/get @entry "name") @config.descriptor)))) 0) }))
+        (emit SC_NEXT { })
+    }
+
+    emits {
+      SHELL_CHECK_ANSWERED -> internal { status : number! body : string! errors : [string]! }
+      SHELL_LAYOUT_EVALUATE { roots : [string]! packs : [ShellLayoutPack]! }
+      SC_ARGS_PARSE { stage : string! argv : [string]! flags : [ArgFlag]! }
+      SC_NEXT { }
+      SC_INSPECT { }
+      SC_ROOT_LISTED { entries : [ShellLayoutEntry]! }
+      SC_PACK_LISTED { entries : [ShellLayoutEntry]! }
+      SC_ROLE_READ { data : bytes! }
+      SC_IO_FAILED { error : string! }
+    }
+
+    listens {
+      SC_CALLED -> inbound "cli-shell-check" answers SHELL_CHECK_ANSWERED { headers : Map string string rawBody : string }
+      SC_ARGS_DONE { stage : string! flags : Map string [string]! positionals : [string]! errors : [string]! words : [string]! }
+      ArgsCli.ARGS_PARSED -> SC_ARGS_DONE
+    }
+  }
+
+  page "/orb-shell-check" -> OrbShellCheck, ArgsCli
+}

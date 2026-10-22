@@ -1,0 +1,566 @@
+{
+  "atom": "cli/atoms/std-orb-shell-check.lolo",
+  "trait": "OrbShellCheck",
+  "cases": [
+    {
+      "id": "optional role roots absent; fixed source folder valid",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "SHELL_LAYOUT_EVALUATE",
+          "payload": {
+            "roots": [
+              "src"
+            ],
+            "packs": [
+              {
+                "path": "src",
+                "role": "",
+                "empty": false
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SHELL_CHECK_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "errors": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "renderer tag under renderers passes",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "SHELL_LAYOUT_EVALUATE",
+          "payload": {
+            "roots": [
+              "renderers"
+            ],
+            "packs": [
+              {
+                "path": "renderers/web",
+                "role": "renderer",
+                "empty": false
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SHELL_CHECK_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "errors": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "direct runtime and named bridge packs pass",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "SHELL_LAYOUT_EVALUATE",
+          "payload": {
+            "roots": [
+              "runtime",
+              "bridges"
+            ],
+            "packs": [
+              {
+                "path": "runtime",
+                "role": "runtime",
+                "empty": false
+              },
+              {
+                "path": "bridges/node",
+                "role": "bridge",
+                "empty": false
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SHELL_CHECK_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "errors": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "native bridge beneath renderers is refused",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "SHELL_LAYOUT_EVALUATE",
+          "payload": {
+            "roots": [
+              "renderers"
+            ],
+            "packs": [
+              {
+                "path": "renderers/node",
+                "role": "bridge",
+                "empty": false
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SHELL_CHECK_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "errors": [
+                    "role bridge is misplaced at renderers/node"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "nonrenderer host beneath renderers is refused",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "SHELL_LAYOUT_EVALUATE",
+          "payload": {
+            "roots": [
+              "renderers"
+            ],
+            "packs": [
+              {
+                "path": "renderers/node",
+                "role": "host",
+                "empty": false
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SHELL_CHECK_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "errors": [
+                    "role host is misplaced at renderers/node"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "role root with no content is refused",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "SHELL_LAYOUT_EVALUATE",
+          "payload": {
+            "roots": [
+              "runtime"
+            ],
+            "packs": [
+              {
+                "path": "runtime",
+                "role": "runtime",
+                "empty": true
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SHELL_CHECK_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "errors": [
+                    "empty layout directory: runtime"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "missing pack descriptor is refused",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "SHELL_LAYOUT_EVALUATE",
+          "payload": {
+            "roots": [
+              "bridges"
+            ],
+            "packs": [
+              {
+                "path": "bridges/node",
+                "role": "",
+                "empty": false
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SHELL_CHECK_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "errors": [
+                    "missing role descriptor: bridges/node"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "unknown top-level source folder is refused",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "SHELL_LAYOUT_EVALUATE",
+          "payload": {
+            "roots": [
+              "src",
+              "python"
+            ],
+            "packs": [
+              {
+                "path": "src",
+                "role": "",
+                "empty": false
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SHELL_CHECK_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "errors": [
+                    "unexpected root directory: python"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "tagged bridge in fixed codegen root is refused",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "SHELL_LAYOUT_EVALUATE",
+          "payload": {
+            "roots": [
+              "src"
+            ],
+            "packs": [
+              {
+                "path": "src",
+                "role": "bridge",
+                "empty": false
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SHELL_CHECK_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "errors": [
+                    "tagged pack has no role root: src"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "arbitrary third-level pack nesting is refused",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "SHELL_LAYOUT_EVALUATE",
+          "payload": {
+            "roots": [
+              "hosts"
+            ],
+            "packs": [
+              {
+                "path": "hosts/desktop/linux",
+                "role": "host",
+                "empty": false
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SHELL_CHECK_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "errors": [
+                    "pack exceeds role/name depth: hosts/desktop/linux"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "metadata roots are explicitly allowed",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "SHELL_LAYOUT_EVALUATE",
+          "payload": {
+            "roots": [
+              "src",
+              ".cargo",
+              ".github"
+            ],
+            "packs": [
+              {
+                "path": "src",
+                "role": "",
+                "empty": false
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SHELL_CHECK_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "errors": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "filesystem event walk reads explicit renderer tag",
+      "steps": [
+        {
+          "from": "listingRoot",
+          "event": "SC_ROOT_LISTED",
+          "payload": {
+            "entries": [
+              {
+                "name": "renderers",
+                "kind": "dir"
+              }
+            ]
+          },
+          "expect": {
+            "state": "scanning"
+          }
+        },
+        {
+          "from": "listingPack",
+          "event": "SC_PACK_LISTED",
+          "payload": {
+            "entries": [
+              {
+                "name": "web",
+                "kind": "dir"
+              }
+            ]
+          },
+          "expect": {
+            "state": "inspecting"
+          }
+        },
+        {
+          "from": "listingPack",
+          "event": "SC_PACK_LISTED",
+          "payload": {
+            "entries": [
+              {
+                "name": "shell-role.json",
+                "kind": "file"
+              },
+              {
+                "name": "src",
+                "kind": "dir"
+              }
+            ]
+          },
+          "expect": {
+            "state": "inspecting"
+          }
+        },
+        {
+          "from": "readingDescriptor",
+          "event": "SC_ROLE_READ",
+          "payload": {
+            "data": "eyJyb2xlIjogInJlbmRlcmVyIn0="
+          },
+          "expect": {
+            "state": "scanning",
+            "emits": [
+              {
+                "event": "SHELL_CHECK_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "errors": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "filesystem event walk reads explicit bridge tag",
+      "steps": [
+        {
+          "from": "listingRoot",
+          "event": "SC_ROOT_LISTED",
+          "payload": {
+            "entries": [
+              {
+                "name": "renderers",
+                "kind": "dir"
+              }
+            ]
+          },
+          "expect": {
+            "state": "scanning"
+          }
+        },
+        {
+          "from": "listingPack",
+          "event": "SC_PACK_LISTED",
+          "payload": {
+            "entries": [
+              {
+                "name": "web",
+                "kind": "dir"
+              }
+            ]
+          },
+          "expect": {
+            "state": "inspecting"
+          }
+        },
+        {
+          "from": "listingPack",
+          "event": "SC_PACK_LISTED",
+          "payload": {
+            "entries": [
+              {
+                "name": "shell-role.json",
+                "kind": "file"
+              },
+              {
+                "name": "src",
+                "kind": "dir"
+              }
+            ]
+          },
+          "expect": {
+            "state": "inspecting"
+          }
+        },
+        {
+          "from": "readingDescriptor",
+          "event": "SC_ROLE_READ",
+          "payload": {
+            "data": "eyJyb2xlIjogImJyaWRnZSJ9"
+          },
+          "expect": {
+            "state": "scanning",
+            "emits": [
+              {
+                "event": "SHELL_CHECK_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "errors": [
+                    "role bridge is misplaced at renderers/web"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "directory read failure is not a green empty check",
+      "steps": [
+        {
+          "from": "listingRoot",
+          "event": "SC_IO_FAILED",
+          "payload": {
+            "error": "permission denied"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SHELL_CHECK_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "errors": [
+                    "shell layout read failed: permission denied"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+app orb-shell-check-spec [
+  version: "1.0.0",
+  description: "The native `orb shell check [ROOT] [--json]` gate. Optional role roots may be direct tagged packs or containers of immediate tagged packs. A shell-role.json declares one role; the canonical role-to-root table belongs to the command's typed config. Unknown top-level directories, empty role roots/packs, missing descriptors, and tags in the wrong root fail. src/templates/tests are fixed source/scaffold/test roots, never inferred renderer packs. Metadata/cache roots are explicit config data. Directory or descriptor read failures fail the command. Status 200 means structurally valid, 500 findings or I/O failure, 400 usage. No source code or package names are inspected to infer roles."
+]
+
+orbital OrbShellCheckSpec {
+  expects trait OrbShellCheck {
+    state ready
+    emits {
+      SHELL_CHECK_ANSWERED { status : number! body : string! errors : [string]! }
+    }
+  }
+  expects page "/orb-shell-check" -> OrbShellCheck
+}
