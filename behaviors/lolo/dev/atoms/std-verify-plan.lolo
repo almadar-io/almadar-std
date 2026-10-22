@@ -58,6 +58,10 @@ orbital VerifyPlanOrbital {
     rowRefs : [PlanRowRef] = []
     rowJobs : [PlanRowJob] = []
     createdOnly : [[string]] = []
+    viewer : Map string PlanMockValue?
+    owners : Map string [string] = {}
+    seedIds : Map string string = {}
+    newIds : Map string string = {}
   }
 
   uses Seed from "std/behaviors/std-mock-seed"
@@ -79,11 +83,17 @@ orbital VerifyPlanOrbital {
       INIT -> ready
       PLAN_REQUEST -> ready
         (set @entity.program (json/stringify @payload.program))
+        (set @entity.viewer (object/get @payload "viewer" null))
+        (set @entity.owners (object/get @payload "owners" {}))
+        (let ((names (array/unique (array/map (array/reduce (object/get (json/parse @entity.program PlanSeedProgram) "orbitals" []) (json/parse "[]" PlanSeedEntities) (fn (acc o) (array/concat (array/concat @acc [(object/get @o "entity")]) (object/get @o "auxiliaryEntities" [])))) (fn e (object/get @e "name" ""))))))
+          (do
+            (set @entity.seedIds (object/fromEntries (array/map @names (fn name [@name, (if (and (object/has @entity.viewer "id") (array/includes (object/get @entity.owners (str/lower @name) []) "id")) (object/get @entity.viewer "id") (str/concat @name "-verify-seed-1"))]))))
+            (set @entity.newIds (object/fromEntries (array/map @names (fn name [@name, (if (and (object/has @entity.viewer "id") (array/includes (object/get @entity.owners (str/lower @name) []) "id")) (object/get @entity.viewer "id") (str/concat @name "-verify-new-1"))]))))))
         (let ((progTraits (array/flatten (array/map (object/get (json/parse (json/stringify @payload.program) PlanProgram) "orbitals") (fn o (array/map (object/get @o "traits" []) (fn t (object/set @t "orbital" (object/get @o "name")))))))))
           (do (set @entity.steps (array/map @payload.rows (fn r
             (let ((tr (array/find @progTraits (fn t (and (= (object/get @t "name") (object/get @r "trait")) (= (object/get @t "orbital") (object/get @r "orbital")))))))
               (let ((ent (object/get @tr "linkedEntity" "")))
-                (let ((seed (if (= @ent "") "" (str/concat @ent "-verify-seed-1")))
+                (let ((seed (if (= @ent "") "" (object/get @entity.seedIds @ent (str/concat @ent "-verify-seed-1"))))
                       (keys (array/map (array/filter (array/map (array/filter (array/reduce (array/filter (object/get (object/get @tr "stateMachine") "transitions" []) (fn a (= (object/get @a "event") (object/get @r "event")))) [] (fn (acc a) (array/concat @acc (array/reduce (object/get @a "effects" []) [] (fn (acc2 e) (array/concat @acc2 (json/nodes @e))))))) (fn n (str/startsWith (json/stringify @n) "["))) (fn n (json/parse (json/stringify @n) PlanForm)))
                                          (fn f (and (> (array/len @f) 2) (= (json/stringify (array/take @f 2)) (json/stringify (quote ["set", "@entity.id"]))) (str/startsWith (json/stringify (array/nth @f 2)) (str/concat "\"" (quote "@payload."))))))
                                        (fn f (str/slice (object/get (json/parse (str/concat "{\"v\":" (json/stringify (array/nth @f 2)) "}") PlanText) "v") 9)))))
@@ -170,17 +180,17 @@ orbital VerifyPlanOrbital {
                   (array/filter (array/unique (array/map @named (fn n (object/get @n "entity")))) (fn e (array/every (array/filter @named (fn n (= (object/get @n "entity") @e))) (fn n (= (object/get @n "op") "create"))))))))))))
         (set @entity.rowRefs (array/reduce (array/range (array/len @payload.rows)) (json/parse "[]" PlanRowRefs) (fn (acc i)
           (let ((r (array/nth @payload.rows @i)) (st (array/nth @entity.steps @i)))
-            (let ((seed (str/concat (object/get @st "linkedEntity" "") "-verify-seed-1")))
+            (let ((seed (object/get @entity.seedIds (object/get @st "linkedEntity" "") (str/concat (object/get @st "linkedEntity" "") "-verify-seed-1"))))
               (array/concat @acc (array/map (array/filter (object/get @r "payload")
                   (fn sl (and (!= (object/get @st "linkedEntity" "") "") (not (object/has @sl "values")) (or (object/has @sl "entity") (= (object/get @sl "type") (quote "@entity")) (= (object/get @sl "type") "[@entity]"))
                     (or (= (json/stringify (object/get (object/get @st "payload") (object/get @sl "name"))) (json/stringify { id: @seed })) (= (json/stringify (object/get (object/get @st "payload") (object/get @sl "name"))) (json/stringify [{ id: @seed }]))))))
-                (fn sl { idx: @i, key: (object/get @sl "name"), entity: (object/get @sl "entity" (object/get @st "linkedEntity" "")), array: (str/startsWith (object/get @sl "type") "["), seed: (if (array/includes (array/nth @entity.createdOnly @i) (object/get @st "linkedEntity" "")) (str/concat (object/get @st "linkedEntity" "") "-verify-new-1") @seed) }))))))))
+                (fn sl { idx: @i, key: (object/get @sl "name"), entity: (object/get @sl "entity" (object/get @st "linkedEntity" "")), array: (str/startsWith (object/get @sl "type") "["), seed: (let ((name (object/get @sl "entity" (object/get @st "linkedEntity" "")))) (if (array/includes (array/nth @entity.createdOnly @i) @name) (object/get @entity.newIds @name (str/concat @name "-verify-new-1")) (object/get @entity.seedIds @name (str/concat @name "-verify-seed-1")))) }))))))))
         (set @entity.steps (array/map (array/range (array/len @entity.steps)) (fn i
           (let ((st (array/nth @entity.steps @i)) (only (array/nth @entity.createdOnly @i)))
             (if (= (array/len @only) 0) @st
               (object/set @st "payload" (array/reduce (object/keys (object/get @st "payload")) (object/get @st "payload") (fn (acc k)
-                (let ((hit (array/find @only (fn e (= (json/stringify (object/get @acc @k)) (json/stringify (str/concat @e "-verify-seed-1")))))))
-                  (if (= (str/default @hit "") "") @acc (object/set @acc @k (str/concat @hit "-verify-new-1"))))))))))))
+                (let ((hit (array/find @only (fn e (= (json/stringify (object/get @acc @k)) (json/stringify (object/get @entity.seedIds @e (str/concat @e "-verify-seed-1"))))))))
+                  (if (= (str/default @hit "") "") @acc (object/set @acc @k (object/get @entity.newIds @hit (str/concat @hit "-verify-new-1")))))))))))))
         (set @entity.rowJobs (let ((ents (array/reduce (object/get (json/parse (json/stringify @payload.program) PlanSeedProgram) "orbitals" []) (json/parse "[]" PlanSeedEntities) (fn (acc o) (array/concat (array/concat @acc [(object/get @o "entity")]) (object/get @o "auxiliaryEntities" []))))))
           (array/reduce (array/unique (array/map @entity.rowRefs (fn rf (object/get @rf "entity")))) (json/parse "[]" PlanRowJobs) (fn (acc name)
             (let ((def (array/find @ents (fn e (= (object/get @e "name" "") @name)))))
@@ -199,7 +209,7 @@ orbital VerifyPlanOrbital {
           (do
             (set @entity.steps (array/map (array/range (array/len @entity.steps)) (fn i
               (array/reduce (array/filter @entity.rowRefs (fn rf (and (= (object/get @rf "idx") @i) (= (object/get @rf "entity") @job)))) (array/nth @entity.steps @i) (fn (st rf)
-                (let ((full (object/set @row "id" (object/get @rf "seed"))))
+                (let ((full (array/reduce (if (object/has @entity.viewer "id") (object/get @entity.owners (str/lower @job) []) []) (object/set @row "id" (object/get @rf "seed")) (fn (acc field) (object/set @acc @field (object/get @entity.viewer "id"))))))
                   (object/set @st "payload" (object/set (object/get @st "payload") (object/get @rf "key") (json/parse (if (object/get @rf "array") (json/stringify [@full]) (json/stringify @full)) PlanMockValue)))))))))
             (set @entity.rowJobs (array/drop @entity.rowJobs 1))
             (emit PLAN_COMPUTED { count: (array/len @entity.steps) })))
@@ -219,8 +229,8 @@ orbital VerifyPlanOrbital {
                             (initSet (and @hasInit (array/some (array/map (array/filter (array/reduce (object/get (array/nth @inits 0) "effects" []) [] (fn (acc2 e) (array/concat @acc2 (json/nodes @e)))) (fn n (str/startsWith (json/stringify @n) "["))) (fn n (json/parse (json/stringify @n) PlanForm))) (fn f (array/some @fields (fn fld (= (json/stringify (array/take @f 2)) (json/stringify ["set", (str/concat (quote "@entity.") @fld)])))))))))
                         (let ((baseNE (or @initSet (array/some @fields (fn fld (array/some @entFields (fn e (and (= (object/get @e "name") @fld) (object/has @e "default")))))))))
                           (array/concat @acc (array/concat
-                            (if @hasInit [{ orbital: (object/get @r "orbital"), trait: (object/get @r "trait"), from: (if (= @initFrom "*") (object/get @r "from") @initFrom), event: "INIT", payload: {}, idx: (- 0 1), baseNE: false }] [])
-                            [{ orbital: (object/get @r "orbital"), trait: (object/get @r "trait"), from: (object/get @r "from"), event: (object/get @r "event"), payload: (object/get (array/nth @entity.steps (object/get @p "idx")) "payload"), idx: (object/get @p "idx"), baseNE: @baseNE }]))))))))))) { key: "steps" emit: { success: PLAN_STEPPED, failure: PLAN_FAILED } }))
+                            (if @hasInit [{ orbital: (object/get @r "orbital"), trait: (object/get @r "trait"), from: (if (= @initFrom "*") (object/get @r "from") @initFrom), event: "INIT", viewer: @entity.viewer, payload: {}, idx: (- 0 1), baseNE: false }] [])
+                            [{ orbital: (object/get @r "orbital"), trait: (object/get @r "trait"), from: (object/get @r "from"), event: (object/get @r "event"), viewer: @entity.viewer, payload: (object/get (array/nth @entity.steps (object/get @p "idx")) "payload"), idx: (object/get @p "idx"), baseNE: @baseNE }]))))))))))) { key: "steps" emit: { success: PLAN_STEPPED, failure: PLAN_FAILED } }))
       PLAN_STEPPED -> ready
         (set @entity.steps (array/reduce @entity.steps [] (fn (acc s)
           (let ((hit (array/filter @payload.result (fn q (= (object/get @q "idx") (array/len @acc))))))
@@ -255,7 +265,7 @@ orbital VerifyPlanOrbital {
       ROWS_DONE { rows : [Map string PlanMockValue?]! }
         @description "Internal: the composed mock seed answered the sample row."
         @tier "internal"
-      PLAN_REQUEST -> external { program : SExpr!, rows : [PlanRow]! }
+      PLAN_REQUEST -> external { program : SExpr!, rows : [PlanRow]!, viewer : Map string PlanMockValue?, owners : Map string [string] }
         @description "Plan a payload for each machine row of a resolved program."
         @synonyms "verify plan, plan transitions, synthesize payloads, seed row id"
     }

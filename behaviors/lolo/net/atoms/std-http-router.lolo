@@ -1,11 +1,13 @@
 app std-http-router [
   version: "1.0.0",
   env: ["VAPID_PUBLIC_KEY", "ORB_TICK_INVOKER"],
-  description: "std-http-router — the request pipeline of an HTTP server program, between std-http1 and the policy and rate-limiter atoms. REQUEST_RECEIVED { requestId, method, path, query, headers, body, peer } starts one request; requests are told apart by requestId so any number are in flight at once. The router asks HTTP_DECIDE of std-http-policy and hears HTTP_DECIDED: a preflight is answered at once with the policy status and headers and an empty body, payload-too-large is answered 413 { error, code } as application/json, and an ok request whose path starts with apiPrefix is counted first (RATE_REQUEST, answered ADMITTED or THROTTLED by std-rate-limiter) while any other goes straight to routing. A throttled request is answered 429 as text/plain with the plain body Too many requests, please try again later. and ratelimit-* headers built from the verdict; an admitted one carries the same headers onto its answer. Routing is by method and path: GET healthPath answers 200 { status, version } as application/json, GET vapidPath answers 200 { publicKey } from env VAPID_PUBLIC_KEY or 404 { error } when unset; POST tickPath answers 404 when ORB_TICK_INVOKER is unset, otherwise verifies the bearer (email equals the invoker and email_verified true, else 401), answers 501 { error, code NOT_IMPLEMENTED } (no host runs the scheduler pass yet, G-ORB-441) for the authorized invoker; every other request answers 404 { error, code }. Every answer is RESPOND { requestId, status, headers, body } for std-http1 to write and REQUEST_ANSWERED for the program; the request then leaves the pending list. Bound to spec/net/http-router.lolo; the other routes, the bearer guard, hooks, SSE and static files are not in this slice."
+  description: "std-http-router — the request pipeline of an HTTP server program, between std-http1 and the policy and rate-limiter atoms. REQUEST_RECEIVED { requestId, method, path, query, headers, body, peer } starts one request; requests are told apart by requestId so any number are in flight at once. The router asks HTTP_DECIDE of std-http-policy and hears HTTP_DECIDED: a preflight is answered at once with the policy status and headers and an empty body, payload-too-large is answered 413 { error, code } as application/json, and an ok request whose path starts with apiPrefix is counted first (RATE_REQUEST, answered ADMITTED or THROTTLED by std-rate-limiter) while any other goes straight to routing. A throttled request is answered 429 as text/plain with the plain body Too many requests, please try again later. and ratelimit-* headers built from the verdict; an admitted one carries the same headers onto its answer. Routing is by method and path: GET healthPath answers 200 { status, version } as application/json, GET vapidPath answers 200 { publicKey } from env VAPID_PUBLIC_KEY or 404 { error } when unset; POST tickPath answers 404 when ORB_TICK_INVOKER is unset, otherwise verifies the bearer (email equals the invoker and email_verified true, else 401), runs program/tick for the authorized invoker and answers 200 { ran } or 500 { error, code TICK_ERROR }; every other request answers 404 { error, code }. Every answer is RESPOND { requestId, status, headers, body } for std-http1 to write and REQUEST_ANSWERED for the program; the request then leaves the pending list. Bound to spec/net/http-router.lolo; the other routes, the bearer guard, hooks, SSE and static files are not in this slice."
 ]
 uses Spec from "almadar-std/http-router"
 type RouterHeader = { name : string!, value : string! }
 type RouterPending = { requestId : number!, method : string!, path : string!, query : string!, authorization : string!, ip : string!, responseHeaders : [RouterHeader]! }
+type RouterTick = { trait : string!, tick : string! }
+type RouterTickAnswer = { ran : [RouterTick]! }
 type RouterStream = { requestId : number!, ticket : string! }
 orbital HttpRouterOrbital {
   entity RouteRequest [runtime] {
@@ -59,7 +61,7 @@ orbital HttpRouterOrbital {
         @tier "infra"
       tickPath : string = "/api/tick"
         @label "Tick path"
-        @description "The path a POST runs one tick pass on: 404 when ORB_TICK_INVOKER is unset, 401 unless the bearer is that verified invoker (email equal, email_verified true), then 501 until a host runs the scheduler pass."
+        @description "The path a POST runs one tick pass on: 404 when ORB_TICK_INVOKER is unset, 401 unless the bearer is that verified invoker (email equal, email_verified true), then runs the host scheduler pass and answers 200 { ran }."
         @tier "infra"
       clientFallback : boolean = false
         @label "Client fallback"
@@ -228,14 +230,27 @@ orbital HttpRouterOrbital {
         (emit REQUEST_ANSWERED { requestId: @payload.requestId, status: 404, headers: (array/append (array/concat (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") @payload.rateHeaders) { name: "content-type", value: "application/json" }), body: (json/stringify { error: "no tick invoker is configured (ORB_TICK_INVOKER)", code: "NOT_FOUND" }) })
         (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
       ROUTE_REQUEST -> routing when (let ((req (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (and (= (str/upper (object/get @req "method")) "POST") (= (object/get @req "path") @config.tickPath) (!= @entity.tickInvoker "")))
+        (set @entity.pending (array/map @entity.pending (fn p (if (= @p.requestId @payload.requestId) (object/merge @p { responseHeaders: (array/concat @p.responseHeaders @payload.rateHeaders) }) @p))))
         (set @entity.ticks (array/append @entity.ticks @payload.requestId))
         (emit BEARER_VERIFY { requestId: @payload.requestId, authorization: (or (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "authorization") "") })
       BEARER_VERIFIED -> routing when (and (array/includes @entity.ticks (or @payload.requestId 0)) (= (or (object/get @payload.viewer "email") "") @entity.tickInvoker) (= (object/get (or (array/find (or @payload.viewer.claims []) (fn c (= @c.name "email_verified"))) { value: false }) "value") true))
-        (set @entity.status 501)
-        (emit RESPOND { requestId: @payload.requestId, status: 501, headers: (array/append (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: "tick pass unavailable: no host runs the scheduler pass yet", code: "NOT_IMPLEMENTED" })) })
-        (emit REQUEST_ANSWERED { requestId: @payload.requestId, status: 501, headers: (array/append (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") { name: "content-type", value: "application/json" }), body: (json/stringify { error: "tick pass unavailable: no host runs the scheduler pass yet", code: "NOT_IMPLEMENTED" }) })
-        (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
-        (set @entity.ticks (array/filter @entity.ticks (fn m (!= @m @payload.requestId))))
+        (program/tick { key: (str/concat "tick-" @payload.requestId), emit: { success: TICK_ANSWERED, failure: TICK_FAILED } })
+      TICK_ANSWERED -> routing when (array/some @entity.ticks (fn id (= (str/concat "tick-" @id) @payload.key)))
+        (let ((id (array/find @entity.ticks (fn id (= (str/concat "tick-" @id) @payload.key)))))
+          (do
+            (set @entity.status 200)
+            (emit RESPOND { requestId: @id, status: 200, headers: (array/append (object/get (array/find @entity.pending (fn p (= @p.requestId @id))) "responseHeaders") { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify @payload.result)) })
+            (emit REQUEST_ANSWERED { requestId: @id, status: 200, headers: (array/append (object/get (array/find @entity.pending (fn p (= @p.requestId @id))) "responseHeaders") { name: "content-type", value: "application/json" }), body: (json/stringify @payload.result) })
+            (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @id))))
+            (set @entity.ticks (array/filter @entity.ticks (fn t (!= @t @id))))))
+      TICK_FAILED -> routing when (array/some @entity.ticks (fn id (= (str/concat "tick-" @id) @payload.key)))
+        (let ((id (array/find @entity.ticks (fn id (= (str/concat "tick-" @id) @payload.key)))))
+          (do
+            (set @entity.status 500)
+            (emit RESPOND { requestId: @id, status: 500, headers: (array/append (object/get (array/find @entity.pending (fn p (= @p.requestId @id))) "responseHeaders") { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: @payload.error, code: "TICK_ERROR" })) })
+            (emit REQUEST_ANSWERED { requestId: @id, status: 500, headers: (array/append (object/get (array/find @entity.pending (fn p (= @p.requestId @id))) "responseHeaders") { name: "content-type", value: "application/json" }), body: (json/stringify { error: @payload.error, code: "TICK_ERROR" }) })
+            (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @id))))
+            (set @entity.ticks (array/filter @entity.ticks (fn t (!= @t @id))))))
       BEARER_VERIFIED -> routing when (and (array/includes @entity.ticks (or @payload.requestId 0)) (not (and (= (or (object/get @payload.viewer "email") "") @entity.tickInvoker) (= (object/get (or (array/find (or @payload.viewer.claims []) (fn c (= @c.name "email_verified"))) { value: false }) "value") true))))
         (set @entity.status 401)
         (emit RESPOND { requestId: @payload.requestId, status: 401, headers: (array/append (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: "Unauthorized", code: "UNAUTHORIZED" })) })
@@ -266,6 +281,14 @@ orbital HttpRouterOrbital {
     }
 
     emits {
+      TICK_ANSWERED -> internal {
+        key : string!
+        result : RouterTickAnswer!
+      }
+      TICK_FAILED -> internal {
+        key : string!
+        error : string!
+      }
       RESPOND -> external {
         requestId : number!
         status : number!

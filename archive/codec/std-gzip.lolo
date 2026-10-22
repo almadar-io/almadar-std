@@ -1,0 +1,679 @@
+app std-gzip [
+  version: "1.3.0",
+  description: "std-gzip — pack and unpack gzip. GZIP { data } answers GZIP_ANSWERED { data, size, crc }: a greedy LZ77 match finder over a hash chain (3-byte key, 32 KB window, matches 3 to 258, the chain knob bounds the walk), one fixed-Huffman DEFLATE block (RFC 1951 3.2.6) and the RFC 1952 header and CRC32/ISIZE trailer; every member round-trips through GUNZIP and gzip -d. Unpack gzip (RFC 1952) over bytes/*, array/*, object literals and math/*. GUNZIP { data } answers GUNZIP_ANSWERED { data, size, crc } when every member parses and checks, and GZIP_REFUSED { reason } otherwise: magic, method, flags (a reserved FLG bit, 0xE0), header-crc (FHCRC mismatch), truncated, block, crc, size, trailing (bytes after a member that do not start another). Members are concatenated; FEXTRA, FNAME, FCOMMENT are skipped and FHCRC is verified. DEFLATE (RFC 1951): stored, fixed and dynamic blocks, any number. Header stages, the block loop and the CRC32 subroutine are events (GZ_*) over one entity; a symbol run is one array/reduce over a bounded range (a symbol takes at least one bit) whose accumulator is the GzDecoder record. Huffman decoding is the canonical count/first/index walk. CRC32 is table driven with the XOR written as a 32-step bit sum, since the language has no XOR operator."
+]
+uses Spec from "almadar-std/gzip"
+
+orbital GzipOrbital {
+  type GzDecoder = {
+    pos : number!
+    out : [number]!
+    done : boolean!
+    err : string!
+  }
+
+  entity GzipRun [runtime] {
+    id : string!
+    data : bytes = ""
+    verdict : string = ""
+    stage : number = 0
+    nbits : number = 0
+    bs : [number] = []
+    bits : [number] = []
+    mstart : number = 0
+    mout : number = 0
+    flg : number = 0
+    hp : number = 0
+    pos : number = 0
+    final : number = 0
+    btype : number = 0
+    hlit : number = 0
+    hdist : number = 0
+    hclen : number = 0
+    total : number = 0
+    lens : [number] = []
+    litCnt : [number] = []
+    litSym : [number] = []
+    distCnt : [number] = []
+    distSym : [number] = []
+    clCnt : [number] = []
+    clSym : [number] = []
+    out : [number] = []
+    dec : GzDecoder
+    crcIn : [number] = []
+    crcVal : number = 0
+    crcFor : string = ""
+    size : number = 0
+    crc : number = 0
+  }
+
+  trait Gunzip -> GzipRun [integration, instance] {
+    initial: idle
+
+    config {
+      lengthBase : [number] = [3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31, 35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258]
+        @label "Length bases"
+        @description "RFC 1951 3.2.5: the match length for length code 257 + i, before its extra bits."
+        @synonyms "deflate length table"
+        @tier "domain"
+      lengthExtra : [number] = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0]
+        @label "Length extra bits"
+        @description "RFC 1951 3.2.5: the extra bits read after length code 257 + i."
+        @synonyms "deflate length extra bits"
+        @tier "domain"
+      distBase : [number] = [1, 2, 3, 4, 5, 7, 9, 13, 17, 25, 33, 49, 65, 97, 129, 193, 257, 385, 513, 769, 1025, 1537, 2049, 3073, 4097, 6145, 8193, 12289, 16385, 24577]
+        @label "Distance bases"
+        @description "RFC 1951 3.2.5: the match distance for distance code i, before its extra bits."
+        @synonyms "deflate distance table"
+        @tier "domain"
+      distExtra : [number] = [0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13]
+        @label "Distance extra bits"
+        @description "RFC 1951 3.2.5: the extra bits read after distance code i."
+        @synonyms "deflate distance extra bits"
+        @tier "domain"
+      alphabet : string = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+        @label "Base64 alphabet"
+        @description "The 64 characters of standard base64, in sextet order."
+        @synonyms "base64 table"
+        @tier "domain"
+      chain : number = 16
+        @label "Match chain length"
+        @description "The most earlier positions the encoder tries for one match (the hash chain walk bound)."
+        @synonyms "deflate effort, lz77 chain"
+        @tier "domain"
+      codeLengthOrder : [number] = [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15]
+        @label "Code-length order"
+        @description "RFC 1951 3.2.7: the order the 19 code-length code lengths are stored in."
+        @synonyms "deflate code length order"
+        @tier "domain"
+    }
+
+    state idle {
+      ;; ---- entry: the bytes of the base64 text, one number each ----
+      GUNZIP -> idle
+        (set @entity.data @payload.data)
+        (set @entity.nbits (* 8 (bytes/length @payload.data)))
+        (set @entity.bs
+          (let ((al (str/split @config.alphabet ""))
+                (nb (bytes/length @payload.data)))
+            (let ((sx (array/map (str/split @payload.data "")
+                        (fn c (if (== @c "=") 0 (array/indexOf @al @c))))))
+              (array/concat
+                (array/map (array/range 0 @nb)
+                  (fn j
+                    (let ((g (* 4 (math/floor (/ @j 3)))))
+                      (if (== (math/mod @j 3) 0)
+                        (+ (* (array/nth @sx @g) 4) (math/floor (/ (array/nth @sx (+ @g 1)) 16)))
+                        (if (== (math/mod @j 3) 1)
+                          (+ (* (math/mod (array/nth @sx (+ @g 1)) 16) 16) (math/floor (/ (array/nth @sx (+ @g 2)) 4)))
+                          (+ (* (math/mod (array/nth @sx (+ @g 2)) 4) 64) (array/nth @sx (+ @g 3))))))))
+                [0, 0, 0, 0, 0, 0, 0, 0]))))
+        (set @entity.out [])
+        (set @entity.mstart 0)
+        (set @entity.mout 0)
+        (emit GZ_MEMBER { })
+
+      ;; ---- member header (RFC 1952 2.3): stage 0 = fixed part ----
+      GZ_MEMBER -> idle
+        (set @entity.flg (array/nth @entity.bs (+ @entity.mstart 3)))
+        (set @entity.hp (+ @entity.mstart 10))
+        (set @entity.stage 1)
+        (set @entity.verdict
+          (if (< (- (/ @entity.nbits 8) @entity.mstart) 18)
+            (if (> @entity.mstart 0) "trailing" "truncated")
+            (if (or (!= (array/nth @entity.bs @entity.mstart) 31)
+                    (!= (array/nth @entity.bs (+ @entity.mstart 1)) 139))
+              (if (> @entity.mstart 0) "trailing" "magic")
+              (if (!= (array/nth @entity.bs (+ @entity.mstart 2)) 8)
+                "method"
+                (if (>= (array/nth @entity.bs (+ @entity.mstart 3)) 32) "flags" "ok")))))
+        (emit GZ_GATE { })
+
+      ;; a stage that failed refuses; one that passed runs the next stage
+      GZ_GATE -> idle when (!= @entity.verdict "ok")
+        (emit GZIP_REFUSED { reason: @entity.verdict })
+      GZ_GATE -> idle when (and (== @entity.verdict "ok") (== @entity.stage 1))
+        (emit GZ_H_EXTRA { })
+      GZ_GATE -> idle when (and (== @entity.verdict "ok") (== @entity.stage 2))
+        (emit GZ_H_NAME { })
+      GZ_GATE -> idle when (and (== @entity.verdict "ok") (== @entity.stage 3))
+        (emit GZ_H_COMMENT { })
+      GZ_GATE -> idle when (and (== @entity.verdict "ok") (== @entity.stage 4))
+        (emit GZ_H_HCRC { })
+      GZ_GATE -> idle when (and (== @entity.verdict "ok") (== @entity.stage 5))
+        (emit GZ_BEGIN { })
+
+      ;; FEXTRA (FLG bit 2): XLEN then XLEN bytes
+      GZ_H_EXTRA -> idle
+        (set @entity.stage 2)
+        (set @entity.verdict
+          (if (== (math/mod (math/floor (/ @entity.flg 4)) 2) 0)
+            "ok"
+            (if (> (+ @entity.hp 2 (+ (array/nth @entity.bs @entity.hp) (* 256 (array/nth @entity.bs (+ @entity.hp 1)))))
+                   (/ @entity.nbits 8))
+              "truncated"
+              "ok")))
+        (set @entity.hp
+          (if (== (math/mod (math/floor (/ @entity.flg 4)) 2) 0)
+            @entity.hp
+            (+ @entity.hp 2 (+ (array/nth @entity.bs @entity.hp) (* 256 (array/nth @entity.bs (+ @entity.hp 1)))))))
+        (emit GZ_GATE { })
+
+      ;; FNAME (FLG bit 3): a NUL-terminated name
+      GZ_H_NAME -> idle
+        (set @entity.stage 3)
+        (set @entity.verdict
+          (if (== (math/mod (math/floor (/ @entity.flg 8)) 2) 0)
+            "ok"
+            (if (< (array/indexOf (array/slice @entity.bs @entity.hp (/ @entity.nbits 8)) 0) 0) "truncated" "ok")))
+        (set @entity.hp
+          (if (== (math/mod (math/floor (/ @entity.flg 8)) 2) 0)
+            @entity.hp
+            (+ @entity.hp 1 (array/indexOf (array/slice @entity.bs @entity.hp (/ @entity.nbits 8)) 0))))
+        (emit GZ_GATE { })
+
+      ;; FCOMMENT (FLG bit 4): a NUL-terminated comment
+      GZ_H_COMMENT -> idle
+        (set @entity.stage 4)
+        (set @entity.verdict
+          (if (== (math/mod (math/floor (/ @entity.flg 16)) 2) 0)
+            "ok"
+            (if (< (array/indexOf (array/slice @entity.bs @entity.hp (/ @entity.nbits 8)) 0) 0) "truncated" "ok")))
+        (set @entity.hp
+          (if (== (math/mod (math/floor (/ @entity.flg 16)) 2) 0)
+            @entity.hp
+            (+ @entity.hp 1 (array/indexOf (array/slice @entity.bs @entity.hp (/ @entity.nbits 8)) 0))))
+        (emit GZ_GATE { })
+
+      ;; FHCRC (FLG bit 1): the low 16 bits of the CRC32 of the header so far
+      GZ_H_HCRC -> idle when (== (math/mod (math/floor (/ @entity.flg 2)) 2) 0)
+        (set @entity.stage 5)
+        (emit GZ_GATE { })
+      GZ_H_HCRC -> idle when (== (math/mod (math/floor (/ @entity.flg 2)) 2) 1)
+        (set @entity.crcIn (array/slice @entity.bs @entity.mstart @entity.hp))
+        (set @entity.crcFor "header")
+        (emit GZ_CRC { })
+
+      ;; ---- CRC32 subroutine: crcIn -> crcVal, then the caller named by crcFor resumes ----
+      GZ_CRC -> idle
+        (set @entity.crcVal
+          (let ((table (array/map (array/range 0 256)
+                         (fn i (array/reduce (array/range 0 8) @i
+                                 (fn c k
+                                   (if (== (math/mod @c 2) 1)
+                                     (array/reduce (array/range 0 32) 0
+                                       (fn s b (+ @s (* (math/mod (+ (math/mod (math/floor (/ (math/floor (/ @c 2)) (math/pow 2 @b))) 2)
+                                                                      (math/mod (math/floor (/ 3988292384 (math/pow 2 @b))) 2)) 2)
+                                                        (math/pow 2 @b)))))
+                                     (math/floor (/ @c 2)))))))))
+            (- 4294967295
+              (array/reduce @entity.crcIn 4294967295
+                (fn c byte
+                  (let ((lo (array/reduce (array/range 0 8) 0
+                              (fn s b (+ @s (* (math/mod (+ (math/mod (math/floor (/ (math/mod @c 256) (math/pow 2 @b))) 2)
+                                                             (math/mod (math/floor (/ @byte (math/pow 2 @b))) 2)) 2)
+                                               (math/pow 2 @b))))))
+                        (hi (math/floor (/ @c 256))))
+                    (let ((tv (array/nth @table @lo)))
+                      (array/reduce (array/range 0 32) 0
+                        (fn s b (+ @s (* (math/mod (+ (math/mod (math/floor (/ @hi (math/pow 2 @b))) 2)
+                                                       (math/mod (math/floor (/ @tv (math/pow 2 @b))) 2)) 2)
+                                         (math/pow 2 @b))))))))))))
+        (emit GZ_CRC_DONE { })
+
+      GZ_CRC_DONE -> idle when (and (== @entity.crcFor "header") (!= (math/mod @entity.crcVal 65536) (+ (array/nth @entity.bs @entity.hp) (* 256 (array/nth @entity.bs (+ @entity.hp 1))))))
+        (set @entity.verdict "header-crc")
+        (emit GZ_GATE { })
+      GZ_CRC_DONE -> idle when (and (== @entity.crcFor "header") (== (math/mod @entity.crcVal 65536) (+ (array/nth @entity.bs @entity.hp) (* 256 (array/nth @entity.bs (+ @entity.hp 1))))))
+        (set @entity.hp (+ @entity.hp 2))
+        (set @entity.stage 5)
+        (emit GZ_GATE { })
+      GZ_CRC_DONE -> idle when (== @entity.crcFor "member")
+        (emit GZ_TRAILER_CRC { })
+
+      ;; ---- first block of a member ----
+      GZ_BEGIN -> idle
+        (set @entity.pos (* 8 @entity.hp))
+        (set @entity.bits
+          (if (== @entity.mstart 0)
+            (array/flatten
+              (array/map @entity.bs
+                (fn byte (array/map (array/range 0 8) (fn k (math/mod (math/floor (/ @byte (math/pow 2 @k))) 2))))))
+            @entity.bits))
+        (emit GZ_BLOCK { })
+
+      ;; ---- a block: BFINAL, BTYPE ----
+      GZ_BLOCK -> idle
+        (set @entity.final (array/nth @entity.bits @entity.pos))
+        (set @entity.btype (+ (array/nth @entity.bits (+ @entity.pos 1)) (* 2 (array/nth @entity.bits (+ @entity.pos 2)))))
+        (set @entity.pos (+ @entity.pos 3))
+        (emit GZ_TYPED { })
+
+      GZ_TYPED -> idle when (== @entity.btype 3)
+        (emit GZIP_REFUSED { reason: "block" })
+
+      ;; stored: LEN, NLEN on a byte boundary, then LEN raw bytes
+      GZ_TYPED -> idle when (== @entity.btype 0)
+        (set @entity.verdict
+          (let ((bi (math/ceil (/ @entity.pos 8))))
+            (let ((len (+ (array/nth @entity.bs @bi) (* 256 (array/nth @entity.bs (+ @bi 1)))))
+                  (nlen (+ (array/nth @entity.bs (+ @bi 2)) (* 256 (array/nth @entity.bs (+ @bi 3))))))
+              (if (> (+ @bi 4) (/ @entity.nbits 8))
+                "truncated"
+                (if (!= (+ @len @nlen) 65535)
+                  "block"
+                  (if (> (+ @bi 4 @len) (/ @entity.nbits 8)) "truncated" "ok"))))))
+        (set @entity.out
+          (if (== @entity.verdict "ok")
+            (let ((bi (math/ceil (/ @entity.pos 8))))
+              (array/concat @entity.out
+                (array/slice @entity.bs (+ @bi 4)
+                  (+ @bi 4 (+ (array/nth @entity.bs @bi) (* 256 (array/nth @entity.bs (+ @bi 1))))))))
+            @entity.out))
+        (set @entity.pos
+          (if (== @entity.verdict "ok")
+            (let ((bi (math/ceil (/ @entity.pos 8))))
+              (* 8 (+ @bi 4 (+ (array/nth @entity.bs @bi) (* 256 (array/nth @entity.bs (+ @bi 1)))))))
+            @entity.pos))
+        (emit GZ_BLOCK_DONE { })
+
+      ;; fixed Huffman: literal/length 0-143 8, 144-255 9, 256-279 7, 280-287 8; distance 30 x 5
+      GZ_TYPED -> idle when (== @entity.btype 1)
+        (set @entity.lens
+          (array/concat
+            (array/map (array/range 0 144) (fn x 8))
+            (array/map (array/range 0 112) (fn x 9))
+            (array/map (array/range 0 24) (fn x 7))
+            (array/map (array/range 0 8) (fn x 8))
+            (array/map (array/range 0 30) (fn x 5))))
+        (set @entity.hlit 288)
+        (set @entity.total 318)
+        (emit GZ_TABLES { })
+
+      ;; dynamic Huffman: HLIT, HDIST, HCLEN, the code-length code, then the lengths
+      GZ_TYPED -> idle when (== @entity.btype 2)
+        (set @entity.hlit
+          (+ 257 (array/reduce (array/range 0 5) 0
+                   (fn s i (+ @s (* (array/nth @entity.bits (+ @entity.pos @i)) (math/pow 2 @i)))))))
+        (set @entity.hdist
+          (+ 1 (array/reduce (array/range 0 5) 0
+                 (fn s i (+ @s (* (array/nth @entity.bits (+ @entity.pos 5 @i)) (math/pow 2 @i)))))))
+        (set @entity.hclen
+          (+ 4 (array/reduce (array/range 0 4) 0
+                 (fn s i (+ @s (* (array/nth @entity.bits (+ @entity.pos 10 @i)) (math/pow 2 @i)))))))
+        (set @entity.total (+ @entity.hlit @entity.hdist))
+        (set @entity.lens
+          (array/map (array/range 0 19)
+            (fn sy
+              (let ((ix (array/indexOf @config.codeLengthOrder @sy)))
+                (if (< @ix @entity.hclen)
+                  (array/reduce (array/range 0 3) 0
+                    (fn s i (+ @s (* (array/nth @entity.bits (+ @entity.pos 14 (* 3 @ix) @i)) (math/pow 2 @i)))))
+                  0)))))
+        (set @entity.pos (+ @entity.pos 14 (* 3 @entity.hclen)))
+        (set @entity.clCnt
+          (array/map (array/range 0 16)
+            (fn l (if (== @l 0) 0 (array/len (array/filter @entity.lens (fn x (== @x @l))))))))
+        (set @entity.clSym
+          (array/flatten
+            (array/map (array/range 1 16)
+              (fn l (array/filter (array/range 0 (array/len @entity.lens))
+                      (fn s (== (array/nth @entity.lens @s) @l)))))))
+        (emit GZ_DYN_LENS { })
+
+      GZ_DYN_LENS -> idle
+        (set @entity.dec
+          (array/reduce (array/range 0 @entity.total)
+            { pos: @entity.pos, out: [], done: false, err: "" }
+            (fn acc t
+              (if (or (>= (array/len @acc.out) @entity.total) (!= @acc.err ""))
+                @acc
+                (let ((cd (array/reduce (array/range 1 16)
+                            { code: 0, first: 0, index: 0, sym: -1, n: 0 }
+                            (fn d len
+                              (if (>= @d.sym 0)
+                                @d
+                                (let ((code1 (+ @d.code (array/nth @entity.bits (+ @acc.pos @d.n))))
+                                      (cnt (array/nth @entity.clCnt @len)))
+                                  (if (< (- @code1 @cnt) @d.first)
+                                    { code: 0, first: 0, index: 0, n: (+ @d.n 1),
+                                      sym: (array/nth @entity.clSym (+ @d.index (- @code1 @d.first))) }
+                                    { code: (* 2 @code1), first: (* 2 (+ @d.first @cnt)),
+                                      index: (+ @d.index @cnt), sym: -1, n: (+ @d.n 1) })))))))
+                  (if (< @cd.sym 0)
+                    (object/merge @acc { err: "block" })
+                    (if (< @cd.sym 16)
+                      (object/merge @acc { pos: (+ @acc.pos @cd.n), out: (array/append @acc.out @cd.sym) })
+                      (if (== @cd.sym 16)
+                        (if (== (array/len @acc.out) 0)
+                          (object/merge @acc { err: "block" })
+                          (object/merge @acc
+                            { pos: (+ @acc.pos @cd.n 2),
+                              out: (array/concat @acc.out
+                                     (array/map (array/range 0 (+ 3 (+ (array/nth @entity.bits (+ @acc.pos @cd.n))
+                                                                        (* 2 (array/nth @entity.bits (+ @acc.pos @cd.n 1))))))
+                                       (fn q (array/last @acc.out)))) }))
+                        (if (== @cd.sym 17)
+                          (object/merge @acc
+                            { pos: (+ @acc.pos @cd.n 3),
+                              out: (array/concat @acc.out
+                                     (array/map (array/range 0 (+ 3 (array/reduce (array/range 0 3) 0
+                                                                       (fn s i (+ @s (* (array/nth @entity.bits (+ @acc.pos @cd.n @i)) (math/pow 2 @i)))))))
+                                       (fn q 0))) })
+                          (object/merge @acc
+                            { pos: (+ @acc.pos @cd.n 7),
+                              out: (array/concat @acc.out
+                                     (array/map (array/range 0 (+ 11 (array/reduce (array/range 0 7) 0
+                                                                        (fn s i (+ @s (* (array/nth @entity.bits (+ @acc.pos @cd.n @i)) (math/pow 2 @i)))))))
+                                       (fn q 0))) }))))))))))
+        (emit GZ_LENS_READ { })
+
+      GZ_LENS_READ -> idle when (!= @entity.dec.err "")
+        (emit GZIP_REFUSED { reason: @entity.dec.err })
+      GZ_LENS_READ -> idle when (and (== @entity.dec.err "") (!= (array/len @entity.dec.out) @entity.total))
+        (emit GZIP_REFUSED { reason: "block" })
+      GZ_LENS_READ -> idle when (and (== @entity.dec.err "") (== (array/len @entity.dec.out) @entity.total))
+        (set @entity.lens @entity.dec.out)
+        (set @entity.pos @entity.dec.pos)
+        (emit GZ_TABLES { })
+
+      ;; canonical Huffman tables: per-length counts and symbols in code order
+      GZ_TABLES -> idle
+        (set @entity.litCnt
+          (array/map (array/range 0 16)
+            (fn l (if (== @l 0) 0 (array/len (array/filter (array/slice @entity.lens 0 @entity.hlit) (fn x (== @x @l))))))))
+        (set @entity.litSym
+          (array/flatten
+            (array/map (array/range 1 16)
+              (fn l (array/filter (array/range 0 @entity.hlit)
+                      (fn s (== (array/nth @entity.lens @s) @l)))))))
+        (set @entity.distCnt
+          (array/map (array/range 0 16)
+            (fn l (if (== @l 0) 0 (array/len (array/filter (array/slice @entity.lens @entity.hlit @entity.total) (fn x (== @x @l))))))))
+        (set @entity.distSym
+          (array/flatten
+            (array/map (array/range 1 16)
+              (fn l (array/filter (array/range 0 (- @entity.total @entity.hlit))
+                      (fn s (== (array/nth @entity.lens (+ @entity.hlit @s)) @l)))))))
+        (emit GZ_SYMBOLS { })
+
+      ;; one pass over the block's symbols; every symbol takes at least one bit
+      GZ_SYMBOLS -> idle
+        (set @entity.dec
+          (array/reduce (array/range 0 (+ @entity.nbits 1))
+            { pos: @entity.pos, out: @entity.out, done: false, err: "" }
+            (fn acc t
+              (if (or @acc.done (!= @acc.err ""))
+                @acc
+                (if (> @acc.pos @entity.nbits)
+                  (object/merge @acc { err: "truncated" })
+                  (let ((ld (array/reduce (array/range 1 16)
+                              { code: 0, first: 0, index: 0, sym: -1, n: 0 }
+                              (fn d len
+                                (if (>= @d.sym 0)
+                                  @d
+                                  (let ((code1 (+ @d.code (array/nth @entity.bits (+ @acc.pos @d.n))))
+                                        (cnt (array/nth @entity.litCnt @len)))
+                                    (if (< (- @code1 @cnt) @d.first)
+                                      { code: 0, first: 0, index: 0, n: (+ @d.n 1),
+                                        sym: (array/nth @entity.litSym (+ @d.index (- @code1 @d.first))) }
+                                      { code: (* 2 @code1), first: (* 2 (+ @d.first @cnt)),
+                                        index: (+ @d.index @cnt), sym: -1, n: (+ @d.n 1) })))))))
+                    (if (< @ld.sym 0)
+                      (object/merge @acc { err: "block" })
+                      (if (< @ld.sym 256)
+                        (object/merge @acc { pos: (+ @acc.pos @ld.n), out: (array/append @acc.out @ld.sym) })
+                        (if (== @ld.sym 256)
+                          (object/merge @acc { pos: (+ @acc.pos @ld.n), done: true })
+                          (let ((li (- @ld.sym 257)))
+                            (if (> @li 28)
+                              (object/merge @acc { err: "block" })
+                              (let ((lx (array/nth @config.lengthExtra @li))
+                                    (p1 (+ @acc.pos @ld.n)))
+                                (let ((len (+ (array/nth @config.lengthBase @li)
+                                              (array/reduce (array/range 0 @lx) 0
+                                                (fn s i (+ @s (* (array/nth @entity.bits (+ @p1 @i)) (math/pow 2 @i)))))))
+                                      (p2 (+ @p1 @lx)))
+                                  (let ((dd (array/reduce (array/range 1 16)
+                                              { code: 0, first: 0, index: 0, sym: -1, n: 0 }
+                                              (fn d dl
+                                                (if (>= @d.sym 0)
+                                                  @d
+                                                  (let ((code1 (+ @d.code (array/nth @entity.bits (+ @p2 @d.n))))
+                                                        (cnt (array/nth @entity.distCnt @dl)))
+                                                    (if (< (- @code1 @cnt) @d.first)
+                                                      { code: 0, first: 0, index: 0, n: (+ @d.n 1),
+                                                        sym: (array/nth @entity.distSym (+ @d.index (- @code1 @d.first))) }
+                                                      { code: (* 2 @code1), first: (* 2 (+ @d.first @cnt)),
+                                                        index: (+ @d.index @cnt), sym: -1, n: (+ @d.n 1) })))))))
+                                    (if (or (< @dd.sym 0) (> @dd.sym 29))
+                                      (object/merge @acc { err: "block" })
+                                      (let ((dx (array/nth @config.distExtra @dd.sym))
+                                            (p3 (+ @p2 @dd.n)))
+                                        (let ((dist (+ (array/nth @config.distBase @dd.sym)
+                                                       (array/reduce (array/range 0 @dx) 0
+                                                         (fn s i (+ @s (* (array/nth @entity.bits (+ @p3 @i)) (math/pow 2 @i)))))))
+                                              (olen (array/len @acc.out)))
+                                          (if (> @dist (- @olen @entity.mout))
+                                            (object/merge @acc { err: "block" })
+                                            (object/merge @acc
+                                              { pos: (+ @p3 @dx),
+                                                out: (array/concat @acc.out
+                                                       (array/map (array/range 0 @len)
+                                                         (fn q (array/nth @acc.out (+ (- @olen @dist) (math/mod @q @dist)))))) })))))))))))))))))))
+        (emit GZ_SYMBOLS_DONE { })
+
+      GZ_SYMBOLS_DONE -> idle when (!= @entity.dec.err "")
+        (emit GZIP_REFUSED { reason: @entity.dec.err })
+      GZ_SYMBOLS_DONE -> idle when (and (== @entity.dec.err "") (not @entity.dec.done))
+        (emit GZIP_REFUSED { reason: "truncated" })
+      GZ_SYMBOLS_DONE -> idle when (and (== @entity.dec.err "") @entity.dec.done)
+        (set @entity.out @entity.dec.out)
+        (set @entity.pos @entity.dec.pos)
+        (emit GZ_BLOCK_DONE { })
+
+      ;; ---- after a block: another block, or the member trailer ----
+      GZ_BLOCK_DONE -> idle when (== @entity.final 0)
+        (emit GZ_BLOCK { })
+      GZ_BLOCK_DONE -> idle when (and (== @entity.final 1) (> (+ (math/ceil (/ @entity.pos 8)) 8) (/ @entity.nbits 8)))
+        (emit GZIP_REFUSED { reason: "truncated" })
+      GZ_BLOCK_DONE -> idle when (and (== @entity.final 1) (<= (+ (math/ceil (/ @entity.pos 8)) 8) (/ @entity.nbits 8)))
+        (set @entity.crcIn (array/slice @entity.out @entity.mout (array/len @entity.out)))
+        (set @entity.crcFor "member")
+        (emit GZ_CRC { })
+
+      ;; CRC32 and ISIZE of the member, then the next member or the end
+      GZ_TRAILER_CRC -> idle
+        (set @entity.verdict
+          (let ((bi (math/ceil (/ @entity.pos 8))))
+            (if (!= (+ (array/nth @entity.bs @bi) (* 256 (array/nth @entity.bs (+ @bi 1)))
+                       (* 65536 (array/nth @entity.bs (+ @bi 2))) (* 16777216 (array/nth @entity.bs (+ @bi 3))))
+                    @entity.crcVal)
+              "crc"
+              (if (!= (+ (array/nth @entity.bs (+ @bi 4)) (* 256 (array/nth @entity.bs (+ @bi 5)))
+                         (* 65536 (array/nth @entity.bs (+ @bi 6))) (* 16777216 (array/nth @entity.bs (+ @bi 7))))
+                      (math/mod (- (array/len @entity.out) @entity.mout) 4294967296))
+                "size"
+                "ok"))))
+        (set @entity.crc @entity.crcVal)
+        (set @entity.mstart (+ (math/ceil (/ @entity.pos 8)) 8))
+        (set @entity.mout (array/len @entity.out))
+        (emit GZ_MEMBER_END { })
+
+      GZ_MEMBER_END -> idle when (!= @entity.verdict "ok")
+        (emit GZIP_REFUSED { reason: @entity.verdict })
+      GZ_MEMBER_END -> idle when (and (== @entity.verdict "ok") (< @entity.mstart (/ @entity.nbits 8)))
+        (emit GZ_MEMBER { })
+      GZ_MEMBER_END -> idle when (and (== @entity.verdict "ok") (== @entity.mstart (/ @entity.nbits 8)))
+        (set @entity.size (array/len @entity.out))
+        (emit GUNZIP_ANSWERED
+          { data: (let ((n (array/len @entity.out)))
+                    (bytes/concat
+                      (array/concat
+                        (array/map (array/range 0 (math/floor (/ @n 4)))
+                          (fn k (bytes/write-uint
+                                  (+ (* (array/nth @entity.out (* 4 @k)) 16777216)
+                                     (* (array/nth @entity.out (+ (* 4 @k) 1)) 65536)
+                                     (* (array/nth @entity.out (+ (* 4 @k) 2)) 256)
+                                     (array/nth @entity.out (+ (* 4 @k) 3)))
+                                  4 "be")))
+                        (array/map (array/range (* 4 (math/floor (/ @n 4))) @n)
+                          (fn k (bytes/write-uint (array/nth @entity.out @k) 1 "be"))))))
+            size: @entity.size,
+            crc: @entity.crc })
+
+      ;; ---- encoder: GZIP -> LZ77 (hash chain) -> fixed-Huffman block (RFC 1951 3.2.6) -> CRC32 -> gzip member (RFC 1952) ----
+      GZIP -> idle
+        (set @entity.size (bytes/length @payload.data))
+        (set @entity.bs (array/map (array/range 0 (bytes/length @payload.data)) (fn j (bytes/at @payload.data @j))))
+        (emit GZ_ENC_LZ { })
+
+      GZ_ENC_LZ -> idle
+        (set @entity.lens
+          (let ((bs @entity.bs) (n (array/len @entity.bs)))
+            (object/get
+              (array/reduce (array/range 0 @n) { next: 0, toks: [], head: {}, prev: [] }
+                (fn acc i
+                  (let ((key (if (< (+ @i 2) @n)
+                               (str/concat "k" (+ (+ (* (array/nth @bs @i) 65536) (* (array/nth @bs (+ @i 1)) 256)) (array/nth @bs (+ @i 2))))
+                               "")))
+                    (let ((cand (- (if (== @key "") 0 (or (object/get @acc.head @key) 0)) 1)))
+                      (let ((best (if (and (>= @i @acc.next) (>= @cand 0))
+                                    (array/reduce (array/range 0 @config.chain) { c: @cand, bl: 0, bd: 0 }
+                                      (fn s k
+                                        (if (or (< @s.c 0) (> (- @i @s.c) 32768))
+                                          { c: -1, bl: @s.bl, bd: @s.bd }
+                                          (let ((m (array/reduce (array/range 0 (math/min 258 (- @n @i))) { len: 0, go: true }
+                                                     (fn a k2
+                                                       (if (and @a.go (== (array/nth @bs (+ @s.c @k2)) (array/nth @bs (+ @i @k2))))
+                                                         { len: (+ @k2 1), go: true }
+                                                         { len: @a.len, go: false })))))
+                                            { c: (array/nth @acc.prev @s.c),
+                                              bl: (if (> @m.len @s.bl) @m.len @s.bl),
+                                              bd: (if (> @m.len @s.bl) (- @i @s.c) @s.bd) }))))
+                                    { c: -1, bl: 0, bd: 0 })))
+                        (let ((useM (and (>= @i @acc.next) (>= @best.bl 3))))
+                          { next: (if @useM (+ @i @best.bl) (if (>= @i @acc.next) (+ @i 1) @acc.next)),
+                            toks: (if @useM
+                                    (array/append @acc.toks (+ (* @best.bl 65536) @best.bd))
+                                    (if (>= @i @acc.next) (array/append @acc.toks (array/nth @bs @i)) @acc.toks)),
+                            head: (if (== @key "") @acc.head (object/set @acc.head @key (+ @i 1))),
+                            prev: (array/append @acc.prev @cand) }))))))
+              "toks")))
+        (emit GZ_ENC_BITS { })
+
+      ;; a literal/length code is 7-9 bits written most significant first, extra bits least significant first, a distance code is 5 bits most significant first
+      GZ_ENC_BITS -> idle
+        (set @entity.bits
+          (array/concat
+            [1, 1, 0]
+            (array/flatten
+              (array/map @entity.lens
+                (fn t
+                  (let ((len (math/floor (/ @t 65536))) (dist (math/mod @t 65536)))
+                    (let ((li (- (array/len (array/filter @config.lengthBase (fn x (<= @x @len)))) 1))
+                          (di (- (array/len (array/filter @config.distBase (fn x (<= @x @dist)))) 1)))
+                      (let ((sym (if (< @t 256) @t (+ 257 @li))))
+                        (let ((code (if (<= @sym 143) (+ 48 @sym) (if (<= @sym 255) (+ 400 (- @sym 144)) (if (<= @sym 279) (- @sym 256) (+ 192 (- @sym 280))))))
+                              (w (if (<= @sym 143) 8 (if (<= @sym 255) 9 (if (<= @sym 279) 7 8)))))
+                          (array/concat
+                            (array/map (array/range 0 @w) (fn k (math/mod (math/floor (/ @code (math/pow 2 (- (- @w 1) @k)))) 2)))
+                            (if (< @t 256) []
+                              (array/concat
+                                (array/map (array/range 0 (array/nth @config.lengthExtra @li))
+                                  (fn k (math/mod (math/floor (/ (- @len (array/nth @config.lengthBase @li)) (math/pow 2 @k))) 2)))
+                                (array/map (array/range 0 5) (fn k (math/mod (math/floor (/ @di (math/pow 2 (- 4 @k)))) 2)))
+                                (array/map (array/range 0 (array/nth @config.distExtra @di))
+                                  (fn k (math/mod (math/floor (/ (- @dist (array/nth @config.distBase @di)) (math/pow 2 @k))) 2)))))))))))))
+            [0, 0, 0, 0, 0, 0, 0]))
+        (emit GZ_ENC_CRC { })
+
+      GZ_ENC_CRC -> idle
+        (set @entity.crc
+          (let ((table (array/map (array/range 0 256)
+                         (fn i (array/reduce (array/range 0 8) @i
+                                 (fn c k (if (== (math/mod @c 2) 1) (bit/xor 3988292384 (bit/shr @c 1)) (bit/shr @c 1))))))))
+            (bit/xor 4294967295
+              (array/reduce @entity.bs 4294967295
+                (fn c b (bit/xor (array/nth @table (bit/and (bit/xor @c @b) 255)) (bit/shr @c 8)))))))
+        (emit GZ_ENC_PACK { })
+
+      GZ_ENC_PACK -> idle
+        (set @entity.out
+          (let ((nb (array/len @entity.bits)))
+            (let ((padded (array/concat @entity.bits (array/map (array/range 0 (math/mod (- 8 (math/mod @nb 8)) 8)) (fn z 0)))))
+              (array/concat
+                [31, 139, 8, 0, 0, 0, 0, 0, 0, 255]
+                (array/map (array/range 0 (/ (array/len @padded) 8))
+                  (fn j (array/reduce (array/range 0 8) 0
+                          (fn sum k (+ @sum (* (array/nth @padded (+ (* 8 @j) @k)) (math/pow 2 @k)))))))))))
+        (emit GZIP_ANSWERED {
+          data: (bytes/concat
+                  [(bytes/concat (array/map @entity.out (fn x (bytes/write-uint @x 1 "be"))))
+                   (bytes/write-uint @entity.crc 4 "le")
+                   (bytes/write-uint @entity.size 4 "le")]),
+          size: @entity.size,
+          crc: @entity.crc })
+    }
+
+    emits {
+      GZ_MEMBER -> internal { }
+      GZ_GATE -> internal { }
+      GZ_H_EXTRA -> internal { }
+      GZ_H_NAME -> internal { }
+      GZ_H_COMMENT -> internal { }
+      GZ_H_HCRC -> internal { }
+      GZ_CRC -> internal { }
+      GZ_CRC_DONE -> internal { }
+      GZ_ENC_LZ -> internal { }
+      GZ_ENC_BITS -> internal { }
+      GZ_ENC_CRC -> internal { }
+      GZ_ENC_PACK -> internal { }
+      GZ_BEGIN -> internal { }
+      GZ_BLOCK -> internal { }
+      GZ_TYPED -> internal { }
+      GZ_DYN_LENS -> internal { }
+      GZ_LENS_READ -> internal { }
+      GZ_TABLES -> internal { }
+      GZ_SYMBOLS -> internal { }
+      GZ_SYMBOLS_DONE -> internal { }
+      GZ_BLOCK_DONE -> internal { }
+      GZ_TRAILER_CRC -> internal { }
+      GZ_MEMBER_END -> internal { }
+      GUNZIP_ANSWERED -> external {
+        data : bytes!
+        size : number!
+        crc : number!
+      }
+        @description "The unpacked bytes of every member, their length and the CRC32 of the last member."
+        @tier "primary"
+      GZIP_ANSWERED -> external {
+        data : bytes!
+        size : number!
+        crc : number!
+      }
+        @description "The gzip member: one fixed-Huffman DEFLATE block, the input length and its CRC32."
+        @tier "primary"
+      GZIP_REFUSED -> external {
+        reason : string!
+      }
+        @description "Why the input was refused: magic, method, flags, header-crc, truncated, block, crc, size or trailing."
+        @tier "primary"
+    }
+
+    listens {
+      GZIP -> external {
+        data : bytes!
+      }
+        @description "Pack these bytes as a gzip member."
+        @synonyms "gzip, compress gzip, deflate, pack gzip"
+      GUNZIP -> external {
+        data : bytes!
+      }
+        @description "Unpack this base64 gzip input."
+        @synonyms "gunzip, ungzip, decompress gzip, unpack tarball"
+    }
+  }
+
+  page "/gzip" -> Gunzip
+}

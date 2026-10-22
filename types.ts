@@ -75,6 +75,7 @@ export type OperatorCategory = (typeof OPERATOR_CATEGORIES)[number];
  * the validator's one generic value-source walk (`orbital-core` `SExpression::value_leaves`) reads to trace which
  * leaf values an expression can yield — e.g. which events a render-bound `itemActions` list can fire.
  *
+ * - `'option-branch<N,key>'` — a literal boolean option selects the declared return union's false/true branch; dynamic options retain the union.
  * - `'branch-union'` — every argument after the condition (`if`).
  * - `'lambda-result'` — the body of the lambda argument (`array/map`).
  * - `'identity-of-arg<N>'` — the result IS arg N, narrowed or reordered (`array/filter`, `array/slice`,
@@ -88,6 +89,7 @@ export type OperatorCategory = (typeof OPERATOR_CATEGORIES)[number];
  * `array/groupBy`, `array/partition`, `array/flatten`) declares nothing and the walk treats it as opaque.
  */
 export type ReturnSemantics =
+  | `option-branch<${number},${string}>`
   | 'branch-union'
   | 'lambda-result'
   | 'identity-of-arg<0>'
@@ -271,7 +273,7 @@ export type OperatorTypeRef =
   | { kind: 'array'; of: OperatorTypeRef }
   | { kind: 'tuple'; items: OperatorTypeRef[] }
   | { kind: 'map'; key: OperatorTypeRef; value: OperatorTypeRef }
-  | { kind: 'object'; fields: Record<string, OperatorTypeRef>; open?: boolean }
+  | { kind: 'object'; fields: Record<string, OperatorTypeRef>; open?: boolean; optional?: string[] }
   | { kind: 'entity'; collection?: string }
   | { kind: 'entityRef' }
   | { kind: 'eventKey'; scope?: 'internal' | 'external' }

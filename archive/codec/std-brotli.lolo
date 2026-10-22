@@ -1,0 +1,65 @@
+app std-brotli [
+  version: "1.0.0",
+  description: "std-brotli — pack bytes as a brotli stream (RFC 7932) over bytes/*, array/* and math/*. BROTLI { data } answers BROTLI_ANSWERED { data, size, packed } where size is the input length and packed the stream length. The encoder emits uncompressed meta-blocks only (RFC 7932 9.2: ISUNCOMPRESSED), so the stream is valid for every decoder and the ratio is above 1 (3 bytes per 65536 input bytes, plus the 1 byte stream end); entropy-coded blocks are not produced yet. Layout: the window is 16 bits (one 0 bit), each meta-block is ISLAST 0, MNIBBLES 0 (four nibbles), MLEN-1 in 16 bits, ISUNCOMPRESSED 1, padding to the byte boundary, then up to 65536 raw bytes; the stream ends with ISLAST 1 and ISLASTEMPTY 1 (byte 0x03, or 0x06 when the input is empty and the window bit shares the byte)."
+]
+uses Spec from "almadar-std/brotli"
+
+orbital BrotliOrbital {
+  entity BrotliRun [runtime] {
+    id : string!
+    data : bytes = ""
+    size : number = 0
+    packed : number = 0
+  }
+
+  trait Brotli -> BrotliRun [integration, instance] {
+    initial: idle
+
+    config {
+      blockMax : number = 65536
+        @label "Meta-block size (bytes)"
+        @description "RFC 7932 9.2: the most raw bytes one uncompressed meta-block carries (MLEN - 1 is 16 bits)."
+        @synonyms "brotli block size"
+        @tier "domain"
+    }
+
+    state idle {
+      BROTLI -> idle
+        (set @entity.size (bytes/length @payload.data))
+        (set @entity.data
+          (let ((n (bytes/length @payload.data)))
+            (bytes/concat
+              (array/append
+                (array/map (array/range 0 (math/ceil (/ @n @config.blockMax)))
+                  (fn i
+                    (let ((m (math/min @config.blockMax (- @n (* @i @config.blockMax)))))
+                      (bytes/concat
+                        [(let ((v (* (+ (* (- @m 1) 8) 524288) (if (== @i 0) 2 1))))
+                           (bytes/concat [(bytes/write-uint (math/mod @v 65536) 2 "le") (bytes/write-uint (math/floor (/ @v 65536)) 1 "be")]))
+                         (bytes/slice @payload.data (* @i @config.blockMax) (+ (* @i @config.blockMax) @m))]))))
+                (bytes/write-uint (if (== @n 0) 6 3) 1 "be")))))
+        (set @entity.packed (bytes/length @entity.data))
+        (emit BROTLI_ANSWERED { data: @entity.data, size: @entity.size, packed: @entity.packed })
+    }
+
+    emits {
+      BROTLI_ANSWERED -> external {
+        data : bytes!
+        size : number!
+        packed : number!
+      }
+        @description "The brotli stream, the input length and the stream length."
+        @tier "primary"
+    }
+
+    listens {
+      BROTLI -> external {
+        data : bytes!
+      }
+        @description "Pack these bytes as a brotli stream."
+        @synonyms "brotli, compress brotli, br encode"
+    }
+  }
+
+  page "/brotli" -> Brotli
+}

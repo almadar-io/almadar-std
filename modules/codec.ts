@@ -9,7 +9,7 @@
  */
 
 import type { OperatorTypeRef, StdOperatorMeta } from '../types.js';
-import { BYTES, NUMBER, STRING, lit, nullable, union } from '../signature.js';
+import { BOOLEAN, BYTES, NUMBER, STRING, shape, lit, nullable, union } from '../signature.js';
 
 const DIGEST_ENCODING: OperatorTypeRef = union(lit('hex'), lit('base64'));
 
@@ -137,27 +137,34 @@ const BYTES_LIMIT: NonNullable<StdOperatorMeta['params']>[number] = {
   description: 'The largest output accepted, in bytes; a larger output fails with kind invalid (the decompression-bomb guard)',
 };
 
+const CODEC_CODE = union(...['magic', 'method', 'flags', 'header-crc', 'truncated', 'block', 'crc', 'size', 'trailing', 'output-limit'].map(lit));
+const CODEC_RESULT = shape({ ok: BOOLEAN, data: nullable(BYTES), crc: nullable(NUMBER), code: nullable(CODEC_CODE) });
+const CODEC_RETURN = union(BYTES, CODEC_RESULT);
+const RESULT_OPTIONS = { name: 'options', type: shape({ result: BOOLEAN }, ['result']), optional: true, description: 'With result: true, return { ok, data, crc, code }; failures are closed codec codes, never error text' };
+
 export const GZIP_OPERATORS: Record<string, StdOperatorMeta> = {
   'gzip/compress': {
     module: 'gzip',
     category: 'std-codec',
     minArity: 1,
-    maxArity: 1,
+    maxArity: 2,
     description: 'gzip (RFC 1952) of bytes at the default level, through the flate2 crate (a bytes value is a standard padded base64 string at run time)',
     hasSideEffects: false,
-    returnType: BYTES,
-    params: [{ name: 'data', type: BYTES, description: 'The bytes to compress' }],
+    returnType: CODEC_RETURN,
+    returnSemantics: 'option-branch<1,result>',
+    params: [{ name: 'data', type: BYTES, description: 'The bytes to compress' }, { name: 'options', type: shape({ result: BOOLEAN, level: NUMBER }, ['result', 'level']), optional: true, description: 'level 0–9 (default 6); result: true returns CodecResult' }],
     example: '["gzip/compress", "aGVsbG8="] // => gzip bytes',
   },
   'gzip/decompress': {
     module: 'gzip',
     category: 'std-codec',
     minArity: 2,
-    maxArity: 2,
+    maxArity: 3,
     description: 'Decompress every gzip member (as gzip -d reads them), through the flate2 crate. An output past maxBytes, corrupt input or a maxBytes that is not a whole number from 0 fails with kind invalid',
     hasSideEffects: false,
-    returnType: BYTES,
-    params: [{ name: 'data', type: BYTES, description: 'The gzip bytes' }, BYTES_LIMIT],
+    returnType: CODEC_RETURN,
+    returnSemantics: 'option-branch<2,result>',
+    params: [{ name: 'data', type: BYTES, description: 'The gzip bytes' }, BYTES_LIMIT, RESULT_OPTIONS],
     example: '["gzip/decompress", "H4sIAAAAAAAAA8tIzcnJV8hAkACAiPnlEQAAAA==", 1024] // => "aGVsbG8gaGVsbG8gaGVsbG8="',
   },
 };
@@ -167,22 +174,24 @@ export const BROTLI_OPERATORS: Record<string, StdOperatorMeta> = {
     module: 'brotli',
     category: 'std-codec',
     minArity: 1,
-    maxArity: 1,
+    maxArity: 2,
     description: 'brotli (RFC 7932) of bytes at the brotli CLI defaults (quality 11, window 22), through the brotli crate (a bytes value is a standard padded base64 string at run time)',
     hasSideEffects: false,
-    returnType: BYTES,
-    params: [{ name: 'data', type: BYTES, description: 'The bytes to compress' }],
+    returnType: CODEC_RETURN,
+    returnSemantics: 'option-branch<1,result>',
+    params: [{ name: 'data', type: BYTES, description: 'The bytes to compress' }, { name: 'options', type: shape({ result: BOOLEAN, quality: NUMBER, window: NUMBER }, ['result', 'quality', 'window']), optional: true, description: 'quality 0–11 (default 11), window 10–24 (default 22); result: true returns CodecResult' }],
     example: '["brotli/compress", "aGVsbG8="] // => brotli bytes',
   },
   'brotli/decompress': {
     module: 'brotli',
     category: 'std-codec',
     minArity: 2,
-    maxArity: 2,
+    maxArity: 3,
     description: 'Decompress one brotli stream through the brotli crate. An output past maxBytes, corrupt input or a maxBytes that is not a whole number from 0 fails with kind invalid',
     hasSideEffects: false,
-    returnType: BYTES,
-    params: [{ name: 'data', type: BYTES, description: 'The brotli bytes' }, BYTES_LIMIT],
+    returnType: CODEC_RETURN,
+    returnSemantics: 'option-branch<2,result>',
+    params: [{ name: 'data', type: BYTES, description: 'The brotli bytes' }, BYTES_LIMIT, RESULT_OPTIONS],
     example: '["brotli/decompress", "HxAA+I2Ubt5EVYaWbCBvAU8cYBw=", 1024] // => "aGVsbG8gaGVsbG8gaGVsbG8="',
   },
 };

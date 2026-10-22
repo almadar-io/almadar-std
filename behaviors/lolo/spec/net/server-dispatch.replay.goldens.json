@@ -184,7 +184,7 @@
       "headers": {
        "content-type": "application/json"
       },
-      "body": "e30=",
+      "body": "eyJyZWYiOnsiZW50aXR5VHlwZSI6Ik5vdGUiLCJpZHMiOltdLCJ0b3RhbCI6MH19",
       "peer": "127.0.0.1:5000"
      }
     },
@@ -654,7 +654,7 @@
    ]
   },
   {
-   "id": "resolve-rows-is-501-until-a-rows-operator-exists",
+   "id": "resolve-rows-calls-the-host-with-an-explicit-anonymous-viewer",
    "steps": [
     {
      "event": "REQUEST_RECEIVED",
@@ -666,7 +666,7 @@
       "headers": {
        "content-type": "application/json"
       },
-      "body": "eyJyZWZlcmVuY2UiOnt9fQ==",
+      "body": "eyJyZWYiOiB7ImVudGl0eVR5cGUiOiAiTm90ZSIsICJpZHMiOiBbIm4xIl0sICJ0b3RhbCI6IDF9fQ==",
       "peer": "127.0.0.1:5000"
      }
     },
@@ -680,14 +680,9 @@
        {
         "event": "RESOLVE_ROWS_REQUESTED",
         "payload": {
-         "requestId": 7
-        }
-       },
-       {
-        "event": "RESPOND",
-        "payload": {
          "requestId": 7,
-         "status": 501
+         "reference": "{\"entityType\":\"Note\",\"ids\":[\"n1\"],\"total\":1}",
+         "viewer": null
         }
        }
       ]
@@ -846,6 +841,257 @@
          "requestId": 7
         }
        }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "rows_answered-answers-once",
+   "entity": {
+    "pending": [
+     {
+      "requestId": 7,
+      "kind": "resolve-rows",
+      "responseHeaders": [],
+      "dispatchKey": "rows-7"
+     }
+    ],
+    "waiting": [],
+    "frames": [],
+    "inflight": 0
+   },
+   "steps": [
+    {
+     "event": "ROWS_ANSWERED",
+     "payload": {
+      "result": {
+       "rows": [
+        {
+         "id": "n1",
+         "title": "visible"
+        }
+       ],
+       "total": 1
+      },
+      "key": "rows-7"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 7,
+         "status": 200
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "ROWS_ANSWERED",
+     "payload": {
+      "result": {
+       "rows": [
+        {
+         "id": "n1",
+         "title": "visible"
+        }
+       ],
+       "total": 1
+      },
+      "key": "rows-7"
+     },
+     "expect": {
+      "fired": false,
+      "neverEmits": [
+       "RESPOND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "rows_failed-answers-once",
+   "entity": {
+    "pending": [
+     {
+      "requestId": 7,
+      "kind": "resolve-rows",
+      "responseHeaders": [],
+      "dispatchKey": "rows-7"
+     }
+    ],
+    "waiting": [],
+    "frames": [],
+    "inflight": 0
+   },
+   "steps": [
+    {
+     "event": "ROWS_FAILED",
+     "payload": {
+      "error": "read failed",
+      "key": "rows-7"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 7,
+         "status": 500
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "ROWS_FAILED",
+     "payload": {
+      "error": "read failed",
+      "key": "rows-7"
+     },
+     "expect": {
+      "fired": false,
+      "neverEmits": [
+       "RESPOND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "resolve-rows-prepared-runs-existing-program-op",
+   "entity": {
+    "inflight": 0,
+    "waiting": [],
+    "frames": [],
+    "pending": [
+     {
+      "requestId": 7,
+      "kind": "resolve-rows",
+      "dispatchKey": "rows-7",
+      "responseHeaders": []
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "RESOLVE_ROWS_REQUESTED",
+     "payload": {
+      "requestId": 7,
+      "reference": "{\"entityType\":\"Note\",\"ids\":[\"n1\"],\"total\":1}",
+      "viewer": {
+       "id": "alice",
+       "role": "user",
+       "permissions": [],
+       "claims": []
+      }
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "program/resolve-rows",
+        "arg1": "@payload.viewer"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "resolve-rows-preserves-the-verified-viewer",
+   "steps": [
+    {
+     "event": "REQUEST_RECEIVED",
+     "payload": {
+      "requestId": 7,
+      "method": "POST",
+      "path": "/api/orbitals/resolve-rows",
+      "query": "",
+      "headers": {
+       "content-type": "application/json"
+      },
+      "body": "eyJyZWYiOiB7ImVudGl0eVR5cGUiOiAiTm90ZSIsICJpZHMiOiBbIm4xIl0sICJ0b3RhbCI6IDF9fQ==",
+      "peer": "127.0.0.1:5000"
+     }
+    },
+    {
+     "event": "DISPATCH_ADMITTED",
+     "payload": {
+      "requestId": 7
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESOLVE_ROWS_REQUESTED",
+        "payload": {
+         "requestId": 7,
+         "reference": "{\"entityType\":\"Note\",\"ids\":[\"n1\"],\"total\":1}",
+         "viewer": {
+          "id": "alice",
+          "role": "user",
+          "permissions": [],
+          "claims": []
+         }
+        }
+       }
+      ]
+     },
+     "entity": {
+      "pending": [
+       {
+        "requestId": 7,
+        "kind": "resolve-rows",
+        "dispatchKey": "rows-7",
+        "responseHeaders": [],
+        "body": "eyJyZWYiOiB7ImVudGl0eVR5cGUiOiAiTm90ZSIsICJpZHMiOiBbIm4xIl0sICJ0b3RhbCI6IDF9fQ==",
+        "viewer": {
+         "id": "alice",
+         "role": "user",
+         "permissions": [],
+         "claims": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "resolve-rows-refuses-unparseable-json",
+   "steps": [
+    {
+     "event": "REQUEST_RECEIVED",
+     "payload": {
+      "requestId": 7,
+      "method": "POST",
+      "path": "/api/orbitals/resolve-rows",
+      "query": "",
+      "headers": {
+       "content-type": "application/json"
+      },
+      "body": "ew==",
+      "peer": "127.0.0.1:5000"
+     }
+    },
+    {
+     "event": "DISPATCH_ADMITTED",
+     "payload": {
+      "requestId": 7
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 7,
+         "status": 400
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESOLVE_ROWS_REQUESTED"
       ]
      }
     }

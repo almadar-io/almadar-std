@@ -2,7 +2,7 @@
  "atom": "net/atoms/std-http-dispatch.lolo",
  "trait": "ServerDispatch",
  "source": "orbital-rust/crates/orbital-server/tests/untargeted_discovery.rs",
- "note": "Twin of orbital-server tests/untargeted_discovery.rs; the discovery itself is the host's, the atom must not guess a trait. Replay limits found: the entity round-trips between steps without its bytes type, so DISPATCH_RUN cannot be asserted after the request is stored (preparedExpect records the intended DISPATCH_PREPARED); a RESPOND payload expectation (requestId, status) does not match even when the event is emitted, so expectedResponse records the intended status and the step asserts only that RESPOND is emitted.",
+ "note": "Adapter parity with untargeted_discovery.rs: absent traits asks the host to discover, explicit [] stays inert. program/step cascades internal events, so preparation is asserted on DISPATCH_QUEUED and successful host answers use a seeded pending request.",
  "cases": [
   {
    "id": "untargeted-request-reaches-every-handler",
@@ -39,48 +39,30 @@
         "payload": {
          "requestId": 1
         }
-       }
-      ]
-     }
-    },
-    {
-     "event": "DISPATCH_RUN",
-     "payload": {
-      "requestId": 1
-     },
-     "expect": {
-      "emits": [
+       },
        {
         "event": "DISPATCH_PREPARED",
         "payload": {
          "address": "Notes..INIT",
          "options": {
-          "wire": true,
+          "clientId": "",
+          "delivery": {},
+          "dispatchLog": {},
+          "entityId": "",
+          "event": "INIT",
           "input": false,
+          "locale": "",
+          "mount": [],
           "orbital": "Notes",
           "targetTrait": "",
-          "entityId": "",
-          "event": "INIT"
+          "viewer": {},
+          "wire": true,
+          "stream": false,
+          "traits": null
          }
         }
        }
       ]
-     }
-    },
-    {
-     "event": "DISPATCH_PREPARED",
-     "payload": {
-      "requestId": 1,
-      "address": "Notes..INIT",
-      "arguments": {},
-      "options": {
-       "wire": true,
-       "input": false,
-       "orbital": "Notes",
-       "targetTrait": "",
-       "entityId": "",
-       "event": "INIT"
-      }
      }
     },
     {
@@ -108,6 +90,21 @@
          "requestId": 1,
          "status": 200
         }
+       }
+      ]
+     },
+     "entity": {
+      "inflight": 1,
+      "waiting": [],
+      "frames": [],
+      "pending": [
+       {
+        "requestId": 1,
+        "kind": "events",
+        "orbital": "Notes",
+        "stream": false,
+        "dispatchKey": "dispatch-1",
+        "responseHeaders": []
        }
       ]
      }
@@ -150,48 +147,30 @@
         "payload": {
          "requestId": 2
         }
-       }
-      ]
-     }
-    },
-    {
-     "event": "DISPATCH_RUN",
-     "payload": {
-      "requestId": 2
-     },
-     "expect": {
-      "emits": [
+       },
        {
         "event": "DISPATCH_PREPARED",
         "payload": {
          "address": "Notes.Body.INIT",
          "options": {
-          "wire": true,
+          "clientId": "",
+          "delivery": {},
+          "dispatchLog": {},
+          "entityId": "",
+          "event": "INIT",
           "input": false,
+          "locale": "",
+          "mount": [],
           "orbital": "Notes",
           "targetTrait": "Body",
-          "entityId": "",
-          "event": "INIT"
+          "viewer": {},
+          "wire": true,
+          "stream": false,
+          "traits": null
          }
         }
        }
       ]
-     }
-    },
-    {
-     "event": "DISPATCH_PREPARED",
-     "payload": {
-      "requestId": 2,
-      "address": "Notes.Body.INIT",
-      "arguments": {},
-      "options": {
-       "wire": true,
-       "input": false,
-       "orbital": "Notes",
-       "targetTrait": "Body",
-       "entityId": "",
-       "event": "INIT"
-      }
      }
     },
     {
@@ -219,6 +198,21 @@
          "requestId": 2,
          "status": 200
         }
+       }
+      ]
+     },
+     "entity": {
+      "inflight": 2,
+      "waiting": [],
+      "frames": [],
+      "pending": [
+       {
+        "requestId": 2,
+        "kind": "events",
+        "orbital": "Notes",
+        "stream": false,
+        "dispatchKey": "dispatch-2",
+        "responseHeaders": []
        }
       ]
      }
@@ -261,48 +255,30 @@
         "payload": {
          "requestId": 3
         }
-       }
-      ]
-     }
-    },
-    {
-     "event": "DISPATCH_RUN",
-     "payload": {
-      "requestId": 3
-     },
-     "expect": {
-      "emits": [
+       },
        {
         "event": "DISPATCH_PREPARED",
         "payload": {
          "address": "Notes..NOPE",
          "options": {
-          "wire": true,
+          "clientId": "",
+          "delivery": {},
+          "dispatchLog": {},
+          "entityId": "",
+          "event": "NOPE",
           "input": false,
+          "locale": "",
+          "mount": [],
           "orbital": "Notes",
           "targetTrait": "",
-          "entityId": "",
-          "event": "NOPE"
+          "viewer": {},
+          "wire": true,
+          "stream": false,
+          "traits": null
          }
         }
        }
       ]
-     }
-    },
-    {
-     "event": "DISPATCH_PREPARED",
-     "payload": {
-      "requestId": 3,
-      "address": "Notes..NOPE",
-      "arguments": {},
-      "options": {
-       "wire": true,
-       "input": false,
-       "orbital": "Notes",
-       "targetTrait": "",
-       "entityId": "",
-       "event": "NOPE"
-      }
      }
     },
     {
@@ -330,6 +306,21 @@
          "requestId": 3,
          "status": 200
         }
+       }
+      ]
+     },
+     "entity": {
+      "inflight": 3,
+      "waiting": [],
+      "frames": [],
+      "pending": [
+       {
+        "requestId": 3,
+        "kind": "events",
+        "orbital": "Notes",
+        "stream": false,
+        "dispatchKey": "dispatch-3",
+        "responseHeaders": []
        }
       ]
      }
@@ -385,7 +376,8 @@
           "targetTrait": "",
           "viewer": {},
           "wire": true,
-          "traits": null
+          "traits": null,
+          "stream": false
          },
          "address": "Notes..INIT",
          "arguments": {}
@@ -444,7 +436,8 @@
           "targetTrait": "",
           "viewer": {},
           "wire": true,
-          "traits": []
+          "traits": [],
+          "stream": false
          },
          "address": "Notes..INIT",
          "arguments": {}

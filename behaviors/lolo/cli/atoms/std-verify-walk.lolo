@@ -20,7 +20,6 @@ type WalkPayload = Map string WalkValue
 type WalkIssue = { code : string!, message : string }
 type WalkValidation = { valid : boolean!, errors : [WalkIssue]!, warnings : [WalkIssue] }
 type WalkPlanned = { orbital : string!, trait : string!, from : string!, event : string!, to : string!, guarded : boolean!, payload : WalkPayload!, unplanned : string!, reply : string! }
-type WalkStep = { payload : WalkPayload, unplanned : string, reply : string }
 type WalkEffect = { type : string!, args : [WalkJson]!, status : string!, error : string }
 type WalkRun = { trait : string!, event : string!, transitionFired : boolean!, guard : string!, firedArm : number, effects : [WalkEffect]!, emitted : [SExpr]!, guards : [SExpr]!, state : Map string WalkJson }
 type WalkSlot = { name : string!, type : string!, required : boolean!, values : [string], entity : string }
@@ -59,6 +58,8 @@ orbital VerifyWalkOrbital {
     credits : [WalkCredit] = []
     creditSteps : [WalkCreditStep] = []
     gaps : number! = 0
+    viewer : Map string WalkValue
+    owners : Map string [string] = {}
   }
 
   trait WalkMachine = Machine.traits.Machine {
@@ -113,7 +114,7 @@ orbital VerifyWalkOrbital {
       VERIFY_WALK_ANSWERED -> external { status : number!  body : string! }
         @description "Internal: the command's answer, which the cli hook prints."
         @tier "internal"
-      VERIFY_WALK_START { file : string! }
+      VERIFY_WALK_START { file : string!, viewer : Map string WalkValue, owners : Map string [string] }
         @description "Internal: walk the program file."
         @tier "internal"
     }
@@ -138,6 +139,8 @@ orbital VerifyWalkOrbital {
     state ready {
       INIT -> ready
       VERIFY_WALK_START -> reading
+        (set @entity.viewer (object/get @payload "viewer" null))
+        (set @entity.owners (object/get @payload "owners" {}))
         (os/read-file { anchor: "cwd" path: @payload.file } { key: "file" emit: { success: WALK_FILE_READ, failure: WALK_FAILED } })
     }
 
@@ -170,7 +173,7 @@ orbital VerifyWalkOrbital {
         (emit VERIFY_WALK_ANSWERED { status: 500, body: "verify-walk: the program has no transitions" })
       WALK_MACHINE_ANSWERED -> planning when (> (array/len @payload.rows) 0)
         (set @entity.machineRows @payload.rows)
-        (emit WALK_PLAN_REQUEST { program: (json/parse @entity.program WalkFull), rows: @payload.rows })
+        (emit WALK_PLAN_REQUEST { program: (json/parse @entity.program WalkFull), rows: @payload.rows, viewer: @entity.viewer, owners: @entity.owners })
       WALK_FAILED -> ready
         (emit VERIFY_WALK_ANSWERED { status: 500, body: (str/concat "verify-walk: " @payload.error) })
     }
@@ -199,7 +202,7 @@ orbital VerifyWalkOrbital {
         (program/step (json/parse @entity.program WalkFull) (array/map @payload.rows (fn r
           { orbital: (object/get @r "orbital"), trait: (object/get @r "trait"), from: (object/get @r "from"), event: (object/get @r "event"), to: (object/get @r "to"), guarded: (object/get @r "guarded"),
             targets: (array/map (array/filter @entity.machineRows (fn g (and (= (object/get @g "trait") (object/get @r "trait")) (= (object/get @g "from") (object/get @r "from")) (= (object/get @g "event") (object/get @r "event"))))) (fn g (object/get @g "to"))),
-            payload: (object/get @r "payload")
+            payload: (object/get @r "payload"), viewer: @entity.viewer
           })) { key: "steps" emit: { success: WALK_STEPPED, failure: WALK_FAILED } })
       WALK_STEPPED -> judging
         (set @entity.played @payload.result)
@@ -262,7 +265,7 @@ orbital VerifyWalkOrbital {
       WALK_MACHINE_READ -> external { program : SExpr! }
         @description "Ask std-machine for the program's transition rows."
         @tier "internal"
-      WALK_PLAN_REQUEST -> external { program : SExpr!, rows : [WalkMachineRow]! }
+      WALK_PLAN_REQUEST -> external { program : SExpr!, rows : [WalkMachineRow]!, viewer : Map string WalkValue, owners : Map string [string] }
         @description "Ask std-verify-plan for one planned step per row."
         @tier "internal"
       WALK_JUDGE_REQUEST -> external { step : WalkPlanStep!, played : WalkRun!, program : SExpr! }
@@ -295,7 +298,7 @@ orbital VerifyWalkOrbital {
     }
 
     listens {
-      VERIFY_WALK_START { file : string! }
+      VERIFY_WALK_START { file : string!, viewer : Map string WalkValue, owners : Map string [string] }
         @description "Walk the program file."
       VerifyWalkCli.VERIFY_WALK_START -> VERIFY_WALK_START
       WalkMachine.MACHINE_ANSWERED -> WALK_MACHINE_ANSWERED
@@ -306,7 +309,7 @@ orbital VerifyWalkOrbital {
         @description "std-verify-credit's CREDIT_ANSWERED."
       WALK_JUDGE_ANSWERED { verdicts : [WalkVerdict]!, unported : [WalkUnported]! }
         @description "std-verify-judge's JUDGE_ANSWERED."
-      WALK_PLAN_ANSWERED { steps : [WalkStep]! }
+      WALK_PLAN_ANSWERED { steps : [WalkPlanStep]! }
         @description "std-verify-plan's PLAN_ANSWERED."
       WALK_MACHINE_ANSWERED { rows : [WalkMachineRow]! }
         @description "std-machine's MACHINE_ANSWERED."

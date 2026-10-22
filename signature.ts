@@ -84,8 +84,8 @@ export function nullable(of: OperatorTypeRef): Tagged<'union'> {
 }
 
 /** A closed record type. */
-export function shape(fields: Record<string, OperatorTypeRef>): Tagged<'object'> {
-  return { kind: 'object', fields };
+export function shape(fields: Record<string, OperatorTypeRef>, optional: string[] = []): Tagged<'object'> {
+  return optional.length ? { kind: 'object', fields, optional } : { kind: 'object', fields };
 }
 
 /** A record type that may carry further fields besides the declared ones. */

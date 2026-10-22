@@ -1019,6 +1019,345 @@
      }
     }
    ]
+  },
+  {
+   "id": "verified-invoker-tick",
+   "entity": {
+    "pending": [
+     {
+      "requestId": 7,
+      "method": "POST",
+      "path": "/api/tick",
+      "query": "",
+      "authorization": "",
+      "ip": "1.2.3.4",
+      "responseHeaders": [
+       {
+        "name": "vary",
+        "value": "origin"
+       }
+      ]
+     }
+    ],
+    "tickInvoker": "ci@x.io",
+    "ticks": [
+     7
+    ]
+   },
+   "steps": [
+    {
+     "event": "BEARER_VERIFIED",
+     "payload": {
+      "requestId": 7,
+      "viewer": {
+       "id": "scheduler",
+       "email": "ci@x.io",
+       "role": "service",
+       "permissions": [],
+       "claims": [
+        {
+         "name": "email_verified",
+         "value": true
+        }
+       ]
+      }
+     },
+     "expect": {
+      "effects": [
+       {
+        "key": [
+         "str/concat",
+         "tick-",
+         "@payload.requestId"
+        ],
+        "optionsAt": 0,
+        "type": "program/tick"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "unverified-invoker-tick",
+   "entity": {
+    "pending": [
+     {
+      "requestId": 7,
+      "method": "POST",
+      "path": "/api/tick",
+      "query": "",
+      "authorization": "",
+      "ip": "1.2.3.4",
+      "responseHeaders": [
+       {
+        "name": "vary",
+        "value": "origin"
+       }
+      ]
+     }
+    ],
+    "tickInvoker": "ci@x.io",
+    "ticks": [
+     7
+    ]
+   },
+   "steps": [
+    {
+     "event": "BEARER_VERIFIED",
+     "payload": {
+      "requestId": 7,
+      "viewer": {
+       "id": "scheduler",
+       "email": "ci@x.io",
+       "role": "service",
+       "permissions": [],
+       "claims": []
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 7,
+         "status": 401
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "wrong-invoker-tick",
+   "entity": {
+    "pending": [
+     {
+      "requestId": 7,
+      "method": "POST",
+      "path": "/api/tick",
+      "query": "",
+      "authorization": "",
+      "ip": "1.2.3.4",
+      "responseHeaders": [
+       {
+        "name": "vary",
+        "value": "origin"
+       }
+      ]
+     }
+    ],
+    "tickInvoker": "ci@x.io",
+    "ticks": [
+     7
+    ]
+   },
+   "steps": [
+    {
+     "event": "BEARER_VERIFIED",
+     "payload": {
+      "requestId": 7,
+      "viewer": {
+       "id": "scheduler",
+       "email": "other@x.io",
+       "role": "service",
+       "permissions": [],
+       "claims": [
+        {
+         "name": "email_verified",
+         "value": true
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 7,
+         "status": 401
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "tick_answered-preserves-request",
+   "entity": {
+    "pending": [
+     {
+      "requestId": 7,
+      "method": "POST",
+      "path": "/api/tick",
+      "query": "",
+      "authorization": "",
+      "ip": "1.2.3.4",
+      "responseHeaders": [
+       {
+        "name": "vary",
+        "value": "origin"
+       }
+      ]
+     },
+     {
+      "requestId": 8,
+      "method": "POST",
+      "path": "/api/tick",
+      "query": "",
+      "authorization": "",
+      "ip": "1.2.3.4",
+      "responseHeaders": [
+       {
+        "name": "vary",
+        "value": "origin"
+       }
+      ]
+     }
+    ],
+    "tickInvoker": "ci@x.io",
+    "ticks": [
+     7,
+     8
+    ]
+   },
+   "steps": [
+    {
+     "event": "TICK_ANSWERED",
+     "payload": {
+      "result": {
+       "ran": [
+        {
+         "trait": "Pulse",
+         "tick": "beat"
+        }
+       ]
+      },
+      "key": "tick-7"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 7,
+         "status": 200
+        }
+       },
+       {
+        "event": "REQUEST_ANSWERED",
+        "payload": {
+         "requestId": 7,
+         "status": 200
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "TICK_ANSWERED",
+     "payload": {
+      "result": {
+       "ran": [
+        {
+         "trait": "Pulse",
+         "tick": "beat"
+        }
+       ]
+      },
+      "key": "tick-7"
+     },
+     "expect": {
+      "fired": false,
+      "neverEmits": [
+       "RESPOND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "tick_failed-preserves-request",
+   "entity": {
+    "pending": [
+     {
+      "requestId": 7,
+      "method": "POST",
+      "path": "/api/tick",
+      "query": "",
+      "authorization": "",
+      "ip": "1.2.3.4",
+      "responseHeaders": [
+       {
+        "name": "vary",
+        "value": "origin"
+       }
+      ]
+     },
+     {
+      "requestId": 8,
+      "method": "POST",
+      "path": "/api/tick",
+      "query": "",
+      "authorization": "",
+      "ip": "1.2.3.4",
+      "responseHeaders": [
+       {
+        "name": "vary",
+        "value": "origin"
+       }
+      ]
+     }
+    ],
+    "tickInvoker": "ci@x.io",
+    "ticks": [
+     7,
+     8
+    ]
+   },
+   "steps": [
+    {
+     "event": "TICK_FAILED",
+     "payload": {
+      "error": "scheduler failed",
+      "key": "tick-7"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 7,
+         "status": 500
+        }
+       },
+       {
+        "event": "REQUEST_ANSWERED",
+        "payload": {
+         "requestId": 7,
+         "status": 500
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "TICK_FAILED",
+     "payload": {
+      "error": "scheduler failed",
+      "key": "tick-7"
+     },
+     "expect": {
+      "fired": false,
+      "neverEmits": [
+       "RESPOND"
+      ]
+     }
+    }
+   ]
   }
  ]
 }

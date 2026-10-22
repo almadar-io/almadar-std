@@ -1,7 +1,7 @@
 {
  "atom": "net/atoms/std-http-dispatch.lolo",
  "trait": "ServerDispatch",
- "note": "The EventResponse wire answers of the dispatch routes. They wait on G-ORB-446: program/dispatch must accept wire: true and hold the dispatch in flight (today it fails 'unsupported option wire' and the atom answers 500). DISPATCH_ANSWERED plays the wire that option returns.",
+ "note": "EventResponse route parity; keyed program/dispatch wire answers preserve status/code and the ordered stream items supplied by the host.",
  "cases": [
   {
    "id": "targeted-init-answers-200",
@@ -303,7 +303,7 @@
   },
   {
    "id": "stream-true-opens-the-event-stream",
-   "note": "events_wire.rs stream_true_answers_with_an_sse_item_sequence_ending_in_complete",
+   "note": "An effect before an event stays before it, with host timestamps preserved and exactly one terminal complete frame.",
    "steps": [
     {
      "event": "REQUEST_RECEIVED",
@@ -349,7 +349,54 @@
          }
         ]
        ],
-       "rejections": []
+       "rejections": [],
+       "items": [
+        {
+         "type": "effect",
+         "data": [
+          "render-ui",
+          "modal",
+          {
+           "type": "form"
+          }
+         ],
+         "timestamp": 123
+        },
+        {
+         "type": "event",
+         "data": {
+          "event": "DRAFT_OPENED"
+         },
+         "timestamp": 124
+        },
+        {
+         "type": "complete",
+         "data": {
+          "success": true,
+          "transitioned": true,
+          "states": {
+           "Layout": "ready",
+           "Modal": "open"
+          },
+          "emittedEvents": [
+           {
+            "event": "DRAFT_OPENED"
+           }
+          ],
+          "clientEffects": [
+           [
+            "render-ui",
+            "modal",
+            {
+             "type": "form"
+            }
+           ]
+          ],
+          "rejections": []
+         },
+         "timestamp": 125
+        }
+       ]
       },
       "key": "dispatch-7"
      },
@@ -360,8 +407,39 @@
         "payload": {
          "requestId": 7
         }
+       },
+       {
+        "event": "SSE_SEND",
+        "payload": {
+         "requestId": 7,
+         "data": "{\"type\":\"effect\",\"data\":[\"render-ui\",\"modal\",{\"type\":\"form\"}],\"timestamp\":123}"
+        }
+       },
+       {
+        "event": "SSE_SEND",
+        "payload": {
+         "requestId": 7,
+         "data": "{\"type\":\"event\",\"data\":{\"event\":\"DRAFT_OPENED\"},\"timestamp\":124}"
+        }
+       },
+       {
+        "event": "SSE_SEND",
+        "payload": {
+         "requestId": 7,
+         "data": "{\"type\":\"complete\",\"data\":{\"success\":true,\"transitioned\":true,\"states\":{\"Layout\":\"ready\",\"Modal\":\"open\"},\"emittedEvents\":[{\"event\":\"DRAFT_OPENED\"}],\"clientEffects\":[[\"render-ui\",\"modal\",{\"type\":\"form\"}]],\"rejections\":[]},\"timestamp\":125}"
+        }
+       },
+       {
+        "event": "SSE_CLOSE",
+        "payload": {
+         "requestId": 7
+        }
        }
-      ]
+      ],
+      "emitCounts": {
+       "SSE_SEND": 3,
+       "SSE_CLOSE": 1
+      }
      },
      "entity": {
       "inflight": 7,
@@ -546,7 +624,8 @@
         "event": "RESPOND",
         "payload": {
          "requestId": 7,
-         "status": 404
+         "status": 404,
+         "body": "eyJjb2RlIjoiT1JCSVRBTF9OT1RfRk9VTkQiLCJlcnJvciI6ImRpc3BhdGNoIGZhaWxlZCJ9"
         }
        }
       ]
@@ -596,7 +675,8 @@
         "event": "RESPOND",
         "payload": {
          "requestId": 7,
-         "status": 400
+         "status": 400,
+         "body": "eyJjb2RlIjoiTE9DQUxFX05PVF9ERUNMQVJFRCIsImVycm9yIjoiZGlzcGF0Y2ggZmFpbGVkIn0="
         }
        }
       ]
@@ -640,7 +720,111 @@
         "event": "RESPOND",
         "payload": {
          "requestId": 7,
-         "status": 500
+         "status": 500,
+         "body": "eyJjb2RlIjoiRVZFTlRfUFJPQ0VTU0lOR19FUlJPUiIsImVycm9yIjoiZGlzcGF0Y2ggZmFpbGVkIn0="
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "query-requests-ordered-stream-items",
+   "steps": [
+    {
+     "event": "REQUEST_RECEIVED",
+     "payload": {
+      "requestId": 7,
+      "method": "POST",
+      "path": "/api/orbitals/Notes/events",
+      "query": "stream=true",
+      "headers": {
+       "content-type": "application/json"
+      },
+      "body": "eyJldmVudCI6IkNSRUFURSIsInRhcmdldFRyYWl0IjoiTGF5b3V0In0=",
+      "peer": "127.0.0.1:5000"
+     }
+    },
+    {
+     "event": "DISPATCH_QUEUED",
+     "payload": {
+      "requestId": 7
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DISPATCH_PREPARED",
+        "payload": {
+         "requestId": 7,
+         "options": {
+          "wire": true,
+          "stream": true,
+          "input": false,
+          "orbital": "Notes",
+          "targetTrait": "Layout",
+          "entityId": "",
+          "event": "CREATE",
+          "traits": null,
+          "mount": [],
+          "clientId": "",
+          "locale": "",
+          "delivery": {},
+          "dispatchLog": {},
+          "viewer": {}
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "accept-header-requests-ordered-stream-items",
+   "steps": [
+    {
+     "event": "REQUEST_RECEIVED",
+     "payload": {
+      "requestId": 7,
+      "method": "POST",
+      "path": "/api/orbitals/Notes/events",
+      "query": "",
+      "headers": {
+       "content-type": "application/json",
+       "accept": "text/event-stream"
+      },
+      "body": "eyJldmVudCI6IkNSRUFURSIsInRhcmdldFRyYWl0IjoiTGF5b3V0In0=",
+      "peer": "127.0.0.1:5000"
+     }
+    },
+    {
+     "event": "DISPATCH_QUEUED",
+     "payload": {
+      "requestId": 7
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DISPATCH_PREPARED",
+        "payload": {
+         "requestId": 7,
+         "options": {
+          "wire": true,
+          "stream": true,
+          "input": false,
+          "orbital": "Notes",
+          "targetTrait": "Layout",
+          "entityId": "",
+          "event": "CREATE",
+          "traits": null,
+          "mount": [],
+          "clientId": "",
+          "locale": "",
+          "delivery": {},
+          "dispatchLog": {},
+          "viewer": {}
+         }
         }
        }
       ]

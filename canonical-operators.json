@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-10-21T17:59:34.371Z",
+  "generated": "2026-10-22T02:26:26.652Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -3601,16 +3601,120 @@
     "brotli/compress": {
       "category": "std-codec",
       "minArity": 1,
-      "maxArity": 1,
-      "returnType": "bytes",
+      "maxArity": 2,
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "bytes",
+          {
+            "kind": "object",
+            "fields": {
+              "ok": "boolean",
+              "data": {
+                "kind": "union",
+                "of": [
+                  "bytes",
+                  {
+                    "kind": "literal",
+                    "value": null
+                  }
+                ]
+              },
+              "crc": {
+                "kind": "union",
+                "of": [
+                  "number",
+                  {
+                    "kind": "literal",
+                    "value": null
+                  }
+                ]
+              },
+              "code": {
+                "kind": "union",
+                "of": [
+                  {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "magic"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "method"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "flags"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "header-crc"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "truncated"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "block"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "crc"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "size"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "trailing"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "output-limit"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "literal",
+                    "value": null
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
       "description": "brotli (RFC 7932) of bytes at the brotli CLI defaults (quality 11, window 22), through the brotli crate (a bytes value is a standard padded base64 string at run time)",
       "module": "brotli",
+      "returnSemantics": "option-branch<1,result>",
       "params": [
         {
           "name": "data",
           "type": "bytes",
           "description": "The bytes to compress",
           "rejectsNull": true
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "result": "boolean",
+              "quality": "number",
+              "window": "number"
+            },
+            "optional": [
+              "result",
+              "quality",
+              "window"
+            ]
+          },
+          "optional": true,
+          "description": "quality 0–11 (default 11), window 10–24 (default 22); result: true returns CodecResult"
         }
       ],
       "examples": [
@@ -3621,10 +3725,96 @@
     "brotli/decompress": {
       "category": "std-codec",
       "minArity": 2,
-      "maxArity": 2,
-      "returnType": "bytes",
+      "maxArity": 3,
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "bytes",
+          {
+            "kind": "object",
+            "fields": {
+              "ok": "boolean",
+              "data": {
+                "kind": "union",
+                "of": [
+                  "bytes",
+                  {
+                    "kind": "literal",
+                    "value": null
+                  }
+                ]
+              },
+              "crc": {
+                "kind": "union",
+                "of": [
+                  "number",
+                  {
+                    "kind": "literal",
+                    "value": null
+                  }
+                ]
+              },
+              "code": {
+                "kind": "union",
+                "of": [
+                  {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "magic"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "method"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "flags"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "header-crc"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "truncated"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "block"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "crc"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "size"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "trailing"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "output-limit"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "literal",
+                    "value": null
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
       "description": "Decompress one brotli stream through the brotli crate. An output past maxBytes, corrupt input or a maxBytes that is not a whole number from 0 fails with kind invalid",
       "module": "brotli",
+      "returnSemantics": "option-branch<2,result>",
       "params": [
         {
           "name": "data",
@@ -3637,6 +3827,20 @@
           "type": "number",
           "description": "The largest output accepted, in bytes; a larger output fails with kind invalid (the decompression-bomb guard)",
           "rejectsNull": true
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "result": "boolean"
+            },
+            "optional": [
+              "result"
+            ]
+          },
+          "optional": true,
+          "description": "With result: true, return { ok, data, crc, code }; failures are closed codec codes, never error text"
         }
       ],
       "examples": [
@@ -8539,16 +8743,118 @@
     "gzip/compress": {
       "category": "std-codec",
       "minArity": 1,
-      "maxArity": 1,
-      "returnType": "bytes",
+      "maxArity": 2,
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "bytes",
+          {
+            "kind": "object",
+            "fields": {
+              "ok": "boolean",
+              "data": {
+                "kind": "union",
+                "of": [
+                  "bytes",
+                  {
+                    "kind": "literal",
+                    "value": null
+                  }
+                ]
+              },
+              "crc": {
+                "kind": "union",
+                "of": [
+                  "number",
+                  {
+                    "kind": "literal",
+                    "value": null
+                  }
+                ]
+              },
+              "code": {
+                "kind": "union",
+                "of": [
+                  {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "magic"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "method"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "flags"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "header-crc"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "truncated"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "block"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "crc"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "size"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "trailing"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "output-limit"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "literal",
+                    "value": null
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
       "description": "gzip (RFC 1952) of bytes at the default level, through the flate2 crate (a bytes value is a standard padded base64 string at run time)",
       "module": "gzip",
+      "returnSemantics": "option-branch<1,result>",
       "params": [
         {
           "name": "data",
           "type": "bytes",
           "description": "The bytes to compress",
           "rejectsNull": true
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "result": "boolean",
+              "level": "number"
+            },
+            "optional": [
+              "result",
+              "level"
+            ]
+          },
+          "optional": true,
+          "description": "level 0–9 (default 6); result: true returns CodecResult"
         }
       ],
       "examples": [
@@ -8559,10 +8865,96 @@
     "gzip/decompress": {
       "category": "std-codec",
       "minArity": 2,
-      "maxArity": 2,
-      "returnType": "bytes",
+      "maxArity": 3,
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "bytes",
+          {
+            "kind": "object",
+            "fields": {
+              "ok": "boolean",
+              "data": {
+                "kind": "union",
+                "of": [
+                  "bytes",
+                  {
+                    "kind": "literal",
+                    "value": null
+                  }
+                ]
+              },
+              "crc": {
+                "kind": "union",
+                "of": [
+                  "number",
+                  {
+                    "kind": "literal",
+                    "value": null
+                  }
+                ]
+              },
+              "code": {
+                "kind": "union",
+                "of": [
+                  {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "magic"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "method"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "flags"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "header-crc"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "truncated"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "block"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "crc"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "size"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "trailing"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "output-limit"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "literal",
+                    "value": null
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
       "description": "Decompress every gzip member (as gzip -d reads them), through the flate2 crate. An output past maxBytes, corrupt input or a maxBytes that is not a whole number from 0 fails with kind invalid",
       "module": "gzip",
+      "returnSemantics": "option-branch<2,result>",
       "params": [
         {
           "name": "data",
@@ -8575,6 +8967,20 @@
           "type": "number",
           "description": "The largest output accepted, in bytes; a larger output fails with kind invalid (the decompression-bomb guard)",
           "rejectsNull": true
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "result": "boolean"
+            },
+            "optional": [
+              "result"
+            ]
+          },
+          "optional": true,
+          "description": "With result: true, return { ok, data, crc, code }; failures are closed codec codes, never error text"
         }
       ],
       "examples": [
@@ -20450,6 +20856,7 @@
                 }
               },
               "wire": "boolean",
+              "stream": "boolean",
               "input": "boolean",
               "orbital": "string",
               "targetTrait": "string",
@@ -20533,7 +20940,7 @@
             },
             "open": true
           },
-          "description": "An optional stated payload (`schema`) the arguments are checked against before dispatch, and the event-request options (`wire`, `input`, `orbital`, `targetTrait`, `entityId`, `event`, `traits`, `mount`, `clientId`, `locale`, `delivery`, `dispatchLog`, `viewer`)",
+          "description": "An optional stated payload (`schema`) the arguments are checked against before dispatch, and the event-request options (`wire`, `stream`, `input`, `orbital`, `targetTrait`, `entityId`, `event`, `traits`, `mount`, `clientId`, `locale`, `delivery`, `dispatchLog`, `viewer`)",
           "optional": true
         },
         {
@@ -21094,7 +21501,7 @@
         "kind": "array",
         "of": "PlayedStep"
       },
-      "description": "Play transitions of a program in one run of the kernel, each from the state it names, and return each request played: the request with its `result` circuit step — whether it fired, the arm that fired, every guard tried, each effect of the fired arm (`routed` when its failure went to its declared `emit.failure`), the events it emitted, and each `@ensures` of the arm judged by the kernel (`held`, `broken` with its counterexample bindings, or `inconclusive` with the reason). It also carries `outcomes`: every trait the dispatch cascade moved, in dispatch order, each `{ orbital, trait, event, from, to, arm, fired, emitted }` (`event` is the event that trait handled, `arm` the arm that fired or null; the first is the requested trait, equal to the top-level fields). A request may seed its trait's entity row (`entity`: fields merged over the row before the event), override its trait's knobs (`config`: values over the declared config defaults, for that trait and the whole call, since `@config` folds into the program; two requests giving one knob different values are refused), dispatch as a user (`viewer`: a user object, or null for nobody) and pin the clock (`now`: the ms-epoch `@now` its dispatch reads); without them the request plays as before. Each result also carries `entityAfter`: the requested trait's entity row after the request. A keyed os/* or http ask a step makes is left pending, reported among the effects and neither run nor failed, so no completion route fires; a later request plays its answer event (an unkeyed one fails, as with no host). With `options.live: true` the requests run on the native program host instead: their os/* and http asks are answered by this machine, and each request waits for its open calls to end; a request's `settleMs` cancels a call still open after that many milliseconds (live only), and without it the request waits with no cutoff. With `options.render`, each result also carries `rendered`: the slots its trait filled, walked by the kernel's render probe as typed node facts (pattern, renderer coverage, entity binding, `@trait` references).",
+      "description": "Play transitions of a program in one run of the kernel, each from the state it names, and return each request played: the request with its `result` circuit step — whether it fired, the arm that fired, every guard tried, each effect of the fired arm (`routed` when its failure went to its declared `emit.failure`), the events it emitted, and each `@ensures` of the arm judged by the kernel (`held`, `broken` with its counterexample bindings, or `inconclusive` with the reason). It also carries `outcomes`: every trait the dispatch cascade moved, in dispatch order, each `{ orbital, trait, event, from, to, arm, fired, effects, emitted }` (`event` is the event that trait handled, `arm` the arm that fired or null, `effects` that arm's effects as the top-level `effects` report them; the first is the requested trait, equal to the top-level fields). A request may seed its trait's entity row (`entity`: fields merged over the row before the event), override its trait's knobs (`config`: values over the declared config defaults, for that trait and the whole call, since `@config` folds into the program; two requests giving one knob different values are refused), dispatch as a user (`viewer`: a user object, or null for nobody) and pin the clock (`now`: the ms-epoch `@now` its dispatch reads); without them the request plays as before. Each result also carries `entityAfter`: the requested trait's entity row after the request. A keyed os/* or http ask a step makes is left pending, reported among the effects and neither run nor failed, so no completion route fires; a later request plays its answer event (an unkeyed one fails, as with no host). With `options.live: true` the requests run on the native program host instead: their os/* and http asks are answered by this machine, and each request waits for its open calls to end; a request's `settleMs` cancels a call still open after that many milliseconds (live only), and without it the request waits with no cutoff. With `options.render`, each result also carries `rendered`: the slots its trait filled, walked by the kernel's render probe as typed node facts (pattern, renderer coverage, entity binding, `@trait` references).",
       "module": "program",
       "hasSideEffects": true,
       "runsOn": "server",
