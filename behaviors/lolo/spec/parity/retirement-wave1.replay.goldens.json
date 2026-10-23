@@ -1,0 +1,457 @@
+{
+ "atom": "store/atoms/std-store-selection.lolo",
+ "trait": "StoreSelection",
+ "source": "parity/retirement/gap-disposition-2026-10-22.json (wave-1 triage, lane F3)",
+ "note": "Native parity proof for the mock/seed isolation class of the retired runtime ledger (G-RUNTIME-013 hosted mock-seed defects, G-RUNTIME-090 mock store seed): a production environment never selects the mock store, and a bad selection never selects a store. Cases drive the reading-state arms directly (entity carries the already-read NODE_ENV/USE_MOCK_DATA/backend).",
+ "cases": [
+  {
+   "id": "bad-production-with-mock-flag-never-selects-a-store",
+   "steps": [
+    {
+     "trait": "StoreSelection",
+     "from": "reading",
+     "entity": {
+      "nodeEnv": "production",
+      "useMock": true,
+      "backend": "firebase",
+      "url": ""
+     },
+     "event": "STORE_BACKEND",
+     "payload": {
+      "value": null
+     },
+     "expect": {
+      "state": "idle",
+      "exactEmits": [
+       {
+        "event": "STORE_SELECTION_FAILED",
+        "payload": {
+         "code": "store_mock_forbidden",
+         "message": "USE_MOCK_DATA=true is not permitted when NODE_ENV=production"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORE_SELECTED"
+      ]
+     }
+    }
+   ],
+   "note": "Legacy G-RUNTIME-013/090 class (mock rows reaching a hosted store): production refuses USE_MOCK_DATA=true."
+  },
+  {
+   "id": "bad-production-with-mock-backend-never-selects-a-store",
+   "steps": [
+    {
+     "trait": "StoreSelection",
+     "from": "reading",
+     "entity": {
+      "nodeEnv": "production",
+      "useMock": false,
+      "backend": "firebase",
+      "url": ""
+     },
+     "event": "STORE_BACKEND",
+     "payload": {
+      "value": "mock"
+     },
+     "expect": {
+      "state": "idle",
+      "exactEmits": [
+       {
+        "event": "STORE_SELECTION_FAILED",
+        "payload": {
+         "code": "store_mock_backend_forbidden",
+         "message": "DATA_BACKEND=mock is not permitted when NODE_ENV=production"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORE_SELECTED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bad-production-mock-flag-and-mock-backend-the-flag-refusal-wins",
+   "steps": [
+    {
+     "trait": "StoreSelection",
+     "from": "reading",
+     "entity": {
+      "nodeEnv": "production",
+      "useMock": true,
+      "backend": "firebase",
+      "url": ""
+     },
+     "event": "STORE_BACKEND",
+     "payload": {
+      "value": "mock"
+     },
+     "expect": {
+      "state": "idle",
+      "exactEmits": [
+       {
+        "event": "STORE_SELECTION_FAILED",
+        "payload": {
+         "code": "store_mock_forbidden",
+         "message": "USE_MOCK_DATA=true is not permitted when NODE_ENV=production"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORE_SELECTED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-development-mock-backend-selects-the-mock-store",
+   "steps": [
+    {
+     "trait": "StoreSelection",
+     "from": "reading",
+     "entity": {
+      "nodeEnv": "development",
+      "useMock": false,
+      "backend": "firebase",
+      "url": ""
+     },
+     "event": "STORE_BACKEND",
+     "payload": {
+      "value": "mock"
+     },
+     "expect": {
+      "state": "idle",
+      "exactEmits": [
+       {
+        "event": "STORE_SELECTED",
+        "payload": {
+         "backend": "mock",
+         "url": "",
+         "poolMax": null
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORE_SELECTION_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-development-mock-flag-selects-the-mock-store-over-the-named-backend",
+   "steps": [
+    {
+     "trait": "StoreSelection",
+     "from": "reading",
+     "entity": {
+      "nodeEnv": "development",
+      "useMock": true,
+      "backend": "firebase",
+      "url": ""
+     },
+     "event": "STORE_BACKEND",
+     "payload": {
+      "value": "postgres"
+     },
+     "expect": {
+      "state": "idle",
+      "exactEmits": [
+       {
+        "event": "STORE_SELECTED",
+        "payload": {
+         "backend": "mock",
+         "url": "",
+         "poolMax": null
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORE_SELECTION_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-production-unset-backend-selects-firebase",
+   "steps": [
+    {
+     "trait": "StoreSelection",
+     "from": "reading",
+     "entity": {
+      "nodeEnv": "production",
+      "useMock": false,
+      "backend": "firebase",
+      "url": ""
+     },
+     "event": "STORE_BACKEND",
+     "payload": {
+      "value": null
+     },
+     "expect": {
+      "state": "idle",
+      "exactEmits": [
+       {
+        "event": "STORE_SELECTED",
+        "payload": {
+         "backend": "firebase",
+         "url": "",
+         "poolMax": null
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORE_SELECTION_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bad-unknown-backend-is-refused",
+   "steps": [
+    {
+     "trait": "StoreSelection",
+     "from": "reading",
+     "entity": {
+      "nodeEnv": "development",
+      "useMock": false,
+      "backend": "firebase",
+      "url": ""
+     },
+     "event": "STORE_BACKEND",
+     "payload": {
+      "value": "sqlite"
+     },
+     "expect": {
+      "state": "idle",
+      "exactEmits": [
+       {
+        "event": "STORE_SELECTION_FAILED",
+        "payload": {
+         "code": "store_backend_invalid",
+         "message": "DATA_BACKEND must be one of mock, firebase, postgres, couchdb, got 'sqlite'"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORE_SELECTED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bad-mock-flag-other-than-true-or-false-is-refused",
+   "steps": [
+    {
+     "trait": "StoreSelection",
+     "from": "reading",
+     "entity": {
+      "nodeEnv": "development",
+      "useMock": false,
+      "backend": "firebase",
+      "url": ""
+     },
+     "event": "STORE_MOCK_FLAG",
+     "payload": {
+      "value": "yes"
+     },
+     "expect": {
+      "state": "idle",
+      "exactEmits": [
+       {
+        "event": "STORE_SELECTION_FAILED",
+        "payload": {
+         "code": "store_mock_flag_invalid",
+         "message": "USE_MOCK_DATA must be 'true' or 'false', got 'yes'"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORE_SELECTED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bad-postgres-without-a-url-is-refused",
+   "steps": [
+    {
+     "trait": "StoreSelection",
+     "from": "reading",
+     "entity": {
+      "nodeEnv": "production",
+      "useMock": false,
+      "backend": "postgres",
+      "url": ""
+     },
+     "event": "STORE_URL",
+     "payload": {
+      "value": null
+     },
+     "expect": {
+      "state": "idle",
+      "exactEmits": [
+       {
+        "event": "STORE_SELECTION_FAILED",
+        "payload": {
+         "code": "store_url_missing",
+         "message": "DATA_BACKEND=postgres requires DATABASE_URL to be set"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORE_SELECTED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bad-couchdb-with-an-empty-url-is-refused",
+   "steps": [
+    {
+     "trait": "StoreSelection",
+     "from": "reading",
+     "entity": {
+      "nodeEnv": "production",
+      "useMock": false,
+      "backend": "couchdb",
+      "url": ""
+     },
+     "event": "STORE_URL",
+     "payload": {
+      "value": ""
+     },
+     "expect": {
+      "state": "idle",
+      "exactEmits": [
+       {
+        "event": "STORE_SELECTION_FAILED",
+        "payload": {
+         "code": "store_url_missing",
+         "message": "DATA_BACKEND=couchdb requires COUCHDB_URL to be set"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORE_SELECTED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-couchdb-url-selects-couchdb",
+   "steps": [
+    {
+     "trait": "StoreSelection",
+     "from": "reading",
+     "entity": {
+      "nodeEnv": "production",
+      "useMock": false,
+      "backend": "couchdb",
+      "url": ""
+     },
+     "event": "STORE_URL",
+     "payload": {
+      "value": "http://couch:5984"
+     },
+     "expect": {
+      "state": "idle",
+      "exactEmits": [
+       {
+        "event": "STORE_SELECTED",
+        "payload": {
+         "backend": "couchdb",
+         "url": "http://couch:5984",
+         "poolMax": null
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORE_SELECTION_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-postgres-pool-max-with-a-leading-plus-is-a-number",
+   "steps": [
+    {
+     "trait": "StoreSelection",
+     "from": "reading",
+     "entity": {
+      "nodeEnv": "production",
+      "useMock": false,
+      "backend": "postgres",
+      "url": "postgres://db/app"
+     },
+     "event": "STORE_POOL_MAX",
+     "payload": {
+      "value": "+8"
+     },
+     "expect": {
+      "state": "idle",
+      "exactEmits": [
+       {
+        "event": "STORE_SELECTED",
+        "payload": {
+         "backend": "postgres",
+         "url": "postgres://db/app",
+         "poolMax": 8
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORE_SELECTION_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-postgres-pool-max-over-u32-is-absent",
+   "steps": [
+    {
+     "trait": "StoreSelection",
+     "from": "reading",
+     "entity": {
+      "nodeEnv": "production",
+      "useMock": false,
+      "backend": "postgres",
+      "url": "postgres://db/app"
+     },
+     "event": "STORE_POOL_MAX",
+     "payload": {
+      "value": "4294967296"
+     },
+     "expect": {
+      "state": "idle",
+      "exactEmits": [
+       {
+        "event": "STORE_SELECTED",
+        "payload": {
+         "backend": "postgres",
+         "url": "postgres://db/app",
+         "poolMax": null
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORE_SELECTION_FAILED"
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

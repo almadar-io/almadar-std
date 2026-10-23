@@ -30,7 +30,7 @@ describe('runsOn', () => {
     expect(getOperatorsRunningOn('server')).toEqual([
       'atomic', 'behavior/catalog', 'behavior/dependencies', 'behavior/describe', 'behavior/resolve', 'behavior/source', 'call-service', 'cancel-call', 'credential-forget', 'credential-list', 'credential-mode', 'credential-remove', 'credential-rotate', 'credential-set', 'credential-status', 'credential-test', 'fetch', 'fetch-stream', 'http',
       'oauth-authorize', 'oauth-connection-forget', 'oauth-connection-status', ...OS_EFFECTS,
-      'persist', 'persist/read-named', 'postgres', 'program/compose', 'program/dispatch', 'program/eval', 'program/inputs', 'program/print', 'program/read', 'program/step', 'program/validate', 'random-bytes', 'redis', 'swap',
+      'persist', 'persist/read-named', 'postgres', 'program/compose', 'program/dispatch', 'program/eval', 'program/inputs', 'program/print', 'program/read', 'program/self', 'program/step', 'program/validate', 'random-bytes', 'redis', 'swap',
     ].sort());
   });
 
@@ -79,7 +79,7 @@ describe('runsOn', () => {
 
   it('bytes/ is a pure closed family and os/ reads return bytes', () => {
     const names = Object.keys(STD_OPERATORS).filter((k) => k.startsWith('bytes/')).sort();
-    expect(names).toEqual(['bytes/at', 'bytes/concat', 'bytes/equals', 'bytes/from-string', 'bytes/index-of', 'bytes/length', 'bytes/read-uint', 'bytes/slice', 'bytes/to-string', 'bytes/write-uint']);
+    expect(names).toEqual(['bytes/at', 'bytes/concat', 'bytes/equals', 'bytes/from-base64', 'bytes/from-string', 'bytes/index-of', 'bytes/length', 'bytes/read-uint', 'bytes/slice', 'bytes/to-base64', 'bytes/to-string', 'bytes/write-uint']);
     for (const name of names) {
       expect(STD_OPERATORS[name].hasSideEffects, name).toBe(false);
       expect(STD_OPERATORS[name].runsOn, name).toBeUndefined();

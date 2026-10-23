@@ -1,12 +1,60 @@
 app std-couchdb [
   version: "1.0.0",
-  description: "std-couchdb — a CouchDB row store over the REST API, the std driver for the kernel's CouchDB backend. The caller names the database (one per collection) and the row id; a row is the document whose _id is the id, and every answer hands the row back without _id and _rev. COUCH_GET answers COUCH_ROW or COUCH_ROW_ABSENT (404). COUCH_CREATE makes the database once (PUT /db, 201 or 202 made, 409 or 412 already there) then PUTs the document; a 409 is COUCH_DUPLICATE_ID. COUCH_UPDATE merges changes over the stored document, COUCH_UPSERT replaces it keeping its createdAt, COUCH_DELETE removes it: each reads the document for its _rev and writes conditioned on it, and a 409 re-reads and tries again up to maxAttempts times before COUCH_FAILED (changed concurrently). COUCH_LIST reads /db/_all_docs; COUCH_FIND POSTs a Mango selector to /db/_find (404 is an empty answer), reads every page through the bookmark when no limit is given and counts the total when a full window cannot say it. Requests carry a Basic Authorization header from the user and password credentials. A non-2xx reply answers COUCH_FAILED with CouchDB's reason; an unreachable server answers status 0.",
+  description: "std-couchdb — a row-store driver over the CouchDB REST API, the std twin of the kernel's CouchDB backend (one typed verb contract: ROW_READ, ROW_LIST, ROWS_QUERY, ROWS_WRITE; replies ROW_FOUND, ROWS_LISTED, ROWS_PAGE, ROWS_IDS, ROWS_WRITTEN, STORE_UNSUPPORTED, STORE_FAILED). An entity type is one database, named by the declared collections or like its Postgres table (TimeEntry is time_entries); a row is the document whose _id is the id, and every answer hands the row back without _id and _rev. ROWS_QUERY translates the typed row query to a Mango selector sorted on _id and answers STORE_UNSUPPORTED with the reason for a query Mango cannot carry with the shared semantics (a contains leaf, an ordering comparison on a string, a nearest ask, an order other than by id); a total of none skips the count request and an ids query asks for _id only. ROWS_WRITE runs the ops in order, each its own _rev-guarded write; a guard is tested in process on the row read and a guard that fails is refused; a failure stops the run, an atomic batch is STORE_UNSUPPORTED and a rekey op fails the batch (rekey is unsupported by this store). The internal COUCH_* events are the per-document steps. COUCH_GET answers COUCH_ROW or COUCH_ROW_ABSENT (404). COUCH_CREATE makes the database once (PUT /db, 201 or 202 made, 409 or 412 already there) then PUTs the document; a 409 is COUCH_DUPLICATE_ID. COUCH_UPDATE merges changes over the stored document, COUCH_UPSERT replaces it keeping its createdAt, COUCH_DELETE removes it: each reads the document for its _rev and writes conditioned on it, and a 409 re-reads and tries again up to maxAttempts times before COUCH_FAILED (changed concurrently). COUCH_LIST reads /db/_all_docs; COUCH_FIND POSTs a Mango selector to /db/_find (404 is an empty answer), reads every page through the bookmark when no limit is given and counts the total when a full window cannot say it. Requests carry a Basic Authorization header from the user and password credentials. A non-2xx reply answers COUCH_FAILED with CouchDB's reason; an unreachable server answers status 0. One request is in flight per frame: the store seam asks the driver in a frame keyed by the ask (EXEC-STORE-4), and orb validate refuses a trait outside the driver that emits a row verb (ORB_STORE_VERB_OUTSIDE_SEAM).",
   egress: ["http://couchdb.example.test:5984"]
 ]
 uses Spec from "almadar-std/couchdb"
-type CouchScalar = string | number | boolean
-type CouchCell = CouchScalar | [CouchScalar] | [[CouchScalar]] | [[[CouchScalar]]]
-type CouchDoc = Map string CouchCell
+type RowCell = string | number | boolean | [RowCell?] | Map string RowCell?
+type Row = Map string RowCell?
+type CouchDoc = Map string RowCell?
+
+type CompareLeaf = { kind : "compare", field : string!, op : "==" | "!=" | "<" | "<=" | ">" | ">=", value : RowCell? }
+type MemberLeaf = { kind : "member", field : string!, values : [RowCell?]! }
+type HasElementLeaf = { kind : "hasElement", field : string!, value : RowCell? }
+type ContainsLeaf = { kind : "contains", field : string!, text : string!, caseSensitive : boolean! }
+type IsNullLeaf = { kind : "isNull", field : string!, isNull : boolean! }
+type AllNode = { kind : "all", of : [RowPredicate]! }
+type AnyNode = { kind : "any", of : [RowPredicate]! }
+type NotNode = { kind : "not", of : RowPredicate! }
+type ConstLeaf = { kind : "const", value : boolean! }
+type RowPredicate = CompareLeaf | MemberLeaf | HasElementLeaf | ContainsLeaf | IsNullLeaf | AllNode | AnyNode | NotNode | ConstLeaf
+
+type RowOrder = { field : string!, direction : "asc" | "desc" }
+type RowNearest = { field : string!, vector : [number]!, k : number! }
+type RowQuery = { policy : RowPredicate?, filter : RowPredicate?, order : RowOrder?, offset : number?, limit : number?, total : "exact" | "none"?, nearest : RowNearest? }
+
+type RowLeafKind = "compare" | "member" | "hasElement" | "contains" | "isNull"
+type RowCombinator = "all" | "any" | "not"
+type RowOperator = "==" | "!=" | "<" | "<=" | ">" | ">=" | "member" | "hasElement" | "contains"
+type RowValueKind = "string" | "number" | "boolean" | "date" | "null"
+type OperatorValueKinds = { operator : RowOperator!, valueKinds : [RowValueKind]! }
+type EveryFieldOrderable = { kind : "every-field" }
+type ListedOrderable = { kind : "listed", fields : [string]! }
+type RowOrderableFields = EveryFieldOrderable | ListedOrderable
+type QueryCapabilities = { leaves : [RowLeafKind]!, combinators : [RowCombinator]!, compareOps : [string]!, operatorValueKinds : [OperatorValueKinds]?, orderableFields : RowOrderableFields!, window : boolean!, exactTotal : boolean!, idsOnly : boolean?, nearest : boolean? }
+type GuardCapabilities = { leaves : [RowLeafKind]!, combinators : [RowCombinator]!, compareOps : [string]! }
+type WriteCapabilities = { guards : GuardCapabilities!, conditional : boolean!, returnsRow : boolean!, stopRuns : boolean!, atomicBatch : boolean! }
+
+type CreateOp = { kind : "create", entityType : string!, data : Row! }
+type UpsertOp = { kind : "upsert", entityType : string!, data : Row! }
+type UpdateOp = { kind : "update", entityType : string!, id : string!, data : Row!, guard : RowPredicate? }
+type DeleteOp = { kind : "delete", entityType : string!, id : string!, guard : RowPredicate? }
+type RekeyOp = { kind : "rekey", entityType : string!, id : string!, newId : string! }
+type RowWriteOp = CreateOp | UpsertOp | UpdateOp | DeleteOp | RekeyOp
+type RowWriteBatch = { ops : [RowWriteOp]!, onFailure : "atomic" | "stop" }
+
+type CreatedOutcome = { kind : "created", row : Row! }
+type UpdatedOutcome = { kind : "updated", row : Row!, before : Row? }
+type DeletedOutcome = { kind : "deleted", before : Row? }
+type NotFoundOutcome = { kind : "not-found" }
+type DuplicateIdOutcome = { kind : "duplicate-id" }
+type RefusedOutcome = { kind : "refused" }
+type FailedOutcome = { kind : "failed", message : string! }
+type RolledBackOutcome = { kind : "rolled-back" }
+type RowWriteOutcome = CreatedOutcome | UpdatedOutcome | DeletedOutcome | NotFoundOutcome | DuplicateIdOutcome | RefusedOutcome | FailedOutcome | RolledBackOutcome
+
+type CollectionBinding = { entityType : string!, collection : string! }
+type MangoStep = { p : string!, n : string!, pj : string!, contains : boolean!, strOrder : boolean! }
 type CouchRev = { _rev : string }
 type CouchError = { error : string, reason : string }
 type CouchFound = { docs : [CouchDoc], bookmark : string }
@@ -15,6 +63,17 @@ type CouchAllDocs = { rows : [CouchAllDocsRow] }
 orbital CouchdbOrbital {
   entity CouchCall [runtime] {
     id : string!
+    key : string @description "The kernel's key for the ask in flight; every reply carries it" = ""
+    mode : string @description "The typed ask in flight: read, list, query or write; empty while idle" = ""
+    entityType : string @description "The entity type of the op in flight" = ""
+    project : string @description "What a query answers: rows or ids" = ""
+    ops : [RowWriteOp] @description "The ops of the batch a write applies" = []
+    at : number @description "Index of the batch op in flight" = 0
+    outcomes : [RowWriteOutcome] @description "The outcomes of the batch ops that ran" = []
+    guard : RowPredicate @description "The guard the update or delete in flight tests on the stored row"
+    before : Row @description "The stored row a guarded update or delete tested, handed back with the outcome"
+    totalNone : boolean @description "The query in flight asked for no exact total" = false
+    fields : string @description "The Mango fields clause the query in flight sends, empty or the ids-only projection" = ""
     op : string @description "The verb in flight: get, create, upsert, update, delete, list or find; empty while idle." = ""
     db : string = ""
     docId : string = ""
@@ -32,13 +91,159 @@ orbital CouchdbOrbital {
     count : number = 0
   }
 
-  trait CouchClient -> CouchCall [integration, instance] {
+  trait RowStoreDriver -> CouchCall [integration, instance] {
     initial: idle
 
     state idle {
       INIT -> idle
         (set @entity.op "")
         (set @entity.attempt 0)
+        (set @entity.mode "")
+
+      ROW_READ -> idle
+        (set @entity.key @payload.key)
+        (set @entity.entityType @payload.entityType)
+        (set @entity.mode "read")
+        (set @entity.db (let ((et @payload.entityType) (b (array/find (array/reverse @config.collections) (fn x (= (object/get @x "entityType" "") @et))))) (if (!= @b null) (object/get @b "collection" "") (let ((snake (let ((cs (str/split @et ""))) (str/join (array/map (array/range 0 (array/len @cs)) (fn i (let ((c (array/nth @cs @i))) (if (validate/pattern @c "^[A-Z]$") (str/concat (if (and (> @i 0) (validate/pattern (array/nth @cs (- @i 1)) "^[a-z0-9]$")) "_" "") (str/lower @c)) @c)))) "")))) (if (validate/pattern @snake "y$") (str/replace-pattern @snake "y$" "ies") (if (validate/pattern @snake "s$") (str/concat @snake "es") (str/concat @snake "s")))))))
+        (emit COUCH_GET { db: @entity.db, id: @payload.id })
+
+      ROW_LIST -> idle
+        (set @entity.key @payload.key)
+        (set @entity.entityType @payload.entityType)
+        (set @entity.mode "list")
+        (set @entity.db (let ((et @payload.entityType) (b (array/find (array/reverse @config.collections) (fn x (= (object/get @x "entityType" "") @et))))) (if (!= @b null) (object/get @b "collection" "") (let ((snake (let ((cs (str/split @et ""))) (str/join (array/map (array/range 0 (array/len @cs)) (fn i (let ((c (array/nth @cs @i))) (if (validate/pattern @c "^[A-Z]$") (str/concat (if (and (> @i 0) (validate/pattern (array/nth @cs (- @i 1)) "^[a-z0-9]$")) "_" "") (str/lower @c)) @c)))) "")))) (if (validate/pattern @snake "y$") (str/replace-pattern @snake "y$" "ies") (if (validate/pattern @snake "s$") (str/concat @snake "es") (str/concat @snake "s")))))))
+        (emit COUCH_LIST { db: @entity.db })
+
+      ROWS_QUERY -> idle
+        (set @entity.key @payload.key)
+        (set @entity.entityType @payload.entityType)
+        (set @entity.mode "query")
+        (set @entity.project (if (= @payload.project "ids") "ids" "rows"))
+        (set @entity.db (let ((et @payload.entityType) (b (array/find (array/reverse @config.collections) (fn x (= (object/get @x "entityType" "") @et))))) (if (!= @b null) (object/get @b "collection" "") (let ((snake (let ((cs (str/split @et ""))) (str/join (array/map (array/range 0 (array/len @cs)) (fn i (let ((c (array/nth @cs @i))) (if (validate/pattern @c "^[A-Z]$") (str/concat (if (and (> @i 0) (validate/pattern (array/nth @cs (- @i 1)) "^[a-z0-9]$")) "_" "") (str/lower @c)) @c)))) "")))) (if (validate/pattern @snake "y$") (str/replace-pattern @snake "y$" "ies") (if (validate/pattern @snake "s$") (str/concat @snake "es") (str/concat @snake "s")))))))
+        (let ((r (tree/fold { kind: "all", of: (array/concat (if (!= (object/get @payload.query "policy" null) null) [(object/get @payload.query "policy" null)] []) (if (!= (object/get @payload.query "filter" null) null) [(object/get @payload.query "filter" null)] [])) } (fn (n k)
+          (let ((kind (object/get @n "kind" "")) (f (object/get @n "field" "")) (v (object/get @n "value" null)) (op (object/get @n "op" "")))
+            (let ((sc (or (validate/string @v) (validate/number @v) (validate/boolean @v)))
+                  (ty (if (validate/number @v) "number" "boolean"))
+                  (ordname (if (= @op "<") "$lt" (if (= @op "<=") "$lte" (if (= @op ">") "$gt" "$gte"))))
+                  (compname (if (= @op "<") "$gte" (if (= @op "<=") "$gt" (if (= @op ">") "$lte" "$lt"))))
+                  (vals (array/filter (object/get @n "values" []) (fn x (or (validate/string @x) (validate/number @x) (validate/boolean @x)))))
+                  (fq (json/stringify @f))
+                  (vq (json/stringify @v))
+                  (all "{\"_id\":{\"$exists\":true}}")
+                  (none "{\"_id\":{\"$exists\":false}}"))
+              (let ((missing (str/concat "{" @fq ":{\"$exists\":false}}"))
+                    (isnull (str/concat "{\"$or\":[{" @fq ":{\"$exists\":false}},{" @fq ":{\"$eq\":null}}]}"))
+                    (notnull (str/concat "{\"$and\":[{" @fq ":{\"$exists\":true}},{" @fq ":{\"$ne\":null}}]}"))
+                    (vj (str/join (array/map @vals (fn x (json/stringify @x))) ",")))
+                (let ((pEq (if (or (= @v null) (not @sc)) @none (str/concat "{" @fq ":{\"$eq\":" @vq "}}")))
+                      (pNe (if (= @v null) @notnull (if (not @sc) @all (str/concat "{\"$or\":[" @missing ",{" @fq ":{\"$ne\":" @vq "}}]}"))))
+                      (pOrd (if (or (= @v null) (not @sc)) @none (str/concat "{" @fq ":{\"" @ordname "\":" @vq ",\"$type\":\"" @ty "\"}}")))
+                      (nOrd (if (or (= @v null) (not @sc)) @all (str/concat "{\"$or\":[" @missing ",{" @fq ":{\"$not\":{\"$type\":\"" @ty "\"}}},{" @fq ":{\"" @compname "\":" @vq ",\"$type\":\"" @ty "\"}}]}")))
+                      (hasP (if @sc (str/concat "{" @fq ":{\"$elemMatch\":{\"$eq\":" @vq "}}}") @none))
+                      (hasN (if @sc (str/concat "{\"$or\":[" @missing ",{" @fq ":{\"$not\":{\"$elemMatch\":{\"$eq\":" @vq "}}}}]}") @all)))
+                  (if (= @kind "const")
+                    { p: (if (= @v true) @all @none), n: (if (= @v true) @none @all), pj: "", contains: false, strOrder: false }
+                  (if (= @kind "isNull")
+                    { p: (if (= (object/get @n "isNull" false) true) @isnull @notnull), n: (if (= (object/get @n "isNull" false) true) @notnull @isnull), pj: "", contains: false, strOrder: false }
+                  (if (= @kind "compare")
+                    { p: (if (= @op "==") @pEq (if (= @op "!=") @pNe @pOrd)), n: (if (= @op "==") @pNe (if (= @op "!=") @pEq @nOrd)), pj: "", contains: false, strOrder: (and (!= @op "==") (!= @op "!=") (validate/string @v)) }
+                  (if (= @kind "member")
+                    { p: (if (= (array/len @vals) 0) @none (str/concat "{" @fq ":{\"$in\":[" @vj "]}}")), n: (if (= (array/len @vals) 0) @all (str/concat "{\"$or\":[" @missing ",{" @fq ":{\"$nin\":[" @vj "]}}]}")), pj: "", contains: false, strOrder: false }
+                  (if (= @kind "hasElement")
+                    { p: @hasP, n: @hasN, pj: "", contains: false, strOrder: false }
+                  (if (= @kind "contains")
+                    { p: @none, n: @all, pj: "", contains: true, strOrder: false }
+                  (if (= @kind "all")
+                    { p: (if (= (array/len (object/get @k "of" [])) 0) @all (str/concat "{\"$and\":[" (str/join (array/map (object/get @k "of" []) (fn r (object/get @r "p" ""))) ",") "]}")), n: (if (= (array/len (object/get @k "of" [])) 0) @none (str/concat "{\"$or\":[" (str/join (array/map (object/get @k "of" []) (fn r (object/get @r "n" ""))) ",") "]}")), pj: (str/join (array/map (object/get @k "of" []) (fn r (object/get @r "p" ""))) ","), contains: (array/some (object/get @k "of" []) (fn r (object/get @r "contains" false))), strOrder: (array/some (object/get @k "of" []) (fn r (object/get @r "strOrder" false))) }
+                  (if (= @kind "any")
+                    { p: (if (= (array/len (object/get @k "of" [])) 0) @none (str/concat "{\"$or\":[" (str/join (array/map (object/get @k "of" []) (fn r (object/get @r "p" ""))) ",") "]}")), n: (if (= (array/len (object/get @k "of" [])) 0) @all (str/concat "{\"$and\":[" (str/join (array/map (object/get @k "of" []) (fn r (object/get @r "n" ""))) ",") "]}")), pj: "", contains: (array/some (object/get @k "of" []) (fn r (object/get @r "contains" false))), strOrder: (array/some (object/get @k "of" []) (fn r (object/get @r "strOrder" false))) }
+                    (let ((sub (json/parse (json/stringify (object/get @k "of" [])) MangoStep)))
+                      { p: (object/get @sub "n" ""), n: (object/get @sub "p" ""), pj: "", contains: (object/get @sub "contains" false), strOrder: (object/get @sub "strOrder" false) })))))))))))))) RowPredicate)))
+          (emit COUCH_PLAN {
+            selector: (str/concat "{\"$and\":[{\"_id\":{\"$gt\":null}}" (if (= (object/get @r "pj" "") "") "" (str/concat "," (object/get @r "pj" ""))) "]}"),
+            sort: (str/concat "[{\"_id\":\"" (if (= (object/get (object/get @payload.query "order" { field: "createdAt", direction: "asc" }) "direction" "asc") "desc") "desc" "asc") "\"}]"),
+            offset: (object/get @payload.query "offset" 0),
+            limit: (object/get @payload.query "limit" null),
+            totalNone: (= (object/get @payload.query "total" "exact") "none"),
+            reason: (if (object/get @r "contains" false) "leaf-unsupported" (if (object/get @r "strOrder" false) "value-kind-unsupported" (if (!= (object/get @payload.query "nearest" null) null) "nearest" (if (not (let ((of @config.queryCapabilities.orderableFields)) (or (= (object/get @of "kind" "") "every-field") (array/includes (object/get @of "fields" []) (object/get (object/get @payload.query "order" { field: "createdAt", direction: "asc" }) "field" "createdAt"))))) "order-field" ""))))
+          }))
+
+      COUCH_PLAN -> idle when (!= @payload.reason "")
+        (set @entity.mode "")
+        (emit STORE_UNSUPPORTED { key: @entity.key, reason: @payload.reason })
+      COUCH_PLAN -> idle when (= @payload.reason "")
+        (emit COUCH_FIND { db: @entity.db, selector: @payload.selector, sort: @payload.sort, skip: @payload.offset, limit: @payload.limit, fields: (if (= @entity.project "ids") ",\"fields\":[\"_id\"]" ""), totalNone: @payload.totalNone })
+
+      ROWS_WRITE -> idle when (array/some @payload.batch.ops (fn o (= (object/get @o "kind" "") "rekey")))
+        (emit STORE_FAILED { key: @payload.key, message: "rekey is unsupported by this store" })
+      ROWS_WRITE -> idle when (and (not (array/some @payload.batch.ops (fn o (= (object/get @o "kind" "") "rekey")))) (and (= @payload.batch.onFailure "atomic") (not @config.writeCapabilities.atomicBatch)))
+        (emit STORE_UNSUPPORTED { key: @payload.key, reason: "this store declares no atomic batches" })
+      ROWS_WRITE -> idle when (and (not (array/some @payload.batch.ops (fn o (= (object/get @o "kind" "") "rekey")))) (not (and (= @payload.batch.onFailure "atomic") (not @config.writeCapabilities.atomicBatch))) (= (array/len @payload.batch.ops) 0))
+        (emit ROWS_WRITTEN { key: @payload.key, outcomes: [] })
+      ROWS_WRITE -> idle when (and (not (array/some @payload.batch.ops (fn o (= (object/get @o "kind" "") "rekey")))) (not (and (= @payload.batch.onFailure "atomic") (not @config.writeCapabilities.atomicBatch))) (> (array/len @payload.batch.ops) 0))
+        (set @entity.key @payload.key)
+        (set @entity.mode "write")
+        (set @entity.ops @payload.batch.ops)
+        (set @entity.at 0)
+        (set @entity.outcomes [])
+        (emit COUCH_STEP { })
+
+      COUCH_STEP -> idle
+        (set @entity.entityType (object/get (array/nth @entity.ops @entity.at) "entityType" ""))
+        (set @entity.db (let ((et @entity.entityType) (b (array/find (array/reverse @config.collections) (fn x (= (object/get @x "entityType" "") @et))))) (if (!= @b null) (object/get @b "collection" "") (let ((snake (let ((cs (str/split @et ""))) (str/join (array/map (array/range 0 (array/len @cs)) (fn i (let ((c (array/nth @cs @i))) (if (validate/pattern @c "^[A-Z]$") (str/concat (if (and (> @i 0) (validate/pattern (array/nth @cs (- @i 1)) "^[a-z0-9]$")) "_" "") (str/lower @c)) @c)))) "")))) (if (validate/pattern @snake "y$") (str/replace-pattern @snake "y$" "ies") (if (validate/pattern @snake "s$") (str/concat @snake "es") (str/concat @snake "s")))))))
+        (emit COUCH_DISPATCH { })
+      COUCH_DISPATCH -> idle when (= (object/get (array/nth @entity.ops @entity.at) "kind" "") "create")
+        (emit COUCH_CREATE { db: @entity.db, id: (let ((i (object/get (object/get (array/nth @entity.ops @entity.at) "data" {}) "id" null))) (if (validate/string @i) @i "")), row: (object/get (array/nth @entity.ops @entity.at) "data" {}) })
+      COUCH_DISPATCH -> idle when (= (object/get (array/nth @entity.ops @entity.at) "kind" "") "upsert")
+        (emit COUCH_UPSERT { db: @entity.db, id: (let ((i (object/get (object/get (array/nth @entity.ops @entity.at) "data" {}) "id" null))) (if (validate/string @i) @i "")), row: (object/get (array/nth @entity.ops @entity.at) "data" {}) })
+      COUCH_DISPATCH -> idle when (= (object/get (array/nth @entity.ops @entity.at) "kind" "") "update")
+        (emit COUCH_UPDATE { db: @entity.db, id: (object/get (array/nth @entity.ops @entity.at) "id" ""), changes: (object/get (array/nth @entity.ops @entity.at) "data" {}), guard: (object/get (array/nth @entity.ops @entity.at) "guard" null) })
+      COUCH_DISPATCH -> idle when (= (object/get (array/nth @entity.ops @entity.at) "kind" "") "delete")
+        (emit COUCH_DELETE { db: @entity.db, id: (object/get (array/nth @entity.ops @entity.at) "id" ""), guard: (object/get (array/nth @entity.ops @entity.at) "guard" null) })
+
+      COUCH_ROW -> idle
+        (set @entity.mode "")
+        (emit ROW_FOUND { key: @entity.key, row: @payload.row })
+      COUCH_ROW_ABSENT -> idle
+        (set @entity.mode "")
+        (emit ROW_FOUND { key: @entity.key, row: null })
+      COUCH_LISTED -> idle
+        (set @entity.mode "")
+        (emit ROWS_LISTED { key: @entity.key, rows: @payload.rows })
+      COUCH_FOUND -> idle when (= @entity.project "ids")
+        (set @entity.mode "")
+        (emit ROWS_IDS { key: @entity.key, ids: @payload.ids, total: @payload.total })
+      COUCH_FOUND -> idle when (!= @entity.project "ids")
+        (set @entity.mode "")
+        (emit ROWS_PAGE { key: @entity.key, rows: @payload.rows, total: @payload.total })
+      COUCH_FAILED -> idle when (!= @entity.mode "write")
+        (set @entity.mode "")
+        (emit STORE_FAILED { key: @entity.key, message: @payload.message })
+      COUCH_FAILED -> idle when (= @entity.mode "write")
+        (emit COUCH_OUTCOME { outcome: { kind: "failed", message: @payload.message } })
+
+      COUCH_CREATED -> idle
+        (emit COUCH_OUTCOME { outcome: { kind: "created", row: @payload.row } })
+      COUCH_DUPLICATE_ID -> idle
+        (emit COUCH_OUTCOME { outcome: { kind: "duplicate-id" } })
+      COUCH_UPSERTED -> idle
+        (emit COUCH_OUTCOME { outcome: (if @payload.created { kind: "created", row: @payload.row } { kind: "updated", row: @payload.row }) })
+      COUCH_UPDATED -> idle
+        (emit COUCH_OUTCOME { outcome: (if (!= @payload.before null) { kind: "updated", row: @payload.row, before: @payload.before } { kind: "updated", row: @payload.row }) })
+      COUCH_DELETED -> idle
+        (emit COUCH_OUTCOME { outcome: (if (!= @payload.before null) { kind: "deleted", before: @payload.before } { kind: "deleted" }) })
+      COUCH_NOT_FOUND -> idle
+        (emit COUCH_OUTCOME { outcome: { kind: "not-found" } })
+      COUCH_REFUSED -> idle
+        (emit COUCH_OUTCOME { outcome: { kind: "refused" } })
+
+      COUCH_OUTCOME -> idle when (and (or (= (object/get @payload.outcome "kind" "") "created") (= (object/get @payload.outcome "kind" "") "updated") (= (object/get @payload.outcome "kind" "") "deleted")) (< (+ @entity.at 1) (array/len @entity.ops)))
+        (set @entity.outcomes (array/append @entity.outcomes @payload.outcome))
+        (set @entity.at (+ @entity.at 1))
+        (emit COUCH_STEP { })
+      COUCH_OUTCOME -> idle when (not (and (or (= (object/get @payload.outcome "kind" "") "created") (= (object/get @payload.outcome "kind" "") "updated") (= (object/get @payload.outcome "kind" "") "deleted")) (< (+ @entity.at 1) (array/len @entity.ops))))
+        (set @entity.mode "")
+        (emit ROWS_WRITTEN { key: @entity.key, outcomes: (array/append @entity.outcomes @payload.outcome) })
 
       COUCH_GET -> getting when (and (!= @payload.db "") (!= @payload.id ""))
         (set @entity.op "get")
@@ -77,8 +282,10 @@ orbital CouchdbOrbital {
           auth: { scheme: basic, user: @config.userCredential, credential: @config.passwordCredential },
           timeoutMs: @config.timeoutMs
         } { emit: { success: COUCH_WRITE_REPLIED, failure: COUCH_UNREACHABLE } })
-      COUCH_CREATE -> idle when (or (= @payload.db "") (= @payload.id ""))
-        (emit COUCH_FAILED { op: "create", status: 0, message: "create needs a database and a string id" })
+      COUCH_CREATE -> idle when (= @payload.id "")
+        (emit COUCH_FAILED { op: "create", status: 0, message: "create needs a string id" })
+      COUCH_CREATE -> idle when (and (= @payload.db "") (!= @payload.id ""))
+        (emit COUCH_FAILED { op: "create", status: 0, message: "db is required" })
 
       COUCH_UPSERT -> ensuring when (and (!= @payload.db "") (!= @payload.id "") (not (array/includes @entity.ensured @payload.db)))
         (set @entity.op "upsert")
@@ -102,8 +309,10 @@ orbital CouchdbOrbital {
           auth: { scheme: basic, user: @config.userCredential, credential: @config.passwordCredential },
           timeoutMs: @config.timeoutMs
         } { emit: { success: COUCH_READ_REPLIED, failure: COUCH_UNREACHABLE } })
-      COUCH_UPSERT -> idle when (or (= @payload.db "") (= @payload.id ""))
-        (emit COUCH_FAILED { op: "upsert", status: 0, message: "upsert needs a database and a string id" })
+      COUCH_UPSERT -> idle when (= @payload.id "")
+        (emit COUCH_FAILED { op: "upsert", status: 0, message: "upsert needs a string id" })
+      COUCH_UPSERT -> idle when (and (= @payload.db "") (!= @payload.id ""))
+        (emit COUCH_FAILED { op: "upsert", status: 0, message: "db is required" })
 
       COUCH_UPDATE -> reading when (and (!= @payload.db "") (!= @payload.id ""))
         (set @entity.op "update")
@@ -111,6 +320,7 @@ orbital CouchdbOrbital {
         (set @entity.docId @payload.id)
         (set @entity.attempt 1)
         (set @entity.changes @payload.changes)
+        (set @entity.guard @payload.guard)
         (http GET @config.origin (str/concat "/" (str/encode-uri-component @payload.db) "/" (str/encode-uri-component @payload.id)) {
           headers: { Accept: "application/json" },
           auth: { scheme: basic, user: @config.userCredential, credential: @config.passwordCredential },
@@ -121,6 +331,7 @@ orbital CouchdbOrbital {
 
       COUCH_DELETE -> reading when (and (!= @payload.db "") (!= @payload.id ""))
         (set @entity.op "delete")
+        (set @entity.guard @payload.guard)
         (set @entity.db @payload.db)
         (set @entity.docId @payload.id)
         (set @entity.attempt 1)
@@ -143,7 +354,9 @@ orbital CouchdbOrbital {
       COUCH_LIST -> idle when (= @payload.db "")
         (emit COUCH_FAILED { op: "list", status: 0, message: "db is required" })
 
-      COUCH_FIND -> finding when (!= @payload.db "")
+      COUCH_FIND -> finding when (and (!= @payload.db "") (!= @payload.limit 0))
+        (set @entity.totalNone (= @payload.totalNone true))
+        (set @entity.fields (if (= @payload.fields null) "" @payload.fields))
         (set @entity.op "find")
         (set @entity.db @payload.db)
         (set @entity.selector @payload.selector)
@@ -155,10 +368,30 @@ orbital CouchdbOrbital {
         (set @entity.count 0)
         (http POST @config.origin (str/concat "/" (str/encode-uri-component @payload.db) "/_find") {
           headers: { Accept: "application/json", Content-Type: "application/json" },
-          text: (str/concat "{\"selector\":" @payload.selector ",\"sort\":" @payload.sort ",\"skip\":" (or @payload.skip 0) ",\"limit\":" (if (= @payload.limit null) @config.pageSize @payload.limit) "" "}"),
+          text: (str/concat "{\"selector\":" @payload.selector ",\"sort\":" @payload.sort @entity.fields (if (or (!= @payload.limit null) (> (or @payload.skip 0) 0)) (str/concat ",\"skip\":" (or @payload.skip 0)) "") ",\"limit\":" (if (= @payload.limit null) @config.pageSize @payload.limit) "}"),
           auth: { scheme: basic, user: @config.userCredential, credential: @config.passwordCredential },
           timeoutMs: @config.timeoutMs
         } { emit: { success: COUCH_FIND_REPLIED, failure: COUCH_UNREACHABLE } })
+      COUCH_FIND -> idle when (and (!= @payload.db "") (= @payload.limit 0) (= @payload.totalNone true))
+        (emit COUCH_FOUND { db: @payload.db, rows: [], ids: [], total: 0 })
+      COUCH_FIND -> counting when (and (!= @payload.db "") (= @payload.limit 0) (not (= @payload.totalNone true)))
+        (set @entity.totalNone false)
+        (set @entity.fields "")
+        (set @entity.op "find")
+        (set @entity.db @payload.db)
+        (set @entity.selector @payload.selector)
+        (set @entity.sort @payload.sort)
+        (set @entity.skip (or @payload.skip 0))
+        (set @entity.limit 0)
+        (set @entity.bookmark "")
+        (set @entity.acc [])
+        (set @entity.count 0)
+        (http POST @config.origin (str/concat "/" (str/encode-uri-component @payload.db) "/_find") {
+          headers: { Accept: "application/json", Content-Type: "application/json" },
+          text: (str/concat "{\"selector\":" @payload.selector ",\"fields\":[\"_id\"],\"limit\":" @config.pageSize "}"),
+          auth: { scheme: basic, user: @config.userCredential, credential: @config.passwordCredential },
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: COUCH_COUNT_REPLIED, failure: COUCH_UNREACHABLE } })
       COUCH_FIND -> idle when (= @payload.db "")
         (emit COUCH_FAILED { op: "find", status: 0, message: "db is required" })
     }
@@ -210,7 +443,10 @@ orbital CouchdbOrbital {
       INIT -> idle
         (set @entity.op "")
         (set @entity.attempt 0)
-      COUCH_READ_REPLIED -> writing when (and (= @payload.status 200) (= @entity.op "update"))
+      COUCH_READ_REPLIED -> idle when (and (= @payload.status 200) (or (= @entity.op "update") (= @entity.op "delete")) (not (or (= @entity.guard null) (row/matches @entity.guard (object/omit (json/parse @payload.body CouchDoc) ["_id", "_rev"])))))
+        (emit COUCH_REFUSED { db: @entity.db, id: @entity.docId })
+      COUCH_READ_REPLIED -> writing when (and (= @payload.status 200) (= @entity.op "update") (or (= @entity.guard null) (row/matches @entity.guard (object/omit (json/parse @payload.body CouchDoc) ["_id", "_rev"]))))
+        (set @entity.before (if (= @entity.guard null) null (object/omit (json/parse @payload.body CouchDoc) ["_id", "_rev"])))
         (set @entity.rev (object/get (json/parse @payload.body CouchRev) _rev ""))
         (set @entity.row (object/merge (json/parse @payload.body CouchDoc) (object/omit @entity.changes ["id"]) { _id: @entity.docId }))
         (http PUT @config.origin (str/concat "/" (str/encode-uri-component @entity.db) "/" (str/encode-uri-component @entity.docId)) {
@@ -228,7 +464,8 @@ orbital CouchdbOrbital {
           auth: { scheme: basic, user: @config.userCredential, credential: @config.passwordCredential },
           timeoutMs: @config.timeoutMs
         } { emit: { success: COUCH_WRITE_REPLIED, failure: COUCH_UNREACHABLE } })
-      COUCH_READ_REPLIED -> writing when (and (= @payload.status 200) (= @entity.op "delete"))
+      COUCH_READ_REPLIED -> writing when (and (= @payload.status 200) (= @entity.op "delete") (or (= @entity.guard null) (row/matches @entity.guard (object/omit (json/parse @payload.body CouchDoc) ["_id", "_rev"]))))
+        (set @entity.before (if (= @entity.guard null) null (object/omit (json/parse @payload.body CouchDoc) ["_id", "_rev"])))
         (set @entity.rev (object/get (json/parse @payload.body CouchRev) _rev ""))
         (http DELETE @config.origin (str/concat "/" (str/encode-uri-component @entity.db) "/" (str/encode-uri-component @entity.docId) "?rev=" (str/encode-uri-component (object/get (json/parse @payload.body CouchRev) _rev ""))) {
           headers: { Accept: "application/json" },
@@ -260,11 +497,11 @@ orbital CouchdbOrbital {
       COUCH_WRITE_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.op "create"))
         (emit COUCH_CREATED { db: @entity.db, id: @entity.docId, row: (object/omit @entity.row ["_id", "_rev"]) })
       COUCH_WRITE_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.op "update"))
-        (emit COUCH_UPDATED { db: @entity.db, id: @entity.docId, row: (object/omit @entity.row ["_id", "_rev"]) })
+        (emit COUCH_UPDATED { db: @entity.db, id: @entity.docId, row: (object/omit @entity.row ["_id", "_rev"]), before: @entity.before })
       COUCH_WRITE_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.op "upsert"))
         (emit COUCH_UPSERTED { db: @entity.db, id: @entity.docId, created: (= @entity.rev ""), row: (object/omit @entity.row ["_id", "_rev"]) })
       COUCH_WRITE_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.op "delete"))
-        (emit COUCH_DELETED { db: @entity.db, id: @entity.docId })
+        (emit COUCH_DELETED { db: @entity.db, id: @entity.docId, before: @entity.before })
       COUCH_WRITE_REPLIED -> idle when (and (= @payload.status 409) (= @entity.op "create"))
         (emit COUCH_DUPLICATE_ID { db: @entity.db, id: @entity.docId })
       COUCH_WRITE_REPLIED -> reading when (and (= @payload.status 409) (!= @entity.op "create") (< @entity.attempt @config.maxAttempts))
@@ -277,7 +514,7 @@ orbital CouchdbOrbital {
       COUCH_WRITE_REPLIED -> idle when (and (= @payload.status 409) (!= @entity.op "create") (>= @entity.attempt @config.maxAttempts))
         (emit COUCH_FAILED { op: @entity.op, status: 409, message: (str/concat @entity.db " " @entity.docId " changed concurrently " @entity.attempt " times") })
       COUCH_WRITE_REPLIED -> idle when (and (not (and (>= @payload.status 200) (< @payload.status 300))) (!= @payload.status 409))
-        (emit COUCH_FAILED { op: @entity.op, status: @payload.status, message: (str/concat "CouchDB write answered " @payload.status ": " (object/get (json/parse @payload.body CouchError) reason "")) })
+        (emit COUCH_FAILED { op: @entity.op, status: @payload.status, message: (str/concat "CouchDB " (if (= @entity.op "delete") "delete" "write") " answered " @payload.status ": " (object/get (json/parse @payload.body CouchError) reason "")) })
       COUCH_UNREACHABLE -> idle
         (emit COUCH_FAILED { op: @entity.op, status: 0, message: (str/concat "CouchDB request failed: " @payload.error) })
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "CouchDB unavailable: " @payload.error) })
@@ -288,7 +525,7 @@ orbital CouchdbOrbital {
         (set @entity.op "")
         (set @entity.attempt 0)
       COUCH_LIST_REPLIED -> idle when (= @payload.status 200)
-        (emit COUCH_LISTED { db: @entity.db, rows: (array/map (object/get (json/parse @payload.body CouchAllDocs) rows []) (fn entry (object/omit (object/get @entry doc {}) ["_id", "_rev"]))) })
+        (emit COUCH_LISTED { db: @entity.db, rows: (array/map (array/filter (object/get (json/parse @payload.body CouchAllDocs) rows []) (fn entry (object/has @entry "doc"))) (fn entry (object/omit (object/get @entry doc {}) ["_id", "_rev"]))) })
       COUCH_LIST_REPLIED -> idle when (= @payload.status 404)
         (emit COUCH_LISTED { db: @entity.db, rows: [] })
       COUCH_LIST_REPLIED -> idle when (and (!= @payload.status 200) (!= @payload.status 404))
@@ -302,22 +539,23 @@ orbital CouchdbOrbital {
       INIT -> idle
         (set @entity.op "")
         (set @entity.attempt 0)
-      COUCH_FIND_REPLIED -> finding when (and (= @payload.status 200) (< @entity.limit 0) (>= (array/len (object/get (json/parse @payload.body CouchFound) docs [])) @config.pageSize))
+      COUCH_FIND_REPLIED -> finding when (and (= @payload.status 200) (< @entity.limit 0) (>= (array/len (object/get (json/parse @payload.body CouchFound) docs [])) @config.pageSize) (!= (object/get (json/parse @payload.body CouchFound) bookmark "") ""))
         (set @entity.acc (array/concat @entity.acc (object/get (json/parse @payload.body CouchFound) docs [])))
         (set @entity.bookmark (object/get (json/parse @payload.body CouchFound) bookmark ""))
-        (set @entity.skip 0)
         (http POST @config.origin (str/concat "/" (str/encode-uri-component @entity.db) "/_find") {
           headers: { Accept: "application/json", Content-Type: "application/json" },
-          text: (str/concat "{\"selector\":" @entity.selector ",\"sort\":" @entity.sort ",\"skip\":" @entity.skip ",\"limit\":" @config.pageSize (if (!= @entity.bookmark "") (str/concat ",\"bookmark\":" (json/stringify @entity.bookmark)) "") "}"),
+          text: (str/concat "{\"selector\":" @entity.selector ",\"sort\":" @entity.sort @entity.fields ",\"limit\":" @config.pageSize ",\"bookmark\":" (json/stringify @entity.bookmark) "}"),
           auth: { scheme: basic, user: @config.userCredential, credential: @config.passwordCredential },
           timeoutMs: @config.timeoutMs
         } { emit: { success: COUCH_FIND_REPLIED, failure: COUCH_UNREACHABLE } })
-      COUCH_FIND_REPLIED -> idle when (and (= @payload.status 200) (< @entity.limit 0) (< (array/len (object/get (json/parse @payload.body CouchFound) docs [])) @config.pageSize))
-        (emit COUCH_FOUND { db: @entity.db, rows: (array/map (array/concat @entity.acc (object/get (json/parse @payload.body CouchFound) docs [])) (fn doc (object/omit @doc ["_id", "_rev"]))), total: (+ @entity.skip (array/len (array/concat @entity.acc (object/get (json/parse @payload.body CouchFound) docs [])))) })
-      COUCH_FIND_REPLIED -> idle when (and (= @payload.status 200) (>= @entity.limit 0) (< (array/len (object/get (json/parse @payload.body CouchFound) docs [])) @entity.limit))
-        (emit COUCH_FOUND { db: @entity.db, rows: (array/map (object/get (json/parse @payload.body CouchFound) docs []) (fn doc (object/omit @doc ["_id", "_rev"]))), total: (+ @entity.skip (array/len (object/get (json/parse @payload.body CouchFound) docs []))) })
-      COUCH_FIND_REPLIED -> counting when (and (= @payload.status 200) (>= @entity.limit 0) (>= (array/len (object/get (json/parse @payload.body CouchFound) docs [])) @entity.limit))
-        (set @entity.acc (object/get (json/parse @payload.body CouchFound) docs []))
+      COUCH_FIND_REPLIED -> idle when (and (= @payload.status 200) (< @entity.limit 0) (>= (array/len (object/get (json/parse @payload.body CouchFound) docs [])) @config.pageSize) (= (object/get (json/parse @payload.body CouchFound) bookmark "") ""))
+        (emit COUCH_FAILED { op: @entity.op, status: 200, message: "CouchDB _find returned a full page without a bookmark, so the next page cannot be requested" })
+      COUCH_FIND_REPLIED -> idle when (and (= @payload.status 200) (< @entity.limit 0) (< (array/len (object/get (json/parse @payload.body CouchFound) docs [])) @config.pageSize) (or (> (array/len (array/concat @entity.acc (object/get (json/parse @payload.body CouchFound) docs []))) 0) (= @entity.skip 0)))
+        (emit COUCH_FOUND { db: @entity.db, rows: (array/map (array/concat @entity.acc (object/get (json/parse @payload.body CouchFound) docs [])) (fn doc (object/omit @doc ["_id", "_rev"]))), ids: (array/map (array/concat @entity.acc (object/get (json/parse @payload.body CouchFound) docs [])) (fn doc (str/concat (object/get @doc "_id" "")))), total: (if @entity.totalNone (array/len (array/concat @entity.acc (object/get (json/parse @payload.body CouchFound) docs []))) (+ @entity.skip (array/len (array/concat @entity.acc (object/get (json/parse @payload.body CouchFound) docs []))))) })
+      COUCH_FIND_REPLIED -> idle when (and (= @payload.status 200) (< @entity.limit 0) (< (array/len (object/get (json/parse @payload.body CouchFound) docs [])) @config.pageSize) (= (array/len (array/concat @entity.acc (object/get (json/parse @payload.body CouchFound) docs []))) 0) (> @entity.skip 0) @entity.totalNone)
+        (emit COUCH_FOUND { db: @entity.db, rows: [], ids: [], total: 0 })
+      COUCH_FIND_REPLIED -> counting when (and (= @payload.status 200) (< @entity.limit 0) (< (array/len (object/get (json/parse @payload.body CouchFound) docs [])) @config.pageSize) (= (array/len (array/concat @entity.acc (object/get (json/parse @payload.body CouchFound) docs []))) 0) (> @entity.skip 0) (not @entity.totalNone))
+        (set @entity.acc [])
         (set @entity.bookmark "")
         (set @entity.count 0)
         (http POST @config.origin (str/concat "/" (str/encode-uri-component @entity.db) "/_find") {
@@ -326,8 +564,24 @@ orbital CouchdbOrbital {
           auth: { scheme: basic, user: @config.userCredential, credential: @config.passwordCredential },
           timeoutMs: @config.timeoutMs
         } { emit: { success: COUCH_COUNT_REPLIED, failure: COUCH_UNREACHABLE } })
-      COUCH_FIND_REPLIED -> idle when (= @payload.status 404)
-        (emit COUCH_FOUND { db: @entity.db, rows: [], total: 0 })
+      COUCH_FIND_REPLIED -> idle when (and (= @payload.status 200) (>= @entity.limit 0) (< (array/len (object/get (json/parse @payload.body CouchFound) docs [])) @entity.limit) (or (> (array/len (object/get (json/parse @payload.body CouchFound) docs [])) 0) (= @entity.skip 0)))
+        (emit COUCH_FOUND { db: @entity.db, rows: (array/map (object/get (json/parse @payload.body CouchFound) docs []) (fn doc (object/omit @doc ["_id", "_rev"]))), ids: (array/map (object/get (json/parse @payload.body CouchFound) docs []) (fn doc (str/concat (object/get @doc "_id" "")))), total: (if @entity.totalNone (array/len (object/get (json/parse @payload.body CouchFound) docs [])) (+ @entity.skip (array/len (object/get (json/parse @payload.body CouchFound) docs [])))) })
+      COUCH_FIND_REPLIED -> idle when (and (= @payload.status 200) (>= @entity.limit 0) (or (>= (array/len (object/get (json/parse @payload.body CouchFound) docs [])) @entity.limit) (and (= (array/len (object/get (json/parse @payload.body CouchFound) docs [])) 0) (> @entity.skip 0))) @entity.totalNone)
+        (emit COUCH_FOUND { db: @entity.db, rows: (array/map (object/get (json/parse @payload.body CouchFound) docs []) (fn doc (object/omit @doc ["_id", "_rev"]))), ids: (array/map (object/get (json/parse @payload.body CouchFound) docs []) (fn doc (str/concat (object/get @doc "_id" "")))), total: (array/len (object/get (json/parse @payload.body CouchFound) docs [])) })
+      COUCH_FIND_REPLIED -> counting when (and (= @payload.status 200) (>= @entity.limit 0) (or (>= (array/len (object/get (json/parse @payload.body CouchFound) docs [])) @entity.limit) (and (= (array/len (object/get (json/parse @payload.body CouchFound) docs [])) 0) (> @entity.skip 0))) (not @entity.totalNone))
+        (set @entity.acc (array/concat @entity.acc (object/get (json/parse @payload.body CouchFound) docs [])))
+        (set @entity.bookmark "")
+        (set @entity.count 0)
+        (http POST @config.origin (str/concat "/" (str/encode-uri-component @entity.db) "/_find") {
+          headers: { Accept: "application/json", Content-Type: "application/json" },
+          text: (str/concat "{\"selector\":" @entity.selector ",\"fields\":[\"_id\"],\"limit\":" @config.pageSize (if (!= @entity.bookmark "") (str/concat ",\"bookmark\":" (json/stringify @entity.bookmark)) "") "}"),
+          auth: { scheme: basic, user: @config.userCredential, credential: @config.passwordCredential },
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: COUCH_COUNT_REPLIED, failure: COUCH_UNREACHABLE } })
+      COUCH_FIND_REPLIED -> idle when (and (= @payload.status 404) (= (array/len @entity.acc) 0))
+        (emit COUCH_FOUND { db: @entity.db, rows: [], ids: [], total: 0 })
+      COUCH_FIND_REPLIED -> idle when (and (= @payload.status 404) (> (array/len @entity.acc) 0))
+        (emit COUCH_FOUND { db: @entity.db, rows: (array/map @entity.acc (fn doc (object/omit @doc ["_id", "_rev"]))), ids: (array/map @entity.acc (fn doc (str/concat (object/get @doc "_id" "")))), total: (if @entity.totalNone (array/len @entity.acc) (+ @entity.skip (array/len @entity.acc))) })
       COUCH_FIND_REPLIED -> idle when (and (!= @payload.status 200) (!= @payload.status 404))
         (emit COUCH_FAILED { op: @entity.op, status: @payload.status, message: (str/concat "CouchDB _find answered " @payload.status ": " (object/get (json/parse @payload.body CouchError) reason "")) })
       COUCH_UNREACHABLE -> idle
@@ -339,7 +593,7 @@ orbital CouchdbOrbital {
       INIT -> idle
         (set @entity.op "")
         (set @entity.attempt 0)
-      COUCH_COUNT_REPLIED -> counting when (and (= @payload.status 200) (>= (array/len (object/get (json/parse @payload.body CouchFound) docs [])) @config.pageSize))
+      COUCH_COUNT_REPLIED -> counting when (and (= @payload.status 200) (>= (array/len (object/get (json/parse @payload.body CouchFound) docs [])) @config.pageSize) (!= (object/get (json/parse @payload.body CouchFound) bookmark "") ""))
         (set @entity.count (+ @entity.count (array/len (object/get (json/parse @payload.body CouchFound) docs []))))
         (set @entity.bookmark (object/get (json/parse @payload.body CouchFound) bookmark ""))
         (http POST @config.origin (str/concat "/" (str/encode-uri-component @entity.db) "/_find") {
@@ -348,9 +602,13 @@ orbital CouchdbOrbital {
           auth: { scheme: basic, user: @config.userCredential, credential: @config.passwordCredential },
           timeoutMs: @config.timeoutMs
         } { emit: { success: COUCH_COUNT_REPLIED, failure: COUCH_UNREACHABLE } })
+      COUCH_COUNT_REPLIED -> idle when (and (= @payload.status 200) (>= (array/len (object/get (json/parse @payload.body CouchFound) docs [])) @config.pageSize) (= (object/get (json/parse @payload.body CouchFound) bookmark "") ""))
+        (emit COUCH_FAILED { op: @entity.op, status: 200, message: "CouchDB _find returned a full page without a bookmark, so the next page cannot be requested" })
       COUCH_COUNT_REPLIED -> idle when (and (= @payload.status 200) (< (array/len (object/get (json/parse @payload.body CouchFound) docs [])) @config.pageSize))
-        (emit COUCH_FOUND { db: @entity.db, rows: (array/map @entity.acc (fn doc (object/omit @doc ["_id", "_rev"]))), total: (+ @entity.count (array/len (object/get (json/parse @payload.body CouchFound) docs []))) })
-      COUCH_COUNT_REPLIED -> idle when (!= @payload.status 200)
+        (emit COUCH_FOUND { db: @entity.db, rows: (array/map @entity.acc (fn doc (object/omit @doc ["_id", "_rev"]))), ids: (array/map @entity.acc (fn doc (str/concat (object/get @doc "_id" "")))), total: (+ @entity.count (array/len (object/get (json/parse @payload.body CouchFound) docs []))) })
+      COUCH_COUNT_REPLIED -> idle when (= @payload.status 404)
+        (emit COUCH_FOUND { db: @entity.db, rows: (array/map @entity.acc (fn doc (object/omit @doc ["_id", "_rev"]))), ids: (array/map @entity.acc (fn doc (str/concat (object/get @doc "_id" "")))), total: @entity.count })
+      COUCH_COUNT_REPLIED -> idle when (and (!= @payload.status 200) (!= @payload.status 404))
         (emit COUCH_FAILED { op: @entity.op, status: @payload.status, message: (str/concat "CouchDB _find answered " @payload.status ": " (object/get (json/parse @payload.body CouchError) reason "")) })
       COUCH_UNREACHABLE -> idle
         (emit COUCH_FAILED { op: @entity.op, status: 0, message: (str/concat "CouchDB request failed: " @payload.error) })
@@ -358,50 +616,89 @@ orbital CouchdbOrbital {
     }
 
     emits {
-      COUCH_ROW -> external { db : string!  id : string!  row : Map string CouchCell! }
-        @description "The stored row (without _id and _rev)."
-        @synonyms "document read, row found"
-        @tier "primary"
-      COUCH_ROW_ABSENT -> external { db : string!  id : string! }
-        @description "No document with that id (404)."
-        @synonyms "missing row, not found"
-        @tier "primary"
-      COUCH_CREATED -> external { db : string!  id : string!  row : Map string CouchCell! }
-        @description "The document was written."
-        @synonyms "row created, inserted"
-        @tier "primary"
-      COUCH_DUPLICATE_ID -> external { db : string!  id : string! }
-        @description "A create lost to a document that already has this id (409)."
-        @synonyms "id taken, already exists"
-        @tier "primary"
-      COUCH_UPDATED -> external { db : string!  id : string!  row : Map string CouchCell! }
-        @description "The changes were merged over the stored document, conditioned on the _rev read."
-        @synonyms "row updated, merged"
-        @tier "primary"
-      COUCH_UPSERTED -> external { db : string!  id : string!  created : boolean!  row : Map string CouchCell! }
-        @description "The document was replaced (created false, createdAt kept) or inserted (created true)."
-        @synonyms "row replaced, created or replaced"
-        @tier "primary"
-      COUCH_DELETED -> external { db : string!  id : string! }
-        @description "The document was deleted at the _rev read."
-        @synonyms "row deleted, removed"
-        @tier "primary"
-      COUCH_NOT_FOUND -> external { db : string!  id : string! }
-        @description "An update or delete found no document to write over."
-        @synonyms "nothing to update, missing"
-        @tier "primary"
-      COUCH_LISTED -> external { db : string!  rows : [Map string CouchCell]! }
-        @description "Every document of the database, without _id and _rev; empty when the database does not exist."
-        @synonyms "all rows, list result"
-        @tier "primary"
-      COUCH_FOUND -> external { db : string!  rows : [Map string CouchCell]!  total : number! }
-        @description "The documents a Mango query matched (the window when a limit was given) and the total the query matches."
-        @synonyms "query result, find result, mango result"
-        @tier "primary"
-      COUCH_FAILED -> external { op : string!  status : number!  message : string! }
-        @description "The call did not complete: the verb, the HTTP status (0 when unreachable or refused before sending) and CouchDB's reason, or the changed-concurrently message after maxAttempts lost races."
-        @synonyms "database error, request failed, write conflict"
-        @tier "primary"
+      ROW_FOUND -> external {
+        key : string!
+        row : Row?
+      }
+        @tier "internal"
+      ROWS_LISTED -> external {
+        key : string!
+        rows : [Row]!
+      }
+        @tier "internal"
+      ROWS_PAGE -> external {
+        key : string!
+        rows : [Row]!
+        total : number!
+      }
+        @tier "internal"
+      ROWS_IDS -> external {
+        key : string!
+        ids : [string]!
+        total : number!
+      }
+        @tier "internal"
+      ROWS_WRITTEN -> external {
+        key : string!
+        outcomes : [RowWriteOutcome]!
+      }
+        @tier "internal"
+      STORE_UNSUPPORTED -> external {
+        key : string!
+        reason : string!
+      }
+        @tier "internal"
+      STORE_FAILED -> external {
+        key : string!
+        message : string!
+      }
+        @tier "internal"
+      COUCH_GET -> internal { db : string!  id : string! }
+        @tier "internal"
+      COUCH_CREATE -> internal { db : string!  id : string!  row : Map string RowCell?! }
+        @tier "internal"
+      COUCH_UPSERT -> internal { db : string!  id : string!  row : Map string RowCell?! }
+        @tier "internal"
+      COUCH_UPDATE -> internal { db : string!  id : string!  changes : Map string RowCell?!  guard : RowPredicate }
+        @tier "internal"
+      COUCH_DELETE -> internal { db : string!  id : string!  guard : RowPredicate }
+        @tier "internal"
+      COUCH_LIST -> internal { db : string! }
+        @tier "internal"
+      COUCH_FIND -> internal { db : string!  selector : string!  sort : string!  skip : number  limit : number  fields : string  totalNone : boolean }
+        @tier "internal"
+      COUCH_PLAN -> internal { selector : string!  sort : string!  offset : number!  limit : number  totalNone : boolean!  reason : string! }
+        @tier "internal"
+      COUCH_STEP -> internal { }
+        @tier "internal"
+      COUCH_DISPATCH -> internal { }
+        @tier "internal"
+      COUCH_OUTCOME -> internal { outcome : RowWriteOutcome! }
+        @tier "internal"
+      COUCH_ROW -> internal { db : string!  id : string!  row : Map string RowCell?! }
+        @tier "internal"
+      COUCH_ROW_ABSENT -> internal { db : string!  id : string! }
+        @tier "internal"
+      COUCH_CREATED -> internal { db : string!  id : string!  row : Map string RowCell?! }
+        @tier "internal"
+      COUCH_DUPLICATE_ID -> internal { db : string!  id : string! }
+        @tier "internal"
+      COUCH_UPDATED -> internal { db : string!  id : string!  row : Map string RowCell?!  before : Map string RowCell? }
+        @tier "internal"
+      COUCH_UPSERTED -> internal { db : string!  id : string!  created : boolean!  row : Map string RowCell?! }
+        @tier "internal"
+      COUCH_DELETED -> internal { db : string!  id : string!  before : Map string RowCell? }
+        @tier "internal"
+      COUCH_NOT_FOUND -> internal { db : string!  id : string! }
+        @tier "internal"
+      COUCH_REFUSED -> internal { db : string!  id : string! }
+        @tier "internal"
+      COUCH_LISTED -> internal { db : string!  rows : [Map string RowCell?]! }
+        @tier "internal"
+      COUCH_FOUND -> internal { db : string!  rows : [Map string RowCell?]!  ids : [string]!  total : number! }
+        @tier "internal"
+      COUCH_FAILED -> internal { op : string!  status : number!  message : string! }
+        @tier "internal"
       COUCH_GET_REPLIED { status : number!  headers : Map string string  body : string!  key : string }
         @description "Internal: the get reply."
         @tier "secondary"
@@ -429,27 +726,33 @@ orbital CouchdbOrbital {
     }
 
     listens {
-      COUCH_GET -> external { db : string!  id : string! }
-        @description "Read one document."
-        @synonyms "read row, fetch document"
-      COUCH_CREATE -> external { db : string!  id : string!  row : Map string CouchCell! }
-        @description "Make the database once, then PUT the document under id."
-        @synonyms "insert row, add document"
-      COUCH_UPSERT -> external { db : string!  id : string!  row : Map string CouchCell! }
-        @description "Create or replace by id, keeping the stored createdAt."
-        @synonyms "save row, replace document"
-      COUCH_UPDATE -> external { db : string!  id : string!  changes : Map string CouchCell! }
-        @description "Merge changes (id excluded) over the stored document."
-        @synonyms "patch row, modify document"
-      COUCH_DELETE -> external { db : string!  id : string! }
-        @description "Delete the document at its current _rev."
-        @synonyms "remove row, drop document"
-      COUCH_LIST -> external { db : string! }
-        @description "Read every document of the database."
-        @synonyms "all rows, list documents"
-      COUCH_FIND -> external { db : string!  selector : string!  sort : string!  skip : number  limit : number }
-        @description "Run a Mango query: selector and sort are JSON text; no limit reads every page."
-        @synonyms "query rows, mango find, search documents"
+      ROW_READ -> external {
+        key : string!
+        entityType : string!
+        id : string!
+      }
+        @description "Read one row of an entity type by id."
+        @tier "internal"
+      ROW_LIST -> external {
+        key : string!
+        entityType : string!
+      }
+        @description "List every row of an entity type."
+        @tier "internal"
+      ROWS_QUERY -> external {
+        key : string!
+        entityType : string!
+        query : RowQuery!
+        project : "rows" | "ids"
+      }
+        @description "A query ask; the order, filter and window are translated to a Mango selector, or the ask is STORE_UNSUPPORTED."
+        @tier "internal"
+      ROWS_WRITE -> external {
+        key : string!
+        batch : RowWriteBatch!
+      }
+        @description "Apply a batch of create, upsert, update and delete ops in order, each conditioned on the _rev it read."
+        @tier "internal"
       COUCH_GET_REPLIED
       COUCH_ENSURE_REPLIED
       COUCH_READ_REPLIED
@@ -461,6 +764,17 @@ orbital CouchdbOrbital {
     }
 
     config {
+      collections : [CollectionBinding] = []
+        @label "Declared collections"
+        @description "The database an entity type is bound to (the last binding of an entity type wins); an entity type not listed here is stored in the database named like its Postgres table (TimeEntry is time_entries)."
+        @synonyms "database names, collection map"
+        @tier "infra"
+      queryCapabilities : QueryCapabilities = { leaves: ["compare", "member", "hasElement", "isNull"], combinators: ["all", "any", "not"], compareOps: ["==", "!=", "<", "<=", ">", ">="], operatorValueKinds: [{ operator: "<", valueKinds: ["number", "boolean", "null"] }, { operator: "<=", valueKinds: ["number", "boolean", "null"] }, { operator: ">", valueKinds: ["number", "boolean", "null"] }, { operator: ">=", valueKinds: ["number", "boolean", "null"] }], orderableFields: { kind: "listed", fields: ["id"] }, window: true, exactTotal: true, idsOnly: true }
+        @description "What query the store pushes down as a Mango selector sorted on _id: no contains leaf, ordering comparisons only on numbers, booleans and null, order only by id."
+        @tier "infra"
+      writeCapabilities : WriteCapabilities = { guards: { leaves: ["compare", "member", "hasElement", "contains", "isNull"], combinators: ["all", "any", "not"], compareOps: ["==", "!=", "<", "<=", ">", ">="] }, conditional: true, returnsRow: true, stopRuns: true, atomicBatch: false }
+        @description "What write the store honours: every guard form (tested in process on the row read), the row before an update or delete, stop runs, and no atomic batch."
+        @tier "infra"
       statusSlot : slot = system
         @label "Status slot"
         @description "Where the atom reports a failed call."
@@ -499,5 +813,5 @@ orbital CouchdbOrbital {
     }
   }
 
-  page "/couchdb" as CouchPage -> CouchClient
+  page "/couchdb" as CouchPage -> RowStoreDriver
 }

@@ -1,0 +1,515 @@
+app std-firestore [
+  version: "1.0.0",
+  description: "std-firestore — a row-store driver over the Firestore REST API, the std twin of runtime/src/stores/firestore.rs (contract: spec/store/firestore.lolo). It answers the same typed row verbs as every RowStoreDriver (spec/store/row-store.lolo): ROW_READ, ROW_LIST, ROWS_QUERY and ROWS_WRITE in, ROW_FOUND, ROWS_LISTED, ROWS_PAGE, ROWS_IDS, ROWS_WRITTEN, STORE_UNSUPPORTED or STORE_FAILED out, each carrying the asked key. Layout: with a root document path (an even number of segments) rows live at <root>/entities/<key>/rows/<id>, with an empty root at the top-level collection <key>/<id>, where <key> is the entity's declared collection (config.collections) else the entity type name; a document holds the row's fields and its id and a read stamps the document name's id over it. Wire (POST <origin>/v1/projects/<project>/databases/<database>/documents<suffix>?$alt=json%3Benum-encoding=int, JSON in and out, Authorization Bearer): a read is :batchGet with documents [<document name>], a list is <parent>:runQuery with from [{collectionId}], a query is <parent>:runQuery with the structured query the plan builds, a count is <parent>:runAggregationQuery, a write batch is one transaction (:batchGet with newTransaction {readWrite: {}} over every touched document, then :commit with the net change and the transaction id). The parent path segments are URI-encoded. Values use Firestore's typed encoding: stringValue, integerValue (a decimal string, whole numbers below 2^63), doubleValue, booleanValue, nullValue, arrayValue ({} when empty), mapValue {fields}; timestampValue and referenceValue read back as text. Query push-down: == and the four range operators, member (IN, at most 30 values), hasElement (ARRAY_CONTAINS), all, and an any over one field and one leaf kind (IN or ARRAY_CONTAINS_ANY); an id comparison is a referenceValue on __name__. A query Firestore cannot run answers STORE_UNSUPPORTED with the plan's reason word (leaf-unsupported, combinator-unsupported, value-kind-unsupported, order-field, nearest) and so does a Firestore refusal with status FAILED_PRECONDITION or INVALID_ARGUMENT (the reason is that status); a query that can match nothing answers an empty page without a request. The total is settled from the window when it can be (a non-empty window that ended before its limit, an empty first page), else counted. Writes: every touched document is read inside the transaction, the ops run over those rows with the reference semantics (create on a taken id is duplicate-id, update or delete of a miss is not-found, a guard that does not hold is refused, an id-less create or upsert fails with 'create needs a string id' or 'upsert needs a string id'), an atomic batch that fails commits nothing and reports rolled-back for the earlier ops, a stop batch commits what was applied; only changed documents are written, deletes before sets per entity type. A commit that Firestore aborts (ABORTED) repeats the whole transaction from its read, at most config.transactionAttempts times, then STORE_FAILED 'the Firestore transaction kept aborting: <last error text>'. A rekey op is STORE_FAILED 'rekey is unsupported by this store' before any request. Failures: a non-2xx reply is STORE_FAILED with the reply text, a transport failure with the transport's error text, a 2xx reply that is not JSON 'Firestore answered an unreadable reply', a count reply with no result 'Firestore answered a count with no result'. A root with an odd number of segments is STORE_FAILED. Auth: config.auth emulator sends Bearer owner, token sends Bearer <the access-token credential>, service-account mints an RS256 service-account bearer through the http jwt-bearer auth (scope https://www.googleapis.com/auth/datastore, audience https://oauth2.googleapis.com/token, refreshed a minute before expiry). One request is in flight per frame: the store seam asks the driver in a frame keyed by the ask (EXEC-STORE-4), and orb validate refuses a trait outside the driver that emits a row verb (ORB_STORE_VERB_OUTSIDE_SEAM).",
+  egress: ["http://127.0.0.1:8080", "https://firestore.googleapis.com", "https://oauth2.googleapis.com"]
+]
+uses Spec from "almadar-std/firestore"
+
+orbital FirestoreOrbital {
+  type RowCell = string | number | boolean | [RowCell?] | Map string RowCell?
+  type Row = Map string RowCell?
+
+  type CompareLeaf = { kind : "compare", field : string!, op : "==" | "!=" | "<" | "<=" | ">" | ">=", value : RowCell? }
+  type MemberLeaf = { kind : "member", field : string!, values : [RowCell?]! }
+  type HasElementLeaf = { kind : "hasElement", field : string!, value : RowCell? }
+  type ContainsLeaf = { kind : "contains", field : string!, text : string!, caseSensitive : boolean! }
+  type IsNullLeaf = { kind : "isNull", field : string!, isNull : boolean! }
+  type AllNode = { kind : "all", of : [RowPredicate]! }
+  type AnyNode = { kind : "any", of : [RowPredicate]! }
+  type NotNode = { kind : "not", of : RowPredicate! }
+  type ConstLeaf = { kind : "const", value : boolean! }
+  type RowPredicate = CompareLeaf | MemberLeaf | HasElementLeaf | ContainsLeaf | IsNullLeaf | AllNode | AnyNode | NotNode | ConstLeaf
+
+  type RowOrder = { field : string!, direction : "asc" | "desc" }
+  type RowNearest = { field : string!, vector : [number]!, k : number! }
+  type RowQuery = { policy : RowPredicate?, filter : RowPredicate?, order : RowOrder?, offset : number?, limit : number?, total : "exact" | "none"?, nearest : RowNearest? }
+
+  type RowLeafKind = "compare" | "member" | "hasElement" | "contains" | "isNull"
+  type RowCombinator = "all" | "any" | "not"
+  type RowOperator = "==" | "!=" | "<" | "<=" | ">" | ">=" | "member" | "hasElement" | "contains"
+  type RowValueKind = "string" | "number" | "boolean" | "date" | "null"
+  type OperatorValueKinds = { operator : RowOperator!, valueKinds : [RowValueKind]! }
+  type EveryFieldOrderable = { kind : "every-field" }
+  type ListedOrderable = { kind : "listed", fields : [string]! }
+  type RowOrderableFields = EveryFieldOrderable | ListedOrderable
+  type QueryCapabilities = { leaves : [RowLeafKind]!, combinators : [RowCombinator]!, compareOps : [string]!, operatorValueKinds : [OperatorValueKinds]?, orderableFields : RowOrderableFields!, window : boolean!, exactTotal : boolean!, idsOnly : boolean?, nearest : boolean? }
+  type GuardCapabilities = { leaves : [RowLeafKind]!, combinators : [RowCombinator]!, compareOps : [string]! }
+  type WriteCapabilities = { guards : GuardCapabilities!, conditional : boolean!, returnsRow : boolean!, stopRuns : boolean!, atomicBatch : boolean! }
+
+  type CreateOp = { kind : "create", entityType : string!, data : Row! }
+  type UpsertOp = { kind : "upsert", entityType : string!, data : Row! }
+  type UpdateOp = { kind : "update", entityType : string!, id : string!, data : Row!, guard : RowPredicate? }
+  type DeleteOp = { kind : "delete", entityType : string!, id : string!, guard : RowPredicate? }
+  type SingletonTarget = { kind : "singleton" }
+  type KeyTarget = { kind : "key", key : string! }
+  type RowTarget = SingletonTarget | KeyTarget
+  type RekeyOp = { kind : "rekey", entityType : string!, target : RowTarget!, newId : string!, guard : RowPredicate? }
+  type RowWriteOp = CreateOp | UpsertOp | UpdateOp | DeleteOp | RekeyOp
+  type RowWriteBatch = { ops : [RowWriteOp]!, onFailure : "atomic" | "stop" }
+
+  type CreatedOutcome = { kind : "created", row : Row! }
+  type UpdatedOutcome = { kind : "updated", row : Row!, before : Row? }
+  type DeletedOutcome = { kind : "deleted", before : Row? }
+  type NotFoundOutcome = { kind : "not-found" }
+  type DuplicateIdOutcome = { kind : "duplicate-id" }
+  type RefusedOutcome = { kind : "refused" }
+  type FailedOutcome = { kind : "failed", message : string! }
+  type RolledBackOutcome = { kind : "rolled-back" }
+  type RowWriteOutcome = CreatedOutcome | UpdatedOutcome | DeletedOutcome | NotFoundOutcome | DuplicateIdOutcome | RefusedOutcome | FailedOutcome | RolledBackOutcome
+
+  type FirestoreAuth = "emulator" | "token" | "service-account"
+  type Wire = string | number | boolean | [Wire?] | Map string Wire?
+  type FsFound = { name : string!, fields : Map string Wire? }
+  type FsResult = { aggregateFields : Map string Wire? }
+  type FsElement = { transaction : string, found : FsFound, document : FsFound, result : FsResult }
+  type FsReply = [FsElement]
+  type FsErrorDetail = { status : string }
+  type FsErrorBody = { error : FsErrorDetail }
+  type FsDoc = { name : string!, id : string!, fields : Row }
+  type WhereClause = { field : string!, op : string!, value : RowCell?!, values : [RowCell?]! }
+  type Collection = { entityType : string!, collection : string! }
+  type PlanPart = { leafBad : boolean!, kindBad : boolean!, k : string!, ws : [WhereClause]!, reason : string!, ak : string!, af : string!, av : [RowCell?]! }
+  type Clause = { k : string!, ws : [WhereClause]!, reason : string! }
+  type OrderBy = { field : string!, descending : boolean! }
+  type QueryPlan = { decline : string!, nothing : boolean!, ws : [WhereClause]!, orderBy : [OrderBy]!, offset : number?, limit : number?, idsOnly : boolean!, totalNone : boolean! }
+  type Touched = { entityType : string!, id : string! }
+  type Table = { entityType : string!, rows : [Row]! }
+  type WriteRun = { tables : [Table]!, outcomes : [RowWriteOutcome]!, halted : boolean! }
+  type JsonDoc = string | number | boolean | [JsonDoc] | Map string JsonDoc
+  type RowIdRec = { id : string }
+  type ArrayInner = { values : [JsonDoc] }
+  type MapInner = { fields : Map string JsonDoc }
+  type FsWrite = Map string RowCell
+
+  entity FirestoreFlight [runtime] {
+    id : string!
+    key : string @description "The kernel's key for the ask in flight; every reply carries it" = ""
+    entityType : string @description "The entity type a read, list or query asks" = ""
+    rowId : string @description "The id a read asks for" = ""
+    op : string @description "The ask in flight: read, list, query or write" = ""
+    phase : string @description "The request in flight: read, list, query, count, txread or commit" = ""
+    project : string @description "What a query answers: rows or ids" = ""
+    rowsPath : string @description "The collection path holding the asked entity's rows" = ""
+    parentSuffix : string @description "The query suffix path of the collection's parent, URI-encoded per segment; empty for a top-level collection" = ""
+    collection : string @description "The collection id of the asked rows" = ""
+    suffix : string @description "The request path after /documents" = ""
+    body : Map string RowCell @description "The request body" = { }
+    els : [FsElement] @description "The elements of the reply just read" = []
+    docs : [FsDoc] @description "The documents of the reply just read, decoded" = []
+    pageDocs : [FsDoc] @description "The documents of a query window while its total is counted" = []
+    tx : string @description "The transaction id the transactional read answered; empty when none" = ""
+    counted : number @description "The count a count reply answered" = 0
+    query : RowQuery @description "The query being planned" = { }
+    parts : [PlanPart] @description "The plan fold of the policy and the filter" = []
+    caps : string @description "The capability reason word, empty when Firestore can run the query" = ""
+    clause : Clause @description "The where clauses of the policy and filter together" = { k: "some", ws: [], reason: "" }
+    plan : QueryPlan @description "What planning the query decided" = { decline: "", nothing: false, ws: [], orderBy: [], idsOnly: false, totalNone: false }
+    batch : RowWriteBatch @description "The batch a write applies" = { ops: [], onFailure: "stop" }
+    touched : [Touched] @description "The documents the batch touches, in first-use order" = []
+    entities : [string] @description "The entity types the batch touches, in first-use order" = []
+    readBody : Map string RowCell @description "The transactional read, kept to repeat it when Firestore aborts the transaction" = { }
+    attempt : number @description "The transaction attempt in flight, from 1" = 0
+    tables0 : [Table] @description "The touched rows as the transaction read them, by entity type" = []
+    run : WriteRun @description "The batch applied over the rows read" = { tables: [], outcomes: [], halted: false }
+    writes : [FsWrite] @description "The commit's writes: the net change, deletes before sets per entity type" = []
+    errStatus : string @description "The gRPC status word of the failed reply, empty when none" = ""
+    errMessage : string @description "The failure text" = ""
+    errKind : string @description "decline, abort or fail" = ""
+  }
+
+  trait RowStoreDriver -> FirestoreFlight [integration, instance] {
+    initial: ready
+
+    config {
+      statusSlot : slot = system
+        @label "Status slot"
+        @description "Where the atom reports an unreachable Firestore."
+        @synonyms "status area, slot"
+        @tier "presentation"
+      origin : url = "http://127.0.0.1:8080"
+        @label "Firestore origin"
+        @description "The Firestore REST origin: the emulator as http://host:port or https://firestore.googleapis.com. Must be declared in the app egress list."
+        @synonyms "firestore host, emulator host, database server"
+        @tier "infra"
+      projectId : string = "demo-almadar"
+        @label "Project id"
+        @description "The Firebase project the documents live in (the emulator accepts any)."
+        @synonyms "firebase project, gcp project"
+        @tier "infra"
+      databaseId : string = "(default)"
+        @label "Database id"
+        @description "The Firestore database id."
+        @synonyms "database name, firestore database"
+        @tier "infra"
+      root : string = ""
+        @label "Root document"
+        @description "The document path the rows hang under (hosted/<appId>), an even number of segments; empty keeps the entity collections at the top level."
+        @synonyms "root path, tenant root, app root"
+        @tier "infra"
+      collections : [Collection] = []
+        @label "Declared collections"
+        @description "The collection an entity type is keyed by in place of its name, for an entity bound to a declared persistent collection."
+        @synonyms "collection names, table names"
+        @tier "domain"
+      orderableFields : [string] = []
+        @label "Orderable fields"
+        @description "The fields (besides id) every document carries, non-null and indexed with the document id as tie-break: only these can order a pushed-down query, since Firestore drops documents lacking the ordered field."
+        @synonyms "sortable fields, indexed fields"
+        @tier "domain"
+      auth : FirestoreAuth = "emulator"
+        @label "Authentication"
+        @description "emulator sends Bearer owner; token sends the access-token credential as the bearer; service-account mints an RS256 bearer from the service-account key credential."
+        @synonyms "credentials mode, bearer mode"
+        @tier "infra"
+      accessTokenCredential : secret = "FIRESTORE_ACCESS_TOKEN"
+        @label "Access token credential"
+        @description "The credential name the host resolves to the bearer token (auth token)."
+        @synonyms "oauth token, bearer token"
+        @tier "infra"
+      serviceAccountCredential : secret = "FIREBASE_SERVICE_ACCOUNT"
+        @label "Service-account credential"
+        @description "The credential name the host resolves to the service-account key JSON (auth service-account)."
+        @synonyms "service account key, firebase admin key"
+        @tier "infra"
+      tokenUrl : url = "https://oauth2.googleapis.com/token"
+        @label "Token URL"
+        @description "The OAuth token endpoint the service-account assertion is exchanged at."
+        @synonyms "oauth endpoint"
+        @tier "infra"
+      scope : string = "https://www.googleapis.com/auth/datastore"
+        @label "Token scope"
+        @description "The scope claim of the service-account assertion."
+        @synonyms "oauth scope"
+        @tier "infra"
+      transactionAttempts : number = 5
+        @label "Transaction attempts"
+        @description "How many times a write transaction that Firestore aborts (contention) is repeated from its read."
+        @synonyms "contention retries"
+        @tier "infra"
+      queryCapabilities : QueryCapabilities = { leaves: ["compare", "member", "hasElement"], combinators: ["all", "any"], compareOps: ["==", "<", "<=", ">", ">="], operatorValueKinds: [{ operator: "<", valueKinds: ["string", "number", "boolean", "date"] }, { operator: "<=", valueKinds: ["string", "number", "boolean", "date"] }, { operator: ">", valueKinds: ["string", "number", "boolean", "date"] }, { operator: ">=", valueKinds: ["string", "number", "boolean", "date"] }], orderableFields: { kind: "every-field" }, window: true, exactTotal: true, idsOnly: true, nearest: false }
+        @label "Query capabilities"
+        @description "What query Firestore runs: == and range comparisons, member, hasElement, all, and an any over one field."
+        @synonyms "pushdown capabilities"
+        @tier "infra"
+      writeCapabilities : WriteCapabilities = { guards: { leaves: ["compare", "member", "hasElement", "contains", "isNull"], combinators: ["all", "any", "not"], compareOps: ["==", "!=", "<", "<=", ">", ">="] }, conditional: true, returnsRow: true, stopRuns: true, atomicBatch: true }
+        @label "Write capabilities"
+        @description "What write the store honours: every guard form, the row before an update or delete, stop runs and atomic batches, all inside one transaction."
+        @synonyms "write forms"
+        @tier "infra"
+    }
+
+    state ready {
+      INIT -> ready
+
+      ROW_READ -> ready when (!= (math/mod (array/len (array/filter (str/split @config.root "/") (fn s (!= @s "")))) 2) 0)
+        (emit STORE_FAILED { key: @payload.key, message: (str/concat "FirestoreRows root \"" @config.root "\" is not a document path (it needs an even number of segments)") })
+      ROW_READ -> busy when (not (!= (math/mod (array/len (array/filter (str/split @config.root "/") (fn s (!= @s "")))) 2) 0))
+        (set @entity.key @payload.key)
+        (set @entity.entityType @payload.entityType)
+        (set @entity.rowId @payload.id)
+        (set @entity.op "read")
+        (set @entity.phase "read")
+        (set @entity.rowsPath (let ((ck (let ((cc (array/find @config.collections (fn c (= @c.entityType @entity.entityType))))) (if (= @cc null) @entity.entityType (object/get @cc "collection" @entity.entityType))))) (if (= @config.root "") @ck (str/concat @config.root "/entities/" @ck "/rows"))))
+        (set @entity.collection (array/last (str/split @entity.rowsPath "/")))
+        (set @entity.parentSuffix (str/join (array/map (array/take (str/split @entity.rowsPath "/") (- (array/len (str/split @entity.rowsPath "/")) 1)) (fn s (str/encode-uri-component @s))) "/"))
+        (set @entity.suffix ":batchGet")
+        (set @entity.body { documents: [(str/concat "projects/" @config.projectId "/databases/" @config.databaseId "/documents/" (str/concat @entity.rowsPath "/" @entity.rowId))] })
+        (emit FS_SEND { })
+
+      ROW_LIST -> ready when (!= (math/mod (array/len (array/filter (str/split @config.root "/") (fn s (!= @s "")))) 2) 0)
+        (emit STORE_FAILED { key: @payload.key, message: (str/concat "FirestoreRows root \"" @config.root "\" is not a document path (it needs an even number of segments)") })
+      ROW_LIST -> busy when (not (!= (math/mod (array/len (array/filter (str/split @config.root "/") (fn s (!= @s "")))) 2) 0))
+        (set @entity.key @payload.key)
+        (set @entity.entityType @payload.entityType)
+        (set @entity.op "list")
+        (set @entity.phase "list")
+        (set @entity.rowsPath (let ((ck (let ((cc (array/find @config.collections (fn c (= @c.entityType @entity.entityType))))) (if (= @cc null) @entity.entityType (object/get @cc "collection" @entity.entityType))))) (if (= @config.root "") @ck (str/concat @config.root "/entities/" @ck "/rows"))))
+        (set @entity.collection (array/last (str/split @entity.rowsPath "/")))
+        (set @entity.parentSuffix (str/join (array/map (array/take (str/split @entity.rowsPath "/") (- (array/len (str/split @entity.rowsPath "/")) 1)) (fn s (str/encode-uri-component @s))) "/"))
+        (set @entity.suffix (if (= @entity.parentSuffix "") ":runQuery" (str/concat "/" @entity.parentSuffix ":runQuery")))
+        (set @entity.body { structuredQuery: { from: [{ collectionId: @entity.collection }] } })
+        (emit FS_SEND { })
+
+      ROWS_QUERY -> ready when (!= (math/mod (array/len (array/filter (str/split @config.root "/") (fn s (!= @s "")))) 2) 0)
+        (emit STORE_FAILED { key: @payload.key, message: (str/concat "FirestoreRows root \"" @config.root "\" is not a document path (it needs an even number of segments)") })
+      ROWS_QUERY -> busy when (not (!= (math/mod (array/len (array/filter (str/split @config.root "/") (fn s (!= @s "")))) 2) 0))
+        (set @entity.key @payload.key)
+        (set @entity.entityType @payload.entityType)
+        (set @entity.project (or @payload.project "rows"))
+        (set @entity.op "query")
+        (set @entity.query @payload.query)
+        (set @entity.rowsPath (let ((ck (let ((cc (array/find @config.collections (fn c (= @c.entityType @entity.entityType))))) (if (= @cc null) @entity.entityType (object/get @cc "collection" @entity.entityType))))) (if (= @config.root "") @ck (str/concat @config.root "/entities/" @ck "/rows"))))
+        (set @entity.collection (array/last (str/split @entity.rowsPath "/")))
+        (set @entity.parentSuffix (str/join (array/map (array/take (str/split @entity.rowsPath "/") (- (array/len (str/split @entity.rowsPath "/")) 1)) (fn s (str/encode-uri-component @s))) "/"))
+        (set @entity.parts (array/map (array/filter [(object/get @payload.query "policy" null), (object/get @payload.query "filter" null)] (fn p (!= @p null))) (fn p (tree/fold @p (fn (n k) (let ((kind (object/get @n "kind" ""))) (if (= @kind "const") { leafBad: false, kindBad: false, k: (if (= (object/get @n "value" false) true) "some" "nothing"), ws: [], reason: "", ak: (if (= (object/get @n "value" true) false) "false" "other"), af: "", av: [] } (if (= @kind "compare") (let ((op (object/get @n "op" ""))) (let ((v (object/get @n "value" null))) { leafBad: (= @op "!="), kindBad: (and (array/includes ["<", "<=", ">", ">="] @op) (= @v null)), k: (if (not (or (validate/string @v) (validate/number @v) (validate/boolean @v))) "nothing" (if (= @op "!=") "decline" "some")), ws: (if (and (or (validate/string @v) (validate/number @v) (validate/boolean @v)) (!= @op "!=")) [{ field: (if (= (object/get @n "field" "") "id") "__name__" (object/get @n "field" "")), op: (object/get { "==": "EQUAL", "<": "LESS_THAN", "<=": "LESS_THAN_OR_EQUAL", ">": "GREATER_THAN", ">=": "GREATER_THAN_OR_EQUAL" } @op ""), value: @v, values: [] }] []), reason: (if (and (or (validate/string @v) (validate/number @v) (validate/boolean @v)) (= @op "!=")) "leaf-unsupported" ""), ak: (if (= @op "==") "eq" "other"), af: (object/get @n "field" ""), av: (if (or (validate/string @v) (validate/number @v) (validate/boolean @v)) [@v] []) })) (if (= @kind "member") (let ((vals (array/filter (object/get @n "values" []) (fn x (or (validate/string @x) (validate/number @x) (validate/boolean @x)))))) { leafBad: false, kindBad: false, k: (if (= (array/len @vals) 0) "nothing" (if (> (array/len @vals) 30) "decline" "some")), ws: (if (and (> (array/len @vals) 0) (<= (array/len @vals) 30)) [{ field: (if (= (object/get @n "field" "") "id") "__name__" (object/get @n "field" "")), op: "IN", value: "", values: @vals }] []), reason: (if (> (array/len @vals) 30) "value-kind-unsupported" ""), ak: "member", af: (object/get @n "field" ""), av: @vals }) (if (= @kind "hasElement") (let ((v (object/get @n "value" null))) { leafBad: false, kindBad: false, k: (if (or (= @v null) (or (validate/string @v) (validate/number @v) (validate/boolean @v))) "some" "nothing"), ws: (if (or (= @v null) (or (validate/string @v) (validate/number @v) (validate/boolean @v))) [{ field: (if (= (object/get @n "field" "") "id") "__name__" (object/get @n "field" "")), op: "ARRAY_CONTAINS", value: @v, values: [] }] []), reason: "", ak: "has", af: (object/get @n "field" ""), av: (if (and (!= @v null) (or (validate/string @v) (validate/number @v) (validate/boolean @v))) [@v] []) }) (if (= @kind "all") (let ((cl (array/reduce @k.of { k: "some", ws: [], reason: "" } (fn a r (if (!= @a.k "some") @a (if (!= @r.k "some") { k: @r.k, ws: [], reason: @r.reason } { k: "some", ws: (array/concat @a.ws @r.ws), reason: "" })))))) { leafBad: (array/some @k.of (fn r @r.leafBad)), kindBad: (array/some @k.of (fn r @r.kindBad)), combBad: (array/some @k.of (fn r (object/get @r "combBad" false))), k: @cl.k, ws: @cl.ws, reason: @cl.reason, ak: "other", af: "", av: [] }) (if (= @kind "any") (let ((kids (array/filter @k.of (fn c (!= @c.ak "false"))))) (let ((elig (array/every @kids (fn c (array/includes ["eq", "member", "has"] @c.ak))))) (let ((fields (array/unique (array/map @kids (fn c @c.af))))) (let ((kinds (array/unique (array/map @kids (fn c (if (= @c.ak "has") "ARRAY_CONTAINS_ANY" "IN")))))) (let ((vals (array/reduce @kids [] (fn acc c (array/concat @acc @c.av))))) (let ((st (if (= (array/len @kids) 0) "nothing" (if (or (not @elig) (> (array/len @fields) 1) (> (array/len @kinds) 1)) "decline" (if (= (array/len @vals) 0) "nothing" (if (> (array/len @vals) 30) "decline" "some")))))) { leafBad: (array/some @k.of (fn r @r.leafBad)), kindBad: (array/some @k.of (fn r @r.kindBad)), combBad: (array/some @k.of (fn r (object/get @r "combBad" false))), k: @st, ws: (if (= @st "some") [{ field: (if (= (array/nth @fields 0) "id") "__name__" (array/nth @fields 0)), op: (array/nth @kinds 0), value: "", values: @vals }] []), reason: (if (= @st "decline") (if (and @elig (<= (array/len @fields) 1) (<= (array/len @kinds) 1)) "value-kind-unsupported" "combinator-unsupported") ""), ak: "other", af: "", av: [] })))))) (if (= @kind "not") { leafBad: (object/get @k.of "leafBad" false), kindBad: (object/get @k.of "kindBad" false), combBad: true, k: "decline", ws: [], reason: "combinator-unsupported", ak: "other", af: "", av: [] } { leafBad: true, kindBad: false, k: "decline", ws: [], reason: "leaf-unsupported", ak: "other", af: "", av: [] }))))))))) "RowPredicate"))))
+        (set @entity.caps (if (array/some @entity.parts (fn p (object/get @p "leafBad" false))) "leaf-unsupported" (if (array/some @entity.parts (fn p (object/get @p "combBad" false))) "combinator-unsupported" (if (array/some @entity.parts (fn p (object/get @p "kindBad" false))) "value-kind-unsupported" (if (!= (object/get @payload.query "nearest" null) null) "nearest" (if (and (or (!= (object/get @payload.query "offset" null) null) (!= (object/get @payload.query "limit" null) null)) (not @config.queryCapabilities.window)) "window" (if (and (not @config.queryCapabilities.exactTotal) (!= (object/get @payload.query "total" "") "none")) "exact-total" "")))))))
+        (set @entity.clause (array/reduce @entity.parts { k: "some", ws: [], reason: "" } (fn a r (if (!= (object/get @a "k" "") "some") @a (if (!= (object/get @r "k" "") "some") { k: (object/get @r "k" ""), ws: [], reason: (object/get @r "reason" "") } { k: "some", ws: (array/concat (object/get @a "ws" []) (object/get @r "ws" [])), reason: "" })))))
+        (set @entity.plan (if (!= @entity.caps "") { decline: @entity.caps, nothing: false, ws: [], orderBy: [], offset: (object/get @entity.query "offset" null), limit: (object/get @entity.query "limit" null), idsOnly: (= @entity.project "ids"), totalNone: (= (object/get @entity.query "total" "") "none") } (if (= @entity.clause.k "decline") { decline: @entity.clause.reason, nothing: false, ws: [], orderBy: [], offset: (object/get @entity.query "offset" null), limit: (object/get @entity.query "limit" null), idsOnly: (= @entity.project "ids"), totalNone: (= (object/get @entity.query "total" "") "none") } (if (= @entity.clause.k "nothing") { decline: "", nothing: true, ws: [], orderBy: [], offset: (object/get @entity.query "offset" null), limit: (object/get @entity.query "limit" null), idsOnly: (= @entity.project "ids"), totalNone: (= (object/get @entity.query "total" "") "none") } (let ((ord (object/get @entity.query "order" { field: "createdAt", direction: "asc" }))) (let ((path (if (= (object/get @ord "field" "createdAt") "id") "__name__" (object/get @ord "field" "createdAt")))) (let ((required (array/some @entity.clause.ws (fn w (and (= (object/get @w "field" "") @path) (not (array/includes ["ARRAY_CONTAINS", "ARRAY_CONTAINS_ANY"] (object/get @w "op" "")))))))) (let ((ineq (array/unique (array/map (array/filter @entity.clause.ws (fn w (array/includes ["LESS_THAN", "LESS_THAN_OR_EQUAL", "GREATER_THAN", "GREATER_THAN_OR_EQUAL"] (object/get @w "op" "")))) (fn w (object/get @w "field" "")))))) { decline: (if (not (or (= (object/get @ord "field" "createdAt") "id") (array/includes @config.orderableFields (object/get @ord "field" "createdAt")) @required)) "order-field" (if (> (array/len @ineq) 1) "leaf-unsupported" (if (and (= (array/len @ineq) 1) (!= (array/nth @ineq 0) @path)) "order-field" ""))), nothing: false, ws: @entity.clause.ws, orderBy: (if (= (object/get @ord "field" "createdAt") "id") [{ field: "__name__", descending: (= (object/get @ord "direction" "asc") "desc") }] [{ field: (object/get @ord "field" "createdAt"), descending: (= (object/get @ord "direction" "asc") "desc") }, { field: "__name__", descending: false }]), offset: (object/get @entity.query "offset" null), limit: (object/get @entity.query "limit" null), idsOnly: (= @entity.project "ids"), totalNone: (= (object/get @entity.query "total" "") "none") }))))))))
+        (emit FS_PLANNED { })
+
+      ROWS_WRITE -> ready when (!= (math/mod (array/len (array/filter (str/split @config.root "/") (fn s (!= @s "")))) 2) 0)
+        (emit STORE_FAILED { key: @payload.key, message: (str/concat "FirestoreRows root \"" @config.root "\" is not a document path (it needs an even number of segments)") })
+      ROWS_WRITE -> ready when (and (not (!= (math/mod (array/len (array/filter (str/split @config.root "/") (fn s (!= @s "")))) 2) 0)) (= @payload.batch.onFailure "atomic") (not @config.writeCapabilities.atomicBatch))
+        (emit STORE_UNSUPPORTED { key: @payload.key, reason: "this store declares no atomic batches" })
+      ROWS_WRITE -> ready when (and (not (!= (math/mod (array/len (array/filter (str/split @config.root "/") (fn s (!= @s "")))) 2) 0)) (= @payload.batch.onFailure "stop") (not @config.writeCapabilities.stopRuns))
+        (emit STORE_UNSUPPORTED { key: @payload.key, reason: "this store declares no stop runs" })
+      ROWS_WRITE -> ready when (and (not (!= (math/mod (array/len (array/filter (str/split @config.root "/") (fn s (!= @s "")))) 2) 0)) (array/some @payload.batch.ops (fn o (= (object/get @o "kind" "") "rekey"))))
+        (emit STORE_FAILED { key: @payload.key, message: "rekey is unsupported by this store" })
+      ROWS_WRITE -> busy when (and (not (!= (math/mod (array/len (array/filter (str/split @config.root "/") (fn s (!= @s "")))) 2) 0)) (not (array/some @payload.batch.ops (fn o (= (object/get @o "kind" "") "rekey")))) (or (not (= @payload.batch.onFailure "atomic")) @config.writeCapabilities.atomicBatch) (or (not (= @payload.batch.onFailure "stop")) @config.writeCapabilities.stopRuns))
+        (set @entity.key @payload.key)
+        (set @entity.op "write")
+        (set @entity.batch @payload.batch)
+        (set @entity.attempt 1)
+        (set @entity.touched (array/reduce @payload.batch.ops [] (fn acc op (let ((et (object/get @op "entityType" ""))) (let ((id (if (or (= (object/get @op "kind" "") "update") (= (object/get @op "kind" "") "delete")) (object/get @op "id" "") (let ((did (object/get (object/get @op "data" {}) "id" ""))) (if (validate/string @did) @did ""))))) (if (and (or (= (object/get @op "kind" "") "update") (= (object/get @op "kind" "") "delete") (!= @id "")) (not (array/some @acc (fn t (and (= (object/get @t "entityType" "") @et) (= (object/get @t "id" "") @id)))))) (array/append @acc { entityType: @et, id: @id }) @acc))))))
+        (set @entity.entities (array/unique (array/map @entity.touched (fn t (object/get @t "entityType" "")))))
+        (set @entity.readBody { documents: (array/map @entity.touched (fn t (str/concat "projects/" @config.projectId "/databases/" @config.databaseId "/documents/" (str/concat (let ((ck (let ((cc (array/find @config.collections (fn c (= @c.entityType @t.entityType))))) (if (= @cc null) @t.entityType (object/get @cc "collection" @t.entityType))))) (if (= @config.root "") @ck (str/concat @config.root "/entities/" @ck "/rows"))) "/" @t.id)))), newTransaction: { readWrite: { } } })
+        (emit FS_BEGIN { })
+    }
+
+    state busy {
+      INIT -> ready
+
+      FS_SEND -> busy when (= @config.auth "emulator")
+        (emit FS_WIRE { phase: @entity.phase, path: @entity.suffix, body: @entity.body })
+        (http POST @config.origin (str/concat "/v1/projects/" @config.projectId "/databases/" @config.databaseId "/documents" @entity.suffix "?$alt=json%3Benum-encoding=int") {
+          headers: { Content-Type: "application/json", Accept: "*/*", Authorization: "Bearer owner" },
+          text: (json/stringify @entity.body)
+        } { emit: { success: FS_REPLIED, failure: FS_UNREACHABLE } })
+      FS_SEND -> busy when (= @config.auth "token")
+        (emit FS_WIRE { phase: @entity.phase, path: @entity.suffix, body: @entity.body })
+        (http POST @config.origin (str/concat "/v1/projects/" @config.projectId "/databases/" @config.databaseId "/documents" @entity.suffix "?$alt=json%3Benum-encoding=int") {
+          headers: { Content-Type: "application/json", Accept: "*/*" },
+          auth: { scheme: bearer, credential: @config.accessTokenCredential },
+          text: (json/stringify @entity.body)
+        } { emit: { success: FS_REPLIED, failure: FS_UNREACHABLE } })
+      FS_SEND -> busy when (= @config.auth "service-account")
+        (emit FS_WIRE { phase: @entity.phase, path: @entity.suffix, body: @entity.body })
+        (http POST @config.origin (str/concat "/v1/projects/" @config.projectId "/databases/" @config.databaseId "/documents" @entity.suffix "?$alt=json%3Benum-encoding=int") {
+          headers: { Content-Type: "application/json", Accept: "*/*" },
+          auth: { scheme: jwt-bearer, key: @config.serviceAccountCredential, alg: RS256, claims: { scope: @config.scope, aud: @config.tokenUrl, exp: (+ (math/floor (/ @now 1000)) 3600), iat: (math/floor (/ @now 1000)) }, tokenUrl: @config.tokenUrl, expiresMarginMs: 60000 },
+          text: (json/stringify @entity.body)
+        } { emit: { success: FS_REPLIED, failure: FS_UNREACHABLE } })
+
+      FS_REPLIED -> busy when (or (< @payload.status 200) (>= @payload.status 300))
+        (set @entity.errStatus (let ((eb (json/parse @payload.body FsErrorBody))) (if (= @eb null) "" (object/get (object/get @eb "error" { }) "status" ""))))
+        (set @entity.errMessage @payload.body)
+        (set @entity.errKind (if (and (array/includes ["query", "count"] @entity.phase) (array/includes ["FAILED_PRECONDITION", "INVALID_ARGUMENT"] @entity.errStatus)) "decline" (if (and (array/includes ["txread", "commit"] @entity.phase) (= @entity.errStatus "ABORTED")) "abort" "fail")))
+        (emit FS_ERRORED { })
+      FS_REPLIED -> busy when (and (and (>= @payload.status 200) (< @payload.status 300)) (not (json/valid @payload.body)))
+        (set @entity.errStatus "")
+        (set @entity.errMessage "Firestore answered an unreadable reply")
+        (set @entity.errKind "fail")
+        (emit FS_ERRORED { })
+      FS_REPLIED -> busy when (and (and (>= @payload.status 200) (< @payload.status 300)) (json/valid @payload.body))
+        (set @entity.els (if (= (json/parse @payload.body FsReply) null) [] (json/parse @payload.body FsReply)))
+        (set @entity.tx (let ((txs (array/filter @entity.els (fn e (validate/string (object/get @e "transaction" null)))))) (if (= (array/len @txs) 0) "" (object/get (array/last @txs) "transaction" ""))))
+        (set @entity.docs (array/map (array/filter @entity.els (fn e (or (!= (object/get @e "found" null) null) (!= (object/get @e "document" null) null)))) (fn e (let ((d (if (!= (object/get @e "found" null) null) (object/get @e "found" { name: "", fields: {} }) (object/get @e "document" { name: "", fields: {} })))) { name: (object/get @d "name" ""), id: (array/last (str/split (object/get @d "name" "") "/")), fields: (json/parse (tree/fold (object/get @d "fields" { }) (fn (n k) (if (validate/array @n) (str/concat "[" (str/join @k ",") "]") (if (not (validate/object @n)) (json/stringify @n) (if (!= (array/len (object/keys @n)) 1) (str/concat "{" (str/join (array/map (object/entries @k) (fn e (str/concat (json/stringify (array/nth @e 0)) ":" (array/nth @e 1)))) ",") "}") (let ((key (array/nth (object/keys @n) 0))) (let ((v (object/get @n @key null))) (if (and (= @key "stringValue") (validate/string @v)) (json/stringify @v) (if (and (= @key "integerValue") (validate/string @v)) (json/stringify (str/to-number @v)) (if (and (= @key "integerValue") (validate/number @v)) (json/stringify @v) (if (and (= @key "doubleValue") (validate/number @v)) (json/stringify @v) (if (and (= @key "booleanValue") (validate/boolean @v)) (json/stringify @v) (if (and (= @key "nullValue") (not (validate/object @v))) "null" (if (and (= @key "timestampValue") (validate/string @v)) (json/stringify @v) (if (and (= @key "referenceValue") (validate/string @v)) (json/stringify @v) (if (and (= @key "arrayValue") (validate/object @v) (= (array/len (array/filter (object/keys @v) (fn x (!= @x "values")))) 0)) (json/stringify (object/get (json/parse (object/get @k "arrayValue" "{}") ArrayInner) "values" [])) (if (and (= @key "mapValue") (validate/object @v) (= (array/len (array/filter (object/keys @v) (fn x (!= @x "fields")))) 0)) (json/stringify (object/get (json/parse (object/get @k "mapValue" "{}") MapInner) "fields" { })) (if (and (= @key "geoPointValue") (validate/object @v) (= (array/len (array/filter (object/keys @v) (fn x (and (!= @x "latitude") (!= @x "longitude"))))) 0)) "null" (if (and (= @key "bytesValue") (validate/string @v)) "null" (str/concat "{" (str/join (array/map (object/entries @k) (fn e (str/concat (json/stringify (array/nth @e 0)) ":" (array/nth @e 1)))) ",") "}"))))))))))))))))))) "Wire") Row) }))))
+        (set @entity.counted (let ((r (array/find @entity.els (fn e (!= (object/get (object/get (object/get @e "result" { }) "aggregateFields" { }) "count" null) null))))) (if (= @r null) -1 (let ((c (object/get (json/parse (tree/fold (object/get (object/get @r "result" { }) "aggregateFields" { }) (fn (n k) (if (validate/array @n) (str/concat "[" (str/join @k ",") "]") (if (not (validate/object @n)) (json/stringify @n) (if (!= (array/len (object/keys @n)) 1) (str/concat "{" (str/join (array/map (object/entries @k) (fn e (str/concat (json/stringify (array/nth @e 0)) ":" (array/nth @e 1)))) ",") "}") (let ((key (array/nth (object/keys @n) 0))) (let ((v (object/get @n @key null))) (if (and (= @key "stringValue") (validate/string @v)) (json/stringify @v) (if (and (= @key "integerValue") (validate/string @v)) (json/stringify (str/to-number @v)) (if (and (= @key "integerValue") (validate/number @v)) (json/stringify @v) (if (and (= @key "doubleValue") (validate/number @v)) (json/stringify @v) (if (and (= @key "booleanValue") (validate/boolean @v)) (json/stringify @v) (if (and (= @key "nullValue") (not (validate/object @v))) "null" (if (and (= @key "timestampValue") (validate/string @v)) (json/stringify @v) (if (and (= @key "referenceValue") (validate/string @v)) (json/stringify @v) (if (and (= @key "arrayValue") (validate/object @v) (= (array/len (array/filter (object/keys @v) (fn x (!= @x "values")))) 0)) (json/stringify (object/get (json/parse (object/get @k "arrayValue" "{}") ArrayInner) "values" [])) (if (and (= @key "mapValue") (validate/object @v) (= (array/len (array/filter (object/keys @v) (fn x (!= @x "fields")))) 0)) (json/stringify (object/get (json/parse (object/get @k "mapValue" "{}") MapInner) "fields" { })) (if (and (= @key "geoPointValue") (validate/object @v) (= (array/len (array/filter (object/keys @v) (fn x (and (!= @x "latitude") (!= @x "longitude"))))) 0)) "null" (if (and (= @key "bytesValue") (validate/string @v)) "null" (str/concat "{" (str/join (array/map (object/entries @k) (fn e (str/concat (json/stringify (array/nth @e 0)) ":" (array/nth @e 1)))) ",") "}"))))))))))))))))))) "Wire") Row) "count" -1))) (if (validate/number @c) @c -1)))))
+        (emit FS_PARSED { })
+      FS_UNREACHABLE -> busy
+        (set @entity.errStatus "")
+        (set @entity.errMessage @payload.error)
+        (set @entity.errKind "fail")
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Firestore unavailable: " @payload.error) })
+        (emit FS_ERRORED { })
+
+      FS_ERRORED -> ready when (= @entity.errKind "decline")
+        (emit STORE_UNSUPPORTED { key: @entity.key, reason: @entity.errStatus })
+      FS_ERRORED -> busy when (and (= @entity.errKind "abort") (< @entity.attempt @config.transactionAttempts))
+        (set @entity.attempt (+ @entity.attempt 1))
+        (set @entity.phase "txread")
+        (set @entity.suffix ":batchGet")
+        (set @entity.body @entity.readBody)
+        (emit FS_SEND { })
+      FS_ERRORED -> ready when (and (= @entity.errKind "abort") (>= @entity.attempt @config.transactionAttempts))
+        (emit STORE_FAILED { key: @entity.key, message: (str/concat "the Firestore transaction kept aborting: " @entity.errMessage) })
+      FS_ERRORED -> ready when (= @entity.errKind "fail")
+        (emit STORE_FAILED { key: @entity.key, message: @entity.errMessage })
+
+      FS_PARSED -> ready when (= @entity.phase "read")
+        (emit ROW_FOUND { key: @entity.key, row: (let ((d (array/find @entity.docs (fn dd (= (object/get @dd "name" "") (str/concat "projects/" @config.projectId "/databases/" @config.databaseId "/documents/" (str/concat @entity.rowsPath "/" @entity.rowId))))))) (if (= @d null) null (object/set (object/get @d "fields" { }) "id" @entity.rowId))) })
+      FS_PARSED -> ready when (= @entity.phase "list")
+        (emit ROWS_LISTED { key: @entity.key, rows: (array/map @entity.docs (fn d (object/set (object/get @d "fields" { }) "id" (object/get @d "id" "")))) })
+
+      FS_PLANNED -> ready when (!= @entity.plan.decline "")
+        (emit STORE_UNSUPPORTED { key: @entity.key, reason: @entity.plan.decline })
+      FS_PLANNED -> busy when (and (= @entity.plan.decline "") @entity.plan.nothing)
+        (set @entity.pageDocs [])
+        (emit FS_PAGE { total: 0 })
+      FS_PLANNED -> busy when (and (= @entity.plan.decline "") (not @entity.plan.nothing) (= (object/get @entity.plan "limit" null) 0) @entity.plan.totalNone)
+        (set @entity.pageDocs [])
+        (emit FS_PAGE { total: 0 })
+      FS_PLANNED -> busy when (and (= @entity.plan.decline "") (not @entity.plan.nothing) (= (object/get @entity.plan "limit" null) 0) (not @entity.plan.totalNone))
+        (set @entity.pageDocs [])
+        (set @entity.phase "count")
+        (set @entity.suffix (if (= @entity.parentSuffix "") ":runAggregationQuery" (str/concat "/" @entity.parentSuffix ":runAggregationQuery")))
+        (set @entity.body { structuredAggregationQuery: { structuredQuery: (object/merge { from: [{ collectionId: @entity.collection }] } (let ((fs (array/map @entity.plan.ws (fn w { fieldFilter: { field: { fieldPath: @w.field }, op: @w.op, value: (if (= @w.field "__name__") (if (array/includes ["IN", "ARRAY_CONTAINS_ANY"] @w.op) { arrayValue: { values: (array/map @w.values (fn x { referenceValue: (str/concat "projects/" @config.projectId "/databases/" @config.databaseId "/documents/" (str/concat @entity.rowsPath "/" (if (validate/string @x) @x ""))) })) } } { referenceValue: (str/concat "projects/" @config.projectId "/databases/" @config.databaseId "/documents/" (str/concat @entity.rowsPath "/" (if (validate/string @w.value) @w.value ""))) }) (if (array/includes ["IN", "ARRAY_CONTAINS_ANY"] @w.op) { arrayValue: { values: (array/map @w.values (fn x (tree/fold @x (fn (n k) (if (= @n null) { nullValue: @n } (if (validate/array @n) (if (= (array/len @n) 0) { arrayValue: {} } { arrayValue: { values: @k } }) (if (validate/object @n) { mapValue: { fields: @k } } (if (validate/string @n) { stringValue: @n } (if (validate/boolean @n) { booleanValue: @n } (if (and (= (math/floor @n) @n) (< (math/abs @n) 9223372036854775000)) { integerValue: (str/concat @n) } { doubleValue: @n }))))))) "RowCell"))) } } (tree/fold @w.value (fn (n k) (if (= @n null) { nullValue: @n } (if (validate/array @n) (if (= (array/len @n) 0) { arrayValue: {} } { arrayValue: { values: @k } }) (if (validate/object @n) { mapValue: { fields: @k } } (if (validate/string @n) { stringValue: @n } (if (validate/boolean @n) { booleanValue: @n } (if (and (= (math/floor @n) @n) (< (math/abs @n) 9223372036854775000)) { integerValue: (str/concat @n) } { doubleValue: @n }))))))) "RowCell"))) } })))) (if (= (array/len @fs) 0) { } (if (= (array/len @fs) 1) { where: (array/nth @fs 0) } { where: { compositeFilter: { op: "AND", filters: @fs } } })))), aggregations: [{ alias: "count", count: { } }] } })
+        (emit FS_SEND { })
+      FS_PLANNED -> busy when (and (= @entity.plan.decline "") (not @entity.plan.nothing) (!= (object/get @entity.plan "limit" null) 0))
+        (set @entity.phase "query")
+        (set @entity.suffix (if (= @entity.parentSuffix "") ":runQuery" (str/concat "/" @entity.parentSuffix ":runQuery")))
+        (set @entity.body { structuredQuery: (object/merge { from: [{ collectionId: @entity.collection }] } (let ((fs (array/map @entity.plan.ws (fn w { fieldFilter: { field: { fieldPath: @w.field }, op: @w.op, value: (if (= @w.field "__name__") (if (array/includes ["IN", "ARRAY_CONTAINS_ANY"] @w.op) { arrayValue: { values: (array/map @w.values (fn x { referenceValue: (str/concat "projects/" @config.projectId "/databases/" @config.databaseId "/documents/" (str/concat @entity.rowsPath "/" (if (validate/string @x) @x ""))) })) } } { referenceValue: (str/concat "projects/" @config.projectId "/databases/" @config.databaseId "/documents/" (str/concat @entity.rowsPath "/" (if (validate/string @w.value) @w.value ""))) }) (if (array/includes ["IN", "ARRAY_CONTAINS_ANY"] @w.op) { arrayValue: { values: (array/map @w.values (fn x (tree/fold @x (fn (n k) (if (= @n null) { nullValue: @n } (if (validate/array @n) (if (= (array/len @n) 0) { arrayValue: {} } { arrayValue: { values: @k } }) (if (validate/object @n) { mapValue: { fields: @k } } (if (validate/string @n) { stringValue: @n } (if (validate/boolean @n) { booleanValue: @n } (if (and (= (math/floor @n) @n) (< (math/abs @n) 9223372036854775000)) { integerValue: (str/concat @n) } { doubleValue: @n }))))))) "RowCell"))) } } (tree/fold @w.value (fn (n k) (if (= @n null) { nullValue: @n } (if (validate/array @n) (if (= (array/len @n) 0) { arrayValue: {} } { arrayValue: { values: @k } }) (if (validate/object @n) { mapValue: { fields: @k } } (if (validate/string @n) { stringValue: @n } (if (validate/boolean @n) { booleanValue: @n } (if (and (= (math/floor @n) @n) (< (math/abs @n) 9223372036854775000)) { integerValue: (str/concat @n) } { doubleValue: @n }))))))) "RowCell"))) } })))) (if (= (array/len @fs) 0) { } (if (= (array/len @fs) 1) { where: (array/nth @fs 0) } { where: { compositeFilter: { op: "AND", filters: @fs } } }))) { orderBy: (array/map @entity.plan.orderBy (fn o { field: { fieldPath: (object/get @o "field" "") }, direction: (if (object/get @o "descending" false) "DESCENDING" "ASCENDING") })) } (if (and (!= @entity.plan.offset null) (> @entity.plan.offset 0)) { offset: @entity.plan.offset } { }) (if (!= @entity.plan.limit null) { limit: @entity.plan.limit } { }) (if @entity.plan.idsOnly { select: { fields: [{ fieldPath: "__name__" }] } } { })) })
+        (emit FS_SEND { })
+
+      FS_PARSED -> busy when (and (= @entity.phase "query") (!= (let ((n (array/len @entity.docs))) (let ((off (if (= (object/get @entity.plan "offset" null) null) 0 (object/get @entity.plan "offset" null)))) (if @entity.plan.totalNone @n (if (> @n 0) (if (= (object/get @entity.plan "limit" null) null) (+ @off @n) (if (< @n (object/get @entity.plan "limit" null)) (+ @off @n) null)) (if (and (= @off 0) (!= (object/get @entity.plan "limit" null) 0)) 0 null))))) null))
+        (set @entity.pageDocs @entity.docs)
+        (emit FS_PAGE { total: (let ((n (array/len @entity.docs))) (let ((off (if (= (object/get @entity.plan "offset" null) null) 0 (object/get @entity.plan "offset" null)))) (if @entity.plan.totalNone @n (if (> @n 0) (if (= (object/get @entity.plan "limit" null) null) (+ @off @n) (if (< @n (object/get @entity.plan "limit" null)) (+ @off @n) null)) (if (and (= @off 0) (!= (object/get @entity.plan "limit" null) 0)) 0 null))))) })
+      FS_PARSED -> busy when (and (= @entity.phase "query") (= (let ((n (array/len @entity.docs))) (let ((off (if (= (object/get @entity.plan "offset" null) null) 0 (object/get @entity.plan "offset" null)))) (if @entity.plan.totalNone @n (if (> @n 0) (if (= (object/get @entity.plan "limit" null) null) (+ @off @n) (if (< @n (object/get @entity.plan "limit" null)) (+ @off @n) null)) (if (and (= @off 0) (!= (object/get @entity.plan "limit" null) 0)) 0 null))))) null))
+        (set @entity.pageDocs @entity.docs)
+        (set @entity.phase "count")
+        (set @entity.suffix (if (= @entity.parentSuffix "") ":runAggregationQuery" (str/concat "/" @entity.parentSuffix ":runAggregationQuery")))
+        (set @entity.body { structuredAggregationQuery: { structuredQuery: (object/merge { from: [{ collectionId: @entity.collection }] } (let ((fs (array/map @entity.plan.ws (fn w { fieldFilter: { field: { fieldPath: @w.field }, op: @w.op, value: (if (= @w.field "__name__") (if (array/includes ["IN", "ARRAY_CONTAINS_ANY"] @w.op) { arrayValue: { values: (array/map @w.values (fn x { referenceValue: (str/concat "projects/" @config.projectId "/databases/" @config.databaseId "/documents/" (str/concat @entity.rowsPath "/" (if (validate/string @x) @x ""))) })) } } { referenceValue: (str/concat "projects/" @config.projectId "/databases/" @config.databaseId "/documents/" (str/concat @entity.rowsPath "/" (if (validate/string @w.value) @w.value ""))) }) (if (array/includes ["IN", "ARRAY_CONTAINS_ANY"] @w.op) { arrayValue: { values: (array/map @w.values (fn x (tree/fold @x (fn (n k) (if (= @n null) { nullValue: @n } (if (validate/array @n) (if (= (array/len @n) 0) { arrayValue: {} } { arrayValue: { values: @k } }) (if (validate/object @n) { mapValue: { fields: @k } } (if (validate/string @n) { stringValue: @n } (if (validate/boolean @n) { booleanValue: @n } (if (and (= (math/floor @n) @n) (< (math/abs @n) 9223372036854775000)) { integerValue: (str/concat @n) } { doubleValue: @n }))))))) "RowCell"))) } } (tree/fold @w.value (fn (n k) (if (= @n null) { nullValue: @n } (if (validate/array @n) (if (= (array/len @n) 0) { arrayValue: {} } { arrayValue: { values: @k } }) (if (validate/object @n) { mapValue: { fields: @k } } (if (validate/string @n) { stringValue: @n } (if (validate/boolean @n) { booleanValue: @n } (if (and (= (math/floor @n) @n) (< (math/abs @n) 9223372036854775000)) { integerValue: (str/concat @n) } { doubleValue: @n }))))))) "RowCell"))) } })))) (if (= (array/len @fs) 0) { } (if (= (array/len @fs) 1) { where: (array/nth @fs 0) } { where: { compositeFilter: { op: "AND", filters: @fs } } })))), aggregations: [{ alias: "count", count: { } }] } })
+        (emit FS_SEND { })
+      FS_PARSED -> busy when (and (= @entity.phase "count") (>= @entity.counted 0))
+        (emit FS_PAGE { total: @entity.counted })
+      FS_PARSED -> busy when (and (= @entity.phase "count") (< @entity.counted 0))
+        (set @entity.errStatus "")
+        (set @entity.errMessage "Firestore answered a count with no result")
+        (set @entity.errKind "fail")
+        (emit FS_ERRORED { })
+      FS_PAGE -> ready when @entity.plan.idsOnly
+        (emit ROWS_IDS { key: @entity.key, ids: (array/map @entity.pageDocs (fn d (object/get @d "id" ""))), total: @payload.total })
+      FS_PAGE -> ready when (not @entity.plan.idsOnly)
+        (emit ROWS_PAGE { key: @entity.key, rows: (array/map @entity.pageDocs (fn d (object/set (object/get @d "fields" { }) "id" (object/get @d "id" "")))), total: @payload.total })
+
+      FS_BEGIN -> busy when (> (array/len @entity.touched) 0)
+        (set @entity.phase "txread")
+        (set @entity.suffix ":batchGet")
+        (set @entity.body @entity.readBody)
+        (emit FS_SEND { })
+      FS_BEGIN -> busy when (= (array/len @entity.touched) 0)
+        (set @entity.docs [])
+        (set @entity.tx "")
+        (emit FS_APPLY { })
+      FS_PARSED -> busy when (= @entity.phase "txread")
+        (emit FS_APPLY { })
+      FS_APPLY -> busy
+        (set @entity.tables0 (array/map @entity.entities (fn ent { entityType: @ent, rows: (array/reduce (array/filter @entity.touched (fn t (= @t.entityType @ent))) [] (fn rows t (let ((d (array/find @entity.docs (fn dd (= @dd.name (str/concat "projects/" @config.projectId "/databases/" @config.databaseId "/documents/" (str/concat (let ((ck (let ((cc (array/find @config.collections (fn c (= @c.entityType @ent))))) (if (= @cc null) @ent (object/get @cc "collection" @ent))))) (if (= @config.root "") @ck (str/concat @config.root "/entities/" @ck "/rows"))) "/" @t.id))))))) (if (= @d null) @rows (array/append @rows (object/set @d.fields "id" @t.id)))))) })))
+        (set @entity.run (array/reduce @entity.batch.ops { tables: @entity.tables0, outcomes: [], halted: false } (fn acc op (if @acc.halted @acc (let ((et (object/get @op "entityType" ""))) (let ((tbl (let ((tb (array/find @acc.tables (fn t (= @t.entityType @et))))) (if (= @tb null) [] @tb.rows)))) (let ((id (if (!= (object/get @op "id" "") "") (object/get @op "id" "") (object/get (object/get @op "data" {}) "id" "")))) (let ((ex (array/find @tbl (fn r (= (object/get @r "id" "") @id))))) (let ((guard (object/get @op "guard" null))) (let ((out (if (and (= (object/get @op "id" "") "") (= @id "") (or (= @op.kind "create") (= @op.kind "upsert"))) { kind: "failed", message: (str/concat @op.kind " needs a string id") } (if (= @op.kind "create") (if (!= @ex null) { kind: "duplicate-id" } { kind: "created", row: (object/set @op.data "id" @id) }) (if (= @op.kind "upsert") (if (!= @ex null) { kind: "updated", row: (if (!= (object/get @ex "createdAt" null) null) (object/set (object/set @op.data "id" @id) "createdAt" (object/get @ex "createdAt" null)) (object/set @op.data "id" @id)) } { kind: "created", row: (object/set @op.data "id" @id) }) (if (= @ex null) { kind: "not-found" } (if (and (!= @guard null) (!= (row/matches @guard @ex) true)) { kind: "refused" } (if (= @op.kind "update") (if (!= @guard null) { kind: "updated", row: (object/set (object/merge @ex @op.data) "id" @id), before: @ex } { kind: "updated", row: (object/set (object/merge @ex @op.data) "id" @id) }) (if (!= @guard null) { kind: "deleted", before: @ex } { kind: "deleted" }))))))))) (let ((ok (or (= @out.kind "created") (= @out.kind "updated") (= @out.kind "deleted")))) { tables: (array/map @acc.tables (fn t (if (= @t.entityType @et) { entityType: @et, rows: (if (not @ok) @tbl (if (= @out.kind "deleted") (array/filter @tbl (fn r (!= (object/get @r "id" "") @id))) (if (= @ex null) (array/append @tbl @out.row) (array/map @tbl (fn r (if (= (object/get @r "id" "") @id) @out.row @r)))))) } @t))), outcomes: (array/append @acc.outcomes @out), halted: (not @ok) })))))))))))
+        (set @entity.run (if (and @entity.run.halted (= @entity.batch.onFailure "atomic")) { tables: @entity.tables0, outcomes: (array/append (array/map (array/take @entity.run.outcomes (- (array/len @entity.run.outcomes) 1)) (fn o { kind: "rolled-back" })) (array/last @entity.run.outcomes)), halted: true } @entity.run))
+        (set @entity.writes (if (and @entity.run.halted (= @entity.batch.onFailure "atomic")) [] (array/flatten (array/map @entity.tables0 (fn tb0 (let ((before @tb0.rows)) (let ((after (let ((ta (array/find @entity.run.tables (fn t (= @t.entityType @tb0.entityType))))) (if (= @ta null) [] @ta.rows)))) (array/concat (array/map (array/filter @before (fn r (not (array/some @after (fn a (= @a.id @r.id)))))) (fn r { delete: (str/concat "projects/" @config.projectId "/databases/" @config.databaseId "/documents/" (str/concat (let ((ck (let ((cc (array/find @config.collections (fn c (= @c.entityType @tb0.entityType))))) (if (= @cc null) @tb0.entityType (object/get @cc "collection" @tb0.entityType))))) (if (= @config.root "") @ck (str/concat @config.root "/entities/" @ck "/rows"))) "/" (object/get (json/parse (json/stringify @r) RowIdRec) "id" ""))) })) (array/map (array/filter @after (fn a (let ((b (array/find @before (fn r (= @r.id @a.id))))) (or (= @b null) (not (object/equals @b @a)))))) (fn a { update: { fields: (object/mapValues @a (fn c (tree/fold @c (fn (n k) (if (= @n null) { nullValue: @n } (if (validate/array @n) (if (= (array/len @n) 0) { arrayValue: {} } { arrayValue: { values: @k } }) (if (validate/object @n) { mapValue: { fields: @k } } (if (validate/string @n) { stringValue: @n } (if (validate/boolean @n) { booleanValue: @n } (if (and (= (math/floor @n) @n) (< (math/abs @n) 9223372036854775000)) { integerValue: (str/concat @n) } { doubleValue: @n }))))))) "RowCell"))), name: (str/concat "projects/" @config.projectId "/databases/" @config.databaseId "/documents/" (str/concat (let ((ck (let ((cc (array/find @config.collections (fn c (= @c.entityType @tb0.entityType))))) (if (= @cc null) @tb0.entityType (object/get @cc "collection" @tb0.entityType))))) (if (= @config.root "") @ck (str/concat @config.root "/entities/" @ck "/rows"))) "/" (object/get (json/parse (json/stringify @a) RowIdRec) "id" ""))) } }))))))))))
+        (emit FS_APPLIED { })
+      FS_APPLIED -> ready when (= (array/len @entity.writes) 0)
+        (emit ROWS_WRITTEN { key: @entity.key, outcomes: @entity.run.outcomes })
+      FS_APPLIED -> busy when (> (array/len @entity.writes) 0)
+        (set @entity.phase "commit")
+        (set @entity.suffix ":commit")
+        (set @entity.body (object/merge { writes: @entity.writes } (if (!= @entity.tx "") { transaction: @entity.tx } { })))
+        (emit FS_SEND { })
+      FS_PARSED -> ready when (= @entity.phase "commit")
+        (emit ROWS_WRITTEN { key: @entity.key, outcomes: @entity.run.outcomes })
+    }
+
+    emits {
+      ROW_FOUND -> external {
+        key : string!
+        row : Row?
+      }
+        @tier "internal"
+      ROWS_LISTED -> external {
+        key : string!
+        rows : [Row]!
+      }
+        @tier "internal"
+      ROWS_PAGE -> external {
+        key : string!
+        rows : [Row]!
+        total : number!
+      }
+        @tier "internal"
+      ROWS_IDS -> external {
+        key : string!
+        ids : [string]!
+        total : number!
+      }
+        @tier "internal"
+      ROWS_WRITTEN -> external {
+        key : string!
+        outcomes : [RowWriteOutcome]!
+      }
+        @tier "internal"
+      STORE_UNSUPPORTED -> external {
+        key : string!
+        reason : string!
+      }
+        @tier "internal"
+      STORE_FAILED -> external {
+        key : string!
+        message : string!
+      }
+        @tier "internal"
+      FS_WIRE -> external {
+        phase : string!
+        path : string!
+        body : Map string RowCell!
+      }
+        @description "The request just sent: the phase, the path after /documents and the JSON body."
+        @synonyms "request trace, wire tap"
+        @tier "secondary"
+      FS_SEND -> internal { }
+        @tier "internal"
+      FS_PLANNED -> internal { }
+        @tier "internal"
+      FS_PARSED -> internal { }
+        @tier "internal"
+      FS_ERRORED -> internal { }
+        @tier "internal"
+      FS_BEGIN -> internal { }
+        @tier "internal"
+      FS_APPLY -> internal { }
+        @tier "internal"
+      FS_APPLIED -> internal { }
+        @tier "internal"
+      FS_PAGE -> internal {
+        total : number!
+      }
+        @tier "internal"
+      FS_REPLIED -> internal {
+        status : number!
+        headers : Map string string
+        body : string!
+        key : string
+      }
+        @tier "internal"
+      FS_UNREACHABLE -> internal {
+        error : string!
+        kind : string
+        credential : string
+        key : string
+      }
+        @tier "internal"
+    }
+
+    listens {
+      ROW_READ -> external {
+        key : string!
+        entityType : string!
+        id : string!
+      }
+        @description "Read one row of an entity type by id."
+        @tier "internal"
+      ROW_LIST -> external {
+        key : string!
+        entityType : string!
+      }
+        @description "List every row of an entity type."
+        @tier "internal"
+      ROWS_QUERY -> external {
+        key : string!
+        entityType : string!
+        query : RowQuery!
+        project : "rows" | "ids"
+      }
+        @description "A query ask; answered as a structured Firestore query when Firestore can run it, else STORE_UNSUPPORTED."
+        @tier "internal"
+      ROWS_WRITE -> external {
+        key : string!
+        batch : RowWriteBatch!
+      }
+        @description "Apply a batch of create, upsert, update and delete ops in one Firestore transaction."
+        @tier "internal"
+    }
+  }
+
+  page "/firestore" -> RowStoreDriver
+}

@@ -1601,6 +1601,377 @@
    ]
   },
   {
+   "id": "a-row-verb-emitted-outside-the-driver-is-refused",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "Tickets",
+         "pages": [],
+         "entity": {
+          "name": "Ticket",
+          "persistence": "persistent",
+          "collection": "tickets",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ],
+          "store": "Rows"
+         },
+         "traits": [
+          {
+           "name": "Desk",
+           "linkedEntity": "Ticket",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "persist",
+                "create",
+                "Ticket",
+                {
+                 "used": false
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "name": "Rows",
+         "pages": [],
+         "entity": {
+          "name": "RowsRow",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "RowsDriver",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "ready",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "ready",
+              "to": "ready",
+              "event": "ROW_READ"
+             },
+             {
+              "from": "ready",
+              "to": "ready",
+              "event": "ROW_LIST"
+             },
+             {
+              "from": "ready",
+              "to": "ready",
+              "event": "ROWS_QUERY"
+             },
+             {
+              "from": "ready",
+              "to": "ready",
+              "event": "ROWS_WRITE"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "name": "Caller",
+         "pages": [],
+         "entity": {
+          "name": "CallerRow",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Asker",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "emit",
+                "ROW_READ",
+                {
+                 "key": "k"
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintStoreBinding"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "store-binding",
+         "findings": [
+          {
+           "code": "ORB_STORE_VERB_OUTSIDE_SEAM",
+           "path": "orbitals[2].traits.Asker",
+           "message": "trait Asker emits the row verb ROW_READ; a store driver is asked only by the store seam, one frame per ask (EXEC-STORE-4)",
+           "suggestion": "Read and write the rows through persist/fetch on an entity bound to the driver",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintStoreBinding"
+    }
+   ]
+  },
+  {
+   "id": "control-a-row-verb-with-no-driver-bound-is-not-checked",
+   "steps": [
+    {
+     "event": "LINT_PROGRAM_READ",
+     "from": "reading",
+     "payload": {
+      "result": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "Tickets",
+         "pages": [],
+         "entity": {
+          "name": "Ticket",
+          "persistence": "persistent",
+          "collection": "tickets",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Desk",
+           "linkedEntity": "Ticket",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "persist",
+                "create",
+                "Ticket",
+                {
+                 "used": false
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "name": "Rows",
+         "pages": [],
+         "entity": {
+          "name": "RowsRow",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "RowsDriver",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "ready",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "ready",
+              "to": "ready",
+              "event": "ROW_READ"
+             },
+             {
+              "from": "ready",
+              "to": "ready",
+              "event": "ROW_LIST"
+             },
+             {
+              "from": "ready",
+              "to": "ready",
+              "event": "ROWS_QUERY"
+             },
+             {
+              "from": "ready",
+              "to": "ready",
+              "event": "ROWS_WRITE"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "name": "Caller",
+         "pages": [],
+         "entity": {
+          "name": "CallerRow",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Asker",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "emit",
+                "ROW_READ",
+                {
+                 "key": "k"
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintStoreBinding"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "store-binding",
+         "findings": []
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintStoreBinding"
+    }
+   ]
+  },
+  {
    "id": "real-program-shape-reminder-scheduler-answers",
    "steps": [
     {

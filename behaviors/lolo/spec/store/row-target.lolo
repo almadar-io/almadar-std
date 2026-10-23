@@ -1,0 +1,24 @@
+app row-target [
+  version: "1.0.0",
+  description: "Design contract for the row target: the address of one stored row, carried separately from the row's domain id. A target is { kind: singleton } (the entity's one row, a [runtime] entity's frame address, storage key \"singleton\") or { kind: key, key } (the row stored under key). ROW_TARGET_RESOLVE { op: read or write, entityType, singleton, target, domainId } answers ROW_TARGET_RESOLVED { op, entityType, storageKey, domainId } where storageKey is \"singleton\" for a singleton target and the key for a key target, and domainId is echoed unchanged: changing the domain id never moves the storage key. A key target with an empty key answers ROW_TARGET_REFUSED { reason } \"a key row target needs a nonempty key\"; a singleton target on an entity that is not a [runtime] singleton (singleton false) answers ROW_TARGET_REFUSED { reason } \"a singleton row target needs a [runtime] entity; <entityType> is not one\". Nothing is read or written here; drivers and the kernel carry the resolved storage key."
+]
+
+type SingletonTarget = { kind : "singleton" }
+type KeyTarget = { kind : "key", key : string! }
+type RowTarget = SingletonTarget | KeyTarget
+
+orbital RowTargetSpec {
+  expects entity TargetRun [runtime] {
+    id : string!
+    storageKey : string
+    domainId : string
+  }
+  expects trait RowTargetResolver {
+    state ready
+    emits {
+      ROW_TARGET_RESOLVED { op : "read" | "write"  entityType : string!  storageKey : string!  domainId : string! }
+      ROW_TARGET_REFUSED { reason : string! }
+    }
+  }
+  expects page "/row-target" -> RowTargetResolver
+}

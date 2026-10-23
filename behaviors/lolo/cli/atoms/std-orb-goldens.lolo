@@ -6,12 +6,12 @@ app std-orb-goldens [
 ]
 uses Spec from "almadar-std/orb-goldens"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
-type GoldenValue = string | number | boolean | [GoldenValue] | Map string GoldenValue
-type GoldenPayload = Map string GoldenValue
+type GoldenValue = string | number | boolean | [GoldenValue?] | Map string GoldenValue?
+type GoldenPayload = Map string GoldenValue?
 type GoldenEmit = { event : string!, payload : GoldenPayload }
 type GoldenEmitted = { type : string!, payload : GoldenPayload }
 type GoldenExpect = { fired : boolean, state : string, emits : [GoldenEmit], neverEmits : [string], exactEmits : [GoldenEmit], emitCounts : Map string number, effects : [GoldenPayload], entity : GoldenPayload }
-type GoldenStep = { keep : string, keepField : string, now : number, entity : GoldenPayload, trait : string, orbital : string, from : string, event : string!, payload : GoldenPayload, expect : GoldenExpect }
+type GoldenStep = { keep : string, keepField : string, now : number, viewer : GoldenPayload, entity : GoldenPayload, trait : string, orbital : string, from : string, event : string!, payload : GoldenPayload, expect : GoldenExpect }
 type GoldenCase = { note : string, golden : string, skip : string, entity : GoldenPayload, config : GoldenPayload, now : number, id : string!, steps : [GoldenStep]! }
 type GoldenFile = { atom : string!, trait : string!, orbital : string, cases : [GoldenCase]! }
 type GoldenEntry = { name : string!, kind : string! }
@@ -82,7 +82,9 @@ orbital GoldensOrbital {
         (set @entity.failed (array/len (array/filter @entity.lines (fn l (str/startsWith @l "fail")))))
         (set @entity.passed (array/len (array/filter @entity.lines (fn l (str/startsWith @l "pass")))))
         (emit GOLDENS_ANSWERED { status: (if (and (= @entity.failed 0) (> @entity.passed 0)) 200 500), body: (str/join (array/append @entity.lines (str/concat @entity.passed " passed, " @entity.failed " failed, " @entity.skipped " skipped in " (array/len @entity.files) " file(s)")) "\n") })
-      GOLDENS_FILE_READ -> reading
+      GOLDENS_FILE_READ -> ready when (== (json/parse (bytes/to-string @payload.data) GoldenFile) null)
+        (emit GOLDENS_ANSWERED { status: 500, body: (str/concat "goldens: goldens file does not match GoldenFile: " @entity.file) })
+      GOLDENS_FILE_READ -> reading when (!= (json/parse (bytes/to-string @payload.data) GoldenFile) null)
         (set @entity.golden (bytes/to-string @payload.data))
         (os/read-file { anchor: "cwd" path: (os/path-normalize (os/path-join @entity.file ".." ".." ".." (object/get (json/parse (bytes/to-string @payload.data) GoldenFile) "atom"))) } { key: "atom" emit: { success: GOLDENS_ATOM_READ, failure: GOLDENS_FAILED } })
       GOLDENS_ATOM_READ -> reading
@@ -108,7 +110,7 @@ orbital GoldensOrbital {
           (if (object/has (json/parse @entity.curCase GoldenCase) "config") [(str/concat "case config is unsupported until G-ORB-460 lands: the case cannot be played")] [])
           (array/flatten (array/reduce (object/get (json/parse @entity.curCase GoldenCase) "steps") [] (fn acc s
             (array/append @acc (array/concat
-              (array/map (array/filter (object/keys @s) (fn k (not (array/includes ["keep", "keepField", "now", "entity", "trait", "orbital", "from", "event", "payload", "expect"] @k)))) (fn k (str/concat "step " (array/len @acc) ": unknown step key: " @k)))
+              (array/map (array/filter (object/keys @s) (fn k (not (array/includes ["keep", "keepField", "now", "viewer", "entity", "trait", "orbital", "from", "event", "payload", "expect"] @k)))) (fn k (str/concat "step " (array/len @acc) ": unknown step key: " @k)))
               (array/map (array/filter (object/keys (object/get @s "expect" {})) (fn k (not (array/includes ["fired", "state", "emits", "neverEmits", "exactEmits", "emitCounts", "effects", "entity"] @k)))) (fn k (str/concat "step " (array/len @acc) ": unknown expect key: " @k)))
               (if (object/has (object/get @s "expect" {}) "entity") [(str/concat "step " (array/len @acc) ": expect.entity cannot be checked: program/step answers no post-step entity row")] []))))))))
         (emit GOLDENS_PREFLIGHT {})
@@ -131,7 +133,8 @@ orbital GoldensOrbital {
                     @pl))) }
               (let ((seed (object/merge (if (= (array/len @acc) 0) (object/get (json/parse @entity.curCase GoldenCase) "entity" {}) {}) (object/get @s "entity" {}))))
                 (if (= (array/len (object/keys @seed)) 0) {} { entity: @seed }))
-              (if (object/has @s "now") { now: (object/get @s "now") } (if (object/has (json/parse @entity.curCase GoldenCase) "now") { now: (object/get (json/parse @entity.curCase GoldenCase) "now") } {}))))))
+              (if (object/has @s "now") { now: (object/get @s "now") } (if (object/has (json/parse @entity.curCase GoldenCase) "now") { now: (object/get (json/parse @entity.curCase GoldenCase) "now") } {}))
+              (if (object/has @s "viewer") { viewer: (object/get @s "viewer") } {})))))
           { key: "steps" emit: { success: GOLDENS_STEPPED, failure: GOLDENS_CASE_FAILED } })
       GOLDENS_STEPPED -> running when (and (array/some (object/get (json/parse @entity.curCase GoldenCase) "steps") (fn s (object/has @s "keep"))) (< (+ @entity.upto 1) (array/len (object/get (json/parse @entity.curCase GoldenCase) "steps"))))
         (set @entity.vars (if (object/has (array/nth (object/get (json/parse @entity.curCase GoldenCase) "steps") @entity.upto) "keep")

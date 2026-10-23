@@ -2,7 +2,7 @@ app std-orb-lint-store-binding [
   version: "1.0.0",
   inbound: ["cli-lint-store-binding"],
   fs: { cwd: "**": [read] },
-  description: "std-orb-lint-store-binding — the `orb lint store-binding <file>` command, the port of store_binding.rs (EXEC-STORE-4) less ORB_STORE_DRIVER_NOT_CONDITIONAL, which walks persist effects and waits on tree/fold. It lowers the file with program/read and checks the program-level store and each entity store (primary and auxiliary): ORB_STORE_ON_NON_PERSISTENT for a store on a runtime or browser-local entity, then, once per driver at its first binding, ORB_STORE_UNKNOWN_ORBITAL for a driver naming no orbital and ORB_STORE_DRIVER_CONTRACT for a driver with no trait handling every row verb (status 500, exit 1). Clean answers `lint store-binding: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  description: "std-orb-lint-store-binding — the `orb lint store-binding <file>` command, the port of store_binding.rs (EXEC-STORE-4). It lowers the file with program/read and checks the program-level store and each entity store (primary and auxiliary): ORB_STORE_ON_NON_PERSISTENT for a store on a runtime or browser-local entity, then, once per driver at its first binding, ORB_STORE_UNKNOWN_ORBITAL for a driver naming no orbital and ORB_STORE_DRIVER_CONTRACT for a driver with no trait handling every row verb; then, when the program binds a driver, ORB_STORE_VERB_OUTSIDE_SEAM for each (emit <row verb> …) in a trait outside a driver orbital (the store seam alone asks a driver, one frame per ask); then ORB_STORE_DRIVER_NOT_CONDITIONAL for a single persist delete or update on an entity whose driver declares writeCapabilities.conditional false (status 500, exit 1). Clean answers `lint store-binding: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-store-binding"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -57,7 +57,27 @@ orbital OrbLintStoreBindingOrbital {
                               (if (= (array/len @missing) 0)
                                 []
                                 [{ code: "ORB_STORE_DRIVER_CONTRACT", path: (object/get @b "path"), message: (str/concat "store driver " @d " has no trait handling [" (str/join (array/map @missing (fn v (str/concat "\"" @v "\""))) ", ") "] (spec/store/row-store.lolo RowStoreDriver)"), suggestion: "Compose a std store driver atom, or give the driver a trait that answers every row verb", severity: "error" }]))))))))))))
-(let ((bnd (array/flatten (array/map @orbitals (fn o
+(let ((drivers (array/filter (array/unique (array/concat (if (object/has @payload.result "store") [(object/get @payload.result "store")] [])
+                                (array/flatten (array/map @orbitals (fn o (array/map (array/filter (array/filter (array/concat [(object/get @o "entity" {})] (object/get @o "auxiliaryEntities" [])) (fn xe (validate/object @xe))) (fn e (object/has @e "store"))) (fn e (object/get @e "store"))))))))
+                            (fn d (array/includes @names @d)))))
+              (if (= (array/len @drivers) 0)
+                []
+                (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+                  (let ((orb (array/nth @orbitals @oi)))
+                    (if (array/includes @drivers (object/get @orb "name"))
+                      []
+                      (array/flatten (array/map (object/get @orb "traits" []) (fn td
+                        (array/flatten (array/map (object/get (object/get @td "stateMachine" {}) "transitions" []) (fn tr
+                          (array/flatten (array/map (object/get @tr "effects" []) (fn ef
+                            (array/map
+                              (tree/fold @ef (fn (n k)
+                                (if (validate/array @n)
+                                  (array/concat
+                                    (if (validate/string (array/nth @n 0)) (if (= (array/nth @n 0) "emit") (if (validate/string (array/nth @n 1)) (if (array/includes ["ROW_READ", "ROW_LIST", "ROWS_QUERY", "ROWS_WRITE"] (array/nth @n 1)) [(array/nth @n 1)] []) []) []) [])
+                                    (array/flatten (array/filter @k (fn r (validate/array @r)))))
+                                  [])) StoreShape)
+                              (fn verb { code: "ORB_STORE_VERB_OUTSIDE_SEAM", path: (str/concat "orbitals[" @oi "].traits." (object/get @td "name" "")), message: (str/concat "trait " (object/get @td "name" "") " emits the row verb " @verb "; a store driver is asked only by the store seam, one frame per ask (EXEC-STORE-4)"), suggestion: "Read and write the rows through persist/fetch on an entity bound to the driver", severity: "error" }))))))))))))))))))
+            (let ((bnd (array/flatten (array/map @orbitals (fn o
                      (array/flatten (array/map (array/filter (array/concat [(object/get @o "entity" {})] (object/get @o "auxiliaryEntities" [])) (fn xe (validate/object @xe))) (fn e
                        (if (and (!= (object/get @e "persistence" "") "runtime") (not (object/get @e "local" false)))
                          (let ((dv (if (object/has @e "store") (object/get @e "store") (if (object/has @payload.result "store") (object/get @payload.result "store") ""))))

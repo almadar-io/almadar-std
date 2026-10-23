@@ -37,7 +37,7 @@ def reset(mode):
         return {'event': 'DATASET_INPUT', 'payload': {'program': program, 'count': 0,
             'seed': 1, 'nowMs': 0, 'viewerId': '', 'ownerPairs': []}}
     return {'event': 'RESTAMP_INPUT', 'payload': {'program': program, 'stores': {},
-        'journal': empty_journal, 'viewer': {'id': ''}}}
+        'journal': empty_journal, 'viewer': {'id': ''}, 'firstOwner': True}}
 
 
 def emitted(step):

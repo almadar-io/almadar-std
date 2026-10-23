@@ -2,7 +2,7 @@ app std-bearer-verify [
   version: "1.0.0",
   description: "std-bearer-verify — turns a raw Authorization header (the exact-case Bearer prefix, as Rust) into a Viewer over std-jws. BEARER_VERIFY { authorization? }: no header answers BEARER_ANONYMOUS; a header that is not Bearer <three-segment token> refuses malformed. Keys are fetched from the jwksOrigin and jwksPath knobs with an http GET, kept until now plus the response max-age, and refetched on expiry or when the token kid is absent from the cache. The kid picks the key; without a kid each key is tried in order, one JWS_VERIFY per key. The atom emits JWS_VERIFY { token, jwk } and listens for JWS_VERIFIED and JWS_REFUSED from std-jws. Claim policy (knobs issuer, audience, clockSkewSeconds, requireAuthTime, allowedTenants): malformed, expired, not-yet-valid, issued-in-future, issuer, audience, subject, auth-time, tenant. A bearer starting with the keyPrefix knob goes only to std-api-key-verifier (VERIFY_KEY, answers API_KEY_VERIFIED/API_KEY_REFUSED, correlated by requestId) when ALMADAR_API_KEY_SALT is set (read at boot), else is refused keys-disabled; it never falls back to the JWT path, and a non-key bearer never reaches the key path. A verified key is BEARER_VERIFIED with the owner as viewer id and the key claims. Success is BEARER_VERIFIED { viewer } with role and permissions mapped into the viewer (a non-string role or non-string-list permissions is refused claims) and every other claim as { name, value } carrying the claim JSON as is. Declare the JWKS origin in the app egress list.",
   egress: ["https://www.googleapis.com"],
-  env: ["ALMADAR_API_KEY_SALT", "FIREBASE_AUTH_EMULATOR_HOST"]
+  env: ["ALMADAR_API_KEY_SALT", "FIREBASE_AUTH_EMULATOR_HOST", "AUTH_PROVIDER", "FIREBASE_PROJECT_ID", "OIDC_ISSUER_URL", "OIDC_AUDIENCE"]
 ]
 uses Spec from "almadar-std/bearer-verify"
 type BearerKeyClaim = { name : string!, value : string! }
@@ -31,6 +31,8 @@ orbital BearerVerifyOrbital {
     candidates : [BearerJwk] @description "The keys to try for the token in hand, in order." = []
     keysEnabled : boolean @description "Whether ALMADAR_API_KEY_SALT is set, read at boot; keys are accepted only then." = false
     emulator : boolean @description "Whether FIREBASE_AUTH_EMULATOR_HOST is set, read at boot; an unsigned (alg none) token is accepted only then." = false
+    issuer : string @description "The iss every token must carry: the issuer knob, or with issuerFromEnv the one the environment names." = ""
+    audience : string @description "The aud every token must carry: the audience knob, or with issuerFromEnv the one the environment names." = ""
     certQueue : [BearerCert] @description "Certificates of the fetched document still to be read for their keys, in document order." = []
     certKeys : [BearerJwk] @description "Keys read so far from the fetched certificates." = []
     attempt : number @description "Index of the candidate last asked of std-jws." = 0
@@ -50,8 +52,28 @@ orbital BearerVerifyOrbital {
       EMULATOR_UNREAD -> idle
         (set @entity.emulator false)
       INIT -> idle
+        (set @entity.issuer @config.issuer)
+        (set @entity.audience @config.audience)
         (os/getenv "ALMADAR_API_KEY_SALT" { emit: { success: KEY_SALT_READ failure: KEY_SALT_UNREAD } })
         (os/getenv "FIREBASE_AUTH_EMULATOR_HOST" { emit: { success: EMULATOR_READ failure: EMULATOR_UNREAD } })
+        (when @config.issuerFromEnv (os/getenv "AUTH_PROVIDER" { emit: { success: PROVIDER_READ failure: ISSUER_UNREAD } }))
+      PROVIDER_READ -> idle when (= (or @payload.value "") "firebase")
+        (os/getenv "FIREBASE_PROJECT_ID" { emit: { success: PROJECT_READ failure: ISSUER_UNREAD } })
+      PROVIDER_READ -> idle when (= (or @payload.value "") "oidc")
+        (os/getenv "OIDC_ISSUER_URL" { emit: { success: OIDC_ISSUER_READ failure: ISSUER_UNREAD } })
+      PROVIDER_READ -> idle when (and (!= (or @payload.value "") "firebase") (!= (or @payload.value "") "oidc"))
+      PROJECT_READ -> idle when (!= (or @payload.value "") "")
+        (set @entity.issuer (str/concat "https://securetoken.google.com/" @payload.value))
+        (set @entity.audience @payload.value)
+      PROJECT_READ -> idle when (= (or @payload.value "") "")
+      OIDC_ISSUER_READ -> idle when (!= (or @payload.value "") "")
+        (set @entity.issuer @payload.value)
+        (os/getenv "OIDC_AUDIENCE" { emit: { success: OIDC_AUDIENCE_READ failure: ISSUER_UNREAD } })
+      OIDC_ISSUER_READ -> idle when (= (or @payload.value "") "")
+      OIDC_AUDIENCE_READ -> idle when (!= (or @payload.value "") "")
+        (set @entity.audience @payload.value)
+      OIDC_AUDIENCE_READ -> idle when (= (or @payload.value "") "")
+      ISSUER_UNREAD -> idle
 
       BEARER_VERIFY -> idle when (and (and (str/startsWith (or @payload.authorization "") "Bearer ") (str/startsWith (str/slice (or @payload.authorization "") 7 (str/len (or @payload.authorization ""))) @config.keyPrefix)) @entity.keysEnabled)
         (emit VERIFY_KEY { requestId: (or @payload.requestId 0), token: (str/slice (or @payload.authorization "") 7 (str/len (or @payload.authorization ""))) })
@@ -72,6 +94,10 @@ orbital BearerVerifyOrbital {
         (set @entity.queue (array/slice @entity.queue 1))
         (emit BEARER_NEXT {})
       BEARER_PUMP -> idle when (and (> (array/len @entity.queue) 0) (and (!= (or (object/get (array/first @entity.queue) "authorization") "") "") (or (not (str/startsWith (object/get (array/first @entity.queue) "authorization") "Bearer ")) (!= (array/len (str/split (str/slice (object/get (array/first @entity.queue) "authorization") 7 (str/len (object/get (array/first @entity.queue) "authorization"))) ".")) 3))))
+        (emit BEARER_REFUSED { requestId: (or (or (object/get (array/first @entity.queue) "requestId") 0) 0), reason: "malformed" })
+        (set @entity.queue (array/slice @entity.queue 1))
+        (emit BEARER_NEXT {})
+      BEARER_PUMP -> idle when (and (> (array/len @entity.queue) 0) (!= (or (object/get (array/first @entity.queue) "authorization") "") "") (and (str/startsWith (object/get (array/first @entity.queue) "authorization") "Bearer ") (= (array/len (str/split (str/slice (object/get (array/first @entity.queue) "authorization") 7 (str/len (object/get (array/first @entity.queue) "authorization"))) ".")) 3)) (or (not (base64/valid (let ((x (str/replaceAll (str/replaceAll (array/nth (str/split (str/slice (object/get (array/first @entity.queue) "authorization") 7 (str/len (object/get (array/first @entity.queue) "authorization"))) ".") 0) "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4)))))) (not (json/valid (base64/decode (let ((x (str/replaceAll (str/replaceAll (array/nth (str/split (str/slice (object/get (array/first @entity.queue) "authorization") 7 (str/len (object/get (array/first @entity.queue) "authorization"))) ".") 0) "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))))) (not (base64/valid (let ((x (str/replaceAll (str/replaceAll (array/nth (str/split (str/slice (object/get (array/first @entity.queue) "authorization") 7 (str/len (object/get (array/first @entity.queue) "authorization"))) ".") 1) "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4)))))) (not (json/valid (base64/decode (let ((x (str/replaceAll (str/replaceAll (array/nth (str/split (str/slice (object/get (array/first @entity.queue) "authorization") 7 (str/len (object/get (array/first @entity.queue) "authorization"))) ".") 1) "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4)))))))))
         (emit BEARER_REFUSED { requestId: (or (or (object/get (array/first @entity.queue) "requestId") 0) 0), reason: "malformed" })
         (set @entity.queue (array/slice @entity.queue 1))
         (emit BEARER_NEXT {})
@@ -250,8 +276,8 @@ orbital BearerVerifyOrbital {
                        (if (<= @c.exp (- @nowS @skew)) "expired"
                          (if (and (!= @c.nbf null) (> @c.nbf 0) (> @c.nbf (+ @nowS @skew))) "not-yet-valid"
                            (if (and (!= @c.iat null) (> @c.iat 0) (> @c.iat (+ @nowS @skew))) "issued-in-future"
-                             (if (!= (or @c.iss "") @config.issuer) "issuer"
-                               (if (not (if (str/startsWith (json/stringify @c.aud) "[") (array/includes (json/parse (json/stringify @c.aud) BearerAudList) @config.audience) (= (json/stringify @c.aud) (json/stringify @config.audience)))) "audience"
+                             (if (!= (or @c.iss "") @entity.issuer) "issuer"
+                               (if (not (if (str/startsWith (json/stringify @c.aud) "[") (array/includes (json/parse (json/stringify @c.aud) BearerAudList) @entity.audience) (= (json/stringify @c.aud) (json/stringify @entity.audience)))) "audience"
                                  (if (= (or @c.sub "") "") "subject"
                                    (if (and @config.requireAuthTime (or (<= (or @c.auth_time 0) 0) (> @c.auth_time @nowS))) "auth-time"
                                      (if (and (> (array/len @config.allowedTenants) 0) (not (array/includes @config.allowedTenants (or (object/get (or @c.firebase {}) "tenant" "") "")))) "tenant" (if (and (array/includes (object/keys @c.extra) "role") (not (str/startsWith (json/stringify (object/get @c.extra "role")) "\""))) "claims" (if (and (array/includes (object/keys @c.extra) "permissions") (not (validate/pattern (json/stringify (object/get @c.extra "permissions")) "^\\[(?:\"(?:[^\"\\\\]|\\\\.)*\"(?:,\"(?:[^\"\\\\]|\\\\.)*\")*)?\\]$"))) "claims" "")))))))))))))
@@ -303,6 +329,32 @@ orbital BearerVerifyOrbital {
         value : string
       }
         @description "Internal: the os/getenv answer for FIREBASE_AUTH_EMULATOR_HOST."
+        @tier "internal"
+      PROVIDER_READ {
+        value : string
+      }
+        @description "Internal: the os/getenv answer for AUTH_PROVIDER."
+        @tier "internal"
+      PROJECT_READ {
+        value : string
+      }
+        @description "Internal: the os/getenv answer for FIREBASE_PROJECT_ID."
+        @tier "internal"
+      OIDC_ISSUER_READ {
+        value : string
+      }
+        @description "Internal: the os/getenv answer for OIDC_ISSUER_URL."
+        @tier "internal"
+      OIDC_AUDIENCE_READ {
+        value : string
+      }
+        @description "Internal: the os/getenv answer for OIDC_AUDIENCE."
+        @tier "internal"
+      ISSUER_UNREAD {
+        error : string
+        kind : string
+      }
+        @description "Internal: an os/getenv of the issuer environment failed; the knobs stand."
         @tier "internal"
       EMULATOR_UNREAD {
         error : string
@@ -407,6 +459,11 @@ orbital BearerVerifyOrbital {
         @label "JWKS path"
         @description "The path of the key set on jwksOrigin (OIDC jwks_uri path)."
         @synonyms "key set path"
+        @tier "infra"
+      issuerFromEnv : boolean = false
+        @label "Issuer from environment"
+        @description "At INIT, read AUTH_PROVIDER: firebase sets the issuer to https://securetoken.google.com/<FIREBASE_PROJECT_ID> and the audience to that project id; oidc sets them to OIDC_ISSUER_URL and OIDC_AUDIENCE; anything else, or a blank variable, leaves the issuer and audience knobs."
+        @synonyms "issuer env, auth provider env"
         @tier "infra"
       issuer : string = ""
         @label "Issuer"

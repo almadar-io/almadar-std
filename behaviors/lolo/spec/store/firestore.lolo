@@ -1,0 +1,94 @@
+app firestore-spec [
+  version: "1.0.0",
+  description: "Design contract for the Firestore row-store driver over the REST API, the std twin of runtime/src/stores/firestore.rs. It answers the same typed row verbs as every RowStoreDriver (spec/store/row-store.lolo): ROW_READ, ROW_LIST, ROWS_QUERY and ROWS_WRITE in, ROW_FOUND, ROWS_LISTED, ROWS_PAGE, ROWS_IDS, ROWS_WRITTEN, STORE_UNSUPPORTED or STORE_FAILED out, each carrying the asked key. Layout: with a root document path (an even number of segments) rows live at <root>/entities/<key>/rows/<id>, with an empty root at the top-level collection <key>/<id>, where <key> is the entity's declared collection (config.collections) else the entity type name; a document holds the row's fields and its id and a read stamps the document name's id over it. Wire (POST <origin>/v1/projects/<project>/databases/<database>/documents<suffix>?$alt=json%3Benum-encoding=int, JSON in and out, Authorization Bearer): a read is :batchGet with documents [<document name>], a list is <parent>:runQuery with from [{collectionId}], a query is <parent>:runQuery with the structured query the plan builds, a count is <parent>:runAggregationQuery, a write batch is one transaction (:batchGet with newTransaction {readWrite: {}} over every touched document, then :commit with the net change and the transaction id). The parent path segments are URI-encoded. Values use Firestore's typed encoding: stringValue, integerValue (a decimal string, whole numbers below 2^63), doubleValue, booleanValue, nullValue, arrayValue ({} when empty), mapValue {fields}; timestampValue and referenceValue read back as text. Query push-down: == and the four range operators, member (IN, at most 30 values), hasElement (ARRAY_CONTAINS), all, and an any over one field and one leaf kind (IN or ARRAY_CONTAINS_ANY); an id comparison is a referenceValue on __name__. A query Firestore cannot run answers STORE_UNSUPPORTED with the plan's reason word (leaf-unsupported, combinator-unsupported, value-kind-unsupported, order-field, nearest) and so does a Firestore refusal with status FAILED_PRECONDITION or INVALID_ARGUMENT (the reason is that status); a query that can match nothing answers an empty page without a request. The total is settled from the window when it can be (a non-empty window that ended before its limit, an empty first page), else counted. Writes: every touched document is read inside the transaction, the ops run over those rows with the reference semantics (create on a taken id is duplicate-id, update or delete of a miss is not-found, a guard that does not hold is refused, an id-less create or upsert fails with 'create needs a string id' or 'upsert needs a string id'), an atomic batch that fails commits nothing and reports rolled-back for the earlier ops, a stop batch commits what was applied; only changed documents are written, deletes before sets per entity type. A commit that Firestore aborts (ABORTED) repeats the whole transaction from its read, at most config.transactionAttempts times, then STORE_FAILED 'the Firestore transaction kept aborting: <last error text>'. A rekey op is STORE_FAILED 'rekey is unsupported by this store' before any request. Failures: a non-2xx reply is STORE_FAILED with the reply text, a transport failure with the transport's error text, a 2xx reply that is not JSON 'Firestore answered an unreadable reply', a count reply with no result 'Firestore answered a count with no result'. A root with an odd number of segments is STORE_FAILED. Auth: config.auth emulator sends Bearer owner, token sends Bearer <the access-token credential>, service-account mints an RS256 service-account bearer through the http jwt-bearer auth (scope https://www.googleapis.com/auth/datastore, audience https://oauth2.googleapis.com/token, refreshed a minute before expiry). One request is in flight per frame: the store seam asks the driver in a frame keyed by the ask (EXEC-STORE-4), and orb validate refuses a trait outside the driver that emits a row verb (ORB_STORE_VERB_OUTSIDE_SEAM)."
+]
+
+orbital FirestoreSpec {
+  type RowCell = string | number | boolean | [RowCell?] | Map string RowCell?
+  type Row = Map string RowCell?
+
+  type CompareLeaf = { kind : "compare", field : string!, op : "==" | "!=" | "<" | "<=" | ">" | ">=", value : RowCell? }
+  type MemberLeaf = { kind : "member", field : string!, values : [RowCell?]! }
+  type HasElementLeaf = { kind : "hasElement", field : string!, value : RowCell? }
+  type ContainsLeaf = { kind : "contains", field : string!, text : string!, caseSensitive : boolean! }
+  type IsNullLeaf = { kind : "isNull", field : string!, isNull : boolean! }
+  type AllNode = { kind : "all", of : [RowPredicate]! }
+  type AnyNode = { kind : "any", of : [RowPredicate]! }
+  type NotNode = { kind : "not", of : RowPredicate! }
+  type ConstLeaf = { kind : "const", value : boolean! }
+  type RowPredicate = CompareLeaf | MemberLeaf | HasElementLeaf | ContainsLeaf | IsNullLeaf | AllNode | AnyNode | NotNode | ConstLeaf
+
+  type RowOrder = { field : string!, direction : "asc" | "desc" }
+  type RowNearest = { field : string!, vector : [number]!, k : number! }
+  type RowQuery = { policy : RowPredicate?, filter : RowPredicate?, order : RowOrder?, offset : number?, limit : number?, total : "exact" | "none"?, nearest : RowNearest? }
+
+  type RowLeafKind = "compare" | "member" | "hasElement" | "contains" | "isNull"
+  type RowCombinator = "all" | "any" | "not"
+  type RowOperator = "==" | "!=" | "<" | "<=" | ">" | ">=" | "member" | "hasElement" | "contains"
+  type RowValueKind = "string" | "number" | "boolean" | "date" | "null"
+  type OperatorValueKinds = { operator : RowOperator!, valueKinds : [RowValueKind]! }
+  type EveryFieldOrderable = { kind : "every-field" }
+  type ListedOrderable = { kind : "listed", fields : [string]! }
+  type RowOrderableFields = EveryFieldOrderable | ListedOrderable
+  type QueryCapabilities = { leaves : [RowLeafKind]!, combinators : [RowCombinator]!, compareOps : [string]!, operatorValueKinds : [OperatorValueKinds]?, orderableFields : RowOrderableFields!, window : boolean!, exactTotal : boolean!, idsOnly : boolean?, nearest : boolean? }
+  type GuardCapabilities = { leaves : [RowLeafKind]!, combinators : [RowCombinator]!, compareOps : [string]! }
+  type WriteCapabilities = { guards : GuardCapabilities!, conditional : boolean!, returnsRow : boolean!, stopRuns : boolean!, atomicBatch : boolean! }
+
+  type CreateOp = { kind : "create", entityType : string!, data : Row! }
+  type UpsertOp = { kind : "upsert", entityType : string!, data : Row! }
+  type UpdateOp = { kind : "update", entityType : string!, id : string!, data : Row!, guard : RowPredicate? }
+  type DeleteOp = { kind : "delete", entityType : string!, id : string!, guard : RowPredicate? }
+  type SingletonTarget = { kind : "singleton" }
+  type KeyTarget = { kind : "key", key : string! }
+  type RowTarget = SingletonTarget | KeyTarget
+  type RekeyOp = { kind : "rekey", entityType : string!, target : RowTarget!, newId : string!, guard : RowPredicate? }
+  type RowWriteOp = CreateOp | UpsertOp | UpdateOp | DeleteOp | RekeyOp
+  type RowWriteBatch = { ops : [RowWriteOp]!, onFailure : "atomic" | "stop" }
+
+  type CreatedOutcome = { kind : "created", row : Row! }
+  type UpdatedOutcome = { kind : "updated", row : Row!, before : Row? }
+  type DeletedOutcome = { kind : "deleted", before : Row? }
+  type NotFoundOutcome = { kind : "not-found" }
+  type DuplicateIdOutcome = { kind : "duplicate-id" }
+  type RefusedOutcome = { kind : "refused" }
+  type FailedOutcome = { kind : "failed", message : string! }
+  type RolledBackOutcome = { kind : "rolled-back" }
+  type RowWriteOutcome = CreatedOutcome | UpdatedOutcome | DeletedOutcome | NotFoundOutcome | DuplicateIdOutcome | RefusedOutcome | FailedOutcome | RolledBackOutcome
+
+  type RowReadVerb = { key : string!, entityType : string!, id : string! }
+  type RowListVerb = { key : string!, entityType : string! }
+  type RowsQueryVerb = { key : string!, entityType : string!, query : RowQuery!, project : "rows" | "ids" }
+  type RowsWriteVerb = { key : string!, batch : RowWriteBatch! }
+
+  type Collection = { entityType : string!, collection : string! }
+  type FirestoreAuth = "emulator" | "token" | "service-account"
+
+  expects entity FirestoreFlight [runtime] {
+    id : string!
+    key : string
+    entityType : string
+    op : string
+    batch : RowWriteBatch
+  }
+
+  expects trait RowStoreDriver {
+    state ready {
+      ROW_READ -> busy
+      ROW_LIST -> busy
+      ROWS_QUERY -> busy
+      ROWS_WRITE -> busy
+    }
+    state busy
+    emits {
+      ROW_FOUND { key : string!  row : Row? }
+      ROWS_LISTED { key : string!  rows : [Row]! }
+      ROWS_PAGE { key : string!  rows : [Row]!  total : number! }
+      ROWS_IDS { key : string!  ids : [string]!  total : number! }
+      ROWS_WRITTEN { key : string!  outcomes : [RowWriteOutcome]! }
+      STORE_UNSUPPORTED { key : string!  reason : string! }
+      STORE_FAILED { key : string!  message : string! }
+    }
+  }
+  expects config { origin : url  projectId : string  databaseId : string  root : string  auth : FirestoreAuth  collections : [Collection]  orderableFields : [string]  transactionAttempts : number  queryCapabilities : QueryCapabilities  writeCapabilities : WriteCapabilities }
+  expects page "/firestore" -> RowStoreDriver
+}

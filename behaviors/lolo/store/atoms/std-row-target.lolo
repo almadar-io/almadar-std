@@ -1,0 +1,60 @@
+app std-row-target [
+  version: "1.0.0",
+  description: "std-row-target — the explicit address of one stored row, separate from the row's domain id. A target is { kind: singleton } (the entity's one row: a [runtime] entity's frame address, storage key \"singleton\") or { kind: key, key } (the row stored under key). ROW_TARGET_RESOLVE answers the storage key for a read or a write and echoes the domain id unchanged, so a domain id change never moves the storage key. A key target needs a nonempty key and a singleton target needs a [runtime] singleton entity; anything else is ROW_TARGET_REFUSED with the reason. Nothing is read or written here.",
+  egress: []
+]
+;; @capabilities "row target, singleton row, row key, storage key, runtime row address"
+uses Spec from "almadar-std/row-target"
+
+type SingletonTarget = { kind : "singleton" }
+type KeyTarget = { kind : "key", key : string! }
+type RowTarget = SingletonTarget | KeyTarget
+
+orbital RowTargetOrbital {
+  entity TargetRun [runtime] {
+    id : string!
+    storageKey : string = ""
+    domainId : string = ""
+  }
+
+  trait RowTargetResolver -> TargetRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+
+      ROW_TARGET_RESOLVE -> ready when (and (= (object/get @payload.target "kind" "") "singleton") (not @payload.singleton))
+        (emit ROW_TARGET_REFUSED { reason: (str/concat "a singleton row target needs a [runtime] entity; " @payload.entityType " is not one") })
+
+      ROW_TARGET_RESOLVE -> ready when (and (= (object/get @payload.target "kind" "") "key") (= (object/get @payload.target "key" "") ""))
+        (emit ROW_TARGET_REFUSED { reason: "a key row target needs a nonempty key" })
+
+      ROW_TARGET_RESOLVE -> ready when (and (= (object/get @payload.target "kind" "") "singleton") @payload.singleton)
+        (set @entity.storageKey "singleton")
+        (set @entity.domainId @payload.domainId)
+        (emit ROW_TARGET_RESOLVED { op: @payload.op, entityType: @payload.entityType, storageKey: @entity.storageKey, domainId: @entity.domainId })
+
+      ROW_TARGET_RESOLVE -> ready when (and (= (object/get @payload.target "kind" "") "key") (!= (object/get @payload.target "key" "") ""))
+        (set @entity.storageKey (object/get @payload.target "key" ""))
+        (set @entity.domainId @payload.domainId)
+        (emit ROW_TARGET_RESOLVED { op: @payload.op, entityType: @payload.entityType, storageKey: @entity.storageKey, domainId: @entity.domainId })
+    }
+
+    emits {
+      ROW_TARGET_RESOLVED -> external { op : "read" | "write", entityType : string!, storageKey : string!, domainId : string! }
+        @description "The storage key the target addresses, with the domain id unchanged."
+        @tier "domain"
+      ROW_TARGET_REFUSED -> external { reason : string! }
+        @description "The target is not a valid address for this entity."
+        @tier "domain"
+    }
+
+    listens {
+      ROW_TARGET_RESOLVE -> external { op : "read" | "write", entityType : string!, singleton : boolean!, target : RowTarget!, domainId : string! }
+        @description "Resolve a row target to its storage key for a read or a write."
+        @synonyms "row target, singleton row, storage key"
+    }
+  }
+
+  page "/row-target" as RowTargetPage -> RowTargetResolver
+}

@@ -1,18 +1,25 @@
 app couchdb-spec [
   version: "1.0.0",
-  description: "Design contract for a CouchDB row store over the REST API: one database per collection name the caller gives; a row is a document whose _id is the row id, and a read hands back the row without _id and _rev. A create makes the database once (PUT /stocks answers 201, 202, 409 or 412 for made-or-existing) then PUTs the document; a 409 on the document is a duplicate id. A get answers the row, or absent on 404. An update or delete reads the document for its _rev, then writes conditioned on that _rev (PUT with _rev, DELETE ?rev=); a 409 re-reads and tries again, at most 5 attempts, then gives up as changed concurrently. A find POSTs a Mango selector to /db/_find (404 is an empty answer) and reads a full page through the bookmark. Credentials from the server URL travel as a Basic Authorization header."
+  description: "Design contract for a CouchDB row-store driver over the REST API, the twin of the kernel's CouchDB backend (orbital-core stores/couchdb.rs). It answers the row-store verbs of row-store.lolo: ROW_READ and ROW_LIST by entity type and id, ROWS_QUERY with the typed row query, ROWS_WRITE with a batch. One database per entity type, named by the declared collection or like the Postgres table (TimeEntry is time_entries); a row is a document whose _id is the row id, and a read hands back the row without _id and _rev. A create makes the database once (PUT /stocks answers 201, 202, 409 or 412 for made-or-existing) then PUTs the document; a 409 on the document is a duplicate id. An update or delete reads the document for its _rev, tests the guard in process on the row read (a guard that fails is refused), then writes conditioned on that _rev (PUT with _rev, DELETE ?rev=); a 409 re-reads and re-tests, at most 5 attempts, then gives up as changed concurrently. A query is translated to a Mango selector sorted on _id and POSTed to /db/_find (404 is an empty answer); a query Mango cannot carry with the shared semantics is STORE_UNSUPPORTED with the reason, a total of none sends no count request, an ids query asks for _id only, and a full page is read through the bookmark. A batch is sequential writes that stop at the first failure; an atomic batch is STORE_UNSUPPORTED and a rekey op fails the batch. Credentials from the server URL travel as a Basic Authorization header. One request is in flight per frame: the store seam asks the driver in a frame keyed by the ask (EXEC-STORE-4), and orb validate refuses a trait outside the driver that emits a row verb (ORB_STORE_VERB_OUTSIDE_SEAM)."
 ]
 
 orbital CouchdbSpec {
   expects entity CouchCall [runtime] {
     id : string!
+    key : string
+    mode : string
+    entityType : string
     op : string
     db : string
     docId : string
     attempt : number
   }
-  expects trait CouchClient {
+  expects trait RowStoreDriver {
     state idle {
+      ROW_READ -> idle
+      ROW_LIST -> idle
+      ROWS_QUERY -> idle
+      ROWS_WRITE -> idle
       COUCH_GET -> getting
       COUCH_CREATE -> ensuring
       COUCH_UPSERT -> ensuring
@@ -28,6 +35,13 @@ orbital CouchdbSpec {
     state reading { COUCH_READ_REPLIED -> idle }
     state writing { COUCH_WRITE_REPLIED -> idle }
     emits {
+      ROW_FOUND { key : string! }
+      ROWS_LISTED { key : string! }
+      ROWS_PAGE { key : string!  total : number! }
+      ROWS_IDS { key : string!  total : number! }
+      ROWS_WRITTEN { key : string! }
+      STORE_UNSUPPORTED { key : string!  reason : string! }
+      STORE_FAILED { key : string!  message : string! }
       COUCH_ROW { db : string!  id : string! }
       COUCH_ROW_ABSENT { db : string!  id : string! }
       COUCH_CREATED { db : string!  id : string! }
@@ -36,10 +50,11 @@ orbital CouchdbSpec {
       COUCH_UPSERTED { db : string!  id : string!  created : boolean! }
       COUCH_DELETED { db : string!  id : string! }
       COUCH_NOT_FOUND { db : string!  id : string! }
+      COUCH_REFUSED { db : string!  id : string! }
       COUCH_LISTED { db : string! }
       COUCH_FOUND { db : string!  total : number! }
       COUCH_FAILED { op : string!  status : number!  message : string! }
     }
   }
-  expects page "/couchdb" -> CouchClient
+  expects page "/couchdb" -> RowStoreDriver
 }

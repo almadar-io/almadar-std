@@ -1,0 +1,396 @@
+{
+ "atom": "store/atoms/std-row-target.lolo",
+ "trait": "RowTargetResolver",
+ "spec": "spec/store/row-target.lolo",
+ "cases": [
+  {
+   "id": "good-singleton-write",
+   "steps": [
+    {
+     "event": "ROW_TARGET_RESOLVE",
+     "payload": {
+      "op": "write",
+      "entityType": "Cursor",
+      "singleton": true,
+      "target": {
+       "kind": "singleton"
+      },
+      "domainId": "cursor-1"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "ROW_TARGET_RESOLVED",
+        "payload": {
+         "op": "write",
+         "entityType": "Cursor",
+         "storageKey": "singleton",
+         "domainId": "cursor-1"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "good-singleton-read",
+   "steps": [
+    {
+     "event": "ROW_TARGET_RESOLVE",
+     "payload": {
+      "op": "read",
+      "entityType": "Cursor",
+      "singleton": true,
+      "target": {
+       "kind": "singleton"
+      },
+      "domainId": "cursor-1"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "ROW_TARGET_RESOLVED",
+        "payload": {
+         "op": "read",
+         "entityType": "Cursor",
+         "storageKey": "singleton",
+         "domainId": "cursor-1"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "good-keyed-write",
+   "steps": [
+    {
+     "event": "ROW_TARGET_RESOLVE",
+     "payload": {
+      "op": "write",
+      "entityType": "Invoice",
+      "singleton": false,
+      "target": {
+       "kind": "key",
+       "key": "inv-7"
+      },
+      "domainId": "inv-7"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "ROW_TARGET_RESOLVED",
+        "payload": {
+         "op": "write",
+         "entityType": "Invoice",
+         "storageKey": "inv-7",
+         "domainId": "inv-7"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "good-keyed-read",
+   "steps": [
+    {
+     "event": "ROW_TARGET_RESOLVE",
+     "payload": {
+      "op": "read",
+      "entityType": "Invoice",
+      "singleton": false,
+      "target": {
+       "kind": "key",
+       "key": "inv-7"
+      },
+      "domainId": "inv-7"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "ROW_TARGET_RESOLVED",
+        "payload": {
+         "op": "read",
+         "entityType": "Invoice",
+         "storageKey": "inv-7",
+         "domainId": "inv-7"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "good-domain-id-change-does-not-move-singleton-key",
+   "steps": [
+    {
+     "event": "ROW_TARGET_RESOLVE",
+     "payload": {
+      "op": "write",
+      "entityType": "Cursor",
+      "singleton": true,
+      "target": {
+       "kind": "singleton"
+      },
+      "domainId": "cursor-1"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "ROW_TARGET_RESOLVED",
+        "payload": {
+         "op": "write",
+         "entityType": "Cursor",
+         "storageKey": "singleton",
+         "domainId": "cursor-1"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "ROW_TARGET_RESOLVE",
+     "payload": {
+      "op": "write",
+      "entityType": "Cursor",
+      "singleton": true,
+      "target": {
+       "kind": "singleton"
+      },
+      "domainId": "viewer-42"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "ROW_TARGET_RESOLVED",
+        "payload": {
+         "op": "write",
+         "entityType": "Cursor",
+         "storageKey": "singleton",
+         "domainId": "viewer-42"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "good-domain-id-differs-from-key",
+   "steps": [
+    {
+     "event": "ROW_TARGET_RESOLVE",
+     "payload": {
+      "op": "read",
+      "entityType": "Invoice",
+      "singleton": false,
+      "target": {
+       "kind": "key",
+       "key": "k1"
+      },
+      "domainId": "other-id"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "ROW_TARGET_RESOLVED",
+        "payload": {
+         "op": "read",
+         "entityType": "Invoice",
+         "storageKey": "k1",
+         "domainId": "other-id"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "good-keyed-target-on-singleton-entity",
+   "steps": [
+    {
+     "event": "ROW_TARGET_RESOLVE",
+     "payload": {
+      "op": "read",
+      "entityType": "Cursor",
+      "singleton": true,
+      "target": {
+       "kind": "key",
+       "key": "k1"
+      },
+      "domainId": "cursor-1"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "ROW_TARGET_RESOLVED",
+        "payload": {
+         "op": "read",
+         "entityType": "Cursor",
+         "storageKey": "k1",
+         "domainId": "cursor-1"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bad-empty-key-is-refused",
+   "steps": [
+    {
+     "event": "ROW_TARGET_RESOLVE",
+     "payload": {
+      "op": "write",
+      "entityType": "Invoice",
+      "singleton": false,
+      "target": {
+       "kind": "key",
+       "key": ""
+      },
+      "domainId": "inv-7"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "ROW_TARGET_REFUSED",
+        "payload": {
+         "reason": "a key row target needs a nonempty key"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bad-empty-key-refused-on-read",
+   "steps": [
+    {
+     "event": "ROW_TARGET_RESOLVE",
+     "payload": {
+      "op": "read",
+      "entityType": "Invoice",
+      "singleton": false,
+      "target": {
+       "kind": "key",
+       "key": ""
+      },
+      "domainId": "inv-7"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "ROW_TARGET_REFUSED",
+        "payload": {
+         "reason": "a key row target needs a nonempty key"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bad-singleton-target-on-non-singleton-entity-is-refused",
+   "steps": [
+    {
+     "event": "ROW_TARGET_RESOLVE",
+     "payload": {
+      "op": "write",
+      "entityType": "Invoice",
+      "singleton": false,
+      "target": {
+       "kind": "singleton"
+      },
+      "domainId": "inv-7"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "ROW_TARGET_REFUSED",
+        "payload": {
+         "reason": "a singleton row target needs a [runtime] entity; Invoice is not one"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "good-refusal-leaves-next-resolve-working",
+   "steps": [
+    {
+     "event": "ROW_TARGET_RESOLVE",
+     "payload": {
+      "op": "write",
+      "entityType": "Invoice",
+      "singleton": false,
+      "target": {
+       "kind": "key",
+       "key": ""
+      },
+      "domainId": "x"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "ROW_TARGET_REFUSED",
+        "payload": {
+         "reason": "a key row target needs a nonempty key"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "ROW_TARGET_RESOLVE",
+     "payload": {
+      "op": "write",
+      "entityType": "Invoice",
+      "singleton": false,
+      "target": {
+       "kind": "key",
+       "key": "a"
+      },
+      "domainId": "x"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "ROW_TARGET_RESOLVED",
+        "payload": {
+         "op": "write",
+         "entityType": "Invoice",
+         "storageKey": "a",
+         "domainId": "x"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

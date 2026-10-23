@@ -1,6 +1,6 @@
 app row-store-kv-spec [
   version: "1.0.0",
-  description: "Design contract for the key-value row-store driver: the same public contract as std-row-store-file (same RowStoreDriver trait, states, listens, emits, record types and RowStoreFlight entity) so a store: binding swaps between the two drivers, with config.store naming the kv store (grant kv: { <store>: [read, write] }) where the file driver has config.dir. Rows live at <entityType>/<id>, change records at <entityType>.log/<seq>; ROW_LIST and plain ROWS_QUERY are one kv/scan of the entity prefix, ROW_READ one kv/get, and a write is one kv/batch of row puts, row deletes and log puts, so an atomic batch that fails applies nothing. Unstated here until the prover decides array/len (G-ORB-427): one change record per applied create, update or delete and none per read, list, query or rolled-back batch; ROW_LIST isolation between prefix-colliding entity types (order vs order-line); the atomic-batch no-change replay; stop-batch keeps applied ops; parity of outcomes and decoded change records against std-row-store-file; the host-level cases (locale namespace isolation, denied store, non-JSON value, cancel)."
+  description: "Design contract for the key-value row-store driver: the same public contract as std-row-store-file (same RowStoreDriver trait, states, listens, emits, record types and RowStoreFlight entity) so a store: binding swaps between the two drivers, with config.store naming the kv store (grant kv: { <store>: [read, write] }) where the file driver has config.dir. Rows live at <entityType>/<id>, change records at <entityType>.log/<seq>; ROW_LIST and plain ROWS_QUERY are one kv/scan of the entity prefix, ROW_READ one kv/get, and a write is one kv/batch of row puts, row deletes and log puts, so an atomic batch that fails applies nothing. Unstated here until the prover decides array/len (G-ORB-427): one change record per applied create, update or delete and none per read, list, query or rolled-back batch; ROW_LIST isolation between prefix-colliding entity types (order vs order-line); the atomic-batch no-change replay; stop-batch keeps applied ops; parity of outcomes and decoded change records against std-row-store-file; a rekey op addresses its row by an explicit target (singleton or key, see row-target.lolo) carried apart from the row domain id: a singleton target keeps the storage key <entityType>/singleton and only the row id field becomes newId, a key target moves the row to <entityType>/<newId>, and an empty key or a singleton target on a non-singleton entity is refused with the row-target reasons; the host-level cases (locale namespace isolation, denied store, non-JSON value, cancel)."
 ]
 
 orbital RowStoreKvSpec {
@@ -38,7 +38,11 @@ orbital RowStoreKvSpec {
   type UpsertOp = { kind : "upsert", entityType : string!, data : Row! }
   type UpdateOp = { kind : "update", entityType : string!, id : string!, data : Row!, guard : RowPredicate? }
   type DeleteOp = { kind : "delete", entityType : string!, id : string!, guard : RowPredicate? }
-  type RowWriteOp = CreateOp | UpsertOp | UpdateOp | DeleteOp
+  type SingletonTarget = { kind : "singleton" }
+  type KeyTarget = { kind : "key", key : string! }
+  type RowTarget = SingletonTarget | KeyTarget
+  type RekeyOp = { kind : "rekey", entityType : string!, target : RowTarget!, newId : string!, guard : RowPredicate? }
+  type RowWriteOp = CreateOp | UpsertOp | UpdateOp | DeleteOp | RekeyOp
   type RowWriteBatch = { ops : [RowWriteOp]!, onFailure : "atomic" | "stop" }
 
   type CreatedOutcome = { kind : "created", row : Row! }

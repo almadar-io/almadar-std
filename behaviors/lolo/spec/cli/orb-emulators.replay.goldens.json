@@ -1,0 +1,35 @@
+{
+  "atom": "cli/atoms/std-orb-emulators.lolo",
+  "trait": "OrbEmulators",
+  "note": "`orb emulators` contract: an argument is a usage error and never starts the suite; a bare call asks the suite to start; a suite failure is surfaced as <code>: <message> (500), never swallowed; a ready suite answers the connection environment.",
+  "cases": [
+    {
+      "id": "argument-is-usage-error-no-start",
+      "steps": [
+        { "event": "EMULATORS_CALLED", "payload": { "headers": {}, "rawBody": "{\"argv\":[\"--no-emulators\"],\"cwd\":\"/tmp\"}" },
+          "expect": { "emits": [ { "event": "EMULATORS_ANSWERED", "payload": { "status": 400 } } ] } }
+      ]
+    },
+    {
+      "id": "bare-call-asks-the-suite-to-start",
+      "steps": [
+        { "event": "EMULATORS_CALLED", "payload": { "headers": {}, "rawBody": "{\"argv\":[],\"cwd\":\"/tmp\"}" },
+          "expect": { "emits": [ { "event": "EMULATORS_REQUESTED" } ] } }
+      ]
+    },
+    {
+      "id": "suite-failure-is-surfaced",
+      "steps": [
+        { "event": "SUITE_FAILED", "payload": { "code": "emulators_no_java", "message": "no Java 21" },
+          "expect": { "emits": [ { "event": "EMULATORS_ANSWERED", "payload": { "status": 500, "body": "emulators_no_java: no Java 21" } } ] } }
+      ]
+    },
+    {
+      "id": "suite-ready-answers-the-environment",
+      "steps": [
+        { "event": "SUITE_READY", "payload": { "projectId": "demo-almadar", "firestoreHost": "127.0.0.1:8080", "authHost": "127.0.0.1:9099", "reused": false },
+          "expect": { "emits": [ { "event": "EMULATORS_ANSWERED", "payload": { "status": 200 } } ] } }
+      ]
+    }
+  ]
+}

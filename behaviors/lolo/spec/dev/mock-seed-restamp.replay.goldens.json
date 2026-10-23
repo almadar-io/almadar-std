@@ -1,0 +1,1208 @@
+{
+ "atom": "spec/dev/mock-seed-access.fixture.lolo",
+ "trait": "MockSeed",
+ "note": "Restamp changes carry an explicit row target: singleton for a [runtime] registration (its storage key survives a rekey), else the changed row key (the old id for a rekey). The stamp right after seeding is firstOwner; a persona switch restamps only under config restampOnPersona (default false) and otherwise answers no changes.",
+ "cases": [
+  {
+   "id": "restamp-target-runtime-entity-set-is-singleton",
+   "steps": [
+    {
+     "event": "INIT",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "CORPUS_ASK",
+        "payload": {}
+       },
+       {
+        "event": "CORPUS_IS",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "RESTAMP_INPUT",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Person",
+          "identity": true,
+          "collection": "people",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "role",
+            "type": "string"
+           }
+          ]
+         }
+        },
+        {
+         "entity": {
+          "name": "Task",
+          "collection": "tasks",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "ownerRef",
+            "type": "string"
+           }
+          ],
+          "persistence": "runtime"
+         }
+        }
+       ]
+      },
+      "stores": {
+       "people": [
+        {
+         "id": "agent",
+         "role": "agent"
+        },
+        {
+         "id": "reader",
+         "role": "reader"
+        }
+       ],
+       "tasks": [
+        {
+         "id": "t1",
+         "ownerRef": "old"
+        }
+       ]
+      },
+      "journal": {
+       "viewerId": "old",
+       "stamped": [
+        {
+         "store": "tasks",
+         "id": "t1",
+         "column": "ownerRef"
+        }
+       ],
+       "deferred": []
+      },
+      "viewer": {
+       "id": "new",
+       "role": "reader",
+       "name": "New viewer"
+      },
+      "firstOwner": true
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "RESTAMP_DONE",
+        "payload": {
+         "journal": {
+          "viewerId": "new",
+          "stamped": [
+           {
+            "store": "tasks",
+            "id": "t1",
+            "column": "ownerRef"
+           }
+          ],
+          "deferred": []
+         },
+         "changes": [
+          {
+           "kind": "set",
+           "store": "tasks",
+           "id": "t1",
+           "column": "ownerRef",
+           "ownerId": "new",
+           "target": {
+            "kind": "singleton"
+           }
+          }
+         ]
+        }
+       }
+      ],
+      "emitCounts": {
+       "RESTAMP_DONE": 1
+      },
+      "neverEmits": [
+       "DATASET_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "restamp-target-keyed-entity-set-is-the-row-key",
+   "steps": [
+    {
+     "event": "INIT",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "CORPUS_ASK",
+        "payload": {}
+       },
+       {
+        "event": "CORPUS_IS",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "RESTAMP_INPUT",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Person",
+          "identity": true,
+          "collection": "people",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "role",
+            "type": "string"
+           }
+          ]
+         }
+        },
+        {
+         "entity": {
+          "name": "Task",
+          "collection": "tasks",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "ownerRef",
+            "type": "string"
+           }
+          ]
+         }
+        }
+       ]
+      },
+      "stores": {
+       "people": [
+        {
+         "id": "agent",
+         "role": "agent"
+        },
+        {
+         "id": "reader",
+         "role": "reader"
+        }
+       ],
+       "tasks": [
+        {
+         "id": "t1",
+         "ownerRef": "old"
+        }
+       ]
+      },
+      "journal": {
+       "viewerId": "old",
+       "stamped": [
+        {
+         "store": "tasks",
+         "id": "t1",
+         "column": "ownerRef"
+        }
+       ],
+       "deferred": []
+      },
+      "viewer": {
+       "id": "new",
+       "role": "reader",
+       "name": "New viewer"
+      },
+      "firstOwner": true
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "RESTAMP_DONE",
+        "payload": {
+         "journal": {
+          "viewerId": "new",
+          "stamped": [
+           {
+            "store": "tasks",
+            "id": "t1",
+            "column": "ownerRef"
+           }
+          ],
+          "deferred": []
+         },
+         "changes": [
+          {
+           "kind": "set",
+           "store": "tasks",
+           "id": "t1",
+           "column": "ownerRef",
+           "ownerId": "new",
+           "target": {
+            "kind": "key",
+            "key": "t1"
+           }
+          }
+         ]
+        }
+       }
+      ],
+      "emitCounts": {
+       "RESTAMP_DONE": 1
+      },
+      "neverEmits": [
+       "DATASET_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "restamp-target-runtime-rekey-keeps-the-singleton-storage-key",
+   "steps": [
+    {
+     "event": "INIT",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "CORPUS_ASK",
+        "payload": {}
+       },
+       {
+        "event": "CORPUS_IS",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "RESTAMP_INPUT",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Person",
+          "identity": true,
+          "collection": "people",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "role",
+            "type": "string"
+           }
+          ]
+         }
+        },
+        {
+         "entity": {
+          "name": "Task",
+          "collection": "tasks",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "ownerRef",
+            "type": "string"
+           }
+          ],
+          "persistence": "runtime"
+         }
+        }
+       ]
+      },
+      "stores": {
+       "people": [
+        {
+         "id": "agent",
+         "role": "agent"
+        },
+        {
+         "id": "reader",
+         "role": "reader"
+        }
+       ],
+       "tasks": [
+        {
+         "id": "t1",
+         "ownerRef": "old"
+        }
+       ]
+      },
+      "journal": {
+       "viewerId": "old",
+       "stamped": [
+        {
+         "store": "tasks",
+         "id": "t1",
+         "column": "id"
+        }
+       ],
+       "deferred": []
+      },
+      "viewer": {
+       "id": "new",
+       "role": "reader",
+       "name": "New viewer"
+      },
+      "firstOwner": true
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "RESTAMP_DONE",
+        "payload": {
+         "journal": {
+          "viewerId": "new",
+          "stamped": [
+           {
+            "store": "tasks",
+            "id": "new",
+            "column": "id"
+           }
+          ],
+          "deferred": []
+         },
+         "changes": [
+          {
+           "kind": "rekey",
+           "store": "tasks",
+           "id": "t1",
+           "column": "id",
+           "ownerId": "new",
+           "target": {
+            "kind": "singleton"
+           }
+          }
+         ]
+        }
+       }
+      ],
+      "emitCounts": {
+       "RESTAMP_DONE": 1
+      },
+      "neverEmits": [
+       "DATASET_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "restamp-target-keyed-rekey-names-the-row-it-moves-by-its-old-key",
+   "steps": [
+    {
+     "event": "INIT",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "CORPUS_ASK",
+        "payload": {}
+       },
+       {
+        "event": "CORPUS_IS",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "RESTAMP_INPUT",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Person",
+          "identity": true,
+          "collection": "people",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "role",
+            "type": "string"
+           }
+          ]
+         }
+        },
+        {
+         "entity": {
+          "name": "Task",
+          "collection": "tasks",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "ownerRef",
+            "type": "string"
+           }
+          ]
+         }
+        }
+       ]
+      },
+      "stores": {
+       "people": [
+        {
+         "id": "agent",
+         "role": "agent"
+        },
+        {
+         "id": "reader",
+         "role": "reader"
+        }
+       ],
+       "tasks": [
+        {
+         "id": "t1",
+         "ownerRef": "old"
+        }
+       ]
+      },
+      "journal": {
+       "viewerId": "old",
+       "stamped": [
+        {
+         "store": "tasks",
+         "id": "t1",
+         "column": "id"
+        }
+       ],
+       "deferred": []
+      },
+      "viewer": {
+       "id": "new",
+       "role": "reader",
+       "name": "New viewer"
+      },
+      "firstOwner": true
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "RESTAMP_DONE",
+        "payload": {
+         "journal": {
+          "viewerId": "new",
+          "stamped": [
+           {
+            "store": "tasks",
+            "id": "new",
+            "column": "id"
+           }
+          ],
+          "deferred": []
+         },
+         "changes": [
+          {
+           "kind": "rekey",
+           "store": "tasks",
+           "id": "t1",
+           "column": "id",
+           "ownerId": "new",
+           "target": {
+            "kind": "key",
+            "key": "t1"
+           }
+          }
+         ]
+        }
+       }
+      ],
+      "emitCounts": {
+       "RESTAMP_DONE": 1
+      },
+      "neverEmits": [
+       "DATASET_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "restamp-target-runtime-rekey-then-set-both-stay-singleton",
+   "steps": [
+    {
+     "event": "INIT",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "CORPUS_ASK",
+        "payload": {}
+       },
+       {
+        "event": "CORPUS_IS",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "RESTAMP_INPUT",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Person",
+          "identity": true,
+          "collection": "people",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "role",
+            "type": "string"
+           }
+          ]
+         }
+        },
+        {
+         "entity": {
+          "name": "Task",
+          "collection": "tasks",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "ownerRef",
+            "type": "string"
+           }
+          ],
+          "persistence": "runtime"
+         }
+        }
+       ]
+      },
+      "stores": {
+       "people": [
+        {
+         "id": "agent",
+         "role": "agent"
+        },
+        {
+         "id": "reader",
+         "role": "reader"
+        }
+       ],
+       "tasks": [
+        {
+         "id": "t1",
+         "ownerRef": "old"
+        }
+       ]
+      },
+      "journal": {
+       "viewerId": "old",
+       "stamped": [
+        {
+         "store": "tasks",
+         "id": "t1",
+         "column": "id"
+        },
+        {
+         "store": "tasks",
+         "id": "t1",
+         "column": "ownerRef"
+        }
+       ],
+       "deferred": []
+      },
+      "viewer": {
+       "id": "new",
+       "role": "reader",
+       "name": "New viewer"
+      },
+      "firstOwner": true
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "RESTAMP_DONE",
+        "payload": {
+         "journal": {
+          "viewerId": "new",
+          "stamped": [
+           {
+            "store": "tasks",
+            "id": "new",
+            "column": "id"
+           },
+           {
+            "store": "tasks",
+            "id": "new",
+            "column": "ownerRef"
+           }
+          ],
+          "deferred": []
+         },
+         "changes": [
+          {
+           "kind": "rekey",
+           "store": "tasks",
+           "id": "t1",
+           "column": "id",
+           "ownerId": "new",
+           "target": {
+            "kind": "singleton"
+           }
+          },
+          {
+           "kind": "set",
+           "store": "tasks",
+           "id": "new",
+           "column": "ownerRef",
+           "ownerId": "new",
+           "target": {
+            "kind": "singleton"
+           }
+          }
+         ]
+        }
+       }
+      ],
+      "emitCounts": {
+       "RESTAMP_DONE": 1
+      },
+      "neverEmits": [
+       "DATASET_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "restamp-target-keyed-rekey-then-set-follows-the-new-key",
+   "steps": [
+    {
+     "event": "INIT",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "CORPUS_ASK",
+        "payload": {}
+       },
+       {
+        "event": "CORPUS_IS",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "RESTAMP_INPUT",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Person",
+          "identity": true,
+          "collection": "people",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "role",
+            "type": "string"
+           }
+          ]
+         }
+        },
+        {
+         "entity": {
+          "name": "Task",
+          "collection": "tasks",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "ownerRef",
+            "type": "string"
+           }
+          ]
+         }
+        }
+       ]
+      },
+      "stores": {
+       "people": [
+        {
+         "id": "agent",
+         "role": "agent"
+        },
+        {
+         "id": "reader",
+         "role": "reader"
+        }
+       ],
+       "tasks": [
+        {
+         "id": "t1",
+         "ownerRef": "old"
+        }
+       ]
+      },
+      "journal": {
+       "viewerId": "old",
+       "stamped": [
+        {
+         "store": "tasks",
+         "id": "t1",
+         "column": "id"
+        },
+        {
+         "store": "tasks",
+         "id": "t1",
+         "column": "ownerRef"
+        }
+       ],
+       "deferred": []
+      },
+      "viewer": {
+       "id": "new",
+       "role": "reader",
+       "name": "New viewer"
+      },
+      "firstOwner": true
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "RESTAMP_DONE",
+        "payload": {
+         "journal": {
+          "viewerId": "new",
+          "stamped": [
+           {
+            "store": "tasks",
+            "id": "new",
+            "column": "id"
+           },
+           {
+            "store": "tasks",
+            "id": "new",
+            "column": "ownerRef"
+           }
+          ],
+          "deferred": []
+         },
+         "changes": [
+          {
+           "kind": "rekey",
+           "store": "tasks",
+           "id": "t1",
+           "column": "id",
+           "ownerId": "new",
+           "target": {
+            "kind": "key",
+            "key": "t1"
+           }
+          },
+          {
+           "kind": "set",
+           "store": "tasks",
+           "id": "new",
+           "column": "ownerRef",
+           "ownerId": "new",
+           "target": {
+            "kind": "key",
+            "key": "new"
+           }
+          }
+         ]
+        }
+       }
+      ],
+      "emitCounts": {
+       "RESTAMP_DONE": 1
+      },
+      "neverEmits": [
+       "DATASET_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "restamp-target-per-store-a-runtime-store-and-a-keyed-store-in-one-run",
+   "steps": [
+    {
+     "event": "INIT",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "CORPUS_ASK",
+        "payload": {}
+       },
+       {
+        "event": "CORPUS_IS",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "RESTAMP_INPUT",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Person",
+          "identity": true,
+          "collection": "people",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "role",
+            "type": "string"
+           }
+          ]
+         }
+        },
+        {
+         "entity": {
+          "name": "Task",
+          "collection": "tasks",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "ownerRef",
+            "type": "string"
+           }
+          ],
+          "persistence": "runtime"
+         }
+        },
+        {
+         "entity": {
+          "name": "Doc",
+          "collection": "docs",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "authorId",
+            "type": "relation",
+            "relation": {
+             "entity": "Person",
+             "cardinality": "one"
+            }
+           }
+          ],
+          "read_policy": [
+           "=",
+           "@user.id",
+           "@entity.authorId"
+          ]
+         }
+        }
+       ]
+      },
+      "stores": {
+       "people": [
+        {
+         "id": "agent",
+         "role": "agent"
+        },
+        {
+         "id": "reader",
+         "role": "reader"
+        }
+       ],
+       "tasks": [
+        {
+         "id": "t1",
+         "ownerRef": "old"
+        }
+       ],
+       "docs": [
+        {
+         "id": "d1",
+         "authorId": "agent"
+        }
+       ]
+      },
+      "journal": {
+       "viewerId": "old",
+       "stamped": [
+        {
+         "store": "tasks",
+         "id": "t1",
+         "column": "ownerRef"
+        },
+        {
+         "store": "docs",
+         "id": "d1",
+         "column": "authorId"
+        }
+       ],
+       "deferred": []
+      },
+      "viewer": {
+       "id": "reader",
+       "role": "reader"
+      },
+      "firstOwner": true
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "RESTAMP_DONE",
+        "payload": {
+         "journal": {
+          "viewerId": "reader",
+          "stamped": [
+           {
+            "store": "tasks",
+            "id": "t1",
+            "column": "ownerRef"
+           },
+           {
+            "store": "docs",
+            "id": "d1",
+            "column": "authorId"
+           }
+          ],
+          "deferred": []
+         },
+         "changes": [
+          {
+           "kind": "set",
+           "store": "tasks",
+           "id": "t1",
+           "column": "ownerRef",
+           "ownerId": "reader",
+           "target": {
+            "kind": "singleton"
+           }
+          },
+          {
+           "kind": "set",
+           "store": "docs",
+           "id": "d1",
+           "column": "authorId",
+           "ownerId": "reader",
+           "target": {
+            "kind": "key",
+            "key": "d1"
+           }
+          }
+         ]
+        }
+       }
+      ],
+      "emitCounts": {
+       "RESTAMP_DONE": 1
+      },
+      "neverEmits": [
+       "DATASET_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "persona-switch-without-restamp-on-persona-changes-nothing",
+   "steps": [
+    {
+     "event": "INIT",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "CORPUS_ASK",
+        "payload": {}
+       },
+       {
+        "event": "CORPUS_IS",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "RESTAMP_INPUT",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Person",
+          "identity": true,
+          "collection": "people",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "role",
+            "type": "string"
+           }
+          ]
+         }
+        },
+        {
+         "entity": {
+          "name": "Task",
+          "collection": "tasks",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "ownerRef",
+            "type": "string"
+           }
+          ]
+         }
+        }
+       ]
+      },
+      "stores": {
+       "people": [
+        {
+         "id": "agent",
+         "role": "agent"
+        },
+        {
+         "id": "reader",
+         "role": "reader"
+        }
+       ],
+       "tasks": [
+        {
+         "id": "t1",
+         "ownerRef": "old"
+        }
+       ]
+      },
+      "journal": {
+       "viewerId": "old",
+       "stamped": [
+        {
+         "store": "tasks",
+         "id": "t1",
+         "column": "ownerRef"
+        }
+       ],
+       "deferred": []
+      },
+      "viewer": {
+       "id": "new",
+       "role": "reader",
+       "name": "New viewer"
+      },
+      "firstOwner": false
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "RESTAMP_DONE",
+        "payload": {
+         "journal": {
+          "viewerId": "old",
+          "stamped": [
+           {
+            "store": "tasks",
+            "id": "t1",
+            "column": "ownerRef"
+           }
+          ],
+          "deferred": []
+         },
+         "changes": []
+        }
+       }
+      ],
+      "emitCounts": {
+       "RESTAMP_DONE": 1
+      },
+      "neverEmits": [
+       "DATASET_FAILED"
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

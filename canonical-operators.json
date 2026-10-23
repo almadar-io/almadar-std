@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-10-22T11:36:23.991Z",
+  "generated": "2026-10-23T04:31:52.535Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -5776,6 +5776,26 @@
       ],
       "docsSource": "generated"
     },
+    "bytes/from-base64": {
+      "category": "std-codec",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "bytes",
+      "description": "The bytes a standard padded base64 text (RFC 4648) encodes, unchanged at run time; other text fails with kind invalid. A bytes value is a standard padded base64 string at run time.",
+      "module": "bytes",
+      "params": [
+        {
+          "name": "s",
+          "type": "string",
+          "description": "Standard padded base64 text",
+          "rejectsNull": true
+        }
+      ],
+      "examples": [
+        "(bytes/from-base64 \"aGVsbG8=\") // => \"aGVsbG8=\""
+      ],
+      "docsSource": "generated"
+    },
     "bytes/from-string": {
       "category": "std-codec",
       "minArity": 1,
@@ -5973,6 +5993,26 @@
       ],
       "examples": [
         "(bytes/slice \"aGVsbG8=\" 1 3) // => \"ZWw=\""
+      ],
+      "docsSource": "generated"
+    },
+    "bytes/to-base64": {
+      "category": "std-codec",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "string",
+      "description": "The standard padded base64 text (RFC 4648) of bytes, unchanged at run time. A bytes value is a standard padded base64 string at run time.",
+      "module": "bytes",
+      "params": [
+        {
+          "name": "data",
+          "type": "bytes",
+          "description": "The bytes to spell as base64 text",
+          "rejectsNull": true
+        }
+      ],
+      "examples": [
+        "(bytes/to-base64 \"aGVsbG8=\") // => \"aGVsbG8=\""
       ],
       "docsSource": "generated"
     },
@@ -21504,6 +21544,50 @@
       ],
       "examples": [
         "(program/resolve-rows @payload.ref @payload.viewer {\"key\":\"@payload.requestId\",\"emit\":{\"success\":\"ROWS_RESOLVED\",\"failure\":\"ROWS_UNRESOLVED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "program/self": {
+      "category": "std-program",
+      "minArity": 0,
+      "maxArity": 1,
+      "returnType": "sexpr",
+      "description": "Reflect the running program: the resolved program (`.orb` IR) the calling orbital belongs to, read-only. Success carries `{ result, text }` with the program as `result`. For a std program composed into an app that must read the app it runs in (std-mock-seed seeds the app's own entities from it).",
+      "module": "program",
+      "hasSideEffects": true,
+      "runsOn": "server",
+      "host": "program",
+      "params": [
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Emit configuration ({ emit: { success, failure } })",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(program/self {\"emit\":{\"success\":\"PROGRAM_KNOWN\",\"failure\":\"PROGRAM_FAILED\"}})"
       ],
       "docsSource": "generated"
     },

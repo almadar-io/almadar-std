@@ -1,0 +1,120 @@
+app row-store-postgres-spec [
+  version: "1.0.0",
+  description: "Design contract for the Postgres row-store driver whose v3 wire protocol is .lolo over os/tcp-connect, os/send, os/recv and os/close (no postgres effect, no new operator), the native twin of runtime/src/stores/pg_rows.rs over drivers/postgres.rs. It answers the same typed verbs as std-row-store-file (row-store.lolo, EXEC-STORE-4). LAYOUT. An entity's table is its snake_case name pluralised (TimeEntry -> time_entries, Category -> categories, Boss -> bosses: trailing y -> ies, trailing s -> es, else +s) unless the entity declares a collection, which is the table as written; a row is one table row, id text plus one column per field; the stamps createdAt and updatedAt live in the columns created_at and updated_at unless the table declares a column of the stamp's own name; an object or list value is stored as JSON text, a jsonb column reads back parsed, a timestamptz reads back as ISO-8601 UTC text with exactly three fraction digits, SQL NULL reads back as null. Identifiers are double-quoted with embedded quotes doubled. WIRE. One held session per driver: connect, an SSLRequest (00 00 00 08 04 d2 16 2f) unless sslmode is disable, then the startup message (protocol 196608, user, database, client_encoding UTF8: no statement_timeout option), login by cleartext (R3), md5 (R5: md5 + hex(md5(hex(md5(password + user)) + salt))) or SCRAM-SHA-256 (R10/R11/R12; client nonce is base64 of random-bytes 18; the server signature is verified), then every statement is one Parse/Bind/Describe(portal)/Execute/Sync send with all binds and results in text format and SQL NULL as length -1. A reply is read until ReadyForQuery (Z); an E is reported at Z with its message and SQLSTATE and keeps the session; a transport failure (eof, send or recv error) closes the socket and drops the session so the next ask reconnects. A partial frame keeps asking for more. TLS is not carried: an S answer under prefer or require is STORE_FAILED (a DROP against the Rust twin, owner call). READ. ROW_READ: SELECT * FROM \"<t>\" WHERE \"id\" = $1 [id]; no row answers ROW_FOUND without a row. ROW_LIST: SELECT * FROM \"<t>\" (unordered), ROWS_LISTED. QUERY (ROWS_QUERY, project rows or ids; nearest is STORE_UNSUPPORTED before any ask). Column kinds come from SELECT column_name, data_type FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = $1 [table] (text|character varying|character -> text, jsonb -> jsonb, ARRAY -> array, else other; cached per table, re-read once when a queried field is neither a known column nor a stamp field). Page: SELECT <* | \"id\">[, (COUNT(*) OVER ())::int AS \"__total\" unless total is none] FROM \"<t>\"[ WHERE <policy> AND <filter>] ORDER BY <col>[ COLLATE \"C\" when text] <ASC|DESC> NULLS LAST, \"id\" COLLATE \"C\" ASC[ LIMIT $n][ OFFSET $n]; the order is the query's, else createdAt ascending; an order field the table lacks is dropped (id tie-break only); limit then offset take the next binds as text. Total: none -> the rows returned; else the first row's __total; else, when offset is 0 and limit is not 0 the total is 0; else SELECT COUNT(*)::int AS total FROM \"<t>\"[ WHERE ...] with the filter binds and no window. A field the table lacks is absent: isNull true -> TRUE, compare != with a non-null value -> TRUE, everything else -> FALSE. Predicates (two-valued logic): compare == COALESCE(col = $n, FALSE); != col IS DISTINCT FROM $n; < <= > >= COALESCE(col[ COLLATE \"C\" when the value is text and the column is text] <op> $n, FALSE); compare against null: != -> col IS NOT NULL, else FALSE; against a list or object: != -> TRUE, else FALSE; member COALESCE(col = ANY($n), FALSE) with $n the array literal of the non-null scalar values, FALSE when none remain; hasElement on jsonb COALESCE(col @> $n::jsonb, FALSE) with $n the JSON array of the value, on an array column COALESCE($n = ANY(col), FALSE), else FALSE; contains on a text column COALESCE(position($n::text in col) > 0, FALSE) or, case-insensitive, COALESCE(position(lower($n::text) in lower(col)) > 0, FALSE), else FALSE; isNull col IS [NOT] NULL; const TRUE|FALSE; all (a AND b) with TRUE for none; any (a OR b) with FALSE for none; not NOT (a). A SQLSTATE 22P02, 22007, 22008, 22003, 42883 or 42804 on a query declines the push-down: STORE_UNSUPPORTED. WRITE (ROWS_WRITE). Rekey anywhere in the batch is STORE_FAILED \"rekey is unsupported by this store\" before any ask. An atomic batch is BEGIN, the ops in order, then COMMIT; when an op is not applied (anything but created, updated, deleted) it sends ROLLBACK and answers rolled-back for every earlier op, then the failing outcome, and no later op runs; a stop batch has no BEGIN, runs ops in order and ends at the first op that is not applied, answering the outcomes of the ops that ran. Create needs a string id (\"create needs a string id\" as a failed outcome, no ask): INSERT INTO \"<t>\" (<cols>) VALUES ($1, ...) ON CONFLICT (\"id\") DO NOTHING RETURNING * -> created with the row, or duplicate-id when no row returns; a server error is a failed outcome carrying the message. Upsert needs a string id (\"upsert needs a string id\"): INSERT ... ON CONFLICT (\"id\") DO UPDATE SET <written non-id non-created columns> = EXCLUDED.<c>, then every other table column in sorted order = DEFAULT except updated_at = now(), RETURNING *, (xmax = 0) AS \"__inserted\" -> created when true, else updated with no before. Update and delete are one statement: WITH \"pre\" AS (SELECT * FROM \"<t>\" WHERE \"id\" = $1 FOR UPDATE), \"post\" AS (UPDATE \"<t>\" SET c = $n, ... | DELETE FROM \"<t>\" WHERE \"id\" = $1[ AND <guard>] RETURNING *) SELECT 'before' AS \"__part\", \"pre\".* FROM \"pre\" UNION ALL SELECT 'after' AS \"__part\", \"post\".* FROM \"post\" ($1 is the id, the data id key is skipped, empty data sets \"id\" = \"id\"): no before row -> not-found, a before row without an after row -> refused, else updated (row = after) or deleted, with before only when the op carried a guard. A guard whose value does not fit its column (the SQLSTATEs above) declines the write: STORE_UNSUPPORTED. A single persist delete or update (the atomic take) is a one-op stop batch: one statement, no BEGIN. Binds: null -> SQL NULL, string as is, boolean true|false, number as JS prints it, list and object as JSON text; the cell tagged union {null}|{text} is declared locally (G-ORB-339). ERRORS (exact). Connect: \"cannot connect to <host>:<port>: <os error>\". Login: \"the server asks for a password and DATABASE_URL has none\", \"unsupported authentication method <n>\", the server's own message for an E (\"password authentication failed for user ...\"), \"the SCRAM server signature does not match: the server does not know the password\". Transport: \"the server closed the connection\", \"the server closed the connection answering the TLS request\", \"the server does not support TLS and sslmode requires it\", \"the answer to the TLS request is 0x78, neither S nor N\". Every other server error answers its message only. One request is in flight per frame: the store seam asks the driver in a frame keyed by the ask (EXEC-STORE-4), and orb validate refuses a trait outside the driver that emits a row verb (ORB_STORE_VERB_OUTSIDE_SEAM)."
+]
+
+orbital RowStorePostgresSpec {
+  type RowCell = string | number | boolean | [RowCell?] | Map string RowCell?
+  type Row = Map string RowCell?
+
+  type CompareLeaf = { kind : "compare", field : string!, op : "==" | "!=" | "<" | "<=" | ">" | ">=", value : RowCell }
+  type MemberLeaf = { kind : "member", field : string!, values : [RowCell]! }
+  type HasElementLeaf = { kind : "hasElement", field : string!, value : RowCell }
+  type ContainsLeaf = { kind : "contains", field : string!, text : string!, caseSensitive : boolean! }
+  type IsNullLeaf = { kind : "isNull", field : string!, isNull : boolean! }
+  type AllNode = { kind : "all", of : [RowPredicate]! }
+  type AnyNode = { kind : "any", of : [RowPredicate]! }
+  type NotNode = { kind : "not", of : RowPredicate! }
+  type ConstLeaf = { kind : "const", value : boolean! }
+  type RowPredicate = CompareLeaf | MemberLeaf | HasElementLeaf | ContainsLeaf | IsNullLeaf | AllNode | AnyNode | NotNode | ConstLeaf
+
+  type RowOrder = { field : string!, direction : "asc" | "desc" }
+  type RowNearest = { field : string!, vector : [number]!, k : number! }
+  type RowQuery = { policy : RowPredicate?, filter : RowPredicate?, order : RowOrder?, offset : number?, limit : number?, total : "exact" | "none"?, nearest : RowNearest? }
+
+  type RowLeafKind = "compare" | "member" | "hasElement" | "contains" | "isNull"
+  type RowCombinator = "all" | "any" | "not"
+  type RowOperator = "==" | "!=" | "<" | "<=" | ">" | ">=" | "member" | "hasElement" | "contains"
+  type RowValueKind = "string" | "number" | "boolean" | "date" | "null"
+  type OperatorValueKinds = { operator : RowOperator!, valueKinds : [RowValueKind]! }
+  type EveryFieldOrderable = { kind : "every-field" }
+  type ListedOrderable = { kind : "listed", fields : [string]! }
+  type RowOrderableFields = EveryFieldOrderable | ListedOrderable
+  type QueryCapabilities = { leaves : [RowLeafKind]!, combinators : [RowCombinator]!, compareOps : [string]!, operatorValueKinds : [OperatorValueKinds]?, orderableFields : RowOrderableFields!, window : boolean!, exactTotal : boolean!, idsOnly : boolean?, nearest : boolean? }
+  type GuardCapabilities = { leaves : [RowLeafKind]!, combinators : [RowCombinator]!, compareOps : [string]! }
+  type WriteCapabilities = { guards : GuardCapabilities!, conditional : boolean!, returnsRow : boolean!, stopRuns : boolean!, atomicBatch : boolean! }
+
+  type CreateOp = { kind : "create", entityType : string!, data : Row! }
+  type UpsertOp = { kind : "upsert", entityType : string!, data : Row! }
+  type UpdateOp = { kind : "update", entityType : string!, id : string!, data : Row!, guard : RowPredicate? }
+  type DeleteOp = { kind : "delete", entityType : string!, id : string!, guard : RowPredicate? }
+  type SingletonTarget = { kind : "singleton" }
+  type KeyTarget = { kind : "key", key : string! }
+  type RowTarget = SingletonTarget | KeyTarget
+  type RekeyOp = { kind : "rekey", entityType : string!, target : RowTarget!, newId : string!, guard : RowPredicate? }
+  type RowWriteOp = CreateOp | UpsertOp | UpdateOp | DeleteOp | RekeyOp
+  type RowWriteBatch = { ops : [RowWriteOp]!, onFailure : "atomic" | "stop" }
+
+  type CreatedOutcome = { kind : "created", row : Row! }
+  type UpdatedOutcome = { kind : "updated", row : Row!, before : Row? }
+  type DeletedOutcome = { kind : "deleted", before : Row? }
+  type NotFoundOutcome = { kind : "not-found" }
+  type DuplicateIdOutcome = { kind : "duplicate-id" }
+  type RefusedOutcome = { kind : "refused" }
+  type FailedOutcome = { kind : "failed", message : string! }
+  type RolledBackOutcome = { kind : "rolled-back" }
+  type RowWriteOutcome = CreatedOutcome | UpdatedOutcome | DeletedOutcome | NotFoundOutcome | DuplicateIdOutcome | RefusedOutcome | FailedOutcome | RolledBackOutcome
+
+  type RowReadVerb = { key : string!, entityType : string!, id : string! }
+  type RowListVerb = { key : string!, entityType : string! }
+  type RowsQueryVerb = { key : string!, entityType : string!, query : RowQuery!, project : "rows" | "ids" }
+  type RowsWriteVerb = { key : string!, batch : RowWriteBatch! }
+
+  type PgNullParam = { kind : "null" }
+  type PgTextParam = { kind : "text", text : string! }
+  type PgParam = PgNullParam | PgTextParam
+  type ColumnKinds = Map string string
+  type SchemaCache = Map string ColumnKinds
+
+  expects entity RowStoreFlight [runtime] {
+    id : string!
+    key : string
+    entityType : string
+    op : string
+    rowId : string
+    table : string
+    project : string
+    query : RowQuery
+    batch : RowWriteBatch
+    opAt : number
+    outcomes : [RowWriteOutcome]
+    sql : string
+    params : [PgParam]
+    sock : number
+    inbox : bytes
+    nonce : string
+    scram : string
+    schema : SchemaCache
+    collections : Map string string
+  }
+
+  expects trait RowStoreDriver {
+    state ready {
+      ROW_READ -> running
+      ROW_LIST -> running
+      ROWS_QUERY -> running
+      ROWS_WRITE -> running
+    }
+    state connecting { PG_CONNECTED -> negotiating }
+    state negotiating { PG_RECEIVED -> startup }
+    state startup { PG_RECEIVED -> running }
+    state drawing { PG_NONCE_DRAWN -> startup }
+    state discovering { PG_RECEIVED -> running }
+    state running { PG_RECEIVED -> ready }
+    state beginning { PG_RECEIVED -> running }
+    state committing { PG_RECEIVED -> ready }
+    state rolling-back { PG_RECEIVED -> ready }
+    emits {
+      ROW_FOUND { key : string!  row : Row? }
+      ROWS_LISTED { key : string!  rows : [Row]! }
+      ROWS_PAGE { key : string!  rows : [Row]!  total : number! }
+      ROWS_IDS { key : string!  ids : [string]!  total : number! }
+      ROWS_WRITTEN { key : string!  outcomes : [RowWriteOutcome]! }
+      STORE_UNSUPPORTED { key : string!  reason : string! }
+      STORE_FAILED { key : string!  message : string! }
+      PG_WIRE_SENT { stage : string!  sql : string!  params : [PgParam]!  frame : bytes! }
+    }
+  }
+  expects config { url : string = "postgres://app:secret@postgres.example.test:5432/app"  sslmode : string!  queryCapabilities : QueryCapabilities  writeCapabilities : WriteCapabilities }
+  expects page "/row-store-postgres" -> RowStoreDriver
+}

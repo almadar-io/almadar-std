@@ -1,161 +1,438 @@
 {
- "atom": "dev/atoms/std-mock-answer.lolo",
- "trait": "MockAnswerer",
- "note": "nested descriptors (array-of-objects, map-value, control-array-without-items, malformed-*) stay in the Rust host (mock_answer.rs); the atom has no event for them",
- "cases": [
-  {
-   "id": "flat-string",
-   "steps": [
+  "atom": "dev/atoms/std-mock-answer.lolo",
+  "trait": "MockAnswerer",
+  "note": "nested descriptors fold with tree/fold; a registry type string t is the descriptor { type: t }. A descriptor without a type never reaches the atom: the kernel's payload check refuses MOCK_ANSWER (\"shape.f.type (missing ...)\"), which a replay case cannot express",
+  "cases": [
     {
-     "event": "MOCK_VALUE",
-     "payload": {
-      "key": "f",
-      "type": "string"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "MOCK_ANSWERED",
-        "payload": {
-         "answer": "\"mock_f\""
+      "id": "flat-string",
+      "steps": [
+        {
+          "event": "MOCK_VALUE",
+          "payload": {
+            "key": "f",
+            "type": "string"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MOCK_ANSWERED",
+                "payload": {
+                  "answer": "\"mock_f\""
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "flat-union-falls-to-string",
-   "steps": [
+    },
     {
-     "event": "MOCK_VALUE",
-     "payload": {
-      "key": "f",
-      "type": "number | null"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "MOCK_ANSWERED",
-        "payload": {
-         "answer": "\"mock_f\""
+      "id": "flat-union-falls-to-string",
+      "steps": [
+        {
+          "event": "MOCK_VALUE",
+          "payload": {
+            "key": "f",
+            "type": "number | null"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MOCK_ANSWERED",
+                "payload": {
+                  "answer": "\"mock_f\""
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "flat-array-suffix",
-   "steps": [
+    },
     {
-     "event": "MOCK_VALUE",
-     "payload": {
-      "key": "f",
-      "type": "Row[]"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "MOCK_ANSWERED",
-        "payload": {
-         "answer": "[]"
+      "id": "flat-array-suffix",
+      "steps": [
+        {
+          "event": "MOCK_VALUE",
+          "payload": {
+            "key": "f",
+            "type": "Row[]"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MOCK_ANSWERED",
+                "payload": {
+                  "answer": "[]"
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "flat-object",
-   "steps": [
+    },
     {
-     "event": "MOCK_VALUE",
-     "payload": {
-      "key": "f",
-      "type": "object"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "MOCK_ANSWERED",
-        "payload": {
-         "answer": "{}"
+      "id": "flat-object",
+      "steps": [
+        {
+          "event": "MOCK_VALUE",
+          "payload": {
+            "key": "f",
+            "type": "object"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MOCK_ANSWERED",
+                "payload": {
+                  "answer": "{}"
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "flat-boolean",
-   "steps": [
+    },
     {
-     "event": "MOCK_VALUE",
-     "payload": {
-      "key": "f",
-      "type": "boolean"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "MOCK_ANSWERED",
-        "payload": {
-         "answer": "true"
+      "id": "flat-boolean",
+      "steps": [
+        {
+          "event": "MOCK_VALUE",
+          "payload": {
+            "key": "f",
+            "type": "boolean"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MOCK_ANSWERED",
+                "payload": {
+                  "answer": "true"
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "flat-number",
-   "steps": [
+    },
     {
-     "event": "MOCK_VALUE",
-     "payload": {
-      "key": "f",
-      "type": "number"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "MOCK_ANSWERED",
-        "payload": {
-         "answer": "42"
+      "id": "flat-number",
+      "steps": [
+        {
+          "event": "MOCK_VALUE",
+          "payload": {
+            "key": "f",
+            "type": "number"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MOCK_ANSWERED",
+                "payload": {
+                  "answer": "42"
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "no-shape-answer",
-   "steps": [
+    },
     {
-     "event": "MOCK_ANSWER",
-     "payload": {
-      "action": "send",
-      "shape": {}
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "MOCK_ANSWERED",
-        "payload": {
-         "answer": "{\"_action\":\"send\",\"_mock\":true,\"success\":true}"
+      "id": "no-shape-answer",
+      "steps": [
+        {
+          "event": "MOCK_ANSWER",
+          "payload": {
+            "action": "send",
+            "shape": {}
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MOCK_ANSWERED",
+                "payload": {
+                  "answer": "{\"_action\":\"send\",\"_mock\":true,\"success\":true}"
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
+    },
+    {
+      "id": "array-of-objects",
+      "steps": [
+        {
+          "event": "MOCK_ANSWER",
+          "payload": {
+            "action": "get",
+            "shape": {
+              "rows": {
+                "type": "array",
+                "items": {
+                  "type": "X",
+                  "properties": {
+                    "a": {
+                      "type": "string"
+                    },
+                    "n": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MOCK_ANSWERED",
+                "payload": {
+                  "answer": "{\"rows\":[{\"a\":\"mock_a\",\"n\":42}]}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "map-value",
+      "steps": [
+        {
+          "event": "MOCK_ANSWER",
+          "payload": {
+            "action": "get",
+            "shape": {
+              "m": {
+                "type": "object",
+                "mapValue": {
+                  "type": "number"
+                }
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MOCK_ANSWERED",
+                "payload": {
+                  "answer": "{\"m\":{\"sample\":42}}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "map-value-keyed-leaf",
+      "steps": [
+        {
+          "event": "MOCK_ANSWER",
+          "payload": {
+            "action": "get",
+            "shape": {
+              "m": {
+                "type": "object",
+                "mapValue": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MOCK_ANSWERED",
+                "payload": {
+                  "answer": "{\"m\":{\"sample\":\"mock_sample\"}}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-array-without-items",
+      "steps": [
+        {
+          "event": "MOCK_ANSWER",
+          "payload": {
+            "action": "get",
+            "shape": {
+              "f": {
+                "type": "array",
+                "properties": {}
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MOCK_ANSWERED",
+                "payload": {
+                  "answer": "{\"f\":[]}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "nested-array-item-keys",
+      "steps": [
+        {
+          "event": "MOCK_ANSWER",
+          "payload": {
+            "action": "get",
+            "shape": {
+              "g": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MOCK_ANSWERED",
+                "payload": {
+                  "answer": "{\"g\":[[\"mock_gItemItem\"]]}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "array-suffix-with-items",
+      "steps": [
+        {
+          "event": "MOCK_ANSWER",
+          "payload": {
+            "action": "get",
+            "shape": {
+              "g": {
+                "type": "Row[]",
+                "items": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MOCK_ANSWERED",
+                "payload": {
+                  "answer": "{\"g\":[true]}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "flat-records-sorted",
+      "steps": [
+        {
+          "event": "MOCK_ANSWER",
+          "payload": {
+            "action": "get",
+            "shape": {
+              "b": {
+                "type": "Row[]"
+              },
+              "a": {
+                "type": "string"
+              },
+              "c": {
+                "type": "map"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MOCK_ANSWERED",
+                "payload": {
+                  "answer": "{\"a\":\"mock_a\",\"b\":[],\"c\":{}}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-flat-array-word",
+      "steps": [
+        {
+          "event": "MOCK_ANSWER",
+          "payload": {
+            "action": "get",
+            "shape": {
+              "f": {
+                "type": "array"
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MOCK_ANSWERED",
+                "payload": {
+                  "answer": "{\"f\":\"mock_f\"}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "properties-nested-object",
+      "steps": [
+        {
+          "event": "MOCK_ANSWER",
+          "payload": {
+            "action": "get",
+            "shape": {
+              "o": {
+                "type": "object",
+                "properties": {
+                  "inner": {
+                    "type": "object",
+                    "properties": {
+                      "z": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MOCK_ANSWERED",
+                "payload": {
+                  "answer": "{\"o\":{\"inner\":{\"z\":true}}}"
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
-   ]
-  }
- ]
+  ]
 }

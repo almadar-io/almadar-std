@@ -119,6 +119,17 @@ export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
     ],
     example: '["program/inputs", { "select": [{ "event": "Chat.ADD_NOTE" }] }, { "emit": { "success": "INPUTS_KNOWN", "failure": "INPUTS_FAILED" } }]',
   },
+  'program/self': {
+    module: 'program', category: 'std-program',
+    minArity: 0, maxArity: 1,
+    description: 'Reflect the running program: the resolved program (`.orb` IR) the calling orbital belongs to, read-only. Success carries `{ result, text }` with the program as `result`. For a std program composed into an app that must read the app it runs in (std-mock-seed seeds the app\'s own entities from it).',
+    hasSideEffects: true,
+    runsOn: 'server',
+    host: 'program',
+    returnType: 'sexpr',
+    params: [EMIT_OPTIONS],
+    example: '["program/self", { "emit": { "success": "PROGRAM_KNOWN", "failure": "PROGRAM_FAILED" } }]',
+  },
   'program/dispatch': {
     module: 'program', category: 'std-program',
     minArity: 1, maxArity: 4,

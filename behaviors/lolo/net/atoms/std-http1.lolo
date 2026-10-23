@@ -1,6 +1,7 @@
 app std-http1 [
   version: "1.0.0",
-  net: { "127.0.0.1:3000": [listen] },
+  env: ["PORT"],
+  net: { "127.0.0.1:3000": [listen], "127.0.0.1", env PORT: [listen] },
   description: "std-http1 — HTTP/1.1 over a raw TCP listener, in .lolo over os/tcp-listen, os/recv, os/send, os/close, bytes/* and str/*. LISTEN binds the host and port knobs as one keyed stream; each accepted connection is read until its head ends in CRLF CRLF (the end found by bytes/index-of), then until content-length body bytes have arrived (a transfer-encoding: chunked body is decoded per RFC 7230 section 4.1: hex size lines, chunk extensions ignored, CRLF framing, the 0 last chunk, trailer fields read and discarded), and is delivered once as REQUEST_RECEIVED { requestId (the connection's socket id), method, path, query, headers (names lower-cased, repeats joined with a comma and a space), body (bytes, delivered intact), peer }. The atom never routes. It answers a connection it cannot deliver: 400 for a head with any byte of 0x80 or above (checked on the bytes, never decoded) and for a head that is not an HTTP/1.0 or 1.1 request line followed by name: value lines and for a content-length that is not a number or repeats with another value, 400 for a request with both content-length and transfer-encoding and for malformed chunk framing, 501 for a transfer-encoding other than chunked, 431 for a head with no end after maxHead bytes or more than maxHeaders headers, 413 for a content-length or a decoded chunked body over maxBody. SEND_RESPONSE { requestId, status, headers, body (bytes) } answers a delivered request once: the status line with the standard reason phrase, the given headers, content-length (not for 204 and 304) and a connection header, then the body; RESPONDED { requestId, bytes } follows. Connections are kept alive by HTTP/1.1 rules: the connection stays open for the next request unless the request said connection: close, was HTTP/1.0 without keep-alive, or maxRequestsPerConn requests have been served on it, in which case it is closed after the response. A response can also be streamed: RESPOND_HEAD { requestId, status, headers } sends the head (chunked transfer-encoding on HTTP/1.1) and HEAD_SENT follows, each RESPOND_CHUNK { requestId, body } sends a piece and CHUNK_SENT follows, and RESPOND_END { requestId } finishes it. Every send carries its own key, so concurrent sends on one connection never collide. A client that disconnects mid-stream, or stays silent past a read timeout, surfaces as STREAM_IDLE and STREAM_CLOSED { requestId, reason }. RESPOND_REFUSED { requestId, kind, error } refuses a response and leaves the request pending: invalid for a status outside 200-599, a header name that is not a token, a value with a control character, a content-length, transfer-encoding or connection header (the atom writes the framing), or a body on 204 and 304; closed when no pending request has the id. Parity with the native listener is gated by http1_listen_parity."
 ]
 uses Spec from "almadar-std/http1"
@@ -28,6 +29,11 @@ orbital Http1Orbital {
       port : number = 3000
         @label "Port"
         @description "The port os/tcp-listen binds; a literal knob because the grant is checked against it."
+        @tier "infra"
+      portFromEnv : boolean = true
+        @label "Port from environment"
+        @description "At LISTEN, read the PORT environment variable and bind it on the host knob (granted by the env PORT listen grant); the port knob when PORT is blank or unset."
+        @synonyms "port env, PORT variable"
         @tier "infra"
       recvBytes : number = 8192
         @label "Read size"
@@ -113,8 +119,16 @@ orbital Http1Orbital {
 
     state booting {
       INIT -> booting
-      LISTEN -> booting
+      LISTEN -> booting when (not @config.portFromEnv)
         (os/tcp-listen @config.host @config.port { key: "http1" emit: { success: LISTENING failure: LISTEN_FAILED onMessage: CONN_ACCEPTED } })
+      LISTEN -> booting when @config.portFromEnv
+        (os/getenv "PORT" { emit: { success: PORT_READ failure: PORT_UNREAD } })
+      PORT_READ -> booting when (or (= @payload.value null) (= (str/trim @payload.value) ""))
+        (os/tcp-listen @config.host @config.port { key: "http1" emit: { success: LISTENING failure: LISTEN_FAILED onMessage: CONN_ACCEPTED } })
+      PORT_READ -> booting when (and (!= @payload.value null) (!= (str/trim @payload.value) ""))
+        (os/tcp-listen @config.host { anchor: { env: "PORT" } } { key: "http1" emit: { success: LISTENING failure: LISTEN_FAILED onMessage: CONN_ACCEPTED } })
+      PORT_UNREAD -> booting
+        (emit HTTP1_LISTEN_FAILED { error: @payload.error, kind: @payload.kind })
       LISTENING -> serving
         (set @entity.host @payload.address)
         (set @entity.port @payload.port)
@@ -473,6 +487,17 @@ orbital Http1Orbital {
         kind : string
       }
         @description "Internal: the bind failed."
+        @tier "internal"
+      PORT_READ {
+        value : string
+      }
+        @description "Internal: the os/getenv answer for PORT."
+        @tier "internal"
+      PORT_UNREAD {
+        error : string
+        kind : string
+      }
+        @description "Internal: the os/getenv for PORT failed."
         @tier "internal"
       LISTENING {
         sock : number

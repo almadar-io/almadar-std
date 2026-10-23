@@ -1,10 +1,13 @@
 app std-mock-answer [
   version: "1.0.0",
-  description: "std-mock-answer — the mock call-service answer for flat response shapes. MOCK_VALUE { key, type } answers one value by type (a type ending in [] gives [], number 42, boolean true, object {}, anything else the string mock_<key>). MOCK_ANSWER { action, shape } answers a whole action: an empty shape gives {success: true, _mock: true, _action}, otherwise one MOCK_VALUE per key. The answer is JSON text. Nested descriptors (items, properties, mapValue), the services-registry lookup and the unknown service/action refusals stay in the Rust host (mock_answer.rs)."
+  description: "std-mock-answer — the mock call-service answer for a response shape, no randomness and no clock. MOCK_VALUE { key, type } answers one flat value by type (a type ending in [] gives [], number 42, boolean true, object {}, anything else the string mock_<key>). MOCK_ANSWER { action, shape } answers a whole action: an empty shape gives {success: true, _mock: true, _action}, otherwise each field by its descriptor, folded with tree/fold: a descriptor is a record { type, items?, properties?, mapValue? } (a registry type string t is { type: t }); one with no items, properties or mapValue answers as MOCK_VALUE; an array type (array or ending in []) gives a one-element array of its items under the key <key>Item, or [] without items; properties give an object of each property; mapValue gives {sample: <mapValue>}; any other described field gives {}. The answer is JSON text with sorted keys, as json/stringify writes it. The services-registry lookup stays with the caller."
 ]
 uses Spec from "almadar-std/mock-answer"
 
 orbital MockAnswerOrbital {
+  type ShapeField = { type : string!, items : ShapeField?, properties : Map string ShapeField?, mapValue : ShapeField? }
+  type Mocked = { keyed : boolean!, arrays : number!, text : string! }
+
   entity MockAnswerRun [runtime] {
     id : string!
     action : string @description "The action last answered." = ""
@@ -21,7 +24,7 @@ orbital MockAnswerOrbital {
       MOCK_VALUE -> ready
         (set @entity.key ?key)
         (set @entity.descriptorType ?type)
-        (set @entity.answer (json/stringify (if (str/endsWith ?type "[]") [] (if (= ?type "number") 42 (if (= ?type "boolean") true (if (= ?type "object") {} (str/concat "mock_" ?key)))))))
+        (set @entity.answer (if (str/endsWith ?type "[]") "[]" (if (= ?type "number") "42" (if (= ?type "boolean") "true" (if (or (= ?type "object") (= ?type "map")) "{}" (json/stringify (str/concat "mock_" ?key)))))))
         (emit MOCK_ANSWERED { answer: @entity.answer })
       MOCK_ANSWER -> ready when (= (array/len (object/keys ?shape)) 0)
         (set @entity.action ?action)
@@ -29,7 +32,7 @@ orbital MockAnswerOrbital {
         (emit MOCK_ANSWERED { answer: @entity.answer })
       MOCK_ANSWER -> ready when (> (array/len (object/keys ?shape)) 0)
         (set @entity.action ?action)
-        (set @entity.answer (json/stringify (object/fromEntries (array/map (object/entries ?shape) (fn e [(array/nth @e 0) (let ((t (array/nth @e 1)) (k (array/nth @e 0))) (if (str/endsWith @t "[]") [] (if (= @t "number") 42 (if (= @t "boolean") true (if (= @t "object") {} (str/concat "mock_" @k))))))])))))
+        (set @entity.answer (str/concat "{" (str/join (array/map (array/sort (object/keys ?shape)) (fn sk (let ((sc (tree/fold (object/get ?shape @sk { type: "" }) (fn (n k) (let ((ty @n.type) (hi (!= @n.items null)) (hp (!= @n.properties null)) (hm (!= @n.mapValue null))) (if (and (not @hi) (not @hp) (not @hm)) (if (or (str/endsWith @ty "[]") (= @ty "number") (= @ty "boolean") (= @ty "object") (= @ty "map")) { keyed: false, arrays: 0, text: (if (str/endsWith @ty "[]") "[]" (if (= @ty "number") "42" (if (= @ty "boolean") "true" (if (or (= @ty "object") (= @ty "map")) "{}" (json/stringify (str/concat "mock_" "")))))) } { keyed: true, arrays: 0, text: "" }) (if (or (= @ty "array") (str/endsWith @ty "[]")) (if @hi (if @k.items.keyed { keyed: true, arrays: (+ @k.items.arrays 1), text: "" } { keyed: false, arrays: 0, text: (str/concat "[" @k.items.text "]") }) { keyed: false, arrays: 0, text: "[]" }) (if @hp { keyed: false, arrays: 0, text: (str/concat "{" (str/join (array/map (array/sort (object/keys @k.properties)) (fn pk (let ((pc (object/get @k.properties @pk { keyed: false, arrays: 0, text: "" }))) (str/concat (json/stringify @pk) ":" (if @pc.keyed (str/concat (str/repeat "[" @pc.arrays) (json/stringify (str/concat "mock_" @pk (str/repeat "Item" @pc.arrays))) (str/repeat "]" @pc.arrays)) @pc.text))))) ",") "}") } (if @hm { keyed: false, arrays: 0, text: (str/concat "{\"sample\":" (if @k.mapValue.keyed (str/concat (str/repeat "[" @k.mapValue.arrays) (json/stringify (str/concat "mock_" "sample" (str/repeat "Item" @k.mapValue.arrays))) (str/repeat "]" @k.mapValue.arrays)) @k.mapValue.text) "}") } { keyed: false, arrays: 0, text: "{}" })))))) "ShapeField"))) (str/concat (json/stringify @sk) ":" (if @sc.keyed (str/concat (str/repeat "[" @sc.arrays) (json/stringify (str/concat "mock_" @sk (str/repeat "Item" @sc.arrays))) (str/repeat "]" @sc.arrays)) @sc.text))))) ",") "}"))
         (emit MOCK_ANSWERED { answer: @entity.answer })
     }
 
@@ -51,9 +54,9 @@ orbital MockAnswerOrbital {
         @synonyms "mock field value"
       MOCK_ANSWER -> external {
         action : string!
-        shape : Map string string!
+        shape : Map string ShapeField!
       }
-        @description "Answer one action from its flat responseShape (field key to type)."
+        @description "Answer one action from its responseShape (field key to descriptor)."
         @synonyms "mock service call, mock call-service"
     }
   }
