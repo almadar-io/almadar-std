@@ -1,0 +1,271 @@
+app std-orb-lint-engine [
+  version: "1.0.0",
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-engine — the rule engine of the lint umbrella. For a LINT_RUN { file } it composes every file-taking std-orb-lint-* rule trait (shared-types is left out: it walks the std and io behavior trees and takes no file), asks the lint input to read and lower the file once (LINT_REQUEST), collects LINT_FOUND { rule, findings } from each rule and answers LINT_COLLECTED { findings, found } once every rule answered, or LINT_INPUT_UNREAD when the file cannot be read or lowered. It declares no cli hook: std-orb-lint-all (the `orb lint all` hook) and std-orb-validate and std-orb-compile (the policy lints) compose its orbital."
+]
+uses Spec from "almadar-std/lint-engine"
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type RuleFound = { rule : string!, findings : [OrbFinding]! }
+
+orbital OrbLintEngineOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+  uses CollectionPolicy from "std/behaviors/std-orb-lint-collection-policy"
+  uses CrossDuplicateEntity from "std/behaviors/std-orb-lint-cross-duplicate-entity"
+  uses EmitConfigRef from "std/behaviors/std-orb-lint-emit-config-ref"
+  uses EntityBrowserStorage from "std/behaviors/std-orb-lint-entity-browser-storage"
+  uses EntityDuplicateField from "std/behaviors/std-orb-lint-entity-duplicate-field"
+  uses EntityEmptyEnum from "std/behaviors/std-orb-lint-entity-empty-enum"
+  uses EntityFieldType from "std/behaviors/std-orb-lint-entity-field-type"
+  uses EntityLocaleInstances from "std/behaviors/std-orb-lint-entity-locale-instances"
+  uses EntityMockMember from "std/behaviors/std-orb-lint-entity-mock-member"
+  uses EntityPersistence from "std/behaviors/std-orb-lint-entity-persistence"
+  uses EntitySemanticDefault from "std/behaviors/std-orb-lint-entity-semantic-default"
+  uses EntityShape from "std/behaviors/std-orb-lint-entity-shape"
+  uses HttpEgressEntry from "std/behaviors/std-orb-lint-http-egress-entry"
+  uses GenericTypes from "std/behaviors/std-orb-lint-generic-types"
+  uses IdentityUnique from "std/behaviors/std-orb-lint-identity-unique"
+  uses Inbound from "std/behaviors/std-orb-lint-inbound"
+  uses InitCoverage from "std/behaviors/std-orb-lint-init-coverage"
+  uses EventIdUniqueness from "std/behaviors/std-orb-lint-event-id-uniqueness"
+  uses ListenTrigger from "std/behaviors/std-orb-lint-listen-trigger"
+  uses LiteralDefault from "std/behaviors/std-orb-lint-literal-default"
+  uses OrbitalDuplicateName from "std/behaviors/std-orb-lint-orbital-duplicate-name"
+  uses PageEmptyTraits from "std/behaviors/std-orb-lint-page-empty-traits"
+  uses PageModifiers from "std/behaviors/std-orb-lint-page-modifiers"
+  uses IdRefs from "std/behaviors/std-orb-lint-id-refs"
+  uses PagePath from "std/behaviors/std-orb-lint-page-path"
+  uses PagePathUniqueness from "std/behaviors/std-orb-lint-page-path-uniqueness"
+  uses PayloadFieldName from "std/behaviors/std-orb-lint-payload-field-name"
+  uses RelationTargets from "std/behaviors/std-orb-lint-relation-targets"
+  uses SignInRoute from "std/behaviors/std-orb-lint-sign-in-route"
+  uses StoreBinding from "std/behaviors/std-orb-lint-store-binding"
+  uses TraitIdUniqueness from "std/behaviors/std-orb-lint-trait-id-uniqueness"
+  uses UntypedArray from "std/behaviors/std-orb-lint-untyped-array"
+  uses SchemaHeader from "std/behaviors/std-orb-lint-schema-header"
+  uses DuplicateTransition from "std/behaviors/std-orb-lint-duplicate-transition"
+  uses StateShape from "std/behaviors/std-orb-lint-state-shape"
+  uses EmptyEventName from "std/behaviors/std-orb-lint-empty-event-name"
+  uses Slot from "std/behaviors/std-orb-lint-slot"
+  uses TransitionRefs from "std/behaviors/std-orb-lint-transition-refs"
+  uses StateUnreachable from "std/behaviors/std-orb-lint-state-unreachable"
+  uses ThemePinContradictsApp from "std/behaviors/std-orb-lint-theme-pin-contradicts-app"
+  uses AssetInlineUrl from "std/behaviors/std-orb-lint-asset-inline-url"
+  uses MissingOrbitalName from "std/behaviors/std-orb-lint-missing-orbital-name"
+  uses DuplicateUseAlias from "std/behaviors/std-orb-lint-duplicate-use-alias"
+  uses TickRequiresRuntime from "std/behaviors/std-orb-lint-tick-requires-runtime"
+  uses LoopInvariantParse from "std/behaviors/std-orb-lint-loop-invariant-parse"
+
+  entity OrbLintEngineRun [runtime] {
+    id : string!
+    found : [RuleFound] = []
+  }
+
+  trait OrbLintEngine -> OrbLintEngineRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_RUN -> collecting
+        (set @entity.found [])
+        (emit LINT_REQUEST { file: @payload.file })
+    }
+
+    state collecting {
+      INIT -> collecting
+      LINT_FOUND -> collecting
+        (set @entity.found (array/concat @entity.found [{ rule: @payload.rule, findings: @payload.findings }]))
+        (emit LINT_SETTLE { })
+      LINT_INPUT_UNREAD -> ready
+      LINT_SETTLE -> collecting when (< (array/len @entity.found) @config.ruleCount)
+      LINT_SETTLE -> ready when (>= (array/len @entity.found) @config.ruleCount)
+        (emit LINT_COLLECTED { findings: (array/flatten (array/map @entity.found (fn r (object/get @r "findings")))), found: @entity.found })
+    }
+
+    emits {
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file once for every rule."
+        @tier "internal"
+      LINT_COLLECTED -> external { findings : [OrbFinding]!  found : [RuleFound]! }
+        @description "Every rule's findings for the file, flattened, and the findings by rule: the structured answer of a run, heard by the hook and by a program that composes the engine (std-orb-validate)."
+        @tier "internal"
+      LINT_SETTLE { }
+        @description "Internal: check whether every rule answered."
+        @tier "internal"
+    }
+
+    config {
+      ruleCount : number = 45
+        @label "Rule count"
+        @description "How many composed rule traits answer LINT_FOUND before the run settles."
+    }
+
+    listens {
+      LINT_RUN { file : string! }
+        @description "Run every lint rule over this file; the cli hook and std-orb-validate emit it."
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+        @description "One rule atom's findings for the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+      OrbLintCollectionPolicy.LINT_FOUND -> LINT_FOUND
+      OrbLintCrossDuplicateEntity.LINT_FOUND -> LINT_FOUND
+      OrbLintEmitConfigRef.LINT_FOUND -> LINT_FOUND
+      OrbLintEntityBrowserStorage.LINT_FOUND -> LINT_FOUND
+      OrbLintEntityDuplicateField.LINT_FOUND -> LINT_FOUND
+      OrbLintEntityEmptyEnum.LINT_FOUND -> LINT_FOUND
+      OrbLintEntityFieldType.LINT_FOUND -> LINT_FOUND
+      OrbLintEntityLocaleInstances.LINT_FOUND -> LINT_FOUND
+      OrbLintEntityMockMember.LINT_FOUND -> LINT_FOUND
+      OrbLintEntityPersistence.LINT_FOUND -> LINT_FOUND
+      OrbLintEntitySemanticDefault.LINT_FOUND -> LINT_FOUND
+      OrbLintEntityShape.LINT_FOUND -> LINT_FOUND
+      OrbLintHttpEgressEntry.LINT_FOUND -> LINT_FOUND
+      OrbLintGenericTypes.LINT_FOUND -> LINT_FOUND
+      OrbLintIdentityUnique.LINT_FOUND -> LINT_FOUND
+      OrbLintInbound.LINT_FOUND -> LINT_FOUND
+      OrbLintInitCoverage.LINT_FOUND -> LINT_FOUND
+      OrbLintEventIdUniqueness.LINT_FOUND -> LINT_FOUND
+      OrbLintListenTrigger.LINT_FOUND -> LINT_FOUND
+      OrbLintLiteralDefault.LINT_FOUND -> LINT_FOUND
+      OrbLintOrbitalDuplicateName.LINT_FOUND -> LINT_FOUND
+      OrbLintPageEmptyTraits.LINT_FOUND -> LINT_FOUND
+      OrbLintPageModifiers.LINT_FOUND -> LINT_FOUND
+      OrbLintIdRefs.LINT_FOUND -> LINT_FOUND
+      OrbLintPagePath.LINT_FOUND -> LINT_FOUND
+      OrbLintPagePathUniqueness.LINT_FOUND -> LINT_FOUND
+      OrbLintPayloadFieldName.LINT_FOUND -> LINT_FOUND
+      OrbLintRelationTargets.LINT_FOUND -> LINT_FOUND
+      OrbLintSignInRoute.LINT_FOUND -> LINT_FOUND
+      OrbLintStoreBinding.LINT_FOUND -> LINT_FOUND
+      OrbLintTraitIdUniqueness.LINT_FOUND -> LINT_FOUND
+      OrbLintUntypedArray.LINT_FOUND -> LINT_FOUND
+      OrbLintSchemaHeader.LINT_FOUND -> LINT_FOUND
+      OrbLintDuplicateTransition.LINT_FOUND -> LINT_FOUND
+      OrbLintSlot.LINT_FOUND -> LINT_FOUND
+      OrbLintStateShape.LINT_FOUND -> LINT_FOUND
+      OrbLintEmptyEventName.LINT_FOUND -> LINT_FOUND
+      OrbLintTransitionRefs.LINT_FOUND -> LINT_FOUND
+      OrbLintStateUnreachable.LINT_FOUND -> LINT_FOUND
+      OrbLintMissingOrbitalName.LINT_FOUND -> LINT_FOUND
+      OrbLintAssetInlineUrl.LINT_FOUND -> LINT_FOUND
+      OrbLintThemePinContradictsApp.LINT_FOUND -> LINT_FOUND
+      OrbLintDuplicateUseAlias.LINT_FOUND -> LINT_FOUND
+      OrbLintTickRequiresRuntime.LINT_FOUND -> LINT_FOUND
+      OrbLintLoopInvariantParse.LINT_FOUND -> LINT_FOUND
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintEngine.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  trait OrbLintCollectionPolicy = CollectionPolicy.traits.OrbLintCollectionPolicy {
+  }
+  trait OrbLintCrossDuplicateEntity = CrossDuplicateEntity.traits.OrbLintCrossDuplicateEntity {
+  }
+  trait OrbLintEmitConfigRef = EmitConfigRef.traits.OrbLintEmitConfigRef {
+  }
+  trait OrbLintEntityBrowserStorage = EntityBrowserStorage.traits.OrbLintEntityBrowserStorage {
+  }
+  trait OrbLintEntityDuplicateField = EntityDuplicateField.traits.OrbLintEntityDuplicateField {
+  }
+  trait OrbLintEntityEmptyEnum = EntityEmptyEnum.traits.OrbLintEntityEmptyEnum {
+  }
+  trait OrbLintEntityFieldType = EntityFieldType.traits.OrbLintEntityFieldType {
+  }
+  trait OrbLintEntityLocaleInstances = EntityLocaleInstances.traits.OrbLintEntityLocaleInstances {
+  }
+  trait OrbLintEntityMockMember = EntityMockMember.traits.OrbLintEntityMockMember {
+  }
+  trait OrbLintEntityPersistence = EntityPersistence.traits.OrbLintEntityPersistence {
+  }
+  trait OrbLintEntitySemanticDefault = EntitySemanticDefault.traits.OrbLintEntitySemanticDefault {
+  }
+  trait OrbLintEntityShape = EntityShape.traits.OrbLintEntityShape {
+  }
+  trait OrbLintHttpEgressEntry = HttpEgressEntry.traits.OrbLintHttpEgressEntry {
+  }
+  trait OrbLintGenericTypes = GenericTypes.traits.OrbLintGenericTypes {
+  }
+  trait OrbLintIdentityUnique = IdentityUnique.traits.OrbLintIdentityUnique {
+  }
+  trait OrbLintInbound = Inbound.traits.OrbLintInbound {
+  }
+  trait OrbLintInitCoverage = InitCoverage.traits.OrbLintInitCoverage {
+  }
+  trait OrbLintEventIdUniqueness = EventIdUniqueness.traits.OrbLintEventIdUniqueness {
+  }
+  trait OrbLintListenTrigger = ListenTrigger.traits.OrbLintListenTrigger {
+  }
+  trait OrbLintLiteralDefault = LiteralDefault.traits.OrbLintLiteralDefault {
+  }
+  trait OrbLintOrbitalDuplicateName = OrbitalDuplicateName.traits.OrbLintOrbitalDuplicateName {
+  }
+  trait OrbLintPageEmptyTraits = PageEmptyTraits.traits.OrbLintPageEmptyTraits {
+  }
+  trait OrbLintPageModifiers = PageModifiers.traits.OrbLintPageModifiers {
+  }
+  trait OrbLintIdRefs = IdRefs.traits.OrbLintIdRefs {
+  }
+  trait OrbLintPagePath = PagePath.traits.OrbLintPagePath {
+  }
+  trait OrbLintPagePathUniqueness = PagePathUniqueness.traits.OrbLintPagePathUniqueness {
+  }
+  trait OrbLintPayloadFieldName = PayloadFieldName.traits.OrbLintPayloadFieldName {
+  }
+  trait OrbLintRelationTargets = RelationTargets.traits.OrbLintRelationTargets {
+  }
+  trait OrbLintSignInRoute = SignInRoute.traits.OrbLintSignInRoute {
+  }
+  trait OrbLintStoreBinding = StoreBinding.traits.OrbLintStoreBinding {
+  }
+  trait OrbLintTraitIdUniqueness = TraitIdUniqueness.traits.OrbLintTraitIdUniqueness {
+  }
+  trait OrbLintUntypedArray = UntypedArray.traits.OrbLintUntypedArray {
+  }
+  trait OrbLintSchemaHeader = SchemaHeader.traits.OrbLintSchemaHeader {
+  }
+  trait OrbLintDuplicateTransition = DuplicateTransition.traits.OrbLintDuplicateTransition {
+  }
+  trait OrbLintSlot = Slot.traits.OrbLintSlot {
+  }
+  trait OrbLintStateShape = StateShape.traits.OrbLintStateShape {
+  }
+  trait OrbLintEmptyEventName = EmptyEventName.traits.OrbLintEmptyEventName {
+  }
+  trait OrbLintTransitionRefs = TransitionRefs.traits.OrbLintTransitionRefs {
+  }
+  trait OrbLintStateUnreachable = StateUnreachable.traits.OrbLintStateUnreachable {
+  }
+  trait OrbLintMissingOrbitalName = MissingOrbitalName.traits.OrbLintMissingOrbitalName {
+  }
+  trait OrbLintAssetInlineUrl = AssetInlineUrl.traits.OrbLintAssetInlineUrl {
+  }
+  trait OrbLintThemePinContradictsApp = ThemePinContradictsApp.traits.OrbLintThemePinContradictsApp {
+  }
+  trait OrbLintDuplicateUseAlias = DuplicateUseAlias.traits.OrbLintDuplicateUseAlias {
+  }
+  trait OrbLintTickRequiresRuntime = TickRequiresRuntime.traits.OrbLintTickRequiresRuntime {
+  }
+  trait OrbLintLoopInvariantParse = LoopInvariantParse.traits.OrbLintLoopInvariantParse {
+  }
+
+  page boot as OrbLintEngineOrbitalStart -> OrbLintEngine, OrbLintInput, Packs, Versions, OrbLintCollectionPolicy, OrbLintCrossDuplicateEntity, OrbLintEmitConfigRef, OrbLintEntityBrowserStorage, OrbLintEntityDuplicateField, OrbLintEntityEmptyEnum, OrbLintEntityFieldType, OrbLintEntityLocaleInstances, OrbLintEntityMockMember, OrbLintEntityPersistence, OrbLintEntitySemanticDefault, OrbLintEntityShape, OrbLintHttpEgressEntry, OrbLintGenericTypes, OrbLintIdentityUnique, OrbLintInbound, OrbLintInitCoverage, OrbLintEventIdUniqueness, OrbLintListenTrigger, OrbLintLiteralDefault, OrbLintOrbitalDuplicateName, OrbLintPageEmptyTraits, OrbLintPageModifiers, OrbLintIdRefs, OrbLintPagePath, OrbLintPagePathUniqueness, OrbLintPayloadFieldName, OrbLintRelationTargets, OrbLintSignInRoute, OrbLintStoreBinding, OrbLintTraitIdUniqueness, OrbLintUntypedArray, OrbLintSchemaHeader, OrbLintDuplicateTransition, OrbLintStateShape, OrbLintEmptyEventName, OrbLintSlot, OrbLintTransitionRefs, OrbLintStateUnreachable, OrbLintMissingOrbitalName, OrbLintDuplicateUseAlias, OrbLintThemePinContradictsApp, OrbLintTickRequiresRuntime, OrbLintLoopInvariantParse, OrbLintAssetInlineUrl, Versions, Packs
+}

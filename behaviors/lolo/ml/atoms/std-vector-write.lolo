@@ -26,6 +26,7 @@ orbital VectorWriteOrbital {
     emodel : string = ""
     edims : number = 0
     ecount : number = 0
+    unreadable : boolean = false
     eoff : number = 0
     kept : [number] = []
     sorted : [bytes] = []
@@ -217,6 +218,7 @@ orbital VectorWriteOrbital {
         (set @entity.eoff (if (> (bytes/length @entity.existing) 0) (+ 16 (bytes/read-uint @entity.existing 8 2 "le")) 0))
         (set @entity.edims (if (> (bytes/length @entity.existing) 0) (bytes/read-uint @entity.existing (- @entity.eoff 6) 2 "le") 0))
         (set @entity.ecount (if (> (bytes/length @entity.existing) 0) (bytes/read-uint @entity.existing (- @entity.eoff 4) 4 "le") 0))
+        (set @entity.unreadable (or (array/some @entity.rows (fn r (not (validate/required (bytes/read-uint (bytes/slice @r 0 32) 28 4 "be"))))) (array/some (array/range 0 @entity.ecount) (fn m (not (validate/required (bytes/read-uint (bytes/slice @entity.existing (+ @entity.eoff (* @m (+ 36 @entity.edims))) (+ @entity.eoff (* @m (+ 36 @entity.edims)) 32)) 28 4 "be")))))))
         (emit CHECKED { })
       VECTOR_REFUSED -> releasing
         (set @entity.pendingCode @payload.code)
@@ -225,18 +227,22 @@ orbital VectorWriteOrbital {
     }
 
     state merging {
-      CHECKED -> releasing when (and (!= @entity.emodel "") (!= @entity.emodel @entity.model))
+      CHECKED -> releasing when @entity.unreadable
+        (set @entity.pendingCode "ORB_VECTOR_CORRUPT")
+        (set @entity.pendingDetail (str/concat @entity.path ": a record key could not be read"))
+        (os/remove { anchor: "cwd" path: (str/concat @entity.path ".lock") } { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } })
+      CHECKED -> releasing when (and (not @entity.unreadable) (!= @entity.emodel "") (!= @entity.emodel @entity.model))
         (set @entity.pendingCode "ORB_VECTOR_MODEL_MISMATCH")
         (set @entity.pendingDetail (str/concat @entity.emodel " vs " @entity.model " — vectors from different embedding models are not comparable"))
         (os/remove { anchor: "cwd" path: (str/concat @entity.path ".lock") } { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } })
-      CHECKED -> releasing when (and (!= @entity.emodel "") (== @entity.emodel @entity.model) (!= @entity.edims @entity.dims))
+      CHECKED -> releasing when (and (not @entity.unreadable) (!= @entity.emodel "") (== @entity.emodel @entity.model) (!= @entity.edims @entity.dims))
         (set @entity.pendingCode "ORB_VECTOR_DIMS_MISMATCH")
         (set @entity.pendingDetail (str/concat "model " @entity.model " has " @entity.edims " dims in one store and " @entity.dims " in the other"))
         (os/remove { anchor: "cwd" path: (str/concat @entity.path ".lock") } { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } })
-      CHECKED -> writing when (or (== @entity.emodel "") (and (== @entity.emodel @entity.model) (== @entity.edims @entity.dims)))
+      CHECKED -> writing when (and (not @entity.unreadable) (or (== @entity.emodel "") (and (== @entity.emodel @entity.model) (== @entity.edims @entity.dims))))
         (set @entity.kept (array/filter (array/range 0 (array/len @entity.rows)) (fn i (not (array/some (array/range (+ @i 1) (array/len @entity.rows)) (fn j (bytes/equals (bytes/slice (array/nth @entity.rows @i) 0 32) (bytes/slice (array/nth @entity.rows @j) 0 32))))))))
-        (set @entity.sorted (let ((rk (array/map @entity.kept (fn i { i: @i, r: (array/len (array/filter @entity.kept (fn j (< (array/reduce (array/range 0 8) 0 (fn cd cw (if (!= @cd 0) @cd (let ((cx (bytes/read-uint (bytes/slice (array/nth @entity.rows @j) 0 32) (* 4 @cw) 4 "be")) (cy (bytes/read-uint (bytes/slice (array/nth @entity.rows @i) 0 32) (* 4 @cw) 4 "be"))) (if (< @cx @cy) -1 (if (> @cx @cy) 1 0)))))) 0)))) })))) (array/map (array/range 0 (array/len @rk)) (fn r (array/nth @entity.rows (object/get (array/find @rk (fn z (== @z.r @r))) "i"))))))
-        (set @entity.plan (array/map @entity.sorted (fn row (let ((lo (object/get (array/reduce (array/range 0 34) { lo: 0, hi: @entity.ecount } (fn sa sj (if (>= @sa.lo @sa.hi) @sa (let ((mid (math/floor (/ (+ @sa.lo @sa.hi) 2)))) (if (< (array/reduce (array/range 0 8) 0 (fn cd cw (if (!= @cd 0) @cd (let ((cx (bytes/read-uint (bytes/slice @entity.existing (+ @entity.eoff (* @mid (+ 36 @entity.edims))) (+ @entity.eoff (* @mid (+ 36 @entity.edims)) 32)) (* 4 @cw) 4 "be")) (cy (bytes/read-uint (bytes/slice @row 0 32) (* 4 @cw) 4 "be"))) (if (< @cx @cy) -1 (if (> @cx @cy) 1 0)))))) 0) { lo: (+ @mid 1), hi: @sa.hi } { lo: @sa.lo, hi: @mid }))))) "lo"))) { row: @row, pos: @lo, eq: (if (and (< @lo @entity.ecount) (== (array/reduce (array/range 0 8) 0 (fn cd cw (if (!= @cd 0) @cd (let ((cx (bytes/read-uint (bytes/slice @entity.existing (+ @entity.eoff (* @lo (+ 36 @entity.edims))) (+ @entity.eoff (* @lo (+ 36 @entity.edims)) 32)) (* 4 @cw) 4 "be")) (cy (bytes/read-uint (bytes/slice @row 0 32) (* 4 @cw) 4 "be"))) (if (< @cx @cy) -1 (if (> @cx @cy) 1 0)))))) 0)) 1 0) }))))
+        (set @entity.sorted (let ((rk (array/map @entity.kept (fn i { i: @i, r: (array/len (array/filter @entity.kept (fn j (< (array/reduce (array/range 0 8) 0 (fn cd cw (if (!= @cd 0) @cd (let ((cx (bytes/read-uint (bytes/slice (array/nth @entity.rows @j) 0 32) (* 4 @cw) 4 "be")) (cy (bytes/read-uint (bytes/slice (array/nth @entity.rows @i) 0 32) (* 4 @cw) 4 "be"))) (if (and (validate/required @cx) (validate/required @cy)) (if (< @cx @cy) -1 (if (> @cx @cy) 1 0)) 2))))) 0)))) })))) (array/map (array/range 0 (array/len @rk)) (fn r (array/nth @entity.rows (object/get (array/find @rk (fn z (== @z.r @r))) "i"))))))
+        (set @entity.plan (array/map @entity.sorted (fn row (let ((lo (object/get (array/reduce (array/range 0 34) { lo: 0, hi: @entity.ecount } (fn sa sj (if (>= @sa.lo @sa.hi) @sa (let ((mid (math/floor (/ (+ @sa.lo @sa.hi) 2)))) (if (< (array/reduce (array/range 0 8) 0 (fn cd cw (if (!= @cd 0) @cd (let ((cx (bytes/read-uint (bytes/slice @entity.existing (+ @entity.eoff (* @mid (+ 36 @entity.edims))) (+ @entity.eoff (* @mid (+ 36 @entity.edims)) 32)) (* 4 @cw) 4 "be")) (cy (bytes/read-uint (bytes/slice @row 0 32) (* 4 @cw) 4 "be"))) (if (and (validate/required @cx) (validate/required @cy)) (if (< @cx @cy) -1 (if (> @cx @cy) 1 0)) 2))))) 0) { lo: (+ @mid 1), hi: @sa.hi } { lo: @sa.lo, hi: @mid }))))) "lo"))) { row: @row, pos: @lo, eq: (if (and (< @lo @entity.ecount) (== (array/reduce (array/range 0 8) 0 (fn cd cw (if (!= @cd 0) @cd (let ((cx (bytes/read-uint (bytes/slice @entity.existing (+ @entity.eoff (* @lo (+ 36 @entity.edims))) (+ @entity.eoff (* @lo (+ 36 @entity.edims)) 32)) (* 4 @cw) 4 "be")) (cy (bytes/read-uint (bytes/slice @row 0 32) (* 4 @cw) 4 "be"))) (if (and (validate/required @cx) (validate/required @cy)) (if (< @cx @cy) -1 (if (> @cx @cy) 1 0)) 2))))) 0)) 1 0) }))))
         (set @entity.total (- (+ @entity.ecount (array/len @entity.sorted)) (array/reduce @entity.plan 0 (fn ta tp (+ @ta @tp.eq)))))
         (set @entity.merged (let ((end (array/reduce @entity.plan { parts: [], cur: 0 } (fn pa pl { parts: (array/concat @pa.parts [(bytes/slice @entity.existing (+ @entity.eoff (* @pa.cur (+ 36 @entity.edims))) (+ @entity.eoff (* @pl.pos (+ 36 @entity.edims)))) @pl.row]), cur: (+ @pl.pos @pl.eq) })))) (bytes/concat (array/concat [(bytes/from-string "ORBVEC") (bytes/write-uint 1 2 "le") (bytes/write-uint (bytes/length (bytes/from-string @entity.model)) 2 "le") (bytes/from-string @entity.model) (bytes/write-uint @entity.dims 2 "le") (bytes/write-uint @entity.total 4 "le")] @end.parts [(bytes/slice @entity.existing (+ @entity.eoff (* @end.cur (+ 36 @entity.edims))) (+ @entity.eoff (* @entity.ecount (+ 36 @entity.edims))))]))))
         (emit MERGED { total: @entity.total, bytes: @entity.merged })

@@ -1,7 +1,9 @@
 app std-orb-lint-listen-trigger [
   version: "1.0.0",
   inbound: ["cli-lint-listen-trigger"],
-  fs: { cwd: "**": [read] },
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
   description: "std-orb-lint-listen-trigger — the `orb lint listen-trigger <file>` command, the port of ORB_X_LISTEN_TRIGGER_UNMATCHED. It lowers the file with program/read and, for every inline trait with listens, requires each listen's trigger (its `-> TRIGGER`, else the listened event) to be the event of a transition in the same trait. Each unmatched listen is reported with its path and suggestion (status 500, exit 1). Clean answers `lint listen-trigger: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-listen-trigger"

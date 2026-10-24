@@ -1,7 +1,9 @@
 app std-orb-lint-duplicate-transition [
   version: "1.0.0",
   inbound: ["cli-lint-duplicate-transition"],
-  fs: { cwd: "**": [read] },
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
   description: "std-orb-lint-duplicate-transition — the `orb lint duplicate-transition <file>` command, the port of ORB_T_DUPLICATE_TRANSITION (trait_validator.rs validate_transitions). It lowers the file with program/read and, for every inline trait, groups the transitions that name one source state (a single-state `from`; list sources are not tracked, as in Rust) and one event. A group of more than one with fewer than size-1 guarded arms reports duplicates without guards; otherwise a group where two guarded arms carry an equal guard reports the same guard. One finding per group at its first arm, with the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint duplicate-transition: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-duplicate-transition"

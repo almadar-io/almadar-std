@@ -1,0 +1,24 @@
+app orb-stamp-spec [
+  version: "1.0.0",
+  inbound: ["cli-stamp"],
+  description: "Design contract for `orb stamp <FILE> [--prior FILE] [-o|--output FILE] [--imports DIR]` (port of orbital-cli commands/stamp.rs stamp_schema_cli). STAMP_START { cwd, positionals, flags } builds the options and asks program/read \"\" { stamp: true, path (absolute: every relative path is joined to the directory the command runs in), prior?, imports?, output? } and answers STAMP_ANSWERED { status, body, stderr }. Without --output: status 200 and body the host's `text`, the stamped program as sorted-key pretty JSON, exactly what Rust printed. With --output: the host writes the text; status 200 and an empty body. A file that cannot be read or parsed, a failed id-edge resolution or a failed write answers 500 with stderr `Error: <reason>` (the reason carries the host's `program/read:` prefix). No file, more than one file, an unknown flag, or a valueless or repeated value flag answers 400 with the usage on stderr (exit 2). Replay goldens: orb-stamp.replay.goldens.json."
+]
+
+orbital OrbStampSpec {
+  expects trait OrbStamp {
+    state ready
+    state parsing
+    state working
+    emits {
+      STAMP_ANSWERED { status : number!  body : string!  stderr : string }
+    }
+  }
+  expects trait StampEngine {
+    state idle
+    state stamping
+    emits {
+      STAMP_ANSWERED { status : number!  body : string!  stderr : string }
+    }
+  }
+  expects page "/orb-stamp" -> OrbStamp
+}

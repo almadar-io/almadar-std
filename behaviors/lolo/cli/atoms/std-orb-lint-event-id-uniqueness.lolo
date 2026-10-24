@@ -1,7 +1,9 @@
 app std-orb-lint-event-id-uniqueness [
   version: "1.0.0",
   inbound: ["cli-lint-event-id-uniqueness"],
-  fs: { cwd: "**": [read] },
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
   description: "std-orb-lint-event-id-uniqueness — the `orb lint event-id-uniqueness <file>` command, the port of ORB_ID_DUPLICATE_EVENT_ID (id_integrity.rs check_duplicate_event_ids; the other ORB_ID rules walk the ledger and are not ported). It lowers the file with program/read and, per orbital, reports each event id (stateMachine.events[].id or emits[].eventId) declared by two or more different inline traits, once per id sorted by id, with the Rust path and message (status 500, exit 1). An id repeated inside one trait is one owner. Clean answers `lint event-id-uniqueness: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-event-id-uniqueness"

@@ -1,7 +1,9 @@
 app std-orb-lint-inbound [
   version: "1.0.0",
   inbound: ["cli-lint-inbound"],
-  fs: { cwd: "**": [read] },
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
   description: "std-orb-lint-inbound — the `orb lint inbound <file>` command, the port of ORB_INBOUND_ENTRY_INVALID, ORB_INBOUND_UNDECLARED, ORB_INBOUND_DUPLICATE, ORB_INBOUND_VERIFY_INVALID and ORB_INBOUND_ANSWER_UNDECLARED (effect/inbound.rs validate_inbound). It lowers the file with program/read, checks the app's `inbound` entries (a lower-case hook name, listed once) and every inline trait event that handles an inbound hook (declared by the app, one handler per name, a `verifies` header and credential of the right form, an answer the trait emits), each with the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint inbound: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-inbound"

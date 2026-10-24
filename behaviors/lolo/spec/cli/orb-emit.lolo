@@ -1,0 +1,24 @@
+app orb-emit-spec [
+  version: "1.0.0",
+  inbound: ["cli-emit"],
+  description: "Design contract for `orb emit <TARGET> <FILE> [--section S] [-o|--output PATH] [--format F] [--only KINDS] [--map] [--inspect-source PATH] [--document-version N] [--unit NAME] [--out DIR] [--sign-key PATH --key-id ID]` (port of orbital-cli emit/mod.rs run). EMIT_START { cwd, positionals, flags } builds the options and asks program/print { target, path (absolute: a relative file, output, inspect-source, out and sign-key are joined to the directory the command runs in), section?, format?, only?, map?, output?, inspectSource?, documentVersion?, unit?, out?, signKey?, keyId? } and answers EMIT_ANSWERED { status, body, stderr }: status 200, body the host's `text` (stdout of `orb emit`, one trailing newline dropped because the hook adds it) and stderr the host's `stderr` notes (one trailing newline dropped). With --output / --out the host writes the files and text is empty. A refusal answers 500 with stderr `Error: <reason>` (the reason carries the host's `program/print:` prefix). Wrong word count, an unknown flag, a valueless flag, a non-numeric --document-version, --document-version without --inspect-source, or one of --sign-key / --key-id without the other answers 400 with the usage on stderr (exit 2). Replay goldens: orb-emit.replay.goldens.json."
+]
+
+orbital OrbEmitSpec {
+  expects trait OrbEmit {
+    state ready
+    state parsing
+    state working
+    emits {
+      EMIT_ANSWERED { status : number!  body : string!  stderr : string }
+    }
+  }
+  expects trait EmitEngine {
+    state idle
+    state emitting
+    emits {
+      EMIT_ANSWERED { status : number!  body : string!  stderr : string }
+    }
+  }
+  expects page "/orb-emit" -> OrbEmit
+}

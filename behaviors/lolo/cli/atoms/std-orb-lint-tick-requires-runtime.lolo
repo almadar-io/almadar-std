@@ -1,15 +1,17 @@
 app std-orb-lint-tick-requires-runtime [
   version: "1.0.0",
   inbound: ["cli-lint-tick-requires-runtime"],
-  fs: { cwd: "**": [read] },
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
   description: "std-orb-lint-tick-requires-runtime — the `orb lint tick-requires-runtime <file>` command, the port of ORB_TICK_REQUIRES_RUNTIME (entity_mutation.rs validate_trait_tick_guards). It lowers the file with program/read and, for every inline trait that declares at least one non-cron tick (a numeric interval, or a string that is not a valid 5-field cron expression, as `orbital_core_base::cron::is_valid_cron_expression` decides) and is linked to a persistent entity (no persistence mode, or `persistent`; the last entity of that name in the program wins, auxiliary entities included), reports the trait once at `...ticks` with the Rust message and suggestion (status 500, exit 1). It also reports ORB_TICK_ASYNC_EFFECT for each effect of a non-cron tick whose tree calls an operator of the registry's std-llm category (llm/call-tools, llm/compact, llm/embed, llm/generate, llm/switch, llm/token-count), found with tree/fold, at `...ticks[i].effects[j]`. Clean answers `lint tick-requires-runtime: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-tick-requires-runtime"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
-type TickShape = string | number | boolean | [TickShape] | Map string TickShape
+type TickShape = string | number | boolean | [TickShape?] | Map string TickShape?
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 type TickInterval = string | number
-type TickDecl = { name : string, interval : TickInterval, effects : [TickShape] }
+type TickDecl = { name : string, interval : TickInterval, effects : [TickShape?] }
 type TickEntity = { name : string, persistence : string }
 type TickTrait = { name : string, linkedEntity : string, ticks : [TickDecl] }
 type TickOrbital = { name : string, entity : TickEntity, auxiliaryEntities : [TickEntity], traits : [TickTrait] }
@@ -36,7 +38,7 @@ orbital OrbLintTickRequiresRuntimeOrbital {
                 (array/flatten (array/map (array/range 0 (array/len (object/get @orb "traits" []))) (fn ti
                   (let ((td (array/nth (object/get @orb "traits" []) @ti)))
                     (let ((ticks (object/get @td "ticks" [])) (linked (object/get @td "linkedEntity" "")) (tn (object/get @td "name" "")) (where (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].traits[" @ti " (" (object/get @td "name" "") ")]")))
-                      (let ((tks (array/map (array/range 0 (array/len @ticks)) (fn i (let ((k (array/nth @ticks @i)) (sx (object/get (array/nth @ticks @i) "interval" ""))) { k: @k, i: @i, nc: (if (validate/number (object/get @k "interval" null)) true (not (let ((fs (str/split (str/replace-pattern (str/trim @sx) "\\s+" " ") " "))) (and (= (array/len @fs) 5) (array/every @fs (fn fl (array/every (str/split @fl ",") (fn pt (validate/pattern @pt "^(\\*|[0-9]+|[0-9]+-[0-9]+|(\\*|[0-9]+)/[0-9]*[1-9][0-9]*)$"))))))))) }))))) 
+                      (let ((tks (array/map (array/range 0 (array/len @ticks)) (fn i (let ((k (array/nth @ticks @i)) (sx (let ((iv (object/get (array/nth @ticks @i) "interval" ""))) (if (validate/string @iv) @iv "")))) { k: @k, i: @i, nc: (if (validate/number (object/get @k "interval" null)) true (not (let ((fs (str/split (str/replace-pattern (str/trim @sx) "\\s+" " ") " "))) (and (= (array/len @fs) 5) (array/every @fs (fn fl (array/every (str/split @fl ",") (fn pt (validate/pattern @pt "^(\\*|[0-9]+|[0-9]+-[0-9]+|(\\*|[0-9]+)/[0-9]*[1-9][0-9]*)$"))))))))) }))))) 
                         (array/concat
                           (if (or (= (array/len @ticks) 0) (not (array/some @tks (fn t (object/get @t "nc")))) (= @linked ""))
                             []
@@ -56,8 +58,8 @@ orbital OrbLintTickRequiresRuntimeOrbital {
                                           (if (validate/string (array/nth @n 0)) (if (array/includes @llm (array/nth @n 0)) [(array/nth @n 0)] []) [])
                                           (array/flatten (array/filter @k (fn r (validate/array @r)))))
                                         (if (validate/object @n)
-                                          (array/flatten (array/filter (array/map (object/entries @k) (fn e (array/nth @e 1))) (fn r (validate/array @r))))
-                                          []))) TickShape))) (if (> (array/len @fd) 0) (array/first @fd) ""))))
+                                          (array/flatten (array/filter (object/values @k) (fn r (validate/array @r))))
+                                          []))) TickShape))) (if (> (array/len @fd) 0) (let ((o0 (array/first @fd))) (if (validate/string @o0) @o0 "")) ""))))
                                       (if (= @op "")
                                         []
                                         [{ code: "ORB_TICK_ASYNC_EFFECT", path: (str/concat @where ".ticks[" @i "].effects[" @j "]"), message: (str/concat "trait \"" @tn "\" tick '" (object/get @tk "name" "") "' calls server-async operator '" @op "' on a non-cron interval — repeated per-tick agent/LLM calls can pile up"), suggestion: "Trigger the async call from an explicit event-driven transition, or use a Cron-scheduled tick", severity: "error" }])))))))))))))))))))))))))

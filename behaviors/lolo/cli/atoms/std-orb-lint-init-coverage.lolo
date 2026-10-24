@@ -1,7 +1,9 @@
 app std-orb-lint-init-coverage [
   version: "1.0.0",
   inbound: ["cli-lint-init-coverage"],
-  fs: { cwd: "**": [read] },
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
   description: "std-orb-lint-init-coverage — the `orb lint init-coverage <file>` command, the port of ORB_CIRCUIT_INIT_UNCOVERED_STATE (G-ORB-186). It lowers the file with program/read and, for every trait a page of its orbital declares whose initial state handles INIT, reports each reachable state with no INIT arm (status 500, exit 1). Reachability follows transitions from their from states or the wildcard and skips a statically false guard (a falsy literal, or a comparison of two literals that cannot hold). Clean answers `lint init-coverage: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-init-coverage"
@@ -10,7 +12,7 @@ type OrbFinding = { code : string!, path : string!, message : string!, suggestio
 type InitFrom = string | [string]
 type InitGuard = string | number | boolean | [InitGuard] | Map string InitGuard
 type InitState = { name : string, isInitial : boolean }
-type InitTransition = { from : InitFrom, event : string, to : string, guard : InitGuard }
+type InitTransition = { from : InitFrom!, event : string!, to : string!, guard : InitGuard }
 type InitMachine = { states : [InitState], transitions : [InitTransition] }
 type InitTrait = { name : string, stateMachine : InitMachine }
 type InitPageTrait = { ref : string }
@@ -32,7 +34,7 @@ orbital OrbLintInitCoverageOrbital {
     state ready {
       INIT -> ready
       LINT_INPUT -> ready
-        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals")))
+        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
             (let ((o (array/nth @orbitals @oi)))
               (let ((pageTraits (array/flatten (array/map (object/get @o "pages" []) (fn p (array/map (object/get @p "traits" []) (fn r (object/get @r "ref" "")))))))
@@ -42,10 +44,11 @@ orbital OrbLintInitCoverageOrbital {
                     (let ((sm (object/get @t "stateMachine" {})))
                       (let ((states (object/get @sm "states" []))
                             (arms (array/map (object/get @sm "transitions" []) (fn a
-                              (let ((raw (object/get @a "from"))
-                                    (g (object/get @a "guard" null)))
-                                (let ((s (json/stringify @g)))
-                                  { froms: (if (str/startsWith (json/stringify @raw) "[") @raw [@raw]), event: (object/get @a "event"), to: (object/get @a "to"), dead: (and (object/has @a "guard") (or (array/includes ["false", "null", "0", "\"\"", "{}", "[]"] @s) (and (or (str/startsWith @s "[\"=\"") (str/startsWith @s "[\"==\"") (str/startsWith @s "[\"!=\"")) (!= (array/nth @g 2) null) (= (array/nth @g 3) null) (not (or (str/startsWith (json/stringify (array/nth @g 1)) "[") (validate/object (array/nth @g 1)) (str/startsWith (json/stringify (array/nth @g 1)) "\"@"))) (not (or (str/startsWith (json/stringify (array/nth @g 2)) "[") (validate/object (array/nth @g 2)) (str/startsWith (json/stringify (array/nth @g 2)) "\"@"))) (= (= (array/nth @g 1) (array/nth @g 2)) (str/startsWith @s "[\"!=\""))))) })))))
+                              (let ((raw (object/get @a "from" ""))
+                                    (g0 (object/get @a "guard" null)))
+                                (let ((s (json/stringify @g0))
+                                      (g (if (validate/array @g0) @g0 [])))
+                                  { froms: (if (validate/array @raw) @raw [@raw]), event: (object/get @a "event" ""), to: (object/get @a "to" ""), dead: (and (object/has @a "guard") (or (array/includes ["false", "null", "0", "\"\"", "{}", "[]"] @s) (and (or (str/startsWith @s "[\"=\"") (str/startsWith @s "[\"==\"") (str/startsWith @s "[\"!=\"")) (!= (array/nth @g 2) null) (= (array/nth @g 3) null) (not (or (str/startsWith (json/stringify (array/nth @g 1)) "[") (validate/object (array/nth @g 1)) (str/startsWith (json/stringify (array/nth @g 1)) "\"@"))) (not (or (str/startsWith (json/stringify (array/nth @g 2)) "[") (validate/object (array/nth @g 2)) (str/startsWith (json/stringify (array/nth @g 2)) "\"@"))) (= (= (array/nth @g 1) (array/nth @g 2)) (str/startsWith @s "[\"!=\""))))) })))))
                             (initialRow (array/find (object/get @sm "states" []) (fn s (= (object/get @s "isInitial" false) true)))))
                         (if (or (= @initialRow null) (not (array/includes @pageTraits (object/get @t "name"))))
                           []

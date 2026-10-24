@@ -1,0 +1,814 @@
+{
+ "atom": "cli/atoms/std-orb-emit.lolo",
+ "trait": "EmitEngine",
+ "cases": [
+  {
+   "id": "the call asks std-args to parse with the emit flag table and its -o alias",
+   "steps": [
+    {
+     "trait": "OrbEmit",
+     "from": "ready",
+     "event": "EMIT_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"orb\", \"a.lolo\", \"-o\", \"r.orb\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "EMIT_ARGS_PARSE",
+        "payload": {
+         "stage": "emit",
+         "argv": [
+          "orb",
+          "a.lolo",
+          "-o",
+          "r.orb"
+         ],
+         "flags": [
+          {
+           "name": "section",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": false
+          },
+          {
+           "name": "output",
+           "aliases": [
+            "-o"
+           ],
+           "takesValue": true,
+           "repeatable": false
+          },
+          {
+           "name": "format",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": false
+          },
+          {
+           "name": "only",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": false
+          },
+          {
+           "name": "map",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          },
+          {
+           "name": "inspect-source",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": false
+          },
+          {
+           "name": "document-version",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": false
+          },
+          {
+           "name": "unit",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": false
+          },
+          {
+           "name": "out",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": false
+          },
+          {
+           "name": "sign-key",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": false
+          },
+          {
+           "name": "key-id",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "target and file start the emit with the working directory and the parsed flags",
+   "steps": [
+    {
+     "trait": "OrbEmit",
+     "from": "ready",
+     "event": "EMIT_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"orb\", \"a.lolo\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing"
+     }
+    },
+    {
+     "trait": "OrbEmit",
+     "from": "parsing",
+     "event": "EMIT_ARGS_DONE",
+     "payload": {
+      "stage": "emit",
+      "flags": {},
+      "positionals": [
+       "orb",
+       "a.lolo"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "working",
+      "emits": [
+       {
+        "event": "EMIT_START",
+        "payload": {
+         "cwd": "/w",
+         "positionals": [
+          "orb",
+          "a.lolo"
+         ],
+         "flags": {}
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "flag values travel to the engine as parsed",
+   "steps": [
+    {
+     "trait": "OrbEmit",
+     "from": "ready",
+     "event": "EMIT_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"ts\", \"/x/a.lolo\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing"
+     }
+    },
+    {
+     "trait": "OrbEmit",
+     "from": "parsing",
+     "event": "EMIT_ARGS_DONE",
+     "payload": {
+      "stage": "emit",
+      "flags": {
+       "section": [
+        "traits.A"
+       ],
+       "map": []
+      },
+      "positionals": [
+       "ts",
+       "/x/a.lolo"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "working",
+      "emits": [
+       {
+        "event": "EMIT_START",
+        "payload": {
+         "cwd": "/w",
+         "positionals": [
+          "ts",
+          "/x/a.lolo"
+         ],
+         "flags": {
+          "section": [
+           "traits.A"
+          ],
+          "map": []
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a sign key with its key id starts the emit",
+   "steps": [
+    {
+     "trait": "OrbEmit",
+     "from": "ready",
+     "event": "EMIT_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"manifest\", \"a.lolo\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing"
+     }
+    },
+    {
+     "trait": "OrbEmit",
+     "from": "parsing",
+     "event": "EMIT_ARGS_DONE",
+     "payload": {
+      "stage": "emit",
+      "flags": {
+       "sign-key": [
+        "k"
+       ],
+       "key-id": [
+        "id"
+       ]
+      },
+      "positionals": [
+       "manifest",
+       "a.lolo"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "working",
+      "emits": [
+       {
+        "event": "EMIT_START",
+        "payload": {
+         "cwd": "/w",
+         "positionals": [
+          "manifest",
+          "a.lolo"
+         ],
+         "flags": {
+          "sign-key": [
+           "k"
+          ],
+          "key-id": [
+           "id"
+          ]
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: no words answers the usage",
+   "steps": [
+    {
+     "trait": "OrbEmit",
+     "from": "ready",
+     "event": "EMIT_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing"
+     }
+    },
+    {
+     "trait": "OrbEmit",
+     "from": "parsing",
+     "event": "EMIT_ARGS_DONE",
+     "payload": {
+      "stage": "emit",
+      "flags": {},
+      "positionals": [],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMIT_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb emit <TARGET> <FILE> [--section SELECTOR] [-o|--output PATH] [--format FORMAT] [--only KINDS] [--map] [--inspect-source PATH] [--document-version N] [--unit NAME] [--out DIR] [--sign-key PATH --key-id ID]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a target without a file answers the usage",
+   "steps": [
+    {
+     "trait": "OrbEmit",
+     "from": "ready",
+     "event": "EMIT_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"orb\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing"
+     }
+    },
+    {
+     "trait": "OrbEmit",
+     "from": "parsing",
+     "event": "EMIT_ARGS_DONE",
+     "payload": {
+      "stage": "emit",
+      "flags": {},
+      "positionals": [
+       "orb"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMIT_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb emit <TARGET> <FILE> [--section SELECTOR] [-o|--output PATH] [--format FORMAT] [--only KINDS] [--map] [--inspect-source PATH] [--document-version N] [--unit NAME] [--out DIR] [--sign-key PATH --key-id ID]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a third word answers the usage",
+   "steps": [
+    {
+     "trait": "OrbEmit",
+     "from": "ready",
+     "event": "EMIT_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"orb\", \"a\", \"b\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing"
+     }
+    },
+    {
+     "trait": "OrbEmit",
+     "from": "parsing",
+     "event": "EMIT_ARGS_DONE",
+     "payload": {
+      "stage": "emit",
+      "flags": {},
+      "positionals": [
+       "orb",
+       "a",
+       "b"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMIT_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb emit <TARGET> <FILE> [--section SELECTOR] [-o|--output PATH] [--format FORMAT] [--only KINDS] [--map] [--inspect-source PATH] [--document-version N] [--unit NAME] [--out DIR] [--sign-key PATH --key-id ID]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a parse error answers the usage",
+   "steps": [
+    {
+     "trait": "OrbEmit",
+     "from": "ready",
+     "event": "EMIT_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"orb\", \"a.lolo\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing"
+     }
+    },
+    {
+     "trait": "OrbEmit",
+     "from": "parsing",
+     "event": "EMIT_ARGS_DONE",
+     "payload": {
+      "stage": "emit",
+      "flags": {},
+      "positionals": [
+       "orb",
+       "a.lolo"
+      ],
+      "errors": [
+       "unknown flag --bogus"
+      ],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMIT_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb emit <TARGET> <FILE> [--section SELECTOR] [-o|--output PATH] [--format FORMAT] [--only KINDS] [--map] [--inspect-source PATH] [--document-version N] [--unit NAME] [--out DIR] [--sign-key PATH --key-id ID]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a non-numeric document version answers the usage",
+   "steps": [
+    {
+     "trait": "OrbEmit",
+     "from": "ready",
+     "event": "EMIT_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"orb\", \"a.lolo\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing"
+     }
+    },
+    {
+     "trait": "OrbEmit",
+     "from": "parsing",
+     "event": "EMIT_ARGS_DONE",
+     "payload": {
+      "stage": "emit",
+      "flags": {
+       "inspect-source": [
+        "/s"
+       ],
+       "document-version": [
+        "x"
+       ]
+      },
+      "positionals": [
+       "orb",
+       "a.lolo"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMIT_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb emit <TARGET> <FILE> [--section SELECTOR] [-o|--output PATH] [--format FORMAT] [--only KINDS] [--map] [--inspect-source PATH] [--document-version N] [--unit NAME] [--out DIR] [--sign-key PATH --key-id ID]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a document version without an inspect source answers the usage",
+   "steps": [
+    {
+     "trait": "OrbEmit",
+     "from": "ready",
+     "event": "EMIT_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"orb\", \"a.lolo\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing"
+     }
+    },
+    {
+     "trait": "OrbEmit",
+     "from": "parsing",
+     "event": "EMIT_ARGS_DONE",
+     "payload": {
+      "stage": "emit",
+      "flags": {
+       "document-version": [
+        "3"
+       ]
+      },
+      "positionals": [
+       "orb",
+       "a.lolo"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMIT_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb emit <TARGET> <FILE> [--section SELECTOR] [-o|--output PATH] [--format FORMAT] [--only KINDS] [--map] [--inspect-source PATH] [--document-version N] [--unit NAME] [--out DIR] [--sign-key PATH --key-id ID]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a sign key without a key id answers the usage",
+   "steps": [
+    {
+     "trait": "OrbEmit",
+     "from": "ready",
+     "event": "EMIT_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"manifest\", \"a.lolo\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing"
+     }
+    },
+    {
+     "trait": "OrbEmit",
+     "from": "parsing",
+     "event": "EMIT_ARGS_DONE",
+     "payload": {
+      "stage": "emit",
+      "flags": {
+       "sign-key": [
+        "k"
+       ]
+      },
+      "positionals": [
+       "manifest",
+       "a.lolo"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMIT_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb emit <TARGET> <FILE> [--section SELECTOR] [-o|--output PATH] [--format FORMAT] [--only KINDS] [--map] [--inspect-source PATH] [--document-version N] [--unit NAME] [--out DIR] [--sign-key PATH --key-id ID]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a key id without a sign key answers the usage",
+   "steps": [
+    {
+     "trait": "OrbEmit",
+     "from": "ready",
+     "event": "EMIT_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"manifest\", \"a.lolo\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing"
+     }
+    },
+    {
+     "trait": "OrbEmit",
+     "from": "parsing",
+     "event": "EMIT_ARGS_DONE",
+     "payload": {
+      "stage": "emit",
+      "flags": {
+       "key-id": [
+        "id"
+       ]
+      },
+      "positionals": [
+       "manifest",
+       "a.lolo"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMIT_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb emit <TARGET> <FILE> [--section SELECTOR] [-o|--output PATH] [--format FORMAT] [--only KINDS] [--map] [--inspect-source PATH] [--document-version N] [--unit NAME] [--out DIR] [--sign-key PATH --key-id ID]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a rendered emit prints its text without the one trailing newline the hook adds",
+   "steps": [
+    {
+     "trait": "EmitEngine",
+     "from": "idle",
+     "event": "EMIT_START",
+     "payload": {
+      "cwd": "/w",
+      "positionals": [
+       "orb",
+       "a.lolo"
+      ],
+      "flags": {}
+     },
+     "expect": {
+      "state": "emitting"
+     }
+    },
+    {
+     "trait": "EmitEngine",
+     "from": "emitting",
+     "event": "EMIT_RENDERED",
+     "payload": {
+      "result": {
+       "text": "{\n  \"name\": \"a\"\n}\n",
+       "stderr": ""
+      }
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "EMIT_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "{\n  \"name\": \"a\"\n}",
+         "stderr": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "stderr notes are relayed without their trailing newline",
+   "steps": [
+    {
+     "trait": "EmitEngine",
+     "from": "idle",
+     "event": "EMIT_START",
+     "payload": {
+      "cwd": "/w",
+      "positionals": [
+       "orb",
+       "a.lolo"
+      ],
+      "flags": {}
+     },
+     "expect": {
+      "state": "emitting"
+     }
+    },
+    {
+     "trait": "EmitEngine",
+     "from": "emitting",
+     "event": "EMIT_RENDERED",
+     "payload": {
+      "result": {
+       "text": "code\n",
+       "stderr": "warning: selector x matched zero generated files\n"
+      }
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "EMIT_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "code",
+         "stderr": "warning: selector x matched zero generated files"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: an emit that wrote its files prints nothing",
+   "steps": [
+    {
+     "trait": "EmitEngine",
+     "from": "idle",
+     "event": "EMIT_START",
+     "payload": {
+      "cwd": "/w",
+      "positionals": [
+       "orb",
+       "a.lolo"
+      ],
+      "flags": {}
+     },
+     "expect": {
+      "state": "emitting"
+     }
+    },
+    {
+     "trait": "EmitEngine",
+     "from": "emitting",
+     "event": "EMIT_RENDERED",
+     "payload": {
+      "result": {
+       "text": "",
+       "stderr": ""
+      }
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "EMIT_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "",
+         "stderr": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a refusal answers 500 with its reason",
+   "steps": [
+    {
+     "trait": "EmitEngine",
+     "from": "emitting",
+     "event": "EMIT_REFUSED",
+     "payload": {
+      "error": "program/print: Failed to read /w/a.lolo: No such file or directory (os error 2)"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "EMIT_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "Error: program/print: Failed to read /w/a.lolo: No such file or directory (os error 2)"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

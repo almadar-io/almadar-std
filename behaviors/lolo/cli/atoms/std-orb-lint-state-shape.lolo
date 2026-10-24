@@ -1,19 +1,27 @@
 app std-orb-lint-state-shape [
   version: "1.0.0",
   inbound: ["cli-lint-state-shape"],
-  fs: { cwd: "**": [read] },
-  description: "std-orb-lint-state-shape — the `orb lint state-shape <file>` command, the port of ORB_T_DUPLICATE_STATE, ORB_T_MULTIPLE_INITIAL_STATES and ORB_T_NO_INITIAL_STATE (trait_validator.rs validate_state_machine). It lowers the file with program/read and, for every inline trait with a state machine, reports an empty state list (and stops there), each repeated state name, no initial state, and several initial states (listed as the Rust debug form), each with the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint state-shape: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-state-shape — the `orb lint state-shape <file>` command, the port of ORB_T_DUPLICATE_STATE, ORB_T_MULTIPLE_INITIAL_STATES, ORB_T_NO_INITIAL_STATE, ORB_T_MISSING_INIT_TRANSITION and ORB_T_EXTERNAL_INPUT_NOT_RESTING (trait_validator.rs validate_state_machine). A trait needs an INIT arm on its initial state only when a route page mounts it (or a route trait embeds it) and it paints a page body (main, content or screen, or a slot it cannot resolve); a helper that renders nothing, only toasts or only opens an overlay needs none. It lowers the file with program/read and, for every inline trait with a state machine, reports an empty state list (and stops there), each repeated state name, no initial state, and several initial states (listed as the Rust debug form), each with the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint state-shape: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-state-shape"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
+type StateShapeExpr = string | number | boolean | [StateShapeExpr?] | Map string StateShapeExpr?
+type StateShapeForm = [StateShapeExpr?]
 type StateShapeState = { name : string, isInitial : boolean }
-type StateShapeArm = { event : string, from : string | [string] }
-type StateShapeEvent = { key : string, external : boolean }
+type StateShapeArm = { event : string, from : string | [string], guard : StateShapeExpr?, effects : [StateShapeExpr?] }
+type StateShapeEvent = { key : string, input : boolean }
 type StateShapeMachine = { states : [StateShapeState], transitions : [StateShapeArm], events : [StateShapeEvent] }
-type StateShapeTrait = { category : string, stateMachine : StateShapeMachine }
-type StateShapeOrbital = { traits : [StateShapeTrait] }
+type StateShapeKnob = { default : StateShapeExpr }
+type StateShapeTick = { guard : StateShapeExpr?, effects : [StateShapeExpr?] }
+type StateShapeTrait = { name : string, id : string, stateMachine : StateShapeMachine, config : Map string StateShapeKnob, ticks : [StateShapeTick] }
+type StateShapeMount = { ref : string, name : string, refId : string }
+type StateShapePage = { protocol : string, traits : [StateShapeMount] }
+type StateShapeOrbital = { name : string, pages : [StateShapePage], traits : [StateShapeTrait] }
 type StateShapeProgram = { orbitals : [StateShapeOrbital] }
 
 orbital OrbLintStateShapeOrbital {
@@ -32,12 +40,27 @@ orbital OrbLintStateShapeOrbital {
       LINT_INPUT -> ready
         (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
-            (let ((trList (object/get (array/nth @orbitals @oi) "traits" [])))
+            (let ((o (array/nth @orbitals @oi)))
+              (let ((trList (object/get @o "traits" []))
+                    (roots (array/flatten (array/map (object/get @o "pages" []) (fn pg
+                      (if (!= (object/get @pg "protocol" null) null) []
+                        (array/flatten (array/map (object/get @pg "traits" []) (fn r
+                          (array/concat
+                            (if (object/has @r "ref") [(object/get @r "ref")] [])
+                            (if (object/has @r "name") [(object/get @r "name")] [])
+                            (if (object/has @r "refId") [(object/get @r "refId")] [])))))))))))
+                (let ((embeds (array/map @trList (fn t { name: (object/get @t "name" ""), kids: (array/concat
+                            (array/flatten (array/map (object/values (let ((cf (object/get @t "config" null))) (if (validate/object @cf) @cf {}))) (fn k (array/map (let ((nd (object/get @k "default" null))) (if (= @nd null) [] (json/parse (json/stringify (json/nodes @nd)) StateShapeForm))) (fn n (if (validate/string @n) (if (str/startsWith @n (quote "@trait.")) (array/first (str/split (array/first (str/split (str/slice @n 7 (str/len @n)) ".")) "[")) "") ""))))))
+                            (array/flatten (array/map (let ((trl (object/get (object/get @t "stateMachine" {}) "transitions" null))) (if (validate/array @trl) @trl [])) (fn a (array/concat (array/map (let ((nd (object/get @a "guard" null))) (if (= @nd null) [] (json/parse (json/stringify (json/nodes @nd)) StateShapeForm))) (fn n (if (validate/string @n) (if (str/startsWith @n (quote "@trait.")) (array/first (str/split (array/first (str/split (str/slice @n 7 (str/len @n)) ".")) "[")) "") ""))) (array/map (let ((nd (object/get @a "effects" []))) (if (= @nd null) [] (json/parse (json/stringify (json/nodes @nd)) StateShapeForm))) (fn n (if (validate/string @n) (if (str/startsWith @n (quote "@trait.")) (array/first (str/split (array/first (str/split (str/slice @n 7 (str/len @n)) ".")) "[")) "") "")))))))
+                            (array/flatten (array/map (let ((tks (object/get @t "ticks" null))) (if (validate/array @tks) @tks [])) (fn k (array/concat (array/map (let ((nd (object/get @k "guard" null))) (if (= @nd null) [] (json/parse (json/stringify (json/nodes @nd)) StateShapeForm))) (fn n (if (validate/string @n) (if (str/startsWith @n (quote "@trait.")) (array/first (str/split (array/first (str/split (str/slice @n 7 (str/len @n)) ".")) "[")) "") ""))) (array/map (let ((nd (object/get @k "effects" []))) (if (= @nd null) [] (json/parse (json/stringify (json/nodes @nd)) StateShapeForm))) (fn n (if (validate/string @n) (if (str/startsWith @n (quote "@trait.")) (array/first (str/split (array/first (str/split (str/slice @n 7 (str/len @n)) ".")) "[")) "") "")))))))) })))
+                      )
+                  (let ((routeSet (array/reduce (array/range 0 (array/len @trList)) (array/unique @roots)
+                          (fn (cur i) (array/unique (array/concat @cur (array/flatten (array/map @embeds (fn e (if (array/includes @cur (object/get @e "name")) (object/get @e "kids") []))))))))))
               (array/flatten (array/map (array/range 0 (array/len @trList)) (fn ti
                 (let ((td (array/nth @trList @ti)))
                   (if (not (validate/object (object/get @td "stateMachine" null)))
                     []
-                    (let ((sm (object/get @td "stateMachine")) (tpath (str/concat "orbitals[" @oi "].traits[" @ti "]")))
+                    (let ((sm (object/get @td "stateMachine")) (tpath (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @td "name" "") ")]")))
                       (let ((sts (object/get @sm "states" [])) (where (str/concat @tpath ".stateMachine")))
                         (if (= (array/len @sts) 0)
                           [{ code: "ORB_T_NO_INITIAL_STATE", path: (str/concat @where ".states"), message: "State machine must have at least one state", suggestion: "Add at least one state to the state machine", severity: "error" }]
@@ -46,24 +69,64 @@ orbital OrbLintStateShapeOrbital {
                               (array/flatten (array/map (array/range 0 (array/len @sts)) (fn k (if (array/includes (array/take @names @k) (array/nth @names @k)) [{ code: "ORB_T_DUPLICATE_STATE", path: (str/concat @where ".states[" @k "]"), message: (str/concat "Duplicate state name: '" (array/nth @names @k) "'"), suggestion: "Each state must have a unique name", severity: "error" }] []))))
                               (if (= (array/len @inits) 0) [{ code: "ORB_T_NO_INITIAL_STATE", path: (str/concat @where ".states"), message: "State machine must have an initial state", suggestion: "Mark one state with isInitial: true", severity: "error" }] [])
                               (if (> (array/len @inits) 1) [{ code: "ORB_T_MULTIPLE_INITIAL_STATES", path: (str/concat @where ".states"), message: (str/concat "Multiple initial states found: [" (str/join (array/map @inits (fn n (str/concat "\"" @n "\""))) ", ") "]"), suggestion: "Only one state should be marked as initial", severity: "error" }] [])
-                              (if (and (> (array/len @inits) 0) (or (not (object/has @td "category")) (= (object/get @td "category") "interaction")))
+                              (if (and (> (array/len @inits) 0) (or (array/includes @routeSet (object/get @td "name" "")) (and (object/has @td "id") (array/includes @routeSet (object/get @td "id")))) (array/some (array/concat
+                            (array/flatten (array/map (let ((trl (object/get (object/get @td "stateMachine" {}) "transitions" null))) (if (validate/array @trl) @trl [])) (fn a (array/map (let ((nd (object/get @a "effects" []))) (if (= @nd null) [] (json/parse (json/stringify (json/nodes @nd)) StateShapeForm))) (fn f
+                                  (if (validate/array @f)
+                                    (let ((hd (array/nth @f 0)))
+                                      (if (validate/string @hd)
+                                        (if (array/includes @config.renderOps @hd)
+                                          (let ((sv (array/nth @f 1)))
+                                            (if (validate/string @sv)
+                                              (if (= (str/slice @sv 0 8) (str/concat (str/decode-uri-component "%40") "config."))
+                                                (let ((dv (object/get (object/get (object/get @td "config" {}) (str/slice @sv 8 (str/len @sv)) {}) "default" null)))
+                                                  (if (validate/string @dv) (array/includes @config.mainSlots @dv) true))
+                                                (array/includes @config.mainSlots @sv))
+                                              true))
+                                          false)
+                                        false))
+                                    false))))))
+                            (array/flatten (array/map (let ((tks (object/get @td "ticks" null))) (if (validate/array @tks) @tks [])) (fn k (array/map (let ((nd (object/get @k "effects" []))) (if (= @nd null) [] (json/parse (json/stringify (json/nodes @nd)) StateShapeForm))) (fn f
+                                  (if (validate/array @f)
+                                    (let ((hd (array/nth @f 0)))
+                                      (if (validate/string @hd)
+                                        (if (array/includes @config.renderOps @hd)
+                                          (let ((sv (array/nth @f 1)))
+                                            (if (validate/string @sv)
+                                              (if (= (str/slice @sv 0 8) (str/concat (str/decode-uri-component "%40") "config."))
+                                                (let ((dv (object/get (object/get (object/get @td "config" {}) (str/slice @sv 8 (str/len @sv)) {}) "default" null)))
+                                                  (if (validate/string @dv) (array/includes @config.mainSlots @dv) true))
+                                                (array/includes @config.mainSlots @sv))
+                                              true))
+                                          false)
+                                        false))
+                                    false)))))))
+                          (fn b (= @b true))))
                                 (let ((init0 (array/first @inits)))
                                   (if (array/some (object/get @sm "transitions" []) (fn tr (and (= (object/get @tr "event" "") "INIT") (let ((frm (object/get @tr "from" ""))) (let ((froms (if (validate/string @frm) (array/append [] @frm) @frm))) (or (array/includes @froms @init0) (array/includes @froms "*")))))))
                                     []
-                                    [{ code: "ORB_T_MISSING_INIT_TRANSITION", path: (str/concat @where ".transitions"), message: (str/concat "Interaction trait should have INIT transition on initial state '" @init0 "'"), suggestion: "Add a transition: { from: 'initialState', to: 'initialState', event: 'INIT', effects: [...] }", severity: "error" }]))
+                                    [{ code: "ORB_T_MISSING_INIT_TRANSITION", path: (str/concat @where ".transitions"), message: (str/concat "Route trait should have INIT transition on initial state '" @init0 "'"), suggestion: "Add a transition: { from: 'initialState', to: 'initialState', event: 'INIT', effects: [...] }", severity: "error" }]))
                                 [])
                               (if (> (array/len @inits) 0)
                                 (let ((init0 (array/first @inits)))
                                   (array/flatten (array/map (array/range 0 (array/len (object/get @sm "events" []))) (fn ei
                                     (let ((ev (array/nth (object/get @sm "events" []) @ei)))
-                                      (if (and (= (object/get @ev "external" false) true)
+                                      (if (and (= (object/get @ev "input" false) true)
                                                (not (array/some (object/get @sm "transitions" []) (fn tr (and (= (object/get @tr "event" "") (object/get @ev "key" "")) (let ((frm (object/get @tr "from" ""))) (let ((froms (if (validate/string @frm) (array/append [] @frm) @frm))) (or (array/includes @froms @init0) (array/includes @froms "*")))))))))
-                                        [{ code: "ORB_T_EXTERNAL_INPUT_NOT_RESTING", path: (str/concat @where ".events[" @ei "]"), message: (str/concat "External input '" (object/get @ev "key" "") "' is not accepted from the initial state '" @init0 "'"), suggestion: "Declare as external only a complete command the trait handles from its initial state (e.g. a persistor's DO_CREATE), or add that transition", severity: "error" }]
+                                        [{ code: "ORB_T_EXTERNAL_INPUT_NOT_RESTING", path: (str/concat @where ".events[" @ei "]"), message: (str/concat "Input '" (object/get @ev "key" "") "' is not accepted from the initial state '" @init0 "'"), suggestion: "Declare as an input only a complete command the trait handles from its initial state (e.g. a persistor's DO_CREATE), or add that transition", severity: "error" }]
                                         []))))))
-                                [])]))))))))))))))))
+                                [])])))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "state-shape", findings: @entity.findings })
+    }
+
+    config {
+      renderOps : [string] = ["render-ui"]
+        @label "Render operators"
+        @description "The effect operators that paint a slot."
+      mainSlots : [string] = ["main", "content", "screen"]
+        @label "Body slots"
+        @description "The slots that paint a page body; a trait rendering one needs an INIT arm."
     }
 
     emits {

@@ -1,7 +1,9 @@
 app std-orb-lint-page-modifiers [
   version: "1.0.0",
   inbound: ["cli-lint-page-modifiers"],
-  fs: { cwd: "**": [read] },
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
   description: "std-orb-lint-page-modifiers — the `orb lint page-modifiers <file>` command, the port of validate_page_modifiers. It lowers the file with program/read and, for every page, reports ORB_P_INDEX_REQUIRES_PUBLIC (an `indexing: index` page lacking `access: public`, `title:` or `description:`), ORB_P_INDEX_PARAM_ROUTE (an indexed page whose route has a `:` segment) and ORB_P_AUTH_NO_SIGN_IN (an `access: authenticated` page when the app declares no `signIn:`), each with its path and suggestion (status 500, exit 1). It also reports ORB_P_TRANSLATION_DUPLICATE_LOCALE (an explicit `translationOf:` group holding more than one page in one locale, the locale being the page path's first segment when declared, else the first declared locale). Clean answers `lint page-modifiers: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-page-modifiers"

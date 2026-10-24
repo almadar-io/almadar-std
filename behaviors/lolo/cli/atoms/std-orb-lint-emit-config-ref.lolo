@@ -1,7 +1,9 @@
 app std-orb-lint-emit-config-ref [
   version: "1.0.0",
   inbound: ["cli-lint-emit-config-ref"],
-  fs: { cwd: "**": [read] },
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
   description: "std-orb-lint-emit-config-ref — the `orb lint emit-config-ref <file>` command, the port of ORB_EMIT_CONFIG_REF_INVALID. It lowers the file with program/read and, for every inline trait emit named `@config.<knob>`, checks the Option B contract: the knob is a declared config field (else unknown), string- or event-typed (else not string), carries a default (else no default) and that default is a string literal (else not string). Each failure is reported with its path and suggestion (status 500, exit 1). Clean answers `lint emit-config-ref: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-emit-config-ref"

@@ -1,7 +1,9 @@
 app std-orb-lint-entity-locale-instances [
   version: "1.0.0",
   inbound: ["cli-lint-entity-locale-instances"],
-  fs: { cwd: "**": [read] },
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
   description: "std-orb-lint-entity-locale-instances — the `orb lint entity-locale-instances <file>` command, the port of ORB_E_LOCALE_INSTANCES_NOT_LOCAL, ORB_E_LOCALE_INSTANCES_UNKNOWN_LOCALE and ORB_E_LOCALE_INSTANCES_INCOMPLETE (entity.rs validate_all_locale_instances), plus ORB_E_INSTANCE_INVALID (entity.rs check_instance_rows) for the default `instances` rows and every locale block: a row key that is no field, a missing required field with no default, and, on a browser-stored entity, a row without an `id`. It lowers the file with program/read and, for every inline primary and auxiliary entity that writes per-locale rows, reports a non-browser-stored entity, a block for an undeclared or default locale, a missing default `instances` block and a missing block for a declared non-default locale, each with the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint entity-locale-instances: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-entity-locale-instances"
@@ -28,7 +30,7 @@ orbital OrbLintEntityLocaleInstancesOrbital {
     state ready {
       INIT -> ready
       LINT_INPUT -> ready
-        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals")) (decl (object/get @payload.program "locales" [])))
+        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])) (decl (object/get @payload.program "locales" [])))
           (let ((ents (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
                   (let ((aux (object/get (array/nth @orbitals @oi) "auxiliaryEntities" [])))
                     (array/filter

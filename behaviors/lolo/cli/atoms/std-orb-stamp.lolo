@@ -1,0 +1,153 @@
+app std-orb-stamp [
+  version: "1.0.0",
+  inbound: ["cli-stamp"],
+  description: "std-orb-stamp — the `orb stamp <FILE> [--prior FILE] [-o|--output FILE] [--imports DIR]` command (spec/cli/orb-stamp.lolo; port of orbital-cli commands/stamp.rs stamp_schema_cli). Every relative path is joined to the directory the command runs in, then the host stamps the `.orb` with program/read \"\" { stamp: true, path, prior?, imports?, output? }, which answers { program, text }: text is exactly what the Rust command printed (the stamped program as sorted-key pretty JSON), printed on stdout. With --output the host writes the file and nothing is printed. A missing file, a file that does not parse or a failed write answers status 500 on stderr `Error: <reason>` (exit 1), the reason carrying the host's `program/read:` prefix; no file, a second file, an unknown flag or a valueless or repeated value flag answers the usage (status 400, exit 2)."
+]
+uses Spec from "almadar-std/orb-stamp"
+uses Args from "std/behaviors/std-args"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
+type StampedAnswer = { text : string! }
+
+orbital OrbStampOrbital {
+  entity StampRun [runtime] {
+    id : string!
+    cwd : string = ""
+    written : boolean = false
+  }
+
+  trait ArgsCli = Args.traits.ArgsParser {
+    listens {
+      OrbStamp.STAMP_ARGS_PARSE -> ARGS_PARSE
+    }
+  }
+
+  trait OrbStamp -> StampRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      STAMP_CALLED -> parsing
+        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
+        (emit STAMP_ARGS_PARSE { stage: "stamp" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "prior" aliases: [] takesValue: true repeatable: false }, { name: "output" aliases: ["-o"] takesValue: true repeatable: false }, { name: "imports" aliases: [] takesValue: true repeatable: false }] })
+    }
+
+    state parsing {
+      INIT -> parsing
+      STAMP_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (!= (array/len @payload.positionals) 1))
+        (emit STAMP_ANSWERED { status: 400, body: "", stderr: "usage: orb stamp <FILE> [--prior FILE] [-o|--output FILE] [--imports DIR]" })
+      STAMP_ARGS_DONE -> working when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1))
+        (emit STAMP_START { cwd: @entity.cwd, positionals: @payload.positionals, flags: @payload.flags })
+    }
+
+    state working {
+      INIT -> working
+      STAMP_DONE -> ready
+        (emit STAMP_ANSWERED { status: @payload.status, body: @payload.body, stderr: @payload.stderr })
+    }
+
+    emits {
+      STAMP_ANSWERED -> internal {
+        status : number!
+        body : string!
+        stderr : string
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      STAMP_ARGS_PARSE {
+        stage : string!
+        argv : [string]!
+        flags : [ArgFlag]!
+      }
+        @description "Internal: parse the call's words."
+        @tier "internal"
+      STAMP_START {
+        cwd : string!
+        positionals : [string]!
+        flags : Map string [string]!
+      }
+        @description "Internal: stamp the program the words name."
+        @tier "internal"
+    }
+
+    listens {
+      STAMP_CALLED -> inbound "cli-stamp" answers STAMP_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb stamp`."
+        @synonyms "orb stamp, assign ids to an orb schema, V4 identity ledger, byte-stable re-stamp"
+      STAMP_ARGS_DONE {
+        stage : string!
+        flags : Map string [string]!
+        positionals : [string]!
+        errors : [string]!
+        words : [string]!
+      }
+        @description "std-args's ARGS_PARSED."
+      ArgsCli.ARGS_PARSED -> STAMP_ARGS_DONE
+      StampEngine.STAMP_ANSWERED -> STAMP_DONE
+      STAMP_DONE { status : number!  body : string!  stderr : string }
+        @description "Internal: the engine's answer, relayed to the hook by its handler."
+        @tier "internal"
+    }
+  }
+
+  trait StampEngine -> StampRun [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      STAMP_START -> stamping when (not (!= (object/get @payload.flags "output") null))
+        (set @entity.cwd @payload.cwd)
+        (set @entity.written false)
+        (program/read "" (object/merge { stamp: true, path: (if (os/path-is-absolute (array/first @payload.positionals)) (array/first @payload.positionals) (os/path-join @entity.cwd (array/first @payload.positionals))) } (if (!= (object/get @payload.flags "prior") null) { prior: (if (os/path-is-absolute (array/first (object/get @payload.flags "prior"))) (array/first (object/get @payload.flags "prior")) (os/path-join @entity.cwd (array/first (object/get @payload.flags "prior")))) } {}) (if (!= (object/get @payload.flags "imports") null) { imports: (if (os/path-is-absolute (array/first (object/get @payload.flags "imports"))) (array/first (object/get @payload.flags "imports")) (os/path-join @entity.cwd (array/first (object/get @payload.flags "imports")))) } {}) (if (!= (object/get @payload.flags "output") null) { output: (if (os/path-is-absolute (array/first (object/get @payload.flags "output"))) (array/first (object/get @payload.flags "output")) (os/path-join @entity.cwd (array/first (object/get @payload.flags "output")))) } {})) { key: "stamp" emit: { success: STAMP_STAMPED, failure: STAMP_REFUSED } })
+      STAMP_START -> stamping when (!= (object/get @payload.flags "output") null)
+        (set @entity.cwd @payload.cwd)
+        (set @entity.written true)
+        (program/read "" (object/merge { stamp: true, path: (if (os/path-is-absolute (array/first @payload.positionals)) (array/first @payload.positionals) (os/path-join @entity.cwd (array/first @payload.positionals))) } (if (!= (object/get @payload.flags "prior") null) { prior: (if (os/path-is-absolute (array/first (object/get @payload.flags "prior"))) (array/first (object/get @payload.flags "prior")) (os/path-join @entity.cwd (array/first (object/get @payload.flags "prior")))) } {}) (if (!= (object/get @payload.flags "imports") null) { imports: (if (os/path-is-absolute (array/first (object/get @payload.flags "imports"))) (array/first (object/get @payload.flags "imports")) (os/path-join @entity.cwd (array/first (object/get @payload.flags "imports")))) } {}) (if (!= (object/get @payload.flags "output") null) { output: (if (os/path-is-absolute (array/first (object/get @payload.flags "output"))) (array/first (object/get @payload.flags "output")) (os/path-join @entity.cwd (array/first (object/get @payload.flags "output")))) } {})) { key: "stamp" emit: { success: STAMP_STAMPED, failure: STAMP_REFUSED } })
+    }
+
+    state stamping {
+      INIT -> stamping
+      STAMP_STAMPED -> idle when @entity.written
+        (emit STAMP_ANSWERED { status: 200, body: "" })
+      STAMP_STAMPED -> idle when (not @entity.written)
+        (emit STAMP_ANSWERED { status: 200, body: (object/get @payload.result "text") })
+      STAMP_REFUSED -> idle
+        (emit STAMP_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " @payload.error) })
+    }
+
+    emits {
+      STAMP_ANSWERED -> external {
+        status : number!
+        body : string!
+        stderr : string
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      STAMP_REFUSED {
+        error : string
+      }
+        @description "The program could not be read, stamped or written."
+        @tier "internal"
+      STAMP_STAMPED {
+        result : StampedAnswer!
+      }
+        @description "program/read: the stamped program's text."
+        @tier "internal"
+    }
+
+    listens {
+      STAMP_START {
+        cwd : string!
+        positionals : [string]!
+        flags : Map string [string]!
+      }
+        @description "Stamp the program the words name."
+      OrbStamp.STAMP_START -> STAMP_START
+    }
+  }
+
+  page "/orb-stamp" as OrbStampPage -> OrbStamp, ArgsCli, StampEngine
+}

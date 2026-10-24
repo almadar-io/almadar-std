@@ -1,8 +1,10 @@
 app std-orb-lint-entity-browser-storage [
   version: "1.0.0",
   inbound: ["cli-lint-entity-browser-storage"],
-  fs: { cwd: "**": [read] },
-  description: "std-orb-lint-entity-browser-storage — the `orb lint entity-browser-storage <file>` command, the port of ORB_E_LOCAL_REQUIRES_PERSISTENT, ORB_E_MOCK_SEED_NOT_LOCAL and ORB_E_IDENTITY_LOCAL (entity.rs validate_browser_storage; the mock-plus-instances conflict is not ported). It lowers the file with program/read and reports, per orbital entity, each storage-flag contradiction with its path and suggestion (status 500, exit 1). Orbitals marked `spec` are skipped, as validate_all_entities skips them. Clean answers `lint entity-browser-storage: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-entity-browser-storage — the `orb lint entity-browser-storage <file>` command, the port of ORB_E_LOCAL_REQUIRES_PERSISTENT and ORB_E_IDENTITY_LOCAL (entity.rs validate_browser_storage; the retired ORB_E_MOCK_SEED_NOT_LOCAL and the mock-plus-instances conflict are not ported). It lowers the file with program/read and reports, per orbital entity, each storage-flag contradiction with its path and suggestion (status 500, exit 1). Orbitals marked `spec` are skipped, as validate_all_entities skips them. Clean answers `lint entity-browser-storage: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-entity-browser-storage"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -33,12 +35,10 @@ orbital OrbLintEntityBrowserStorageOrbital {
                 (array/map (array/range 0 (array/len @auxs)) (fn ai { ent: (array/nth @auxs @ai), base: (str/concat "orbitals[" @oi "].auxiliaryEntities[" @ai "]") })))
               (fn eb
             (let ((ent (object/get @eb "ent")))
-              (if (and (validate/object @ent) (not (object/get (array/nth @orbitals @oi) "spec" false))) (let ((nm (object/get @ent "name" "")) (lc (object/get @ent "local" false)) (sd (object/get @ent "seedMock" false)) (idn (object/get @ent "identity" false)) (rt (= (object/get @ent "persistence" "") "runtime")))
+              (if (and (validate/object @ent) (not (object/get (array/nth @orbitals @oi) "spec" false))) (let ((nm (object/get @ent "name" "")) (lc (object/get @ent "local" false)) (idn (object/get @ent "identity" false)) (rt (= (object/get @ent "persistence" "") "runtime")))
                 (array/concat
                   (if (and @lc @rt) [{ code: "ORB_E_LOCAL_REQUIRES_PERSISTENT", path: (str/concat (object/get @eb "base") ".local"), message: (str/concat "Entity '" @nm "' is [runtime, local] — a runtime entity's frame already lives in the client; `local` declares where PERSISTED rows live"), suggestion: "Use `[persistent: <collection>, local]` for rows stored in the browser, or drop `local`.", severity: "error" }] [])
-                  (array/concat
-                    (if (and @sd (not @lc)) [{ code: "ORB_E_MOCK_SEED_NOT_LOCAL", path: (str/concat (object/get @eb "base") ".seedMock"), message: (str/concat "Entity '" @nm "' declares `mock` seeding but its rows are not browser-stored — a server's mock data is its own deployment mode"), suggestion: "Add `local` (`[persistent: <collection>, local, mock]`) or drop `mock`.", severity: "error" }] [])
-                    (if (and @idn @lc) [{ code: "ORB_E_IDENTITY_LOCAL", path: (str/concat (object/get @eb "base") ".local"), message: (str/concat "Entity '" @nm "' is [identity] and `local` — the viewer directory is never browser-resident"), suggestion: "Drop `local` from the identity entity.", severity: "error" }] [])))) [])))))))))))
+                  (if (and @idn @lc) [{ code: "ORB_E_IDENTITY_LOCAL", path: (str/concat (object/get @eb "base") ".local"), message: (str/concat "Entity '" @nm "' is [identity] and `local` — the viewer directory is never browser-resident"), suggestion: "Drop `local` from the identity entity.", severity: "error" }] []))) [])))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "entity-browser-storage", findings: @entity.findings })

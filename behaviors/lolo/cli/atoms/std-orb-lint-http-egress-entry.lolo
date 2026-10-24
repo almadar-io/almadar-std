@@ -1,7 +1,9 @@
 app std-orb-lint-http-egress-entry [
   version: "1.0.0",
   inbound: ["cli-lint-http-egress-entry"],
-  fs: { cwd: "**": [read] },
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
   description: "std-orb-lint-http-egress-entry — the `orb lint http-egress-entry <file>` command, the port of ORB_HTTP_EGRESS_ENTRY_INVALID (effect/http.rs validate_http_effects over http_wire parse_egress_entry). It lowers the file with program/read and reports each app `egress` entry that is not `scheme://host[:port]` for http, https, redis, rediss, postgres or postgresql (no path, query, credentials, space, backslash, empty host or a port outside 0..65535), with the Rust path, message and suggestion (status 500, exit 1). The other ORB_HTTP rules check the arguments of `http` calls nested in effects, which this lint cannot walk without a tree fold. Clean answers `lint http-egress-entry: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-http-egress-entry"

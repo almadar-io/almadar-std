@@ -1,0 +1,18 @@
+app orb-compile-spec [
+  version: "1.0.0",
+  inbound: ["cli-compile"],
+  description: "Design contract for `orb compile <FILE> [-o|--output DIR] [-s|--shell SHELL] [-m|--mode MODE] [--frontend SHELL] [--backend SHELL] [--backend-url URL] [--patterns PATH] [--dev-logs] [--host HOST] [--listen-host ADDR] [--port N] [--emit-orb PATH]` (port of orbital-cli commands/compile.rs). The parsed words first run the std validate engine (std-orb-validate's ValidateEngine trait composed here, with the lint umbrella: core checks plus the policy lints) with `--json` on the source: any error-severity finding refuses with status 500 and stderr `Error: <path> fails `orb validate` with N error(s), so it is not compiled:` followed by one `[CODE] path: message[ 💡 suggestion]` line per error. A clean source asks program/eval null { generate: { path, output, shell, mode?, frontend?, backend?, backendUrl?, patterns?, devLogs?, host?, listenHost?, port?, emitOrb? } } (every path absolute: relative ones are joined to the directory the command runs in; output defaults to ./output, shell to typescript) and answers COMPILE_ANSWERED { status, body, stderr }: status 200, body the host's `lines` joined by newlines, exactly what `orb compile` printed. A refusal from the host answers 500 with stderr `Error: <reason>` (the reason carries the host's `program/eval:` prefix). No file, more than one file, an unknown flag, a valueless value flag, or a non-numeric --port answers 400 with the usage on stderr (exit 2). Replay goldens: orb-compile.replay.goldens.json."
+]
+
+orbital OrbCompileSpec {
+  expects trait OrbCompile {
+    state ready
+    state parsing
+    state validating
+    state generating
+    emits {
+      COMPILE_ANSWERED { status : number!  body : string!  stderr : string }
+    }
+  }
+  expects page "/orb-compile" -> OrbCompile
+}

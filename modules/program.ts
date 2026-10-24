@@ -30,29 +30,45 @@ const ValidationReport = shape({
   stats: nullable(openShape({ orbitals: NUMBER, entities: NUMBER, traits: NUMBER, pages: NUMBER })),
 });
 
+const GENERATE_OPTIONS = openShape({
+  path: STRING,
+  output: STRING,
+  shell: STRING,
+  mode: STRING,
+  frontend: STRING,
+  backend: STRING,
+  backendUrl: STRING,
+  patterns: STRING,
+  devLogs: BOOLEAN,
+  host: STRING,
+  listenHost: STRING,
+  port: NUMBER,
+  emitOrb: STRING,
+});
+
 export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
   'program/read': {
     module: 'program', category: 'std-program',
     minArity: 1, maxArity: 3,
-    description: 'Parse `.lolo` source text into a quoted program. With inspect:true and an absolute path, return the resolved program, original-source anchors and imported source provenance; version identifies the editor document. With embeds:true, the text\'s inline behavior embeds `[{ orbital, trait, behavior, line, column }]` (what `orb embeds` prints). With resolve:true and the absolute path, the file resolved as `orb resolve` prints it, `{ program, text }`; with output, also written there with its catalogs and lazy behaviors (without it, a program with lazy behaviors or locales is refused).',
+    description: 'Parse `.lolo` source text into a quoted program. With inspect:true and an absolute path, return the resolved program, original-source anchors and imported source provenance; version identifies the editor document. With embeds:true, the text\'s inline behavior embeds `[{ orbital, trait, behavior, line, column }]` (what `orb embeds` prints). With resolve:true and the absolute path, the file resolved as `orb resolve` prints it, `{ program, text }`; with output, also written there with its catalogs and lazy behaviors (without it, a program with lazy behaviors or locales is refused). With stamp:true and the absolute path of a `.orb`, the program stamped with V4 identity as `orb stamp` prints it, `{ program, text }`; `prior` (a `.orb` path) keeps ids stable, `imports` (a directory) resolves cross-file `uses` id edges, `output` also writes the text to that file.',
     hasSideEffects: true,
     runsOn: 'server',
     host: 'program',
     returnType: 'sexpr',
-    params: [{ name: 'text', type: 'string', description: '`.lolo` source' }, { name: 'inspection', type: openShape({ inspect: BOOLEAN, embeds: BOOLEAN, resolve: BOOLEAN, path: STRING, output: STRING, version: NUMBER }), description: 'Optional inspection (inspect, path, version), embed listing (embeds) or resolution (resolve, path, output) request', optional: true }, EMIT_OPTIONS],
+    params: [{ name: 'text', type: 'string', description: '`.lolo` source' }, { name: 'inspection', type: openShape({ inspect: BOOLEAN, embeds: BOOLEAN, resolve: BOOLEAN, stamp: BOOLEAN, path: STRING, output: STRING, version: NUMBER, prior: STRING, imports: STRING }), description: 'Optional inspection (inspect, path, version), embed listing (embeds), resolution (resolve, path, output) or stamping (stamp, path, prior, imports, output) request', optional: true }, EMIT_OPTIONS],
     example: '["program/read", "@entity.draft", { "emit": { "success": "READ", "failure": "READ_FAILED" } }]',
   },
   'program/print': {
     module: 'program', category: 'std-program',
     minArity: 1, maxArity: 3,
-    description: 'Format a quoted program as `.lolo` source text. With `source`, format that authored `.lolo` text instead (comments kept, the bytes `orb format` prints; `.orb` JSON prints with sorted keys) and the program is not read: `node` prints the one construct at a path (`orbitals[0].traits[2]`, `orbitals[0].entity.fields[1]`), `nodes` every construct a path with `[*]` matches, as a list.',
+    description: 'Format a quoted program as `.lolo` source text. With `source`, format that authored `.lolo` text instead (comments kept, the bytes `orb format` prints; `.orb` JSON prints with sorted keys) and the program is not read: `node` prints the one construct at a path (`orbitals[0].traits[2]`, `orbitals[0].entity.fields[1]`), `nodes` every construct a path with `[*]` matches, as a list. With `target` (`orb`, `lolo`, `ts`, `py` or `manifest`) and the absolute `path` of a `.lolo` or `.orb`, what `orb emit <target> <path>` prints, `{ text, stderr }` (`stderr` the notes it prints on stderr); `section`, `format`, `only`, `map`, `inspectSource`, `documentVersion`, `unit`, `signKey` and `keyId` are its flags, and `output` / `out` / `map` write the files the command writes (then `text` is empty). `target` excludes `source`, `node` and `nodes`.',
     hasSideEffects: true,
     runsOn: 'server',
     host: 'program',
-    returnType: union(STRING, list(STRING)),
+    returnType: union(STRING, list(STRING), shape({ text: STRING, stderr: STRING })),
     params: [
       { name: 'program', type: { kind: 'sexpr' }, description: 'A quoted program (not read when `source` is given)' },
-      { name: 'options', type: openShape({ source: STRING, node: STRING, nodes: STRING }), description: 'Authored `source` to format, at one `node` path or every `nodes` match', optional: true },
+      { name: 'options', type: openShape({ source: STRING, node: STRING, nodes: STRING, target: STRING, path: STRING, section: STRING, format: STRING, only: STRING, map: BOOLEAN, output: STRING, inspectSource: STRING, documentVersion: NUMBER, unit: STRING, out: STRING, signKey: STRING, keyId: STRING }), description: 'Authored `source` to format, at one `node` path or every `nodes` match, or the `orb emit` form (`target`, `path` and its flags)', optional: true },
       EMIT_OPTIONS,
     ],
     example: '["program/print", null, { "source": "@entity.text", "node": "orbitals[0].traits[0]" }, { "emit": { "success": "PRINTED", "failure": "PRINT_FAILED" } }]',
@@ -60,14 +76,14 @@ export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
   'program/eval': {
     module: 'program', category: 'std-program',
     minArity: 1, maxArity: 3,
-    description: 'Validate a program (`.orb` IR) at the 0-error / 0-warning bar and write it into the workspace (default `orbitals/<name>.orb`, or the project named by `into`). Success carries `{ behavior, traits, value }` — where the program was written, its traits as values, and the program itself as a behavior value; failure carries the validator errors as data. A `prior` program keeps ids stable across a re-evaluation.',
+    description: 'Validate a program (`.orb` IR) at the 0-error / 0-warning bar and write it into the workspace (default `orbitals/<name>.orb`, or the project named by `into`). Success carries `{ behavior, traits, value }` — where the program was written, its traits as values, and the program itself as a behavior value; failure carries the validator errors as data. A `prior` program keeps ids stable across a re-evaluation. With `generate` (alone) and a null program, what `orb compile` does and prints: the program at the absolute `path` is validated, then the `shell` shell writes the project into the absolute `output`; success carries `{ lines, files, warnings, nextSteps }`, `lines` being the report `orb compile` prints.',
     hasSideEffects: true,
     runsOn: 'server',
     host: 'program',
-    returnType: 'EvaluatedProgram',
+    returnType: union('EvaluatedProgram', shape({ lines: list(STRING), files: NUMBER, warnings: list(STRING), nextSteps: list(STRING) })),
     params: [
       { name: 'program', type: { kind: 'sexpr' }, description: 'A quoted program' },
-      { name: 'options', type: EMIT_ENVELOPE, description: 'An optional target project (`into`) and prior program (`prior`)', optional: true },
+      { name: 'options', type: openShape({ into: STRING, prior: { kind: 'sexpr' }, final: BOOLEAN, workspace: STRING, generate: GENERATE_OPTIONS }), description: 'An optional target project (`into`) and prior program (`prior`), or the `orb compile` form (`generate`)', optional: true },
       EMIT_OPTIONS,
     ],
     example: '["program/eval", "@entity.program", { "emit": { "success": "BUILT", "failure": "BUILD_FAILED" } }]',

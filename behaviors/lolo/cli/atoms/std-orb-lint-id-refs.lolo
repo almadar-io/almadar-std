@@ -1,7 +1,9 @@
 app std-orb-lint-id-refs [
   version: "1.0.0",
   inbound: ["cli-lint-id-refs"],
-  fs: { cwd: "**": [read] },
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
   description: "std-orb-lint-id-refs — the `orb lint id-refs <file>` command, the port of ORB_ID_UNKNOWN_REF, ORB_ID_KIND_MISMATCH and ORB_ID_NAME_MISMATCH (id_integrity.rs Checker::check). It lowers the file with program/read and checks every dual-carry id at the primary entity (extends and top-level field relations) and at each orbital trait (linked entity, entityRefIds, emits, listens and their sources, and a reference trait's ref): the id's kind prefix against the position, the id against the declared nodes and the ledger, and the sibling name against the ledger curName (an `@config.<key>` curName is satisfied by the owning trait's config default), each with the Rust path and message (status 500, exit 1). Not ported: ORB_ID_LEDGER_ORPHAN (it needs the `@trait.` embed tokens of every effect, which waits for the shared IR walk), auxiliary and data entities, nested field relations, page-owned traits and page objects. Clean answers `lint id-refs: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-id-refs"

@@ -4313,6 +4313,47 @@
      }
     }
    ]
+  },
+  {
+   "id": "date with unparseable month is refused",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "a = 2024-xx-05\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_REFUSED",
+        "payload": {
+         "requestId": "",
+         "code": "bad-value",
+         "line": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

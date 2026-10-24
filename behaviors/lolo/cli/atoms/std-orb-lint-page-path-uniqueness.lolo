@@ -1,15 +1,18 @@
 app std-orb-lint-page-path-uniqueness [
   version: "1.0.0",
   inbound: ["cli-lint-page-path-uniqueness"],
-  fs: { cwd: "**": [read] },
-  description: "std-orb-lint-page-path-uniqueness — the `orb lint page-path-uniqueness <file>` command, the port of validate_page_path_uniqueness. It lowers the file with program/read, collapses each page path to its param shape (every :name segment becomes a bare :) and reports ORB_P_DUPLICATE_PATH once per shape shared by two or more pages across all orbitals, at the first page, with the paths and locations (status 500, exit 1). Clean answers `lint page-path-uniqueness: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-page-path-uniqueness — the `orb lint page-path-uniqueness <file>` command, the port of validate_page_path_uniqueness: pages collide only within one protocol, a route by its param-shaped path, an addressed endpoint by its address (a literal path param-shaped), and an endpoint with no address collides with nothing. It lowers the file with program/read, collapses each page path to its param shape (every :name segment becomes a bare :) and reports ORB_P_DUPLICATE_PATH once per shape shared by two or more pages across all orbitals, at the first page, with the paths and locations (status 500, exit 1). Clean answers `lint page-path-uniqueness: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-page-path-uniqueness"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
-type PagePathPage = { path : string }
-type PagePathOrbital = { pages : [PagePathPage] }
-type PagePathProgram = { orbitals : [PagePathOrbital] }
+type PageUniquenessVal = string | number | boolean | [PageUniquenessVal?] | Map string PageUniquenessVal?
+type PageUniquenessPage = { path : string, protocol : string, address : PageUniquenessVal? }
+type PageUniquenessOrbital = { pages : [PageUniquenessPage] }
+type PageUniquenessProgram = { orbitals : [PageUniquenessOrbital] }
 
 orbital OrbLintPagePathUniquenessOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
@@ -26,22 +29,31 @@ orbital OrbLintPagePathUniquenessOrbital {
       INIT -> ready
       LINT_INPUT -> ready
         (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
-          (let ((locs (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+          (let ((entries (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
                   (let ((pgs (object/get (array/nth @orbitals @oi) "pages" [])))
                     (array/flatten (array/map (array/range 0 (array/len @pgs)) (fn pj
-                      (if (object/has (array/nth @pgs @pj) "path") [(str/concat "orbitals[" @oi "].pages[" @pj "]")] [])))))))))
-                (rts (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
-                  (let ((pgs (object/get (array/nth @orbitals @oi) "pages" [])))
-                    (array/flatten (array/map (array/range 0 (array/len @pgs)) (fn pj
-                      (if (object/has (array/nth @pgs @pj) "path") [(object/get (array/nth @pgs @pj) "path")] [])))))))))
-                )
-            (let ((keys (array/map @rts (fn rt (str/join (array/map (str/split @rt "/") (fn seg (if (str/startsWith @seg ":") ":" @seg))) "/")))))
+                      (let ((pg (array/nth @pgs @pj)))
+                        (let ((proto (object/get @pg "protocol" null)) (addr (object/get @pg "address" null)) (pth (object/get @pg "path" "")))
+                          (let ((key (if (= @proto null)
+                                       (str/concat "route " (str/join (array/map (str/split @pth "/") (fn seg (if (str/startsWith @seg ":") ":" @seg))) "/"))
+                                       (if (= @addr null) null
+                                         (str/concat @proto " "
+                                           (if (validate/object @addr)
+                                             (str/join (array/sort (array/map (object/keys @addr) (fn k
+                                               (let ((v (object/get @addr @k)))
+                                                 (if (and (= @k "path") (validate/string @v))
+                                                   (if (str/startsWith @v (quote "@")) (str/concat @k "=" (json/stringify @v)) (str/concat "path=" (str/join (array/map (str/split @v "/") (fn seg (if (str/startsWith @seg ":") ":" @seg))) "/")))
+                                                   (str/concat @k "=" (if (validate/number @v) (if (= (math/floor @v) @v) (str/concat @v ".0") (json/stringify @v)) (json/stringify @v)))))))) ",")
+                                             (json/stringify @addr)))))))
+                            (if (= @key null) []
+                              [{ loc: (str/concat "orbitals[" @oi "].pages[" @pj "]"), path: @pth, key: @key }])))))))))))))
+            (let ((keys (array/map @entries (fn en (object/get @en "key")))))
               (array/flatten (array/map (array/range 0 (array/len @keys)) (fn ki
                 (let ((key (array/nth @keys @ki)))
                   (let ((at (array/filter (array/range 0 (array/len @keys)) (fn j (= (array/nth @keys @j) @key)))))
                     (if (or (< (array/len @at) 2) (!= (array/first @at) @ki))
                       []
-                      [{ code: "ORB_P_DUPLICATE_PATH", path: (array/nth @locs @ki), message: (str/concat "Duplicate page path (normalized to '" @key "'): [" (str/join (array/map @at (fn j (json/stringify (array/nth @rts @j)))) ", ") "] found at: [" (str/join (array/map @at (fn j (json/stringify (array/nth @locs @j)))) ", ") "]"), suggestion: "Each page must have a unique path — two routes that only differ by a param NAME still collide at dispatch", severity: "error" }]))))))))))
+                      [{ code: "ORB_P_DUPLICATE_PATH", path: (object/get (array/nth @entries @ki) "loc"), message: (str/concat "Duplicate page path (normalized to '" @key "'): [" (str/join (array/map @at (fn j (json/stringify (object/get (array/nth @entries @j) "path")))) ", ") "] found at: [" (str/join (array/map @at (fn j (json/stringify (object/get (array/nth @entries @j) "loc")))) ", ") "]"), suggestion: "Each page must have a unique path — two routes that only differ by a param NAME still collide at dispatch", severity: "error" }]))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "page-path-uniqueness", findings: @entity.findings })
@@ -57,7 +69,7 @@ orbital OrbLintPagePathUniquenessOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PagePathProgram }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PageUniquenessProgram }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }

@@ -1,0 +1,49 @@
+{
+ "atom": "codec/atoms/std-semver.lolo",
+ "trait": "Semver",
+ "note": "a range component that does not parse as an integer takes the unsatisfiable arm",
+ "cases": [
+  {
+   "id": "satisfies 1.2.3 \"^99999999999999999999.0.0\" (unparseable component is refused, not defaulted)",
+   "steps": [
+    {
+     "event": "SEMVER_SATISFIES",
+     "payload": {
+      "version": "1.2.3",
+      "range": "^99999999999999999999.0.0"
+     }
+    },
+    {
+     "event": "SEMVER_DESUGAR",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "SEMVER_STAGE",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "SEMVER_STAGED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMVER_REFUSED",
+        "payload": {
+         "requestId": "",
+         "operation": "satisfies",
+         "reason": "range"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

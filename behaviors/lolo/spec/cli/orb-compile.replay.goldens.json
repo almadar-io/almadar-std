@@ -1,0 +1,873 @@
+{
+ "atom": "cli/atoms/std-orb-compile.lolo",
+ "trait": "OrbCompile",
+ "cases": [
+  {
+   "id": "the call asks std-args to parse with the compile flag table and its -o -s -m aliases",
+   "steps": [
+    {
+     "trait": "OrbCompile",
+     "from": "ready",
+     "event": "COMPILE_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"a.lolo\", \"-o\", \"out\", \"-s\", \"python\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "COMPILE_ARGS_PARSE",
+        "payload": {
+         "stage": "compile",
+         "argv": [
+          "a.lolo",
+          "-o",
+          "out",
+          "-s",
+          "python"
+         ],
+         "flags": [
+          {
+           "name": "output",
+           "aliases": [
+            "-o"
+           ],
+           "takesValue": true,
+           "repeatable": false
+          },
+          {
+           "name": "shell",
+           "aliases": [
+            "-s"
+           ],
+           "takesValue": true,
+           "repeatable": false
+          },
+          {
+           "name": "mode",
+           "aliases": [
+            "-m"
+           ],
+           "takesValue": true,
+           "repeatable": false
+          },
+          {
+           "name": "frontend",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": false
+          },
+          {
+           "name": "backend",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": false
+          },
+          {
+           "name": "backend-url",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": false
+          },
+          {
+           "name": "patterns",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": false
+          },
+          {
+           "name": "dev-logs",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          },
+          {
+           "name": "host",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": false
+          },
+          {
+           "name": "listen-host",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": false
+          },
+          {
+           "name": "port",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": false
+          },
+          {
+           "name": "emit-orb",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a relative file is validated first with --json, joined to the working directory",
+   "steps": [
+    {
+     "trait": "OrbCompile",
+     "from": "ready",
+     "event": "COMPILE_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"a.lolo\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing"
+     }
+    },
+    {
+     "trait": "OrbCompile",
+     "from": "parsing",
+     "event": "COMPILE_ARGS_DONE",
+     "payload": {
+      "stage": "compile",
+      "flags": {},
+      "positionals": [
+       "a.lolo"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "validating",
+      "emits": [
+       {
+        "event": "VALIDATE_START",
+        "payload": {
+         "file": "a.lolo",
+         "path": "/w/a.lolo",
+         "cwd": "/w",
+         "json": true,
+         "denyWarnings": false,
+         "finalProgram": false,
+         "hasPatterns": false,
+         "patterns": "",
+         "hasServices": false,
+         "services": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an absolute file is validated as given",
+   "steps": [
+    {
+     "trait": "OrbCompile",
+     "from": "ready",
+     "event": "COMPILE_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"/x/a.lolo\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing"
+     }
+    },
+    {
+     "trait": "OrbCompile",
+     "from": "parsing",
+     "event": "COMPILE_ARGS_DONE",
+     "payload": {
+      "stage": "compile",
+      "flags": {},
+      "positionals": [
+       "/x/a.lolo"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "validating",
+      "emits": [
+       {
+        "event": "VALIDATE_START",
+        "payload": {
+         "file": "/x/a.lolo",
+         "path": "/x/a.lolo",
+         "cwd": "/w",
+         "json": true,
+         "denyWarnings": false,
+         "finalProgram": false,
+         "hasPatterns": false,
+         "patterns": "",
+         "hasServices": false,
+         "services": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: no file answers the usage",
+   "steps": [
+    {
+     "trait": "OrbCompile",
+     "from": "ready",
+     "event": "COMPILE_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing"
+     }
+    },
+    {
+     "trait": "OrbCompile",
+     "from": "parsing",
+     "event": "COMPILE_ARGS_DONE",
+     "payload": {
+      "stage": "compile",
+      "flags": {},
+      "positionals": [],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "COMPILE_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb compile <FILE> [-o|--output DIR] [-s|--shell SHELL] [-m|--mode MODE] [--frontend SHELL] [--backend SHELL] [--backend-url URL] [--patterns PATH] [--dev-logs] [--host HOST] [--listen-host ADDR] [--port N] [--emit-orb PATH]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a second file answers the usage",
+   "steps": [
+    {
+     "trait": "OrbCompile",
+     "from": "ready",
+     "event": "COMPILE_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"a.lolo\", \"b.lolo\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing"
+     }
+    },
+    {
+     "trait": "OrbCompile",
+     "from": "parsing",
+     "event": "COMPILE_ARGS_DONE",
+     "payload": {
+      "stage": "compile",
+      "flags": {},
+      "positionals": [
+       "a.lolo",
+       "b.lolo"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "COMPILE_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb compile <FILE> [-o|--output DIR] [-s|--shell SHELL] [-m|--mode MODE] [--frontend SHELL] [--backend SHELL] [--backend-url URL] [--patterns PATH] [--dev-logs] [--host HOST] [--listen-host ADDR] [--port N] [--emit-orb PATH]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a parse error answers the usage",
+   "steps": [
+    {
+     "trait": "OrbCompile",
+     "from": "ready",
+     "event": "COMPILE_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"a.lolo\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing"
+     }
+    },
+    {
+     "trait": "OrbCompile",
+     "from": "parsing",
+     "event": "COMPILE_ARGS_DONE",
+     "payload": {
+      "stage": "compile",
+      "flags": {},
+      "positionals": [
+       "a.lolo"
+      ],
+      "errors": [
+       "unknown flag --bogus"
+      ],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "COMPILE_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb compile <FILE> [-o|--output DIR] [-s|--shell SHELL] [-m|--mode MODE] [--frontend SHELL] [--backend SHELL] [--backend-url URL] [--patterns PATH] [--dev-logs] [--host HOST] [--listen-host ADDR] [--port N] [--emit-orb PATH]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a non-numeric port answers the usage",
+   "steps": [
+    {
+     "trait": "OrbCompile",
+     "from": "ready",
+     "event": "COMPILE_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"a.lolo\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing"
+     }
+    },
+    {
+     "trait": "OrbCompile",
+     "from": "parsing",
+     "event": "COMPILE_ARGS_DONE",
+     "payload": {
+      "stage": "compile",
+      "flags": {
+       "port": [
+        "x"
+       ]
+      },
+      "positionals": [
+       "a.lolo"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "COMPILE_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb compile <FILE> [-o|--output DIR] [-s|--shell SHELL] [-m|--mode MODE] [--frontend SHELL] [--backend SHELL] [--backend-url URL] [--patterns PATH] [--dev-logs] [--host HOST] [--listen-host ADDR] [--port N] [--emit-orb PATH]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a clean validation moves on to generating",
+   "steps": [
+    {
+     "trait": "OrbCompile",
+     "from": "ready",
+     "event": "COMPILE_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"a.lolo\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing"
+     }
+    },
+    {
+     "trait": "OrbCompile",
+     "from": "parsing",
+     "event": "COMPILE_ARGS_DONE",
+     "payload": {
+      "stage": "compile",
+      "flags": {},
+      "positionals": [
+       "a.lolo"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "validating",
+      "emits": [
+       {
+        "event": "VALIDATE_START",
+        "payload": {
+         "file": "a.lolo",
+         "path": "/w/a.lolo",
+         "cwd": "/w",
+         "json": true,
+         "denyWarnings": false,
+         "finalProgram": false,
+         "hasPatterns": false,
+         "patterns": "",
+         "hasServices": false,
+         "services": ""
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbCompile",
+     "from": "validating",
+     "event": "VALIDATE_REPORTED",
+     "payload": {
+      "status": 200,
+      "body": "{\"success\": true, \"valid\": true}",
+      "stderr": ""
+     },
+     "expect": {
+      "state": "generating"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a validation error refuses with the gate wording and one line per error",
+   "steps": [
+    {
+     "trait": "OrbCompile",
+     "from": "ready",
+     "event": "COMPILE_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"a.lolo\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing"
+     }
+    },
+    {
+     "trait": "OrbCompile",
+     "from": "parsing",
+     "event": "COMPILE_ARGS_DONE",
+     "payload": {
+      "stage": "compile",
+      "flags": {},
+      "positionals": [
+       "a.lolo"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "validating",
+      "emits": [
+       {
+        "event": "VALIDATE_START",
+        "payload": {
+         "file": "a.lolo",
+         "path": "/w/a.lolo",
+         "cwd": "/w",
+         "json": true,
+         "denyWarnings": false,
+         "finalProgram": false,
+         "hasPatterns": false,
+         "patterns": "",
+         "hasServices": false,
+         "services": ""
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbCompile",
+     "from": "validating",
+     "event": "VALIDATE_REPORTED",
+     "payload": {
+      "status": 200,
+      "body": "{\"success\": true, \"valid\": false, \"errors\": [{\"code\": \"ORB_X\", \"path\": \"orbitals[0]\", \"message\": \"bad\", \"suggestion\": \"fix it\"}, {\"code\": \"ORB_Y\", \"path\": \"p\", \"message\": \"worse\"}]}",
+      "stderr": ""
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "COMPILE_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "Error: /w/a.lolo fails `orb validate` with 2 error(s), so it is not compiled:\n[ORB_X] orbitals[0]: bad 💡 fix it\n[ORB_Y] p: worse"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a validate run that could not answer relays its stderr as status 500",
+   "steps": [
+    {
+     "trait": "OrbCompile",
+     "from": "ready",
+     "event": "COMPILE_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"a.lolo\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing"
+     }
+    },
+    {
+     "trait": "OrbCompile",
+     "from": "parsing",
+     "event": "COMPILE_ARGS_DONE",
+     "payload": {
+      "stage": "compile",
+      "flags": {},
+      "positionals": [
+       "a.lolo"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "validating",
+      "emits": [
+       {
+        "event": "VALIDATE_START",
+        "payload": {
+         "file": "a.lolo",
+         "path": "/w/a.lolo",
+         "cwd": "/w",
+         "json": true,
+         "denyWarnings": false,
+         "finalProgram": false,
+         "hasPatterns": false,
+         "patterns": "",
+         "hasServices": false,
+         "services": ""
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbCompile",
+     "from": "validating",
+     "event": "VALIDATE_REPORTED",
+     "payload": {
+      "status": 500,
+      "body": "",
+      "stderr": "Error: boom"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "COMPILE_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "Error: boom"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "generated lines print joined by newlines",
+   "steps": [
+    {
+     "trait": "OrbCompile",
+     "from": "ready",
+     "event": "COMPILE_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"a.lolo\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing"
+     }
+    },
+    {
+     "trait": "OrbCompile",
+     "from": "parsing",
+     "event": "COMPILE_ARGS_DONE",
+     "payload": {
+      "stage": "compile",
+      "flags": {},
+      "positionals": [
+       "a.lolo"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "validating",
+      "emits": [
+       {
+        "event": "VALIDATE_START",
+        "payload": {
+         "file": "a.lolo",
+         "path": "/w/a.lolo",
+         "cwd": "/w",
+         "json": true,
+         "denyWarnings": false,
+         "finalProgram": false,
+         "hasPatterns": false,
+         "patterns": "",
+         "hasServices": false,
+         "services": ""
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbCompile",
+     "from": "validating",
+     "event": "VALIDATE_REPORTED",
+     "payload": {
+      "status": 200,
+      "body": "{\"success\": true, \"valid\": true}",
+      "stderr": ""
+     },
+     "expect": {
+      "state": "generating"
+     }
+    },
+    {
+     "trait": "OrbCompile",
+     "from": "generating",
+     "event": "COMPILE_GENERATED",
+     "payload": {
+      "result": {
+       "lines": [
+        "Compiling schema: /w/a.lolo",
+        "",
+        "✅ Generated 2 files"
+       ],
+       "files": 2,
+       "warnings": [],
+       "nextSteps": []
+      }
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "COMPILE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "Compiling schema: /w/a.lolo\n\n✅ Generated 2 files"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a host refusal answers 500 with its reason",
+   "steps": [
+    {
+     "trait": "OrbCompile",
+     "from": "ready",
+     "event": "COMPILE_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"a.lolo\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing"
+     }
+    },
+    {
+     "trait": "OrbCompile",
+     "from": "parsing",
+     "event": "COMPILE_ARGS_DONE",
+     "payload": {
+      "stage": "compile",
+      "flags": {},
+      "positionals": [
+       "a.lolo"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "validating",
+      "emits": [
+       {
+        "event": "VALIDATE_START",
+        "payload": {
+         "file": "a.lolo",
+         "path": "/w/a.lolo",
+         "cwd": "/w",
+         "json": true,
+         "denyWarnings": false,
+         "finalProgram": false,
+         "hasPatterns": false,
+         "patterns": "",
+         "hasServices": false,
+         "services": ""
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbCompile",
+     "from": "validating",
+     "event": "VALIDATE_REPORTED",
+     "payload": {
+      "status": 200,
+      "body": "{\"success\": true, \"valid\": true}",
+      "stderr": ""
+     },
+     "expect": {
+      "state": "generating"
+     }
+    },
+    {
+     "trait": "OrbCompile",
+     "from": "generating",
+     "event": "COMPILE_REFUSED",
+     "payload": {
+      "error": "program/eval: /w/out/p.orb (compiled from /w/a.lolo) fails `orb validate` with 1 error(s), so it is not compiled:\n[X] y: z"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "COMPILE_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "Error: program/eval: /w/out/p.orb (compiled from /w/a.lolo) fails `orb validate` with 1 error(s), so it is not compiled:\n[X] y: z"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a refusal with no reason still answers 500",
+   "steps": [
+    {
+     "trait": "OrbCompile",
+     "from": "ready",
+     "event": "COMPILE_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"a.lolo\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing"
+     }
+    },
+    {
+     "trait": "OrbCompile",
+     "from": "parsing",
+     "event": "COMPILE_ARGS_DONE",
+     "payload": {
+      "stage": "compile",
+      "flags": {},
+      "positionals": [
+       "a.lolo"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "validating",
+      "emits": [
+       {
+        "event": "VALIDATE_START",
+        "payload": {
+         "file": "a.lolo",
+         "path": "/w/a.lolo",
+         "cwd": "/w",
+         "json": true,
+         "denyWarnings": false,
+         "finalProgram": false,
+         "hasPatterns": false,
+         "patterns": "",
+         "hasServices": false,
+         "services": ""
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbCompile",
+     "from": "validating",
+     "event": "VALIDATE_REPORTED",
+     "payload": {
+      "status": 200,
+      "body": "{\"success\": true, \"valid\": true}",
+      "stderr": ""
+     },
+     "expect": {
+      "state": "generating"
+     }
+    },
+    {
+     "trait": "OrbCompile",
+     "from": "generating",
+     "event": "COMPILE_REFUSED",
+     "payload": {},
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "COMPILE_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

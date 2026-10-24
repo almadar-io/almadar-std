@@ -1,0 +1,21 @@
+app lint-loop-invariant-parse-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint loop-invariant-parse <file>`: a json/parse or bytes/to-string call inside a lambda whose argument uses none of the lambda's parameters nor a name bound inside it is a warning ORB_W_LOOP_INVARIANT_PARSE."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintLoopInvariantParseSpec {
+  expects trait OrbLintLoopInvariantParse {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintLoopInvariantParseCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintLoopInvariantParse, OrbLintLoopInvariantParseCli
+}

@@ -1,0 +1,533 @@
+{
+ "atom": "cli/atoms/std-orb-stamp.lolo",
+ "trait": "StampEngine",
+ "cases": [
+  {
+   "id": "the call asks std-args to parse with the stamp flag table and its -o alias",
+   "steps": [
+    {
+     "trait": "OrbStamp",
+     "from": "ready",
+     "event": "STAMP_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"a.orb\", \"--prior\", \"p.orb\", \"-o\", \"s.orb\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "STAMP_ARGS_PARSE",
+        "payload": {
+         "stage": "stamp",
+         "argv": [
+          "a.orb",
+          "--prior",
+          "p.orb",
+          "-o",
+          "s.orb"
+         ],
+         "flags": [
+          {
+           "name": "prior",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": false
+          },
+          {
+           "name": "output",
+           "aliases": [
+            "-o"
+           ],
+           "takesValue": true,
+           "repeatable": false
+          },
+          {
+           "name": "imports",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "one file starts the stamp with the working directory",
+   "steps": [
+    {
+     "trait": "OrbStamp",
+     "from": "ready",
+     "event": "STAMP_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"a.orb\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing"
+     }
+    },
+    {
+     "trait": "OrbStamp",
+     "from": "parsing",
+     "event": "STAMP_ARGS_DONE",
+     "payload": {
+      "stage": "stamp",
+      "flags": {},
+      "positionals": [
+       "a.orb"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "working",
+      "emits": [
+       {
+        "event": "STAMP_START",
+        "payload": {
+         "cwd": "/w",
+         "positionals": [
+          "a.orb"
+         ],
+         "flags": {}
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "flags travel to the engine as parsed",
+   "steps": [
+    {
+     "trait": "OrbStamp",
+     "from": "ready",
+     "event": "STAMP_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"/x/a.orb\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing"
+     }
+    },
+    {
+     "trait": "OrbStamp",
+     "from": "parsing",
+     "event": "STAMP_ARGS_DONE",
+     "payload": {
+      "stage": "stamp",
+      "flags": {
+       "prior": [
+        "p.orb"
+       ],
+       "imports": [
+        "/i"
+       ],
+       "output": [
+        "s.orb"
+       ]
+      },
+      "positionals": [
+       "/x/a.orb"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "working",
+      "emits": [
+       {
+        "event": "STAMP_START",
+        "payload": {
+         "cwd": "/w",
+         "positionals": [
+          "/x/a.orb"
+         ],
+         "flags": {
+          "prior": [
+           "p.orb"
+          ],
+          "imports": [
+           "/i"
+          ],
+          "output": [
+           "s.orb"
+          ]
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: no file answers the usage",
+   "steps": [
+    {
+     "trait": "OrbStamp",
+     "from": "ready",
+     "event": "STAMP_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing"
+     }
+    },
+    {
+     "trait": "OrbStamp",
+     "from": "parsing",
+     "event": "STAMP_ARGS_DONE",
+     "payload": {
+      "stage": "stamp",
+      "flags": {},
+      "positionals": [],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "STAMP_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb stamp <FILE> [--prior FILE] [-o|--output FILE] [--imports DIR]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a second file answers the usage",
+   "steps": [
+    {
+     "trait": "OrbStamp",
+     "from": "ready",
+     "event": "STAMP_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"a.orb\", \"b.orb\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing"
+     }
+    },
+    {
+     "trait": "OrbStamp",
+     "from": "parsing",
+     "event": "STAMP_ARGS_DONE",
+     "payload": {
+      "stage": "stamp",
+      "flags": {},
+      "positionals": [
+       "a.orb",
+       "b.orb"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "STAMP_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb stamp <FILE> [--prior FILE] [-o|--output FILE] [--imports DIR]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a parse error answers the usage",
+   "steps": [
+    {
+     "trait": "OrbStamp",
+     "from": "ready",
+     "event": "STAMP_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"a.orb\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing"
+     }
+    },
+    {
+     "trait": "OrbStamp",
+     "from": "parsing",
+     "event": "STAMP_ARGS_DONE",
+     "payload": {
+      "stage": "stamp",
+      "flags": {},
+      "positionals": [
+       "a.orb"
+      ],
+      "errors": [
+       "unknown flag --bogus"
+      ],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "STAMP_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb stamp <FILE> [--prior FILE] [-o|--output FILE] [--imports DIR]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a stamped program prints its text and drops the program tree",
+   "steps": [
+    {
+     "trait": "StampEngine",
+     "from": "idle",
+     "event": "STAMP_START",
+     "payload": {
+      "cwd": "/w",
+      "positionals": [
+       "a.orb"
+      ],
+      "flags": {}
+     },
+     "expect": {
+      "state": "stamping"
+     }
+    },
+    {
+     "trait": "StampEngine",
+     "from": "stamping",
+     "event": "STAMP_STAMPED",
+     "payload": {
+      "result": {
+       "program": {
+        "name": "a"
+       },
+       "text": "{\n  \"name\": \"a\"\n}"
+      }
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STAMP_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "{\n  \"name\": \"a\"\n}"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: with --output the host writes the text and nothing is printed",
+   "steps": [
+    {
+     "trait": "StampEngine",
+     "from": "idle",
+     "event": "STAMP_START",
+     "payload": {
+      "cwd": "/w",
+      "positionals": [
+       "a.orb"
+      ],
+      "flags": {
+       "output": [
+        "s.orb"
+       ]
+      }
+     },
+     "expect": {
+      "state": "stamping"
+     }
+    },
+    {
+     "trait": "StampEngine",
+     "from": "stamping",
+     "event": "STAMP_STAMPED",
+     "payload": {
+      "result": {
+       "program": {
+        "name": "a"
+       },
+       "text": "{\n  \"name\": \"a\"\n}"
+      }
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STAMP_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a second run without --output prints again after a run with it",
+   "steps": [
+    {
+     "trait": "StampEngine",
+     "from": "idle",
+     "event": "STAMP_START",
+     "payload": {
+      "cwd": "/w",
+      "positionals": [
+       "a.orb"
+      ],
+      "flags": {
+       "output": [
+        "s.orb"
+       ]
+      }
+     },
+     "expect": {
+      "state": "stamping"
+     }
+    },
+    {
+     "trait": "StampEngine",
+     "from": "stamping",
+     "event": "STAMP_STAMPED",
+     "payload": {
+      "result": {
+       "program": {},
+       "text": "{\n  \"name\": \"a\"\n}"
+      }
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STAMP_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": ""
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "StampEngine",
+     "from": "idle",
+     "event": "STAMP_START",
+     "payload": {
+      "cwd": "/w",
+      "positionals": [
+       "a.orb"
+      ],
+      "flags": {}
+     },
+     "expect": {
+      "state": "stamping"
+     }
+    },
+    {
+     "trait": "StampEngine",
+     "from": "stamping",
+     "event": "STAMP_STAMPED",
+     "payload": {
+      "result": {
+       "program": {},
+       "text": "{\n  \"name\": \"a\"\n}"
+      }
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STAMP_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "{\n  \"name\": \"a\"\n}"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a refusal (missing file, unparsable file, failed write) answers 500 with its reason",
+   "steps": [
+    {
+     "trait": "StampEngine",
+     "from": "stamping",
+     "event": "STAMP_REFUSED",
+     "payload": {
+      "error": "program/read: Failed to read /w/a.orb: No such file or directory (os error 2)"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STAMP_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "Error: program/read: Failed to read /w/a.orb: No such file or directory (os error 2)"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a refusal with no reason still answers 500",
+   "steps": [
+    {
+     "trait": "StampEngine",
+     "from": "stamping",
+     "event": "STAMP_REFUSED",
+     "payload": {},
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STAMP_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

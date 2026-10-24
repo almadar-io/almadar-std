@@ -2151,7 +2151,7 @@
       ]
     },
     {
-      "id": "object-form-hud",
+      "id": "control-object-form-effects-are-not-render-ui-so-no-hud-slot",
       "steps": [
         {
           "event": "LINT_INPUT",
@@ -2249,15 +2249,7 @@
                 "event": "LINT_FOUND",
                 "payload": {
                   "rule": "slot",
-                  "findings": [
-                    {
-                      "code": "ORB_SLOT_HUD_NON_GAME",
-                      "path": "orbitals[0].pages[0]",
-                      "message": "Slot 'hud-top' is typically used in game context",
-                      "suggestion": "HUD slots are intended for game UIs",
-                      "severity": "error"
-                    }
-                  ]
+                  "findings": []
                 }
               }
             ]
@@ -2266,7 +2258,7 @@
       ]
     },
     {
-      "id": "object-form-underscore-contention",
+      "id": "object-form-effects-are-not-render-ui-so-main-is-uncovered",
       "steps": [
         {
           "event": "LINT_INPUT",
@@ -2365,10 +2357,10 @@
                   "rule": "slot",
                   "findings": [
                     {
-                      "code": "ORB_SLOT_CONTENTION",
+                      "code": "ORB_SLOT_MAIN_NOT_COVERED",
                       "path": "orbitals[0].pages[0]",
-                      "message": "Slot 'main' has contention: multiple traits render to it: [\"A1\", \"A2\"]",
-                      "suggestion": "Each slot should be owned by exactly one trait",
+                      "message": "Main slot is not covered by any trait on page load",
+                      "suggestion": "Ensure at least one trait renders to 'main' slot in INIT transition",
                       "severity": "error"
                     }
                   ]
@@ -2380,7 +2372,7 @@
       ]
     },
     {
-      "id": "control-object-form-main",
+      "id": "object-form-effect-alone-leaves-main-uncovered",
       "steps": [
         {
           "event": "LINT_INPUT",
@@ -2451,7 +2443,15 @@
                 "event": "LINT_FOUND",
                 "payload": {
                   "rule": "slot",
-                  "findings": []
+                  "findings": [
+                    {
+                      "code": "ORB_SLOT_MAIN_NOT_COVERED",
+                      "path": "orbitals[0].pages[0]",
+                      "message": "Main slot is not covered by any trait on page load",
+                      "suggestion": "Ensure at least one trait renders to 'main' slot in INIT transition",
+                      "severity": "error"
+                    }
+                  ]
                 }
               }
             ]
@@ -6077,7 +6077,7 @@
       ]
     },
     {
-      "id": "one-trait-rendering-main-twice-is-contention-with-itself-as-in-rust",
+      "id": "one-trait-rendering-main-twice-in-one-arm-does-not-contend-with-itself",
       "steps": [
         {
           "event": "LINT_INPUT",
@@ -6155,11 +6155,3567 @@
                 "event": "LINT_FOUND",
                 "payload": {
                   "rule": "slot",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "sibling-traits-share-the-modal-overlay",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/x",
+                      "traits": [
+                        {
+                          "name": "M",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "name": "Create",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "modal",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "name": "Edit",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "modal",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "slot",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "sibling-traits-share-the-toast-overlay",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/x",
+                      "traits": [
+                        {
+                          "name": "M",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "name": "Create",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "toast",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "name": "Edit",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "toast",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "slot",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-sibling-traits-contend-for-the-sidebar",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/x",
+                      "traits": [
+                        {
+                          "name": "M",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "name": "Create",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "sidebar",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "name": "Edit",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "sidebar",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "slot",
                   "findings": [
                     {
                       "code": "ORB_SLOT_CONTENTION",
                       "path": "orbitals[0].pages[0]",
-                      "message": "Slot 'main' has contention: multiple traits render to it: [\"T\", \"T\"]",
+                      "message": "Slot 'sidebar' has contention: multiple traits render to it: [\"Create\", \"Edit\"]",
+                      "suggestion": "Each slot should be owned by exactly one trait",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "sibling-traits-share-the-modal-overlay-at-runtime",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/x",
+                      "traits": [
+                        {
+                          "name": "M",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "name": "Create",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              },
+                              {
+                                "name": "second"
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": []
+                              },
+                              {
+                                "from": "idle",
+                                "to": "second",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "modal",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              },
+                              {
+                                "from": "second",
+                                "to": "second",
+                                "event": "REFRESH_Create",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "modal",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "name": "Edit",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              },
+                              {
+                                "name": "second"
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": []
+                              },
+                              {
+                                "from": "idle",
+                                "to": "second",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "modal",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              },
+                              {
+                                "from": "second",
+                                "to": "second",
+                                "event": "REFRESH_Edit",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "modal",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "slot",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-sibling-traits-contend-for-the-sidebar-at-runtime",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/x",
+                      "traits": [
+                        {
+                          "name": "M",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "name": "Create",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              },
+                              {
+                                "name": "second"
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": []
+                              },
+                              {
+                                "from": "idle",
+                                "to": "second",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "sidebar",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              },
+                              {
+                                "from": "second",
+                                "to": "second",
+                                "event": "REFRESH_Create",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "sidebar",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "name": "Edit",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              },
+                              {
+                                "name": "second"
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": []
+                              },
+                              {
+                                "from": "idle",
+                                "to": "second",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "sidebar",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              },
+                              {
+                                "from": "second",
+                                "to": "second",
+                                "event": "REFRESH_Edit",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "sidebar",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "slot",
+                  "findings": [
+                    {
+                      "code": "ORB_SLOT_CONTENTION_RUNTIME",
+                      "path": "orbitals[0].pages[0]",
+                      "message": "Slot 'sidebar' in state 'second' has contention: traits [\"Create\", \"Edit\"] all render to it.",
+                      "suggestion": "Each slot should be owned by exactly one trait per state",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-embedded-trait-does-not-contend-for-main",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/x",
+                      "traits": [
+                        {
+                          "name": "Host",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "stack",
+                                      "children": [
+                                        "@trait.Child"
+                                      ]
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "name": "Child",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "slot",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-unembedded-peer-still-contends-beside-an-embedding-host",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/x",
+                      "traits": [
+                        {
+                          "name": "Host",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "stack",
+                                      "children": [
+                                        "@trait.Child"
+                                      ]
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "name": "Child",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "name": "Peer",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "slot",
+                  "findings": [
+                    {
+                      "code": "ORB_SLOT_CONTENTION",
+                      "path": "orbitals[0].pages[0]",
+                      "message": "Slot 'main' has contention: multiple traits render to it: [\"Host\", \"Peer\"]",
+                      "suggestion": "Each slot should be owned by exactly one trait",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "nested-and-conditional-embeds-do-not-contend",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/x",
+                      "traits": [
+                        {
+                          "name": "Host",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "if",
+                                    true,
+                                    [
+                                      "render-ui",
+                                      "main",
+                                      {
+                                        "type": "stack",
+                                        "children": [
+                                          "@trait.Card"
+                                        ]
+                                      }
+                                    ],
+                                    null
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "name": "Card",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "stack",
+                                      "children": [
+                                        "@trait.Leaf"
+                                      ]
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "name": "Leaf",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "slot",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-embedded-child-does-not-cover-main",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/x",
+                      "traits": [
+                        {
+                          "name": "Host",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "sidebar",
+                                    {
+                                      "type": "stack",
+                                      "children": [
+                                        "@trait.Child"
+                                      ]
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "name": "Child",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "slot",
+                  "findings": [
+                    {
+                      "code": "ORB_SLOT_MAIN_NOT_COVERED",
+                      "path": "orbitals[0].pages[0]",
+                      "message": "Main slot is not covered by any trait on page load",
+                      "suggestion": "Ensure at least one trait renders to 'main' slot in INIT transition",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-hosting-trait-covers-main-for-its-embedded-child",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/x",
+                      "traits": [
+                        {
+                          "name": "Host",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "stack",
+                                      "children": [
+                                        "@trait.Child"
+                                      ]
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "name": "Child",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "sidebar",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "slot",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-embed-token-with-a-slot-suffix-names-its-trait",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/x",
+                      "traits": [
+                        {
+                          "name": "Host",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "stack",
+                                      "children": [
+                                        "@trait.Child.body",
+                                        "@trait.Other[0]"
+                                      ]
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "name": "Child",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "name": "Other",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "slot",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-embed-in-a-config-default-is-an-embed",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/x",
+                      "traits": [
+                        {
+                          "name": "Host",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          },
+                          "config": {
+                            "body": {
+                              "type": "node",
+                              "default": "@trait.Child"
+                            }
+                          }
+                        },
+                        {
+                          "name": "Child",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "slot",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-embed-in-a-tick-is-an-embed",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/x",
+                      "traits": [
+                        {
+                          "name": "Host",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          },
+                          "ticks": [
+                            {
+                              "interval": 1000,
+                              "effects": [
+                                [
+                                  "render-ui",
+                                  "main",
+                                  {
+                                    "type": "stack",
+                                    "children": [
+                                      "@trait.Child"
+                                    ]
+                                  }
+                                ]
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "name": "Child",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "slot",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-trait-embedding-itself-is-still-a-page-trait",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/x",
+                      "traits": [
+                        {
+                          "name": "Host",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "stack",
+                                      "children": [
+                                        "@trait.Host"
+                                      ]
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "slot",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "mutually-embedding-traits-leave-no-page-trait-to-cover-main",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/x",
+                      "traits": [
+                        {
+                          "name": "A1",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "stack",
+                                      "children": [
+                                        "@trait.B1"
+                                      ]
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "name": "B1",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "stack",
+                                      "children": [
+                                        "@trait.A1"
+                                      ]
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "slot",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-embedded-trait-does-not-contend-at-runtime",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/x",
+                      "traits": [
+                        {
+                          "name": "Host",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              },
+                              {
+                                "name": "second"
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              },
+                              {
+                                "from": "idle",
+                                "to": "second",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "stack",
+                                      "children": [
+                                        "@trait.Child"
+                                      ]
+                                    }
+                                  ]
+                                ]
+                              },
+                              {
+                                "from": "second",
+                                "to": "second",
+                                "event": "REFRESH_Host",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "name": "Child",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              },
+                              {
+                                "name": "second"
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT"
+                              },
+                              {
+                                "from": "idle",
+                                "to": "second",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              },
+                              {
+                                "from": "second",
+                                "to": "second",
+                                "event": "REFRESH_Child",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "slot",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-the-same-traits-without-an-embed-contend-at-runtime",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/x",
+                      "traits": [
+                        {
+                          "name": "Host",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              },
+                              {
+                                "name": "second"
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              },
+                              {
+                                "from": "idle",
+                                "to": "second",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              },
+                              {
+                                "from": "second",
+                                "to": "second",
+                                "event": "REFRESH_Host",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "name": "Child",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              },
+                              {
+                                "name": "second"
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT"
+                              },
+                              {
+                                "from": "idle",
+                                "to": "second",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              },
+                              {
+                                "from": "second",
+                                "to": "second",
+                                "event": "REFRESH_Child",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "slot",
+                  "findings": [
+                    {
+                      "code": "ORB_SLOT_CONTENTION_RUNTIME",
+                      "path": "orbitals[0].pages[0]",
+                      "message": "Slot 'main' in state 'second' has contention: traits [\"Child\", \"Host\"] all render to it.",
+                      "suggestion": "Each slot should be owned by exactly one trait per state",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "render-ui-inside-an-if-branch-covers-main",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/x",
+                      "traits": [
+                        {
+                          "name": "Cond",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "if",
+                                    true,
+                                    [
+                                      "render-ui",
+                                      "main",
+                                      {
+                                        "type": "card"
+                                      }
+                                    ]
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "slot",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "render-ui-inside-a-do-block-covers-main",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/x",
+                      "traits": [
+                        {
+                          "name": "Cond",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "do",
+                                    [
+                                      "render-ui",
+                                      "main",
+                                      {
+                                        "type": "card"
+                                      }
+                                    ]
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "slot",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-render-ui-inside-an-if-branch-on-another-slot-leaves-main-uncovered",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/x",
+                      "traits": [
+                        {
+                          "name": "Cond",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "if",
+                                    true,
+                                    [
+                                      "render-ui",
+                                      "sidebar",
+                                      {
+                                        "type": "card"
+                                      }
+                                    ]
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "slot",
+                  "findings": [
+                    {
+                      "code": "ORB_SLOT_MAIN_NOT_COVERED",
+                      "path": "orbitals[0].pages[0]",
+                      "message": "Main slot is not covered by any trait on page load",
+                      "suggestion": "Ensure at least one trait renders to 'main' slot in INIT transition",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "two-renders-of-main-inside-if-branches-contend-between-traits",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/x",
+                      "traits": [
+                        {
+                          "name": "C1",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "if",
+                                    true,
+                                    [
+                                      "render-ui",
+                                      "main",
+                                      {
+                                        "type": "card"
+                                      }
+                                    ]
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "name": "C2",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "if",
+                                    false,
+                                    [
+                                      "render-ui",
+                                      "main",
+                                      {
+                                        "type": "card"
+                                      }
+                                    ]
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "slot",
+                  "findings": [
+                    {
+                      "code": "ORB_SLOT_CONTENTION",
+                      "path": "orbitals[0].pages[0]",
+                      "message": "Slot 'main' has contention: multiple traits render to it: [\"C1\", \"C2\"]",
+                      "suggestion": "Each slot should be owned by exactly one trait",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "one-trait-with-two-init-arms-does-not-contend-with-itself",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/x",
+                      "traits": [
+                        {
+                          "name": "Arms",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              },
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "slot",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-http-endpoint-page-needs-no-main-slot",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "pages": [
+                    {
+                      "name": "Pt",
+                      "path": "/t",
+                      "traits": [
+                        {
+                          "name": "V",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "E",
+                      "path": "",
+                      "protocol": "http",
+                      "traits": [
+                        {
+                          "name": "S",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": []
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "address": {
+                        "host": "0.0.0.0",
+                        "port": 8080,
+                        "path": "/"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "slot",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-boot-page-needs-no-main-slot",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "pages": [
+                    {
+                      "name": "Pt",
+                      "path": "/t",
+                      "traits": [
+                        {
+                          "name": "V",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "E",
+                      "path": "",
+                      "protocol": "boot",
+                      "traits": [
+                        {
+                          "name": "B",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": []
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "slot",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-stdio-page-needs-no-main-slot",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "pages": [
+                    {
+                      "name": "Pt",
+                      "path": "/t",
+                      "traits": [
+                        {
+                          "name": "V",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "E",
+                      "path": "",
+                      "protocol": "stdio",
+                      "traits": [
+                        {
+                          "name": "S",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": []
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "slot",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-route-page-of-the-same-traits-needs-main",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "pages": [
+                    {
+                      "name": "Pt",
+                      "path": "/t",
+                      "traits": [
+                        {
+                          "name": "V",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Pu",
+                      "path": "/u",
+                      "traits": [
+                        {
+                          "name": "S",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": []
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "slot",
+                  "findings": [
+                    {
+                      "code": "ORB_SLOT_MAIN_NOT_COVERED",
+                      "path": "orbitals[0].pages[1]",
+                      "message": "Main slot is not covered by any trait on page load",
+                      "suggestion": "Ensure at least one trait renders to 'main' slot in INIT transition",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-endpoint-page-does-not-report-contention-or-hud",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "pages": [
+                    {
+                      "name": "Pt",
+                      "path": "/t",
+                      "traits": [
+                        {
+                          "name": "V",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "E",
+                      "path": "",
+                      "protocol": "http",
+                      "traits": [
+                        {
+                          "name": "S1",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "name": "S2",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "name": "H",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "hud-top",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "address": {
+                        "host": "0.0.0.0",
+                        "port": 8080,
+                        "path": "/"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "slot",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-route-page-reports-contention-between-the-same-traits",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "pages": [
+                    {
+                      "name": "Pt",
+                      "path": "/t",
+                      "traits": [
+                        {
+                          "name": "S1",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "name": "S2",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "slot",
+                  "findings": [
+                    {
+                      "code": "ORB_SLOT_CONTENTION",
+                      "path": "orbitals[0].pages[0]",
+                      "message": "Slot 'main' has contention: multiple traits render to it: [\"S1\", \"S2\"]",
                       "suggestion": "Each slot should be owned by exactly one trait",
                       "severity": "error"
                     }
@@ -6172,5 +9728,5 @@
       ]
     }
   ],
-  "note": " The real-program-shape cases feed a lowered std atom to the rule: the rule must reach LINT_FINISH (a runtime type error in the findings expression leaves the transition without it). Added cases: a `@config.<knob>` slot is read through the trait's declared default (what the compiler sees after inlining), and one trait rendering a slot twice on INIT is reported as contention with itself, as Rust's initial_slots lists the trait once per effect (owner may change this)."
+  "note": "Slots follow validate_page_slots over the traits of ROUTE pages only: an endpoint or boot page (a page with a protocol) is not checked. A trait some sibling embeds with `@trait.X` (in a render payload, a config default, a transition guard or effect, or a tick, inside an `if` or not) paints inside that sibling's frame and owns no page slot, and the embed set is read from every page trait, so mutually embedding traits leave none. A trait counts once per slot, a render-ui inside `if` or `do` counts, and modal and toast are shared overlays that never contend. Only a render-ui array is a render (an object-shaped effect is not). The real-program-shape cases feed a lowered std atom to the rule: the rule must reach LINT_FINISH (a runtime type error in the findings expression leaves the transition without it). A `@config.<knob>` slot is read through the trait's declared default, what the compiler sees after inlining."
 }

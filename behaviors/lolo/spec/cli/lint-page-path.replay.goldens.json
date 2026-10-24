@@ -4318,6 +4318,62 @@
           }
         }
       ]
+    },
+    {
+      "id": "an-endpoint-page-carrying-a-malformed-path-is-not-held-to-the-path-checks",
+      "steps": [
+        {
+          "trait": "OrbLintPagePath",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "orbitals": [
+                {
+                  "name": "A",
+                  "pages": [
+                    {
+                      "name": "Api",
+                      "path": "api/x",
+                      "protocol": "http"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintPagePath",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-path",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

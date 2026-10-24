@@ -1,7 +1,9 @@
 app std-orb-lint-transition-refs [
   version: "1.0.0",
   inbound: ["cli-lint-transition-refs"],
-  fs: { cwd: "**": [read] },
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
   description: "std-orb-lint-transition-refs — the `orb lint transition-refs <file>` command, the port of ORB_T_INVALID_TRANSITION and ORB_T_UNDEFINED_EVENT (trait_validator.rs validate_transitions). It lowers the file with program/read and, for every inline trait with at least one state, reports per transition a source state that is not declared (`*` allowed; list sources checked one by one), a target state that is not declared, and, when the trait declares events, an event other than INIT that is not among them, each with the Rust path and message (the Rust valid-values list is not printed). Status 500, exit 1. Clean answers `lint transition-refs: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-transition-refs"

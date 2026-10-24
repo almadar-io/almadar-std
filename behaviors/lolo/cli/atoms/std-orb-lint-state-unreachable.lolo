@@ -1,7 +1,9 @@
 app std-orb-lint-state-unreachable [
   version: "1.0.0",
   inbound: ["cli-lint-state-unreachable"],
-  fs: { cwd: "**": [read] },
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
   description: "std-orb-lint-state-unreachable — the `orb lint state-unreachable <file>` command, the port of ORB_T_STATE_UNREACHABLE (trait_validator.rs validate_state_machine). It lowers the file with program/read and, for every inline trait with an initial state, follows the transition edges from the first initial state (a `*` source adds no edge; the INIT self-loop on the initial state is skipped) and reports each declared state not reached, with the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint state-unreachable: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-state-unreachable"

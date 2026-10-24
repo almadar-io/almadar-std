@@ -1,7 +1,7 @@
 {
   "atom": "cli/atoms/std-orb-lint-page-path-uniqueness.lolo",
   "trait": "OrbLintPagePathUniqueness",
-  "note": "Expected findings are the code, path, message and suggestion `orb validate` (the Rust validator) reports for the same program. Added cases copy page.rs param_shape_collision_fires_once_through_validate_comprehensive_full and different_param_shapes_do_not_collide, and follow validate_page_path_uniqueness for three pages and two orbitals. The real-program-shape cases feed a lowered std atom to the rule: the rule must reach LINT_FINISH (a runtime type error in the findings expression leaves the transition without it).",
+  "note": "Expected findings are the code, path, message and suggestion `orb validate` (the Rust validator) reports for the same program. Added cases copy page.rs param_shape_collision_fires_once_through_validate_comprehensive_full and different_param_shapes_do_not_collide, and follow validate_page_path_uniqueness for three pages and two orbitals. The real-program-shape cases feed a lowered std atom to the rule: the rule must reach LINT_FINISH (a runtime type error in the findings expression leaves the transition without it). The collision key is per protocol, as the compiler computes it: a route is keyed `route <param-shape path>`, an addressed endpoint `<protocol> <its address entries as key=value, sorted, with a literal path param-shaped>`, and an endpoint with no address has no key, so it collides with nothing.",
   "cases": [
     {
       "id": "two-pages-share-a-path",
@@ -154,7 +154,7 @@
                     {
                       "code": "ORB_P_DUPLICATE_PATH",
                       "path": "orbitals[0].pages[0]",
-                      "message": "Duplicate page path (normalized to '/a'): [\"/a\", \"/a\"] found at: [\"orbitals[0].pages[0]\", \"orbitals[1].pages[0]\"]",
+                      "message": "Duplicate page path (normalized to 'route /a'): [\"/a\", \"/a\"] found at: [\"orbitals[0].pages[0]\", \"orbitals[1].pages[0]\"]",
                       "suggestion": "Each page must have a unique path — two routes that only differ by a param NAME still collide at dispatch",
                       "severity": "error"
                     }
@@ -318,7 +318,7 @@
                     {
                       "code": "ORB_P_DUPLICATE_PATH",
                       "path": "orbitals[0].pages[0]",
-                      "message": "Duplicate page path (normalized to '/a/:'): [\"/a/:id\", \"/a/:name\"] found at: [\"orbitals[0].pages[0]\", \"orbitals[1].pages[0]\"]",
+                      "message": "Duplicate page path (normalized to 'route /a/:'): [\"/a/:id\", \"/a/:name\"] found at: [\"orbitals[0].pages[0]\", \"orbitals[1].pages[0]\"]",
                       "suggestion": "Each page must have a unique path — two routes that only differ by a param NAME still collide at dispatch",
                       "severity": "error"
                     }
@@ -812,7 +812,7 @@
                     {
                       "code": "ORB_P_DUPLICATE_PATH",
                       "path": "orbitals[0].pages[0]",
-                      "message": "Duplicate page path (normalized to '/x/:'): [\"/x/:id\", \"/x/:slug\"] found at: [\"orbitals[0].pages[0]\", \"orbitals[0].pages[1]\"]",
+                      "message": "Duplicate page path (normalized to 'route /x/:'): [\"/x/:id\", \"/x/:slug\"] found at: [\"orbitals[0].pages[0]\", \"orbitals[0].pages[1]\"]",
                       "suggestion": "Each page must have a unique path — two routes that only differ by a param NAME still collide at dispatch",
                       "severity": "error"
                     }
@@ -994,7 +994,7 @@
                     {
                       "code": "ORB_P_DUPLICATE_PATH",
                       "path": "orbitals[0].pages[0]",
-                      "message": "Duplicate page path (normalized to '/t'): [\"/t\", \"/t\", \"/t\"] found at: [\"orbitals[0].pages[0]\", \"orbitals[0].pages[1]\", \"orbitals[0].pages[2]\"]",
+                      "message": "Duplicate page path (normalized to 'route /t'): [\"/t\", \"/t\", \"/t\"] found at: [\"orbitals[0].pages[0]\", \"orbitals[0].pages[1]\", \"orbitals[0].pages[2]\"]",
                       "suggestion": "Each page must have a unique path — two routes that only differ by a param NAME still collide at dispatch",
                       "severity": "error"
                     }
@@ -1158,7 +1158,7 @@
                     {
                       "code": "ORB_P_DUPLICATE_PATH",
                       "path": "orbitals[0].pages[0]",
-                      "message": "Duplicate page path (normalized to '/t'): [\"/t\", \"/t\"] found at: [\"orbitals[0].pages[0]\", \"orbitals[1].pages[0]\"]",
+                      "message": "Duplicate page path (normalized to 'route /t'): [\"/t\", \"/t\"] found at: [\"orbitals[0].pages[0]\", \"orbitals[1].pages[0]\"]",
                       "suggestion": "Each page must have a unique path — two routes that only differ by a param NAME still collide at dispatch",
                       "severity": "error"
                     }
@@ -2020,6 +2020,1246 @@
             ]
           },
           "trait": "OrbLintPagePathUniqueness"
+        }
+      ]
+    },
+    {
+      "id": "a-route-and-an-http-endpoint-on-one-path-do-not-collide",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": []
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "Px",
+                      "path": "/x",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Ex",
+                      "path": "",
+                      "protocol": "http",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ],
+                      "address": {
+                        "host": "0.0.0.0",
+                        "port": 8080,
+                        "path": "/x"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-path-uniqueness",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "two-routes-on-one-path-collide",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": []
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "Px",
+                      "path": "/x",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Px2",
+                      "path": "/x",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-path-uniqueness",
+                  "findings": [
+                    {
+                      "code": "ORB_P_DUPLICATE_PATH",
+                      "path": "orbitals[0].pages[0]",
+                      "message": "Duplicate page path (normalized to 'route /x'): [\"/x\", \"/x\"] found at: [\"orbitals[0].pages[0]\", \"orbitals[0].pages[1]\"]",
+                      "suggestion": "Each page must have a unique path — two routes that only differ by a param NAME still collide at dispatch",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "two-http-endpoints-on-one-address-collide",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": []
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "Pt",
+                      "path": "/t",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Ex",
+                      "path": "",
+                      "protocol": "http",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ],
+                      "address": {
+                        "host": "0.0.0.0",
+                        "port": 8080,
+                        "path": "/x"
+                      }
+                    },
+                    {
+                      "name": "Other",
+                      "path": "",
+                      "protocol": "http",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ],
+                      "address": {
+                        "host": "0.0.0.0",
+                        "port": 8080,
+                        "path": "/x"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-path-uniqueness",
+                  "findings": [
+                    {
+                      "code": "ORB_P_DUPLICATE_PATH",
+                      "path": "orbitals[0].pages[1]",
+                      "message": "Duplicate page path (normalized to 'http host=\"0.0.0.0\",path=/x,port=8080.0'): [\"\", \"\"] found at: [\"orbitals[0].pages[1]\", \"orbitals[0].pages[2]\"]",
+                      "suggestion": "Each page must have a unique path — two routes that only differ by a param NAME still collide at dispatch",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-http-endpoints-on-different-paths-do-not-collide",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": []
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "Pt",
+                      "path": "/t",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Ex",
+                      "path": "",
+                      "protocol": "http",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ],
+                      "address": {
+                        "host": "0.0.0.0",
+                        "port": 8080,
+                        "path": "/x"
+                      }
+                    },
+                    {
+                      "name": "Ey",
+                      "path": "",
+                      "protocol": "http",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ],
+                      "address": {
+                        "host": "0.0.0.0",
+                        "port": 8080,
+                        "path": "/y"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-path-uniqueness",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-http-endpoints-on-different-ports-do-not-collide",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": []
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "Ex",
+                      "path": "",
+                      "protocol": "http",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ],
+                      "address": {
+                        "host": "0.0.0.0",
+                        "port": 8080,
+                        "path": "/x"
+                      }
+                    },
+                    {
+                      "name": "Ey",
+                      "path": "",
+                      "protocol": "http",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ],
+                      "address": {
+                        "host": "0.0.0.0",
+                        "port": 8081,
+                        "path": "/x"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-path-uniqueness",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "http-endpoint-paths-that-differ-only-by-a-param-name-collide",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": []
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "Ex",
+                      "path": "",
+                      "protocol": "http",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ],
+                      "address": {
+                        "host": "0.0.0.0",
+                        "port": 8080,
+                        "path": "/x/:id"
+                      }
+                    },
+                    {
+                      "name": "Ey",
+                      "path": "",
+                      "protocol": "http",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ],
+                      "address": {
+                        "host": "0.0.0.0",
+                        "port": 8080,
+                        "path": "/x/:name"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-path-uniqueness",
+                  "findings": [
+                    {
+                      "code": "ORB_P_DUPLICATE_PATH",
+                      "path": "orbitals[0].pages[0]",
+                      "message": "Duplicate page path (normalized to 'http host=\"0.0.0.0\",path=/x/:,port=8080.0'): [\"\", \"\"] found at: [\"orbitals[0].pages[0]\", \"orbitals[0].pages[1]\"]",
+                      "suggestion": "Each page must have a unique path — two routes that only differ by a param NAME still collide at dispatch",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "http-endpoints-on-one-config-bound-path-collide-on-the-literal",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": []
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "Ex",
+                      "path": "",
+                      "protocol": "http",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ],
+                      "address": {
+                        "host": "0.0.0.0",
+                        "port": 8080,
+                        "path": "@config.p"
+                      }
+                    },
+                    {
+                      "name": "Ey",
+                      "path": "",
+                      "protocol": "http",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ],
+                      "address": {
+                        "host": "0.0.0.0",
+                        "port": 8080,
+                        "path": "@config.p"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-path-uniqueness",
+                  "findings": [
+                    {
+                      "code": "ORB_P_DUPLICATE_PATH",
+                      "path": "orbitals[0].pages[0]",
+                      "message": "Duplicate page path (normalized to 'http host=\"0.0.0.0\",path=\"@config.p\",port=8080.0'): [\"\", \"\"] found at: [\"orbitals[0].pages[0]\", \"orbitals[0].pages[1]\"]",
+                      "suggestion": "Each page must have a unique path — two routes that only differ by a param NAME still collide at dispatch",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-endpoints-without-an-address-have-nothing-to-collide-on",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": []
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "Pt",
+                      "path": "/t",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "B1",
+                      "path": "",
+                      "protocol": "boot",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "B2",
+                      "path": "",
+                      "protocol": "boot",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "S1",
+                      "path": "",
+                      "protocol": "stdio",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "S2",
+                      "path": "",
+                      "protocol": "stdio",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-path-uniqueness",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-two-protocols-on-one-address-shape-do-not-collide",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": []
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "Ex",
+                      "path": "",
+                      "protocol": "http",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ],
+                      "address": {
+                        "host": "h",
+                        "port": 1,
+                        "path": "/x"
+                      }
+                    },
+                    {
+                      "name": "Ey",
+                      "path": "",
+                      "protocol": "https",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ],
+                      "address": {
+                        "host": "h",
+                        "port": 1,
+                        "path": "/x"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-path-uniqueness",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "two-pages-of-one-address-less-protocol-and-a-route-with-an-empty-path-do-not-collide",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": []
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "Pe",
+                      "path": "",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "B1",
+                      "path": "",
+                      "protocol": "boot",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-path-uniqueness",
+                  "findings": []
+                }
+              }
+            ]
+          }
         }
       ]
     }

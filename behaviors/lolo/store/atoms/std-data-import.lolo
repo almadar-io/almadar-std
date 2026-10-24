@@ -297,15 +297,15 @@ orbital DataImportOrbital {
           failed: (array/len (array/filter ?data (fn row (and
             (= (object/get @row "batchId") @entity.id)
             (not (validate/object (json/parse (object/get @row "rowJson") ImportCells)))))))
-          rows: (array/map
+          rows: (let ((mapping (json/parse @entity.mappingJson ImportCells))) (array/map
             (array/filter ?data (fn row (and
               (= (object/get @row "batchId") @entity.id)
               (validate/object (json/parse (object/get @row "rowJson") ImportCells)))))
             (fn row (object/mapKeys
               (json/parse (object/get @row "rowJson") ImportCells)
-              (fn k (if (object/has (json/parse @entity.mappingJson ImportCells) @k)
-                (object/get (json/parse @entity.mappingJson ImportCells) @k)
-                @k)))))
+              (fn k (if (object/has @mapping @k)
+                (object/get @mapping @k)
+                @k))))))
           targetEntity: @config.targetEntity
         })
       ;; Same transient-failure self-loop as in `staged` — the row fetch can

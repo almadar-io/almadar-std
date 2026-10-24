@@ -1,0 +1,1641 @@
+{
+  "atom": "cli/atoms/std-orb-lint-loop-invariant-parse.lolo",
+  "trait": "OrbLintLoopInvariantParse",
+  "note": "Each case feeds a lowered program through LINT_INPUT and finishes. A call is judged against its nearest enclosing lambda: its argument must reference none of that lambda's parameters and no name bound by a let or an inner lambda inside it.",
+  "cases": [
+    {
+      "id": "bytes-to-string-in-a-map-lambda-with-a-constant-argument",
+      "steps": [
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.out",
+                                [
+                                  "array/map",
+                                  "@entity.out",
+                                  [
+                                    "fn",
+                                    "x",
+                                    [
+                                      "let",
+                                      [
+                                        [
+                                          "a",
+                                          [
+                                            "bytes/to-string",
+                                            "@payload.data"
+                                          ]
+                                        ]
+                                      ],
+                                      [
+                                        "str/concat",
+                                        "@x",
+                                        "@a"
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "loop-invariant-parse",
+                  "findings": [
+                    {
+                      "code": "ORB_W_LOOP_INVARIANT_PARSE",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "bytes/to-string re-parses the same value for every element; bind it once with let outside the lambda",
+                      "suggestion": "Bind the parsed value once with `let` outside the lambda and use the bound name inside it.",
+                      "severity": "warning"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-the-same-parse-bound-outside-the-lambda",
+      "steps": [
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": [
+                              [
+                                "let",
+                                [
+                                  [
+                                    "a",
+                                    [
+                                      "bytes/to-string",
+                                      "@payload.data"
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "set",
+                                  "@entity.out",
+                                  [
+                                    "array/map",
+                                    "@entity.out",
+                                    [
+                                      "fn",
+                                      "x",
+                                      [
+                                        "str/concat",
+                                        "@x",
+                                        "@a"
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "loop-invariant-parse",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "json-parse-of-an-entity-field-in-a-guard-lambda",
+      "steps": [
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": [],
+                            "guard": [
+                              "array/some",
+                              "@entity.out",
+                              [
+                                "fn",
+                                "x",
+                                [
+                                  "=",
+                                  "@x",
+                                  [
+                                    "json/parse",
+                                    "@entity.raw",
+                                    "V"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "loop-invariant-parse",
+                  "findings": [
+                    {
+                      "code": "ORB_W_LOOP_INVARIANT_PARSE",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].guard",
+                      "message": "json/parse re-parses the same value for every element; bind it once with let outside the lambda",
+                      "suggestion": "Bind the parsed value once with `let` outside the lambda and use the bound name inside it.",
+                      "severity": "warning"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-json-parse-of-the-lambda-parameter",
+      "steps": [
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": [],
+                            "guard": [
+                              "array/some",
+                              "@entity.out",
+                              [
+                                "fn",
+                                "x",
+                                [
+                                  "json/parse",
+                                  "@x",
+                                  "V"
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "loop-invariant-parse",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "json-parse-of-a-literal-in-a-filter-lambda",
+      "steps": [
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.out",
+                                [
+                                  "array/filter",
+                                  "@entity.out",
+                                  [
+                                    "fn",
+                                    "x",
+                                    [
+                                      "=",
+                                      "@x",
+                                      [
+                                        "json/parse",
+                                        "{}",
+                                        "V"
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "loop-invariant-parse",
+                  "findings": [
+                    {
+                      "code": "ORB_W_LOOP_INVARIANT_PARSE",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "json/parse re-parses the same value for every element; bind it once with let outside the lambda",
+                      "suggestion": "Bind the parsed value once with `let` outside the lambda and use the bound name inside it.",
+                      "severity": "warning"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "json-parse-in-a-find-lambda",
+      "steps": [
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.out",
+                                [
+                                  "array/find",
+                                  "@entity.out",
+                                  [
+                                    "fn",
+                                    "x",
+                                    [
+                                      "=",
+                                      "@x",
+                                      [
+                                        "json/parse",
+                                        "@payload.text",
+                                        "V"
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "loop-invariant-parse",
+                  "findings": [
+                    {
+                      "code": "ORB_W_LOOP_INVARIANT_PARSE",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "json/parse re-parses the same value for every element; bind it once with let outside the lambda",
+                      "suggestion": "Bind the parsed value once with `let` outside the lambda and use the bound name inside it.",
+                      "severity": "warning"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "json-parse-in-an-every-lambda",
+      "steps": [
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": [],
+                            "guard": [
+                              "array/every",
+                              "@entity.out",
+                              [
+                                "fn",
+                                "x",
+                                [
+                                  "=",
+                                  "@x",
+                                  [
+                                    "json/parse",
+                                    "@entity.raw",
+                                    "V"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "loop-invariant-parse",
+                  "findings": [
+                    {
+                      "code": "ORB_W_LOOP_INVARIANT_PARSE",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].guard",
+                      "message": "json/parse re-parses the same value for every element; bind it once with let outside the lambda",
+                      "suggestion": "Bind the parsed value once with `let` outside the lambda and use the bound name inside it.",
+                      "severity": "warning"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "json-parse-in-a-reduce-lambda-of-two-parameters",
+      "steps": [
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.out",
+                                [
+                                  "array/reduce",
+                                  "@entity.out",
+                                  "",
+                                  [
+                                    "fn",
+                                    [
+                                      "acc",
+                                      "s"
+                                    ],
+                                    [
+                                      "str/concat",
+                                      "@acc",
+                                      [
+                                        "json/parse",
+                                        "@entity.raw",
+                                        "V"
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "loop-invariant-parse",
+                  "findings": [
+                    {
+                      "code": "ORB_W_LOOP_INVARIANT_PARSE",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "json/parse re-parses the same value for every element; bind it once with let outside the lambda",
+                      "suggestion": "Bind the parsed value once with `let` outside the lambda and use the bound name inside it.",
+                      "severity": "warning"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-reduce-parse-of-the-accumulator",
+      "steps": [
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.out",
+                                [
+                                  "array/reduce",
+                                  "@entity.out",
+                                  "",
+                                  [
+                                    "fn",
+                                    [
+                                      "acc",
+                                      "s"
+                                    ],
+                                    [
+                                      "json/parse",
+                                      "@acc",
+                                      "V"
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "loop-invariant-parse",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-reduce-parse-of-the-element",
+      "steps": [
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.out",
+                                [
+                                  "array/reduce",
+                                  "@entity.out",
+                                  "",
+                                  [
+                                    "fn",
+                                    [
+                                      "acc",
+                                      "s"
+                                    ],
+                                    [
+                                      "json/parse",
+                                      "@s",
+                                      "V"
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "loop-invariant-parse",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-parse-outside-any-lambda",
+      "steps": [
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.raw",
+                                [
+                                  "json/parse",
+                                  "@payload.text",
+                                  "V"
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "loop-invariant-parse",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-parse-of-a-name-let-bound-inside-the-lambda",
+      "steps": [
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.out",
+                                [
+                                  "array/map",
+                                  "@entity.out",
+                                  [
+                                    "fn",
+                                    "x",
+                                    [
+                                      "let",
+                                      [
+                                        [
+                                          "s",
+                                          [
+                                            "str/concat",
+                                            "@x",
+                                            "y"
+                                          ]
+                                        ]
+                                      ],
+                                      [
+                                        "json/parse",
+                                        "@s",
+                                        "V"
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "loop-invariant-parse",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-parse-of-a-property-of-the-parameter",
+      "steps": [
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.out",
+                                [
+                                  "array/map",
+                                  "@entity.out",
+                                  [
+                                    "fn",
+                                    "x",
+                                    [
+                                      "json/parse",
+                                      "@x.text",
+                                      "V"
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "loop-invariant-parse",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "nested-lambda-parse-of-the-outer-parameter-is-invariant-for-the-inner-lambda",
+      "steps": [
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.out",
+                                [
+                                  "array/map",
+                                  "@entity.out",
+                                  [
+                                    "fn",
+                                    "x",
+                                    [
+                                      "array/map",
+                                      "@entity.out",
+                                      [
+                                        "fn",
+                                        "y",
+                                        [
+                                          "json/parse",
+                                          "@x",
+                                          "V"
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "loop-invariant-parse",
+                  "findings": [
+                    {
+                      "code": "ORB_W_LOOP_INVARIANT_PARSE",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "json/parse re-parses the same value for every element; bind it once with let outside the lambda",
+                      "suggestion": "Bind the parsed value once with `let` outside the lambda and use the bound name inside it.",
+                      "severity": "warning"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "note": "the argument uses only the outer parameter, so it does not change across the inner lambda's elements: it is reported against the inner lambda, once"
+    },
+    {
+      "id": "control-nested-lambda-parse-of-the-inner-parameter",
+      "steps": [
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.out",
+                                [
+                                  "array/map",
+                                  "@entity.out",
+                                  [
+                                    "fn",
+                                    "x",
+                                    [
+                                      "array/map",
+                                      "@entity.out",
+                                      [
+                                        "fn",
+                                        "y",
+                                        [
+                                          "json/parse",
+                                          "@y",
+                                          "V"
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "loop-invariant-parse",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "nested-lambda-parse-of-an-outside-name-is-reported-once",
+      "steps": [
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.out",
+                                [
+                                  "array/map",
+                                  "@entity.out",
+                                  [
+                                    "fn",
+                                    "x",
+                                    [
+                                      "array/map",
+                                      "@entity.out",
+                                      [
+                                        "fn",
+                                        "y",
+                                        [
+                                          "json/parse",
+                                          "@entity.raw",
+                                          "V"
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "loop-invariant-parse",
+                  "findings": [
+                    {
+                      "code": "ORB_W_LOOP_INVARIANT_PARSE",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "json/parse re-parses the same value for every element; bind it once with let outside the lambda",
+                      "suggestion": "Bind the parsed value once with `let` outside the lambda and use the bound name inside it.",
+                      "severity": "warning"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "note": "invariant for both lambdas, reported once against the innermost"
+    },
+    {
+      "id": "two-invariant-parses-in-one-lambda-are-two-warnings",
+      "steps": [
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.out",
+                                [
+                                  "array/map",
+                                  "@entity.out",
+                                  [
+                                    "fn",
+                                    "x",
+                                    [
+                                      "str/concat",
+                                      [
+                                        "json/parse",
+                                        "@entity.raw",
+                                        "V"
+                                      ],
+                                      [
+                                        "bytes/to-string",
+                                        "@payload.data"
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "loop-invariant-parse",
+                  "findings": [
+                    {
+                      "code": "ORB_W_LOOP_INVARIANT_PARSE",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "json/parse re-parses the same value for every element; bind it once with let outside the lambda",
+                      "suggestion": "Bind the parsed value once with `let` outside the lambda and use the bound name inside it.",
+                      "severity": "warning"
+                    },
+                    {
+                      "code": "ORB_W_LOOP_INVARIANT_PARSE",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "bytes/to-string re-parses the same value for every element; bind it once with let outside the lambda",
+                      "suggestion": "Bind the parsed value once with `let` outside the lambda and use the bound name inside it.",
+                      "severity": "warning"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-no-expressions-is-clean",
+      "steps": [
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "loop-invariant-parse",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
