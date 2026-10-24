@@ -139,11 +139,6 @@ orbital LearnGenerateOrbital {
         @label "Fill tool event"
         @description "The address the model's FILL tool fires; a consumer that renames this trait sets it to its own name (`VizGen.FILL`)"
         @tier "internal"
-      statusSlot : slot = main
-        @label "Status slot"
-        @description "Where the atom shows its one-line status; a page running it in the background sends it to `system`"
-        @synonyms "status area, slot"
-        @tier "presentation"
     }
 
     state idle {
@@ -158,7 +153,6 @@ orbital LearnGenerateOrbital {
         (set @entity.roster "")
         (set @entity.error "")
         (set @entity.status listing)
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Finding an instrument…" })
         (behavior/catalog { paths: @config.scope } {
           emit: { failure: GENERATE_FAILED, success: CATALOG_LISTED }
         })
@@ -169,7 +163,6 @@ orbital LearnGenerateOrbital {
         (set @entity.roster "")
         (set @entity.error "")
         (set @entity.status choosing)
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Choosing an instrument…" })
         (emit CONVERSE {
           messages: [{ role: "user", content: (str/concat "Subject: " ?subject (if (= (object/get @payload context "") "") "" (str/concat "\nContext: " (object/get @payload context "")))) }]
           instructions: (str/concat "You pick the one interactive learning instrument that best lets a learner explore the subject. The installed instruments:\n" (str/join (array/map @entity.instruments (fn i (str/concat "- " (object/get @i behavior) ": " (object/get @i description "")))) "\n") "\nCall the CHOOSE tool once with exactly one of them, then reply with one sentence.")
@@ -197,12 +190,10 @@ orbital LearnGenerateOrbital {
       CATALOG_LISTED -> failed when (= (array/len (array/filter ?result (fn h (or (= (array/len @config.instruments) 0) (array/includes @config.instruments (object/get @h behavior)))))) 0)
         (set @entity.error "No behavior in scope to choose from")
         (set @entity.status failed)
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "No instrument could be generated" })
         (emit GENERATE_FAILED { error: "No behavior in scope to choose from" })
       GENERATE_FAILED -> failed
         (set @entity.error ?error)
         (set @entity.status failed)
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "No instrument could be generated" })
         (emit GENERATION_FAILED { error: ?error })
     }
 
@@ -228,7 +219,6 @@ orbital LearnGenerateOrbital {
       GENERATE_FAILED -> failed
         (set @entity.error ?error)
         (set @entity.status failed)
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "No instrument could be generated" })
         (emit GENERATION_FAILED { error: ?error })
     }
 
@@ -236,7 +226,6 @@ orbital LearnGenerateOrbital {
       INIT -> choosing
         (set @entity.status choosing)
       INSTRUMENTS_READY -> choosing when (> (array/len @entity.instruments) 0)
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Choosing an instrument…" })
         (emit CONVERSE {
           messages: [{ role: "user", content: (str/concat "Subject: " @entity.subject (if (= @entity.context "") "" (str/concat "\nContext: " @entity.context))) }]
           instructions: (str/concat "You pick the one interactive learning instrument that best lets a learner explore the subject. The installed instruments:\n" (str/join (array/map @entity.instruments (fn i (str/concat "- " (object/get @i behavior) ": " (object/get @i description "")))) "\n") "\nCall the CHOOSE tool once with exactly one of them, then reply with one sentence.")
@@ -250,13 +239,11 @@ orbital LearnGenerateOrbital {
       INSTRUMENTS_READY -> failed when (= (array/len @entity.instruments) 0)
         (set @entity.error "No instrument in scope takes a roster")
         (set @entity.status failed)
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "No instrument could be generated" })
         (emit GENERATION_FAILED { error: "No instrument in scope takes a roster" })
       CHOOSE -> choosing
         (set @entity.chosen ?choice)
       ASSISTANT_REPLIED -> filling when (array/some @entity.instruments (fn i (= (object/get @i behavior) @entity.chosen)))
         (set @entity.status filling)
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Writing the roster…" })
         (emit CONVERSE {
           messages: [{ role: "user", content: (str/concat "Subject: " @entity.subject (if (= @entity.context "") "" (str/concat "\nContext: " @entity.context))) }]
           instructions: (str/concat "You write the content roster for the learning instrument " @entity.chosen ": " (object/get (array/find @entity.instruments (fn i (= (object/get @i behavior) @entity.chosen))) description "") "\nCall the FILL tool once with a roster of realistic, accurate, pedagogically useful content about the subject. If the tool reports issues, call it again with them fixed. Then reply with one sentence.")
@@ -270,12 +257,10 @@ orbital LearnGenerateOrbital {
       ASSISTANT_REPLIED -> failed when (not (array/some @entity.instruments (fn i (= (object/get @i behavior) @entity.chosen))))
         (set @entity.error "The model chose no installed instrument")
         (set @entity.status failed)
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "No instrument could be generated" })
         (emit GENERATION_FAILED { error: "The model chose no installed instrument" })
       TOOLS_FAILED -> failed
         (set @entity.error ?error)
         (set @entity.status failed)
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "No instrument could be generated" })
         (emit GENERATION_FAILED { error: ?error })
     }
 
@@ -286,17 +271,14 @@ orbital LearnGenerateOrbital {
         (set @entity.roster (json/stringify ?roster))
       ASSISTANT_REPLIED -> done when (!= @entity.roster "")
         (set @entity.status done)
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Instrument ready" })
         (emit GENERATED { behavior: @entity.chosen, mode: (array/last (str/split @entity.chosen "/")), roster: @entity.roster })
       ASSISTANT_REPLIED -> failed when (= @entity.roster "")
         (set @entity.error "The model wrote no roster that matches the instrument")
         (set @entity.status failed)
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "No instrument could be generated" })
         (emit GENERATION_FAILED { error: "The model wrote no roster that matches the instrument" })
       TOOLS_FAILED -> failed
         (set @entity.error ?error)
         (set @entity.status failed)
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "No instrument could be generated" })
         (emit GENERATION_FAILED { error: ?error })
     }
 
@@ -437,5 +419,5 @@ orbital LearnGenerateOrbital {
     }
   }
 
-  page "/learn-generate" as LearnGeneratePage -> LearnGenerate, LearnGenerateTools, LearnGenerateLlm
+  page boot as LearnGeneratePage -> LearnGenerate, LearnGenerateTools, LearnGenerateLlm
 }

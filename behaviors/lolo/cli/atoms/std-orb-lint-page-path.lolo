@@ -4,13 +4,13 @@ app std-orb-lint-page-path [
   env: ["PATH"],
   exec: ["orb"],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
-  description: "std-orb-lint-page-path — the `orb lint page-path <file>` command, the port. It lowers the file with program/read and, for every inline page, reports a missing or non-PascalCase page name (the PascalCase check applies to an English program only), an empty path, a path that does not start with '/', and a path starting with '/api', each with the Rust path, message and suggestion (status 500, exit 1). The character-set check (letters, numbers, hyphens, underscores, colons and slashes) applies only to an English program, as in the compiler: the program's language is decided from the raw file against the installed language packs (a .orb document by its top-level keys, a .lolo source by its first token), the packs being scanned by std-orb-language's engine. Clean answers `lint page-path: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  description: "std-orb-lint-page-path — the `orb lint page-path <file>` command, the port. It lowers the file with program/read and, for every inline page of a non-spec orbital, reports a missing or non-PascalCase page name (the PascalCase check applies to an English program only), an empty path, a path that does not start with '/', and a path starting with '/api', each with the Rust path, message and suggestion (status 500, exit 1). The character-set check (letters, numbers, hyphens, underscores, colons and slashes) applies only to an English program, as in the compiler: the program's language is decided from the raw file against the installed language packs (a .orb document by its top-level keys, a .lolo source by its first token), the packs being scanned by std-orb-language's engine. Clean answers `lint page-path: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-page-path"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 type PagePathPage = { name : string, path : string, protocol : string }
-type PagePathOrbital = { pages : [PagePathPage] }
+type PagePathOrbital = { spec : boolean, pages : [PagePathPage] }
 type PagePathProgram = { orbitals : [PagePathOrbital]! }
 
 orbital OrbLintPagePathOrbital {
@@ -18,6 +18,7 @@ orbital OrbLintPagePathOrbital {
 
   entity OrbLintPagePathRun [runtime] {
     id : string!
+    scope : string = ""
     findings : [OrbFinding] = []
   }
 
@@ -27,9 +28,10 @@ orbital OrbLintPagePathOrbital {
     state ready {
       INIT -> ready
       LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
         (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
-            (let ((pgList (object/get (array/nth @orbitals @oi) "pages" [])))
+            (let ((pgList (if (object/get (array/nth @orbitals @oi) "spec" false) [] (object/get (array/nth @orbitals @oi) "pages" []))))
               (array/flatten (array/map (array/range 0 (array/len @pgList)) (fn pj
                 (let ((pg (array/nth @pgList @pj)))
                  (array/concat
@@ -50,11 +52,11 @@ orbital OrbLintPagePathOrbital {
                           (if (str/startsWith @route "/api") [{ code: "ORB_P_INVALID_PATH", path: @where, message: (str/concat "Page path '" @route "' starts with '/api' which collides with the API server proxy"), suggestion: "Choose a different path that doesn't start with '/api' (e.g., '/requests' instead of '/apirequests')", severity: "error" }] [])])))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
-        (emit LINT_FOUND { rule: "page-path", findings: @entity.findings })
+        (emit LINT_FOUND { rule: "page-path", scope: @entity.scope, findings: @entity.findings })
     }
 
     emits {
-      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
         @description "This rule's findings for the file, offered to the lint-all umbrella."
         @tier "internal"
       LINT_FINISH { }
@@ -63,7 +65,7 @@ orbital OrbLintPagePathOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PagePathProgram }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PagePathProgram  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -100,7 +102,7 @@ orbital OrbLintPagePathOrbital {
       LINT_REQUEST -> external { file : string! }
         @description "Ask the lint input to read and lower this file."
         @tier "internal"
-      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
         @description "The rule trait's findings for the file."
         @tier "internal"
       LINT_INPUT_UNREAD -> external { file : string! }

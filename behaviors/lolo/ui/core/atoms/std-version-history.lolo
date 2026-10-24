@@ -1,6 +1,6 @@
 app std-version-history [
   version: "1.0.0",
-  description: "std-version-history — wiki/CMS revision history with diff + rollback. Browses revisions; opens detail in `viewing_single`; compares the opened revision with the newest in `comparing`; Rollback emits RevisionRolledBack { row } for the consumer to restore onto its source document. `RevisionManage` is a rebindable single-entity trait: a consumer rebinds it to its own entity via `linkedEntity`. `config.scopeField` names the Revision field holding the parent document id; a page-mounted `{id}` route param scopes INIT's own fetch, and a consumer forwards SHOW_HISTORY { key } (via a `listens` override) to rescope the feed to one document — empty scopeField (default) or no id keeps today's unfiltered global feed. Rollback and retry refetches stay scoped."
+  description: "std-version-history — wiki/CMS revision history with diff + rollback. Browses revisions; opens detail in `viewing_single`; compares the opened revision with the newest in `comparing`; Rollback emits RevisionRolledBack { row } for the consumer to restore onto its source document. `RevisionManage` is a rebindable single-entity trait: a consumer rebinds it to its own entity via `linkedEntity`. `config.scopeField` names the Revision field holding the parent document id; a page-mounted `{id}` route param scopes INIT's own fetch, and a consumer forwards SHOW_HISTORY { key } (via a `listens` override) to rescope the feed to one document — unset scopeField (default) or no id keeps today's unfiltered global feed. Rollback and retry refetches stay scoped."
 ]
 type ItemAction = { label : string!, event : event, navigatesTo : string, variant : primary | secondary | ghost | danger, icon : string, roles : [string], when : SExpr }
 orbital RevisionOrbital {
@@ -32,7 +32,7 @@ orbital RevisionOrbital {
       INIT -> loading
         (set @entity.scopeKey (str/default ?id ""))
         (fetch Revision {
-          filter: (or (= @config.scopeField "") (= (str/default ?id "") "") (= (object/get @entity @config.scopeField) ?id))
+          filter: (or (not (validate/required @config.scopeField)) (= (str/default ?id "") "") (= (object/get @entity @config.scopeField) ?id))
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
         })
         (render-ui main {
@@ -109,7 +109,7 @@ orbital RevisionOrbital {
       INIT -> loading
         (set @entity.scopeKey (str/default ?id ""))
         (fetch Revision {
-          filter: (or (= @config.scopeField "") (= (str/default ?id "") "") (= (object/get @entity @config.scopeField) ?id))
+          filter: (or (not (validate/required @config.scopeField)) (= (str/default ?id "") "") (= (object/get @entity @config.scopeField) ?id))
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
         })
         (render-ui main {
@@ -248,7 +248,7 @@ orbital RevisionOrbital {
         (emit RevisionRolledBack { row: ?row })
         (set @entity.scopeKey (object/get ?row @config.scopeField ""))
         (fetch Revision {
-          filter: (or (= @config.scopeField "") (= (object/get ?row @config.scopeField "") "") (= (object/get @entity @config.scopeField) (object/get ?row @config.scopeField "")))
+          filter: (or (not (validate/required @config.scopeField)) (= (object/get ?row @config.scopeField "") "") (= (object/get @entity @config.scopeField) (object/get ?row @config.scopeField "")))
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
         })
         (render-ui main {
@@ -282,7 +282,7 @@ orbital RevisionOrbital {
       INIT -> loading
         (set @entity.scopeKey (str/default ?id ""))
         (fetch Revision {
-          filter: (or (= @config.scopeField "") (= (str/default ?id "") "") (= (object/get @entity @config.scopeField) ?id))
+          filter: (or (not (validate/required @config.scopeField)) (= (str/default ?id "") "") (= (object/get @entity @config.scopeField) ?id))
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
         })
         (render-ui main {
@@ -293,7 +293,7 @@ orbital RevisionOrbital {
         })
       CLOSE_VIEW -> loading
         (fetch Revision {
-          filter: (or (= @config.scopeField "") (= @entity.scopeKey "") (= (object/get @entity @config.scopeField) @entity.scopeKey))
+          filter: (or (not (validate/required @config.scopeField)) (= @entity.scopeKey "") (= (object/get @entity @config.scopeField) @entity.scopeKey))
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
         })
         (render-ui main {
@@ -347,7 +347,7 @@ orbital RevisionOrbital {
         (emit RevisionRolledBack { row: ?row })
         (set @entity.scopeKey (object/get ?row @config.scopeField ""))
         (fetch Revision {
-          filter: (or (= @config.scopeField "") (= (object/get ?row @config.scopeField "") "") (= (object/get @entity @config.scopeField) (object/get ?row @config.scopeField "")))
+          filter: (or (not (validate/required @config.scopeField)) (= (object/get ?row @config.scopeField "") "") (= (object/get @entity @config.scopeField) (object/get ?row @config.scopeField "")))
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
         })
         (render-ui main {
@@ -381,7 +381,7 @@ orbital RevisionOrbital {
       INIT -> loading
         (set @entity.scopeKey (str/default ?id ""))
         (fetch Revision {
-          filter: (or (= @config.scopeField "") (= (str/default ?id "") "") (= (object/get @entity @config.scopeField) ?id))
+          filter: (or (not (validate/required @config.scopeField)) (= (str/default ?id "") "") (= (object/get @entity @config.scopeField) ?id))
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
         })
         (render-ui main {
@@ -392,7 +392,7 @@ orbital RevisionOrbital {
         })
       CLOSE_VIEW -> loading
         (fetch Revision {
-          filter: (or (= @config.scopeField "") (= @entity.scopeKey "") (= (object/get @entity @config.scopeField) @entity.scopeKey))
+          filter: (or (not (validate/required @config.scopeField)) (= @entity.scopeKey "") (= (object/get @entity @config.scopeField) @entity.scopeKey))
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
         })
         (render-ui main {
@@ -405,7 +405,7 @@ orbital RevisionOrbital {
         (emit RevisionRolledBack { row: ?row })
         (set @entity.scopeKey (object/get ?row @config.scopeField ""))
         (fetch Revision {
-          filter: (or (= @config.scopeField "") (= (object/get ?row @config.scopeField "") "") (= (object/get @entity @config.scopeField) (object/get ?row @config.scopeField "")))
+          filter: (or (not (validate/required @config.scopeField)) (= (object/get ?row @config.scopeField "") "") (= (object/get @entity @config.scopeField) (object/get ?row @config.scopeField "")))
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
         })
         (render-ui main {
@@ -439,7 +439,7 @@ orbital RevisionOrbital {
       INIT -> loading
         (set @entity.scopeKey (str/default ?id ""))
         (fetch Revision {
-          filter: (or (= @config.scopeField "") (= (str/default ?id "") "") (= (object/get @entity @config.scopeField) ?id))
+          filter: (or (not (validate/required @config.scopeField)) (= (str/default ?id "") "") (= (object/get @entity @config.scopeField) ?id))
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
         })
         (render-ui main {
@@ -571,9 +571,9 @@ orbital RevisionOrbital {
         @label "Stat display look"
         @description "Layer 2 visual treatment for stat / KPI cards."
         @tier "presentation"
-      scopeField : string = ""
+      scopeField : field @entity
         @label "Scope field"
-        @description "Revision entity field holding the parent document's id. When set, a page-mounted {id} route param scopes INIT's fetch, and a SHOW_HISTORY { key } event rescopes the feed, to rows whose scopeField equals the id/key; rollback and retry refetches stay scoped too. Empty (default) or no id = unfiltered global feed, unchanged from prior behavior."
+        @description "Revision entity field holding the parent document's id. When set, a page-mounted {id} route param scopes INIT's fetch, and a SHOW_HISTORY { key } event rescopes the feed, to rows whose scopeField equals the id/key; rollback and retry refetches stay scoped too. Unset (default) or no id = unfiltered global feed, unchanged from prior behavior."
         @tier "domain"
       itemClickEvent : event = OPEN_REVISION
         @label "Row click"

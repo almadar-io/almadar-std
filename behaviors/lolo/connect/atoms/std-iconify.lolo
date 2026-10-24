@@ -30,7 +30,6 @@ orbital IconifyOrbital {
         (emit ICONIFY_SVG_EXISTS_RESULT { exists: false })
       ICONIFY_SVG_FAILED -> idle
         (emit ICONIFY_SVG_EXISTS_RESULT { exists: false })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Iconify unavailable: " @payload.error) })
 
       ICONIFY_SEARCH -> idle when (!= @payload.query "")
         (http GET @config.origin "/search" {
@@ -46,7 +45,6 @@ orbital IconifyOrbital {
         (emit ICONIFY_SEARCH_RESULT { icons: [] })
       ICONIFY_SEARCH_FAILED -> idle
         (emit ICONIFY_SEARCH_RESULT { icons: [] })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Iconify unavailable: " @payload.error) })
 
       ICONIFY_GET_ICON_BODY -> idle when (and (>= (array/len (str/split @payload.iconId ":")) 2) (!= (array/nth (str/split @payload.iconId ":") 0) "") (!= (array/nth (str/split @payload.iconId ":") 1) ""))
         (http GET @config.origin (str/concat "/" (array/nth (str/split @payload.iconId ":") 0) ".json") {
@@ -66,7 +64,6 @@ orbital IconifyOrbital {
         (emit ICONIFY_ICON_BODY_RESULT { body: null })
       ICONIFY_BODY_FAILED -> idle
         (emit ICONIFY_ICON_BODY_RESULT { body: null })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Iconify unavailable: " @payload.error) })
     }
 
     emits {
@@ -180,11 +177,6 @@ orbital IconifyOrbital {
     }
 
     config {
-      statusSlot : slot = system
-        @label "Status slot"
-        @description "Where the atom reports an unreachable Iconify call; a page running it in the background keeps it in `system`"
-        @synonyms "status area, slot"
-        @tier "presentation"
       origin : url = "https://api.iconify.design"
         @label "Iconify API origin"
         @description "The Iconify API origin (scheme://host, no path). Must be declared in the app egress list."
@@ -203,5 +195,5 @@ orbital IconifyOrbital {
     }
   }
 
-  page "/iconify" as IconifyPage -> IconifyClient
+  page boot as IconifyPage -> IconifyClient
 }

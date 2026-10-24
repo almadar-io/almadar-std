@@ -4,13 +4,13 @@ app std-orb-lint-page-modifiers [
   env: ["PATH"],
   exec: ["orb"],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
-  description: "std-orb-lint-page-modifiers — the `orb lint page-modifiers <file>` command, the port of validate_page_modifiers. It lowers the file with program/read and, for every page, reports ORB_P_INDEX_REQUIRES_PUBLIC (an `indexing: index` page lacking `access: public`, `title:` or `description:`), ORB_P_INDEX_PARAM_ROUTE (an indexed page whose route has a `:` segment) and ORB_P_AUTH_NO_SIGN_IN (an `access: authenticated` page when the app declares no `signIn:`), each with its path and suggestion (status 500, exit 1). It also reports ORB_P_TRANSLATION_DUPLICATE_LOCALE (an explicit `translationOf:` group holding more than one page in one locale, the locale being the page path's first segment when declared, else the first declared locale). Clean answers `lint page-modifiers: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  description: "std-orb-lint-page-modifiers — the `orb lint page-modifiers <file>` command, the port of validate_page_modifiers. It lowers the file with program/read and, for every route page (a page with a protocol is an endpoint and is skipped), reports ORB_P_INDEX_REQUIRES_PUBLIC (an `indexing: index` page lacking `access: public`, `title:` or `description:`), ORB_P_INDEX_PARAM_ROUTE (an indexed page whose route has a `:` segment) and ORB_P_AUTH_NO_SIGN_IN (an `access: authenticated` page when the app declares no `signIn:`), each with its path and suggestion (status 500, exit 1). It also reports ORB_P_TRANSLATION_DUPLICATE_LOCALE (an explicit `translationOf:` group holding more than one page in one locale, the locale being the page path's first segment when declared, else the first declared locale). Clean answers `lint page-modifiers: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-page-modifiers"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
-type PageModsPage = { path : string, name : string, access : string, title : string, description : string, indexing : string, translationOf : string }
+type PageModsPage = { path : string, protocol : string, name : string, access : string, title : string, description : string, indexing : string, translationOf : string }
 type PageModsOrbital = { pages : [PageModsPage] }
 type PageModsSite = { signIn : string }
 type PageModsProgram = { site : PageModsSite, locales : [string], orbitals : [PageModsOrbital]! }
@@ -20,6 +20,7 @@ orbital OrbLintPageModifiersOrbital {
 
   entity OrbLintPageModifiersRun [runtime] {
     id : string!
+    scope : string = ""
     findings : [OrbFinding] = []
   }
 
@@ -29,13 +30,14 @@ orbital OrbLintPageModifiersOrbital {
     state ready {
       INIT -> ready
       LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
         (set @entity.findings (let ((sgi (if (object/has @payload.program "site") (object/get (object/get @payload.program "site") "signIn" "") "")) (orbitals (object/get @payload.program "orbitals" [])) (locs (object/get @payload.program "locales" [])))
           (array/flatten [
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
             (let ((pgs (object/get (array/nth @orbitals @oi) "pages" [])))
               (array/flatten (array/map (array/range 0 (array/len @pgs)) (fn pj
                 (let ((pg (array/nth @pgs @pj)))
-                  (if (not (object/has @pg "path"))
+                  (if (or (not (object/has @pg "path")) (object/has @pg "protocol"))
                     []
                     (let ((where (str/concat "orbitals[" @oi "].pages[" @pj "]")) (rt (object/get @pg "path")) (pname (object/get @pg "name" "")) (pacc (object/get @pg "access" "")))
                       (let ((lacks (array/flatten [
@@ -56,7 +58,7 @@ orbital OrbLintPageModifiersOrbital {
                   (let ((pgs (object/get (array/nth @orbitals @oi) "pages" [])))
                     (array/flatten (array/map (array/range 0 (array/len @pgs)) (fn pj
                       (let ((pg (array/nth @pgs @pj)))
-                        (if (and (object/has @pg "path") (object/has @pg "translationOf") (> (array/len @locs) 0))
+                        (if (and (object/has @pg "path") (not (object/has @pg "protocol")) (object/has @pg "translationOf") (> (array/len @locs) 0))
                           (let ((segs (array/filter (str/split (object/get @pg "path") "/") (fn s (!= @s "")))) (seg (if (> (array/len @segs) 0) (array/first @segs) "")))
                             [{ g: (object/get @pg "translationOf"), l: (if (array/some @locs (fn lc (= @lc @seg))) @seg (array/first @locs)), p: (object/get @pg "path") }])
                           [])))))))))))
@@ -68,11 +70,11 @@ orbital OrbLintPageModifiersOrbital {
                     []))))))) ])))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
-        (emit LINT_FOUND { rule: "page-modifiers", findings: @entity.findings })
+        (emit LINT_FOUND { rule: "page-modifiers", scope: @entity.scope, findings: @entity.findings })
     }
 
     emits {
-      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
         @description "This rule's findings for the file, offered to the lint-all umbrella."
         @tier "internal"
       LINT_FINISH { }
@@ -81,7 +83,7 @@ orbital OrbLintPageModifiersOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PageModsProgram }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PageModsProgram  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -118,7 +120,7 @@ orbital OrbLintPageModifiersOrbital {
       LINT_REQUEST -> external { file : string! }
         @description "Ask the lint input to read and lower this file."
         @tier "internal"
-      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
         @description "The rule trait's findings for the file."
         @tier "internal"
       LINT_INPUT_UNREAD -> external { file : string! }

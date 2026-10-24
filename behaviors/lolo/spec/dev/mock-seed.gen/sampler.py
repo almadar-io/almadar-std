@@ -131,7 +131,7 @@ def sampler_step(P):
            f'(if @hasmock {mock_gate} '
            f'(if {projected} {res(C(chr(40)+"if (= @ty "+qs("array")+") "+qs("relation-many")+" "+qs("string")+")"))} '
            f'(if (> (array/len @vals) 0) {res(vocab)} {typed_dispatch})))))')
-    body=(f'(let ((fr (array/first (object/get @acc "stack")))) (let ((rest (array/drop (object/get @acc "stack") 1)) (s0 (object/get @acc "s")) (sp (object/get @fr "spec")) (nm (object/get @fr "name")) (ix (object/get @fr "index")) (dp (object/get @fr "depth")) (pa (object/get @fr "path"))) '
+    body=(f'(let ((fr (array/first (object/get @acc "stack")))) (let ((rest (array/drop (object/get @acc "stack") 1)) (s0 (object/get @acc "s")) (sp (object/get @fr "spec")) (nm (object/get @fr "name" "")) (ix (object/get @fr "index")) (dp (object/get @fr "depth")) (pa (object/get @fr "path"))) '
           f'(let ((ty (object/get @sp "type")) (o (if {RT} 1 @ix))) (let ((vals (if (= @ty "union") [] (object/get @sp "values" []))) (hasdef (object/has @sp "default")) (hasmock (object/has @sp "mock"))) '
           f'(let ((rr {chain})) {{ stack: (array/concat (object/get @rr "push") @rest), cells: (array/concat (object/get @acc "cells") (object/get @rr "cells")), s: (object/get @rr "s") }})))))')
     return f'(fn acc kk (if (= (array/len (object/get @acc "stack")) 0) @acc {body}))'

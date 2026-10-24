@@ -35,6 +35,8 @@ orbital OrbLanguageOrbital {
     kind : string = ""
     compiler : string = ""
     lines : [string] = []
+    coreRoot : string = ""
+    stdRoot : string = ""
     packNames : [string] = []
     scopes : [string] = []
     packCursor : number = 0
@@ -138,6 +140,8 @@ orbital OrbLanguageOrbital {
         (set @entity.roots (let ((parts (array/filter (str/split @payload.cwd "/") (fn s (!= @s ""))))) (array/append (array/map (array/range 0 (+ (array/len @parts) 1)) (fn i (str/concat (str/join (array/concat [""] (array/take @parts (- (array/len @parts) @i))) "/") "/node_modules"))) "~/.orb/node_modules")))
         (set @entity.cursor 0)
         (set @entity.lines [])
+        (set @entity.coreRoot "")
+        (set @entity.stdRoot "")
         (set @entity.packLines [])
         (set @entity.packProblem "")
         (os/getenv "PATH" { key: "path" emit: { success: LANG_PATH_READ, failure: LANG_START_FAILED } })
@@ -217,6 +221,8 @@ orbital OrbLanguageOrbital {
       LANG_ROOT_ASK -> probing when (= @entity.stage (- (array/len @entity.roots) 1))
         (os/realpath (str/concat "~/.orb/node_modules/" (object/get (array/nth @entity.pkgs @entity.cursor) "name")) { key: "root" emit: { success: LANG_ROOT, failure: LANG_ROOT_FAILED } })
       LANG_ROOT -> probing
+        (set @entity.coreRoot (if (and (= (object/get (array/nth @entity.pkgs @entity.cursor) "name") (str/concat (quote "@") "almadar/core")) (= @entity.kind "")) @payload.path @entity.coreRoot))
+        (set @entity.stdRoot (if (and (= (object/get (array/nth @entity.pkgs @entity.cursor) "name") (str/concat (quote "@") "almadar/std")) (= @entity.kind "")) @payload.path @entity.stdRoot))
         (set @entity.lines (array/append @entity.lines (let ((n (object/get (array/nth @entity.pkgs @entity.cursor) "name")) (invalid (str/concat (object/get (array/nth @entity.pkgs @entity.cursor) "name") " → ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at " (json/stringify (str/concat @payload.path "/package.json")) ": "))) (if (= @entity.kind "") (str/concat @n (quote "@") @entity.ver " → " @payload.path) (if (= @entity.kind "block") (str/concat @invalid "missing `orbLanguage` block") (if (= @entity.kind "range") (str/concat @invalid "missing `orbLanguage.compiler` range") (if (= @entity.kind "json") (str/concat @invalid "invalid JSON") (if (= @entity.kind "incompat") (str/concat @n " → ORB_LANGUAGE_DATA_INCOMPATIBLE: installed " @n (quote "@") @entity.ver " requires orb " @entity.compiler ", but this orb is " @entity.running " — install a " @n " whose `orbLanguage.compiler` accepts " @entity.running ", or upgrade orb") (str/concat @invalid "`orbLanguage.compiler` " (json/stringify @entity.compiler) " is not a semver range: " (str/slice @entity.kind 7))))))))))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit LANGUAGE_ROW { line: (array/last @entity.lines) })
@@ -324,7 +330,7 @@ orbital OrbLanguageOrbital {
       LANG_ROOT_FAILED -> idle
         (emit SCAN_ANSWERED { status: 500, body: "", stderr: @payload.error })
       LANG_DONE -> idle
-        (emit LANGUAGE_PACKS_DONE { problem: @entity.packProblem })
+        (emit LANGUAGE_PACKS_DONE { problem: @entity.packProblem, coreRoot: @entity.coreRoot, stdRoot: @entity.stdRoot })
         (emit SCAN_ANSWERED { status: 200, body: (str/join (array/concat @entity.lines (if (!= @entity.packProblem "") [(str/concat "language packs → " @entity.packProblem)] @entity.packLines)) "\n"), stderr: "" })
     }
 
@@ -337,7 +343,7 @@ orbital OrbLanguageOrbital {
         @description "The scan answer: status, the rows as text, and stderr."
       LANGUAGE_PACK_VOCAB -> external { name : string!  text : string! }
         @description "A language pack that passed its checks, with its vocabulary file text (orb i18n check reads it)."
-      LANGUAGE_PACKS_DONE -> external { problem : string! }
+      LANGUAGE_PACKS_DONE -> external { problem : string!  coreRoot : string!  stdRoot : string! }
         @description "The pack scan finished; problem is the one pack-discovery problem, or empty."
       LANGUAGE_ROW -> external { line : string! }
         @description "One resolved or failed language package row."

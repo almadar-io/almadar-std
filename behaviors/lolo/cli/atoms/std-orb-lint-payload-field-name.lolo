@@ -22,6 +22,7 @@ orbital OrbLintPayloadFieldNameOrbital {
 
   entity OrbLintPayloadFieldNameRun [runtime] {
     id : string!
+    scope : string = ""
     findings : [OrbFinding] = []
   }
 
@@ -31,6 +32,7 @@ orbital OrbLintPayloadFieldNameOrbital {
     state ready {
       INIT -> ready
       LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
         (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
             (let ((orb (array/nth @orbitals @oi)))
@@ -57,11 +59,11 @@ orbital OrbLintPayloadFieldNameOrbital {
                           (fn h (let ((rel (let ((r0 (object/get @h "rel" ""))) (if (validate/string @r0) @r0 ""))) (hn (let ((n0 (object/get @h "nm" ""))) (if (validate/string @n0) @n0 "")))) { code: "ORB_X_PAYLOAD_FIELD_NAME", path: (str/concat (object/get @x "w") @rel "." @hn), message: (str/concat "Payload field name '" @hn "' is not a valid TypeScript identifier"), suggestion: "Use a single identifier (letters, digits, underscores; no dot, no space, no leading digit). For a nested shape, declare an object field with nested properties instead of a dotted name.", severity: "error" }))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
-        (emit LINT_FOUND { rule: "payload-field-name", findings: @entity.findings })
+        (emit LINT_FOUND { rule: "payload-field-name", scope: @entity.scope, findings: @entity.findings })
     }
 
     emits {
-      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
         @description "This rule's findings for the file, offered to the lint-all umbrella."
         @tier "internal"
       LINT_FINISH { }
@@ -70,7 +72,7 @@ orbital OrbLintPayloadFieldNameOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PayloadFieldProgram }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PayloadFieldProgram  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -107,7 +109,7 @@ orbital OrbLintPayloadFieldNameOrbital {
       LINT_REQUEST -> external { file : string! }
         @description "Ask the lint input to read and lower this file."
         @tier "internal"
-      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
         @description "The rule trait's findings for the file."
         @tier "internal"
       LINT_INPUT_UNREAD -> external { file : string! }

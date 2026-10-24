@@ -93,10 +93,8 @@ orbital WebhookOrbital {
       WEBHOOK_UNREACHABLE -> sending
         (set @entity.lastError @payload.error)
         (emit WEBHOOK_RETRY_FAILED { key: @entity.key, error: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Webhook unreachable: " @payload.error) })
       WEBHOOK_GAVE_UP -> idle
         (emit WEBHOOK_FAILED { code: null, message: @entity.lastError, attempts: @entity.attempts })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Webhook not delivered: " @entity.lastError) })
     }
 
     emits {
@@ -161,11 +159,6 @@ orbital WebhookOrbital {
     }
 
     config {
-      statusSlot : slot = system
-        @label "Status slot"
-        @description "Where the atom reports an unreachable or undelivered webhook; a page running it in the background keeps it in `system`"
-        @synonyms "status area, slot"
-        @tier "presentation"
       signed : boolean = false
         @label "Sign with the configured secret"
         @description "Sign sends that carry no per-call secret with the signingSecret credential. Off sends them unsigned."
@@ -184,5 +177,5 @@ orbital WebhookOrbital {
     }
   }
 
-  page "/webhook" as WebhookPage -> WebhookClient, WebhookRetry
+  page boot as WebhookPage -> WebhookClient, WebhookRetry
 }

@@ -3,10 +3,12 @@ app std-app-search [
   description: "std-app-search — reusable global search: wraps a host content view and, on a SEARCH trigger, fetches the linked entity filtered by @config.searchField and renders the matching results, then CLEAR_SEARCH returns to the host view. Rebind to any entity; point @config.idleContent at the normal view and wire a trigger (e.g. AppLayout SEARCH) into SEARCH."
 ]
 type AppSearchFieldSpec = { name : string!, label : string, variant : h3 | h4 | body | caption | badge | small | progress, icon : string, format : date | currency | number | boolean | percent, event : string, href : string, payload : string, disabled : boolean, confirm : string, hidden : boolean }
+type AppSearchRelatedRow = { id : string! }
 type AppSearchActionSpec = { label : string!, event : event!, variant : primary | secondary | ghost | danger, icon : string, href : string, payload : string, disabled : boolean, confirm : string, hidden : boolean, roles : [string] }
 orbital AppSearchOrbital {
   type AppSearchLoaded = Event { data : [AppSearchTarget]! } "Filtered search results loaded"
   type AppSearchFailed = Event { error : string } "Search fetch failed"
+  type AppSearchRelatedLoaded = Event { data : [AppSearchRelatedRow]! } "Related rows whose text matches the query loaded"
 
   entity AppSearchTarget [runtime] {
     id : string!
@@ -47,11 +49,30 @@ orbital AppSearchOrbital {
           gap: md
           children: [@config.idleContent]
         })
-      APP_SEARCH -> searching
+      APP_SEARCH -> searching when (= @config.searchRelation null)
         (set @entity.searchTerm ?value)
         (fetch AppSearchTarget {
           filter: (or (= ?value "") (str/includes (object/get @entity @config.searchField) ?value))
           emit: { success: AppSearchLoaded, failure: AppSearchFailed }
+        })
+        (render-ui main {
+          type: stack
+          align: center
+          direction: vertical
+          gap: md
+          className: "py-12"
+          children: [{ type: spinner }, {
+            type: typography
+            variant: caption
+            color: muted
+            content: "Searching…"
+          }]
+        })
+      APP_SEARCH -> searching when (!= @config.searchRelation null)
+        (set @entity.searchTerm ?value)
+        (fetch @config.relatedEntity {
+          filter: (or (= ?value "") (str/includes (object/get @entity @config.relatedSearchField) ?value))
+          emit: { success: AppSearchRelatedLoaded, failure: AppSearchFailed }
         })
         (render-ui main {
           type: stack
@@ -78,7 +99,7 @@ orbital AppSearchOrbital {
           gap: md
           children: [@config.idleContent]
         })
-      APP_SEARCH -> searching
+      APP_SEARCH -> searching when (= @config.searchRelation null)
         (set @entity.searchTerm ?value)
         (fetch AppSearchTarget {
           filter: (or (= ?value "") (str/includes (object/get @entity @config.searchField) ?value))
@@ -96,6 +117,30 @@ orbital AppSearchOrbital {
             color: muted
             content: "Searching…"
           }]
+        })
+      APP_SEARCH -> searching when (!= @config.searchRelation null)
+        (set @entity.searchTerm ?value)
+        (fetch @config.relatedEntity {
+          filter: (or (= ?value "") (str/includes (object/get @entity @config.relatedSearchField) ?value))
+          emit: { success: AppSearchRelatedLoaded, failure: AppSearchFailed }
+        })
+        (render-ui main {
+          type: stack
+          align: center
+          direction: vertical
+          gap: md
+          className: "py-12"
+          children: [{ type: spinner }, {
+            type: typography
+            variant: caption
+            color: muted
+            content: "Searching…"
+          }]
+        })
+      AppSearchRelatedLoaded -> searching
+        (fetch AppSearchTarget {
+          filter: (or (= @entity.searchTerm "") (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation)))
+          emit: { success: AppSearchLoaded, failure: AppSearchFailed }
         })
       AppSearchLoaded -> results
         (render-ui main {
@@ -155,11 +200,30 @@ orbital AppSearchOrbital {
           gap: md
           children: [@config.idleContent]
         })
-      APP_SEARCH -> searching
+      APP_SEARCH -> searching when (= @config.searchRelation null)
         (set @entity.searchTerm ?value)
         (fetch AppSearchTarget {
           filter: (or (= ?value "") (str/includes (object/get @entity @config.searchField) ?value))
           emit: { success: AppSearchLoaded, failure: AppSearchFailed }
+        })
+        (render-ui main {
+          type: stack
+          align: center
+          direction: vertical
+          gap: md
+          className: "py-12"
+          children: [{ type: spinner }, {
+            type: typography
+            variant: caption
+            color: muted
+            content: "Searching…"
+          }]
+        })
+      APP_SEARCH -> searching when (!= @config.searchRelation null)
+        (set @entity.searchTerm ?value)
+        (fetch @config.relatedEntity {
+          filter: (or (= ?value "") (str/includes (object/get @entity @config.relatedSearchField) ?value))
+          emit: { success: AppSearchRelatedLoaded, failure: AppSearchFailed }
         })
         (render-ui main {
           type: stack
@@ -187,6 +251,7 @@ orbital AppSearchOrbital {
     emits {
       AppSearchLoaded
       AppSearchFailed
+      AppSearchRelatedLoaded
     }
 
     listens {
@@ -206,9 +271,21 @@ orbital AppSearchOrbital {
         @label "Idle content"
         @description "The normal content view (e.g. the data ledger/browse trait) shown when no search is active."
         @tier "presentation"
-      searchField : string = name
+      searchField : field @entity string = name
         @label "Search field"
         @description "Entity field matched against the query (case-insensitive substring)."
+        @tier "presentation"
+      relatedEntity : entity = AppSearchTarget
+        @label "Related entity"
+        @description "The entity a relation search matches through: the target of searchRelation."
+        @tier "presentation"
+      searchRelation : (field @entity (@entity @config.relatedEntity))?
+        @label "Search through relation"
+        @description "A relation field of the searched entity. When set, the query matches the related rows' relatedSearchField and the results are the rows pointing at them; unset, searchField on the row itself is matched."
+        @tier "presentation"
+      relatedSearchField : field (@entity @config.relatedEntity) string = name
+        @label "Related search field"
+        @description "Field of the related entity matched against the query when searchRelation is set."
         @tier "presentation"
       resultsTitle : string = "Search results"
         @label "Results title"

@@ -3,10 +3,10 @@ app std-orb-lint-engine [
   env: ["PATH"],
   exec: ["orb"],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
-  description: "std-orb-lint-engine — the rule engine of the lint umbrella. For a LINT_RUN { file } it composes every file-taking std-orb-lint-* rule trait (shared-types is left out: it walks the std and io behavior trees and takes no file), asks the lint input to read and lower the file once (LINT_REQUEST), collects LINT_FOUND { rule, findings } from each rule and answers LINT_COLLECTED { findings, found } once every rule answered, or LINT_INPUT_UNREAD when the file cannot be read or lowered. It declares no cli hook: std-orb-lint-all (the `orb lint all` hook) and std-orb-validate and std-orb-compile (the policy lints) compose its orbital."
+  description: "std-orb-lint-engine — the rule engine of the lint umbrella. For a LINT_RUN { file } it composes every file-taking std-orb-lint-* rule trait (shared-types is left out: it walks the std and io behavior trees and takes no file), asks the lint input to read and lower the file once (LINT_REQUEST), collects LINT_FOUND { rule, findings } from each rule, then asks the input for each lazy child the resolved program split off (LINT_LAZY names them; LINT_CHILD_REQUEST { index } replays every rule on that child, each rule echoing the pass's scope (empty for the program, the child's orbital) so every pass's answers are distinct deliveries (EXEC-QUEUE-4), and a child's findings' paths prefixed `lazy[<scope>].` as the compiler's validate_lazy_children prefixed them) and answers LINT_COLLECTED { findings, found } once every rule answered for the program and every child, or LINT_INPUT_UNREAD when the file cannot be read or lowered. It declares no cli hook: std-orb-lint-all (the `orb lint all` hook) and std-orb-validate and std-orb-compile (the policy lints) compose its orbital."
 ]
 uses Spec from "almadar-std/lint-engine"
-type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error", validValues : [string] }
 type RuleFound = { rule : string!, findings : [OrbFinding]! }
 
 orbital OrbLintEngineOrbital {
@@ -56,10 +56,14 @@ orbital OrbLintEngineOrbital {
   uses DuplicateUseAlias from "std/behaviors/std-orb-lint-duplicate-use-alias"
   uses TickRequiresRuntime from "std/behaviors/std-orb-lint-tick-requires-runtime"
   uses LoopInvariantParse from "std/behaviors/std-orb-lint-loop-invariant-parse"
+  uses ReservedComponentName from "std/behaviors/std-orb-lint-reserved-component-name"
 
   entity OrbLintEngineRun [runtime] {
     id : string!
     found : [RuleFound] = []
+    done : [RuleFound] = []
+    orbitals : [string] = []
+    child : number = 0
   }
 
   trait OrbLintEngine -> OrbLintEngineRun [optimistic] {
@@ -69,26 +73,39 @@ orbital OrbLintEngineOrbital {
       INIT -> ready
       LINT_RUN -> collecting
         (set @entity.found [])
+        (set @entity.done [])
+        (set @entity.orbitals [])
+        (set @entity.child 0)
         (emit LINT_REQUEST { file: @payload.file })
     }
 
     state collecting {
       INIT -> collecting
+      LINT_LAZY_HEARD -> collecting
+        (set @entity.orbitals @payload.orbitals)
       LINT_FOUND -> collecting
-        (set @entity.found (array/concat @entity.found [{ rule: @payload.rule, findings: @payload.findings }]))
+        (set @entity.found (array/concat @entity.found [{ rule: @payload.rule, findings: (if (= @payload.scope "") @payload.findings (let ((prefix (str/concat "lazy[" @payload.scope "]."))) (array/map @payload.findings (fn f (object/merge @f { path: (str/concat @prefix (object/get @f "path")) }))))) }]))
         (emit LINT_SETTLE { })
       LINT_INPUT_UNREAD -> ready
       LINT_SETTLE -> collecting when (< (array/len @entity.found) @config.ruleCount)
-      LINT_SETTLE -> ready when (>= (array/len @entity.found) @config.ruleCount)
-        (emit LINT_COLLECTED { findings: (array/flatten (array/map @entity.found (fn r (object/get @r "findings")))), found: @entity.found })
+      LINT_SETTLE -> collecting when (and (>= (array/len @entity.found) @config.ruleCount) (< @entity.child (array/len @entity.orbitals)))
+        (set @entity.done (array/concat @entity.done @entity.found))
+        (set @entity.found [])
+        (set @entity.child (+ @entity.child 1))
+        (emit LINT_CHILD_REQUEST { index: (- @entity.child 1) })
+      LINT_SETTLE -> ready when (and (>= (array/len @entity.found) @config.ruleCount) (>= @entity.child (array/len @entity.orbitals)))
+        (emit LINT_COLLECTED { findings: (array/flatten (array/map (array/concat @entity.done @entity.found) (fn r (object/get @r "findings")))), found: (array/concat @entity.done @entity.found) })
     }
 
     emits {
       LINT_REQUEST -> external { file : string! }
         @description "Ask the lint input to read and lower this file once for every rule."
         @tier "internal"
+      LINT_CHILD_REQUEST -> external { index : number! }
+        @description "Ask the lint input to offer every rule the lazy child at this index."
+        @tier "internal"
       LINT_COLLECTED -> external { findings : [OrbFinding]!  found : [RuleFound]! }
-        @description "Every rule's findings for the file, flattened, and the findings by rule: the structured answer of a run, heard by the hook and by a program that composes the engine (std-orb-validate)."
+        @description "Every rule's findings for the file and its lazy children, flattened, and the findings by rule (one entry per rule per program): the structured answer of a run, heard by the hook and by a program that composes the engine (std-orb-validate)."
         @tier "internal"
       LINT_SETTLE { }
         @description "Internal: check whether every rule answered."
@@ -96,7 +113,7 @@ orbital OrbLintEngineOrbital {
     }
 
     config {
-      ruleCount : number = 45
+      ruleCount : number = 46
         @label "Rule count"
         @description "How many composed rule traits answer LINT_FOUND before the run settles."
     }
@@ -104,11 +121,14 @@ orbital OrbLintEngineOrbital {
     listens {
       LINT_RUN { file : string! }
         @description "Run every lint rule over this file; the cli hook and std-orb-validate emit it."
-      LINT_INPUT_UNREAD { file : string! }
+      LINT_INPUT_UNREAD { file : string!  error : string! }
         @description "The lint input could not read or lower the file."
-      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
-        @description "One rule atom's findings for the file."
+      LINT_FOUND { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "One rule atom's findings for the file or the lazy child being linted."
+      LINT_LAZY_HEARD { orbitals : [string]! }
+        @description "std-orb-lint-input's LINT_LAZY: the lazy children to lint after the program."
       OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+      OrbLintInput.LINT_LAZY -> LINT_LAZY_HEARD
       OrbLintCollectionPolicy.LINT_FOUND -> LINT_FOUND
       OrbLintCrossDuplicateEntity.LINT_FOUND -> LINT_FOUND
       OrbLintEmitConfigRef.LINT_FOUND -> LINT_FOUND
@@ -154,6 +174,7 @@ orbital OrbLintEngineOrbital {
       OrbLintDuplicateUseAlias.LINT_FOUND -> LINT_FOUND
       OrbLintTickRequiresRuntime.LINT_FOUND -> LINT_FOUND
       OrbLintLoopInvariantParse.LINT_FOUND -> LINT_FOUND
+      OrbLintReservedComponentName.LINT_FOUND -> LINT_FOUND
     }
   }
 
@@ -164,6 +185,7 @@ orbital OrbLintEngineOrbital {
   trait OrbLintInput = Input.traits.OrbLintInput {
     listens {
       OrbLintEngine.LINT_REQUEST -> LINT_REQUEST
+      OrbLintEngine.LINT_CHILD_REQUEST -> LINT_CHILD_REQUEST
       LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
         @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
       LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
@@ -266,6 +288,8 @@ orbital OrbLintEngineOrbital {
   }
   trait OrbLintLoopInvariantParse = LoopInvariantParse.traits.OrbLintLoopInvariantParse {
   }
+  trait OrbLintReservedComponentName = ReservedComponentName.traits.OrbLintReservedComponentName {
+  }
 
-  page boot as OrbLintEngineOrbitalStart -> OrbLintEngine, OrbLintInput, Packs, Versions, OrbLintCollectionPolicy, OrbLintCrossDuplicateEntity, OrbLintEmitConfigRef, OrbLintEntityBrowserStorage, OrbLintEntityDuplicateField, OrbLintEntityEmptyEnum, OrbLintEntityFieldType, OrbLintEntityLocaleInstances, OrbLintEntityMockMember, OrbLintEntityPersistence, OrbLintEntitySemanticDefault, OrbLintEntityShape, OrbLintHttpEgressEntry, OrbLintGenericTypes, OrbLintIdentityUnique, OrbLintInbound, OrbLintInitCoverage, OrbLintEventIdUniqueness, OrbLintListenTrigger, OrbLintLiteralDefault, OrbLintOrbitalDuplicateName, OrbLintPageEmptyTraits, OrbLintPageModifiers, OrbLintIdRefs, OrbLintPagePath, OrbLintPagePathUniqueness, OrbLintPayloadFieldName, OrbLintRelationTargets, OrbLintSignInRoute, OrbLintStoreBinding, OrbLintTraitIdUniqueness, OrbLintUntypedArray, OrbLintSchemaHeader, OrbLintDuplicateTransition, OrbLintStateShape, OrbLintEmptyEventName, OrbLintSlot, OrbLintTransitionRefs, OrbLintStateUnreachable, OrbLintMissingOrbitalName, OrbLintDuplicateUseAlias, OrbLintThemePinContradictsApp, OrbLintTickRequiresRuntime, OrbLintLoopInvariantParse, OrbLintAssetInlineUrl, Versions, Packs
+  page boot as OrbLintEngineOrbitalStart -> OrbLintEngine, OrbLintInput, Packs, Versions, OrbLintCollectionPolicy, OrbLintCrossDuplicateEntity, OrbLintEmitConfigRef, OrbLintEntityBrowserStorage, OrbLintEntityDuplicateField, OrbLintEntityEmptyEnum, OrbLintEntityFieldType, OrbLintEntityLocaleInstances, OrbLintEntityMockMember, OrbLintEntityPersistence, OrbLintEntitySemanticDefault, OrbLintEntityShape, OrbLintHttpEgressEntry, OrbLintGenericTypes, OrbLintIdentityUnique, OrbLintInbound, OrbLintInitCoverage, OrbLintEventIdUniqueness, OrbLintListenTrigger, OrbLintLiteralDefault, OrbLintOrbitalDuplicateName, OrbLintPageEmptyTraits, OrbLintPageModifiers, OrbLintIdRefs, OrbLintPagePath, OrbLintPagePathUniqueness, OrbLintPayloadFieldName, OrbLintRelationTargets, OrbLintSignInRoute, OrbLintStoreBinding, OrbLintTraitIdUniqueness, OrbLintUntypedArray, OrbLintSchemaHeader, OrbLintDuplicateTransition, OrbLintStateShape, OrbLintEmptyEventName, OrbLintSlot, OrbLintTransitionRefs, OrbLintStateUnreachable, OrbLintMissingOrbitalName, OrbLintDuplicateUseAlias, OrbLintThemePinContradictsApp, OrbLintTickRequiresRuntime, OrbLintLoopInvariantParse, OrbLintReservedComponentName, OrbLintAssetInlineUrl, Versions, Packs
 }

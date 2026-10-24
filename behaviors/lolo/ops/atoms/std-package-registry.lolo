@@ -45,10 +45,6 @@ orbital PackageRegistryOrbital {
         @label "API prefix"
         @description "The routes live under this prefix followed by /packages."
         @tier "infra"
-      statusSlot : slot = system
-        @label "Status slot"
-        @description "Where the atom reports a refused request; a page running it in the background keeps it in `system`."
-        @tier "infra"
       baseUrl : string = ""
         @label "Base URL"
         @description "Prepended to the tarball url the registry answers."
@@ -106,12 +102,10 @@ orbital PackageRegistryOrbital {
       PACKAGE_PUBLISH -> serving when (or (= @config.publishToken "") (!= @payload.token @config.publishToken))
         (emit RESPOND { requestId: @payload.requestId, status: 401, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { error: "Unauthorized", code: "UNAUTHORIZED" })) })
         (emit PACKAGE_REFUSED { requestId: @payload.requestId, status: 401, code: "UNAUTHORIZED", error: "Unauthorized" })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "UNAUTHORIZED" })
         (emit REGISTRY_DONE {})
       PACKAGE_PUBLISH -> serving when (and (not (or (= @config.publishToken "") (!= @payload.token @config.publishToken))) (= (bytes/length @payload.tarball) 0))
         (emit RESPOND { requestId: @payload.requestId, status: 400, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { error: "Empty tarball", code: "EMPTY_TARBALL" })) })
         (emit PACKAGE_REFUSED { requestId: @payload.requestId, status: 400, code: "EMPTY_TARBALL", error: "Empty tarball" })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "EMPTY_TARBALL" })
         (emit REGISTRY_DONE {})
       PACKAGE_PUBLISH -> serving when (and (not (or (= @config.publishToken "") (!= @payload.token @config.publishToken))) (> (bytes/length @payload.tarball) 0))
         (set @entity.tarball @payload.tarball)
@@ -120,7 +114,6 @@ orbital PackageRegistryOrbital {
       PACKAGE_YANK -> serving when (or (= @config.publishToken "") (!= @payload.token @config.publishToken))
         (emit RESPOND { requestId: @payload.requestId, status: 401, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { error: "Unauthorized", code: "UNAUTHORIZED" })) })
         (emit PACKAGE_REFUSED { requestId: @payload.requestId, status: 401, code: "UNAUTHORIZED", error: "Unauthorized" })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "UNAUTHORIZED" })
         (emit REGISTRY_DONE {})
       PACKAGE_YANK -> serving when (not (or (= @config.publishToken "") (!= @payload.token @config.publishToken)))
         (set @entity.current { requestId: @payload.requestId, op: "yank", name: @payload.name, version: @payload.version, integrity: "" })
@@ -137,14 +130,13 @@ orbital PackageRegistryOrbital {
       REGISTRY_FOUND -> serving when (= @entity.current.op "publish")
         (emit RESPOND { requestId: @entity.current.requestId, status: 409, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { error: "Version already published", code: "VERSION_EXISTS" })) })
         (emit PACKAGE_REFUSED { requestId: @entity.current.requestId, status: 409, code: "VERSION_EXISTS", error: "Version already published" })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "VERSION_EXISTS" })
         (emit REGISTRY_DONE {})
       REGISTRY_FOUND -> serving when (= @entity.current.op "fetch")
         (emit RESPOND { requestId: @entity.current.requestId, status: 200, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { name: @entity.current.name, version: @entity.current.version, url: (str/concat @config.baseUrl @config.apiPrefix "/packages/" @entity.current.name "/" @entity.current.version "/tarball"), integrity: @payload.data.integrity, yanked: @payload.data.yanked })) })
         (emit REGISTRY_DONE {})
       REGISTRY_FOUND -> serving when (and (= @entity.current.op "tarball") @payload.data.yanked)
         (emit RESPOND { requestId: @entity.current.requestId, status: 410, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { error: "Version yanked", code: "YANKED" })) })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "YANKED" })
+        (emit PACKAGE_REFUSED { requestId: @entity.current.requestId, status: 410, code: "YANKED", error: "Version yanked" })
         (emit REGISTRY_DONE {})
       REGISTRY_FOUND -> serving when (and (= @entity.current.op "tarball") (not @payload.data.yanked))
         (emit RESPOND { requestId: @entity.current.requestId, status: 200, headers: [{ name: "content-type", value: "application/gzip" }], body: @payload.data.tarball })
@@ -168,27 +160,22 @@ orbital PackageRegistryOrbital {
         (set @entity.tarball (bytes/from-string ""))
         (emit RESPOND { requestId: @entity.current.requestId, status: 501, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { error: "The tarball could not be hashed", code: "INTEGRITY_UNAVAILABLE" })) })
         (emit PACKAGE_REFUSED { requestId: @entity.current.requestId, status: 501, code: "INTEGRITY_UNAVAILABLE", error: "The tarball could not be hashed" })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "INTEGRITY_UNAVAILABLE" })
         (emit REGISTRY_DONE {})
       REGISTRY_MISSING -> serving when (and (!= @entity.current.op "publish") (= @payload.code "not-found"))
         (emit RESPOND { requestId: @entity.current.requestId, status: 404, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { error: "Not found", code: "NOT_FOUND" })) })
         (emit PACKAGE_REFUSED { requestId: @entity.current.requestId, status: 404, code: "NOT_FOUND", error: "Not found" })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "NOT_FOUND" })
         (emit REGISTRY_DONE {})
       REGISTRY_MISSING -> serving when (!= @payload.code "not-found")
         (emit RESPOND { requestId: @entity.current.requestId, status: 503, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { error: "Package store unavailable", code: "STORE_UNAVAILABLE" })) })
         (emit PACKAGE_REFUSED { requestId: @entity.current.requestId, status: 503, code: "STORE_UNAVAILABLE", error: "Package store unavailable" })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "STORE_UNAVAILABLE" })
         (emit REGISTRY_DONE {})
       REGISTRY_STORE_REFUSED -> serving
         (emit RESPOND { requestId: @entity.current.requestId, status: 503, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { error: "Package store unavailable", code: "STORE_UNAVAILABLE" })) })
         (emit PACKAGE_REFUSED { requestId: @entity.current.requestId, status: 503, code: "STORE_UNAVAILABLE", error: "Package store unavailable" })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "STORE_UNAVAILABLE" })
         (emit REGISTRY_DONE {})
       REGISTRY_LISTED -> serving when (= (array/len @payload.data) 0)
         (emit RESPOND { requestId: @entity.current.requestId, status: 404, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { error: "Not found", code: "NOT_FOUND" })) })
         (emit PACKAGE_REFUSED { requestId: @entity.current.requestId, status: 404, code: "NOT_FOUND", error: "Not found" })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "NOT_FOUND" })
         (emit REGISTRY_DONE {})
       REGISTRY_LISTED -> serving when (> (array/len @payload.data) 0)
         (emit RESPOND { requestId: @entity.current.requestId, status: 200, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { name: @entity.current.name, versions: (array/map (array/sort @payload.data "publishedAt" "desc") (fn r { version: @r.version, integrity: @r.integrity, yanked: @r.yanked, publishedAt: @r.publishedAt })) })) })
@@ -332,5 +319,5 @@ orbital PackageRegistryOrbital {
     }
   }
 
-  page "/packages" as PackageRegistryPage -> PackageRegistry, Digest
+  page boot as PackageRegistryPage -> PackageRegistry, Digest
 }

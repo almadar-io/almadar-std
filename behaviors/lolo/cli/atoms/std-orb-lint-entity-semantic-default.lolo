@@ -4,25 +4,27 @@ app std-orb-lint-entity-semantic-default [
   env: ["PATH"],
   exec: ["orb"],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
-  description: "std-orb-lint-entity-semantic-default — the `orb lint entity-semantic-default <file>` command, the port of ORB_E_SEMANTIC_VALUE_INVALID and ORB_E_DEFAULT_TYPE_MISMATCH (entity.rs validate_field). It lowers the file with program/read and, for every top-level field of the primary entity typed email, url, phone, uuid or image whose default is a string literal, reports an empty default and a default the validate/email, validate/url (also for image), validate/phone or validate/uuid operator rejects, with the Rust path, message and suggestion (status 500, exit 1). Orbitals marked `spec` are skipped, as validate_all_entities skips them. It also checks every primary and auxiliary entity field's default against its declared type (config_type.rs check_field_def_shape): primitive kinds, enum membership of a non-string default, relation ids (to-many relations take an array of id strings), array elements and object members, with the Rust messages, skipping an `@` binding, an array headed by a namespaced operator, an optional field's null and a string default of an enum field (ORB_E_LITERAL_UNION_DEFAULT_MISMATCH owns that); union, tuple and event-typed fields and bare-operator calls are not ported. Clean answers `lint entity-semantic-default: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  description: "std-orb-lint-entity-semantic-default — the `orb lint entity-semantic-default <file>` command, the port of ORB_E_SEMANTIC_VALUE_INVALID and ORB_E_DEFAULT_TYPE_MISMATCH (entity.rs validate_field). It lowers the file with program/read and, for every top-level field of a primary or auxiliary entity typed email, url, phone, uuid or image whose default is a string literal, reports an empty default and a default the validate/email, validate/url (also for image), validate/phone or validate/uuid operator rejects, with the Rust path, message and suggestion (status 500, exit 1). Orbitals marked `spec` are skipped, as validate_all_entities skips them. It also checks every primary and auxiliary entity field's default against its declared type (config_type.rs check_field_def_shape): primitive kinds (an int field takes a number), enum membership of a non-string default, relation ids (to-many relations take an array of id strings), array elements and object members, union fields (the variant a discriminator tag or an untagged closed shape selects, then that variant only, with a closed key set), tuple slots and event / EventAddress members, with the Rust messages, skipping an `@` binding, an array headed by a namespaced operator, an optional field's null and a string default of an enum field (ORB_E_LITERAL_UNION_DEFAULT_MISMATCH owns that); a default array headed by a namespaced name or by an installed operator with no namespace (LINT_OPERATORS) is an operator call, deferred like the compiler does. Clean answers `lint entity-semantic-default: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-entity-semantic-default"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
-type FieldShape = string | number | boolean | [FieldShape] | Map string FieldShape
+type FieldShape = string | number | boolean | [FieldShape?] | Map string FieldShape?
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 type SemanticDefaultField = { type : string, default : FieldShape?, values : [string], required : boolean, relation : Map string string, properties : Map string FieldShape, items : FieldShape }
 type SemanticDefaultEntity = { fields : [SemanticDefaultField] }
 type SemanticDefaultEntityRef = SemanticDefaultEntity | string
 type SemanticDefaultOrbital = { entity : SemanticDefaultEntityRef, auxiliaryEntities : [SemanticDefaultEntity], spec : boolean }
 type SemanticDefaultProgram = { orbitals : [SemanticDefaultOrbital]! }
-type SchemaRec = { np : string, t : string, hv : boolean, vals : [FieldShape], req : boolean, hp : boolean, keys : [string], many : boolean }
-type ValRec = { np : string, dp : string, kind : string, raw : FieldShape? }
+type TabEntry = { pth : string, tab : [[OrbFinding]] }
+type ValRec = { dp : string, kind : string, raw : FieldShape?, ks : [string], offs : [number] }
 
 orbital OrbLintEntitySemanticDefaultOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
   entity OrbLintEntitySemanticDefaultRun [runtime] {
     id : string!
+    scope : string = ""
+    operators : [string] = []
     findings : [OrbFinding] = []
   }
 
@@ -31,22 +33,30 @@ orbital OrbLintEntitySemanticDefaultOrbital {
 
     state ready {
       INIT -> ready
+      LINT_OPERATORS_HEARD -> ready
+        (set @entity.operators @payload.names)
       LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
         (set @entity.findings (let ((orbitals : [SemanticDefaultOrbital] (object/get @payload.program "orbitals" [])))
           (array/concat
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
-            (let ((ent (object/get (array/nth @orbitals @oi) "entity" {})))
-              (if (validate/object @ent) (if (not (object/get (array/nth @orbitals @oi) "spec" false)) (let ((fields (object/get @ent "fields" [])))
-                (array/flatten (array/map (array/range 0 (array/len @fields)) (fn fi
-                  (let ((f (array/nth @fields @fi)))
-                    (let ((kind (object/get @f "type" "")) (lit (object/get @f "default" 0)) (at (str/concat "orbitals[" @oi "].entity.fields[" @fi "].default")))
-                      (if (and (array/includes ["email" "url" "phone" "uuid" "image"] @kind) (validate/string @lit))
-                        (if (= @lit "")
-                          [{ code: "ORB_E_SEMANTIC_VALUE_INVALID", path: @at, message: (str/concat "A '" @kind "' field cannot default to an empty string"), suggestion: "Drop the default — the mock generator synthesizes a valid value", severity: "error" }]
-                          (if (if (= @kind "email") (validate/email @lit) (if (= @kind "phone") (validate/phone @lit) (if (= @kind "uuid") (validate/uuid @lit) (validate/url @lit))))
-                            []
-                            [{ code: "ORB_E_SEMANTIC_VALUE_INVALID", path: @at, message: (str/concat "'" @lit "' is not a valid " @kind), suggestion: (str/concat "Provide a valid " @kind " or drop the default"), severity: "error" }]))
-                        []))))))) []) [])))))
+            (let ((auxs (object/get (array/nth @orbitals @oi) "auxiliaryEntities" [])))
+              (array/flatten (array/map
+                (array/concat [{ ent: (object/get (array/nth @orbitals @oi) "entity" {}), base: (str/concat "orbitals[" @oi "].entity") }]
+                  (array/map (array/range 0 (array/len @auxs)) (fn ai { ent: (array/nth @auxs @ai), base: (str/concat "orbitals[" @oi "].auxiliaryEntities[" @ai "]") })))
+                (fn eb
+                  (let ((ent (object/get @eb "ent")))
+                    (if (and (validate/object @ent) (not (object/get (array/nth @orbitals @oi) "spec" false))) (let ((fields (object/get @ent "fields" [])))
+                      (array/flatten (array/map (array/range 0 (array/len @fields)) (fn fi
+                        (let ((f (array/nth @fields @fi)))
+                          (let ((kind (object/get @f "type" "")) (lit (object/get @f "default" 0)) (at (str/concat (object/get @eb "base") ".fields[" @fi "].default")))
+                            (if (and (array/includes ["email" "url" "phone" "uuid" "image"] @kind) (validate/string @lit))
+                              (if (= @lit "")
+                                [{ code: "ORB_E_SEMANTIC_VALUE_INVALID", path: @at, message: (str/concat "A '" @kind "' field cannot default to an empty string"), suggestion: "Drop the default — the mock generator synthesizes a valid value", severity: "error" }]
+                                (if (if (= @kind "email") (validate/email @lit) (if (= @kind "phone") (validate/phone @lit) (if (= @kind "uuid") (validate/uuid @lit) (validate/url @lit))))
+                                  []
+                                  [{ code: "ORB_E_SEMANTIC_VALUE_INVALID", path: @at, message: (str/concat "'" @lit "' is not a valid " @kind), suggestion: (str/concat "Provide a valid " @kind " or drop the default"), severity: "error" }]))
+                              []))))))) [])))))))))
           (let ((ents (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
                       (let ((auxs (object/get (array/nth @orbitals @oi) "auxiliaryEntities" [])))
                         (array/filter
@@ -62,99 +72,14 @@ orbital OrbLintEntitySemanticDefaultOrbital {
                         (let ((dflt (object/get @f "default")))
                           (if (or (and (object/has @f "values") (validate/string @dflt)) (and (not (object/get @f "required" false)) (= @dflt null)))
                             []
-                          (let ((sch (tree/fold @f (fn (n k)
-                              (if (validate/array @n)
-                                (array/flatten @k)
-                                (if (validate/object @n)
-                                  (let ((t0 (object/get @n "type" 0)))
-                                    (if (not (validate/string @t0))
-                                      (array/flatten (array/map (array/sort (object/keys @n)) (fn key
-                                        (array/map (object/get @k @key []) (fn h (object/set @h "np" (str/concat "." @key (object/get @h "np"))))))))
-                                      (let ((ft (if (validate/string @t0) @t0 ""))
-                                            (v0 (object/get @n "values" []))
-                                            (r0 (object/get @n "required" false))
-                                            (pr0 (object/get @n "properties" {}))
-                                            (rl0 (object/get @n "relation" {})))
-                                        (let ((vals (if (validate/array @v0) @v0 []))
-                                              (req (if (validate/boolean @r0) @r0 false))
-                                              (pr (if (validate/object @pr0) @pr0 {}))
-                                              (cd0 (if (validate/object @rl0) (object/get @rl0 "cardinality" "") "")))
-                                          (let ((cd (if (validate/string @cd0) @cd0 "")))
-                                            (array/concat
-                                              [{ np: "", t: @ft, hv: (object/has @n "values"), vals: @vals, req: @req, hp: (object/has @n "properties"), keys: (array/sort (object/keys @pr)), many: (and (= @ft "relation") (object/has @n "relation") (array/includes ["many" "one-to-many" "many-to-many"] @cd)) }]
-                                              (if (and (= @ft "array") (object/has @n "items"))
-                                                (array/map (object/get @k "items" []) (fn h (object/set @h "np" (str/concat "[]" (object/get @h "np")))))
-                                                (if (and (= @ft "object") (object/has @n "properties"))
-                                                  (object/get @k "properties" [])
-                                                  []))))))))
-                                  []))) FieldShape))
-                              (val (if (= @dflt null)
-                                [{ np: "", dp: "", kind: "null", raw: @dflt }]
-                                (tree/fold @dflt (fn (n k) (let ((nn @n))
-                                  (if (validate/array @n)
-                                    (array/concat
-                                      [{ np: "", dp: "", kind: (let ((h0 (array/nth @n 0))) (if (validate/string @h0) (if (str/includes @h0 "/") "deferred" "array") "array")), raw: @nn }]
-                                      (array/flatten (array/map (array/range 0 (array/len @k)) (fn i
-                                        (array/map (array/nth @k @i) (fn h (object/set (object/set @h "np" (str/concat "[]" (object/get @h "np"))) "dp" (str/concat "[" @i "]" (object/get @h "dp")))))))))
-                                    (if (validate/object @n)
-                                      (array/concat
-                                        [{ np: "", dp: "", kind: "object", raw: @nn }]
-                                        (array/flatten (array/map (object/keys @k) (fn key
-                                          (array/map (object/get @k @key []) (fn h (object/set (object/set @h "np" (str/concat "." @key (object/get @h "np"))) "dp" (str/concat "." @key (object/get @h "dp")))))))))
-                                      [{ np: "", dp: "", kind: (if (validate/string @n) (if (= (str/slice @n 0 1) (str/decode-uri-component "%40")) "deferred" "string") (if (validate/number @n) "number" (if (validate/boolean @n) "boolean" "null"))), raw: @nn }])))) FieldShape))))
-                              (let ((found (array/flatten (array/map (if (validate/array @val) @val []) (fn vn
-                                      (let ((m (array/filter (if (validate/array @sch) @sch []) (fn sn (= (object/get @sn "np") (object/get @vn "np"))))))
-                                        (if (= (array/len @m) 0)
-                                          []
-                                          (let ((sn (array/first @m)))
-                                            (let ((kd (object/get @vn "kind"))
-                                                  (raw (object/get @vn "raw"))
-                                                  (t (object/get @sn "t")))
-                                              (let ((rs (if (validate/string @raw) @raw ""))
-                                                    (vs (array/map (object/get @sn "vals") (fn x (if (validate/string @x) @x (json/stringify @x)))))
-                                                    (desc (if (validate/array @raw)
-                                                            (str/concat "(" (str/join (array/map @raw (fn bi (if (validate/array @bi) (let ((b0 (array/nth @bi 0))) (if (validate/string @b0) (str/concat "(" @b0 " …)") "(…)")) (if (validate/string @bi) @bi (if (validate/number @bi) (str/concat @bi "") (if (validate/boolean @bi) (if @bi "true" "false") (if (validate/object @bi) "{…}" "null"))))))) " ") ")")
-                                                            (if (validate/string @raw) @raw (if (validate/number @raw) (str/concat @raw "") (if (validate/boolean @raw) (if @raw "true" "false") (if (validate/object @raw) "{…}" "null")))))))
-                              (if (= @kd "deferred")
-                                []
-                                (if (array/includes ["union" "tuple" "event" "EventAddress"] @t)
-                                  []
-                                  (if (= @t "array")
-                                    (if (= @kd "array") [] [{ code: "ORB_E_DEFAULT_TYPE_MISMATCH", path: (str/concat @at (object/get @vn "dp")), message: (str/concat "expected an array, got " @desc), suggestion: "wrap the value(s) in `[ … ]`", severity: "error" }])
-                                    (if (= @t "object")
-                                      (if (= @kd "object") [] [{ code: "ORB_E_DEFAULT_TYPE_MISMATCH", path: (str/concat @at (object/get @vn "dp")), message: (str/concat "expected an object, got " @desc), suggestion: (if (object/get @sn "hp") (str/concat "write this entry as an object literal `{ … }` with fields: " (str/join (object/get @sn "keys") ", ")) "write this entry as an object literal `{ … }`"), severity: "error" }])
-                                      (let ((enum (if (object/get @sn "hv")
-                                                    (if (= @kd "string")
-                                                      (if (array/includes (object/get @sn "vals") @raw) "ok" "bad")
-                                                      (if (= @kd "null") "ok" "wrong"))
-                                                    "ok")))
-                                        (if (= @enum "bad")
-                                          [{ code: "ORB_E_DEFAULT_TYPE_MISMATCH", path: (str/concat @at (object/get @vn "dp")), message: (str/concat "'" @rs "' isn't a legal enum value (allowed: " (str/join @vs ", ") ")"), suggestion: "", severity: "error" }]
-                                          (if (= @enum "wrong")
-                                            [{ code: "ORB_E_DEFAULT_TYPE_MISMATCH", path: (str/concat @at (object/get @vn "dp")), message: (str/concat "expected a string member of [" (str/join @vs ", ") "], got " @kd), suggestion: "", severity: "error" }]
-                                            (if (= @t "relation")
-                                              (if (object/get @sn "many")
-                                                (if (= @kd "null")
-                                                  (if (object/get @sn "req") [{ code: "ORB_E_DEFAULT_TYPE_MISMATCH", path: (str/concat @at (object/get @vn "dp")), message: "expected an array of relation ids, got null on a required field", suggestion: "", severity: "error" }] [])
-                                                  (if (= @kd "array")
-                                                    (let ((ra (if (validate/array @raw) @raw []))) (array/flatten (array/map (array/range 0 (array/len @ra)) (fn ii (let ((it (array/nth @ra @ii))) (if (if (validate/string @it) true (if (validate/array @it) (let ((h0 (array/nth @it 0))) (if (validate/string @h0) (str/includes @h0 "/") false)) false))
-                                                          []
-                                                          [{ code: "ORB_E_DEFAULT_TYPE_MISMATCH", path: (str/concat @at (object/get @vn "dp") "[" @ii "]"), message: (str/concat "expected a relation id string, got " (if (validate/number @it) "number" (if (validate/boolean @it) "boolean" (if (validate/array @it) "array" (if (validate/object @it) "object" "null"))))), suggestion: "a to-many relation's default holds an array of id strings, never rows — store rows in a typed `Map string <Row>` field", severity: "error" }]))))))
-                                                    [{ code: "ORB_E_DEFAULT_TYPE_MISMATCH", path: (str/concat @at (object/get @vn "dp")), message: (str/concat "expected an array of relation ids, got " @kd), suggestion: "a to-many relation's default is absent, null, or an array of id strings", severity: "error" }]))
-                                                (let ((tag "relation")) (let ((ok (if (= @tag "string") (= @kd "string") (if (= @tag "number") (= @kd "number") (if (= @tag "boolean") (= @kd "boolean") (if (= @tag "relation") (or (= @kd "string") (= @kd "null")) (or (= @kd "string") (= @kd "number")))))))) (if @ok [] [{ code: "ORB_E_DEFAULT_TYPE_MISMATCH", path: (str/concat @at (object/get @vn "dp")), message: (str/concat "expected " @tag ", got " @kd), suggestion: (if (= @kd "object") "to declare an array of object records, define a named type alias — `type Item = { field : T, … }` — then annotate the knob `name : [Item]`. A bare `[json]` array lowers to unconstrained object elements; `[string]`/scalar element types cannot carry objects." ""), severity: "error" }]))))
-                                              (if (array/includes ["string" "number" "boolean" "date" "datetime" "timestamp"] @t)
-                                                (let ((tag @t)) (let ((ok (if (= @tag "string") (= @kd "string") (if (= @tag "number") (= @kd "number") (if (= @tag "boolean") (= @kd "boolean") (if (= @tag "relation") (or (= @kd "string") (= @kd "null")) (or (= @kd "string") (= @kd "number")))))))) (if @ok [] [{ code: "ORB_E_DEFAULT_TYPE_MISMATCH", path: (str/concat @at (object/get @vn "dp")), message: (str/concat "expected " @tag ", got " @kd), suggestion: (if (= @kd "object") "to declare an array of object records, define a named type alias — `type Item = { field : T, … }` — then annotate the knob `name : [Item]`. A bare `[json]` array lowers to unconstrained object elements; `[string]`/scalar element types cannot carry objects." ""), severity: "error" }])))
-                                                [])))))))))))))))))))
-                                (if (= (object/get @f "type" "") "relation")
-                                  (array/map @found (fn x (object/set @x "suggestion" "a relation field's default is absent, null, or an id string; store a row in a typed `Map string <Row>` field")))
-                                  @found))))))))))))))))))
+                          (let ((val (if (= @dflt null) [{ dp: "", kind: "null", raw: @dflt, ks: [], offs: [] }] (tree/fold @dflt (fn (n k) (let ((nn @n)) (if (validate/array @n) (array/concat [{ dp: "", kind: (let ((h0 (array/nth @n 0))) (if (validate/string @h0) (if (or (str/includes @h0 "/") (array/includes @entity.operators @h0)) "deferred" "array") "array")), raw: @nn, ks: [], offs: (array/map (array/range 0 (array/len @k)) (fn i (+ 1 (array/sum (array/map (array/range 0 @i) (fn j (array/len (or (array/nth @k @j) [{ dp: "", kind: "null", raw: (array/nth @n @j), ks: [], offs: [] }])))))))) }] (array/flatten (array/map (array/range 0 (array/len @k)) (fn i (array/map (or (array/nth @k @i) [{ dp: "", kind: "null", raw: (array/nth @n @i), ks: [], offs: [] }]) (fn h (object/set @h "dp" (str/concat "[" @i "]" (object/get @h "dp"))))))))) (if (validate/object @n) (let ((ks (object/keys @k))) (array/concat [{ dp: "", kind: "object", raw: @nn, ks: @ks, offs: (array/map (array/range 0 (array/len @ks)) (fn i (+ 1 (array/sum (array/map (array/range 0 @i) (fn j (array/len (or (object/get @k (array/nth @ks @j) []) [{ dp: "", kind: "null", raw: (object/get @n (array/nth @ks @j)), ks: [], offs: [] }]))))))))}] (array/flatten (array/map @ks (fn key (array/map (or (object/get @k @key []) [{ dp: "", kind: "null", raw: (object/get @n @key), ks: [], offs: [] }]) (fn h (object/set @h "dp" (str/concat "." @key (object/get @h "dp")))))))))) [{ dp: "", kind: (if (validate/string @n) (if (= (str/slice @n 0 1) (str/decode-uri-component "%40")) "deferred" "string") (if (validate/number @n) "number" (if (validate/boolean @n) "boolean" "null"))), raw: @nn, ks: [], offs: [] }])))) FieldShape))) (sch (tree/fold (object/set @f "default" 0) (fn (n k) (if (validate/array @n) [] (if (validate/object @n) (let ((t0 (object/get @n "type" 0))) (if (not (validate/string @t0)) (array/flatten (array/map (array/sort (object/keys @k)) (fn key (array/map (array/filter (or (object/get @k @key []) []) (fn e (= (object/get @e "pth") ""))) (fn e (object/set @e "pth" (str/concat "." @key))))))) (let ((ft @t0) (hv (object/has @n "values")) (hp (object/has @n "properties")) (hi (object/has @n "items")) (req (let ((r0 (object/get @n "required" false))) (if (validate/boolean @r0) @r0 false))) (vals (let ((v0 (object/get @n "values" []))) (if (validate/array @v0) @v0 []))) (pr (let ((p0 (object/get @n "properties" {}))) (if (validate/object @p0) @p0 {}))) (rl (let ((r1 (object/get @n "relation" {}))) (if (validate/object @r1) @r1 {}))) (pes (object/get @k "properties" [])) (itab (let ((ies (array/filter (object/get @k "items" []) (fn e (= (object/get @e "pth") ""))))) (if (> (array/len @ies) 0) (object/get (array/first @ies) "tab") [])))) (let ((vls (array/map @vals (fn x (if (validate/string @x) @x (json/stringify @x))))) (prk (array/sort (object/keys @pr))) (many (and (= @ft "relation") (object/has @n "relation") (array/includes ["many" "one-to-many" "many-to-many"] (let ((cd0 (object/get @rl "cardinality" ""))) (if (validate/string @cd0) @cd0 "")))))) (let ((hint "to declare an array of object records, define a named type alias — `type Item = { field : T, … }` — then annotate the knob `name : [Item]`. A bare `[json]` array lowers to unconstrained object elements; `[string]`/scalar element types cannot carry objects.")) [{ pth: "", tab: (array/map (array/range 0 (array/len @val)) (fn i (let ((v (array/nth @val @i))) (let ((kd (object/get @v "kind")) (raw (object/get @v "raw")) (offs (object/get @v "offs")) (vks (object/get @v "ks")) (p (str/concat @at (object/get @v "dp")))) (let ((ra (if (validate/array @raw) @raw [])) (rs (if (validate/string @raw) @raw ""))) (if (= @kd "deferred") [] (if (= @ft "union") (if (not (and @hv @hp)) [] (if (!= @kd "object") (if (array/some @vls (fn nm (let ((tb (let ((hits (array/filter @pes (fn e (= (object/get @e "pth") (str/concat "." @nm)))))) (if (> (array/len @hits) 0) (object/get (array/first @hits) "tab") [])))) (if (> (array/len @tb) @i) (= (array/len (array/nth @tb @i)) 0) false)))) [] [{ code: "ORB_E_DEFAULT_TYPE_MISMATCH", path: @p, message: (str/concat "expected one of the union variants (" (str/join @vls " | ") ") but the value is " @kd " and fits none of them"), suggestion: "", severity: "error" }]) (let ((ro (if (validate/object @raw) @raw {}))) (let ((vkeys (object/keys @ro))) (let ((classes (array/map @vls (fn nm (if (not (object/has @pr @nm)) "missing" (let ((var0 (object/get @pr @nm))) (if (not (validate/object @var0)) "skip" (if (not (object/has @var0 "properties")) "skip" (let ((vp0 (object/get @var0 "properties" 0))) (if (not (validate/object @vp0)) "skip" (let ((vp @vp0)) (let ((tags (array/filter (array/sort (object/keys @vp)) (fn pk (let ((d (object/get @vp @pk))) (if (validate/object @d) (let ((dv (object/get @d "values" 0))) (if (validate/array @dv) (and (= (array/len @dv) 1) (not (and (= (object/get @d "type" "") "union") (not (object/has @d "properties"))))) false)) false)))))) (if (= (array/len @tags) 0) "untagged" (let ((rd (array/map @tags (fn pk (if (array/includes @vkeys @pk) (let ((x (object/get @ro @pk))) (if (validate/string @x) (if (= (str/slice @x 0 1) (str/decode-uri-component "%40")) "late" (let ((d (object/get @vp @pk))) (if (validate/object @d) (let ((dv (object/get @d "values" []))) (if (validate/array @dv) (if (= @x (array/nth @dv 0)) "eq" "diff") "diff")) "diff"))) "diff")) "diff"))))) (if (= (array/len (array/filter @rd (fn x (= @x "eq")))) (array/len @tags)) "matched" (if (array/includes @rd "late") "late" "diff")))))))))))))))) (let ((ci (array/findIndex @classes (fn c (or (= @c "missing") (= @c "matched")))))) (if (>= @ci 0) (if (= (array/nth @classes @ci) "missing") [{ code: "ORB_E_DEFAULT_TYPE_MISMATCH", path: @p, message: (str/concat "the union definition is ill-formed: the union names variant " (array/nth @vls @ci) " but does not declare it"), suggestion: "", severity: "error" }] (let ((cn (array/nth @vls @ci))) (array/concat (let ((ct (let ((hits (array/filter @pes (fn e (= (object/get @e "pth") (str/concat "." @cn)))))) (if (> (array/len @hits) 0) (object/get (array/first @hits) "tab") [])))) (if (> (array/len @ct) @i) (array/nth @ct @i) [])) (let ((cv0 (object/get @pr @cn))) (if (validate/object @cv0) (if (object/has @cv0 "properties") (let ((cp0 (object/get @cv0 "properties" 0))) (if (validate/object @cp0) (array/map (array/filter (array/sort @vkeys) (fn key (not (array/includes (object/keys @cp0) @key)))) (fn key { code: "ORB_E_DEFAULT_TYPE_MISMATCH", path: (str/concat @p "." @key), message: (str/concat "'" @key "' is not a field of union variant '" (let ((nm0 (object/get @cv0 "name" "?"))) (if (validate/string @nm0) @nm0 "?")) "' — the variant's own tag selected it, so this key belongs to a different variant or to none"), suggestion: "", severity: "error" })) [])) []) []))))) (if (array/includes @classes "late") [] (let ((fits0 (array/map (array/filter (array/range 0 (array/len @vls)) (fn ix (and (= (array/nth @classes @ix) "untagged") (let ((vv (object/get @pr (array/nth @vls @ix)))) (if (validate/object @vv) (let ((kp0 (object/get @vv "properties" 0))) (if (validate/object @kp0) (let ((kp (object/keys @kp0))) (array/every @vkeys (fn key (array/includes @kp @key)))) false)) false))))) (fn ix (array/nth @vls @ix))))) (let ((fits (if (> (array/len @fits0) 1) (let ((cm (array/filter @fits0 (fn nm (let ((vv (object/get @pr @nm))) (if (validate/object @vv) (let ((kp0 (object/get @vv "properties" 0))) (if (validate/object @kp0) (array/every (object/keys @kp0) (fn pk (let ((d (object/get @kp0 @pk))) (or (not (and (validate/object @d) (= (object/get @d "required" false) true))) (array/includes @vkeys @pk))))) false)) false)))))) (if (> (array/len @cm) 0) @cm @fits0)) @fits0))) (if (= (array/len @fits) 1) (let ((cn (array/first @fits))) (array/concat (let ((ct (let ((hits (array/filter @pes (fn e (= (object/get @e "pth") (str/concat "." @cn)))))) (if (> (array/len @hits) 0) (object/get (array/first @hits) "tab") [])))) (if (> (array/len @ct) @i) (array/nth @ct @i) [])) (let ((cv0 (object/get @pr @cn))) (if (validate/object @cv0) (if (object/has @cv0 "properties") (let ((cp0 (object/get @cv0 "properties" 0))) (if (validate/object @cp0) (array/map (array/filter (array/sort @vkeys) (fn key (not (array/includes (object/keys @cp0) @key)))) (fn key { code: "ORB_E_DEFAULT_TYPE_MISMATCH", path: (str/concat @p "." @key), message: (str/concat "'" @key "' is not a field of union variant '" (let ((nm0 (object/get @cv0 "name" "?"))) (if (validate/string @nm0) @nm0 "?")) "' — the variant's own tag selected it, so this key belongs to a different variant or to none"), suggestion: "", severity: "error" })) [])) []) [])))) (if (= (array/len @fits) 0) [{ code: "ORB_E_DEFAULT_TYPE_MISMATCH", path: @p, message: (str/concat "value matches none of the union variants (" (str/join @vls " | ") ") — no variant's discriminator agrees with this value's tag, and no untagged variant's closed shape fits its keys"), suggestion: "", severity: "error" }] [{ code: "ORB_E_DEFAULT_TYPE_MISMATCH", path: @p, message: (str/concat "value fits several union variants (" (str/join (array/sort @fits) ", ") ") equally — give them a discriminator field"), suggestion: "", severity: "error" }])))))))))))) (if (= @ft "tuple") (let ((tn (if @hp (array/len @prk) 0))) (if (!= @kd "array") [{ code: "ORB_E_DEFAULT_TYPE_MISMATCH", path: @p, message: (str/concat "expected a tuple of " @tn " values, got " (if (validate/array @raw) (str/concat "(" (str/join (array/map @raw (fn bi (if (validate/array @bi) (let ((b0 (array/nth @bi 0))) (if (validate/string @b0) (str/concat "(" @b0 " …)") "(…)")) (if (validate/string @bi) @bi (if (validate/number @bi) (str/concat @bi "") (if (validate/boolean @bi) (if @bi "true" "false") (if (validate/object @bi) "{…}" "null"))))))) " ") ")") (if (validate/string @raw) @raw (if (validate/number @raw) (str/concat @raw "") (if (validate/boolean @raw) (if @raw "true" "false") (if (validate/object @raw) "{…}" "null")))))), suggestion: (str/concat "supply `[ … ]` with exactly " @tn " values"), severity: "error" }] (if (!= (array/len @ra) @tn) [{ code: "ORB_E_DEFAULT_TYPE_MISMATCH", path: @p, message: (str/concat "expected a tuple of " @tn " values, got " (array/len @ra)), suggestion: (str/concat "supply exactly " @tn " values"), severity: "error" }] (array/flatten (array/map (array/range 0 @tn) (fn j (let ((ct (let ((hits (array/filter @pes (fn e (= (object/get @e "pth") (str/concat "." (str/concat @j ""))))))) (if (> (array/len @hits) 0) (object/get (array/first @hits) "tab") [])))) (if (> (array/len @ct) (+ @i (array/nth @offs @j))) (array/nth @ct (+ @i (array/nth @offs @j))) [])))))))) (if (= @ft "array") (if (!= @kd "array") [{ code: "ORB_E_DEFAULT_TYPE_MISMATCH", path: @p, message: (str/concat "expected an array, got " (if (validate/array @raw) (str/concat "(" (str/join (array/map @raw (fn bi (if (validate/array @bi) (let ((b0 (array/nth @bi 0))) (if (validate/string @b0) (str/concat "(" @b0 " …)") "(…)")) (if (validate/string @bi) @bi (if (validate/number @bi) (str/concat @bi "") (if (validate/boolean @bi) (if @bi "true" "false") (if (validate/object @bi) "{…}" "null"))))))) " ") ")") (if (validate/string @raw) @raw (if (validate/number @raw) (str/concat @raw "") (if (validate/boolean @raw) (if @raw "true" "false") (if (validate/object @raw) "{…}" "null")))))), suggestion: "wrap the value(s) in `[ … ]`", severity: "error" }] (if @hi (array/flatten (array/map (array/range 0 (array/len @ra)) (fn j (let ((ct @itab)) (if (> (array/len @ct) (+ @i (array/nth @offs @j))) (array/nth @ct (+ @i (array/nth @offs @j))) []))))) [])) (if (= @ft "object") (if (!= @kd "object") [{ code: "ORB_E_DEFAULT_TYPE_MISMATCH", path: @p, message: (str/concat "expected an object, got " (if (validate/array @raw) (str/concat "(" (str/join (array/map @raw (fn bi (if (validate/array @bi) (let ((b0 (array/nth @bi 0))) (if (validate/string @b0) (str/concat "(" @b0 " …)") "(…)")) (if (validate/string @bi) @bi (if (validate/number @bi) (str/concat @bi "") (if (validate/boolean @bi) (if @bi "true" "false") (if (validate/object @bi) "{…}" "null"))))))) " ") ")") (if (validate/string @raw) @raw (if (validate/number @raw) (str/concat @raw "") (if (validate/boolean @raw) (if @raw "true" "false") (if (validate/object @raw) "{…}" "null")))))), suggestion: (if @hp (str/concat "write this entry as an object literal `{ … }` with fields: " (str/join @prk ", ")) "write this entry as an object literal `{ … }`"), severity: "error" }] (if @hp (array/flatten (array/map (array/range 0 (array/len @vks)) (fn j (let ((key (array/nth @vks @j))) (if (array/includes @prk @key) (let ((ct (let ((hits (array/filter @pes (fn e (= (object/get @e "pth") (str/concat "." @key)))))) (if (> (array/len @hits) 0) (object/get (array/first @hits) "tab") [])))) (if (> (array/len @ct) (+ @i (array/nth @offs @j))) (array/nth @ct (+ @i (array/nth @offs @j))) [])) []))))) [])) (let ((enum (if @hv (if (= @kd "string") (if (array/includes @vals @raw) "ok" "bad") (if (= @kd "null") "ok" "wrong")) "ok"))) (if (= @enum "bad") [{ code: "ORB_E_DEFAULT_TYPE_MISMATCH", path: @p, message: (str/concat "'" @rs "' isn't a legal enum value (allowed: " (str/join @vls ", ") ")"), suggestion: "", severity: "error" }] (if (= @enum "wrong") [{ code: "ORB_E_DEFAULT_TYPE_MISMATCH", path: @p, message: (str/concat "expected a string member of [" (str/join @vls ", ") "], got " @kd), suggestion: "", severity: "error" }] (if (= @ft "event") (if (= @kd "string") [] [{ code: "ORB_E_DEFAULT_TYPE_MISMATCH", path: @p, message: "Struct field typed `event` must hold a string event name", suggestion: "Use a string event key, e.g. `event: SEARCH`, or \"\" for a default-off outlet", severity: "error" }]) (if (= @ft "EventAddress") (if (= @kd "string") [] [{ code: "ORB_E_DEFAULT_TYPE_MISMATCH", path: @p, message: "Struct field typed `EventAddress` must hold a string address", suggestion: "Write `Trait.EVENT` or `Orbital.Trait.EVENT`", severity: "error" }]) (if (= @ft "relation") (if @many (if (= @kd "null") (if @req [{ code: "ORB_E_DEFAULT_TYPE_MISMATCH", path: @p, message: "expected an array of relation ids, got null on a required field", suggestion: "", severity: "error" }] []) (if (= @kd "array") (array/flatten (array/map (array/range 0 (array/len @ra)) (fn ii (let ((it (array/nth @ra @ii))) (if (if (validate/string @it) true (if (validate/array @it) (let ((h0 (array/nth @it 0))) (if (validate/string @h0) (or (str/includes @h0 "/") (array/includes @entity.operators @h0)) false)) false)) [] [{ code: "ORB_E_DEFAULT_TYPE_MISMATCH", path: (str/concat @p "[" @ii "]"), message: (str/concat "expected a relation id string, got " (if (validate/number @it) "number" (if (validate/boolean @it) "boolean" (if (validate/array @it) "array" (if (validate/object @it) "object" "null"))))), suggestion: "a to-many relation's default holds an array of id strings, never rows — store rows in a typed `Map string <Row>` field", severity: "error" }]))))) [{ code: "ORB_E_DEFAULT_TYPE_MISMATCH", path: @p, message: (str/concat "expected an array of relation ids, got " @kd), suggestion: "a to-many relation's default is absent, null, or an array of id strings", severity: "error" }])) (if (or (= @kd "string") (= @kd "null")) [] [{ code: "ORB_E_DEFAULT_TYPE_MISMATCH", path: @p, message: (str/concat "expected relation, got " @kd), suggestion: (if (= @kd "object") @hint ""), severity: "error" }])) (if (array/includes ["string" "number" "int" "boolean" "date" "datetime" "timestamp"] @ft) (if (if (= @ft "string") (= @kd "string") (if (= @ft "number") (= @kd "number") (if (= @ft "int") (= @kd "number") (if (= @ft "boolean") (= @kd "boolean") (or (= @kd "string") (= @kd "number")))))) [] [{ code: "ORB_E_DEFAULT_TYPE_MISMATCH", path: @p, message: (str/concat "expected " @ft ", got " @kd), suggestion: (if (= @kd "object") @hint ""), severity: "error" }]) []))))))) )))))))))) }]))))) []))) FieldShape))) (let ((sc (if (validate/array @sch) @sch []))) (let ((found (if (> (array/len @sc) 0) (let ((tb (object/get (array/first @sc) "tab"))) (if (> (array/len @tb) 0) (array/nth @tb 0) [])) []))) (if (= (object/get @f "type" "") "relation") (array/map @found (fn x (object/set @x "suggestion" "a relation field's default is absent, null, or an id string; store a row in a typed `Map string <Row>` field"))) @found)))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
-        (emit LINT_FOUND { rule: "entity-semantic-default", findings: @entity.findings })
+        (emit LINT_FOUND { rule: "entity-semantic-default", scope: @entity.scope, findings: @entity.findings })
     }
 
     emits {
-      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
         @description "This rule's findings for the file, offered to the lint-all umbrella."
         @tier "internal"
       LINT_FINISH { }
@@ -163,8 +88,11 @@ orbital OrbLintEntitySemanticDefaultOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : SemanticDefaultProgram }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : SemanticDefaultProgram  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
+      LINT_OPERATORS_HEARD { names : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATORS: the installed operator names with no namespace, sent before LINT_INPUT."
+      OrbLintInput.LINT_OPERATORS -> LINT_OPERATORS_HEARD
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
   }
@@ -200,7 +128,7 @@ orbital OrbLintEntitySemanticDefaultOrbital {
       LINT_REQUEST -> external { file : string! }
         @description "Ask the lint input to read and lower this file."
         @tier "internal"
-      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
         @description "The rule trait's findings for the file."
         @tier "internal"
       LINT_INPUT_UNREAD -> external { file : string! }

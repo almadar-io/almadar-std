@@ -80,7 +80,8 @@
                   ]
                 }
               ]
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "fired": true,
@@ -111,7 +112,8 @@
                       "suggestion": "Each field must have a unique name within the entity",
                       "severity": "error"
                     }
-                  ]
+                  ],
+                  "scope": ""
                 }
               }
             ]
@@ -197,7 +199,8 @@
                   ]
                 }
               ]
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "fired": true,
@@ -220,7 +223,8 @@
                 "event": "LINT_FOUND",
                 "payload": {
                   "rule": "entity-duplicate-field",
-                  "findings": []
+                  "findings": [],
+                  "scope": ""
                 }
               }
             ]
@@ -1066,7 +1070,8 @@
                   }
                 }
               }
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "fired": true,
@@ -1155,7 +1160,8 @@
                   "spec": true
                 }
               ]
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "fired": true,
@@ -1178,7 +1184,170 @@
                 "event": "LINT_FOUND",
                 "payload": {
                   "rule": "entity-duplicate-field",
-                  "findings": []
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityDuplicateField"
+        }
+      ]
+    },
+    {
+      "id": "auxiliary-field-name-declared-twice",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Row",
+                      "persistence": "runtime",
+                      "fields": [
+                        {
+                          "name": "a",
+                          "type": "string"
+                        },
+                        {
+                          "name": "a",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityDuplicateField"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-duplicate-field",
+                  "findings": [
+                    {
+                      "code": "ORB_E_DUPLICATE_FIELD",
+                      "path": "orbitals[0].auxiliaryEntities[0].fields[1].name",
+                      "message": "Duplicate field name: 'a'",
+                      "suggestion": "Each field must have a unique name within the entity",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityDuplicateField"
+        }
+      ]
+    },
+    {
+      "id": "control-auxiliary-distinct-field-names",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Row",
+                      "persistence": "runtime",
+                      "fields": [
+                        {
+                          "name": "a",
+                          "type": "string"
+                        },
+                        {
+                          "name": "b",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityDuplicateField"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-duplicate-field",
+                  "findings": [],
+                  "scope": ""
                 }
               }
             ]

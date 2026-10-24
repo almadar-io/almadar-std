@@ -71,7 +71,6 @@ orbital SidecarFetchOrbital {
       SIDECAR_FETCHED -> idle when (!= @payload.status 200)
         (emit SIDECAR_REFUSED { requestId: @entity.requestId, code: "fetch-failed", error: (str/concat "ORB_SIDECAR_FETCH_FAILED: " @entity.name (quote "@") @entity.version " " @entity.declared " from " @config.origin ": HTTP " @payload.status) })
       SIDECAR_FETCH_FAILED -> idle
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "A sidecar download never reached " @config.origin) })
         (emit SIDECAR_REFUSED { requestId: @entity.requestId, code: "fetch-failed", error: (str/concat "ORB_SIDECAR_FETCH_FAILED: " @entity.name (quote "@") @entity.version " " @entity.declared " from " @config.origin ": transport error " @payload.kind) })
     }
 
@@ -159,13 +158,8 @@ orbital SidecarFetchOrbital {
         @description "The origin every pinned url must sit under (scheme://host, no trailing slash); declared in egress."
         @synonyms "storage host"
         @tier "infra"
-      statusSlot : slot = system
-        @label "Status slot"
-        @description "Where a download that never reached the origin is reported; a page running it in the background keeps it in `system`."
-        @synonyms "status area"
-        @tier "presentation"
     }
   }
 
-  page "/sidecar-fetch" as SidecarFetchPage -> SidecarFetch, Digest
+  page boot as SidecarFetchPage -> SidecarFetch, Digest
 }

@@ -1,0 +1,144 @@
+app std-orb-lint-reserved-component-name [
+  version: "1.0.0",
+  inbound: ["cli-lint-reserved-component-name"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-reserved-component-name — the `orb lint reserved-component-name <file>` command, the port of the entity.rs validate_entity UI-component name check. It reads the installed @almadar/core component names (LINT_COMPONENTS, from its component mapping) and, after the lint input lowers the file with program/read, reports every primary or auxiliary entity of a non-spec orbital whose name is one of them at `<entity path>.name` (ORB_E_INVALID_FIELD_NAME, the code the compiler reused): the generated entity type and the component would be duplicate identifiers in compiled output (status 500, exit 1). Clean answers `lint reserved-component-name: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-reserved-component-name"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type ReservedNameEntity = { name : string }
+type ReservedNameOrbital = { name : string, spec : boolean, entity : ReservedNameEntity, auxiliaryEntities : [ReservedNameEntity] }
+type ReservedNameProgram = { orbitals : [ReservedNameOrbital] }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error", validValues : [string] }
+
+orbital OrbLintReservedComponentNameOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintReservedComponentNameRun [runtime] {
+    id : string!
+    scope : string = ""
+    components : [string] = []
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintReservedComponentName -> OrbLintReservedComponentNameRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_COMPONENTS_HEARD -> ready
+        (set @entity.components @payload.names)
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
+          (array/map
+            (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+              (let ((o (array/nth @orbitals @oi)))
+                (if (object/get @o "spec" false) []
+                  (array/filter
+                    (array/concat
+                      [(if (validate/object (object/get @o "entity" null)) { name: (object/get (object/get @o "entity" {}) "name" ""), path: (str/concat "orbitals[" @oi "].entity.name") } null)]
+                      (array/map (array/range 0 (array/len (object/get @o "auxiliaryEntities" []))) (fn ai
+                        (if (validate/object (array/nth (object/get @o "auxiliaryEntities" []) @ai)) { name: (object/get (array/nth (object/get @o "auxiliaryEntities" []) @ai) "name" ""), path: (str/concat "orbitals[" @oi "].auxiliaryEntities[" @ai "].name") } null))))
+                    (fn x (and (!= @x null) (array/includes @entity.components (object/get @x "name"))))))))))
+            (fn x { code: "ORB_E_INVALID_FIELD_NAME", path: (object/get @x "path"), message: (str/concat "Entity name '" (object/get @x "name") "' collides with a UI component name. This causes duplicate identifier errors in compiled output."), suggestion: (str/concat "Rename the entity to avoid the collision (e.g., '" (object/get @x "name") "Entry', '" (object/get @x "name") "Record', '" (object/get @x "name") "Data')"), severity: "error" }))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "reserved-component-name", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_COMPONENTS_HEARD { names : [string]! }
+        @description "std-orb-lint-input's LINT_COMPONENTS: the installed UI component names, sent before LINT_INPUT."
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : ReservedNameProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_COMPONENTS -> LINT_COMPONENTS_HEARD
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+    }
+  }
+
+  trait OrbLintReservedComponentNameCli -> OrbLintReservedComponentNameRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint reserved-component-name <file>" })
+      LINT_CALLED -> waiting when (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "reserved-component-name") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint reserved-component-name: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "reserved-component-name") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint reserved-component-name: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-reserved-component-name" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint reserved-component-name` with its arguments and working directory."
+        @synonyms "orb lint reserved-component-name"
+      OrbLintReservedComponentName.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintReservedComponentNameCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintReservedComponentNameOrbitalStart -> OrbLintReservedComponentName, OrbLintReservedComponentNameCli, OrbLintInput, Packs, Versions
+}

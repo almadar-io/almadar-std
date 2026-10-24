@@ -120,26 +120,19 @@ orbital YoutubeOrbital {
       YOUTUBE_UNREACHED -> idle when (and (!= @payload.kind "refused") (!= @payload.kind "unconfigured") (< (object/get (json/parse @payload.key YoutubeCall) attempt 0) 2))
         (let ((call (json/parse @payload.key YoutubeCall)))
           (emit YOUTUBE_REQUEST { kind: (object/get @call kind ""), attempt: (+ (object/get @call attempt 0) 1), query: (object/get @call query ""), maxResults: (object/get @call maxResults 0), type: (object/get @call type ""), id: (object/get @call id "") }))
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "YouTube unreachable: " @payload.error) })
       YOUTUBE_UNREACHED -> idle when (and (!= @payload.kind "refused") (!= @payload.kind "unconfigured") (>= (object/get (json/parse @payload.key YoutubeCall) attempt 0) 2))
         (emit YOUTUBE_REJECTED { kind: (object/get (json/parse @payload.key YoutubeCall) kind ""), message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "YouTube unreachable: " @payload.error) })
       YOUTUBE_UNREACHED -> idle when (= @payload.kind "unconfigured")
         (emit YOUTUBE_REJECTED { kind: (object/get (json/parse @payload.key YoutubeCall) kind ""), message: (str/concat @payload.credential " not configured") })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "YouTube unreachable: " @payload.error) })
       YOUTUBE_UNREACHED -> idle when (= @payload.kind "refused")
         (emit YOUTUBE_REJECTED { kind: (object/get (json/parse @payload.key YoutubeCall) kind ""), message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "YouTube unreachable: " @payload.error) })
 
       YOUTUBE_REJECTED -> idle when (= @payload.kind "search")
         (emit YOUTUBE_SEARCH_FAILED { code: null, message: @payload.message })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "YouTube search failed: " @payload.message) })
       YOUTUBE_REJECTED -> idle when (= @payload.kind "video")
         (emit YOUTUBE_VIDEO_FAILED { code: null, message: @payload.message })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "YouTube video lookup failed: " @payload.message) })
       YOUTUBE_REJECTED -> idle when (= @payload.kind "channel")
         (emit YOUTUBE_CHANNEL_FAILED { code: null, message: @payload.message })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "YouTube channel lookup failed: " @payload.message) })
     }
 
     emits {
@@ -266,11 +259,6 @@ orbital YoutubeOrbital {
     }
 
     config {
-      statusSlot : slot = system
-        @label "Status slot"
-        @description "Where the atom reports a failed YouTube call; a page running it in the background keeps it in `system`"
-        @synonyms "status area, slot"
-        @tier "presentation"
       origin : url = "https://youtube.googleapis.com"
         @label "YouTube API origin"
         @description "The YouTube Data API origin (scheme://host, no path). Must be declared in the app egress list."
@@ -289,5 +277,5 @@ orbital YoutubeOrbital {
     }
   }
 
-  page "/youtube" as YoutubePage -> YoutubeClient
+  page boot as YoutubePage -> YoutubeClient
 }

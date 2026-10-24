@@ -59,7 +59,6 @@ orbital GithubOrbital {
         })
       GITHUB_CREATE_PR_UNREACHABLE -> idle
         (emit GITHUB_CREATE_PR_FAILED { code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "GitHub unavailable: " @payload.error) })
 
       GITHUB_GET_PR_COMMENTS -> idle when (and (!= @config.owner "") (!= @config.repo ""))
         (http GET @config.origin (str/concat "/repos/" @config.owner "/" @config.repo "/pulls/" @payload.prNumber "/comments") {
@@ -78,7 +77,6 @@ orbital GithubOrbital {
         })
       GITHUB_GET_PR_COMMENTS_UNREACHABLE -> idle
         (emit GITHUB_GET_PR_COMMENTS_FAILED { code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "GitHub unavailable: " @payload.error) })
 
       GITHUB_LIST_ISSUES -> idle when (and (!= @config.owner "") (!= @config.repo ""))
         (http GET @config.origin (str/concat "/repos/" @config.owner "/" @config.repo "/issues?state=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (if (not (validate/required @payload.state)) "open" @payload.state)) "%20" "+") "!" "%21") "~" "%7E") "'" "%27") "(" "%28") ")" "%29") "&per_page=" (math/min (if (= @payload.per_page null) 30 @payload.per_page) 100) (if (> (array/len (or @payload.labels [])) 0) (str/concat "&labels=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (str/join (or @payload.labels []) ",")) "%20" "+") "!" "%21") "~" "%7E") "'" "%27") "(" "%28") ")" "%29")) "")) {
@@ -97,7 +95,6 @@ orbital GithubOrbital {
         })
       GITHUB_LIST_ISSUES_UNREACHABLE -> idle
         (emit GITHUB_LIST_ISSUES_FAILED { code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "GitHub unavailable: " @payload.error) })
 
       GITHUB_GET_ISSUE -> idle when (and (!= @config.owner "") (!= @config.repo ""))
         (http GET @config.origin (str/concat "/repos/" @config.owner "/" @config.repo "/issues/" @payload.issueNumber) {
@@ -120,7 +117,6 @@ orbital GithubOrbital {
         })
       GITHUB_GET_ISSUE_UNREACHABLE -> idle
         (emit GITHUB_GET_ISSUE_FAILED { code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "GitHub unavailable: " @payload.error) })
       GITHUB_GET_ISSUE_COMMENTS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
         (emit GITHUB_ISSUE { issue: (json/parse @payload.key GithubIssue), comments: (json/parse @payload.body [GithubComment]) })
       GITHUB_GET_ISSUE_COMMENTS_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
@@ -130,7 +126,6 @@ orbital GithubOrbital {
         })
       GITHUB_GET_ISSUE_COMMENTS_UNREACHABLE -> idle
         (emit GITHUB_GET_ISSUE_FAILED { code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "GitHub unavailable: " @payload.error) })
 
       GITHUB_GET_FILE -> idle
         (http GET @config.origin (str/concat "/repos/" @payload.owner "/" @payload.repo "/contents/" @payload.path) {
@@ -149,7 +144,6 @@ orbital GithubOrbital {
         })
       GITHUB_GET_FILE_UNREACHABLE -> idle
         (emit GITHUB_GET_FILE_FAILED { code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "GitHub unavailable: " @payload.error) })
 
       GITHUB_LIST_COMMITS -> idle
         (let ((query (str/join (array/filter [(if (!= (or @payload.path "") "") (str/concat "path=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (or @payload.path "")) "%20" "+") "!" "%21") "~" "%7E") "'" "%27") "(" "%28") ")" "%29")) ""), (if (!= (or @payload.ref "") "") (str/concat "sha=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (or @payload.ref "")) "%20" "+") "!" "%21") "~" "%7E") "'" "%27") "(" "%28") ")" "%29")) ""), (if (!= (or @payload.per_page 0) 0) (str/concat "per_page=" @payload.per_page) "")] (fn p (!= @p ""))) "&")))
@@ -167,7 +161,6 @@ orbital GithubOrbital {
         })
       GITHUB_LIST_COMMITS_UNREACHABLE -> idle
         (emit GITHUB_LIST_COMMITS_FAILED { code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "GitHub unavailable: " @payload.error) })
 
       GITHUB_CREATE_ISSUE -> idle
         (http POST @config.origin (str/concat "/repos/" @payload.owner "/" @payload.repo "/issues") {
@@ -186,7 +179,6 @@ orbital GithubOrbital {
         })
       GITHUB_CREATE_ISSUE_UNREACHABLE -> idle
         (emit GITHUB_CREATE_ISSUE_FAILED { code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "GitHub unavailable: " @payload.error) })
       GITHUB_GRAPHQL -> idle
         (http POST @config.origin "/graphql" {
           headers: { Accept: "application/vnd.github+json", X-GitHub-Api-Version: @config.apiVersion, Content-Type: "application/json" },
@@ -202,7 +194,6 @@ orbital GithubOrbital {
         (emit GITHUB_GRAPHQL_FAILED { status: @payload.status, code: (if (= @payload.status 429) "RATE_LIMIT_ERROR" (if (or (= @payload.status 401) (= @payload.status 403)) "AUTH_ERROR" "SERVICE_ERROR")), message: (if (= @payload.status 429) "GitHub API rate limit exceeded" (str/concat (if (or (= @payload.status 401) (= @payload.status 403)) "GitHub API authentication failed: " "GitHub API request failed: ") (if (!= (object/get (json/parse @payload.body GithubError) message "") "") (object/get (json/parse @payload.body GithubError) message "") (object/get @config.statusText (str/concat @payload.status) "")))) })
       GITHUB_GRAPHQL_UNREACHABLE -> idle
         (emit GITHUB_GRAPHQL_FAILED { status: 0, code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "GitHub unavailable: " @payload.error) })
 
       GITHUB_LIST_RUNNERS -> idle
         (http GET @config.origin (str/concat "/" @payload.scope "/actions/runners") {
@@ -222,7 +213,6 @@ orbital GithubOrbital {
       GITHUB_LIST_RUNNERS_UNREACHABLE -> idle
         (let ((at (json/parse @payload.key GithubRunnersKey)))
           (emit GITHUB_LIST_RUNNERS_FAILED { scope: @at.scope, status: 0, code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) }))
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "GitHub unavailable: " @payload.error) })
 
       GITHUB_LIST_RUNS -> idle
         (http GET @config.origin (str/concat "/repos/" @payload.owner "/" @payload.repo "/actions/runs") {
@@ -240,7 +230,6 @@ orbital GithubOrbital {
       GITHUB_LIST_RUNS_UNREACHABLE -> idle
         (let ((at (json/parse @payload.key GithubRunsKey)))
           (emit GITHUB_LIST_RUNS_FAILED { owner: @at.owner, repo: @at.repo, code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) }))
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "GitHub unavailable: " @payload.error) })
 
       GITHUB_LIST_RUN_JOBS -> idle
         (http GET @config.origin (str/concat "/repos/" @payload.owner "/" @payload.repo "/actions/runs/" @payload.runId "/jobs") {
@@ -257,7 +246,6 @@ orbital GithubOrbital {
       GITHUB_LIST_RUN_JOBS_UNREACHABLE -> idle
         (let ((at (json/parse @payload.key GithubJobsKey)))
           (emit GITHUB_LIST_RUN_JOBS_FAILED { owner: @at.owner, repo: @at.repo, runId: @at.runId, code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) }))
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "GitHub unavailable: " @payload.error) })
 
       GITHUB_BILLING_USAGE -> idle
         (http GET @config.origin (str/concat (if (= @payload.kind "org") "/organizations/" "/users/") @payload.account "/settings/billing/usage") {
@@ -278,7 +266,6 @@ orbital GithubOrbital {
       GITHUB_BILLING_USAGE_UNREACHABLE -> idle
         (let ((at (json/parse @payload.key GithubBillingKey)))
           (emit GITHUB_BILLING_USAGE_FAILED { account: @at.account, kind: @at.kind, status: 0, code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) }))
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "GitHub unavailable: " @payload.error) })
 
     }
 
@@ -874,11 +861,6 @@ orbital GithubOrbital {
     }
 
     config {
-      statusSlot : slot = system
-        @label "Status slot"
-        @description "Where the atom reports an unreachable GitHub call; a page running it in the background keeps it in `system`"
-        @synonyms "status area, slot"
-        @tier "presentation"
       origin : url = "https://api.github.com"
         @label "GitHub API origin"
         @description "The GitHub API origin (scheme://host, no path); a GitHub Enterprise host must also be declared in the app egress list."
@@ -917,5 +899,5 @@ orbital GithubOrbital {
     }
   }
 
-  page "/github" as GithubPage -> GithubClient
+  page boot as GithubPage -> GithubClient
 }

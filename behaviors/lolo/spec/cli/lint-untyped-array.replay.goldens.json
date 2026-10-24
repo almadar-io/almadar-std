@@ -83,7 +83,8 @@
                   ]
                 }
               ]
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "fired": true,
@@ -114,7 +115,8 @@
                       "suggestion": "Declare the element type as `[T]` (e.g. `[string]`) instead of the bare `array`.",
                       "severity": "error"
                     }
-                  ]
+                  ],
+                  "scope": ""
                 }
               }
             ]
@@ -203,7 +205,8 @@
                   ]
                 }
               ]
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "fired": true,
@@ -226,7 +229,8 @@
                 "event": "LINT_FOUND",
                 "payload": {
                   "rule": "untyped-array",
-                  "findings": []
+                  "findings": [],
+                  "scope": ""
                 }
               }
             ]
@@ -329,7 +333,8 @@
                   ]
                 }
               ]
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "fired": true,
@@ -360,7 +365,8 @@
                       "suggestion": "Declare the element type as `[T]` (e.g. `[string]`) instead of the bare `array`.",
                       "severity": "error"
                     }
-                  ]
+                  ],
+                  "scope": ""
                 }
               }
             ]
@@ -455,7 +461,8 @@
                   ]
                 }
               ]
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "fired": true,
@@ -486,7 +493,8 @@
                       "suggestion": "Declare the element type as `[T]` (e.g. `[string]`) instead of the bare `array`.",
                       "severity": "error"
                     }
-                  ]
+                  ],
+                  "scope": ""
                 }
               }
             ]
@@ -575,7 +583,8 @@
                   ]
                 }
               ]
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "fired": true,
@@ -606,7 +615,8 @@
                       "suggestion": "Declare the element type as `[T]` (e.g. `[string]`) instead of the bare `array`.",
                       "severity": "error"
                     }
-                  ]
+                  ],
+                  "scope": ""
                 }
               }
             ]
@@ -695,7 +705,8 @@
                   ]
                 }
               ]
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "fired": true,
@@ -726,7 +737,8 @@
                       "suggestion": "Declare the element type as `[T]` (e.g. `[string]`) instead of the bare `array`.",
                       "severity": "error"
                     }
-                  ]
+                  ],
+                  "scope": ""
                 }
               }
             ]
@@ -808,7 +820,8 @@
                   ]
                 }
               ]
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "fired": true,
@@ -831,7 +844,8 @@
                 "event": "LINT_FOUND",
                 "payload": {
                   "rule": "untyped-array",
-                  "findings": []
+                  "findings": [],
+                  "scope": ""
                 }
               }
             ]
@@ -1677,7 +1691,8 @@
                   }
                 }
               }
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "fired": true,
@@ -3845,7 +3860,8 @@
                   }
                 }
               }
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "fired": true,
@@ -3954,7 +3970,8 @@
                   ]
                 }
               ]
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "fired": true,
@@ -3977,12 +3994,294 @@
                 "event": "LINT_FOUND",
                 "payload": {
                   "rule": "untyped-array",
-                  "findings": []
+                  "findings": [],
+                  "scope": ""
                 }
               }
             ]
           },
           "trait": "OrbLintUntypedArray"
+        }
+      ]
+    },
+    {
+      "id": "auxiliary-entity-array-field-without-items-is-flagged",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Row",
+                      "persistence": "runtime",
+                      "fields": [
+                        {
+                          "name": "id",
+                          "type": "string"
+                        },
+                        {
+                          "name": "tags",
+                          "type": "array"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintUntypedArray"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "untyped-array",
+                  "findings": [
+                    {
+                      "code": "ORB_X_UNTYPED_ARRAY",
+                      "path": "orbitals[0].auxiliaryEntities[0].fields[1].items",
+                      "message": "Field 'tags' is typed `array` but its element type is undeclared.",
+                      "suggestion": "Declare the element type as `[T]` (e.g. `[string]`) instead of the bare `array`.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintUntypedArray"
+        }
+      ]
+    },
+    {
+      "id": "control-auxiliary-entity-typed-array-and-tuple-fields-are-clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Row",
+                      "persistence": "runtime",
+                      "fields": [
+                        {
+                          "name": "tags",
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        {
+                          "name": "pair",
+                          "type": "tuple"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintUntypedArray"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "untyped-array",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintUntypedArray"
+        }
+      ]
+    },
+    {
+      "id": "control-a-spec-orbital-entity-is-not-checked",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "tags",
+                        "type": "array"
+                      }
+                    ]
+                  },
+                  "spec": true
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintUntypedArray"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "untyped-array",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintUntypedArray"
+        }
+      ]
+    },
+    {
+      "id": "a-nested-null-in-a-default-still-reaches-the-verdict",
+      "steps": [
+        {
+          "trait": "OrbLintUntypedArray",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "meta",
+                        "type": "object",
+                        "default": {
+                          "a": null,
+                          "b": [
+                            null,
+                            1
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
         }
       ]
     }

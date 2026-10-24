@@ -2,7 +2,6 @@ app std-orb-serve [
   version: "1.0.0",
   inbound: ["cli-serve"],
   env: ["HOME"],
-  fs: { cwd: "**": [read], "/**": [read], "~/.almadar/serve/**": [read, write, create] },
   description: "std-orb-serve — the `orb serve <file> [--port N] [--host H] [--no-mock] [--client-dir DIR] [--open] [--no-emulators]` command (spec/cli/orb-serve.lolo; port of orbital-cli program_command.rs serve_program and server_overrides). It resolves the app with program/read { resolve: true, path }, resolves std/behaviors/std-http-server with behavior/resolve and composes the two with program/compose, naming the app, with the overrides the Rust server_overrides built: Http1.host, Http1.port, Http1.portFromEnv false, the listen grant for host:port and, with --client-dir (made absolute against the working directory, then required to lie under it), ServerStatic.clientDir relative to the working directory with its anchored cwd read grant. The command never runs the program: it answers a hand-off the bootloader acts on, status 200 with headers orb-run: server, orb-mock: on (default) or off (--no-mock), orb-app: the absolute app path, and the composed program's JSON as the body. --open and --no-emulators answer status 500 on stderr with the texts the Rust command bailed with; a port that is not an integer in 0..65535 answers status 400 on stderr; a client dir outside the working directory, an app that names no app or a program that does not resolve or compose answers status 500 on stderr `Error: <reason>`; a missing or second file or an unknown flag answers the usage (status 400, exit 2). Defaults: port 3030, host 127.0.0.1. The resolved app is written (with its catalogs and lazy behaviors) to ~/.almadar/serve/<app path with / as _>.orb, the directory read from the HOME env grant and written under the fs grant ~/.almadar/serve/**; orb-app names that file, so the bootloader finds the catalogs."
 ]
 uses Spec from "almadar-std/orb-serve"
@@ -285,5 +284,5 @@ orbital OrbServeOrbital {
     }
   }
 
-  page "/orb-serve" as OrbServePage -> OrbServe, ArgsCli, ServeEngine
+  page boot as OrbServePage -> OrbServe, ArgsCli, ServeEngine
 }

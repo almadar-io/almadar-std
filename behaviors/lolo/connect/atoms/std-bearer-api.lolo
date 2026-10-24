@@ -55,7 +55,6 @@ orbital BearerApiOrbital {
         (emit BEARER_API_RESPONSE { status: @payload.status, ok: (and (>= @payload.status 200) (< @payload.status 300)), body: @payload.body })
       BEARER_API_UNREACHABLE -> idle
         (emit BEARER_API_FAILED { code: null, message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "API unavailable: " @payload.error) })
     }
 
     emits {
@@ -100,11 +99,6 @@ orbital BearerApiOrbital {
     }
 
     config {
-      statusSlot : slot = system
-        @label "Status slot"
-        @description "Where the atom reports an unreachable API; a page running it in the background keeps it in `system`."
-        @synonyms "status area, slot"
-        @tier "presentation"
       origin : url = "https://api.example.com"
         @label "API origin"
         @description "The API origin (scheme://host[:port], no path) every endpoint is appended to; the default is a placeholder, and the real origin must also be declared in the app egress list."
@@ -123,5 +117,5 @@ orbital BearerApiOrbital {
     }
   }
 
-  page "/bearer-api" as BearerApiPage -> BearerApiClient
+  page boot as BearerApiPage -> BearerApiClient
 }

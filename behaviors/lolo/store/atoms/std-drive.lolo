@@ -367,7 +367,6 @@ orbital DriveOrbital {
         (emit DRIVE_FAILED { code: null, message: (if (and (= (or (object/get (json/parse @payload.grantBody DriveGrantError) error "") "") "invalid_grant") (str/includes (str/lower (or (object/get (json/parse @payload.grantBody DriveGrantError) error_description "") "")) "reauth")) (json/stringify (json/parse @payload.grantBody DriveGrantError)) (if (= (object/get (json/parse @payload.grantBody DriveErrorReply) error null) null) (if (>= @payload.grantStatus 400) (if (str/startsWith (json/stringify (json/parse @payload.grantBody DriveErrorReply)) "{") "[object Object]" @payload.grantBody) (str/concat "Request failed with status code " @payload.grantStatus)) (if (str/startsWith (json/stringify (object/get (json/parse @payload.grantBody DriveErrorReply) error null)) "\"") (object/get (json/parse @payload.grantBody DriveErrorStringReply) error "") (if (object/has (json/parse @payload.grantBody DriveErrorReply) "error.errors") (str/join (array/map (object/get (json/parse @payload.grantBody DriveErrorReply) "error.errors" []) (fn e (or (object/get @e message "") ""))) "\n") (or (object/get (json/parse @payload.grantBody DriveErrorReply) "error.message" "") ""))))) })
       DRIVE_CALL_FAILED -> idle when (and (!= @payload.kind "unconfigured") (!= @payload.phase "grant"))
         (emit DRIVE_FAILED { code: null, message: (if (= @payload.kind "timeout") "network timeout" @payload.error) })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Google Drive unavailable: " @payload.error) })
       DRIVE_REFRESH_PROBED -> idle when @payload.connected
         (emit DRIVE_FAILED { code: null, message: "Drive not configured — set GOOGLE_DRIVE_SA_KEY (reads) and/or GOOGLE_DRIVE_REFRESH_TOKEN + OAUTH_CLIENT_ID/SECRET (writes)" })
       DRIVE_REFRESH_PROBED -> idle when (not @payload.connected)
@@ -557,11 +556,6 @@ orbital DriveOrbital {
     }
 
     config {
-      statusSlot : slot = system
-        @label "Status slot"
-        @description "Where the atom reports an unreachable Drive call; a page running it in the background keeps it in `system`"
-        @synonyms "status area, slot"
-        @tier "presentation"
       origin : url = "https://www.googleapis.com"
         @label "Google APIs origin"
         @description "The Google APIs origin (scheme://host, no path). Must be declared in the app egress list."
@@ -600,5 +594,5 @@ orbital DriveOrbital {
     }
   }
 
-  page "/drive" as DrivePage -> DriveClient
+  page boot as DrivePage -> DriveClient
 }

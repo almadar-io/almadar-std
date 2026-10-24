@@ -16,11 +16,6 @@ orbital TabCaptureOrbital {
     initial: idle
 
     config {
-      statusSlot : slot = main
-        @label "Status slot"
-        @description "Where the atom shows its one-line status; an organism capturing in the background sends it to `system`"
-        @synonyms "status area, slot"
-        @tier "presentation"
       format : "png" | "jpeg" = png
         @label "Image format"
         @description "png keeps every pixel; jpeg is smaller"
@@ -34,33 +29,25 @@ orbital TabCaptureOrbital {
     }
 
     state idle {
-      INIT -> idle
-        (render-ui @config.statusSlot { type: typography, variant: body, role: status, content: "Ready to capture" })
       CAPTURE -> capturing when (= @config.format "png")
         (set @entity.tab ?tab)
         (set @entity.status capturing)
         (browser/tab-capture { tab: ?tab, format: "png" } { emit: { success: SHOT, failure: SHOT_FAILED } })
-        (render-ui @config.statusSlot { type: typography, variant: body, role: status, content: (str/concat "Capturing tab " ?tab) })
       CAPTURE -> capturing when (= @config.format "jpeg")
         (set @entity.tab ?tab)
         (set @entity.status capturing)
         (browser/tab-capture { tab: ?tab, format: "jpeg", quality: @config.jpegQuality } { emit: { success: SHOT, failure: SHOT_FAILED } })
-        (render-ui @config.statusSlot { type: typography, variant: body, role: status, content: (str/concat "Capturing tab " ?tab) })
     }
 
     state capturing {
-      INIT -> capturing
-        (render-ui @config.statusSlot { type: typography, variant: body, role: status, content: (str/concat "Capturing tab " @entity.tab) })
       SHOT -> idle
         (set @entity.status idle)
         (set @entity.errorMessage "")
         (emit CAPTURED { tab: ?tab, format: ?format, image: ?image })
-        (render-ui @config.statusSlot { type: typography, variant: body, role: status, content: (str/concat "Captured tab " ?tab) })
       SHOT_FAILED -> idle
         (set @entity.status idle)
         (set @entity.errorMessage ?error)
         (emit CAPTURE_FAILED { tab: @entity.tab, error: ?error, kind: ?kind })
-        (render-ui @config.statusSlot { type: typography, variant: body, role: status, content: (str/concat "Couldn't capture: " ?error) })
     }
 
     emits {
@@ -86,5 +73,5 @@ orbital TabCaptureOrbital {
     }
   }
 
-  page "/tab-capture" as TabCapturePage -> TabCapture
+  page boot as TabCapturePage -> TabCapture
 }

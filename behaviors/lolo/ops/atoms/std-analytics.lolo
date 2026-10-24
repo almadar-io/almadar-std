@@ -16,11 +16,6 @@ orbital AnalyticsOrbital {
     initial: active
 
     config {
-      statusSlot : slot = main
-        @label "Status slot"
-        @description "Where the atom shows its one-line status; a page running it in the background sends it to `system`"
-        @synonyms "status area, slot"
-        @tier "presentation"
       endpoint : url
         @label "Collector endpoint"
         @description "The analytics collector's absolute ingest URL (`POST`, text/plain); Its origin must be declared in the app egress list."
@@ -41,7 +36,6 @@ orbital AnalyticsOrbital {
     state active {
       INIT -> active
         (emit ANALYTICS_PAGEVIEW { path: @config.path, domain: @config.domain })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Reporting this visit…" })
       TRACK -> active
         (emit ANALYTICS_TRACK { name: ?name, path: @config.path, props: ?props, domain: @config.domain })
       ANALYTICS_PAGEVIEW -> active when (not (str/startsWith @payload.path "/"))
@@ -80,18 +74,14 @@ orbital AnalyticsOrbital {
         (emit REPORTED { sent: @payload.sent })
       ANALYTICS_BEACON_FAILED -> active
         (emit ANALYTICS_FAILED { code: null, message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Not reported: " @payload.error) })
       ANALYTICS_FACTS_FAILED -> active
         (emit ANALYTICS_FAILED { code: null, message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Not reported: " @payload.error) })
       REPORTED -> active
         (set @entity.status (if ?sent reported skipped))
         (set @entity.reported (if ?sent (+ @entity.reported 1) @entity.reported))
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (if ?sent "Visit reported" "Not reported here") })
       ANALYTICS_FAILED -> active
         (set @entity.status failed)
         (set @entity.errorMessage ?message)
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Not reported: " ?message) })
         (emit REPORT_FAILED { error: ?message })
     }
 
@@ -177,5 +167,5 @@ orbital AnalyticsOrbital {
     }
   }
 
-  page "/analytics" as AnalyticsPage -> Analytics
+  page boot as AnalyticsPage -> Analytics
 }

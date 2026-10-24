@@ -32,13 +32,11 @@ orbital OAuthOrbital {
           (emit OAUTH_AUTHORIZE_MOCK { provider: (object/get @st provider ""), scopes: (object/get @st scopes []), redirectUri: (object/get @st redirectUri ""), subject: (if (object/get @st hasSubject false) (object/get @st subject "") null), hasSubject: (object/get @st hasSubject false) }))
       OAUTH_DISCOVERY_FAILED -> idle when (!= @payload.reason "unconfigured-client")
         (emit OAUTH_AUTHORIZE_ERROR { code: @payload.code, message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Sign-in unavailable: " @payload.error) })
       OAUTH_AUTHORIZE_FAILED -> idle when (= @payload.reason "unconfigured-client")
         (let ((st (json/parse @payload.key OAuthAuthCall)))
           (emit OAUTH_AUTHORIZE_MOCK { provider: (object/get @st provider ""), scopes: (object/get @st scopes []), redirectUri: (object/get @st redirectUri ""), subject: (if (object/get @st hasSubject false) (object/get @st subject "") null), hasSubject: (object/get @st hasSubject false) }))
       OAUTH_AUTHORIZE_FAILED -> idle when (!= @payload.reason "unconfigured-client")
         (emit OAUTH_AUTHORIZE_ERROR { code: @payload.code, message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Sign-in unavailable: " @payload.error) })
       OAUTH_AUTHORIZE_MOCK -> idle
         (oauth-authorize { tag: @config.provider, mode: mock, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: (if (= @config.clientAuth "none") none post) } { redirectUri: (if (= @payload.redirectUri "") @config.redirectUri @payload.redirectUri), scope: @payload.scopes, subject: (if @payload.hasSubject @payload.subject null) } { key: (json/stringify { provider: @config.provider, redirectUri: @payload.redirectUri, subject: (or @payload.subject ""), hasSubject: @payload.hasSubject, scopes: @payload.scopes }), emit: { success: OAUTH_AUTHORIZE_REPLIED, failure: OAUTH_AUTHORIZE_FAILED } })
       OAUTH_AUTHORIZE_STATIC -> idle
@@ -72,7 +70,6 @@ orbital OAuthOrbital {
           (emit OAUTH_TOKEN_MOCK { code: (object/get @st a ""), state: (object/get @st b ""), subject: (if (object/get @st hasSubject false) (object/get @st subject "") null), hasSubject: (object/get @st hasSubject false) }))
       OAUTH_TOKEN_FAILED -> idle when (!= @payload.reason "unconfigured-client")
         (emit OAUTH_TOKEN_ERROR { code: @payload.code, message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Sign-in unavailable: " @payload.error) })
       OAUTH_REFRESH -> idle when (= @config.mode "mock")
         (emit OAUTH_REFRESH_MOCK { refreshToken: @payload.refreshToken })
       OAUTH_REFRESH -> idle when (and (!= @config.mode "mock") (= @config.provider "auth0") (= @config.issuerUrl ""))
@@ -90,7 +87,6 @@ orbital OAuthOrbital {
           (emit OAUTH_REFRESH_MOCK { refreshToken: (object/get @st a "") }))
       OAUTH_REFRESH_FAILED -> idle when (!= @payload.reason "unconfigured-client")
         (emit OAUTH_REFRESH_ERROR { code: @payload.code, message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Sign-in unavailable: " @payload.error) })
       OAUTH_REVOKE -> idle when (= @config.mode "mock")
         (emit OAUTH_REVOKE_MOCK { token: @payload.token })
       OAUTH_REVOKE -> idle when (and (!= @config.mode "mock") (= @config.provider "auth0") (= @config.issuerUrl ""))
@@ -108,7 +104,6 @@ orbital OAuthOrbital {
           (emit OAUTH_REVOKE_MOCK { token: (object/get @st a "") }))
       OAUTH_REVOKE_FAILED -> idle when (!= @payload.reason "unconfigured-client")
         (emit OAUTH_REVOKE_ERROR { code: @payload.code, message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Sign-in unavailable: " @payload.error) })
       OAUTH_USERINFO -> idle when (= @config.mode "mock")
         (emit OAUTH_USERINFO_MOCK { accessToken: @payload.accessToken })
       OAUTH_USERINFO -> idle when (and (!= @config.mode "mock") (= @config.provider "auth0") (= @config.issuerUrl ""))
@@ -126,7 +121,6 @@ orbital OAuthOrbital {
           (emit OAUTH_USERINFO_MOCK { accessToken: (object/get @st a "") }))
       OAUTH_USERINFO_FAILED -> idle when (!= @payload.reason "unconfigured-client")
         (emit OAUTH_USERINFO_ERROR { code: @payload.code, message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Sign-in unavailable: " @payload.error) })
       OAUTH_CONNECT -> idle when (= @config.mode "mock")
         (emit OAUTH_CONNECT_MOCK { provider: @config.provider, code: @payload.code, state: @payload.state })
       OAUTH_CONNECT -> idle when (and (!= @config.mode "mock") (and (= @config.provider "github") (= @config.issuerUrl "")))
@@ -142,7 +136,6 @@ orbital OAuthOrbital {
           (emit OAUTH_CONNECT_MOCK { provider: (object/get @st c ""), code: (object/get @st a ""), state: (object/get @st b "") }))
       OAUTH_CONNECT_FAILED -> idle when (!= @payload.reason "unconfigured-client")
         (emit OAUTH_CONNECT_ERROR { code: @payload.code, message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Sign-in unavailable: " @payload.error) })
       OAUTH_CONNECTION -> idle
         (oauth-connection-status @config.provider { emit: { success: OAUTH_CONNECTION_REPLIED, failure: OAUTH_CONNECTION_FAILED } })
       OAUTH_CONNECTION_REPLIED -> idle
@@ -153,10 +146,8 @@ orbital OAuthOrbital {
         (emit OAUTH_DISCONNECTED { provider: @payload.provider, connected: @payload.connected, account: @payload.account, avatarUrl: @payload.avatarUrl, scope: @payload.scope, connectedAt: @payload.connectedAt })
       OAUTH_CONNECTION_FAILED -> idle
         (emit OAUTH_CONNECTION_ERROR { code: @payload.code, message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Sign-in unavailable: " @payload.error) })
       OAUTH_DISCONNECT_FAILED -> idle
         (emit OAUTH_DISCONNECT_ERROR { code: @payload.code, message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Sign-in unavailable: " @payload.error) })
     }
     emits {
       OAUTH_AUTHORIZED -> external {
@@ -736,11 +727,6 @@ orbital OAuthOrbital {
         @description "The callback used when an authorize call gives an empty redirectUri."
         @synonyms "callback url, default redirect"
         @tier "infra"
-      statusSlot : slot = system
-        @label "Status slot"
-        @description "Where the atom reports a failed OAuth call; a page running it in the background keeps it in `system`"
-        @synonyms "status area, slot"
-        @tier "presentation"
       issuerUrl : string = ""
         @label "OIDC issuer"
         @description "An OIDC-compliant issuer used for every provider instead of Google's and GitHub's built-in servers; required for auth0. It must be declared in the app egress list."
@@ -749,5 +735,5 @@ orbital OAuthOrbital {
     }
   }
 
-  page "/oauth" as OAuthPage -> OAuthClient
+  page boot as OAuthPage -> OAuthClient
 }

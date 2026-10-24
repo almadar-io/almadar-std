@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-10-24T08:37:31.053Z",
+  "generated": "2026-10-24T18:19:06.503Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -13416,6 +13416,7 @@
       },
       "description": "Logical OR (returns the first truthy value, NOT a boolean — short-circuit)",
       "module": "core",
+      "returnSemantics": "coalesce",
       "title": "Or",
       "params": [
         {
@@ -22016,11 +22017,44 @@
               "path": "string",
               "denyWarnings": "boolean",
               "patterns": "string",
-              "services": "string"
+              "services": "string",
+              "findings": {
+                "kind": "array",
+                "of": {
+                  "kind": "object",
+                  "fields": {
+                    "code": "string",
+                    "path": "string",
+                    "message": "string",
+                    "suggestion": "string",
+                    "severity": {
+                      "kind": "union",
+                      "of": [
+                        {
+                          "kind": "literal",
+                          "value": "error"
+                        },
+                        {
+                          "kind": "literal",
+                          "value": "warning"
+                        }
+                      ]
+                    },
+                    "validValues": {
+                      "kind": "array",
+                      "of": "string"
+                    }
+                  },
+                  "optional": [
+                    "suggestion",
+                    "validValues"
+                  ]
+                }
+              }
             },
             "open": true
           },
-          "description": "An optional prior program (`prior`) and `final` flag; or `{ report: true, path, final?, denyWarnings?, patterns?, services? }`: the report `orb validate --json` prints for the file at the absolute `path` (the program argument is not read)",
+          "description": "An optional prior program (`prior`) and `final` flag; or `{ report: true, path, final?, denyWarnings?, patterns?, services?, findings? }`: the report `orb validate --json` prints for the file at the absolute `path` (the program argument is not read); each of `findings` (a std lint's) joins the errors or warnings by its severity, positioned through the same source map",
           "optional": true
         },
         {
@@ -23037,6 +23071,7 @@
       },
       "description": "Return default if value is null/undefined/empty",
       "module": "str",
+      "returnSemantics": "coalesce",
       "title": "Default",
       "params": [
         {
@@ -26128,6 +26163,7 @@
       },
       "description": "Resolved IR only, never written in .lolo: the value, checked to be of the type the program declared for it. `orb resolve` writes it at an operator argument whose declared type is a list of a union or of SExpr, so the kernel binds the operator's type variable to that declared type instead of reading one from the items. An item outside the declared type is a type mismatch.",
       "module": "core",
+      "returnSemantics": "identity-of-arg<0>",
       "params": [
         {
           "name": "value",

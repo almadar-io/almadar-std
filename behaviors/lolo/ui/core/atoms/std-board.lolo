@@ -11,7 +11,7 @@ orbital BoardOrbital {
 
     type BoardColumn = { key : string!, label : string!, icon : string, variant : "default" | "primary" | "success" | "warning" | "error" | "info", count : number, items : [BoardItem] }
 
-    type BoardItemsLoaded = Event { data : [BoardItem]! } "Fired when board items finish loading (from an upstream fetcher / persistor)"
+    type BoardItemsLoaded = Event { data : [@entity]! } "Fired when board items finish loading (from an upstream fetcher / persistor)"
 
     type BoardItemsLoadFailed = Event { error : string, code : string } "Fired when the upstream fetch fails"
 
@@ -381,7 +381,7 @@ orbital BoardOrbital {
         @synonyms "edit, modify, update, change"
         @tier "domain"
       BoardItemsLoaded {
-        data : [BoardItem]!
+        data : [@entity]!
       }
         @description "Signals that board items have been successfully loaded."
         @synonyms "loaded, fetched, retrieved, populated"
@@ -495,7 +495,7 @@ orbital BoardOrbital {
         @synonyms "reload, refresh, update, paginate"
         @tier "domain"
       BoardItemsLoaded {
-        data : [BoardItem]!
+        data : [@entity]!
       }
         @description "Data for the board columns has been successfully retrieved."
         @synonyms "loaded, fetched, retrieved, populated"
@@ -536,7 +536,7 @@ orbital BoardOrbital {
         @label "Board title"
         @description "Heading shown above the column board"
         @tier "presentation"
-      searchField : string = "title"
+      searchField : field @entity string = title
         @label "Which column does the search box match against?"
         @description "Name the field on this entity the search box's str/includes filter matches against. Declared, never inferred: an entity with no `title` column must set this to a real field (e.g. name, summary) or the search box can never match a card."
         @synonyms "search column, search on field, match field, search key"
@@ -576,7 +576,7 @@ orbital BoardOrbital {
         @label "Grid columns"
         @description "Outer grid column count before the board wraps"
         @tier "presentation"
-      formFields : [string] = (title description stage notes)
+      formFields : [field @entity] = (title description stage notes)
         @label "New-card fields"
         @description "Fields shown in the add-card form"
         @tier "presentation"
@@ -609,7 +609,7 @@ orbital BoardOrbital {
         @label "Card notes binding"
         @description "Per-card binding for the notes slot shown in the card detail view. Set to an empty string for hosts with no notes-equivalent field — declared as 'no notes capture', never inferred."
         @tier "presentation"
-      groupByField : string = stage
+      groupByField : field @entity string = stage
         @label "Group-by field"
         @description "Entity field whose value matches a column key — items are filtered into columns by it. Default 'stage'; set to 'status' (or any field) for entities that track state under a different name."
         @tier "presentation"

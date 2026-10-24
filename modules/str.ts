@@ -361,6 +361,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Return default if value is null/undefined/empty',
     hasSideEffects: false,
     returnType: tv('T'),
+    returnSemantics: 'coalesce',
     params: [
       { name: 's', type: tv('T', union(STRING, NUMBER, BOOLEAN)), description: 'The value (a string, number or boolean)' },
       { name: 'default', type: tv('T'), description: 'Default value' },

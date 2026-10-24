@@ -242,36 +242,4 @@ orbital StreamTicketOrbital {
   }
 
   page boot as StreamTicketStart -> StreamTicketer
-
-  entity StreamTicketDemoView [runtime] {
-    id : string!
-  }
-
-  trait StreamTicketDemo -> StreamTicketDemoView [optimistic] {
-    initial: idle
-
-    state idle {
-      INIT -> idle
-      REFUSED -> idle when (!= @payload.code "busy")
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Stream ticket refused" })
-    }
-
-    listens {
-      StreamTicketer.TICKET_REFUSED -> REFUSED
-      REFUSED {
-        code : string!
-        message : string!
-      }
-    }
-
-    config {
-      statusSlot : slot = main
-        @label "Status slot"
-        @description "Where the demo page reports a refused ticket."
-        @synonyms "status area, slot"
-        @tier "presentation"
-    }
-  }
-
-  page "/stream-ticket" as StreamTicketDemoPage -> StreamTicketDemo
 }

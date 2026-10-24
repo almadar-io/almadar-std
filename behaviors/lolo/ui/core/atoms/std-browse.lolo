@@ -68,7 +68,7 @@ orbital BrowseItemOrbital {
       INIT -> loading
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
-          filter: (and (or (= @config.scopeField "") (= (object/get @entity @config.scopeField) @user.id)) (or (= @config.initialFilterField "") (= (object/get @entity @config.initialFilterField) @config.initialFilterValue)))
+          filter: (and (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id)) (or (not (validate/required @config.initialFilterField)) (= (object/get @entity @config.initialFilterField) @config.initialFilterValue)))
           include: @config.include
           limit: @config.pageSize
           orderBy: @config.orderBy
@@ -103,7 +103,7 @@ orbital BrowseItemOrbital {
       INIT -> loading
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
-          filter: (and (or (= @config.scopeField "") (= (object/get @entity @config.scopeField) @user.id)) (or (= @config.initialFilterField "") (= (object/get @entity @config.initialFilterField) @config.initialFilterValue)))
+          filter: (and (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id)) (or (not (validate/required @config.initialFilterField)) (= (object/get @entity @config.initialFilterField) @config.initialFilterValue)))
           include: @config.include
           limit: @config.pageSize
           orderBy: @config.orderBy
@@ -118,7 +118,7 @@ orbital BrowseItemOrbital {
       REFETCH_QUERY -> browsing
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
-          filter: (and (or (= @config.scopeField "") (= (object/get @entity @config.scopeField) @user.id)) (or (= ?searchTerm "") (str/includes (object/get @entity @config.searchField) ?searchTerm)))
+          filter: (and (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id)) (or (= ?searchTerm "") (str/includes (object/get @entity @config.searchField) ?searchTerm)))
           include: @config.include
           limit: @config.pageSize
           orderBy: @config.orderBy
@@ -127,7 +127,7 @@ orbital BrowseItemOrbital {
       REFETCH_FILTER -> browsing
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
-          filter: (and (or (= @config.scopeField "") (= (object/get @entity @config.scopeField) @user.id)) (or (= ?value "") (= (object/get @entity ?field) ?value)))
+          filter: (and (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id)) (or (= ?value "") (= (object/get @entity ?field) ?value)))
           include: @config.include
           limit: @config.pageSize
           orderBy: @config.orderBy
@@ -136,7 +136,7 @@ orbital BrowseItemOrbital {
       REFETCH_PAGE -> browsing
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
-          filter: (or (= @config.scopeField "") (= (object/get @entity @config.scopeField) @user.id))
+          filter: (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id))
           include: @config.include
           limit: @config.pageSize
           orderBy: @config.orderBy
@@ -172,7 +172,7 @@ orbital BrowseItemOrbital {
       INIT -> loading
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
-          filter: (and (or (= @config.scopeField "") (= (object/get @entity @config.scopeField) @user.id)) (or (= @config.initialFilterField "") (= (object/get @entity @config.initialFilterField) @config.initialFilterValue)))
+          filter: (and (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id)) (or (not (validate/required @config.initialFilterField)) (= (object/get @entity @config.initialFilterField) @config.initialFilterValue)))
           include: @config.include
           limit: @config.pageSize
           orderBy: @config.orderBy
@@ -287,7 +287,7 @@ orbital BrowseItemOrbital {
         @label "Table columns"
         @description "Column definitions for table-style variants (dense). Each maps an entity field to a column with optional width / align / weight / format."
         @tier "presentation"
-      imageField : string = ""
+      imageField : field @entity
         @label "Which field holds the row image?"
         @description "Entity field containing the thumbnail URL for each row."
         @synonyms "image field, thumbnail field, photo field, picture column"
@@ -352,7 +352,7 @@ orbital BrowseItemOrbital {
         @description "Row-click channel. Retarget when two browse lists coexist in one orbital and their VIEW payloads differ, so each gets its own typed channel."
         @synonyms "row click event, item click, open event, select event"
         @tier "presentation"
-      scopeField : string = ""
+      scopeField : field @entity
         @label "Only show records owned by the signed-in user?"
         @description "Name the field on this entity that holds the viewer's id (e.g. memberId, patientId, assignee). When set, the list loads ONLY rows whose that field equals @user.id — the 'my bookings' / 'my appointments' shape. Left blank the list loads every row, which is the default. Declared, never inferred: guessing the column from its name would silently scope the wrong one."
         @synonyms "owner field, my records, only mine, only my own, scope to user, per-user list, mine only, owned by me"
@@ -361,7 +361,7 @@ orbital BrowseItemOrbital {
         @label "Viewer's role"
         @description "The signed-in viewer's role that each row action's `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show."
         @tier "policy"
-      initialFilterField : string = ""
+      initialFilterField : field @entity
         @label "Which field does the first load filter on?"
         @description "Name the field the INITIAL load filters on, paired with initialFilterValue. This is the detail half of a list-detail pair: a thread that must wait for a conversation to be picked sets the field to its parent key and leaves the value blank, so the first load matches nothing and the empty state shows instead of every record in the table. REFETCH_FILTER then supplies the real selection. Left blank the first load is unfiltered, which is the default."
         @synonyms "initial filter, first load filter, wait for selection, detail pane filter, requires selection, start empty"
@@ -376,7 +376,7 @@ orbital BrowseItemOrbital {
         @description "Adds a checkbox column with select-all to the dense table. Enable only when the surface offers bulk actions — checkboxes with nothing to act on are a dead affordance."
         @synonyms "row checkboxes, multi-select, bulk select, selection column"
         @tier "presentation"
-      searchField : string = "name"
+      searchField : field @entity string = name
         @label "Which column does the search box match against?"
         @description "Name the field on this entity the search box's str/includes filter matches against. Declared, never inferred: an entity with no `name` column must set this to a real field (e.g. title, content) or the search box can never match a row."
         @synonyms "search column, search on field, match field, search key"

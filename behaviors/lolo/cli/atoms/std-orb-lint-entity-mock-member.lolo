@@ -4,14 +4,14 @@ app std-orb-lint-entity-mock-member [
   env: ["PATH"],
   exec: ["orb"],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
-  description: "std-orb-lint-entity-mock-member — the `orb lint entity-mock-member <file>` command, the port of ORB_E_MOCK_NOT_IN_ENUM (entity.rs validate_field). It lowers the file with program/read and, for every non-union field with declared values and a @mock, reports the comma-separated trimmed candidates that are not among the values, with the Rust path, message and suggestion (status 500, exit 1). Orbitals marked `spec` are skipped, as validate_all_entities skips them. Clean answers `lint entity-mock-member: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  description: "std-orb-lint-entity-mock-member — the `orb lint entity-mock-member <file>` command, the port of ORB_E_MOCK_NOT_IN_ENUM (entity.rs validate_field). It lowers the file with program/read and, for every non-union field of a primary or auxiliary entity with declared values and a @mock, reports the comma-separated trimmed candidates that are not among the values, with the Rust path, message and suggestion (status 500, exit 1). Orbitals marked `spec` are skipped, as validate_all_entities skips them. Clean answers `lint entity-mock-member: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-entity-mock-member"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
-type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error", validValues : [string] }
 type MockMemberField = { type : string, values : [string], mock : string }
 type MockMemberEntity = { fields : [MockMemberField] }
-type MockMemberOrbital = { entity : MockMemberEntity, spec : boolean }
+type MockMemberOrbital = { entity : MockMemberEntity, auxiliaryEntities : [MockMemberEntity], spec : boolean }
 type MockMemberProgram = { orbitals : [MockMemberOrbital] }
 
 orbital OrbLintEntityMockMemberOrbital {
@@ -19,6 +19,7 @@ orbital OrbLintEntityMockMemberOrbital {
 
   entity OrbLintEntityMockMemberRun [runtime] {
     id : string!
+    scope : string = ""
     findings : [OrbFinding] = []
   }
 
@@ -28,26 +29,34 @@ orbital OrbLintEntityMockMemberOrbital {
     state ready {
       INIT -> ready
       LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
         (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
-            (let ((ent (object/get (array/nth @orbitals @oi) "entity" {})))
-              (if (and (validate/object @ent) (not (object/get (array/nth @orbitals @oi) "spec" false))) (let ((fields (object/get @ent "fields" [])))
-                (array/flatten (array/map (array/range 0 (array/len @fields)) (fn fi
-                  (let ((f (array/nth @fields @fi)))
-                    (let ((values (object/get @f "values" [])) (cands (array/filter (array/map (str/split (object/get @f "mock" "") ",") (fn c (str/trim @c))) (fn c (!= @c "")))))
-                      (if (and (> (array/len @values) 0) (!= (object/get @f "type" "") "union"))
-                        (let ((outside (array/filter @cands (fn c (not (array/includes @values @c))))))
-                          (if (> (array/len @outside) 0)
-                            [{ code: "ORB_E_MOCK_NOT_IN_ENUM", path: (str/concat "orbitals[" @oi "].entity.fields[" @fi "].mock"), message: (str/concat (str/decode-uri-component "%40") "mock candidate(s) " (str/join @outside ", ") " are not values of this field"), suggestion: "Use only the field's declared values as @mock candidates", severity: "error" }]
-                            []))
-                        []))))))) [])))))))
+            (let ((auxs (object/get (array/nth @orbitals @oi) "auxiliaryEntities" [])))
+              (array/flatten (array/map
+                (array/concat [{ ent: (object/get (array/nth @orbitals @oi) "entity" {}), base: (str/concat "orbitals[" @oi "].entity") }]
+                  (array/map (array/range 0 (array/len @auxs)) (fn ai { ent: (array/nth @auxs @ai), base: (str/concat "orbitals[" @oi "].auxiliaryEntities[" @ai "]") })))
+                (fn eb
+                  (let ((ent (object/get @eb "ent")) (base (object/get @eb "base")))
+                    (if (and (validate/object @ent) (not (object/get (array/nth @orbitals @oi) "spec" false)))
+                      (let ((fields (object/get @ent "fields" [])))
+                        (array/flatten (array/map (array/range 0 (array/len @fields)) (fn fi
+                          (let ((f (array/nth @fields @fi)))
+                            (let ((values (object/get @f "values" [])) (cands (array/filter (array/map (str/split (object/get @f "mock" "") ",") (fn c (str/trim @c))) (fn c (!= @c "")))))
+                              (if (and (> (array/len @values) 0) (!= (object/get @f "type" "") "union"))
+                                (let ((outside (array/filter @cands (fn c (not (array/includes @values @c))))))
+                                  (if (> (array/len @outside) 0)
+                                    [{ code: "ORB_E_MOCK_NOT_IN_ENUM", path: (str/concat @base ".fields[" @fi "].mock"), message: (str/concat (str/decode-uri-component "%40") "mock candidate(s) " (str/join @outside ", ") " are not values of this field"), suggestion: "Use only the field's declared values as @mock candidates", severity: "error", validValues: @values }]
+                                    []))
+                                [])))))))
+                      [])))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
-        (emit LINT_FOUND { rule: "entity-mock-member", findings: @entity.findings })
+        (emit LINT_FOUND { rule: "entity-mock-member", scope: @entity.scope, findings: @entity.findings })
     }
 
     emits {
-      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
         @description "This rule's findings for the file, offered to the lint-all umbrella."
         @tier "internal"
       LINT_FINISH { }
@@ -56,7 +65,7 @@ orbital OrbLintEntityMockMemberOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : MockMemberProgram }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : MockMemberProgram  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -93,7 +102,7 @@ orbital OrbLintEntityMockMemberOrbital {
       LINT_REQUEST -> external { file : string! }
         @description "Ask the lint input to read and lower this file."
         @tier "internal"
-      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
         @description "The rule trait's findings for the file."
         @tier "internal"
       LINT_INPUT_UNREAD -> external { file : string! }

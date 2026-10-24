@@ -1,6 +1,6 @@
 app lint-engine-spec [
   version: "1.0.0",
-  description: "Design contract for the lint engine: for a LINT_RUN { file } it asks the lint input to read and lower the file once (LINT_REQUEST), collects every composed rule trait's LINT_FOUND { rule, findings } and, once all of them answered, emits LINT_COLLECTED { findings, found } (the findings flattened, and by rule). When the lint input cannot read or lower the file the run ends without an answer."
+  description: "Design contract for the lint engine: for a LINT_RUN { file } it asks the lint input to read and lower the file once (LINT_REQUEST), collects every composed rule trait's LINT_FOUND { rule, scope, findings } and, once all of them answered, asks for each lazy child (LINT_CHILD_REQUEST { index }) and collects its pass the same way, a child finding's path prefixed `lazy[<scope>].`; after the last pass it emits LINT_COLLECTED { findings, found } (the findings flattened, and by rule). When the lint input cannot read or lower the file the run ends without an answer."
 ]
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 type RuleFound = { rule : string!, findings : [OrbFinding]! }
@@ -10,6 +10,7 @@ orbital LintEngineSpec {
     state ready
     emits {
       LINT_REQUEST { file : string! }
+      LINT_CHILD_REQUEST { index : number! }
       LINT_COLLECTED { findings : [OrbFinding]!  found : [RuleFound]! }
     }
   }

@@ -221,17 +221,12 @@ orbital AgentBuilderOrbital {
         @label "Repair turns"
         @description "How many times validator issues go back to the model before the build fails."
         @tier "policy"
-      statusSlot : slot = main
-        @label "Status slot"
-        @description "Where the builder shows its one-line status; a page running it in the background sends it to `system`."
-        @tier "presentation"
     }
     initial: idle
 
     state idle {
       INIT -> idle
         (set @entity.status idle)
-        (render-ui @config.statusSlot <typography content="Ready to build." variant="caption" />)
       START -> searching
         (set @entity.request ?request)
         (set @entity.orbitalName ?orbitalName)
@@ -257,7 +252,6 @@ orbital AgentBuilderOrbital {
       REQUEST_EMBEDDED -> failed when (= (array/len ?embeddings) 0)
         (set @entity.error "The model returned no embedding")
         (set @entity.status failed)
-        (render-ui @config.statusSlot <typography content="Build failed: the model returned no embedding." variant="caption" />)
         (emit BUILD_REJECTED { error: "The model returned no embedding", errors: [] })
       STEP -> searching when (and (< @entity.step (array/len @config.ladder)) (= (object/get (array/nth @config.ladder @entity.step) source) "catalog"))
         (behavior/catalog { paths: (object/get (array/nth @config.ladder @entity.step) scope []) } {
@@ -268,10 +262,9 @@ orbital AgentBuilderOrbital {
       STEP -> failed when (>= @entity.step (array/len @config.ladder))
         (set @entity.error "No tier of the ladder could serve the request")
         (set @entity.status failed)
-        (render-ui @config.statusSlot <typography content="No tier could serve the request." variant="caption" />)
         (emit BUILD_REJECTED { error: "No tier of the ladder could serve the request", errors: [] })
       CATALOG_LISTED -> searching
-        (set @entity.ranked (array/sort (array/map (array/filter ?result (fn e (> (array/len (object/get @e.vectors description)) 0))) (fn e { behavior: @e.behavior, value: @e.value, trait: (array/first @e.traits), description: (object/get @e description ""), fields: {}, score: (array/cosine (object/get @e.vectors description) @entity.queryVector) })) score desc))
+        (set @entity.ranked (array/sort (array/map (array/filter ?result (fn e (> (array/len (object/get @e.vectors description)) 0))) (fn e { behavior: @e.behavior, value: @e.value, trait: (array/first @e.traits), description: (object/get @e description ""), fields: {}, score: (array/cosine (object/get @e.vectors description []) @entity.queryVector) })) score desc))
         (emit RANKED {})
       POOL_FOUND -> searching
         (set @entity.ranked (array/map ?hits (fn h { behavior: @h.behavior, value: @h.value, description: (object/get @h description ""), fields: (object/get @h fields {}), score: @h.score })))
@@ -306,7 +299,6 @@ orbital AgentBuilderOrbital {
       RANKED -> done when (and (> (array/len @entity.ranked) 0) (and (>= (object/get (array/first @entity.ranked) score) (object/get (array/nth @config.ladder @entity.step) threshold)) (= (object/get (array/nth @config.ladder @entity.step) action) "adopt")))
         (set @entity.behavior (object/get (array/first @entity.ranked) behavior))
         (set @entity.status done)
-        (render-ui @config.statusSlot <typography content={(str/concat "Adopted " @entity.behavior)} variant="caption" />)
         (emit BUILD_COMPLETE { orbitalName: @entity.orbitalName, behavior: @entity.behavior, value: (object/get (array/first @entity.ranked) value), tier: (object/get (array/nth @config.ladder @entity.step) name), fields: (object/get (array/first @entity.ranked) fields {}) })
       RANKED -> describing when (and (and (> (array/len @entity.ranked) 0) (and (>= (object/get (array/first @entity.ranked) score) (object/get (array/nth @config.ladder @entity.step) threshold)) (= (object/get (array/nth @config.ladder @entity.step) action) "fill"))) (or (<= (object/get (array/nth @config.ladder @entity.step) take 1) 1) (= (array/len @entity.ranked) 1)))
         (set @entity.chosen (object/get (array/first @entity.ranked) behavior))
@@ -337,12 +329,10 @@ orbital AgentBuilderOrbital {
       BUILD_FAILED -> failed
         (set @entity.error ?error)
         (set @entity.status failed)
-        (render-ui @config.statusSlot <typography content={(str/concat "Build failed: " ?error)} variant="caption" />)
         (emit BUILD_REJECTED { error: ?error, errors: [] })
       LLM_REQUEST_FAILED -> failed
         (set @entity.error ?message)
         (set @entity.status failed)
-        (render-ui @config.statusSlot <typography content={(str/concat "Build failed: " ?message)} variant="caption" />)
         (emit BUILD_REJECTED { error: ?message, errors: [] })
     }
 
@@ -360,17 +350,14 @@ orbital AgentBuilderOrbital {
       CHOSEN -> failed when (not (array/some (array/take @entity.ranked (object/get (array/nth @config.ladder @entity.step) take 1)) (fn r (= @r.behavior ?choice))))
         (set @entity.error "The decision model picked none of the building blocks offered")
         (set @entity.status failed)
-        (render-ui @config.statusSlot <typography content="Build failed: no building block was picked." variant="caption" />)
         (emit BUILD_REJECTED { error: "The decision model picked none of the building blocks offered", errors: [] })
       BUILD_FAILED -> failed
         (set @entity.error ?error)
         (set @entity.status failed)
-        (render-ui @config.statusSlot <typography content={(str/concat "Build failed: " ?error)} variant="caption" />)
         (emit BUILD_REJECTED { error: ?error, errors: [] })
       LLM_REQUEST_FAILED -> failed
         (set @entity.error ?message)
         (set @entity.status failed)
-        (render-ui @config.statusSlot <typography content={(str/concat "Build failed: " ?message)} variant="caption" />)
         (emit BUILD_REJECTED { error: ?message, errors: [] })
       PICK -> choosing
         (set @entity.chosen (str/default ?behavior ""))
@@ -385,12 +372,10 @@ orbital AgentBuilderOrbital {
       ASSISTANT_REPLIED -> failed when (not (array/some (array/take @entity.ranked (object/get (array/nth @config.ladder @entity.step) take 1)) (fn r (= @r.behavior @entity.chosen))))
         (set @entity.error "The model picked none of the building blocks offered")
         (set @entity.status failed)
-        (render-ui @config.statusSlot <typography content="Build failed: no building block was picked." variant="caption" />)
         (emit BUILD_REJECTED { error: "The model picked none of the building blocks offered", errors: [] })
       TOOLS_FAILED -> failed
         (set @entity.error ?error)
         (set @entity.status failed)
-        (render-ui @config.statusSlot <typography content={(str/concat "Build failed: " ?error)} variant="caption" />)
         (emit BUILD_REJECTED { error: ?error, errors: [] })
     }
 
@@ -417,12 +402,10 @@ orbital AgentBuilderOrbital {
       DESCRIBED -> failed when (= (array/len (object/get ?result orbitals [])) 0)
         (set @entity.error "The best match has no orbital to fill")
         (set @entity.status failed)
-        (render-ui @config.statusSlot <typography content="Build failed: the best match has no orbital to fill." variant="caption" />)
         (emit BUILD_REJECTED { error: "The best match has no orbital to fill", errors: [] })
       BUILD_FAILED -> failed
         (set @entity.error ?error)
         (set @entity.status failed)
-        (render-ui @config.statusSlot <typography content={(str/concat "Build failed: " ?error)} variant="caption" />)
         (emit BUILD_REJECTED { error: ?error, errors: [] })
     }
 
@@ -452,7 +435,6 @@ orbital AgentBuilderOrbital {
       TOOLS_FAILED -> failed
         (set @entity.error ?error)
         (set @entity.status failed)
-        (render-ui @config.statusSlot <typography content={(str/concat "Build failed: " ?error)} variant="caption" />)
         (emit BUILD_REJECTED { error: ?error, errors: [] })
     }
 
@@ -462,7 +444,6 @@ orbital AgentBuilderOrbital {
       BUILT -> done
         (set @entity.behavior (object/get ?result behavior))
         (set @entity.status done)
-        (render-ui @config.statusSlot <typography content={(str/concat "Built " (object/get ?result behavior))} variant="caption" />)
         (emit BUILD_COMPLETE { orbitalName: @entity.orbitalName, behavior: (object/get ?result behavior), value: (object/get ?result value), tier: (object/get (array/nth @config.ladder @entity.step) name), fields: @entity.filledFields })
       BUILD_FAILED -> filling when (and (= (object/get (array/nth @config.ladder @entity.step) action) "fill") (< @entity.repairs @config.maxRepairs))
         (set @entity.repairs (+ @entity.repairs 1))
@@ -477,7 +458,6 @@ orbital AgentBuilderOrbital {
       BUILD_FAILED -> failed when (or (!= (object/get (array/nth @config.ladder @entity.step) action) "fill") (>= @entity.repairs @config.maxRepairs))
         (set @entity.error ?error)
         (set @entity.status failed)
-        (render-ui @config.statusSlot <typography content={(str/concat "Build failed: " ?error)} variant="caption" />)
         (emit BUILD_REJECTED { error: ?error, errors: (if (== ?errors null) [] ?errors) })
     }
 
@@ -487,7 +467,6 @@ orbital AgentBuilderOrbital {
       RESET -> idle
         (set @entity.status idle)
         (set @entity.pick null)
-        (render-ui @config.statusSlot <typography content="Ready to build." variant="caption" />)
       START -> searching
         (set @entity.request ?request)
         (set @entity.orbitalName ?orbitalName)
@@ -505,7 +484,6 @@ orbital AgentBuilderOrbital {
       RESET -> idle
         (set @entity.status idle)
         (set @entity.pick null)
-        (render-ui @config.statusSlot <typography content="Ready to build." variant="caption" />)
       START -> searching
         (set @entity.request ?request)
         (set @entity.orbitalName ?orbitalName)
@@ -681,5 +659,5 @@ orbital AgentBuilderOrbital {
     }
   }
 
-  page "/agent-builder" as AgentBuilderPage -> BuilderPipeline, BuilderTools, BuilderLlm
+  page boot as AgentBuilderPage -> BuilderPipeline, BuilderTools, BuilderLlm
 }

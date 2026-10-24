@@ -43,7 +43,7 @@ orbital RelatedItemOrbital {
       SHOW_RELATED -> loading
         (fetch RelatedItem {
           emit: { failure: RelatedItemLoadFailed, success: RelatedItemLoaded }
-          filter: (or (= @config.relationField "") (= (object/get @entity @config.relationField) ?key))
+          filter: (or (not (validate/required @config.relationField)) (= (object/get @entity @config.relationField) ?key))
         })
         (render-ui main {
           type: stack
@@ -139,7 +139,7 @@ orbital RelatedItemOrbital {
       SHOW_RELATED -> loading
         (fetch RelatedItem {
           emit: { failure: RelatedItemLoadFailed, success: RelatedItemLoaded }
-          filter: (or (= @config.relationField "") (= (object/get @entity @config.relationField) ?key))
+          filter: (or (not (validate/required @config.relationField)) (= (object/get @entity @config.relationField) ?key))
         })
         (render-ui main {
           type: stack
@@ -175,7 +175,7 @@ orbital RelatedItemOrbital {
       SHOW_RELATED -> loading
         (fetch RelatedItem {
           emit: { failure: RelatedItemLoadFailed, success: RelatedItemLoaded }
-          filter: (or (= @config.relationField "") (= (object/get @entity @config.relationField) ?key))
+          filter: (or (not (validate/required @config.relationField)) (= (object/get @entity @config.relationField) ?key))
         })
         (render-ui main {
           type: stack
@@ -231,13 +231,13 @@ orbital RelatedItemOrbital {
         @label "Section title"
         @description "Heading shown above the related list."
         @tier "presentation"
-      labelField : string = name
+      labelField : field @entity string = name
         @label "Which field labels each related row?"
         @description "Name of the field on the (rebound) related row rendered as the row label and carried as SELECT_RELATED's name — set it to `title` (etc.) whenever the bound entity labels rows differently. The rows are mapped through this at render time, because a trait-level `fields {}` rename is declaration-only on the runtime path and every populated row used to render a blank label."
         @tier "presentation"
-      relationField : string = ""
+      relationField : field @entity
         @label "Relation field"
-        @description "RelatedItem field compared against SHOW_RELATED's key to scope the fetch to one parent document; empty renders the full unfiltered collection (default)."
+        @description "RelatedItem field compared against SHOW_RELATED's key to scope the fetch to one parent document; unset renders the full unfiltered collection (default)."
         @tier "domain"
       tableLook : "dense" | "spacious" | "striped" | "borderless" | "card-rows" = dense
         @label "Table look"

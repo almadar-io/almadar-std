@@ -102,7 +102,7 @@ export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
     })),
     params: [
       { name: 'program', type: { kind: 'sexpr' }, description: 'A quoted program' },
-      { name: 'options', type: openShape({ prior: { kind: 'sexpr' }, final: BOOLEAN, report: BOOLEAN, path: STRING, denyWarnings: BOOLEAN, patterns: STRING, services: STRING }), description: 'An optional prior program (`prior`) and `final` flag; or `{ report: true, path, final?, denyWarnings?, patterns?, services? }`: the report `orb validate --json` prints for the file at the absolute `path` (the program argument is not read)', optional: true },
+      { name: 'options', type: openShape({ prior: { kind: 'sexpr' }, final: BOOLEAN, report: BOOLEAN, path: STRING, denyWarnings: BOOLEAN, patterns: STRING, services: STRING, findings: list(shape({ code: STRING, path: STRING, message: STRING, suggestion: STRING, severity: union(lit('error'), lit('warning')), validValues: list(STRING) }, ['suggestion', 'validValues'])) }), description: 'An optional prior program (`prior`) and `final` flag; or `{ report: true, path, final?, denyWarnings?, patterns?, services?, findings? }`: the report `orb validate --json` prints for the file at the absolute `path` (the program argument is not read); each of `findings` (a std lint\'s) joins the errors or warnings by its severity, positioned through the same source map', optional: true },
       EMIT_OPTIONS,
     ],
     example: '["program/validate", "@entity.program", { "emit": { "success": "CHECKED", "failure": "CHECK_FAILED" } }]',

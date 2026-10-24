@@ -76,7 +76,8 @@
                   ]
                 }
               ]
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "fired": true,
@@ -107,7 +108,8 @@
                       "suggestion": "Provide a valid camelCase field name",
                       "severity": "error"
                     }
-                  ]
+                  ],
+                  "scope": ""
                 }
               }
             ]
@@ -189,7 +191,8 @@
                   ]
                 }
               ]
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "fired": true,
@@ -220,7 +223,8 @@
                       "suggestion": "Add relation: { entity: 'EntityName', cardinality: 'one' }",
                       "severity": "error"
                     }
-                  ]
+                  ],
+                  "scope": ""
                 }
               }
             ]
@@ -310,7 +314,8 @@
                   ]
                 }
               ]
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "fired": true,
@@ -333,7 +338,8 @@
                 "event": "LINT_FOUND",
                 "payload": {
                   "rule": "entity-field-type",
-                  "findings": []
+                  "findings": [],
+                  "scope": ""
                 }
               }
             ]
@@ -1179,7 +1185,8 @@
                   }
                 }
               }
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "fired": true,
@@ -1264,7 +1271,8 @@
                   "spec": true
                 }
               ]
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "fired": true,
@@ -1287,7 +1295,607 @@
                 "event": "LINT_FOUND",
                 "payload": {
                   "rule": "entity-field-type",
-                  "findings": []
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityFieldType"
+        }
+      ]
+    },
+    {
+      "id": "field-name-not-camel-case",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "Title",
+                        "type": "string"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityFieldType"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-field-type",
+                  "findings": [
+                    {
+                      "code": "ORB_E_INVALID_FIELD_NAME",
+                      "path": "orbitals[0].entity.fields[0].name",
+                      "message": "Field name 'Title' should be camelCase",
+                      "suggestion": "Use camelCase for field names (e.g., 'firstName', 'createdAt')",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityFieldType"
+        }
+      ]
+    },
+    {
+      "id": "field-name-with-an-underscore-is-not-camel-case",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "first_name",
+                        "type": "string"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityFieldType"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-field-type",
+                  "findings": [
+                    {
+                      "code": "ORB_E_INVALID_FIELD_NAME",
+                      "path": "orbitals[0].entity.fields[0].name",
+                      "message": "Field name 'first_name' should be camelCase",
+                      "suggestion": "Use camelCase for field names (e.g., 'firstName', 'createdAt')",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityFieldType"
+        }
+      ]
+    },
+    {
+      "id": "control-camel-case-field-names-with-digits",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "firstName2",
+                        "type": "string"
+                      },
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityFieldType"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-field-type",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityFieldType"
+        }
+      ]
+    },
+    {
+      "id": "control-non-latin-program-skips-the-camel-case-check",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": false,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "Title",
+                        "type": "string"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityFieldType"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-field-type",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityFieldType"
+        }
+      ]
+    },
+    {
+      "id": "auxiliary-field-with-an-empty-name",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Row",
+                      "persistence": "runtime",
+                      "fields": [
+                        {
+                          "name": "",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityFieldType"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-field-type",
+                  "findings": [
+                    {
+                      "code": "ORB_E_INVALID_FIELD_NAME",
+                      "path": "orbitals[0].auxiliaryEntities[0].fields[0].name",
+                      "message": "Field name cannot be empty",
+                      "suggestion": "Provide a valid camelCase field name",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityFieldType"
+        }
+      ]
+    },
+    {
+      "id": "auxiliary-field-with-an-invalid-type",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Row",
+                      "persistence": "runtime",
+                      "fields": [
+                        {
+                          "name": "a",
+                          "type": "SExpr"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityFieldType"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-field-type",
+                  "findings": [
+                    {
+                      "code": "ORB_E_INVALID_FIELD_TYPE",
+                      "path": "orbitals[0].auxiliaryEntities[0].fields[0].type",
+                      "message": "Invalid field type: 'SExpr'",
+                      "suggestion": "Use a valid field type",
+                      "severity": "error",
+                      "validValues": [
+                        "string",
+                        "number",
+                        "int",
+                        "boolean",
+                        "date",
+                        "datetime",
+                        "timestamp",
+                        "email",
+                        "url",
+                        "phone",
+                        "uuid",
+                        "image",
+                        "money",
+                        "file",
+                        "bytes",
+                        "CallKey",
+                        "array",
+                        "tuple",
+                        "object",
+                        "enum",
+                        "relation",
+                        "trait",
+                        "orbital",
+                        "behavior",
+                        "slot",
+                        "pattern",
+                        "node",
+                        "event",
+                        "union"
+                      ]
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityFieldType"
+        }
+      ]
+    },
+    {
+      "id": "control-a-tuple-field-is-a-valid-type",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "pair",
+                        "type": "tuple"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityFieldType"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-field-type",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityFieldType"
+        }
+      ]
+    },
+    {
+      "id": "auxiliary-relation-field-without-relation-config",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Row",
+                      "persistence": "runtime",
+                      "fields": [
+                        {
+                          "name": "owner",
+                          "type": "relation"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityFieldType"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-field-type",
+                  "findings": [
+                    {
+                      "code": "ORB_E_INVALID_RELATION",
+                      "path": "orbitals[0].auxiliaryEntities[0].fields[0].relation",
+                      "message": "Relation field requires a 'relation' configuration",
+                      "suggestion": "Add relation: { entity: 'EntityName', cardinality: 'one' }",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
                 }
               }
             ]

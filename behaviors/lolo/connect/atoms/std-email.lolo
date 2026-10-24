@@ -49,7 +49,6 @@ orbital EmailOrbital {
           } { emit: { success: EMAIL_SENDGRID_REPLIED, failure: EMAIL_SENDGRID_FAILED } }))
       EMAIL_SEND -> idle when (and (= @config.vendor resend) (validate/required @payload.templateId))
         (emit EMAIL_SEND_FAILED { code: null, message: "templateId is not supported by the resend provider — use sendgrid or drop templateId" })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Email not sent: templateId is not supported by the resend provider" })
       EMAIL_SEND -> idle when (and (= @config.vendor resend) (not (validate/required @payload.templateId)))
         (http POST @config.resendOrigin "/emails" {
           headers: { Accept: "*/*" },
@@ -72,10 +71,8 @@ orbital EmailOrbital {
         (emit EMAIL_SENT { status: "sent" })
       EMAIL_SENDGRID_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (emit EMAIL_SEND_FAILED { code: null, message: (object/get @config.statusText (str/concat @payload.status) "") })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Email not sent: " (object/get @config.statusText (str/concat @payload.status) "")) })
       EMAIL_SENDGRID_FAILED -> idle
         (emit EMAIL_SEND_FAILED { code: null, message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Email not sent: " @payload.error) })
 
       EMAIL_RESEND_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (!= (json/parse @payload.body ResendReply) null) (!= (object/get (json/parse @payload.body ResendReply) id "") ""))
         (emit EMAIL_SENT { id: (object/get (json/parse @payload.body ResendReply) id ""), status: "sent" })
@@ -83,22 +80,16 @@ orbital EmailOrbital {
         (emit EMAIL_SENT { status: "sent" })
       EMAIL_RESEND_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= (json/parse @payload.body ResendReply) null) (= (str/trim @payload.body) "null"))
         (emit EMAIL_SEND_FAILED { code: null, message: "Resend rejected the email: no message id returned" })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Email not sent: Resend returned no message id" })
       EMAIL_RESEND_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= (json/parse @payload.body ResendReply) null) (!= (str/trim @payload.body) "null"))
         (emit EMAIL_SEND_FAILED { code: null, message: "Resend rejected the email: Unable to fetch data. The request could not be resolved." })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Email not sent: Resend reply was unreadable" })
       EMAIL_RESEND_REPLIED -> idle when (and (or (< @payload.status 200) (>= @payload.status 300)) (!= (json/parse @payload.body ResendReply) null))
         (emit EMAIL_SEND_FAILED { code: null, message: (str/concat "Resend rejected the email: " (if (validate/required (object/get (json/parse @payload.body ResendReply) message "")) (object/get (json/parse @payload.body ResendReply) message "") "no message id returned")) })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Email not sent: Resend rejected the email" })
       EMAIL_RESEND_REPLIED -> idle when (and (or (< @payload.status 200) (>= @payload.status 300)) (= (json/parse @payload.body ResendReply) null) (= (str/trim @payload.body) "null"))
         (emit EMAIL_SEND_FAILED { code: null, message: "Resend rejected the email: no message id returned" })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Email not sent: Resend rejected the email" })
       EMAIL_RESEND_REPLIED -> idle when (and (or (< @payload.status 200) (>= @payload.status 300)) (= (json/parse @payload.body ResendReply) null) (!= (str/trim @payload.body) "null"))
         (emit EMAIL_SEND_FAILED { code: null, message: "Resend rejected the email: Internal server error. We are unable to process your request right now, please try again later." })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Email not sent: Resend rejected the email" })
       EMAIL_RESEND_FAILED -> idle
         (emit EMAIL_SEND_FAILED { code: null, message: "Resend rejected the email: Unable to fetch data. The request could not be resolved." })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Email not sent: " @payload.error) })
     }
 
     emits {
@@ -177,11 +168,6 @@ orbital EmailOrbital {
     }
 
     config {
-      statusSlot : slot = system
-        @label "Status slot"
-        @description "Where the atom reports an unsent email; a page running it in the background keeps it in `system`"
-        @synonyms "status area, slot"
-        @tier "presentation"
       vendor : "sendgrid" | "resend" = sendgrid
         @label "Email vendor"
         @description "The vendor that delivers the mail."
@@ -225,5 +211,5 @@ orbital EmailOrbital {
     }
   }
 
-  page "/email" as EmailPage -> EmailSender
+  page boot as EmailPage -> EmailSender
 }

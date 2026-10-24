@@ -23,11 +23,6 @@ orbital PageWatchOrbital {
     initial: active
 
     config {
-      statusSlot : slot = main
-        @label "Status slot"
-        @description "Where the atom shows its one-line status; an organism running it in the background sends it to `system`"
-        @synonyms "status area, slot"
-        @tier "presentation"
       match : string = "https://example.com/*"
         @label "Pages"
         @description "URL match pattern of the tabs to watch, in Chrome match-pattern syntax (`<scheme>://<host>/<path>` with `*` wildcards)"
@@ -52,16 +47,14 @@ orbital PageWatchOrbital {
     state active {
       INIT -> active
         (browser/tab-watch { match: @config.match, selector: @config.itemSelector, fields: @config.fields, event: @config.itemEvent }
-          { emit: { success: WATCHING, failure: WATCH_FAILED } })
-        (render-ui @config.statusSlot { type: typography, variant: body, role: status, content: "Connecting to the pages…" })
+          { emit: { success: WATCHING, failure: WATCH_CALL_FAILED } })
       WATCHING -> active
         (set @entity.watchId ?watchId)
         (set @entity.status watching)
-        (render-ui @config.statusSlot { type: typography, variant: body, role: status, content: (str/concat "Watching " @config.match) })
-      WATCH_FAILED -> active
+      WATCH_CALL_FAILED -> active
         (set @entity.errorMessage ?error)
         (set @entity.status failed)
-        (render-ui @config.statusSlot { type: typography, variant: body, role: status, content: (str/concat "Can't watch these pages: " ?error) })
+        (emit WATCH_FAILED { error: ?error })
       ITEM_FOUND -> active
         (set @entity.found (+ @entity.found 1))
         (emit ITEM { tab: ?tab, elementId: ?elementId, url: ?url, fields: ?fields })
@@ -70,6 +63,9 @@ orbital PageWatchOrbital {
     emits {
       WATCHING { watchId : string! }
         @description "The watch is attached"
+        @tier "secondary"
+      WATCH_CALL_FAILED { error : string! }
+        @description "The browser could not attach the watch"
         @tier "secondary"
       WATCH_FAILED -> external { error : string! }
         @description "The watch could not be attached (no browser tabs, or no access to the pages)"
@@ -86,5 +82,5 @@ orbital PageWatchOrbital {
     }
   }
 
-  page "/page-watch" as PageWatchPage -> PageWatch
+  page boot as PageWatchPage -> PageWatch
 }

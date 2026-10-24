@@ -22,6 +22,7 @@ orbital OrbLintThemePinContradictsAppOrbital {
 
   entity OrbLintThemePinContradictsAppRun [runtime] {
     id : string!
+    scope : string = ""
     findings : [OrbFinding] = []
   }
 
@@ -31,6 +32,7 @@ orbital OrbLintThemePinContradictsAppOrbital {
     state ready {
       INIT -> ready
       LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
         (set @entity.findings (let ((raw (object/get @payload.program "theme" null)))
           (let ((dq (str/decode-uri-component "%22")) (appKey (if (validate/string @raw) @raw (if (validate/object @raw) (object/get @raw "name" "") ""))) (orbitals (object/get @payload.program "orbitals" [])))
             (if (= @appKey "")
@@ -44,11 +46,11 @@ orbital OrbLintThemePinContradictsAppOrbital {
                         [{ code: "ORB_THEME_PIN_CONTRADICTS_APP", path: (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].theme"), message: (str/concat (object/get @orb "name" "") " pins theme " (str/join (array/map @divergent (fn p (str/concat @dq @p @dq))) ", ") " while the app declares " @dq @appKey @dq " at the app level"), suggestion: (str/concat "remove the config pin so the orbital inherits the app theme via @currentTheme - or, for a deliberate per-orbital override, declare it as the orbital's own `theme " @dq "<key>" @dq "`"), severity: "error" }])))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
-        (emit LINT_FOUND { rule: "theme-pin-contradicts-app", findings: @entity.findings })
+        (emit LINT_FOUND { rule: "theme-pin-contradicts-app", scope: @entity.scope, findings: @entity.findings })
     }
 
     emits {
-      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
         @description "This rule's findings for the file, offered to the lint-all umbrella."
         @tier "internal"
       LINT_FINISH { }
@@ -57,7 +59,7 @@ orbital OrbLintThemePinContradictsAppOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : ThemePinProgram }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : ThemePinProgram  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -94,7 +96,7 @@ orbital OrbLintThemePinContradictsAppOrbital {
       LINT_REQUEST -> external { file : string! }
         @description "Ask the lint input to read and lower this file."
         @tier "internal"
-      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
         @description "The rule trait's findings for the file."
         @tier "internal"
       LINT_INPUT_UNREAD -> external { file : string! }

@@ -2223,6 +2223,239 @@
      }
     }
    ]
+  },
+  {
+   "id": "an absolute goldens file is read without the cwd anchor",
+   "entity": {
+    "file": "/tmp/a/b/c.replay.goldens.json",
+    "files": [
+     "/tmp/a/b/c.replay.goldens.json"
+    ],
+    "fileCursor": 0,
+    "cursor": 0,
+    "lines": []
+   },
+   "steps": [
+    {
+     "from": "reading",
+     "event": "GOLDENS_FILE_NEXT",
+     "payload": {},
+     "expect": {
+      "state": "reading",
+      "effects": [
+       {
+        "type": "os/read-file",
+        "key": "golden",
+        "arg0": [
+         "str/concat",
+         "/",
+         [
+          "str/slice",
+          [
+           "array/nth",
+           "@entity.files",
+           "@entity.fileCursor"
+          ],
+          1,
+          [
+           "str/len",
+           [
+            "array/nth",
+            "@entity.files",
+            "@entity.fileCursor"
+           ]
+          ]
+         ]
+        ],
+        "optionsAt": 1
+       }
+      ]
+     },
+     "trait": "OrbGoldens"
+    }
+   ]
+  },
+  {
+   "id": "control: a relative goldens file is read under the cwd anchor",
+   "entity": {
+    "file": "spec/a/c.replay.goldens.json",
+    "files": [
+     "spec/a/c.replay.goldens.json"
+    ],
+    "fileCursor": 0,
+    "cursor": 0,
+    "lines": []
+   },
+   "steps": [
+    {
+     "from": "reading",
+     "event": "GOLDENS_FILE_NEXT",
+     "payload": {},
+     "expect": {
+      "state": "reading",
+      "effects": [
+       {
+        "type": "os/read-file",
+        "key": "golden",
+        "arg0": {
+         "anchor": "cwd",
+         "path": [
+          "array/nth",
+          "@entity.files",
+          "@entity.fileCursor"
+         ]
+        },
+        "optionsAt": 1
+       }
+      ]
+     },
+     "trait": "OrbGoldens"
+    }
+   ]
+  },
+  {
+   "id": "the atom of an absolute goldens file is read without the cwd anchor",
+   "entity": {
+    "file": "/tmp/a/b/c.replay.goldens.json",
+    "files": [
+     "/tmp/a/b/c.replay.goldens.json"
+    ],
+    "fileCursor": 0,
+    "cursor": 0,
+    "lines": []
+   },
+   "steps": [
+    {
+     "from": "reading",
+     "event": "GOLDENS_FILE_READ",
+     "payload": {
+      "data": "eyJhdG9tIjogIngubG9sbyIsICJ0cmFpdCI6ICJUIiwgImNhc2VzIjogW119"
+     },
+     "expect": {
+      "state": "reading",
+      "effects": [
+       {
+        "type": "os/read-file",
+        "key": "atom",
+        "arg0": [
+         "str/concat",
+         "/",
+         [
+          "str/slice",
+          [
+           "os/path-normalize",
+           [
+            "os/path-join",
+            "@entity.file",
+            "..",
+            "..",
+            "..",
+            [
+             "object/get",
+             [
+              "json/parse",
+              [
+               "bytes/to-string",
+               "@payload.data"
+              ],
+              "{\"version\":1,\"name\":\"GoldenFile\",\"type\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"atom\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[]},{\"name\":\"trait\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[]},{\"name\":\"orbital\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"cases\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenCase\"}},\"required\":true,\"constraints\":[]}]},\"named\":{\"GoldenCase\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"note\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"golden\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"skip\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"entity\",\"fieldType\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"},\"required\":false,\"constraints\":[]},{\"name\":\"config\",\"fieldType\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"},\"required\":false,\"constraints\":[]},{\"name\":\"now\",\"fieldType\":{\"kind\":\"number\"},\"required\":false,\"constraints\":[]},{\"name\":\"id\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[]},{\"name\":\"steps\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenStep\"}},\"required\":true,\"constraints\":[]}]},\"GoldenEmit\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"event\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[]},{\"name\":\"payload\",\"fieldType\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"},\"required\":false,\"constraints\":[]},{\"name\":\"optionsAt\",\"fieldType\":{\"kind\":\"number\"},\"required\":false,\"constraints\":[]}]},\"GoldenPayload\":{\"kind\":\"map\",\"key\":{\"kind\":\"string\"},\"value\":{\"kind\":\"optional\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenValue\"}}},\"GoldenStep\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"keep\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"keepField\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"now\",\"fieldType\":{\"kind\":\"number\"},\"required\":false,\"constraints\":[]},{\"name\":\"viewer\",\"fieldType\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"},\"required\":false,\"constraints\":[]},{\"name\":\"entity\",\"fieldType\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"},\"required\":false,\"constraints\":[]},{\"name\":\"trait\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"orbital\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"from\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"event\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[]},{\"name\":\"payload\",\"fieldType\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"},\"required\":false,\"constraints\":[]},{\"name\":\"expect\",\"fieldType\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"fired\",\"fieldType\":{\"kind\":\"boolean\"},\"required\":false,\"constraints\":[]},{\"name\":\"state\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"emits\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenEmit\"}},\"required\":false,\"constraints\":[]},{\"name\":\"neverEmits\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"string\"}},\"required\":false,\"constraints\":[]},{\"name\":\"exactEmits\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenEmit\"}},\"required\":false,\"constraints\":[]},{\"name\":\"emitCounts\",\"fieldType\":{\"kind\":\"map\",\"key\":{\"kind\":\"string\"},\"value\":{\"kind\":\"number\"}},\"required\":false,\"constraints\":[]},{\"name\":\"effects\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"}},\"required\":false,\"constraints\":[]},{\"name\":\"entity\",\"fieldType\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"},\"required\":false,\"constraints\":[]}]},\"required\":false,\"constraints\":[]}]},\"GoldenValue\":{\"kind\":\"union\",\"variants\":[{\"name\":\"string\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"number\",\"fieldType\":{\"kind\":\"number\"},\"required\":false,\"constraints\":[]},{\"name\":\"boolean\",\"fieldType\":{\"kind\":\"boolean\"},\"required\":false,\"constraints\":[]},{\"name\":\"array\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"optional\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenValue\"}}},\"required\":false,\"constraints\":[]},{\"name\":\"object\",\"fieldType\":{\"kind\":\"map\",\"key\":{\"kind\":\"string\"},\"value\":{\"kind\":\"optional\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenValue\"}}},\"required\":false,\"constraints\":[]}]}}}"
+             ],
+             "atom"
+            ]
+           ]
+          ],
+          1,
+          [
+           "str/len",
+           [
+            "os/path-normalize",
+            [
+             "os/path-join",
+             "@entity.file",
+             "..",
+             "..",
+             "..",
+             [
+              "object/get",
+              [
+               "json/parse",
+               [
+                "bytes/to-string",
+                "@payload.data"
+               ],
+               "{\"version\":1,\"name\":\"GoldenFile\",\"type\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"atom\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[]},{\"name\":\"trait\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[]},{\"name\":\"orbital\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"cases\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenCase\"}},\"required\":true,\"constraints\":[]}]},\"named\":{\"GoldenCase\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"note\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"golden\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"skip\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"entity\",\"fieldType\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"},\"required\":false,\"constraints\":[]},{\"name\":\"config\",\"fieldType\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"},\"required\":false,\"constraints\":[]},{\"name\":\"now\",\"fieldType\":{\"kind\":\"number\"},\"required\":false,\"constraints\":[]},{\"name\":\"id\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[]},{\"name\":\"steps\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenStep\"}},\"required\":true,\"constraints\":[]}]},\"GoldenEmit\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"event\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[]},{\"name\":\"payload\",\"fieldType\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"},\"required\":false,\"constraints\":[]},{\"name\":\"optionsAt\",\"fieldType\":{\"kind\":\"number\"},\"required\":false,\"constraints\":[]}]},\"GoldenPayload\":{\"kind\":\"map\",\"key\":{\"kind\":\"string\"},\"value\":{\"kind\":\"optional\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenValue\"}}},\"GoldenStep\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"keep\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"keepField\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"now\",\"fieldType\":{\"kind\":\"number\"},\"required\":false,\"constraints\":[]},{\"name\":\"viewer\",\"fieldType\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"},\"required\":false,\"constraints\":[]},{\"name\":\"entity\",\"fieldType\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"},\"required\":false,\"constraints\":[]},{\"name\":\"trait\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"orbital\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"from\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"event\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[]},{\"name\":\"payload\",\"fieldType\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"},\"required\":false,\"constraints\":[]},{\"name\":\"expect\",\"fieldType\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"fired\",\"fieldType\":{\"kind\":\"boolean\"},\"required\":false,\"constraints\":[]},{\"name\":\"state\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"emits\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenEmit\"}},\"required\":false,\"constraints\":[]},{\"name\":\"neverEmits\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"string\"}},\"required\":false,\"constraints\":[]},{\"name\":\"exactEmits\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenEmit\"}},\"required\":false,\"constraints\":[]},{\"name\":\"emitCounts\",\"fieldType\":{\"kind\":\"map\",\"key\":{\"kind\":\"string\"},\"value\":{\"kind\":\"number\"}},\"required\":false,\"constraints\":[]},{\"name\":\"effects\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"}},\"required\":false,\"constraints\":[]},{\"name\":\"entity\",\"fieldType\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"},\"required\":false,\"constraints\":[]}]},\"required\":false,\"constraints\":[]}]},\"GoldenValue\":{\"kind\":\"union\",\"variants\":[{\"name\":\"string\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"number\",\"fieldType\":{\"kind\":\"number\"},\"required\":false,\"constraints\":[]},{\"name\":\"boolean\",\"fieldType\":{\"kind\":\"boolean\"},\"required\":false,\"constraints\":[]},{\"name\":\"array\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"optional\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenValue\"}}},\"required\":false,\"constraints\":[]},{\"name\":\"object\",\"fieldType\":{\"kind\":\"map\",\"key\":{\"kind\":\"string\"},\"value\":{\"kind\":\"optional\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenValue\"}}},\"required\":false,\"constraints\":[]}]}}}"
+              ],
+              "atom"
+             ]
+            ]
+           ]
+          ]
+         ]
+        ],
+        "optionsAt": 1
+       }
+      ]
+     },
+     "trait": "OrbGoldens"
+    }
+   ]
+  },
+  {
+   "id": "control: the atom of a relative goldens file is read under the cwd anchor",
+   "entity": {
+    "file": "spec/a/c.replay.goldens.json",
+    "files": [
+     "spec/a/c.replay.goldens.json"
+    ],
+    "fileCursor": 0,
+    "cursor": 0,
+    "lines": []
+   },
+   "steps": [
+    {
+     "from": "reading",
+     "event": "GOLDENS_FILE_READ",
+     "payload": {
+      "data": "eyJhdG9tIjogIngubG9sbyIsICJ0cmFpdCI6ICJUIiwgImNhc2VzIjogW119"
+     },
+     "expect": {
+      "state": "reading",
+      "effects": [
+       {
+        "type": "os/read-file",
+        "key": "atom",
+        "arg0": {
+         "anchor": "cwd",
+         "path": [
+          "os/path-normalize",
+          [
+           "os/path-join",
+           "@entity.file",
+           "..",
+           "..",
+           "..",
+           [
+            "object/get",
+            [
+             "json/parse",
+             [
+              "bytes/to-string",
+              "@payload.data"
+             ],
+             "{\"version\":1,\"name\":\"GoldenFile\",\"type\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"atom\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[]},{\"name\":\"trait\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[]},{\"name\":\"orbital\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"cases\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenCase\"}},\"required\":true,\"constraints\":[]}]},\"named\":{\"GoldenCase\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"note\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"golden\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"skip\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"entity\",\"fieldType\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"},\"required\":false,\"constraints\":[]},{\"name\":\"config\",\"fieldType\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"},\"required\":false,\"constraints\":[]},{\"name\":\"now\",\"fieldType\":{\"kind\":\"number\"},\"required\":false,\"constraints\":[]},{\"name\":\"id\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[]},{\"name\":\"steps\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenStep\"}},\"required\":true,\"constraints\":[]}]},\"GoldenEmit\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"event\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[]},{\"name\":\"payload\",\"fieldType\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"},\"required\":false,\"constraints\":[]},{\"name\":\"optionsAt\",\"fieldType\":{\"kind\":\"number\"},\"required\":false,\"constraints\":[]}]},\"GoldenPayload\":{\"kind\":\"map\",\"key\":{\"kind\":\"string\"},\"value\":{\"kind\":\"optional\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenValue\"}}},\"GoldenStep\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"keep\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"keepField\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"now\",\"fieldType\":{\"kind\":\"number\"},\"required\":false,\"constraints\":[]},{\"name\":\"viewer\",\"fieldType\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"},\"required\":false,\"constraints\":[]},{\"name\":\"entity\",\"fieldType\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"},\"required\":false,\"constraints\":[]},{\"name\":\"trait\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"orbital\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"from\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"event\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[]},{\"name\":\"payload\",\"fieldType\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"},\"required\":false,\"constraints\":[]},{\"name\":\"expect\",\"fieldType\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"fired\",\"fieldType\":{\"kind\":\"boolean\"},\"required\":false,\"constraints\":[]},{\"name\":\"state\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"emits\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenEmit\"}},\"required\":false,\"constraints\":[]},{\"name\":\"neverEmits\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"string\"}},\"required\":false,\"constraints\":[]},{\"name\":\"exactEmits\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenEmit\"}},\"required\":false,\"constraints\":[]},{\"name\":\"emitCounts\",\"fieldType\":{\"kind\":\"map\",\"key\":{\"kind\":\"string\"},\"value\":{\"kind\":\"number\"}},\"required\":false,\"constraints\":[]},{\"name\":\"effects\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"}},\"required\":false,\"constraints\":[]},{\"name\":\"entity\",\"fieldType\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"},\"required\":false,\"constraints\":[]}]},\"required\":false,\"constraints\":[]}]},\"GoldenValue\":{\"kind\":\"union\",\"variants\":[{\"name\":\"string\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"number\",\"fieldType\":{\"kind\":\"number\"},\"required\":false,\"constraints\":[]},{\"name\":\"boolean\",\"fieldType\":{\"kind\":\"boolean\"},\"required\":false,\"constraints\":[]},{\"name\":\"array\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"optional\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenValue\"}}},\"required\":false,\"constraints\":[]},{\"name\":\"object\",\"fieldType\":{\"kind\":\"map\",\"key\":{\"kind\":\"string\"},\"value\":{\"kind\":\"optional\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenValue\"}}},\"required\":false,\"constraints\":[]}]}}}"
+            ],
+            "atom"
+           ]
+          ]
+         ]
+        },
+        "optionsAt": 1
+       }
+      ]
+     },
+     "trait": "OrbGoldens"
+    }
+   ]
   }
  ]
 }

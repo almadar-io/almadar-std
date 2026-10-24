@@ -56,7 +56,6 @@ orbital ApiKeysOrbital {
               }))))
       SEED_FAILED -> idle
         (emit API_KEY_FAILED { code: null, message: ?error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "API key not minted: " ?error) })
     }
 
     state saving {
@@ -64,14 +63,12 @@ orbital ApiKeysOrbital {
 
       SALT_UNUSABLE -> idle
         (emit API_KEY_FAILED { code: null, message: "The API key salt credential is missing or is not non-empty hex" })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "API key not minted: the salt credential is missing or not hex" })
       KEY_SAVED -> idle
         (emit API_KEY_MINTED { plaintext: @entity.plaintext, keyHash: @entity.keyHash, lastFour: @entity.lastFour })
         (set @entity.plaintext "")
       KEY_NOT_SAVED -> idle
         (set @entity.plaintext "")
         (emit API_KEY_FAILED { code: ?code, message: ?error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "API key not minted: " ?error) })
     }
 
     emits {
@@ -135,11 +132,6 @@ orbital ApiKeysOrbital {
         @description "Name of the credential holding the hex salt API keys are hashed with. The server verifying keys (apiKeyVerifier) must hold the same value."
         @synonyms "api key salt, hashing salt"
         @tier "infra"
-      statusSlot : slot = system
-        @label "Status slot"
-        @description "Where the atom reports a key it could not mint; a page running it in the background keeps it in `system`"
-        @synonyms "status area, slot"
-        @tier "presentation"
       prefix : string = "sk_live_"
         @label "Key prefix"
         @description "What every key starts with; a presented bearer with this prefix is routed to the key verifier."
@@ -148,5 +140,5 @@ orbital ApiKeysOrbital {
     }
   }
 
-  page "/keys" as ApiKeysPage -> ApiKeyMinter
+  page boot as ApiKeysPage -> ApiKeyMinter
 }

@@ -12,9 +12,10 @@ uses LintEngine from "std/behaviors/std-orb-lint-engine"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
 type RuleFound = { rule : string!, findings : [OrbFinding]! }
-type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error", validValues : [string] }
 type ReportFinding = { code : string!, path : string, message : string!, suggestion : string, fixGuidance : string, expectedShape : string, validValues : [string], line : number, column : number, endLine : number, endColumn : number, approximate : boolean, needsInstall : boolean }
 type ReportStats = { orbitals : number!, entities : number!, traits : number!, pages : number! }
+type ValidateOptions = { report : boolean!, path : string!, final : boolean!, denyWarnings : boolean!, patterns : string, services : string }
 type ValidationReport = { success : boolean!, valid : boolean!, errors : [ReportFinding], warnings : [ReportFinding], stats : ReportStats }
 
 orbital Lint = LintEngine.orbitals.OrbLintEngineOrbital {
@@ -34,6 +35,9 @@ orbital OrbValidateOrbital {
     errors : [ReportFinding] = []
     warnings : [ReportFinding] = []
     valid : boolean = false
+    options : ValidateOptions
+    lintUnread : boolean = false
+    lintError : string = ""
   }
 
   trait ArgsCli = Args.traits.ArgsParser {
@@ -125,37 +129,37 @@ orbital OrbValidateOrbital {
 
     state idle {
       INIT -> idle
-      VALIDATE_START -> validating
+      VALIDATE_START -> linting
         (set @entity.cwd @payload.cwd)
         (set @entity.file @payload.file)
         (set @entity.json @payload.json)
         (set @entity.denyWarnings @payload.denyWarnings)
-        (program/validate null (object/merge (object/merge { report: true path: @payload.path final: @payload.finalProgram denyWarnings: @payload.denyWarnings } (if @payload.hasPatterns { patterns: @payload.patterns } {})) (if @payload.hasServices { services: @payload.services } {})) { key: "validate" emit: { success: VALIDATE_CHECKED, failure: VALIDATE_REFUSED } })
+        (set @entity.lintUnread false)
+        (set @entity.options (object/merge (object/merge { report: true path: @payload.path final: @payload.finalProgram denyWarnings: @payload.denyWarnings } (if @payload.hasPatterns { patterns: @payload.patterns } {})) (if @payload.hasServices { services: @payload.services } {})))
+        (emit LINT_RUN { file: @payload.file })
+    }
+
+    state linting {
+      INIT -> linting
+      LINT_COLLECTED -> validating
+        (program/validate null (object/merge @entity.options { findings: @payload.findings }) { key: "validate" emit: { success: VALIDATE_CHECKED, failure: VALIDATE_REFUSED } })
+      LINT_INPUT_UNREAD -> validating
+        (set @entity.lintUnread true)
+        (set @entity.lintError @payload.error)
+        (program/validate null @entity.options { key: "validate" emit: { success: VALIDATE_CHECKED, failure: VALIDATE_REFUSED } })
     }
 
     state validating {
       INIT -> validating
       VALIDATE_REFUSED -> idle
         (emit VALIDATE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " @payload.error) })
-      VALIDATE_CHECKED -> linting
+      VALIDATE_CHECKED -> idle when (and @entity.lintUnread (= (array/len (object/get @payload.result "errors" [])) 0))
+        (emit VALIDATE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: the file could not be read or lowered for the lint rules: " @entity.file (if (= @entity.lintError "") "" (str/concat ": " @entity.lintError))) })
+      VALIDATE_CHECKED -> rendering when (or (not @entity.lintUnread) (> (array/len (object/get @payload.result "errors" [])) 0))
         (set @entity.report @payload.result)
-        (emit LINT_RUN { file: @entity.file })
-    }
-
-    state linting {
-      INIT -> linting
-      LINT_COLLECTED -> merging
-        (emit VALIDATE_MERGE { findings: @payload.findings })
-      LINT_INPUT_UNREAD -> idle
-        (emit VALIDATE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: the file could not be read or lowered for the lint rules: " @payload.file) })
-    }
-
-    state merging {
-      INIT -> merging
-      VALIDATE_MERGE -> rendering
-        (set @entity.errors (array/concat (object/get @entity.report "errors" []) (array/map (array/filter @payload.findings (fn x (= (object/get @x "severity") "error"))) (fn x (if (= (object/get @x "suggestion") "") { code: (object/get @x "code"), path: (object/get @x "path"), message: (object/get @x "message") } { code: (object/get @x "code"), path: (object/get @x "path"), message: (object/get @x "message"), suggestion: (object/get @x "suggestion") })))))
-        (set @entity.warnings (array/concat (object/get @entity.report "warnings" []) (array/map (array/filter @payload.findings (fn x (= (object/get @x "severity") "warning"))) (fn x (if (= (object/get @x "suggestion") "") { code: (object/get @x "code"), path: (object/get @x "path"), message: (object/get @x "message") } { code: (object/get @x "code"), path: (object/get @x "path"), message: (object/get @x "message"), suggestion: (object/get @x "suggestion") })))))
-        (set @entity.valid (and (object/get @entity.report "valid" false) (= (array/len (array/filter @payload.findings (fn x (= (object/get @x "severity") "error")))) 0) (or (not @entity.denyWarnings) (= (array/len (array/filter @payload.findings (fn x (= (object/get @x "severity") "warning")))) 0))))
+        (set @entity.errors (object/get @payload.result "errors" []))
+        (set @entity.warnings (object/get @payload.result "warnings" []))
+        (set @entity.valid (object/get @payload.result "valid" false))
         (emit VALIDATE_RENDER { })
     }
 
@@ -189,18 +193,13 @@ orbital OrbValidateOrbital {
       VALIDATE_CHECKED {
         result : ValidationReport!
       }
-        @description "program/validate: the report orb validate --json prints."
+        @description "program/validate: the report orb validate --json prints, the lint findings placed and positioned in it."
         @tier "internal"
       LINT_RUN -> external { file : string! }
         @description "Ask the composed std-orb-lint-engine to lint the file; it answers LINT_COLLECTED."
         @tier "internal"
-      VALIDATE_MERGE {
-        findings : [OrbFinding]!
-      }
-        @description "Internal: the policy lint findings to merge into the report."
-        @tier "internal"
       VALIDATE_RENDER { }
-        @description "Internal: the report is merged, print it."
+        @description "Internal: the report holds the core and lint findings, print it."
         @tier "internal"
     }
 
@@ -221,12 +220,12 @@ orbital OrbValidateOrbital {
       OrbValidate.VALIDATE_START -> VALIDATE_START
       LINT_COLLECTED { findings : [OrbFinding]!  found : [RuleFound]! }
         @description "std-orb-lint-engine's LINT_COLLECTED: every rule's findings for the file."
-      LINT_INPUT_UNREAD { file : string! }
+      LINT_INPUT_UNREAD { file : string!  error : string! }
         @description "std-orb-lint-input's LINT_INPUT_UNREAD: the file could not be read or lowered."
       Lint.OrbLintEngine.LINT_COLLECTED -> LINT_COLLECTED
       Lint.OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
     }
   }
 
-  page "/orb-validate" as OrbValidatePage -> OrbValidate, ArgsCli, ValidateEngine
+  page boot as OrbValidatePage -> OrbValidate, ArgsCli, ValidateEngine
 }

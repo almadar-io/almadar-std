@@ -1304,6 +1304,79 @@
      }
     }
    ]
+  },
+  {
+   "id": "an absolute program file is read without the cwd anchor",
+   "entity": {
+    "argText": "[{\"trait\":\"Sender\",\"event\":\"GO\"}]",
+    "stepsText": "[{\"trait\":\"Sender\",\"event\":\"GO\"}]",
+    "mode": "steps",
+    "path": "/tmp/a.lolo",
+    "file": "/tmp/a.lolo"
+   },
+   "steps": [
+    {
+     "trait": "OrbExecute",
+     "from": "checking",
+     "event": "EXEC_CHECK",
+     "payload": {},
+     "expect": {
+      "state": "reading",
+      "effects": [
+       {
+        "type": "os/read-file",
+        "key": "program",
+        "optionsAt": 1,
+        "arg0": [
+         "str/concat",
+         "/",
+         [
+          "str/slice",
+          "@entity.path",
+          1,
+          [
+           "str/len",
+           "@entity.path"
+          ]
+         ]
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a relative program file is read under the cwd anchor",
+   "entity": {
+    "argText": "[{\"trait\":\"Sender\",\"event\":\"GO\"}]",
+    "stepsText": "[{\"trait\":\"Sender\",\"event\":\"GO\"}]",
+    "mode": "steps",
+    "path": "a.lolo",
+    "file": "a.lolo"
+   },
+   "steps": [
+    {
+     "trait": "OrbExecute",
+     "from": "checking",
+     "event": "EXEC_CHECK",
+     "payload": {},
+     "expect": {
+      "state": "reading",
+      "effects": [
+       {
+        "type": "os/read-file",
+        "key": "program",
+        "optionsAt": 1,
+        "arg0": {
+         "anchor": "cwd",
+         "path": "@entity.path"
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

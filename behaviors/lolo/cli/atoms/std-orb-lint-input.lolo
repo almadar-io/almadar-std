@@ -3,15 +3,25 @@ app std-orb-lint-input [
   env: ["PATH"],
   exec: ["orb"],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
-  description: "std-orb-lint-input — the one place a lint run reads its file. For a LINT_REQUEST { file } it reads the file, scans the installed language packs (std-orb-language's engine, std-semver for the range check), decides from the raw text whether the program is in the English vocabulary (a .orb document by its top-level keys, a .lolo source by its first token), lowers it with program/read and answers LINT_INPUT { file, raw, latin, program } to every rule trait that listens; an unreadable or unlowerable file, or a failed pack scan, answers LINT_INPUT_UNREAD { file }. A rule trait only analyzes this input; the rule cli traits and the lint-all umbrella each issue one request."
+  description: "std-orb-lint-input — the one place a lint run reads its file. For a LINT_REQUEST { file } it reads the file, scans the installed language packs (std-orb-language's engine, std-semver for the range check), decides from the raw text whether the program is in the English vocabulary (a .orb document by its top-level keys, a .lolo source by its first token), reads the installed @almadar/core component mapping (the root the language scan reports) and answers LINT_COMPONENTS { names }, reads the installed @almadar/std operator table and answers LINT_OPERATORS { names } (the names with no namespace), resolves it with program/read { resolve } (the inlined program `orb resolve` prints, its `uses lazy` behaviors split off) and answers LINT_LAZY { orbitals } (the lazy children by orbital) and LINT_INPUT { file, raw, latin, program } to every rule trait that listens; a LINT_CHILD_REQUEST { index } answers LINT_INPUT again with that lazy child's program and its orbital as `scope` (empty for the program itself), which each rule echoes in LINT_FOUND; an unreadable or unlowerable file, or a failed pack scan, answers LINT_INPUT_UNREAD { file }. A rule trait only analyzes this input; the rule cli traits and the lint-all umbrella each issue one request."
 ]
 uses Spec from "almadar-std/lint-input"
 uses Language from "std/behaviors/std-orb-language"
 type DocObject = Map string DocValue
 type DocValue = string | number | boolean | [DocValue] | Map string DocValue
 type LintValue = string | number | boolean | [LintValue?] | Map string LintValue?
+type LazyChild = { orbital : string!, program : LintValue! }
+type ResolvedProgram = { program : LintValue!, lazy : [LazyChild]! }
 type PackText = { name : string!, text : string! }
 type PackMeta = { code : string! }
+type CoreLanguageBlock = { componentMapping : string }
+type CoreManifest = { orbLanguage : CoreLanguageBlock? }
+type ComponentMappingEntry = { component : string! }
+type StdLanguageBlock = { operators : string }
+type StdManifest = { orbLanguage : StdLanguageBlock? }
+type OperatorEntry = { category : string }
+type OperatorTable = { operators : Map string OperatorEntry! }
+type ComponentMappingFile = { mappings : Map string ComponentMappingEntry! }
 type PackVocab = { meta : PackMeta!, keywords : Map string string, orb : Map string string }
 
 orbital OrbLintInputOrbital {
@@ -20,9 +30,13 @@ orbital OrbLintInputOrbital {
   entity OrbLintInputRun [runtime] {
     id : string!
     file : string = ""
+    cwd : string = ""
     raw : string = ""
     packs : [PackText] = []
     latin : boolean = true
+    lazy : [LazyChild] = []
+    coreRoot : string = ""
+    stdRoot : string = ""
   }
 
   trait Versions = Semver.traits.Semver {
@@ -51,22 +65,25 @@ orbital OrbLintInputOrbital {
       LINT_REQUEST -> reading
         (set @entity.file @payload.file)
         (set @entity.packs [])
-        (os/read-file { anchor: "cwd" path: @payload.file } { key: "lint-input-file" emit: { success: LINT_FILE_READ, failure: LINT_FILE_UNREAD } })
+        (os/realpath { anchor: "cwd" path: "." } { key: "lint-input-cwd" emit: { success: LINT_CWD, failure: LINT_FILE_UNREAD } })
+      LINT_CHILD_REQUEST -> ready
+        (emit LINT_INPUT { file: @entity.file, raw: @entity.raw, latin: @entity.latin, program: (object/get (array/nth @entity.lazy @payload.index) "program"), scope: (object/get (array/nth @entity.lazy @payload.index) "orbital") })
     }
 
     state reading {
       INIT -> reading
+      LINT_CWD -> reading
+        (set @entity.cwd @payload.path)
+        (os/read-file (str/concat "/" (os/path-relative "/" (if (os/path-is-absolute @entity.file) @entity.file (os/path-join @payload.path @entity.file)))) { key: "lint-input-file" emit: { success: LINT_FILE_READ, failure: LINT_FILE_UNREAD } })
       LINT_FILE_READ -> reading
         (set @entity.raw (bytes/to-string @payload.data))
-        (os/realpath { anchor: "cwd" path: "." } { key: "lint-input-cwd" emit: { success: LINT_CWD, failure: LINT_FILE_UNREAD } })
-      LINT_CWD -> reading
-        (emit LINT_PACKS_RUN { cwd: @payload.path })
+        (emit LINT_PACKS_RUN { cwd: @entity.cwd })
       LANGUAGE_PACK_VOCAB_HEARD -> reading
         (set @entity.packs (array/append @entity.packs { name: @payload.name, text: @payload.text }))
       LANG_SCAN_ANSWERED -> ready when (!= @payload.status 200)
-        (emit LINT_INPUT_UNREAD { file: @entity.file })
+        (emit LINT_INPUT_UNREAD { file: @entity.file, error: (str/concat "the language pack scan failed: " @payload.stderr) })
       LANGUAGE_PACKS_DONE_HEARD -> ready when (!= @payload.problem "")
-        (emit LINT_INPUT_UNREAD { file: @entity.file })
+        (emit LINT_INPUT_UNREAD { file: @entity.file, error: @payload.problem })
       LANGUAGE_PACKS_DONE_HEARD -> reading when (= @payload.problem "")
         (set @entity.latin (let ((words ["app", "uses", "expects", "type", "theme", "orbital"]) (vocabs (array/map @entity.packs (fn k (json/parse (object/get @k "text") PackVocab)))))
           (if (str/startsWith (str/trim @entity.raw) "{")
@@ -75,18 +92,75 @@ orbital OrbLintInputOrbital {
             (let ((tok (array/first (str/split (array/first (str/split (array/first (str/split (str/trim (array/find (str/split @entity.raw "\n") (fn l (let ((t (str/trim @l))) (and (!= @t "") (not (str/startsWith @t ";;"))))))) " ")) "[")) "("))))
               (or (array/includes @words @tok) (not (array/some @vocabs (fn v (array/some @words (fn w (= (object/get (object/get @v "keywords" {}) @w "") @tok)))))))))))
         (emit LINT_LANGUAGE { latin: @entity.latin })
-        (program/read @entity.raw { emit: { success: LINT_PROGRAM_READ, failure: LINT_FILE_UNREAD } })
+        (set @entity.coreRoot @payload.coreRoot)
+        (set @entity.stdRoot @payload.stdRoot)
+        (emit LINT_CORE_READ { })
+      LINT_CORE_READ -> ready when (= @entity.coreRoot "")
+        (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the language scan found no compatible @almadar/core" })
+      LINT_CORE_READ -> reading when (!= @entity.coreRoot "")
+        (os/read-file (str/concat "/" (os/path-relative "/" (os/path-join @entity.coreRoot "package.json"))) { key: "lint-input-core" emit: { success: LINT_CORE_MANIFEST, failure: LINT_FILE_UNREAD } })
+      LINT_CORE_MANIFEST -> ready when (= (object/get (object/get (json/parse (bytes/to-string @payload.data) CoreManifest) "orbLanguage" {}) "componentMapping" "") "")
+        (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the installed @almadar/core declares no orbLanguage.componentMapping" })
+      LINT_CORE_MANIFEST -> reading when (!= (object/get (object/get (json/parse (bytes/to-string @payload.data) CoreManifest) "orbLanguage" {}) "componentMapping" "") "")
+        (os/read-file (str/concat "/" (os/path-relative "/" (os/path-join @entity.coreRoot (object/get (object/get (json/parse (bytes/to-string @payload.data) CoreManifest) "orbLanguage" {}) "componentMapping" "")))) { key: "lint-input-components" emit: { success: LINT_MAPPING_READ, failure: LINT_FILE_UNREAD } })
+      LINT_MAPPING_READ -> ready when (= (json/parse (bytes/to-string @payload.data) ComponentMappingFile) null)
+        (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the installed @almadar/core component mapping is not a component mapping" })
+      LINT_MAPPING_READ -> reading when (!= (json/parse (bytes/to-string @payload.data) ComponentMappingFile) null)
+        (emit LINT_COMPONENTS { names: (array/sort (array/unique (array/map (object/values (object/get (json/parse (bytes/to-string @payload.data) ComponentMappingFile) "mappings")) (fn m (object/get @m "component"))))) })
+        (emit LINT_STD_READ { })
+      LINT_STD_READ -> ready when (= @entity.stdRoot "")
+        (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the language scan found no compatible @almadar/std" })
+      LINT_STD_READ -> reading when (!= @entity.stdRoot "")
+        (os/read-file (str/concat "/" (os/path-relative "/" (os/path-join @entity.stdRoot "package.json"))) { key: "lint-input-std" emit: { success: LINT_STD_MANIFEST, failure: LINT_FILE_UNREAD } })
+      LINT_STD_MANIFEST -> ready when (= (object/get (object/get (json/parse (bytes/to-string @payload.data) StdManifest) "orbLanguage" {}) "operators" "") "")
+        (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the installed @almadar/std declares no orbLanguage.operators" })
+      LINT_STD_MANIFEST -> reading when (!= (object/get (object/get (json/parse (bytes/to-string @payload.data) StdManifest) "orbLanguage" {}) "operators" "") "")
+        (os/read-file (str/concat "/" (os/path-relative "/" (os/path-join @entity.stdRoot (object/get (object/get (json/parse (bytes/to-string @payload.data) StdManifest) "orbLanguage" {}) "operators" "")))) { key: "lint-input-operators" emit: { success: LINT_TABLE_READ, failure: LINT_FILE_UNREAD } })
+      LINT_TABLE_READ -> ready when (= (json/parse (bytes/to-string @payload.data) OperatorTable) null)
+        (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the installed @almadar/std operator table is not an operator table" })
+      LINT_TABLE_READ -> reading when (!= (json/parse (bytes/to-string @payload.data) OperatorTable) null)
+        (emit LINT_OPERATORS { names: (array/sort (array/filter (object/keys (object/get (json/parse (bytes/to-string @payload.data) OperatorTable) "operators")) (fn n (not (str/includes @n "/"))))) })
+        (program/read "" { resolve: true text: false path: (if (os/path-is-absolute @entity.file) @entity.file (os/path-join @entity.cwd @entity.file)) } { emit: { success: LINT_PROGRAM_READ, failure: LINT_FILE_UNREAD } })
       LINT_PROGRAM_READ -> ready
-        (emit LINT_INPUT { file: @entity.file, raw: @entity.raw, latin: @entity.latin, program: @payload.result })
+        (set @entity.lazy (object/get @payload.result "lazy" []))
+        (emit LINT_LAZY { orbitals: (array/map (object/get @payload.result "lazy" []) (fn c (object/get @c "orbital"))) })
+        (emit LINT_INPUT { file: @entity.file, raw: @entity.raw, latin: @entity.latin, program: (object/get @payload.result "program"), scope: "" })
       LINT_FILE_UNREAD -> ready
-        (emit LINT_INPUT_UNREAD { file: @entity.file })
+        (emit LINT_INPUT_UNREAD { file: @entity.file, error: (or @payload.error "") })
     }
 
     emits {
-      LINT_INPUT -> external { file : string!  raw : string!  latin : boolean!  program : LintValue! }
+      LINT_INPUT -> external { file : string!  raw : string!  latin : boolean!  program : LintValue!  scope : string! }
         @description "The file read, its language decided and the program lowered, offered to every rule trait."
         @tier "internal"
-      LINT_INPUT_UNREAD -> external { file : string! }
+      LINT_COMPONENTS -> external { names : [string]! }
+        @description "The UI component names of the installed @almadar/core component mapping (an entity named like one collides in compiled output); sent before LINT_INPUT."
+        @tier "internal"
+      LINT_OPERATORS -> external { names : [string]! }
+        @description "The installed operator names with no namespace (`if`, `+`, `and`, …): a default array headed by one is an operator call, not data; sent before LINT_INPUT."
+        @tier "internal"
+      LINT_STD_READ { }
+        @description "Internal: read the installed @almadar/std operator table."
+        @tier "internal"
+      LINT_STD_MANIFEST { data : bytes! }
+        @description "The installed @almadar/std package.json read."
+        @tier "internal"
+      LINT_TABLE_READ { data : bytes! }
+        @description "The installed @almadar/std operator table read."
+        @tier "internal"
+      LINT_CORE_READ { }
+        @description "Internal: read the installed @almadar/core component mapping."
+        @tier "internal"
+      LINT_CORE_MANIFEST { data : bytes! }
+        @description "The installed @almadar/core package.json read."
+        @tier "internal"
+      LINT_MAPPING_READ { data : bytes! }
+        @description "The installed @almadar/core component mapping read."
+        @tier "internal"
+      LINT_LAZY -> external { orbitals : [string]! }
+        @description "The resolved program's lazy children, by orbital, in the order LINT_CHILD_REQUEST indexes them."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string!  error : string! }
         @description "The file could not be read or lowered, or the language scan failed."
         @tier "internal"
       LINT_LANGUAGE -> external { latin : boolean! }
@@ -98,8 +172,8 @@ orbital OrbLintInputOrbital {
       LINT_FILE_UNREAD { error : string }
         @description "The file could not be read or lowered."
         @tier "internal"
-      LINT_PROGRAM_READ { result : LintValue! }
-        @description "The file lowered by program/read."
+      LINT_PROGRAM_READ { result : ResolvedProgram! }
+        @description "The file resolved by program/read."
         @tier "internal"
       LINT_PACKS_RUN { cwd : string! }
         @description "Ask the language engine to scan the installed language packs."
@@ -112,12 +186,14 @@ orbital OrbLintInputOrbital {
     listens {
       LINT_REQUEST { file : string! }
         @description "The lint request this trait answers: the cli trait of a rule or the umbrella routes its LINT_REQUEST here."
+      LINT_CHILD_REQUEST { index : number! }
+        @description "Offer the rules the lazy child at this index of LINT_LAZY's orbitals; the lint engine asks once per child."
       LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
         @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
       LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
         @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
-      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
-        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string!  coreRoot : string!  stdRoot : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished, with the installed @almadar/core root when it is compatible."
       Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
       Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
       Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD

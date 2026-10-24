@@ -49,7 +49,6 @@ orbital ConceptIconOrbital {
         (emit CONCEPT_ICON_FAILED { code: "CONFLICT", message: "A concept icon lookup is already running" })
       CONCEPT_ICON_CACHE_FAILED -> idle
         (emit CONCEPT_ICON_FAILED { code: "SERVICE_ERROR", message: ?error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Concept icon unavailable: " ?error) })
       CONCEPT_ICON_CACHE_LOADED -> idle when (and (> (array/len ?data) 0) (!= (or (object/get (array/first ?data) icon "") "") ""))
         (emit CONCEPT_ICON_RESULT { icon: (object/get (array/first ?data) icon ""), tone: (object/get (array/first ?data) tone "none") })
       CONCEPT_ICON_CACHE_LOADED -> idle when (and (> (array/len ?data) 0) (= (or (object/get (array/first ?data) icon "") "") ""))
@@ -119,7 +118,6 @@ orbital ConceptIconOrbital {
         (emit CONCEPT_ICON_RESULT { icon: @entity.resultIcon, tone: @entity.resultTone })
       CONCEPT_ICON_STORE_FAILED -> idle
         (emit CONCEPT_ICON_FAILED { code: "SERVICE_ERROR", message: ?error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Concept icon unavailable: " ?error) })
     }
 
     emits {
@@ -173,14 +171,6 @@ orbital ConceptIconOrbital {
       }
         @description "Internal: the lookup outcome could not be cached."
         @tier "secondary"
-    }
-
-    config {
-      statusSlot : slot = system
-        @label "Status slot"
-        @description "Where the resolver reports an icon cache that could not be read or written; a page running it in the background keeps it in `system`"
-        @synonyms "status area, slot"
-        @tier "presentation"
     }
 
     listens {
@@ -241,5 +231,5 @@ orbital ConceptIconOrbital {
     }
   }
 
-  page "/concept-icon" as ConceptIconPage -> ConceptIconResolver, ConceptIconApi
+  page boot as ConceptIconPage -> ConceptIconResolver, ConceptIconApi
 }

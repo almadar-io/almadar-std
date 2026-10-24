@@ -139,7 +139,6 @@ orbital QueueOrbital {
         (emit JOB_ENQUEUED { jobId: @entity.wantId, position: (array/len ?data) })
       EnqFailed -> idle
         (emit QUEUE_FAILED { op: "enqueue", error: ?error, code: ?code })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Queue unavailable: " ?error) })
       CANCEL -> idle
         (set @entity.wantId ?jobId)
         (fetch @config.jobEntity {
@@ -164,7 +163,6 @@ orbital QueueOrbital {
         (emit JOB_CANCELLED { jobId: @entity.wantId, cancelled: false })
       CancelFailed -> idle when (!= ?code "duplicate-id")
         (emit QUEUE_FAILED { op: "cancel", error: ?error, code: ?code })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Queue unavailable: " ?error) })
     }
 
     emits {
@@ -259,11 +257,6 @@ orbital QueueOrbital {
         @description "The persisted job record. It must supply queue, priority, status (pending | processing | completed | failed), enqueuedAt, availableAt, attempts, leaseExpiresAt, result and error; its own fields (the payload) are whatever the app declares."
         @synonyms "job record, task entity"
         @tier "domain"
-      statusSlot : slot = system
-        @label "Status slot"
-        @description "Where the atom reports an unreachable store; a page running it in the background keeps it in `system`"
-        @synonyms "status area, slot"
-        @tier "presentation"
     }
   }
 
@@ -354,7 +347,6 @@ orbital QueueOrbital {
         })
       DeqFailed -> idle when (!= ?code "duplicate-id")
         (emit QUEUE_FAILED { op: "dequeue", error: ?error, code: ?code })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Queue unavailable: " ?error) })
     }
 
     emits {
@@ -441,11 +433,6 @@ orbital QueueOrbital {
         @description "The persisted job record. It must supply queue, priority, status (pending | processing | completed | failed), enqueuedAt, availableAt, attempts, leaseExpiresAt, result and error; its own fields (the payload) are whatever the app declares."
         @synonyms "job record, task entity"
         @tier "domain"
-      statusSlot : slot = system
-        @label "Status slot"
-        @description "Where the atom reports an unreachable store; a page running it in the background keeps it in `system`"
-        @synonyms "status area, slot"
-        @tier "presentation"
       leaseMs : number = 30000
         @label "Lease length (ms)"
         @description "How long a consumer holds a dequeued job before another DEQUEUE may take it over"
@@ -507,7 +494,6 @@ orbital QueueOrbital {
         (emit LEASE_LOST { jobId: @entity.wantId, attempt: @entity.wantAttempt, op: "fail" })
       FinFailed -> idle when (!= ?code "duplicate-id")
         (emit QUEUE_FAILED { op: "settle", error: ?error, code: ?code })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Queue unavailable: " ?error) })
     }
 
     emits {
@@ -588,11 +574,6 @@ orbital QueueOrbital {
         @description "The persisted job record. It must supply queue, priority, status (pending | processing | completed | failed), enqueuedAt, availableAt, attempts, leaseExpiresAt, result and error; its own fields (the payload) are whatever the app declares."
         @synonyms "job record, task entity"
         @tier "domain"
-      statusSlot : slot = system
-        @label "Status slot"
-        @description "Where the atom reports an unreachable store; a page running it in the background keeps it in `system`"
-        @synonyms "status area, slot"
-        @tier "presentation"
     }
   }
 
@@ -632,7 +613,6 @@ orbital QueueOrbital {
         })
       InspectFailed -> idle
         (emit QUEUE_FAILED { op: "inspect", error: ?error, code: ?code })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Queue unavailable: " ?error) })
     }
 
     emits {
@@ -706,13 +686,8 @@ orbital QueueOrbital {
         @description "The persisted job record. It must supply queue, priority, status (pending | processing | completed | failed), enqueuedAt, availableAt, attempts, leaseExpiresAt, result and error; its own fields (the payload) are whatever the app declares."
         @synonyms "job record, task entity"
         @tier "domain"
-      statusSlot : slot = system
-        @label "Status slot"
-        @description "Where the atom reports an unreachable store; a page running it in the background keeps it in `system`"
-        @synonyms "status area, slot"
-        @tier "presentation"
     }
   }
 
-  page "/queue" as QueuePage -> QueueProducer, QueueConsumer, QueueFinisher, QueueInspector
+  page boot as QueuePage -> QueueProducer, QueueConsumer, QueueFinisher, QueueInspector
 }

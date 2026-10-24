@@ -65,7 +65,6 @@ orbital ConceptPersonaOrbital {
         (emit CONCEPT_PERSONA_FAILED { code: "CONFLICT", message: "A concept persona lookup is already running" })
       CONCEPT_PERSONA_CACHE_FAILED -> idle
         (emit CONCEPT_PERSONA_FAILED { code: "SERVICE_ERROR", message: ?error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Concept persona unavailable: " ?error) })
       CONCEPT_PERSONA_CACHE_LOADED -> answering when (> (array/len ?data) 0)
         (set @entity.resultName (object/get (array/first ?data) name ""))
         (set @entity.resultDescription (object/get (array/first ?data) description ""))
@@ -138,7 +137,6 @@ orbital ConceptPersonaOrbital {
         (emit CONCEPT_PERSONA_ANSWER {})
       CONCEPT_PERSONA_STORE_FAILED -> answering
         (emit CONCEPT_PERSONA_ANSWER {})
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Concept persona not cached: " ?error) })
     }
 
     state answering {
@@ -221,11 +219,6 @@ orbital ConceptPersonaOrbital {
     }
 
     config {
-      statusSlot : slot = system
-        @label "Status slot"
-        @description "Where the resolver reports a persona cache that could not be read; a page running it in the background keeps it in `system`"
-        @synonyms "status area, slot"
-        @tier "presentation"
       systemPrompt : string = "You identify the single most historically credited HUMAN originator, inventor, or creator of a learning concept, then greet a learner in their voice. The concept may be a programming language, framework, library, algorithm, data structure, mathematical/scientific concept, theory, or technique. Use the concept name alone to determine the DISCIPLINE and disambiguate it. Reply ONLY with compact JSON: {\"name\":<a SPECIFIC REAL HUMAN BEING's full canonical name as it would title a Wikipedia article, e.g. \"Isaac Newton\", \"Brendan Eich\">,\"description\":<one sentence, max ~20 words: who they are + key contribution>,\"greeting\":<one warm first-person sentence, in character, mentioning the concept>}. HARD RULES: \"name\" MUST be a human being. It must NEVER be the concept name itself, nor an animal, object, place, or product. If the concept is an invention, name its inventor/creator. If no single person is credited, name the most iconic human contributor or the field's founder. Never invent a fictional person."
         @label "Persona drafting prompt"
         @description "The system prompt that makes the model name the single most credited human originator of the concept and greet the learner in their voice; it must ask for compact JSON with name, description and greeting."
@@ -286,5 +279,5 @@ orbital ConceptPersonaOrbital {
     }
   }
 
-  page "/concept-persona" as ConceptPersonaPage -> ConceptPersonaResolver, PersonaLlmApi, PersonaWikiApi
+  page boot as ConceptPersonaPage -> ConceptPersonaResolver, PersonaLlmApi, PersonaWikiApi
 }

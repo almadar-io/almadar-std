@@ -2,7 +2,7 @@ app std-orb-reference [
   version: "1.0.0",
   inbound: ["cli-reference"],
   fs: { cwd: "**": [read] },
-  description: "std-orb-reference — the `orb reference [TOPIC]` command (spec/cli/orb-reference.lolo; port of orbital-cli commands/reference.rs). It reads the installed @almadar/core package.json, follows its orbLanguage block to the constructs, validation-codes and vocabulary tables, and answers one compact JSON line (a value read from the tables keeps the table's key order as the Rust verb prints it; the index's own keys come out alphabetical, codes then constructs then vocabulary): no topic lists the constructs, the vocabulary and the code topics (codes/<category> with a count); `vocabulary` prints the vocabulary; `codes/<category>` lists that category's codes; any other topic names a construct (case-insensitive) with its doc and fields. examples are cut from the installed almadar-std `.lolo` tree as orbital_lolo::reference::examples does: every `.lolo` file under the package's orb.source in path order, each construct the config's examplePaths names printed by program/print `{ source, nodes }` (comments dropped; a file that does not parse gives none), stable-sorted by byte length, adjacent repeats dropped, then the item at index n/2 and the one at n*9/10 (sorted, unique); a construct with no entry has none, and a std package without an orb.source tree is an error. The scan runs twice (counts per length, then the two items). An unknown topic or an empty category answers status 500 (exit 1); more than one word or an unknown flag answers the usage (status 400, exit 2)."
+  description: "std-orb-reference — the `orb reference [TOPIC]` command (spec/cli/orb-reference.lolo; port of orbital-cli commands/reference.rs). It reads the installed @almadar/core package.json, follows its orbLanguage block to the constructs, validation-codes and vocabulary tables, and answers one compact JSON line (a value read from the tables keeps the table's key order as the Rust verb prints it; the index's own keys come out alphabetical, codes then constructs then vocabulary): no topic lists the constructs, the vocabulary and the code topics (codes/<category> with a count); `vocabulary` prints the vocabulary; `codes/<category>` lists that category's codes; any other topic names a construct (case-insensitive) with its doc and fields. examples are cut from the installed almadar-std `.lolo` tree as orbital_lolo::reference::examples does: every `.lolo` file under the package's orb.source in path order, each construct the config's examplePaths names printed by program/print `{ source, nodes }` (comments dropped; a file that does not parse gives none), stable-sorted by byte length, adjacent repeats dropped, then the item at index n/2 and the one at n*9/10 (sorted, unique); a construct with no entry has none, and a std package without an orb.source tree is an error. The scan runs once: each printed example becomes a key (byte length, scan position) unless it equals the last example of its length, each print records its place, and when the scan ends the two items are picked from the sorted keys and printed again from their places. An unknown topic or an empty category answers status 500 (exit 1); more than one word or an unknown flag answers the usage (status 400, exit 2)."
 ]
 uses Spec from "almadar-std/orb-reference"
 uses Args from "std/behaviors/std-args"
@@ -20,10 +20,8 @@ type RefPackageManifest = { orb : RefPackageOrb? }
 type RefPackageOrb = { source : string? }
 type RefEntry = { name : string!, kind : string! }
 type RefKeyedPath = { key : string!, path : string! }
-type RefTally = { counts : Map string number!, lasts : Map string string!, pick : [string]! }
-type RefGroup = { key : string!, n : number!, last : string! }
-type RefAcc = { key : string!, prev : string!, n : number!, groups : [RefGroup]!, picks : [string]! }
-type RefRanks = { cum : number!, a : number!, ak : number!, fa : boolean!, b : number!, bk : number!, fb : boolean! }
+type RefWant = { fi : number!, ji : number!, ri : number! }
+type RefScan = { lasts : Map string string!, keys : [number]! }
 type RefVocabulary = { keywords : [string]!, shapes : [string]!, tags : [string]!, categories : [string]!, capabilities : [string]!, annotations : [string]!, sigils : [string]!, effects : [string]!, types : [string]!, units : [string]!, literals : [string]!, reservedEvents : [string]! }
 
 orbital OrbReferenceOrbital {
@@ -45,13 +43,14 @@ orbital OrbReferenceOrbital {
     source : string = ""
     jobs : [string] = []
     jcursor : number = 0
-    tally : RefTally = { counts: {}, lasts: {}, pick: [] }
-    pass : number = 1
-    acc : RefAcc = { key: "", prev: "", n: 0, groups: [], picks: [] }
-    wantA : number = 0
-    wantAk : number = 0
-    wantB : number = 0
-    wantBk : number = 0
+    lasts : Map string string = {}
+    keys : [number] = []
+    pseq : [number] = []
+    ploc : [number] = []
+    seen : number = 0
+    wants : [RefWant] = []
+    wcursor : number = 0
+    picked : [string] = []
   }
 
   trait ArgsCli = Args.traits.ArgsParser {
@@ -172,8 +171,11 @@ orbital OrbReferenceOrbital {
         (set @entity.hit (array/find @payload.constructs (fn c (= (str/lower (object/get @c "name")) (str/lower @payload.topic)))))
         (set @entity.constructs [])
         (set @entity.vocabulary { keywords: [], shapes: [], tags: [], categories: [], capabilities: [], annotations: [], sigils: [], effects: [], types: [], units: [], literals: [], reservedEvents: [] })
-        (set @entity.tally { counts: {}, lasts: {}, pick: [] })
-        (set @entity.pass 1)
+        (set @entity.lasts {})
+        (set @entity.keys [])
+        (set @entity.pseq [])
+        (set @entity.ploc [])
+        (set @entity.seen 0)
         (set @entity.files [])
         (set @entity.dirs [])
         (set @entity.dcursor 0)
@@ -210,53 +212,94 @@ orbital OrbReferenceOrbital {
         (emit EXAMPLES_WALK { })
       EXAMPLES_NEXT -> finding when (< @entity.fcursor (array/len @entity.files))
         (os/read-file { anchor: "cwd" path: (array/nth @entity.files @entity.fcursor) } { key: "file" emit: { success: EXAMPLES_READ, failure: EXAMPLES_FAILED } })
-      EXAMPLES_NEXT -> finding when (and (>= @entity.fcursor (array/len @entity.files)) (= @entity.pass 1) (= (array/sum (object/values (object/get @entity.tally "counts"))) 0))
-        (emit EXAMPLES_FINISH { })
-      EXAMPLES_NEXT -> finding when (and (>= @entity.fcursor (array/len @entity.files)) (= @entity.pass 1) (> (array/sum (object/values (object/get @entity.tally "counts"))) 0))
-        (let ((ranks (array/reduce (array/sort (array/map (object/keys (object/get @entity.tally "counts")) (fn k (str/to-int (str/slice @k 1 (str/len @k)))))) { cum: 0, a: 0, ak: 0, fa: false, b: 0, bk: 0, fb: false } (fn r l (let ((c (object/get (object/get @entity.tally "counts") (str/concat "l" @l)))) (let ((hitA (and (not (object/get @r "fa")) (< (math/floor (/ (array/sum (object/values (object/get @entity.tally "counts"))) 2)) (+ (object/get @r "cum") @c)))) (hitB (and (not (object/get @r "fb")) (< (math/floor (/ (* (array/sum (object/values (object/get @entity.tally "counts"))) 9) 10)) (+ (object/get @r "cum") @c))))) { cum: (+ (object/get @r "cum") @c), a: (if @hitA @l (object/get @r "a")), ak: (if @hitA (- (math/floor (/ (array/sum (object/values (object/get @entity.tally "counts"))) 2)) (object/get @r "cum")) (object/get @r "ak")), fa: (or (object/get @r "fa") @hitA), b: (if @hitB @l (object/get @r "b")), bk: (if @hitB (- (math/floor (/ (* (array/sum (object/values (object/get @entity.tally "counts"))) 9) 10)) (object/get @r "cum")) (object/get @r "bk")), fb: (or (object/get @r "fb") @hitB) }))))))
-          (do
-            (set @entity.wantA (object/get @ranks "a"))
-            (set @entity.wantAk (object/get @ranks "ak"))
-            (set @entity.wantB (object/get @ranks "b"))
-            (set @entity.wantBk (object/get @ranks "bk"))
-            (set @entity.tally { counts: {}, lasts: {}, pick: [] })
-            (set @entity.pass 2)
-            (set @entity.fcursor 0)
-            (emit EXAMPLES_SECOND { })))
-      EXAMPLES_SECOND -> finding
-        (emit EXAMPLES_NEXT { })
-      EXAMPLES_NEXT -> finding when (and (>= @entity.fcursor (array/len @entity.files)) (= @entity.pass 2))
+      EXAMPLES_NEXT -> finding when (>= @entity.fcursor (array/len @entity.files))
         (emit EXAMPLES_FINISH { })
       EXAMPLES_READ -> finding when (> (array/len (object/get @config.examplePaths (object/get @entity.hit "name"))) 0)
         (set @entity.source (bytes/to-string @payload.data))
         (set @entity.jobs (object/get @config.examplePaths (object/get @entity.hit "name")))
         (set @entity.jcursor 0)
-        (emit EXAMPLES_PRINT { })
+        (program/print null { source: @entity.source, nodes: (array/nth @entity.jobs 0) } { key: "print" emit: { success: EXAMPLES_PRINTED, failure: EXAMPLES_SKIPPED } })
       EXAMPLES_READ -> finding when (= (array/len (object/get @config.examplePaths (object/get @entity.hit "name"))) 0)
         (set @entity.source (bytes/to-string @payload.data))
         (program/print null { source: (bytes/to-string @payload.data), nodes: "orbitals[*]" } { key: "count" emit: { success: EXAMPLES_COUNTED, failure: EXAMPLES_UNPARSED } })
-      EXAMPLES_COUNTED -> finding
+      EXAMPLES_COUNTED -> finding when (> (array/len @payload.result) 0)
         (set @entity.jobs (array/flatten (array/map (array/range (array/len @payload.result)) (fn i (if (= (object/get @entity.hit "name") "EntityField") [(str/concat "orbitals[" @i "].entity.fields[*]"), (str/concat "orbitals[" @i "].entities[*].fields[*]")] [(str/concat "orbitals[" @i "].entity"), (str/concat "orbitals[" @i "].entities[*]")])))))
         (set @entity.jcursor 0)
-        (emit EXAMPLES_PRINT { })
-      EXAMPLES_UNPARSED -> finding
+        (program/print null { source: @entity.source, nodes: (array/nth @entity.jobs 0) } { key: "print" emit: { success: EXAMPLES_PRINTED, failure: EXAMPLES_SKIPPED } })
+      EXAMPLES_COUNTED -> finding when (and (= (array/len @payload.result) 0) (< (+ @entity.fcursor 1) (array/len @entity.files)))
         (set @entity.fcursor (+ @entity.fcursor 1))
-        (emit EXAMPLES_NEXT { })
-      EXAMPLES_PRINT -> finding when (< @entity.jcursor (array/len @entity.jobs))
+        (os/read-file { anchor: "cwd" path: (array/nth @entity.files @entity.fcursor) } { key: "file" emit: { success: EXAMPLES_READ, failure: EXAMPLES_FAILED } })
+      EXAMPLES_COUNTED -> finding when (and (= (array/len @payload.result) 0) (>= (+ @entity.fcursor 1) (array/len @entity.files)))
+        (set @entity.fcursor (+ @entity.fcursor 1))
+        (emit EXAMPLES_FINISH { })
+      EXAMPLES_UNPARSED -> finding when (< (+ @entity.fcursor 1) (array/len @entity.files))
+        (set @entity.fcursor (+ @entity.fcursor 1))
+        (os/read-file { anchor: "cwd" path: (array/nth @entity.files @entity.fcursor) } { key: "file" emit: { success: EXAMPLES_READ, failure: EXAMPLES_FAILED } })
+      EXAMPLES_UNPARSED -> finding when (>= (+ @entity.fcursor 1) (array/len @entity.files))
+        (set @entity.fcursor (+ @entity.fcursor 1))
+        (emit EXAMPLES_FINISH { })
+      EXAMPLES_PRINTED -> finding when (< (+ @entity.jcursor 1) (array/len @entity.jobs))
+        (set @entity.pseq (array/append @entity.pseq @entity.seen))
+        (set @entity.ploc (array/append @entity.ploc (+ (* @entity.fcursor 1000000) @entity.jcursor)))
+        (let ((scan : RefScan (array/reduce (array/range (array/len @payload.result)) { lasts: @entity.lasts, keys: @entity.keys } (fn a i (let ((t (array/nth @payload.result @i)) (n (bytes/length (bytes/from-string (array/nth @payload.result @i))))) (let ((hk (str/concat "l" @n)) (h (hash/sha256 @t "hex" "text"))) { lasts: (object/set (object/get @a "lasts") @hk @h), keys: (if (= (object/get (object/get @a "lasts") @hk) @h) (object/get @a "keys") (array/append (object/get @a "keys") (+ (* @n 1000000000) @entity.seen @i))) }))))))
+          (do
+            (set @entity.lasts (object/get @scan "lasts"))
+            (set @entity.keys (object/get @scan "keys"))))
+        (set @entity.seen (+ @entity.seen (array/len @payload.result)))
+        (set @entity.jcursor (+ @entity.jcursor 1))
         (program/print null { source: @entity.source, nodes: (array/nth @entity.jobs @entity.jcursor) } { key: "print" emit: { success: EXAMPLES_PRINTED, failure: EXAMPLES_SKIPPED } })
-      EXAMPLES_PRINT -> finding when (>= @entity.jcursor (array/len @entity.jobs))
+      EXAMPLES_PRINTED -> finding when (and (>= (+ @entity.jcursor 1) (array/len @entity.jobs)) (< (+ @entity.fcursor 1) (array/len @entity.files)))
+        (set @entity.pseq (array/append @entity.pseq @entity.seen))
+        (set @entity.ploc (array/append @entity.ploc (+ (* @entity.fcursor 1000000) @entity.jcursor)))
+        (let ((scan : RefScan (array/reduce (array/range (array/len @payload.result)) { lasts: @entity.lasts, keys: @entity.keys } (fn a i (let ((t (array/nth @payload.result @i)) (n (bytes/length (bytes/from-string (array/nth @payload.result @i))))) (let ((hk (str/concat "l" @n)) (h (hash/sha256 @t "hex" "text"))) { lasts: (object/set (object/get @a "lasts") @hk @h), keys: (if (= (object/get (object/get @a "lasts") @hk) @h) (object/get @a "keys") (array/append (object/get @a "keys") (+ (* @n 1000000000) @entity.seen @i))) }))))))
+          (do
+            (set @entity.lasts (object/get @scan "lasts"))
+            (set @entity.keys (object/get @scan "keys"))))
+        (set @entity.seen (+ @entity.seen (array/len @payload.result)))
         (set @entity.fcursor (+ @entity.fcursor 1))
-        (emit EXAMPLES_NEXT { })
-      EXAMPLES_PRINTED -> finding
-        (set @entity.acc (let ((init : RefAcc { key: "", prev: "", n: 0, groups: [], picks: [] }) (lasts (object/get @entity.tally "lasts")) (counts (object/get @entity.tally "counts"))) (array/reduce (array/sort (array/map @payload.result (fn s { len: (bytes/length (bytes/from-string @s)), text: @s })) "len" "asc") @init (fn a r (let ((key (str/concat "l" (object/get @r "len")))) (let ((same (= (object/get @a "key") @key))) (let ((start (if @same (object/get @a "prev") (or (object/get @lasts @key) "")))) (let ((n0 (if @same (object/get @a "n") 0)) (kept (if @same (!= (object/get @r "text") @start) (!= (hash/sha256 (object/get @r "text") "hex" "text") @start)))) (object/merge { key: @key, prev: (if @kept (object/get @r "text") @start), n: (+ @n0 (if @kept 1 0)) } { groups: (if (or @same (= (object/get @a "key") "")) (object/get @a "groups") (array/append (object/get @a "groups") (object/merge { key: (object/get @a "key"), n: (object/get @a "n") } { last: (hash/sha256 (object/get @a "prev") "hex" "text") }))), picks: (if (and @kept (= @entity.pass 2) (or (and (= @key (str/concat "l" @entity.wantA)) (= (+ (or (object/get @counts @key) 0) @n0) @entity.wantAk)) (and (= @key (str/concat "l" @entity.wantB)) (= (+ (or (object/get @counts @key) 0) @n0) @entity.wantBk)))) (array/append (object/get @a "picks") (object/get @r "text")) (object/get @a "picks")) })))))))))
-        (set @entity.tally (let ((counts (object/get @entity.tally "counts")) (lasts (object/get @entity.tally "lasts")) (groups (array/filter (array/append (object/get @entity.acc "groups") (object/merge { key: (object/get @entity.acc "key"), n: (object/get @entity.acc "n") } { last: (hash/sha256 (object/get @entity.acc "prev") "hex" "text") })) (fn g (> (object/get @g "n") 0)))) (pick (object/get @entity.tally "pick"))) (object/merge { counts: (object/merge @counts (array/reduce @groups {} (fn o g (object/set @o (object/get @g "key") (+ (or (object/get @counts (object/get @g "key")) 0) (object/get @g "n")))))) } { lasts: (object/merge @lasts (array/reduce @groups {} (fn o g (object/set @o (object/get @g "key") (object/get @g "last"))))), pick: (array/concat @pick (object/get @entity.acc "picks")) })))
+        (os/read-file { anchor: "cwd" path: (array/nth @entity.files @entity.fcursor) } { key: "file" emit: { success: EXAMPLES_READ, failure: EXAMPLES_FAILED } })
+      EXAMPLES_PRINTED -> finding when (and (>= (+ @entity.jcursor 1) (array/len @entity.jobs)) (>= (+ @entity.fcursor 1) (array/len @entity.files)))
+        (set @entity.pseq (array/append @entity.pseq @entity.seen))
+        (set @entity.ploc (array/append @entity.ploc (+ (* @entity.fcursor 1000000) @entity.jcursor)))
+        (let ((scan : RefScan (array/reduce (array/range (array/len @payload.result)) { lasts: @entity.lasts, keys: @entity.keys } (fn a i (let ((t (array/nth @payload.result @i)) (n (bytes/length (bytes/from-string (array/nth @payload.result @i))))) (let ((hk (str/concat "l" @n)) (h (hash/sha256 @t "hex" "text"))) { lasts: (object/set (object/get @a "lasts") @hk @h), keys: (if (= (object/get (object/get @a "lasts") @hk) @h) (object/get @a "keys") (array/append (object/get @a "keys") (+ (* @n 1000000000) @entity.seen @i))) }))))))
+          (do
+            (set @entity.lasts (object/get @scan "lasts"))
+            (set @entity.keys (object/get @scan "keys"))))
+        (set @entity.seen (+ @entity.seen (array/len @payload.result)))
+        (set @entity.fcursor (+ @entity.fcursor 1))
+        (emit EXAMPLES_FINISH { })
+      EXAMPLES_SKIPPED -> finding when (< (+ @entity.jcursor 1) (array/len @entity.jobs))
         (set @entity.jcursor (+ @entity.jcursor 1))
-        (emit EXAMPLES_PRINT { })
-      EXAMPLES_SKIPPED -> finding
-        (set @entity.jcursor (+ @entity.jcursor 1))
-        (emit EXAMPLES_PRINT { })
-      EXAMPLES_FINISH -> idle
-        (emit REFERENCE_ANSWERED { status: 200, body: (json/stringify (object/merge @entity.hit { examples: (array/sort (array/unique (object/get @entity.tally "pick"))) })) })
+        (program/print null { source: @entity.source, nodes: (array/nth @entity.jobs @entity.jcursor) } { key: "print" emit: { success: EXAMPLES_PRINTED, failure: EXAMPLES_SKIPPED } })
+      EXAMPLES_SKIPPED -> finding when (and (>= (+ @entity.jcursor 1) (array/len @entity.jobs)) (< (+ @entity.fcursor 1) (array/len @entity.files)))
+        (set @entity.fcursor (+ @entity.fcursor 1))
+        (os/read-file { anchor: "cwd" path: (array/nth @entity.files @entity.fcursor) } { key: "file" emit: { success: EXAMPLES_READ, failure: EXAMPLES_FAILED } })
+      EXAMPLES_SKIPPED -> finding when (and (>= (+ @entity.jcursor 1) (array/len @entity.jobs)) (>= (+ @entity.fcursor 1) (array/len @entity.files)))
+        (set @entity.fcursor (+ @entity.fcursor 1))
+        (emit EXAMPLES_FINISH { })
+      EXAMPLES_FINISH -> idle when (= (array/len @entity.keys) 0)
+        (emit REFERENCE_ANSWERED { status: 200, body: (json/stringify (object/merge @entity.hit { examples: [] })) })
+      EXAMPLES_FINISH -> finding when (> (array/len @entity.keys) 0)
+        (let ((sorted (array/sort @entity.keys)))
+          (do
+            (set @entity.wants (array/map (let ((ia (math/floor (/ (array/len @sorted) 2))) (ib (math/floor (/ (* (array/len @sorted) 9) 10)))) (if (= @ia @ib) [(array/nth @sorted @ia)] [(array/nth @sorted @ia), (array/nth @sorted @ib)])) (fn k (let ((seq (- @k (* (math/floor (/ @k 1000000000)) 1000000000)))) (let ((p (array/last (array/filter (array/range (array/len @entity.pseq)) (fn q (<= (array/nth @entity.pseq @q) @seq)))))) (let ((loc (array/nth @entity.ploc @p))) { fi: (math/floor (/ @loc 1000000)), ji: (- @loc (* (math/floor (/ @loc 1000000)) 1000000)), ri: (- @seq (array/nth @entity.pseq @p)) }))))))
+            (set @entity.lasts {})
+            (set @entity.keys [])
+            (set @entity.pseq [])
+            (set @entity.ploc [])
+            (set @entity.wcursor 0)
+            (set @entity.picked [])
+            (emit EXAMPLES_FETCH { })))
+      EXAMPLES_FETCH -> finding when (< @entity.wcursor (array/len @entity.wants))
+        (os/read-file { anchor: "cwd" path: (array/nth @entity.files (object/get (array/nth @entity.wants @entity.wcursor) "fi")) } { key: "pick" emit: { success: EXAMPLES_FETCHED, failure: EXAMPLES_FAILED } })
+      EXAMPLES_FETCH -> idle when (>= @entity.wcursor (array/len @entity.wants))
+        (emit REFERENCE_ANSWERED { status: 200, body: (json/stringify (object/merge @entity.hit { examples: (array/sort (array/unique @entity.picked)) })) })
+      EXAMPLES_FETCHED -> finding
+        (program/print null { source: (bytes/to-string @payload.data), nodes: (let ((ji (object/get (array/nth @entity.wants @entity.wcursor) "ji")) (paths (object/get @config.examplePaths (object/get @entity.hit "name")))) (if (> (array/len @paths) 0) (array/nth @paths @ji) (let ((k (math/floor (/ @ji 2))) (second (- @ji (* 2 (math/floor (/ @ji 2)))))) (if (= (object/get @entity.hit "name") "EntityField") (if (= @second 0) (str/concat "orbitals[" @k "].entity.fields[*]") (str/concat "orbitals[" @k "].entities[*].fields[*]")) (if (= @second 0) (str/concat "orbitals[" @k "].entity") (str/concat "orbitals[" @k "].entities[*]")))))) } { key: "pick" emit: { success: EXAMPLES_PICKED, failure: EXAMPLES_FAILED } })
+      EXAMPLES_PICKED -> finding
+        (set @entity.picked (array/append @entity.picked (array/nth @payload.result (object/get (array/nth @entity.wants @entity.wcursor) "ri"))))
+        (set @entity.wcursor (+ @entity.wcursor 1))
+        (emit EXAMPLES_FETCH { })
     }
 
     config {
@@ -333,17 +376,23 @@ orbital OrbReferenceOrbital {
       }
         @description "Internal: read the next std file."
         @tier "internal"
-      EXAMPLES_PRINT {
+      EXAMPLES_FETCH {
       }
-        @description "Internal: print the next path of this file."
+        @description "Internal: re-print the next chosen example."
         @tier "internal"
-      EXAMPLES_SECOND {
+      EXAMPLES_FETCHED {
+        data : bytes!
       }
-        @description "Internal: scan the files again for the two chosen examples."
+        @description "os/read-file: the file of a chosen example."
+        @tier "internal"
+      EXAMPLES_PICKED {
+        result : [string]!
+      }
+        @description "program/print: the node of a chosen example, formatted."
         @tier "internal"
       EXAMPLES_FINISH {
       }
-        @description "Internal: pick the examples."
+        @description "Internal: pick the two examples from the sorted list."
         @tier "internal"
       REFERENCE_FAILED {
         error : string

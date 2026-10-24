@@ -45,7 +45,6 @@ orbital RiggerOrbital {
         (emit RIGGER_HEALTH_CHECKED { ok: (and (>= @payload.status 200) (< @payload.status 300)) })
       RIGGER_HEALTH_UNREACHABLE -> idle
         (emit RIGGER_HEALTH_FAILED { code: null, message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Rigger unavailable: " @payload.error) })
 
       RIGGER_BUILD_MESH -> idle
         (http POST @config.origin "/mesh/build" {
@@ -67,7 +66,6 @@ orbital RiggerOrbital {
             }))
       RIGGER_BUILD_MESH_UNREACHABLE -> idle
         (emit RIGGER_BUILD_MESH_FAILED { code: null, message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Rigger unavailable: " @payload.error) })
 
       RIGGER_RENDER -> idle
         (http POST @config.origin "/render" {
@@ -89,7 +87,6 @@ orbital RiggerOrbital {
             }))
       RIGGER_RENDER_UNREACHABLE -> idle
         (emit RIGGER_RENDER_FAILED { code: null, message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Rigger unavailable: " @payload.error) })
 
       RIGGER_LIST_PRESETS -> idle
         (http GET @config.origin "/presets" {
@@ -110,7 +107,6 @@ orbital RiggerOrbital {
             }))
       RIGGER_LIST_PRESETS_UNREACHABLE -> idle
         (emit RIGGER_LIST_PRESETS_FAILED { code: null, message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Rigger unavailable: " @payload.error) })
 
       RIGGER_LOAD_RIG -> idle
         (http POST @config.origin "/rig/load" {
@@ -132,7 +128,6 @@ orbital RiggerOrbital {
             }))
       RIGGER_LOAD_RIG_UNREACHABLE -> idle
         (emit RIGGER_LOAD_RIG_FAILED { code: null, message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Rigger unavailable: " @payload.error) })
 
       RIGGER_SAVE_RIG -> idle
         (http POST @config.origin "/rig/save" {
@@ -154,7 +149,6 @@ orbital RiggerOrbital {
             }))
       RIGGER_SAVE_RIG_UNREACHABLE -> idle
         (emit RIGGER_SAVE_RIG_FAILED { code: null, message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Rigger unavailable: " @payload.error) })
 
       RIGGER_OWNERSHIP -> idle
         (http POST @config.origin "/ownership" {
@@ -176,7 +170,6 @@ orbital RiggerOrbital {
             }))
       RIGGER_OWNERSHIP_UNREACHABLE -> idle
         (emit RIGGER_OWNERSHIP_FAILED { code: null, message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Rigger unavailable: " @payload.error) })
 
       RIGGER_BUILD_LAYERS -> idle
         (http POST @config.origin "/layers" {
@@ -198,7 +191,6 @@ orbital RiggerOrbital {
             }))
       RIGGER_BUILD_LAYERS_UNREACHABLE -> idle
         (emit RIGGER_BUILD_LAYERS_FAILED { code: null, message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Rigger unavailable: " @payload.error) })
 
       RIGGER_POSE -> idle
         (http POST @config.origin "/pose" {
@@ -220,7 +212,6 @@ orbital RiggerOrbital {
             }))
       RIGGER_POSE_UNREACHABLE -> idle
         (emit RIGGER_POSE_FAILED { code: null, message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Rigger unavailable: " @payload.error) })
 
       RIGGER_GENERATE -> idle when (and (or (= @payload.model "z-image-turbo") (= @payload.model "kontext")) (or (!= @payload.model "kontext") (!= (or @payload.sourcePath "") "")))
         (http POST @config.origin "/generate" {
@@ -246,7 +237,6 @@ orbital RiggerOrbital {
             }))
       RIGGER_GENERATE_UNREACHABLE -> idle
         (emit RIGGER_GENERATE_FAILED { code: null, message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Rigger unavailable: " @payload.error) })
     }
 
     emits {
@@ -602,11 +592,6 @@ orbital RiggerOrbital {
     }
 
     config {
-      statusSlot : slot = system
-        @label "Status slot"
-        @description "Where the atom reports an unreachable rigger call; a page running it in the background keeps it in `system`."
-        @synonyms "status area, slot"
-        @tier "presentation"
       origin : url = "http://127.0.0.1:8181"
         @label "Rigger service origin"
         @description "The rigger service origin (scheme://host[:port], no path); must be declared in the app egress list."
@@ -625,5 +610,5 @@ orbital RiggerOrbital {
     }
   }
 
-  page "/rigger" as RiggerPage -> RiggerClient
+  page boot as RiggerPage -> RiggerClient
 }

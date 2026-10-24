@@ -32,7 +32,8 @@
                   }
                 }
               ]
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "emits": [
@@ -60,9 +61,14 @@
                       "path": "orbitals[0].entity.fields[0].mock",
                       "message": "@mock candidate(s) refunded are not values of this field",
                       "suggestion": "Use only the field's declared values as @mock candidates",
-                      "severity": "error"
+                      "severity": "error",
+                      "validValues": [
+                        "draft",
+                        "paid"
+                      ]
                     }
-                  ]
+                  ],
+                  "scope": ""
                 }
               }
             ]
@@ -100,7 +106,8 @@
                   }
                 }
               ]
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "emits": [
@@ -128,9 +135,14 @@
                       "path": "orbitals[0].entity.fields[0].mock",
                       "message": "@mock candidate(s) x, y are not values of this field",
                       "suggestion": "Use only the field's declared values as @mock candidates",
-                      "severity": "error"
+                      "severity": "error",
+                      "validValues": [
+                        "draft",
+                        "paid"
+                      ]
                     }
-                  ]
+                  ],
+                  "scope": ""
                 }
               }
             ]
@@ -172,7 +184,8 @@
                   }
                 }
               ]
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "emits": [
@@ -200,9 +213,14 @@
                       "path": "orbitals[0].entity.fields[1].mock",
                       "message": "@mock candidate(s) gone are not values of this field",
                       "suggestion": "Use only the field's declared values as @mock candidates",
-                      "severity": "error"
+                      "severity": "error",
+                      "validValues": [
+                        "draft",
+                        "paid"
+                      ]
                     }
-                  ]
+                  ],
+                  "scope": ""
                 }
               }
             ]
@@ -240,7 +258,8 @@
                   }
                 }
               ]
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "emits": [
@@ -262,7 +281,8 @@
                 "event": "LINT_FOUND",
                 "payload": {
                   "rule": "entity-mock-member",
-                  "findings": []
+                  "findings": [],
+                  "scope": ""
                 }
               }
             ]
@@ -296,7 +316,8 @@
                   }
                 }
               ]
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "emits": [
@@ -318,7 +339,8 @@
                 "event": "LINT_FOUND",
                 "payload": {
                   "rule": "entity-mock-member",
-                  "findings": []
+                  "findings": [],
+                  "scope": ""
                 }
               }
             ]
@@ -356,7 +378,8 @@
                   }
                 }
               ]
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "emits": [
@@ -378,7 +401,8 @@
                 "event": "LINT_FOUND",
                 "payload": {
                   "rule": "entity-mock-member",
-                  "findings": []
+                  "findings": [],
+                  "scope": ""
                 }
               }
             ]
@@ -416,7 +440,8 @@
                   }
                 }
               ]
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "emits": [
@@ -438,7 +463,8 @@
                 "event": "LINT_FOUND",
                 "payload": {
                   "rule": "entity-mock-member",
-                  "findings": []
+                  "findings": [],
+                  "scope": ""
                 }
               }
             ]
@@ -475,7 +501,8 @@
                   }
                 }
               ]
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "emits": [
@@ -497,7 +524,8 @@
                 "event": "LINT_FOUND",
                 "payload": {
                   "rule": "entity-mock-member",
-                  "findings": []
+                  "findings": [],
+                  "scope": ""
                 }
               }
             ]
@@ -1343,7 +1371,8 @@
                   }
                 }
               }
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "fired": true,
@@ -1388,7 +1417,8 @@
                   "spec": true
                 }
               ]
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "emits": [
@@ -1410,7 +1440,174 @@
                 "event": "LINT_FOUND",
                 "payload": {
                   "rule": "entity-mock-member",
-                  "findings": []
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "auxiliary-candidate-outside-enum",
+      "steps": [
+        {
+          "trait": "OrbLintEntityMockMember",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Row",
+                      "persistence": "runtime",
+                      "fields": [
+                        {
+                          "name": "status",
+                          "type": "string",
+                          "values": [
+                            "draft",
+                            "paid"
+                          ],
+                          "mock": "paid, refunded"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEntityMockMember",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-mock-member",
+                  "findings": [
+                    {
+                      "code": "ORB_E_MOCK_NOT_IN_ENUM",
+                      "path": "orbitals[0].auxiliaryEntities[0].fields[0].mock",
+                      "message": "@mock candidate(s) refunded are not values of this field",
+                      "suggestion": "Use only the field's declared values as @mock candidates",
+                      "severity": "error",
+                      "validValues": [
+                        "draft",
+                        "paid"
+                      ]
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-auxiliary-member-candidates",
+      "steps": [
+        {
+          "trait": "OrbLintEntityMockMember",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Row",
+                      "persistence": "runtime",
+                      "fields": [
+                        {
+                          "name": "status",
+                          "type": "string",
+                          "values": [
+                            "draft",
+                            "paid"
+                          ],
+                          "mock": "paid, draft"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEntityMockMember",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-mock-member",
+                  "findings": [],
+                  "scope": ""
                 }
               }
             ]

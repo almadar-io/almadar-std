@@ -21,6 +21,7 @@ orbital OrbLintPageEmptyTraitsOrbital {
 
   entity OrbLintPageEmptyTraitsRun [runtime] {
     id : string!
+    scope : string = ""
     findings : [OrbFinding] = []
   }
 
@@ -30,9 +31,10 @@ orbital OrbLintPageEmptyTraitsOrbital {
     state ready {
       INIT -> ready
       LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
         (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
-         (let ((inl (array/flatten (array/map @orbitals (fn o (object/get @o "traits" []))))))
-         (let ((tnames (array/map @inl (fn t (object/get @t "name" (object/get @t "ref" ""))))) (tids (array/filter (array/map @inl (fn t (object/get @t "id" ""))) (fn i (!= @i "")))))
+         (let ((inl (array/filter (array/flatten (array/map @orbitals (fn o (object/get @o "traits" [])))) (fn t (object/has @t "stateMachine")))))
+         (let ((tnames (array/map @inl (fn t (object/get @t "name" "")))) (tids (array/filter (array/map @inl (fn t (object/get @t "id" ""))) (fn i (!= @i "")))))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
             (let ((pgList (if (object/get (array/nth @orbitals @oi) "spec" false) [] (object/get (array/nth @orbitals @oi) "pages" []))))
               (array/flatten (array/map (array/range 0 (array/len @pgList)) (fn pj
@@ -64,11 +66,11 @@ orbital OrbLintPageEmptyTraitsOrbital {
                                 [{ code: "ORB_P_INVALID_TRAIT_REF", path: @tp, message: "Page trait reference must have 'ref' or 'name' property", suggestion: "Add ref: 'TraitName' to reference a trait", severity: "error" }]))))))))])))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
-        (emit LINT_FOUND { rule: "page-empty-traits", findings: @entity.findings })
+        (emit LINT_FOUND { rule: "page-empty-traits", scope: @entity.scope, findings: @entity.findings })
     }
 
     emits {
-      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
         @description "This rule's findings for the file, offered to the lint-all umbrella."
         @tier "internal"
       LINT_FINISH { }
@@ -77,7 +79,7 @@ orbital OrbLintPageEmptyTraitsOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PageTraitsProgram }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PageTraitsProgram  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -114,7 +116,7 @@ orbital OrbLintPageEmptyTraitsOrbital {
       LINT_REQUEST -> external { file : string! }
         @description "Ask the lint input to read and lower this file."
         @tier "internal"
-      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
         @description "The rule trait's findings for the file."
         @tier "internal"
       LINT_INPUT_UNREAD -> external { file : string! }

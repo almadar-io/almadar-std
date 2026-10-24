@@ -62,22 +62,13 @@ orbital InfraProjectionOrbital {
   trait InfraProjector -> InfraProjection [client] {
     initial: idle
 
-    config {
-      statusSlot : slot = main
-        @label "Status slot"
-        @description "Where the projector shows its one-line status."
-        @synonyms "status area, slot"
-        @tier "presentation"
-    }
 
     state idle {
       INIT -> idle
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "No projection yet." })
 
       INFRA_PROJECT -> idle when (not (str/startsWith (json/stringify (json/parse @payload.program InfraProgram)) "{"))
         (set @entity.status "failed")
         (emit INFRA_PROJECT_FAILED { error: "the program is not a JSON object" })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Projection failed: the program is not a JSON object." })
       INFRA_PROJECT -> idle when (str/startsWith (json/stringify (json/parse @payload.program InfraProgram)) "{")
         (set @entity.appName @payload.appName)
         (set @entity.provider (or @payload.provider "gcp"))
@@ -222,8 +213,7 @@ orbital InfraProjectionOrbital {
                           breakdown: @breakdown,
                           analysis: { orbitalCount: @entity.orbitalCount, effectCounts: { renderUI: @entity.renderUI, persist: @entity.persistCount, fetch: @entity.fetchCount, callService: @entity.callService, emitExternal: @entity.emitExternal, spawn: @entity.spawnCount, despawn: @entity.despawnCount, navigate: @entity.navigateCount, notify: @entity.notifyCount, set: @entity.setCount }, tickCount: @entity.tickCount, persistentEntityCount: @entity.persistentEntityCount, runtimeEntityCount: @entity.runtimeEntityCount, crossOrbitalEventCount: @entity.crossOrbitalEventCount, serviceRefs: @entity.serviceRefs, serviceCredentials: @entity.serviceCredentials, hasAuth: @entity.hasAuth, hasFileUploads: @entity.hasFileUploads, entityNames: @entity.entityNames, traitCount: @entity.traitCount, pageCount: @entity.pageCount, totalTransitions: @entity.totalTransitions },
                           tierDescription: (if (= @tier 1) (if @usePostgres "Tier 1: Single Instance (Cloud Run + Postgres)" "Tier 1: Single Instance (Cloud Run + Firestore, $10-50/mo)") (if (= @tier 2) "Tier 2: Multi-Instance (+ Redis event bus, $50-400/mo)" (str/concat "Tier 3: Distributed (+ " (if @usePostgres "Postgres" "Firestore") ", multi-region, $400-5000+/mo)")))
-                        })
-                        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Projected: tier " @tier ", score " @raw ".") })))))))))
+                        })))))))))
     }
 
     emits {
@@ -269,5 +259,5 @@ orbital InfraProjectionOrbital {
     }
   }
 
-  page "/infra-projection" -> InfraProjector
+  page boot as InfraProjectionStart -> InfraProjector
 }

@@ -7,6 +7,16 @@ orbital AreaFillOrbital {
     x : number!
     y : number!
   }
+  type AreaFillSpec = {
+    id : string!
+    x0 : number!
+    x1 : number!
+    baseline : number!
+    target : number!
+    rateMode : string
+    hint : string
+    samples : [AreaFillSample]!
+  }
   type AreaFill = {
     id : string!
     x0 : number!
@@ -80,7 +90,7 @@ orbital AreaFillOrbital {
 
     listens {
       BODY_MOVED { x : number!, y : number!, vx : number!, vy : number!, grounded : boolean!, skating : boolean!, speed : number! }
-      SET_FILLS { fills : [AreaFill]! }
+      SET_FILLS { fills : [AreaFillSpec]! }
       RESTART { id : string }
     }
 
@@ -89,7 +99,7 @@ orbital AreaFillOrbital {
         @label "Running"
         @description "When true, BODY_MOVED paints every fill the player moves through; toggle to freeze every fill as-is."
         @tier "domain"
-      fills : [AreaFill] = []
+      fills : [AreaFillSpec] = []
         @label "Fills"
         @description "One row per fill region: id, x-range (x0..x1 in world units), baseline the height is measured from, target area, rateMode (area | speed | ride — default area), optional hint, and the curve samples to interpolate. filled/frontier/reported are stamped at runtime. Seeded onto the entity on INIT; the live set is entity.fills — SET_FILLS replaces it at runtime (boards that import fills), and RESTART re-arms the live set rather than re-reading config, so injected fills survive respawns."
         @tier "domain"

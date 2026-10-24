@@ -155,11 +155,6 @@ orbital RowStorePostgresOrbital {
         @label "SSL mode"
         @description "Required: disable, allow, prefer, require, verify-ca or verify-full, declared by every call site (no default, so nothing downgrades silently). disable and allow send no SSLRequest; the rest send one, and N is accepted under prefer only. An S answer is STORE_FAILED until the kernel's os/tls-upgrade lands (EXEC-HTTP-7)."
         @tier "infra"
-      statusSlot : slot = system
-        @label "Status slot"
-        @description "Where the driver reports a login that could not start; a page running it in the background keeps it in `system`."
-        @synonyms "status area, slot"
-        @tier "presentation"
       recvBytes : number = 16384
         @label "Read size"
         @description "The most bytes one os/recv takes."
@@ -1090,7 +1085,6 @@ orbital RowStorePostgresOrbital {
         (set @entity.sock -1)
         (set @entity.inbox (bytes/from-string ""))
         (emit STORE_FAILED { key: @entity.key, message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Postgres login could not start: " @payload.error) })
     }
 
     state discovering {
@@ -1669,5 +1663,5 @@ orbital RowStorePostgresOrbital {
     }
   }
 
-  page "/row-store-postgres" -> RowStoreDriver
+  page boot as RowStorePostgresStart -> RowStoreDriver
 }

@@ -3,7 +3,7 @@ app std-cross-reference [
   description: "std-cross-reference — join-table primitive for N:M relationships. Listens for LinkRequested/UnlinkRequested/FETCH_LINKS_FOR and manages the junction collection (default CrossRefLink [persistent: cross_ref_links]). Rebind via linkedEntity={YourJunction} to your consumer junction; if your junction's id fields differ from leftId/rightId, override them with fields{} renames at the call site. A rebind target must supply leftId, rightId, createdAt, filteredLinks. Emits LinkCreated, LinkRemoved, LinksLoaded as external broadcasts for downstream consumers."
 ]
 type LinkSpec = { label : string!, href : string!, icon : string }
-type ObjectSpec = { id : string, label : string, value : string }
+type CrossRefRow = { id : string!, leftId : string, rightId : string, createdAt : string }
 orbital CrossReferenceOrbital {
     type LinkRequested = Event { leftId : string, rightId : string } "Request to create a link between leftId and rightId."
 
@@ -15,18 +15,18 @@ orbital CrossReferenceOrbital {
 
     type LinkRemoved = Event { id : string, deleted : boolean } "Fired after a junction row is deleted — persist delete emits the deleted row's id and a deleted flag, not the link's leftId/rightId."
 
-    type LinksLoaded = Event { leftId : string, data : [ObjectSpec] } "Fired after junction rows for leftId are fetched."
+    type LinksLoaded = Event { leftId : string, data : [CrossRefRow] } "Fired after junction rows for leftId are fetched."
 
     type LinkOpFailed = Event { error : string, code : string } "Fired when a junction persist or fetch fails."
 
-    type LinksFetched = Event { data : [ObjectSpec] } "Internal: raw fetch result before filtering by leftId."
+    type LinksFetched = Event { data : [CrossRefRow]! } "Internal: raw fetch result before filtering by leftId."
 
   entity CrossRefLink [persistent: cross_ref_links] {
     id : string!
     leftId : string @description "Identifier for the related entity on the left side." @synonyms "sourceId, originId, parentId" = ""
     rightId : string @description "Identifier for the related entity on the right side." @synonyms "targetId, relatedId, counterpartId" = ""
     createdAt : string = ""
-    filteredLinks : [LinkSpec] @description "A list of filtered link specifications." @synonyms "links, references, connections" = []
+    filteredLinks : [CrossRefRow] @description "A list of filtered link specifications." @synonyms "links, references, connections" = []
   }
 
   trait CrossReferenceGate -> @rebindable CrossRefLink {
@@ -61,10 +61,10 @@ orbital CrossReferenceOrbital {
       }
       LinksLoaded -> external {
         leftId : string
-        data : [ObjectSpec]
+        data : [CrossRefRow]
       }
       LinksFetched -> external {
-        data : [ObjectSpec]
+        data : [CrossRefRow]!
       }
       LinkOpFailed -> external {
         error : string
@@ -85,7 +85,7 @@ orbital CrossReferenceOrbital {
         leftId : string
       }
       LinksFetched {
-        data : [ObjectSpec]
+        data : [CrossRefRow]!
       }
     }
 

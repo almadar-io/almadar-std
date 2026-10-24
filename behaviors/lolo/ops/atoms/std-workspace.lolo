@@ -10,7 +10,7 @@ type WorkspaceRequest = { action : string, workspace : string, user : string, pa
 type WorkspaceNode = { id : string!, path : string!, type : string!, size : number! }
 type WorkspaceSnapshot = { id : string!, timestamp : number!, reason : string!, kind : string!, target : string! }
 type WorkspaceChange = { id : string!, path : string!, before : string!, after : string!, change : string! }
-type WorkspaceEntry = { id : string, timestamp : number, reason : string, kind : string, restores : string, undoes : string, redoes : string }
+type WorkspaceEntry = { id : string!, timestamp : number!, reason : string!, kind : string!, restores : string, undoes : string, redoes : string }
 type WorkspaceKey = { key : string!, size : number!, lastModified : number! }
 type BucketStep = { op : string, key : string, content : string, prefix : string }
 type WalkItem = { path : string, kind : string }
@@ -519,7 +519,7 @@ orbital WorkspaceOrbital {
       WS_SCRIPT_DONE -> working when (and (== @entity.stage "arch3") @entity.full)
         (set @entity.bundle (array/nth @entity.rawOuts 0))
         (set @entity.bstage "archFullA")
-        (set @entity.bsteps [{ op: "put", key: (str/concat @entity.pfx "history/base.bundle"), content: (str/concat "data:application/octet-stream;base64," (array/nth @entity.rawOuts 0)), prefix: "" }, { op: "list", key: "", content: "", prefix: (str/concat @entity.pfx "history/inc-") }])
+        (set @entity.bsteps [{ op: "put", key: (str/concat @entity.pfx "history/base.bundle"), content: (str/concat "data:application/octet-stream;base64," (bytes/to-base64 (array/nth @entity.rawOuts 0))), prefix: "" }, { op: "list", key: "", content: "", prefix: (str/concat @entity.pfx "history/inc-") }])
         (emit WS_B_START { })
       WS_B_DONE -> working when (== @entity.bstage "archFullA")
         (set @entity.bstage "archFullB")
@@ -537,7 +537,7 @@ orbital WorkspaceOrbital {
         (emit WS_B_START { })
       WS_B_DONE -> working when (== @entity.bstage "archIncA")
         (set @entity.bstage "archIncB")
-        (set @entity.bsteps [{ op: "put", key: (str/concat @entity.pfx "history/inc-" (str/padStart (str/concat (array/len @entity.bkeys)) 6 "0") ".bundle"), content: (str/concat "data:application/octet-stream;base64," @entity.bundle), prefix: "" }])
+        (set @entity.bsteps [{ op: "put", key: (str/concat @entity.pfx "history/inc-" (str/padStart (str/concat (array/len @entity.bkeys)) 6 "0") ".bundle"), content: (str/concat "data:application/octet-stream;base64," (bytes/to-base64 @entity.bundle)), prefix: "" }])
         (emit WS_B_START { })
       WS_B_DONE -> working when (== @entity.bstage "archIncB")
         (set @entity.incs (+ @entity.incs 1))
@@ -564,7 +564,7 @@ orbital WorkspaceOrbital {
         (os/read-file (str/concat @config.root "/" @entity.wsRel "/" (array/nth @entity.rpaths @entity.rcursor)) { emit: { success: WS_R_GOT, failure: WS_R_ERR } })
       WS_R_GOT -> working
         (set @entity.stdoutBytes @payload.data)
-        (set @entity.outValid (base64/valid @entity.stdoutBytes))
+        (set @entity.outValid (base64/valid (bytes/to-base64 @entity.stdoutBytes)))
         (set @entity.rdata (array/append @entity.rdata @payload.data))
         (set @entity.rcursor (+ @entity.rcursor 1))
         (emit WS_R_NEXT { })
@@ -581,7 +581,7 @@ orbital WorkspaceOrbital {
       WS_R_DONE -> working when (== @entity.rstage "sync")
         (set @entity.paths @entity.rpaths)
         (set @entity.bstage "syncPut")
-        (set @entity.bsteps (array/map @entity.rpaths (fn p i { op: "put", key: (str/concat @entity.pfx "files/" @p), content: (str/concat "data:application/octet-stream;base64," (array/nth @entity.rdata @i)), prefix: "" })))
+        (set @entity.bsteps (array/map @entity.rpaths (fn p i { op: "put", key: (str/concat @entity.pfx "files/" @p), content: (str/concat "data:application/octet-stream;base64," (bytes/to-base64 (array/nth @entity.rdata @i))), prefix: "" })))
         (emit WS_B_START { })
       WS_OPENED -> working when (== @entity.action "writeFile")
         (set @entity.wpaths [@entity.path])
@@ -605,7 +605,7 @@ orbital WorkspaceOrbital {
         (emit WS_NEXT { })
       WS_W_DONE -> working when (and (== @entity.wstage "write") (== @config.store "bucket"))
         (set @entity.bstage "wput")
-        (set @entity.bsteps [{ op: "put", key: (str/concat @entity.pfx "files/" @entity.path), content: (str/concat "data:application/octet-stream;base64," (array/first @entity.wdata)), prefix: "" }])
+        (set @entity.bsteps [{ op: "put", key: (str/concat @entity.pfx "files/" @entity.path), content: (str/concat "data:application/octet-stream;base64," (bytes/to-base64 (array/first @entity.wdata))), prefix: "" }])
         (emit WS_B_START { })
       WS_B_DONE -> working when (== @entity.bstage "wput")
         (emit WORKSPACE_FILE_WRITTEN { workspace: @entity.workspace, path: @entity.path, written: true })
@@ -1190,5 +1190,5 @@ orbital WorkspaceOrbital {
     }
   }
 
-  page "/workspace" as WorkspacePage -> WorkspaceClient, WorkspaceStore, WorkspaceGit, WorkspaceSteps
+  page boot as WorkspacePage -> WorkspaceClient, WorkspaceStore, WorkspaceGit, WorkspaceSteps
 }

@@ -54,13 +54,10 @@ orbital MetaAdsOrbital {
           }))
       META_ADS_SPEND_FAILED -> idle when (str/startsWith @payload.error "credential missing: ")
         (emit META_ADS_FAILED { code: null, message: (str/concat (str/replace @payload.error "credential missing: " "") " not configured") })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Meta Ads unavailable: " @payload.error) })
       META_ADS_SPEND_FAILED -> idle when (and (not (str/startsWith @payload.error "credential missing: ")) (= @payload.kind "timeout"))
         (emit META_ADS_FAILED { code: null, message: "The operation was aborted due to timeout" })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Meta Ads unavailable: " @payload.error) })
       META_ADS_SPEND_FAILED -> idle when (and (not (str/startsWith @payload.error "credential missing: ")) (!= @payload.kind "timeout"))
         (emit META_ADS_FAILED { code: null, message: "fetch failed" })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Meta Ads unavailable: " @payload.error) })
 
       META_ADS_LIST_CAMPAIGNS -> idle when (= (if (!= (or @payload.accountId "") "") @payload.accountId @config.defaultAccountId) "")
         (emit META_ADS_FAILED { code: null, message: "No ad account: pass `accountId` or set META_AD_ACCOUNT_ID" })
@@ -98,13 +95,10 @@ orbital MetaAdsOrbital {
         })
       META_ADS_CAMPAIGNS_FAILED -> idle when (str/startsWith @payload.error "credential missing: ")
         (emit META_ADS_FAILED { code: null, message: (str/concat (str/replace @payload.error "credential missing: " "") " not configured") })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Meta Ads unavailable: " @payload.error) })
       META_ADS_CAMPAIGNS_FAILED -> idle when (and (not (str/startsWith @payload.error "credential missing: ")) (= @payload.kind "timeout"))
         (emit META_ADS_FAILED { code: null, message: "The operation was aborted due to timeout" })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Meta Ads unavailable: " @payload.error) })
       META_ADS_CAMPAIGNS_FAILED -> idle when (and (not (str/startsWith @payload.error "credential missing: ")) (!= @payload.kind "timeout"))
         (emit META_ADS_FAILED { code: null, message: "fetch failed" })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Meta Ads unavailable: " @payload.error) })
     }
 
     emits {
@@ -193,11 +187,6 @@ orbital MetaAdsOrbital {
     }
 
     config {
-      statusSlot : slot = system
-        @label "Status slot"
-        @description "Where the atom reports an unreachable Graph API call; a page running it in the background keeps it in `system`"
-        @synonyms "status area, slot"
-        @tier "presentation"
       origin : url = "https://graph.facebook.com"
         @label "Graph API origin"
         @description "The Meta Graph API origin (scheme://host, no path). Must be declared in the app egress list."
@@ -226,5 +215,5 @@ orbital MetaAdsOrbital {
     }
   }
 
-  page "/meta-ads" as MetaAdsPage -> MetaAdsClient
+  page boot as MetaAdsPage -> MetaAdsClient
 }

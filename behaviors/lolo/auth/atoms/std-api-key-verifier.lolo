@@ -153,36 +153,4 @@ orbital ApiKeyVerifierOrbital {
   }
 
   page boot as ApiKeyVerifierStart -> ApiKeyVerifier
-
-  entity ApiKeyVerifierDemoView [runtime] {
-    id : string!
-  }
-
-  trait ApiKeyVerifierDemo -> ApiKeyVerifierDemoView [optimistic] {
-    initial: idle
-
-    state idle {
-      INIT -> idle
-      REFUSED -> idle when (!= @payload.reason "busy")
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "API key refused" })
-    }
-
-    listens {
-      ApiKeyVerifier.API_KEY_REFUSED -> REFUSED
-      REFUSED {
-        reason : string!
-        message : string!
-      }
-    }
-
-    config {
-      statusSlot : slot = main
-        @label "Status slot"
-        @description "Where the demo page reports a refused key."
-        @synonyms "status area, slot"
-        @tier "presentation"
-    }
-  }
-
-  page "/key-verify" as ApiKeyVerifierDemoPage -> ApiKeyVerifierDemo
 }

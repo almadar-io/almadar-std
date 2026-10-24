@@ -77,7 +77,8 @@
                   ]
                 }
               ]
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "fired": true,
@@ -108,7 +109,8 @@
                       "suggestion": "Declare `config { target : string = \"...\" }` on this trait, or reference an existing string-typed knob with a default.",
                       "severity": "error"
                     }
-                  ]
+                  ],
+                  "scope": ""
                 }
               }
             ]
@@ -186,7 +188,8 @@
                   ]
                 }
               ]
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "fired": true,
@@ -209,7 +212,8 @@
                 "event": "LINT_FOUND",
                 "payload": {
                   "rule": "emit-config-ref",
-                  "findings": []
+                  "findings": [],
+                  "scope": ""
                 }
               }
             ]
@@ -298,7 +302,8 @@
                   ]
                 }
               ]
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "fired": true,
@@ -329,7 +334,8 @@
                       "suggestion": "Declare `config { target : string = \"...\" }` on this trait, or reference an existing string-typed knob with a default.",
                       "severity": "error"
                     }
-                  ]
+                  ],
+                  "scope": ""
                 }
               }
             ]
@@ -417,7 +423,8 @@
                   ]
                 }
               ]
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "fired": true,
@@ -448,7 +455,8 @@
                       "suggestion": "Declare `config { target : string = \"...\" }` on this trait, or reference an existing string-typed knob with a default.",
                       "severity": "error"
                     }
-                  ]
+                  ],
+                  "scope": ""
                 }
               }
             ]
@@ -537,7 +545,8 @@
                   ]
                 }
               ]
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "fired": true,
@@ -560,7 +569,8 @@
                 "event": "LINT_FOUND",
                 "payload": {
                   "rule": "emit-config-ref",
-                  "findings": []
+                  "findings": [],
+                  "scope": ""
                 }
               }
             ]
@@ -1406,7 +1416,8 @@
                   }
                 }
               }
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "fired": true,
@@ -1414,6 +1425,353 @@
               {
                 "event": "LINT_FINISH",
                 "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEmitConfigRef"
+        }
+      ]
+    },
+    {
+      "id": "string-typed-knob-with-a-non-string-default",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "TA",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": []
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "target": {
+                          "type": "string",
+                          "default": 5
+                        }
+                      },
+                      "emits": [
+                        {
+                          "event": "@config.target"
+                        }
+                      ]
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "PA",
+                      "path": "/a",
+                      "traits": [
+                        {
+                          "ref": "TA"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEmitConfigRef"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "emit-config-ref",
+                  "findings": [
+                    {
+                      "code": "ORB_EMIT_CONFIG_REF_INVALID",
+                      "path": "orbitals[0 (A)].traits[0 (TA)].emits(@config.target)",
+                      "message": "emits references `@config.target` but the `target` config field is not string-typed (or its call-site/default value isn't a string literal).",
+                      "suggestion": "Declare `config { target : string = \"...\" }` on this trait, or reference an existing string-typed knob with a default.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEmitConfigRef"
+        }
+      ]
+    },
+    {
+      "id": "control-event-typed-knob-with-a-string-default-is-not-reported",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "TA",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": []
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "target": {
+                          "type": "event",
+                          "default": "DONE"
+                        }
+                      },
+                      "emits": [
+                        {
+                          "event": "@config.target"
+                        }
+                      ]
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "PA",
+                      "path": "/a",
+                      "traits": [
+                        {
+                          "ref": "TA"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEmitConfigRef"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "emit-config-ref",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEmitConfigRef"
+        }
+      ]
+    },
+    {
+      "id": "control-a-dotted-or-empty-reference-is-not-a-knob-reference",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "TA",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": []
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "emits": [
+                        {
+                          "event": "@config.a.b"
+                        },
+                        {
+                          "event": "@config."
+                        }
+                      ]
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "PA",
+                      "path": "/a",
+                      "traits": [
+                        {
+                          "ref": "TA"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEmitConfigRef"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "emit-config-ref",
+                  "findings": [],
+                  "scope": ""
+                }
               }
             ]
           },

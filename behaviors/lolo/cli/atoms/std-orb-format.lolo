@@ -1,8 +1,8 @@
 app std-orb-format [
   version: "1.0.0",
   inbound: ["cli-format"],
-  fs: { cwd: "**": [read, write] },
-  description: "std-orb-format — the `orb format <file> [--write]` command (spec/cli/orb-format.lolo; port of orbital-cli commands/parse.rs format_schema). It reads the file (os/read-file) and formats its text with program/print { source }: a .lolo file through the authored-AST formatter with its comments kept, a .orb file as JSON with sorted keys. Without --write the formatted text is the answer. With --write the file is rewritten (os/write-file) and the answer is `Formatted <path> (<n> bytes)`, n the byte length of the formatted text. The file must lie under the working directory (the program's fs grant is anchored at cwd; an absolute path outside it is refused by the host). A read, format or write failure answers status 500 with `Error: <message>` on stderr (as the Rust anyhow exit); a missing file, a second word or an unknown flag answers the usage (status 400, exit 2)."
+  fs: { cwd: "**": [read, write], "/**": [read, write] },
+  description: "std-orb-format — the `orb format <file> [--write]` command (spec/cli/orb-format.lolo; port of orbital-cli commands/parse.rs format_schema). It reads the file (os/read-file) and formats its text with program/print { source }: a .lolo file through the authored-AST formatter with its comments kept, a .orb file as JSON with sorted keys. Without --write the formatted text is the answer. With --write the file is rewritten (os/write-file) and the answer is `Formatted <path> (<n> bytes)`, n the byte length of the formatted text. The file may be a relative path (under the working directory) or an absolute path. A read, format or write failure answers status 500 with `Error: <message>` on stderr (as the Rust anyhow exit); a missing file, a second word or an unknown flag answers the usage (status 400, exit 2)."
 ]
 uses Spec from "almadar-std/orb-format"
 uses Args from "std/behaviors/std-args"
@@ -39,11 +39,16 @@ orbital OrbFormatOrbital {
       INIT -> parsing
       FORMAT_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (!= (array/len @payload.positionals) 1))
         (emit FORMAT_ANSWERED { status: 400, body: "usage: orb format <file> [--write]" })
-      FORMAT_ARGS_DONE -> reading when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1))
+      FORMAT_ARGS_DONE -> reading when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1) (not (os/path-is-absolute (array/first @payload.positionals))))
         (set @entity.file (array/first @payload.positionals))
-        (set @entity.path (if (os/path-is-absolute (array/first @payload.positionals)) (os/path-relative @entity.cwd (array/first @payload.positionals)) (array/first @payload.positionals)))
+        (set @entity.path (array/first @payload.positionals))
         (set @entity.write (!= (object/get @payload.flags "write") null))
-        (os/read-file { anchor: "cwd" path: (if (os/path-is-absolute (array/first @payload.positionals)) (os/path-relative @entity.cwd (array/first @payload.positionals)) (array/first @payload.positionals)) } { key: "source" emit: { success: FORMAT_READ, failure: FORMAT_READ_FAILED } })
+        (os/read-file { anchor: "cwd" path: @entity.path } { key: "source" emit: { success: FORMAT_READ, failure: FORMAT_READ_FAILED } })
+      FORMAT_ARGS_DONE -> reading when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1) (os/path-is-absolute (array/first @payload.positionals)))
+        (set @entity.file (array/first @payload.positionals))
+        (set @entity.path (array/first @payload.positionals))
+        (set @entity.write (!= (object/get @payload.flags "write") null))
+        (os/read-file (str/concat "/" (str/slice @entity.path 1 (str/len @entity.path))) { key: "source" emit: { success: FORMAT_READ, failure: FORMAT_READ_FAILED } })
     }
 
     state reading {
@@ -60,9 +65,12 @@ orbital OrbFormatOrbital {
         (emit FORMAT_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " @payload.error) })
       FORMAT_PRINTED -> ready when (not @entity.write)
         (emit FORMAT_ANSWERED { status: 200, body: @payload.result })
-      FORMAT_PRINTED -> writing when @entity.write
+      FORMAT_PRINTED -> writing when (and @entity.write (not (os/path-is-absolute @entity.path)))
         (set @entity.text @payload.result)
         (os/write-file { anchor: "cwd" path: @entity.path } (bytes/from-string @payload.result) { key: "formatted" emit: { success: FORMAT_WRITTEN, failure: FORMAT_WRITE_FAILED } })
+      FORMAT_PRINTED -> writing when (and @entity.write (os/path-is-absolute @entity.path))
+        (set @entity.text @payload.result)
+        (os/write-file (str/concat "/" (str/slice @entity.path 1 (str/len @entity.path))) (bytes/from-string @payload.result) { key: "formatted" emit: { success: FORMAT_WRITTEN, failure: FORMAT_WRITE_FAILED } })
     }
 
     state writing {

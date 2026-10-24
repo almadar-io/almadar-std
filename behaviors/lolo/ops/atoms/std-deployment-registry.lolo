@@ -42,11 +42,6 @@ orbital DeploymentRegistryOrbital {
     initial: idle
 
     config {
-      statusSlot : slot = main
-        @label "Status slot"
-        @description "Where the registrar shows its one-line status."
-        @synonyms "status area, slot"
-        @tier "presentation"
       maxRetries : number = 3
         @label "Retries after a lost race"
         @description "How many times a deploy that lost a race for a version number tries the next one."
@@ -56,7 +51,6 @@ orbital DeploymentRegistryOrbital {
 
     state idle {
       INIT -> idle
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "No deployment recorded yet." })
 
       DEPLOY -> idle
         (set @entity.artifact @payload.artifact)
@@ -76,7 +70,6 @@ orbital DeploymentRegistryOrbital {
         (emit DEPLOY_ACTIVE_CHECK { })
       COUNTER_ABSENT -> idle when (!= @payload.code "not-found")
         (emit DEPLOY_FAILED { artifact: @entity.artifact, code: "failed", message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Deploy failed: " @payload.error) })
       DEPLOY_ACTIVE_CHECK -> idle
         (fetch ActiveDeployment { id: @entity.artifact, emit: { success: DEPLOY_ACTIVE_LOADED, failure: DEPLOY_ACTIVE_ABSENT } })
       DEPLOY_ACTIVE_LOADED -> idle
@@ -87,7 +80,6 @@ orbital DeploymentRegistryOrbital {
         (emit DEPLOY_WRITE { })
       DEPLOY_ACTIVE_ABSENT -> idle when (!= @payload.code "not-found")
         (emit DEPLOY_FAILED { artifact: @entity.artifact, code: "failed", message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Deploy failed: " @payload.error) })
       DEPLOY_WRITE -> idle
         (set @entity.version (+ @entity.last 1))
         (persist batch (array/flatten [
@@ -100,13 +92,11 @@ orbital DeploymentRegistryOrbital {
         ]) { emit: { success: DEPLOY_WRITTEN, failure: DEPLOY_NOT_WRITTEN } })
       DEPLOY_WRITTEN -> idle
         (emit DEPLOYED { artifact: @entity.artifact, version: @entity.version })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Recorded " @entity.artifact " version " @entity.version ".") })
       DEPLOY_NOT_WRITTEN -> idle when (and (= @payload.code "duplicate-id") (< @entity.retries @config.maxRetries))
         (set @entity.retries (+ @entity.retries 1))
         (emit DEPLOY_NEXT { })
       DEPLOY_NOT_WRITTEN -> idle when (not (and (= @payload.code "duplicate-id") (< @entity.retries @config.maxRetries)))
         (emit DEPLOY_FAILED { artifact: @entity.artifact, code: (if (= @payload.code "duplicate-id") "contended" "failed"), message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Deploy failed: " @payload.error) })
 
       ROLLBACK -> idle
         (set @entity.artifact @payload.artifact)
@@ -114,42 +104,33 @@ orbital DeploymentRegistryOrbital {
         (fetch Deployment { id: (str/concat @payload.artifact "#" @payload.version), emit: { success: ROLLBACK_LOADED, failure: ROLLBACK_ABSENT } })
       ROLLBACK_LOADED -> idle when (not @payload.data.activates)
         (emit ROLLBACK_FAILED { artifact: @entity.artifact, code: "not-activatable", message: (str/concat "Version " @entity.version " of " @entity.artifact " cannot be active") })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Version " @entity.version " of " @entity.artifact " cannot be active.") })
       ROLLBACK_LOADED -> idle when @payload.data.activates
         (set @entity.details (or @payload.data.details {}))
         (fetch ActiveDeployment { id: @entity.artifact, emit: { success: ROLLBACK_ACTIVE_LOADED, failure: ROLLBACK_ACTIVE_ABSENT } })
       ROLLBACK_ABSENT -> idle when (= @payload.code "not-found")
         (emit ROLLBACK_FAILED { artifact: @entity.artifact, code: "not-recorded", message: (str/concat @entity.artifact " has no recorded version " @entity.version) })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat @entity.artifact " has no recorded version " @entity.version ".") })
       ROLLBACK_ABSENT -> idle when (!= @payload.code "not-found")
         (emit ROLLBACK_FAILED { artifact: @entity.artifact, code: "failed", message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Rollback failed: " @payload.error) })
       ROLLBACK_ACTIVE_LOADED -> idle
         (persist update ActiveDeployment { id: @entity.artifact, version: @entity.version, recordedAt: @now, details: @entity.details } { emit: { success: ROLLBACK_WRITTEN, failure: ROLLBACK_NOT_WRITTEN } })
       ROLLBACK_ACTIVE_ABSENT -> idle when (!= @payload.code "not-found")
         (emit ROLLBACK_FAILED { artifact: @entity.artifact, code: "failed", message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Rollback failed: " @payload.error) })
       ROLLBACK_ACTIVE_ABSENT -> idle when (= @payload.code "not-found")
         (persist create ActiveDeployment { id: @entity.artifact, version: @entity.version, recordedAt: @now, details: @entity.details } { emit: { success: ROLLBACK_WRITTEN, failure: ROLLBACK_NOT_WRITTEN } })
       ROLLBACK_WRITTEN -> idle
         (emit ROLLED_BACK { artifact: @entity.artifact, version: @entity.version })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat @entity.artifact " serves version " @entity.version " again.") })
       ROLLBACK_NOT_WRITTEN -> idle
         (emit ROLLBACK_FAILED { artifact: @entity.artifact, code: "failed", message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Rollback failed: " @payload.error) })
 
       WITHDRAW -> idle
         (set @entity.artifact @payload.artifact)
         (persist delete ActiveDeployment @payload.artifact { emit: { success: WITHDRAW_WRITTEN, failure: WITHDRAW_NOT_WRITTEN } })
       WITHDRAW_WRITTEN -> idle
         (emit WITHDRAWN { artifact: @entity.artifact })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat @entity.artifact " is withdrawn.") })
       WITHDRAW_NOT_WRITTEN -> idle when (= @payload.code "not-found")
         (emit WITHDRAWN { artifact: @entity.artifact })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat @entity.artifact " had nothing active.") })
       WITHDRAW_NOT_WRITTEN -> idle when (!= @payload.code "not-found")
         (emit WITHDRAW_FAILED { artifact: @entity.artifact, message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Withdraw failed: " @payload.error) })
 
       RESOLVE -> idle
         (set @entity.artifact @payload.artifact)
@@ -158,10 +139,8 @@ orbital DeploymentRegistryOrbital {
         (emit RESOLVED { artifact: @entity.artifact, found: true, version: @payload.data.version, recordedAt: @payload.data.recordedAt, details: (or @payload.data.details {}) })
       RESOLVE_ABSENT -> idle when (= @payload.code "not-found")
         (emit RESOLVED { artifact: @entity.artifact, found: false, version: 0, recordedAt: 0, details: {} })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat @entity.artifact " has nothing active.") })
       RESOLVE_ABSENT -> idle when (!= @payload.code "not-found")
         (emit RESOLVE_FAILED { artifact: @entity.artifact, code: @payload.code, message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Resolve failed: " @payload.error) })
 
       HISTORY -> idle
         (set @entity.artifact @payload.artifact)
@@ -172,7 +151,6 @@ orbital DeploymentRegistryOrbital {
         (emit HISTORY_ANSWERED { artifact: @entity.artifact, deployments: (array/take [{ id: "", artifact: "", version: 0, activates: false, recordedAt: 0, details: {} }] 0) })
       HISTORY_UNREADABLE -> idle when (!= @payload.code "not-found")
         (emit HISTORY_FAILED { artifact: @entity.artifact, code: @payload.code, message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "History unavailable: " @payload.error) })
     }
 
     emits {
@@ -347,5 +325,5 @@ orbital DeploymentRegistryOrbital {
     }
   }
 
-  page "/deployment-registry" -> DeploymentRegistrar
+  page boot as DeploymentRegistryStart -> DeploymentRegistrar
 }

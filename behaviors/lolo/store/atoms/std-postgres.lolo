@@ -27,7 +27,6 @@ orbital PostgresOrbital {
         (emit PG_RESULT { rows: @payload.rows, rowCount: @payload.rowCount, columns: @payload.columns })
       PG_CALL_FAILED -> idle
         (emit PG_FAILED { kind: @payload.kind, code: @payload.code, message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Postgres unavailable: " @payload.error) })
     }
 
     emits {
@@ -89,11 +88,6 @@ orbital PostgresOrbital {
     }
 
     config {
-      statusSlot : slot = system
-        @label "Status slot"
-        @description "Where the atom reports a failed query; a page running it in the background keeps it in `system`"
-        @synonyms "status area, slot"
-        @tier "presentation"
       origin : url = "postgres://postgres.example.test:5432"
         @label "Postgres origin"
         @description "The Postgres server as postgres://host[:port] (no path). Must be declared in the app egress list."
@@ -132,5 +126,5 @@ orbital PostgresOrbital {
     }
   }
 
-  page "/postgres" as PostgresPage -> PostgresClient
+  page boot as PostgresPage -> PostgresClient
 }

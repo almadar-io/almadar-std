@@ -23,6 +23,7 @@ orbital OrbLintAssetInlineUrlOrbital {
 
   entity OrbLintAssetInlineUrlRun [runtime] {
     id : string!
+    scope : string = ""
     findings : [OrbFinding] = []
   }
 
@@ -32,6 +33,7 @@ orbital OrbLintAssetInlineUrlOrbital {
     state ready {
       INIT -> ready
       LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
         (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
             (let ((orb (array/nth @orbitals @oi)))
@@ -56,11 +58,11 @@ orbital OrbLintAssetInlineUrlOrbital {
 (let ((dq (str/decode-uri-component "%22"))) (array/map (array/filter (if (= @v null) [] (json/nodes [@v])) (fn y (let ((t (json/stringify @y))) (or (str/startsWith @t (str/concat @dq "https://")) (str/startsWith @t (str/concat @dq "http://")))))) (fn y { code: "ORB_ASSET_INLINE_URL", path: @p, message: (str/concat "Orbital '" @oname "' composes std-asset-pack but carries the literal asset url '" (object/get (json/parse (str/concat "{" @dq "v" @dq ":" (json/stringify @y) "}") UrlText) "v") "'"), suggestion: "Add the art to the pack's assets rows and look it up by key; the pack atom's origin is the only place a host belongs", severity: "error" })))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
-        (emit LINT_FOUND { rule: "asset-inline-url", findings: @entity.findings })
+        (emit LINT_FOUND { rule: "asset-inline-url", scope: @entity.scope, findings: @entity.findings })
     }
 
     emits {
-      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
         @description "This rule's findings for the file, offered to the lint-all umbrella."
         @tier "internal"
       LINT_FINISH { }
@@ -69,7 +71,7 @@ orbital OrbLintAssetInlineUrlOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : AssetProgram }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : AssetProgram  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -106,7 +108,7 @@ orbital OrbLintAssetInlineUrlOrbital {
       LINT_REQUEST -> external { file : string! }
         @description "Ask the lint input to read and lower this file."
         @tier "internal"
-      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
         @description "The rule trait's findings for the file."
         @tier "internal"
       LINT_INPUT_UNREAD -> external { file : string! }

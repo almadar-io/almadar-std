@@ -23,6 +23,7 @@ orbital OrbLintEmptyEventNameOrbital {
 
   entity OrbLintEmptyEventNameRun [runtime] {
     id : string!
+    scope : string = ""
     findings : [OrbFinding] = []
   }
 
@@ -32,6 +33,7 @@ orbital OrbLintEmptyEventNameOrbital {
     state ready {
       INIT -> ready
       LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
         (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
             (let ((trList (object/get (array/nth @orbitals @oi) "traits" [])))
@@ -49,11 +51,11 @@ orbital OrbLintEmptyEventNameOrbital {
                             (array/flatten (array/map (array/range 0 (array/len (object/get @sm "transitions" []))) (fn k (if (= (object/get (array/nth (object/get @sm "transitions" []) @k) "event" "") "") [{ code: "ORB_T_EMPTY_EVENT_NAME", path: (str/concat @where ".transitions" "[" @k "].event"), message: "Event name is empty", suggestion: "Name the event, or remove it; an unset optional event knob declares no event", severity: "error" }] []))))])))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
-        (emit LINT_FOUND { rule: "empty-event-name", findings: @entity.findings })
+        (emit LINT_FOUND { rule: "empty-event-name", scope: @entity.scope, findings: @entity.findings })
     }
 
     emits {
-      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
         @description "This rule's findings for the file, offered to the lint-all umbrella."
         @tier "internal"
       LINT_FINISH { }
@@ -62,7 +64,7 @@ orbital OrbLintEmptyEventNameOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : EmptyEventProgram }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : EmptyEventProgram  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -99,7 +101,7 @@ orbital OrbLintEmptyEventNameOrbital {
       LINT_REQUEST -> external { file : string! }
         @description "Ask the lint input to read and lower this file."
         @tier "internal"
-      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
         @description "The rule trait's findings for the file."
         @tier "internal"
       LINT_INPUT_UNREAD -> external { file : string! }

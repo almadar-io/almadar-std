@@ -36,7 +36,7 @@ orbital EventLogOrbital {
     errorMessage : string @description "A human-readable message indicating an error condition." @synonyms "error, error message, problem, issue" = ""
   }
 
-  trait EventLogTimeline -> @rebindable EventLogView   [client]{
+  trait EventLogTimeline -> @rebindable EventLogView {
     initial: loading
 
     state loading {
@@ -617,12 +617,12 @@ orbital EventLogOrbital {
         @label "Section title"
         @description "Heading shown above the activity timeline"
         @tier "presentation"
-      searchField : string = "title"
+      searchField : field @entity string = title
         @label "Which column does the search box match against?"
         @description "Name the field on this entity the search box's str/includes filter matches against. Declared, never inferred: an entity with no `title` column must set this to a real field or the search box can never match an entry."
         @synonyms "search column, search on field, match field, search key"
         @tier "policy"
-      kindField : string = "kind"
+      kindField : field @entity string = kind
         @label "Which column holds each entry's kind?"
         @description "Name the field on this entity the kind filter compares against (the values of kindOptions). An entity whose kind lives under another column (e.g. status) sets it here, or the kind filter can never match an entry."
         @synonyms "kind column, type field, category column, filter by kind"
@@ -659,7 +659,7 @@ orbital EventLogOrbital {
         @label "Event kinds"
         @description "Maps each event kind to its label, icon, and status color"
         @tier "presentation"
-      formFields : [string] = (backfillTitle backfillDescription backfillKind backfillDate)
+      formFields : [field @entity] = (backfillTitle backfillDescription backfillKind backfillDate)
         @label "Backfill fields"
         @description "Inputs shown in the form for manually logging missed events"
         @tier "presentation"
@@ -667,21 +667,21 @@ orbital EventLogOrbital {
         @label "Card look"
         @description "Layer 2 visual treatment for cards rendered by this atom."
         @tier "presentation"
-      titleField : string = "title"
+      titleField : field @entity string = title
         @label "Title field"
         @description "Entity field holding each event's title."
         @tier "presentation"
-      descriptionField : string = "description"
+      descriptionField : field @entity string = description
         @label "Description field"
         @description "Entity field holding each event's description."
         @tier "presentation"
-      dateField : string = "date"
+      dateField : field @entity = date
         @label "Date field"
         @description "Entity field holding each event's date."
         @tier "presentation"
-      statusField : string = "status"
+      statusField : field @entity string
         @label "Status field"
-        @description "Entity field holding each event's status (complete | active | pending | error)."
+        @description "Entity field holding each event's status (complete | active | pending | error). Unset = events carry no status."
         @tier "presentation"
       timelineLook : "vertical-compact" | "vertical-spacious" | "horizontal" | "swimlane" = vertical-spacious
         @label "Timeline look"

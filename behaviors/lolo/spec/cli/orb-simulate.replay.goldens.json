@@ -1273,6 +1273,102 @@
      }
     }
    ]
+  },
+  {
+   "id": "an absolute file is read without the cwd anchor",
+   "steps": [
+    {
+     "from": "ready",
+     "event": "SIMULATE_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\": [\"/tmp/a.lolo\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "reading",
+      "effects": [
+       {
+        "type": "os/read-file",
+        "key": "file",
+        "arg0": [
+         "str/concat",
+         "/",
+         [
+          "str/slice",
+          [
+           "array/first",
+           [
+            "object/get",
+            [
+             "json/parse",
+             "@payload.rawBody",
+             "{\"version\":1,\"name\":\"OrbCommandArgs\",\"type\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"argv\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"string\"}},\"required\":true,\"constraints\":[]},{\"name\":\"cwd\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[]}]}}"
+            ],
+            "argv"
+           ]
+          ],
+          1,
+          [
+           "str/len",
+           [
+            "array/first",
+            [
+             "object/get",
+             [
+              "json/parse",
+              "@payload.rawBody",
+              "{\"version\":1,\"name\":\"OrbCommandArgs\",\"type\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"argv\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"string\"}},\"required\":true,\"constraints\":[]},{\"name\":\"cwd\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[]}]}}"
+             ],
+             "argv"
+            ]
+           ]
+          ]
+         ]
+        ],
+        "optionsAt": 1
+       }
+      ]
+     },
+     "trait": "OrbSimulate"
+    }
+   ]
+  },
+  {
+   "id": "control: a relative file is read under the cwd anchor",
+   "steps": [
+    {
+     "from": "ready",
+     "event": "SIMULATE_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\": [\"a.lolo\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "reading",
+      "effects": [
+       {
+        "type": "os/read-file",
+        "key": "file",
+        "arg0": {
+         "anchor": "cwd",
+         "path": [
+          "array/first",
+          [
+           "object/get",
+           [
+            "json/parse",
+            "@payload.rawBody",
+            "{\"version\":1,\"name\":\"OrbCommandArgs\",\"type\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"argv\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"string\"}},\"required\":true,\"constraints\":[]},{\"name\":\"cwd\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[]}]}}"
+           ],
+           "argv"
+          ]
+         ]
+        },
+        "optionsAt": 1
+       }
+      ]
+     },
+     "trait": "OrbSimulate"
+    }
+   ]
   }
  ]
 }

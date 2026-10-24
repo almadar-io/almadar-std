@@ -29,11 +29,6 @@ orbital NameClaimOrbital {
     initial: idle
 
     config {
-      statusSlot : slot = main
-        @label "Status slot"
-        @description "Where the claimer shows its one-line status."
-        @synonyms "status area, slot"
-        @tier "presentation"
       label : string = "name"
         @label "What a name is called"
         @description "The word messages use for a name: handle, slug, namespace."
@@ -58,14 +53,11 @@ orbital NameClaimOrbital {
 
     state idle {
       INIT -> idle
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "No " @config.label " claimed yet.") })
 
       CLAIM_NAME -> idle when (not (validate/pattern @payload.name @config.namePattern))
         (emit NAME_CLAIM_FAILED { code: "invalid", value: @payload.name, message: (str/concat "The " @config.label " \"" @payload.name "\" must be " @config.patternRule) })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "\"" @payload.name "\" is not a valid " @config.label ".") })
       CLAIM_NAME -> idle when (and (validate/pattern @payload.name @config.namePattern) (array/includes @config.reserved @payload.name))
         (emit NAME_CLAIM_FAILED { code: "reserved", value: @payload.name, message: (str/concat "\"" @payload.name "\" is reserved") })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "\"" @payload.name "\" is reserved.") })
       CLAIM_NAME -> idle when (and (validate/pattern @payload.name @config.namePattern) (not (array/includes @config.reserved @payload.name)))
         (set @entity.name @payload.name)
         (set @entity.holder @payload.holder)
@@ -82,20 +74,16 @@ orbital NameClaimOrbital {
         (emit NAME_CHECK { })
       HOLDER_ABSENT -> idle when (!= @payload.code "not-found")
         (emit NAME_CLAIM_FAILED { code: "failed", value: @entity.name, message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Claim failed: " @payload.error) })
 
       NAME_CHECK -> idle when (and @entity.keepHeld (!= @entity.held "") (!= @entity.held @entity.name))
         (emit NAME_CLAIM_FAILED { code: "kept", value: @entity.held, message: (str/concat "\"" @entity.held "\" must stay your " @config.label) })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "\"" @entity.held "\" must stay your " @config.label ".") })
       NAME_CHECK -> idle when (not (and @entity.keepHeld (!= @entity.held "") (!= @entity.held @entity.name)))
         (fetch NameLock { id: @entity.name, emit: { success: LOCK_LOADED, failure: LOCK_ABSENT } })
 
       LOCK_LOADED -> idle when (= @payload.data.holder @entity.holder)
         (emit NAME_CLAIMED { name: @entity.name, holder: @entity.holder })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "\"" @entity.name "\" is yours.") })
       LOCK_LOADED -> idle when (!= @payload.data.holder @entity.holder)
         (emit NAME_CLAIM_FAILED { code: "taken", value: @entity.name, message: (str/concat "\"" @entity.name "\" is taken") })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "\"" @entity.name "\" is taken.") })
       LOCK_ABSENT -> idle when (= @payload.code "not-found")
         (persist batch (array/flatten [
           [["create", "NameLock", { id: @entity.name, holder: @entity.holder, claimedAt: @now }]],
@@ -104,17 +92,13 @@ orbital NameClaimOrbital {
         ]) { emit: { success: NAME_WRITTEN, failure: NAME_NOT_WRITTEN } })
       LOCK_ABSENT -> idle when (!= @payload.code "not-found")
         (emit NAME_CLAIM_FAILED { code: "failed", value: @entity.name, message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Claim failed: " @payload.error) })
 
       NAME_WRITTEN -> idle
         (emit NAME_CLAIMED { name: @entity.name, holder: @entity.holder })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "\"" @entity.name "\" is yours.") })
       NAME_NOT_WRITTEN -> idle when (= @payload.code "duplicate-id")
         (emit NAME_CLAIM_FAILED { code: "taken", value: @entity.name, message: (str/concat "\"" @entity.name "\" is taken") })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "\"" @entity.name "\" is taken.") })
       NAME_NOT_WRITTEN -> idle when (!= @payload.code "duplicate-id")
         (emit NAME_CLAIM_FAILED { code: "failed", value: @entity.name, message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Claim failed: " @payload.error) })
 
       NAME_OF -> idle
         (set @entity.asking @payload.holder)
@@ -123,7 +107,6 @@ orbital NameClaimOrbital {
         (emit NAME_OF_ANSWERED { holder: @entity.asking, name: @payload.data.name })
       NAME_OF_ABSENT -> idle
         (emit NAME_OF_ANSWERED { holder: @entity.asking, name: "" })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat @entity.asking " holds no " @config.label ".") })
 
       HOLDER_OF -> idle
         (set @entity.asking @payload.name)
@@ -132,7 +115,6 @@ orbital NameClaimOrbital {
         (emit HOLDER_OF_ANSWERED { name: @entity.asking, holder: @payload.data.holder })
       HOLDER_OF_ABSENT -> idle
         (emit HOLDER_OF_ANSWERED { name: @entity.asking, holder: "" })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Nobody holds \"" @entity.asking "\".") })
     }
 
     emits {
@@ -223,5 +205,5 @@ orbital NameClaimOrbital {
     }
   }
 
-  page "/name-claim" -> NameClaimer
+  page boot as NameClaimStart -> NameClaimer
 }

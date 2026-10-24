@@ -4,16 +4,16 @@ app std-orb-lint-relation-targets [
   env: ["PATH"],
   exec: ["orb"],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
-  description: "std-orb-lint-relation-targets - the `orb lint relation-targets <file>` command, the port of ORB_X_UNRESOLVED_RELATION_TARGET. It lowers the file with program/read and reports every field of type relation, at any depth, of each orbital's primary entity (both codes) and auxiliary entities (the cross-orbital code only, as in Rust), whose target entity is not a declared entity of the program (any orbital's primary or auxiliary entity, or an expects entity or identity), with its path and suggestion (status 500, exit 1). A relation nested in array items or object properties with no `relation` config is reported as ORB_E_INVALID_RELATION at its `.relation` path (the top-level one is entity-field-type's). Relations nested in array items or object properties are walked at any depth with tree/fold, in the Rust order (the field, its items, its properties by name). Clean answers `lint relation-targets: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  description: "std-orb-lint-relation-targets - the `orb lint relation-targets <file>` command, the port of ORB_X_UNRESOLVED_RELATION_TARGET. It lowers the file with program/read and reports every field of type relation, at any depth, of each orbital's primary entity (both codes) and auxiliary entities (both codes, as validate_all_entities gives every auxiliary entity the same per-entity validation), whose target entity is not a declared entity of the program (any orbital's primary or auxiliary entity, or an expects entity or identity), with its path and suggestion (status 500, exit 1). A relation nested in array items or object properties with no `relation` config is reported as ORB_E_INVALID_RELATION at its `.relation` path (the top-level one is entity-field-type's). Relations nested in array items or object properties are walked at any depth with tree/fold, in the Rust order (the field, its items, its properties by name). Clean answers `lint relation-targets: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-relation-targets"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
-type FieldShape = string | number | boolean | [FieldShape] | Map string FieldShape
-type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type FieldShape = string | number | boolean | [FieldShape?] | Map string FieldShape?
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error", validValues : [string] }
 
 type RelTargetsExpect = { kind : string, name : string }
 type RelTargetsEntity = { name : string, fields : [FieldShape] }
-type RelTargetsOrbital = { entity : RelTargetsEntity, auxiliaryEntities : [RelTargetsEntity], expects : [RelTargetsExpect] }
+type RelTargetsOrbital = { entity : RelTargetsEntity, auxiliaryEntities : [RelTargetsEntity], expects : [RelTargetsExpect], spec : boolean }
 type RelTargetsProgram = { orbitals : [RelTargetsOrbital]! }
 
 orbital OrbLintRelationTargetsOrbital {
@@ -21,6 +21,7 @@ orbital OrbLintRelationTargetsOrbital {
 
   entity OrbLintRelationTargetsRun [runtime] {
     id : string!
+    scope : string = ""
     findings : [OrbFinding] = []
   }
 
@@ -30,6 +31,7 @@ orbital OrbLintRelationTargetsOrbital {
     state ready {
       INIT -> ready
       LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
         (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
           (let ((declared (array/flatten (array/map @orbitals (fn o
                   (array/concat
@@ -41,8 +43,8 @@ orbital OrbLintRelationTargetsOrbital {
                     (auxs (object/get (array/nth @orbitals @oi) "auxiliaryEntities" [])))
                 (array/flatten (array/map
                   (array/concat
-                    (if (validate/object @prim) [{ ent: @prim, base: (str/concat "orbitals[" @oi "].entity"), e: true }] [])
-                    (array/map (array/range 0 (array/len @auxs)) (fn ai { ent: (array/nth @auxs @ai), base: (str/concat "orbitals[" @oi "].auxiliaryEntities[" @ai "]"), e: false })))
+                    (if (validate/object @prim) [{ ent: @prim, base: (str/concat "orbitals[" @oi "].entity"), e: (not (object/get (array/nth @orbitals @oi) "spec" false)) }] [])
+                    (array/map (array/range 0 (array/len @auxs)) (fn ai { ent: (array/nth @auxs @ai), base: (str/concat "orbitals[" @oi "].auxiliaryEntities[" @ai "]"), e: (not (object/get (array/nth @orbitals @oi) "spec" false)) })))
                   (fn eb
                     (let ((fields (object/get (object/get @eb "ent") "fields" [])) (ename (object/get (object/get @eb "ent") "name" "")))
                       (array/flatten (array/map (array/range 0 (array/len @fields)) (fn fi
@@ -52,7 +54,7 @@ orbital OrbLintRelationTargetsOrbital {
                           (array/flatten (array/filter @k (fn r (validate/array @r))))
                           (if (validate/object @n)
                             (if (not (validate/string (object/get @n "type" 0)))
-                              (array/flatten (array/map (array/sort (object/keys @k)) (fn key (array/map (object/get @k @key) (fn h { rel: (str/concat ".properties." @key (object/get @h "rel")), nm: (object/get @h "nm"), tg: (object/get @h "tg"), miss: (object/get @h "miss") })))))
+                              (array/flatten (array/map (array/sort (object/keys @k)) (fn key (array/map (or (object/get @k @key) []) (fn h { rel: (str/concat ".properties." @key (object/get @h "rel")), nm: (object/get @h "nm"), tg: (object/get @h "tg"), miss: (object/get @h "miss") })))))
                             (let ((ty0 (object/get @n "type" "")) (nm0 (object/get @n "name" "<anonymous>")) (rl0 (object/get @n "relation" {})))
                              (let ((ty (if (validate/string @ty0) @ty0 "")) (nm (if (validate/string @nm0) @nm0 "<anonymous>")) (tg (if (validate/object @rl0) (let ((t0 (object/get @rl0 "entity" ""))) (if (validate/string @t0) @t0 "")) "")))
                             (array/concat
@@ -68,15 +70,15 @@ orbital OrbLintRelationTargetsOrbital {
                             (if (object/get @h "miss")
                               (if (and (object/get @eb "e") (!= (object/get @h "rel") "")) [{ code: "ORB_E_INVALID_RELATION", path: (str/concat (object/get @eb "base") ".fields[" @fi "]" (object/get @h "rel") ".relation"), message: "Relation field requires a 'relation' configuration", suggestion: "Add relation: { entity: 'EntityName', cardinality: 'one' }", severity: "error" }] [])
                               (array/concat
-                              (if (object/get @eb "e") [{ code: "ORB_E_INVALID_RELATION", path: (str/concat (object/get @eb "base") ".fields[" @fi "]" (object/get @h "rel") ".relation.entity"), message: (str/concat "Relation target entity '" (object/get @h "tg") "' does not exist"), suggestion: "Ensure the related entity is defined in the schema", severity: "error" }] [])
-                              [{ code: "ORB_X_UNRESOLVED_RELATION_TARGET", path: (str/concat (object/get @eb "base") ".fields[" @fi "]" (object/get @h "rel") ".relation.entity"), message: (str/concat "Relation field '" (object/get @h "nm") "' on '" @ename "' points at '" (object/get @h "tg") "', which is not declared in this schema"), suggestion: "Declare the target entity in one of the schema's orbitals, or correct the relation.entity name.", severity: "error" }]))))))))))))))))))))
+                              (if (object/get @eb "e") [{ code: "ORB_E_INVALID_RELATION", path: (str/concat (object/get @eb "base") ".fields[" @fi "]" (object/get @h "rel") ".relation.entity"), message: (str/concat "Relation target entity '" (object/get @h "tg") "' does not exist"), suggestion: "Ensure the related entity is defined in the schema", validValues: (array/sort (array/unique (array/filter @declared (fn n (!= @n ""))))), severity: "error" }] [])
+                              [{ code: "ORB_X_UNRESOLVED_RELATION_TARGET", path: (str/concat (object/get @eb "base") ".fields[" @fi "]" (object/get @h "rel") ".relation.entity"), message: (str/concat "Relation field '" (object/get @h "nm") "' on '" @ename "' points at '" (object/get @h "tg") "', which is not declared in this schema"), suggestion: "Declare the target entity in one of the schema's orbitals, or correct the relation.entity name.", validValues: (array/sort (array/unique (array/filter @declared (fn n (!= @n ""))))), severity: "error" }]))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
-        (emit LINT_FOUND { rule: "relation-targets", findings: @entity.findings })
+        (emit LINT_FOUND { rule: "relation-targets", scope: @entity.scope, findings: @entity.findings })
     }
 
     emits {
-      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
         @description "This rule's findings for the file, offered to the lint-all umbrella."
         @tier "internal"
       LINT_FINISH { }
@@ -85,7 +87,7 @@ orbital OrbLintRelationTargetsOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : RelTargetsProgram }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : RelTargetsProgram  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -122,7 +124,7 @@ orbital OrbLintRelationTargetsOrbital {
       LINT_REQUEST -> external { file : string! }
         @description "Ask the lint input to read and lower this file."
         @tier "internal"
-      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
         @description "The rule trait's findings for the file."
         @tier "internal"
       LINT_INPUT_UNREAD -> external { file : string! }

@@ -38,7 +38,6 @@ orbital WikimediaOrbital {
               (if (validate/required (object/get @page extract null)) { extract: (str/trim (str/slice (object/get @page extract "") 0 2000)) } {})))))
       WIKIMEDIA_PAGE_FAILED -> idle
         (emit WIKIMEDIA_PAGE_FAILURE { error: @payload.error, kind: @payload.kind })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Wikipedia unavailable: " @payload.error) })
     }
 
     emits {
@@ -91,11 +90,6 @@ orbital WikimediaOrbital {
     }
 
     config {
-      statusSlot : slot = system
-        @label "Status slot"
-        @description "Where the atom reports an unreachable Wikipedia call; a page running it in the background keeps it in `system`"
-        @synonyms "status area, slot"
-        @tier "presentation"
       origin : url = "https://en.wikipedia.org"
         @label "Wikipedia API origin"
         @description "The MediaWiki API origin (scheme://host, no path). Must be declared in the app egress list."
@@ -114,5 +108,5 @@ orbital WikimediaOrbital {
     }
   }
 
-  page "/wikimedia" as WikimediaPage -> WikimediaClient
+  page boot as WikimediaPage -> WikimediaClient
 }

@@ -273,7 +273,6 @@ orbital LlmOrbital {
           job: @payload.key,
           message: (if (= @payload.kind "timeout") (str/concat "LLM call timed out after " @config.timeoutMs "ms") (str/concat "Connection error: " @payload.error))
         })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "LLM unavailable: " @payload.error) })
       LLM_CHAT_HTTP_CANCELLED -> idle
         (set @entity.inflight (array/filter @entity.inflight (fn c (!= @c.httpKey @payload.key))))
         (set @entity.streamed (array/filter @entity.streamed (fn c (!= @c.key @payload.key))))
@@ -526,7 +525,6 @@ orbital LlmOrbital {
         } { key: (json/stringify { values: (array/map @payload.options (fn o @o.value)) }), emit: { success: LLM_JEV_REPLIED, failure: LLM_JEV_UNREACHABLE } })
       LLM_JEV_UNREACHABLE -> idle
         (emit LLM_FAILED { code: null, message: (if (= @payload.kind "timeout") "Jev decide timed out after 30000ms" (str/concat "Jev decide request failed: " @payload.error)) })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "LLM unavailable: " @payload.error) })
       LLM_JEV_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (emit LLM_FAILED { code: null, message: (str/concat "Jev decide failed with status " @payload.status) })
       LLM_JEV_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
@@ -641,7 +639,6 @@ orbital LlmOrbital {
       LLM_TOOLS_UNREACHABLE -> idle
         (set @entity.inflight (array/filter @entity.inflight (fn c (!= @c.httpKey @payload.key))))
         (emit LLM_FAILED { code: null, message: (if (= @payload.kind "timeout") (str/concat "LLMClient.callWithTools timed out after " @config.timeoutMs "ms") "fetch failed") })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "LLM unavailable: " @payload.error) })
 
       LLM_TOOLS_CANCELLED -> idle
         (set @entity.inflight (array/filter @entity.inflight (fn c (!= @c.httpKey @payload.key))))
@@ -786,7 +783,6 @@ orbital LlmOrbital {
           job: @payload.key, status: 0,
           message: (if (= @payload.kind "timeout") "fetch failed: the request timed out" (str/concat "fetch failed: " @payload.error))
         })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "LLM unavailable: " @payload.error) })
       LLM_EMBED_HTTP_CANCELLED -> idle
         (set @entity.inflight (array/filter @entity.inflight (fn c (!= @c.httpKey @payload.key))))
         (emit LLM_CANCELLED { key: (object/get (json/parse @payload.key EmbedJob) callKey "") })
@@ -1255,11 +1251,6 @@ orbital LlmOrbital {
     }
 
     config {
-      statusSlot : slot = system
-        @label "Status slot"
-        @description "Where the atom reports an unreachable LLM call; a page running it in the background keeps it in `system`"
-        @synonyms "status area, slot"
-        @tier "presentation"
       provider : "openai" | "anthropic" | "deepseek" | "kimi" | "openrouter" | "orbgen" | "masar" | "lmstudio" = openai
         @label "Chat provider"
         @description "The chat provider; it picks the wire format (Anthropic Messages or OpenAI chat completions), the keyless providers (lmstudio, orbgen) and the provider-specific body fields (kimi, openrouter)."
@@ -1328,5 +1319,5 @@ orbital LlmOrbital {
     }
   }
 
-  page "/llm" as LlmPage -> LlmClient
+  page boot as LlmPage -> LlmClient
 }

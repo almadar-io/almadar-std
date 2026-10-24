@@ -6,14 +6,16 @@ app asset-pack-fixture [
 orbital AssetPackFixtureOrbital {
   uses Pack from "std/behaviors/std-asset-pack"
 
-  type Asset = {
+  type PackAsset = {
+    key : string!
     url : asset
     atlas : asset
     sprite : string
     role : string
     category : string
     animations : [string]
-    style : string
+    style : "pixel" | "vector" | "hd" | "1-bit" | "isometric" | "lowpoly"
+    fxKind : "slash" | "puff" | "heal" | "trap" | "burst"
     dimension : string
     aspect : string
     name : string
@@ -22,8 +24,8 @@ orbital AssetPackFixtureOrbital {
 
   entity GameState [runtime, shared] {
     id : string!
-    assetByKey : Map string Asset = {}
-    assetManifest : Map string Map string Asset = {}
+    assetByKey : Map string PackAsset = {}
+    assetManifest : Map string Map string PackAsset = {}
     assetPackStatus : string = "idle"
     assetPackMissing : [string] = []
     assetPackCursor : number = 0

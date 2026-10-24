@@ -19,6 +19,7 @@ orbital OrbLintPagePathUniquenessOrbital {
 
   entity OrbLintPagePathUniquenessRun [runtime] {
     id : string!
+    scope : string = ""
     findings : [OrbFinding] = []
   }
 
@@ -28,6 +29,7 @@ orbital OrbLintPagePathUniquenessOrbital {
     state ready {
       INIT -> ready
       LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
         (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
           (let ((entries (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
                   (let ((pgs (object/get (array/nth @orbitals @oi) "pages" [])))
@@ -56,11 +58,11 @@ orbital OrbLintPagePathUniquenessOrbital {
                       [{ code: "ORB_P_DUPLICATE_PATH", path: (object/get (array/nth @entries @ki) "loc"), message: (str/concat "Duplicate page path (normalized to '" @key "'): [" (str/join (array/map @at (fn j (json/stringify (object/get (array/nth @entries @j) "path")))) ", ") "] found at: [" (str/join (array/map @at (fn j (json/stringify (object/get (array/nth @entries @j) "loc")))) ", ") "]"), suggestion: "Each page must have a unique path — two routes that only differ by a param NAME still collide at dispatch", severity: "error" }]))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
-        (emit LINT_FOUND { rule: "page-path-uniqueness", findings: @entity.findings })
+        (emit LINT_FOUND { rule: "page-path-uniqueness", scope: @entity.scope, findings: @entity.findings })
     }
 
     emits {
-      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
         @description "This rule's findings for the file, offered to the lint-all umbrella."
         @tier "internal"
       LINT_FINISH { }
@@ -69,7 +71,7 @@ orbital OrbLintPagePathUniquenessOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PageUniquenessProgram }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PageUniquenessProgram  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -106,7 +108,7 @@ orbital OrbLintPagePathUniquenessOrbital {
       LINT_REQUEST -> external { file : string! }
         @description "Ask the lint input to read and lower this file."
         @tier "internal"
-      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
         @description "The rule trait's findings for the file."
         @tier "internal"
       LINT_INPUT_UNREAD -> external { file : string! }

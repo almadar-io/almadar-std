@@ -503,35 +503,4 @@ orbital BearerVerifyOrbital {
   }
 
   page boot as BearerVerifyStart -> BearerVerifier
-
-  entity BearerVerifierDemoView [runtime] {
-    id : string!
-  }
-
-  trait BearerVerifierDemo -> BearerVerifierDemoView [optimistic] {
-    initial: idle
-
-    state idle {
-      INIT -> idle
-      REFUSED -> idle when (= @payload.reason "keys-unavailable")
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Key set unavailable" })
-    }
-
-    listens {
-      BearerVerifier.BEARER_REFUSED -> REFUSED
-      REFUSED {
-        reason : string!
-      }
-    }
-
-    config {
-      statusSlot : slot = main
-        @label "Status slot"
-        @description "Where the demo page reports an unreachable key set."
-        @synonyms "status area, slot"
-        @tier "presentation"
-    }
-  }
-
-  page "/bearer-verify" as BearerVerifyDemoPage -> BearerVerifierDemo
 }

@@ -37,10 +37,8 @@ orbital TwilioOrbital {
         (emit TWILIO_SMS_FAILED { code: null, message: (if (and (!= (object/get (json/parse @payload.body TwilioError) type null) null) (!= (object/get (json/parse @payload.body TwilioError) title null) null) (!= (object/get (json/parse @payload.body TwilioError) status null) null) (!= (object/get (json/parse @payload.body TwilioError) code null) null))
           (str/concat "[HTTP " (if (!= (object/get (json/parse @payload.body TwilioError) status 0) 0) (object/get (json/parse @payload.body TwilioError) status 0) @payload.status) "] " (if (!= (object/get (json/parse @payload.body TwilioError) title "") "") (object/get (json/parse @payload.body TwilioError) title "") "Failed to execute request"))
           (if (= (json/parse @payload.body TwilioError) null) (str/concat "[HTTP " @payload.status "] Failed to execute request") (object/get (json/parse @payload.body TwilioError) message ""))) })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Twilio rejected the message" })
       TWILIO_SMS_HTTP_FAILED -> idle
         (emit TWILIO_SMS_FAILED { code: null, message: (if (= @payload.kind "unconfigured") "TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN not configured" (if (= @payload.kind "timeout") (str/concat "timeout of " @config.timeoutMs "ms exceeded") @payload.error)) })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Twilio unavailable: " @payload.error) })
 
       TWILIO_SEND_WHATSAPP -> idle when (= @config.accountSid "")
         (emit TWILIO_WHATSAPP_FAILED { code: null, message: "TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN not configured" })
@@ -63,10 +61,8 @@ orbital TwilioOrbital {
         (emit TWILIO_WHATSAPP_FAILED { code: null, message: (if (and (!= (object/get (json/parse @payload.body TwilioError) type null) null) (!= (object/get (json/parse @payload.body TwilioError) title null) null) (!= (object/get (json/parse @payload.body TwilioError) status null) null) (!= (object/get (json/parse @payload.body TwilioError) code null) null))
           (str/concat "[HTTP " (if (!= (object/get (json/parse @payload.body TwilioError) status 0) 0) (object/get (json/parse @payload.body TwilioError) status 0) @payload.status) "] " (if (!= (object/get (json/parse @payload.body TwilioError) title "") "") (object/get (json/parse @payload.body TwilioError) title "") "Failed to execute request"))
           (if (= (json/parse @payload.body TwilioError) null) (str/concat "[HTTP " @payload.status "] Failed to execute request") (object/get (json/parse @payload.body TwilioError) message ""))) })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Twilio rejected the message" })
       TWILIO_WHATSAPP_HTTP_FAILED -> idle
         (emit TWILIO_WHATSAPP_FAILED { code: null, message: (if (= @payload.kind "unconfigured") "TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN not configured" (if (= @payload.kind "timeout") (str/concat "timeout of " @config.timeoutMs "ms exceeded") @payload.error)) })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Twilio unavailable: " @payload.error) })
     }
 
     emits {
@@ -157,11 +153,6 @@ orbital TwilioOrbital {
     }
 
     config {
-      statusSlot : slot = system
-        @label "Status slot"
-        @description "Where the atom reports an unreachable or rejecting Twilio call; a page running it in the background keeps it in `system`"
-        @synonyms "status area, slot"
-        @tier "presentation"
       origin : url = "https://api.twilio.com"
         @label "Twilio API origin"
         @description "The Twilio REST origin (scheme://host, no path). Must be declared in the app egress list."
@@ -195,5 +186,5 @@ orbital TwilioOrbital {
     }
   }
 
-  page "/twilio" as TwilioPage -> TwilioClient
+  page boot as TwilioPage -> TwilioClient
 }

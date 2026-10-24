@@ -94,7 +94,6 @@ orbital StripeOrbital {
         } { key: (object/get (json/parse @payload.key StripeDraw) call ""), emit: { success: STRIPE_REPLIED, failure: STRIPE_HTTP_FAILED } }))
       STRIPE_RANDOM_FAILED -> idle
         (emit STRIPE_FAILED { code: null, message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Stripe unavailable: " @payload.error) })
       STRIPE_REPLIED -> idle when (not (!= (json/parse @payload.body StripeErrorReply) null))
         (emit STRIPE_FAILED { code: null, message: "Invalid JSON received from the Stripe API" })
       STRIPE_REPLIED -> idle when (and (!= (json/parse @payload.body StripeErrorReply) null) (and (!= (object/get (json/parse @payload.body StripeOauthErrorReply) error null) null) (not (and (validate/string (object/get (json/parse @payload.body StripeOauthErrorReply) error null)) (= (object/get (json/parse @payload.body StripeOauthErrorReply) error null) "")))))
@@ -103,7 +102,6 @@ orbital StripeOrbital {
         (emit STRIPE_OK { key: @payload.key, body: @payload.body })
       STRIPE_HTTP_FAILED -> idle
         (emit STRIPE_FAILED { code: null, message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Stripe unavailable: " @payload.error) })
       STRIPE_OK -> idle when (= (object/get (json/parse @payload.key StripeKey) action "") "createPaymentIntent")
         (emit STRIPE_CREATE_PAYMENT_INTENT_RESULT { id: (object/get (json/parse @payload.body StripePaymentIntent) id null), object: (object/get (json/parse @payload.body StripePaymentIntent) object null), amount: (object/get (json/parse @payload.body StripePaymentIntent) amount null), currency: (object/get (json/parse @payload.body StripePaymentIntent) currency null), status: (object/get (json/parse @payload.body StripePaymentIntent) status null), client_secret: (object/get (json/parse @payload.body StripePaymentIntent) client_secret null), metadata: (object/get (json/parse @payload.body StripePaymentIntent) metadata null) })
       STRIPE_OK -> idle when (= (object/get (json/parse @payload.key StripeKey) action "") "confirmPayment")
@@ -424,11 +422,6 @@ orbital StripeOrbital {
     }
 
     config {
-      statusSlot : slot = system
-        @label "Status slot"
-        @description "Where the atom reports an unreachable Stripe call; a page running it in the background keeps it in `system`"
-        @synonyms "status area, slot"
-        @tier "presentation"
       origin : url = "https://api.stripe.com"
         @label "Stripe API origin"
         @description "The Stripe API origin (scheme://host, no path). Must be declared in the app egress list."
@@ -462,5 +455,5 @@ orbital StripeOrbital {
     }
   }
 
-  page "/stripe" as StripePage -> StripeClient
+  page boot as StripePage -> StripeClient
 }

@@ -67,14 +67,12 @@ orbital RedisOrbital {
         (if @config.authenticated (redis @config.origin ["SET", (object/get (json/parse @payload.key RedisLockRequest) key ""), @payload.value, "NX", "PX", (str/concat (object/get (json/parse @payload.key RedisLockRequest) ttl 30000))] { auth: @config.password, user: (if (!= @config.user "") @config.user null), db: (if (> @config.db 0) @config.db null) } { key: @payload.value, emit: { success: REDIS_LOCK_REPLIED, failure: REDIS_LOCK_CALL_FAILED } }) (redis @config.origin ["SET", (object/get (json/parse @payload.key RedisLockRequest) key ""), @payload.value, "NX", "PX", (str/concat (object/get (json/parse @payload.key RedisLockRequest) ttl 30000))] { db: (if (> @config.db 0) @config.db null) } { key: @payload.value, emit: { success: REDIS_LOCK_REPLIED, failure: REDIS_LOCK_CALL_FAILED } }))
       REDIS_LOCK_ID_FAILED -> idle
         (emit REDIS_FAILED { action: "lock", kind: "failed", code: null, message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Redis unavailable: " @payload.error) })
       REDIS_LOCK_REPLIED -> idle when (= @payload.reply "OK")
         (emit REDIS_LOCKED { acquired: true, lockId: @payload.key })
       REDIS_LOCK_REPLIED -> idle when (!= @payload.reply "OK")
         (emit REDIS_LOCKED { acquired: false, lockId: "" })
       REDIS_LOCK_CALL_FAILED -> idle
         (emit REDIS_FAILED { action: "lock", kind: @payload.kind, code: @payload.code, message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Redis unavailable: " @payload.error) })
 
       REDIS_UNLOCK -> idle when (and (!= @payload.key "") (!= @payload.lockId ""))
         (if @config.authenticated (redis @config.origin ["EVAL", "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end", "1", @payload.key, @payload.lockId] { auth: @config.password, user: (if (!= @config.user "") @config.user null), db: (if (> @config.db 0) @config.db null) } { key: "unlock", emit: { success: REDIS_UNLOCK_REPLIED, failure: REDIS_CALL_FAILED } }) (redis @config.origin ["EVAL", "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end", "1", @payload.key, @payload.lockId] { db: (if (> @config.db 0) @config.db null) } { key: "unlock", emit: { success: REDIS_UNLOCK_REPLIED, failure: REDIS_CALL_FAILED } }))
@@ -85,7 +83,6 @@ orbital RedisOrbital {
 
       REDIS_CALL_FAILED -> idle
         (emit REDIS_FAILED { action: @payload.key, kind: @payload.kind, code: @payload.code, message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Redis unavailable: " @payload.error) })
     }
 
     emits {
@@ -330,11 +327,6 @@ orbital RedisOrbital {
     }
 
     config {
-      statusSlot : slot = system
-        @label "Status slot"
-        @description "Where the atom reports a failed Redis call; a page running it in the background keeps it in `system`"
-        @synonyms "status area, slot"
-        @tier "presentation"
       origin : url = "redis://redis.example.test:6379"
         @label "Redis origin"
         @description "The Redis server as redis://host[:port], or rediss://host[:port] for TLS (no path). Must be declared in the app egress list."
@@ -363,5 +355,5 @@ orbital RedisOrbital {
     }
   }
 
-  page "/redis" as RedisPage -> RedisClient
+  page boot as RedisPage -> RedisClient
 }

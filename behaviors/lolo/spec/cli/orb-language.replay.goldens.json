@@ -1,2289 +1,2548 @@
 {
- "atom": "cli/atoms/std-orb-language.lolo",
- "trait": "OrbLanguage",
- "cases": [
-  {
-   "id": "no-subcommand-answers-usage",
-   "steps": [
+  "atom": "cli/atoms/std-orb-language.lolo",
+  "trait": "OrbLanguage",
+  "cases": [
     {
-     "trait": "OrbLanguage",
-     "event": "LANG_ARGS_DONE",
-     "payload": {
-      "stage": "language",
-      "flags": {},
-      "positionals": [],
-      "errors": [],
-      "words": []
-     },
-     "from": "parsing",
-     "expect": {
-      "emits": [
-       {
-        "event": "LANGUAGE_ANSWERED",
-        "payload": {
-         "status": 400,
-         "body": "",
-         "stderr": "usage: orb language which"
+      "id": "no-subcommand-answers-usage",
+      "steps": [
+        {
+          "trait": "OrbLanguage",
+          "event": "LANG_ARGS_DONE",
+          "payload": {
+            "stage": "language",
+            "flags": {},
+            "positionals": [],
+            "errors": [],
+            "words": []
+          },
+          "from": "parsing",
+          "expect": {
+            "emits": [
+              {
+                "event": "LANGUAGE_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "",
+                  "stderr": "usage: orb language which"
+                }
+              }
+            ],
+            "state": "ready"
+          }
         }
-       }
-      ],
-      "state": "ready"
-     }
-    }
-   ]
-  },
-  {
-   "id": "unknown-subcommand-answers-usage",
-   "steps": [
-    {
-     "trait": "OrbLanguage",
-     "event": "LANG_ARGS_DONE",
-     "payload": {
-      "stage": "language",
-      "flags": {},
-      "positionals": [
-       "bogus"
-      ],
-      "errors": [],
-      "words": [
-       "bogus"
       ]
-     },
-     "from": "parsing",
-     "expect": {
-      "emits": [
-       {
-        "event": "LANGUAGE_ANSWERED",
-        "payload": {
-         "status": 400,
-         "body": "",
-         "stderr": "usage: orb language which"
-        }
-       }
-      ],
-      "state": "ready"
-     }
-    }
-   ]
-  },
-  {
-   "id": "parse-error-answers-usage",
-   "steps": [
+    },
     {
-     "trait": "OrbLanguage",
-     "event": "LANG_ARGS_DONE",
-     "payload": {
-      "stage": "language",
-      "flags": {},
-      "positionals": [
-       "which"
-      ],
-      "errors": [
-       "unknown flag: --x"
-      ],
-      "words": [
-       "which"
+      "id": "unknown-subcommand-answers-usage",
+      "steps": [
+        {
+          "trait": "OrbLanguage",
+          "event": "LANG_ARGS_DONE",
+          "payload": {
+            "stage": "language",
+            "flags": {},
+            "positionals": [
+              "bogus"
+            ],
+            "errors": [],
+            "words": [
+              "bogus"
+            ]
+          },
+          "from": "parsing",
+          "expect": {
+            "emits": [
+              {
+                "event": "LANGUAGE_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "",
+                  "stderr": "usage: orb language which"
+                }
+              }
+            ],
+            "state": "ready"
+          }
+        }
       ]
-     },
-     "from": "parsing",
-     "expect": {
-      "emits": [
-       {
-        "event": "LANGUAGE_ANSWERED",
-        "payload": {
-         "status": 400,
-         "body": "",
-         "stderr": "usage: orb language which"
-        }
-       }
-      ],
-      "state": "ready"
-     }
-    }
-   ]
-  },
-  {
-   "id": "which-asks-the-running-version-control",
-   "steps": [
+    },
     {
-     "trait": "OrbLanguage",
-     "event": "LANG_ARGS_DONE",
-     "payload": {
-      "stage": "language",
-      "flags": {},
-      "positionals": [
-       "which"
-      ],
-      "errors": [],
-      "words": [
-       "which"
+      "id": "parse-error-answers-usage",
+      "steps": [
+        {
+          "trait": "OrbLanguage",
+          "event": "LANG_ARGS_DONE",
+          "payload": {
+            "stage": "language",
+            "flags": {},
+            "positionals": [
+              "which"
+            ],
+            "errors": [
+              "unknown flag: --x"
+            ],
+            "words": [
+              "which"
+            ]
+          },
+          "from": "parsing",
+          "expect": {
+            "emits": [
+              {
+                "event": "LANGUAGE_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "",
+                  "stderr": "usage: orb language which"
+                }
+              }
+            ],
+            "state": "ready"
+          }
+        }
       ]
-     },
-     "from": "parsing",
-     "entity": {
-      "id": "c",
-      "cwd": "/a/b"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LANG_SCAN",
-        "payload": {
-         "cwd": "/a/b"
-        }
-       }
-      ],
-      "state": "scanning"
-     }
-    }
-   ]
-  },
-  {
-   "id": "version-answer-starts-the-probe",
-   "steps": [
+    },
     {
-     "trait": "OrbLanguageEngine",
-     "event": "LANG_WAITED",
-     "payload": {
-      "code": 0
-     },
-     "from": "versioning",
-     "entity": {
-      "id": "c",
-      "cwd": "/w",
-      "pkgs": [
-       {
-        "name": "@almadar/core",
-        "hint": "orb update",
-        "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
-       },
-       {
-        "name": "@almadar/std",
-        "hint": "orb update",
-        "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
-       }
-      ],
-      "roots": [
-       "/w/node_modules",
-       "/node_modules",
-       "~/.orb/node_modules"
-      ],
-      "cursor": 0,
-      "stage": 0,
-      "running": "",
-      "ver": "10.128.0",
-      "kind": "",
-      "compiler": ">=17.11.2",
-      "lines": [],
-      "reply": "orb 18.0.5"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LANG_NEXT",
-        "payload": {
-         "tag": "0"
+      "id": "which-asks-the-running-version-control",
+      "steps": [
+        {
+          "trait": "OrbLanguage",
+          "event": "LANG_ARGS_DONE",
+          "payload": {
+            "stage": "language",
+            "flags": {},
+            "positionals": [
+              "which"
+            ],
+            "errors": [],
+            "words": [
+              "which"
+            ]
+          },
+          "from": "parsing",
+          "entity": {
+            "id": "c",
+            "cwd": "/a/b"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LANG_SCAN",
+                "payload": {
+                  "cwd": "/a/b"
+                }
+              }
+            ],
+            "state": "scanning"
+          }
         }
-       }
-      ],
-      "state": "probing"
-     }
-    }
-   ]
-  },
-  {
-   "id": "non-version-answer-fails-control",
-   "steps": [
-    {
-     "trait": "OrbLanguageEngine",
-     "event": "LANG_WAITED",
-     "payload": {
-      "code": 0
-     },
-     "from": "versioning",
-     "entity": {
-      "id": "c",
-      "cwd": "/w",
-      "pkgs": [
-       {
-        "name": "@almadar/core",
-        "hint": "orb update",
-        "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
-       },
-       {
-        "name": "@almadar/std",
-        "hint": "orb update",
-        "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
-       }
-      ],
-      "roots": [
-       "/w/node_modules",
-       "/node_modules",
-       "~/.orb/node_modules"
-      ],
-      "cursor": 0,
-      "stage": 0,
-      "running": "18.0.5",
-      "ver": "10.128.0",
-      "kind": "",
-      "compiler": ">=17.11.2",
-      "lines": [],
-      "reply": "garbage"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "SCAN_ANSWERED",
-        "payload": {
-         "status": 500,
-         "body": "",
-         "stderr": "orb language: the host binary did not answer --version as `orb X.Y.Z`"
-        }
-       }
-      ],
-      "state": "idle"
-     }
-    }
-   ]
-  },
-  {
-   "id": "absent-nearest-tries-the-parent",
-   "steps": [
-    {
-     "trait": "OrbLanguageEngine",
-     "event": "LANG_ABSENT",
-     "payload": {
-      "kind": "not-found",
-      "error": "x"
-     },
-     "from": "probing",
-     "entity": {
-      "id": "c",
-      "cwd": "/w",
-      "pkgs": [
-       {
-        "name": "@almadar/core",
-        "hint": "orb update",
-        "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
-       },
-       {
-        "name": "@almadar/std",
-        "hint": "orb update",
-        "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
-       }
-      ],
-      "roots": [
-       "/w/node_modules",
-       "/node_modules",
-       "~/.orb/node_modules"
-      ],
-      "cursor": 0,
-      "stage": 0,
-      "running": "18.0.5",
-      "ver": "10.128.0",
-      "kind": "",
-      "compiler": ">=17.11.2",
-      "lines": []
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LANG_READ",
-        "payload": {
-         "tag": "1:0"
-        }
-       }
-      ],
-      "state": "probing"
-     }
-    }
-   ]
-  },
-  {
-   "id": "absent-in-the-parent-tries-the-user-store",
-   "steps": [
-    {
-     "trait": "OrbLanguageEngine",
-     "event": "LANG_ABSENT",
-     "payload": {
-      "kind": "not-found",
-      "error": "x"
-     },
-     "from": "probing",
-     "entity": {
-      "id": "c",
-      "cwd": "/w",
-      "pkgs": [
-       {
-        "name": "@almadar/core",
-        "hint": "orb update",
-        "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
-       },
-       {
-        "name": "@almadar/std",
-        "hint": "orb update",
-        "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
-       }
-      ],
-      "roots": [
-       "/w/node_modules",
-       "/node_modules",
-       "~/.orb/node_modules"
-      ],
-      "cursor": 0,
-      "stage": 1,
-      "running": "18.0.5",
-      "ver": "10.128.0",
-      "kind": "",
-      "compiler": ">=17.11.2",
-      "lines": []
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LANG_READ",
-        "payload": {
-         "tag": "2:0"
-        }
-       }
-      ],
-      "state": "probing"
-     }
-    }
-   ]
-  },
-  {
-   "id": "absent-everywhere-is-not-installed-core",
-   "steps": [
-    {
-     "trait": "OrbLanguageEngine",
-     "event": "LANG_ABSENT",
-     "payload": {
-      "kind": "not-found",
-      "error": "x"
-     },
-     "from": "probing",
-     "entity": {
-      "id": "c",
-      "cwd": "/w",
-      "pkgs": [
-       {
-        "name": "@almadar/core",
-        "hint": "orb update",
-        "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
-       },
-       {
-        "name": "@almadar/std",
-        "hint": "orb update",
-        "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
-       }
-      ],
-      "roots": [
-       "/w/node_modules",
-       "/node_modules",
-       "~/.orb/node_modules"
-      ],
-      "cursor": 0,
-      "stage": 2,
-      "running": "18.0.5",
-      "ver": "10.128.0",
-      "kind": "",
-      "compiler": ">=17.11.2",
-      "lines": []
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LANGUAGE_ROW",
-        "payload": {
-         "line": "@almadar/core \u2192 ORB_LANGUAGE_DATA_NOT_INSTALLED: @almadar/core is not installed \u2014 run `orb update` (or with `--global`)"
-        }
-       },
-       {
-        "event": "LANG_NEXT",
-        "payload": {
-         "tag": "1"
-        }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "absent-everywhere-is-not-installed-std-code",
-   "steps": [
+    },
     {
-     "trait": "OrbLanguageEngine",
-     "event": "LANG_ABSENT",
-     "payload": {
-      "kind": "not-found",
-      "error": "x"
-     },
-     "from": "probing",
-     "entity": {
-      "id": "c",
-      "cwd": "/w",
-      "pkgs": [
-       {
-        "name": "@almadar/core",
-        "hint": "orb update",
-        "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
-       },
-       {
-        "name": "@almadar/std",
-        "hint": "orb update",
-        "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
-       }
-      ],
-      "roots": [
-       "/w/node_modules",
-       "/node_modules",
-       "~/.orb/node_modules"
-      ],
-      "cursor": 1,
-      "stage": 2,
-      "running": "18.0.5",
-      "ver": "10.128.0",
-      "kind": "",
-      "compiler": ">=17.11.2",
-      "lines": []
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LANGUAGE_ROW",
-        "payload": {
-         "line": "@almadar/std \u2192 ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED: @almadar/std is not installed \u2014 run `orb update` (or with `--global`)"
+      "id": "version-answer-starts-the-probe",
+      "steps": [
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_WAITED",
+          "payload": {
+            "code": 0
+          },
+          "from": "versioning",
+          "entity": {
+            "id": "c",
+            "cwd": "/w",
+            "pkgs": [
+              {
+                "name": "@almadar/core",
+                "hint": "orb update",
+                "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
+              },
+              {
+                "name": "@almadar/std",
+                "hint": "orb update",
+                "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
+              }
+            ],
+            "roots": [
+              "/w/node_modules",
+              "/node_modules",
+              "~/.orb/node_modules"
+            ],
+            "cursor": 0,
+            "stage": 0,
+            "running": "",
+            "ver": "10.128.0",
+            "kind": "",
+            "compiler": ">=17.11.2",
+            "lines": [],
+            "reply": "orb 18.0.5"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LANG_NEXT",
+                "payload": {
+                  "tag": "0"
+                }
+              }
+            ],
+            "state": "probing"
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "manifest-with-a-range-asks-semver",
-   "steps": [
+    },
     {
-     "trait": "OrbLanguageEngine",
-     "event": "LANG_MANIFEST",
-     "payload": {
-      "text": "{\"name\": \"@almadar/core\", \"version\": \"10.128.0\", \"orbLanguage\": {\"compiler\": \">=17.11.2\"}}"
-     },
-     "from": "probing",
-     "entity": {
-      "id": "c",
-      "cwd": "/w",
-      "pkgs": [
-       {
-        "name": "@almadar/core",
-        "hint": "orb update",
-        "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
-       },
-       {
-        "name": "@almadar/std",
-        "hint": "orb update",
-        "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
-       }
-      ],
-      "roots": [
-       "/w/node_modules",
-       "/node_modules",
-       "~/.orb/node_modules"
-      ],
-      "cursor": 0,
-      "stage": 0,
-      "running": "18.0.5",
-      "ver": "10.128.0",
-      "kind": "",
-      "compiler": ">=17.11.2",
-      "lines": []
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LANG_SEMVER",
-        "payload": {
-         "requestId": "pkg:0:0",
-         "version": "18.0.5",
-         "range": ">=17.11.2"
+      "id": "non-version-answer-fails-control",
+      "steps": [
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_WAITED",
+          "payload": {
+            "code": 0
+          },
+          "from": "versioning",
+          "entity": {
+            "id": "c",
+            "cwd": "/w",
+            "pkgs": [
+              {
+                "name": "@almadar/core",
+                "hint": "orb update",
+                "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
+              },
+              {
+                "name": "@almadar/std",
+                "hint": "orb update",
+                "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
+              }
+            ],
+            "roots": [
+              "/w/node_modules",
+              "/node_modules",
+              "~/.orb/node_modules"
+            ],
+            "cursor": 0,
+            "stage": 0,
+            "running": "18.0.5",
+            "ver": "10.128.0",
+            "kind": "",
+            "compiler": ">=17.11.2",
+            "lines": [],
+            "reply": "garbage"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "SCAN_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "",
+                  "stderr": "orb language: the host binary did not answer --version as `orb X.Y.Z`"
+                }
+              }
+            ],
+            "state": "idle"
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "manifest-without-orbLanguage-is-blockless-control",
-   "steps": [
+    },
     {
-     "trait": "OrbLanguageEngine",
-     "event": "LANG_MANIFEST",
-     "payload": {
-      "text": "{\"name\": \"@almadar/core\", \"version\": \"10.128.0\"}"
-     },
-     "from": "probing",
-     "entity": {
-      "id": "c",
-      "cwd": "/w",
-      "pkgs": [
-       {
-        "name": "@almadar/core",
-        "hint": "orb update",
-        "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
-       },
-       {
-        "name": "@almadar/std",
-        "hint": "orb update",
-        "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
-       }
-      ],
-      "roots": [
-       "/w/node_modules",
-       "/node_modules",
-       "~/.orb/node_modules"
-      ],
-      "cursor": 0,
-      "stage": 0,
-      "running": "18.0.5",
-      "ver": "10.128.0",
-      "kind": "",
-      "compiler": ">=17.11.2",
-      "lines": []
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LANG_ROOT_ASK",
-        "payload": {
-         "tag": "0:0",
-         "version": "10.128.0",
-         "kind": "block"
+      "id": "absent-nearest-tries-the-parent",
+      "steps": [
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_ABSENT",
+          "payload": {
+            "kind": "not-found",
+            "error": "x"
+          },
+          "from": "probing",
+          "entity": {
+            "id": "c",
+            "cwd": "/w",
+            "pkgs": [
+              {
+                "name": "@almadar/core",
+                "hint": "orb update",
+                "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
+              },
+              {
+                "name": "@almadar/std",
+                "hint": "orb update",
+                "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
+              }
+            ],
+            "roots": [
+              "/w/node_modules",
+              "/node_modules",
+              "~/.orb/node_modules"
+            ],
+            "cursor": 0,
+            "stage": 0,
+            "running": "18.0.5",
+            "ver": "10.128.0",
+            "kind": "",
+            "compiler": ">=17.11.2",
+            "lines": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LANG_READ",
+                "payload": {
+                  "tag": "1:0"
+                }
+              }
+            ],
+            "state": "probing"
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "manifest-without-compiler-range",
-   "steps": [
+    },
     {
-     "trait": "OrbLanguageEngine",
-     "event": "LANG_MANIFEST",
-     "payload": {
-      "text": "{\"name\": \"@almadar/core\", \"version\": \"10.128.0\", \"orbLanguage\": {}}"
-     },
-     "from": "probing",
-     "entity": {
-      "id": "c",
-      "cwd": "/w",
-      "pkgs": [
-       {
-        "name": "@almadar/core",
-        "hint": "orb update",
-        "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
-       },
-       {
-        "name": "@almadar/std",
-        "hint": "orb update",
-        "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
-       }
-      ],
-      "roots": [
-       "/w/node_modules",
-       "/node_modules",
-       "~/.orb/node_modules"
-      ],
-      "cursor": 0,
-      "stage": 0,
-      "running": "18.0.5",
-      "ver": "10.128.0",
-      "kind": "",
-      "compiler": ">=17.11.2",
-      "lines": []
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LANG_ROOT_ASK",
-        "payload": {
-         "tag": "0:0",
-         "version": "10.128.0",
-         "kind": "range"
+      "id": "absent-in-the-parent-tries-the-user-store",
+      "steps": [
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_ABSENT",
+          "payload": {
+            "kind": "not-found",
+            "error": "x"
+          },
+          "from": "probing",
+          "entity": {
+            "id": "c",
+            "cwd": "/w",
+            "pkgs": [
+              {
+                "name": "@almadar/core",
+                "hint": "orb update",
+                "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
+              },
+              {
+                "name": "@almadar/std",
+                "hint": "orb update",
+                "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
+              }
+            ],
+            "roots": [
+              "/w/node_modules",
+              "/node_modules",
+              "~/.orb/node_modules"
+            ],
+            "cursor": 0,
+            "stage": 1,
+            "running": "18.0.5",
+            "ver": "10.128.0",
+            "kind": "",
+            "compiler": ">=17.11.2",
+            "lines": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LANG_READ",
+                "payload": {
+                  "tag": "2:0"
+                }
+              }
+            ],
+            "state": "probing"
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "manifest-that-is-not-json",
-   "steps": [
+    },
     {
-     "trait": "OrbLanguageEngine",
-     "event": "LANG_MANIFEST",
-     "payload": {
-      "text": "{nope"
-     },
-     "from": "probing",
-     "entity": {
-      "id": "c",
-      "cwd": "/w",
-      "pkgs": [
-       {
-        "name": "@almadar/core",
-        "hint": "orb update",
-        "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
-       },
-       {
-        "name": "@almadar/std",
-        "hint": "orb update",
-        "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
-       }
-      ],
-      "roots": [
-       "/w/node_modules",
-       "/node_modules",
-       "~/.orb/node_modules"
-      ],
-      "cursor": 0,
-      "stage": 0,
-      "running": "18.0.5",
-      "ver": "10.128.0",
-      "kind": "",
-      "compiler": ">=17.11.2",
-      "lines": []
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LANG_ROOT_ASK",
-        "payload": {
-         "tag": "0:0",
-         "version": "",
-         "kind": "json"
+      "id": "absent-everywhere-is-not-installed-core",
+      "steps": [
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_ABSENT",
+          "payload": {
+            "kind": "not-found",
+            "error": "x"
+          },
+          "from": "probing",
+          "entity": {
+            "id": "c",
+            "cwd": "/w",
+            "pkgs": [
+              {
+                "name": "@almadar/core",
+                "hint": "orb update",
+                "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
+              },
+              {
+                "name": "@almadar/std",
+                "hint": "orb update",
+                "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
+              }
+            ],
+            "roots": [
+              "/w/node_modules",
+              "/node_modules",
+              "~/.orb/node_modules"
+            ],
+            "cursor": 0,
+            "stage": 2,
+            "running": "18.0.5",
+            "ver": "10.128.0",
+            "kind": "",
+            "compiler": ">=17.11.2",
+            "lines": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LANGUAGE_ROW",
+                "payload": {
+                  "line": "@almadar/core → ORB_LANGUAGE_DATA_NOT_INSTALLED: @almadar/core is not installed — run `orb update` (or with `--global`)"
+                }
+              },
+              {
+                "event": "LANG_NEXT",
+                "payload": {
+                  "tag": "1"
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "satisfied-range-is-ok",
-   "steps": [
+    },
     {
-     "trait": "OrbLanguageEngine",
-     "event": "LANG_SAT",
-     "payload": {
-      "requestId": "pkg:0:0",
-      "value": true
-     },
-     "from": "probing",
-     "entity": {
-      "id": "c",
-      "cwd": "/w",
-      "pkgs": [
-       {
-        "name": "@almadar/core",
-        "hint": "orb update",
-        "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
-       },
-       {
-        "name": "@almadar/std",
-        "hint": "orb update",
-        "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
-       }
-      ],
-      "roots": [
-       "/w/node_modules",
-       "/node_modules",
-       "~/.orb/node_modules"
-      ],
-      "cursor": 0,
-      "stage": 0,
-      "running": "18.0.5",
-      "ver": "10.128.0",
-      "kind": "",
-      "compiler": ">=17.11.2",
-      "lines": []
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LANG_ROOT_ASK",
-        "payload": {
-         "tag": "0:0",
-         "version": "10.128.0",
-         "kind": ""
+      "id": "absent-everywhere-is-not-installed-std-code",
+      "steps": [
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_ABSENT",
+          "payload": {
+            "kind": "not-found",
+            "error": "x"
+          },
+          "from": "probing",
+          "entity": {
+            "id": "c",
+            "cwd": "/w",
+            "pkgs": [
+              {
+                "name": "@almadar/core",
+                "hint": "orb update",
+                "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
+              },
+              {
+                "name": "@almadar/std",
+                "hint": "orb update",
+                "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
+              }
+            ],
+            "roots": [
+              "/w/node_modules",
+              "/node_modules",
+              "~/.orb/node_modules"
+            ],
+            "cursor": 1,
+            "stage": 2,
+            "running": "18.0.5",
+            "ver": "10.128.0",
+            "kind": "",
+            "compiler": ">=17.11.2",
+            "lines": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LANGUAGE_ROW",
+                "payload": {
+                  "line": "@almadar/std → ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED: @almadar/std is not installed — run `orb update` (or with `--global`)"
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "unsatisfied-range-is-incompatible-control",
-   "steps": [
+    },
     {
-     "trait": "OrbLanguageEngine",
-     "event": "LANG_SAT",
-     "payload": {
-      "requestId": "pkg:0:0",
-      "value": false
-     },
-     "from": "probing",
-     "entity": {
-      "id": "c",
-      "cwd": "/w",
-      "pkgs": [
-       {
-        "name": "@almadar/core",
-        "hint": "orb update",
-        "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
-       },
-       {
-        "name": "@almadar/std",
-        "hint": "orb update",
-        "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
-       }
-      ],
-      "roots": [
-       "/w/node_modules",
-       "/node_modules",
-       "~/.orb/node_modules"
-      ],
-      "cursor": 0,
-      "stage": 0,
-      "running": "18.0.5",
-      "ver": "10.128.0",
-      "kind": "",
-      "compiler": ">=17.11.2",
-      "lines": []
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LANG_ROOT_ASK",
-        "payload": {
-         "tag": "0:0",
-         "version": "10.128.0",
-         "kind": "incompat"
+      "id": "manifest-with-a-range-asks-semver",
+      "steps": [
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_MANIFEST",
+          "payload": {
+            "text": "{\"name\": \"@almadar/core\", \"version\": \"10.128.0\", \"orbLanguage\": {\"compiler\": \">=17.11.2\"}}"
+          },
+          "from": "probing",
+          "entity": {
+            "id": "c",
+            "cwd": "/w",
+            "pkgs": [
+              {
+                "name": "@almadar/core",
+                "hint": "orb update",
+                "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
+              },
+              {
+                "name": "@almadar/std",
+                "hint": "orb update",
+                "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
+              }
+            ],
+            "roots": [
+              "/w/node_modules",
+              "/node_modules",
+              "~/.orb/node_modules"
+            ],
+            "cursor": 0,
+            "stage": 0,
+            "running": "18.0.5",
+            "ver": "10.128.0",
+            "kind": "",
+            "compiler": ">=17.11.2",
+            "lines": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LANG_SEMVER",
+                "payload": {
+                  "requestId": "pkg:0:0",
+                  "version": "18.0.5",
+                  "range": ">=17.11.2"
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "refused-range-is-a-semver-problem",
-   "steps": [
+    },
     {
-     "trait": "OrbLanguageEngine",
-     "event": "LANG_SAT_REFUSED",
-     "payload": {
-      "requestId": "pkg:0:0",
-      "operation": "satisfies",
-      "reason": "range"
-     },
-     "from": "probing",
-     "entity": {
-      "id": "c",
-      "cwd": "/w",
-      "pkgs": [
-       {
-        "name": "@almadar/core",
-        "hint": "orb update",
-        "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
-       },
-       {
-        "name": "@almadar/std",
-        "hint": "orb update",
-        "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
-       }
-      ],
-      "roots": [
-       "/w/node_modules",
-       "/node_modules",
-       "~/.orb/node_modules"
-      ],
-      "cursor": 0,
-      "stage": 0,
-      "running": "18.0.5",
-      "ver": "10.128.0",
-      "kind": "",
-      "compiler": ">=17.11.2",
-      "lines": []
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LANG_ROOT_ASK",
-        "payload": {
-         "tag": "0:0",
-         "version": "10.128.0",
-         "kind": "semver:range"
+      "id": "manifest-without-orbLanguage-is-blockless-control",
+      "steps": [
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_MANIFEST",
+          "payload": {
+            "text": "{\"name\": \"@almadar/core\", \"version\": \"10.128.0\"}"
+          },
+          "from": "probing",
+          "entity": {
+            "id": "c",
+            "cwd": "/w",
+            "pkgs": [
+              {
+                "name": "@almadar/core",
+                "hint": "orb update",
+                "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
+              },
+              {
+                "name": "@almadar/std",
+                "hint": "orb update",
+                "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
+              }
+            ],
+            "roots": [
+              "/w/node_modules",
+              "/node_modules",
+              "~/.orb/node_modules"
+            ],
+            "cursor": 0,
+            "stage": 0,
+            "running": "18.0.5",
+            "ver": "10.128.0",
+            "kind": "",
+            "compiler": ">=17.11.2",
+            "lines": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LANG_ROOT_ASK",
+                "payload": {
+                  "tag": "0:0",
+                  "version": "10.128.0",
+                  "kind": "block"
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "resolved-package-prints-version-and-root",
-   "steps": [
+    },
     {
-     "trait": "OrbLanguageEngine",
-     "event": "LANG_ROOT",
-     "payload": {
-      "path": "/repo/packages/almadar-core"
-     },
-     "from": "probing",
-     "entity": {
-      "id": "c",
-      "cwd": "/w",
-      "pkgs": [
-       {
-        "name": "@almadar/core",
-        "hint": "orb update",
-        "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
-       },
-       {
-        "name": "@almadar/std",
-        "hint": "orb update",
-        "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
-       }
-      ],
-      "roots": [
-       "/w/node_modules",
-       "/node_modules",
-       "~/.orb/node_modules"
-      ],
-      "cursor": 0,
-      "stage": 0,
-      "running": "18.0.5",
-      "ver": "10.128.0",
-      "kind": "",
-      "compiler": ">=17.11.2",
-      "lines": []
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LANGUAGE_ROW",
-        "payload": {
-         "line": "@almadar/core@10.128.0 \u2192 /repo/packages/almadar-core"
+      "id": "manifest-without-compiler-range",
+      "steps": [
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_MANIFEST",
+          "payload": {
+            "text": "{\"name\": \"@almadar/core\", \"version\": \"10.128.0\", \"orbLanguage\": {}}"
+          },
+          "from": "probing",
+          "entity": {
+            "id": "c",
+            "cwd": "/w",
+            "pkgs": [
+              {
+                "name": "@almadar/core",
+                "hint": "orb update",
+                "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
+              },
+              {
+                "name": "@almadar/std",
+                "hint": "orb update",
+                "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
+              }
+            ],
+            "roots": [
+              "/w/node_modules",
+              "/node_modules",
+              "~/.orb/node_modules"
+            ],
+            "cursor": 0,
+            "stage": 0,
+            "running": "18.0.5",
+            "ver": "10.128.0",
+            "kind": "",
+            "compiler": ">=17.11.2",
+            "lines": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LANG_ROOT_ASK",
+                "payload": {
+                  "tag": "0:0",
+                  "version": "10.128.0",
+                  "kind": "range"
+                }
+              }
+            ]
+          }
         }
-       },
-       {
-        "event": "LANG_NEXT",
-        "payload": {
-         "tag": "1"
-        }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "blockless-package-prints-the-invalid-problem",
-   "steps": [
+    },
     {
-     "trait": "OrbLanguageEngine",
-     "event": "LANG_ROOT",
-     "payload": {
-      "path": "/repo/packages/almadar-core"
-     },
-     "from": "probing",
-     "entity": {
-      "id": "c",
-      "cwd": "/w",
-      "pkgs": [
-       {
-        "name": "@almadar/core",
-        "hint": "orb update",
-        "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
-       },
-       {
-        "name": "@almadar/std",
-        "hint": "orb update",
-        "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
-       }
-      ],
-      "roots": [
-       "/w/node_modules",
-       "/node_modules",
-       "~/.orb/node_modules"
-      ],
-      "cursor": 0,
-      "stage": 0,
-      "running": "18.0.5",
-      "ver": "10.128.0",
-      "kind": "block",
-      "compiler": ">=17.11.2",
-      "lines": []
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LANGUAGE_ROW",
-        "payload": {
-         "line": "@almadar/core \u2192 ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at \"/repo/packages/almadar-core/package.json\": missing `orbLanguage` block"
+      "id": "manifest-that-is-not-json",
+      "steps": [
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_MANIFEST",
+          "payload": {
+            "text": "{nope"
+          },
+          "from": "probing",
+          "entity": {
+            "id": "c",
+            "cwd": "/w",
+            "pkgs": [
+              {
+                "name": "@almadar/core",
+                "hint": "orb update",
+                "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
+              },
+              {
+                "name": "@almadar/std",
+                "hint": "orb update",
+                "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
+              }
+            ],
+            "roots": [
+              "/w/node_modules",
+              "/node_modules",
+              "~/.orb/node_modules"
+            ],
+            "cursor": 0,
+            "stage": 0,
+            "running": "18.0.5",
+            "ver": "10.128.0",
+            "kind": "",
+            "compiler": ">=17.11.2",
+            "lines": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LANG_ROOT_ASK",
+                "payload": {
+                  "tag": "0:0",
+                  "version": "",
+                  "kind": "json"
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "rangeless-package-prints-the-invalid-problem",
-   "steps": [
+    },
     {
-     "trait": "OrbLanguageEngine",
-     "event": "LANG_ROOT",
-     "payload": {
-      "path": "/repo/packages/almadar-core"
-     },
-     "from": "probing",
-     "entity": {
-      "id": "c",
-      "cwd": "/w",
-      "pkgs": [
-       {
-        "name": "@almadar/core",
-        "hint": "orb update",
-        "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
-       },
-       {
-        "name": "@almadar/std",
-        "hint": "orb update",
-        "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
-       }
-      ],
-      "roots": [
-       "/w/node_modules",
-       "/node_modules",
-       "~/.orb/node_modules"
-      ],
-      "cursor": 0,
-      "stage": 0,
-      "running": "18.0.5",
-      "ver": "10.128.0",
-      "kind": "range",
-      "compiler": ">=17.11.2",
-      "lines": []
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LANGUAGE_ROW",
-        "payload": {
-         "line": "@almadar/core \u2192 ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at \"/repo/packages/almadar-core/package.json\": missing `orbLanguage.compiler` range"
+      "id": "satisfied-range-is-ok",
+      "steps": [
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_SAT",
+          "payload": {
+            "requestId": "pkg:0:0",
+            "value": true
+          },
+          "from": "probing",
+          "entity": {
+            "id": "c",
+            "cwd": "/w",
+            "pkgs": [
+              {
+                "name": "@almadar/core",
+                "hint": "orb update",
+                "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
+              },
+              {
+                "name": "@almadar/std",
+                "hint": "orb update",
+                "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
+              }
+            ],
+            "roots": [
+              "/w/node_modules",
+              "/node_modules",
+              "~/.orb/node_modules"
+            ],
+            "cursor": 0,
+            "stage": 0,
+            "running": "18.0.5",
+            "ver": "10.128.0",
+            "kind": "",
+            "compiler": ">=17.11.2",
+            "lines": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LANG_ROOT_ASK",
+                "payload": {
+                  "tag": "0:0",
+                  "version": "10.128.0",
+                  "kind": ""
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "incompatible-package-prints-the-incompatible-problem",
-   "steps": [
+    },
     {
-     "trait": "OrbLanguageEngine",
-     "event": "LANG_ROOT",
-     "payload": {
-      "path": "/repo/packages/almadar-core"
-     },
-     "from": "probing",
-     "entity": {
-      "id": "c",
-      "cwd": "/w",
-      "pkgs": [
-       {
-        "name": "@almadar/core",
-        "hint": "orb update",
-        "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
-       },
-       {
-        "name": "@almadar/std",
-        "hint": "orb update",
-        "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
-       }
-      ],
-      "roots": [
-       "/w/node_modules",
-       "/node_modules",
-       "~/.orb/node_modules"
-      ],
-      "cursor": 0,
-      "stage": 0,
-      "running": "18.0.5",
-      "ver": "10.128.0",
-      "kind": "incompat",
-      "compiler": ">=19.0.0",
-      "lines": []
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LANGUAGE_ROW",
-        "payload": {
-         "line": "@almadar/core \u2192 ORB_LANGUAGE_DATA_INCOMPATIBLE: installed @almadar/core@10.128.0 requires orb >=19.0.0, but this orb is 18.0.5 \u2014 install a @almadar/core whose `orbLanguage.compiler` accepts 18.0.5, or upgrade orb"
+      "id": "unsatisfied-range-is-incompatible-control",
+      "steps": [
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_SAT",
+          "payload": {
+            "requestId": "pkg:0:0",
+            "value": false
+          },
+          "from": "probing",
+          "entity": {
+            "id": "c",
+            "cwd": "/w",
+            "pkgs": [
+              {
+                "name": "@almadar/core",
+                "hint": "orb update",
+                "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
+              },
+              {
+                "name": "@almadar/std",
+                "hint": "orb update",
+                "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
+              }
+            ],
+            "roots": [
+              "/w/node_modules",
+              "/node_modules",
+              "~/.orb/node_modules"
+            ],
+            "cursor": 0,
+            "stage": 0,
+            "running": "18.0.5",
+            "ver": "10.128.0",
+            "kind": "",
+            "compiler": ">=17.11.2",
+            "lines": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LANG_ROOT_ASK",
+                "payload": {
+                  "tag": "0:0",
+                  "version": "10.128.0",
+                  "kind": "incompat"
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "non-semver-range-prints-the-invalid-problem",
-   "steps": [
+    },
     {
-     "trait": "OrbLanguageEngine",
-     "event": "LANG_ROOT",
-     "payload": {
-      "path": "/repo/packages/almadar-core"
-     },
-     "from": "probing",
-     "entity": {
-      "id": "c",
-      "cwd": "/w",
-      "pkgs": [
-       {
-        "name": "@almadar/core",
-        "hint": "orb update",
-        "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
-       },
-       {
-        "name": "@almadar/std",
-        "hint": "orb update",
-        "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
-       }
-      ],
-      "roots": [
-       "/w/node_modules",
-       "/node_modules",
-       "~/.orb/node_modules"
-      ],
-      "cursor": 0,
-      "stage": 0,
-      "running": "18.0.5",
-      "ver": "10.128.0",
-      "kind": "semver:range",
-      "compiler": "^1 || ^2",
-      "lines": []
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LANGUAGE_ROW",
-        "payload": {
-         "line": "@almadar/core \u2192 ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at \"/repo/packages/almadar-core/package.json\": `orbLanguage.compiler` \"^1 || ^2\" is not a semver range: range"
+      "id": "refused-range-is-a-semver-problem",
+      "steps": [
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_SAT_REFUSED",
+          "payload": {
+            "requestId": "pkg:0:0",
+            "operation": "satisfies",
+            "reason": "range"
+          },
+          "from": "probing",
+          "entity": {
+            "id": "c",
+            "cwd": "/w",
+            "pkgs": [
+              {
+                "name": "@almadar/core",
+                "hint": "orb update",
+                "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
+              },
+              {
+                "name": "@almadar/std",
+                "hint": "orb update",
+                "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
+              }
+            ],
+            "roots": [
+              "/w/node_modules",
+              "/node_modules",
+              "~/.orb/node_modules"
+            ],
+            "cursor": 0,
+            "stage": 0,
+            "running": "18.0.5",
+            "ver": "10.128.0",
+            "kind": "",
+            "compiler": ">=17.11.2",
+            "lines": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LANG_ROOT_ASK",
+                "payload": {
+                  "tag": "0:0",
+                  "version": "10.128.0",
+                  "kind": "semver:range"
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "packages-done-starts-the-pack-scan",
-   "steps": [
+    },
     {
-     "trait": "OrbLanguageEngine",
-     "event": "LANG_NEXT",
-     "payload": {
-      "tag": "2"
-     },
-     "from": "probing",
-     "entity": {
-      "id": "c",
-      "cwd": "/w",
-      "pkgs": [
-       {
-        "name": "@almadar/core",
-        "hint": "orb update",
-        "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
-       },
-       {
-        "name": "@almadar/std",
-        "hint": "orb update",
-        "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
-       }
-      ],
-      "roots": [
-       "/w/node_modules",
-       "/node_modules",
-       "~/.orb/node_modules"
-      ],
-      "cursor": 2,
-      "stage": 0,
-      "running": "18.0.5",
-      "ver": "10.128.0",
-      "kind": "",
-      "compiler": ">=17.11.2",
-      "lines": []
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LANG_PACK_LIST",
-        "payload": {
-         "tag": "0"
+      "id": "resolved-package-prints-version-and-root",
+      "steps": [
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_ROOT",
+          "payload": {
+            "path": "/repo/packages/almadar-core"
+          },
+          "from": "probing",
+          "entity": {
+            "id": "c",
+            "cwd": "/w",
+            "pkgs": [
+              {
+                "name": "@almadar/core",
+                "hint": "orb update",
+                "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
+              },
+              {
+                "name": "@almadar/std",
+                "hint": "orb update",
+                "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
+              }
+            ],
+            "roots": [
+              "/w/node_modules",
+              "/node_modules",
+              "~/.orb/node_modules"
+            ],
+            "cursor": 0,
+            "stage": 0,
+            "running": "18.0.5",
+            "ver": "10.128.0",
+            "kind": "",
+            "compiler": ">=17.11.2",
+            "lines": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LANGUAGE_ROW",
+                "payload": {
+                  "line": "@almadar/core@10.128.0 → /repo/packages/almadar-core"
+                }
+              },
+              {
+                "event": "LANG_NEXT",
+                "payload": {
+                  "tag": "1"
+                }
+              }
+            ]
+          }
         }
-       }
-      ],
-      "state": "scanning"
-     }
-    }
-   ]
-  },
-  {
-   "id": "vocabulary-manifest-is-a-pack",
-   "steps": [
+      ]
+    },
     {
-     "trait": "OrbLanguageEngine",
-     "event": "LANG_PACK_MANIFEST",
-     "payload": {
-      "text": "{\"name\": \"@almadar/lolo-ar\", \"version\": \"1.3.0\", \"orbVocabulary\": {\"compiler\": \">=17.11.2\", \"vocabulary\": \"vocabulary.json\"}}"
-     },
-     "from": "scanning",
-     "entity": {
-      "id": "c",
-      "cwd": "/w",
-      "pkgs": [
-       {
-        "name": "@almadar/core",
-        "hint": "orb update",
-        "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
-       },
-       {
-        "name": "@almadar/std",
-        "hint": "orb update",
-        "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
-       }
-      ],
-      "roots": [
-       "/w/node_modules",
-       "/node_modules",
-       "~/.orb/node_modules"
-      ],
-      "cursor": 0,
-      "stage": 0,
-      "running": "18.0.5",
-      "ver": "10.128.0",
-      "kind": "",
-      "compiler": ">=17.11.2",
-      "lines": [],
-      "packNames": [
-       "@almadar/lolo-ar"
-      ],
-      "packCursor": 0
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LANG_PACK_FOUND",
-        "payload": {
-         "name": "@almadar/lolo-ar",
-         "version": "1.3.0",
-         "compiler": ">=17.11.2",
-         "vocab": "vocabulary.json"
+      "id": "blockless-package-prints-the-invalid-problem",
+      "steps": [
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_ROOT",
+          "payload": {
+            "path": "/repo/packages/almadar-core"
+          },
+          "from": "probing",
+          "entity": {
+            "id": "c",
+            "cwd": "/w",
+            "pkgs": [
+              {
+                "name": "@almadar/core",
+                "hint": "orb update",
+                "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
+              },
+              {
+                "name": "@almadar/std",
+                "hint": "orb update",
+                "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
+              }
+            ],
+            "roots": [
+              "/w/node_modules",
+              "/node_modules",
+              "~/.orb/node_modules"
+            ],
+            "cursor": 0,
+            "stage": 0,
+            "running": "18.0.5",
+            "ver": "10.128.0",
+            "kind": "block",
+            "compiler": ">=17.11.2",
+            "lines": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LANGUAGE_ROW",
+                "payload": {
+                  "line": "@almadar/core → ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at \"/repo/packages/almadar-core/package.json\": missing `orbLanguage` block"
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "manifest-without-orbVocabulary-is-no-pack-control",
-   "steps": [
+    },
     {
-     "trait": "OrbLanguageEngine",
-     "event": "LANG_PACK_MANIFEST",
-     "payload": {
-      "text": "{\"name\": \"@almadar/lolo-ar\", \"version\": \"1.3.0\"}"
-     },
-     "from": "scanning",
-     "entity": {
-      "id": "c",
-      "cwd": "/w",
-      "pkgs": [
-       {
-        "name": "@almadar/core",
-        "hint": "orb update",
-        "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
-       },
-       {
-        "name": "@almadar/std",
-        "hint": "orb update",
-        "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
-       }
-      ],
-      "roots": [
-       "/w/node_modules",
-       "/node_modules",
-       "~/.orb/node_modules"
-      ],
-      "cursor": 0,
-      "stage": 0,
-      "running": "18.0.5",
-      "ver": "10.128.0",
-      "kind": "",
-      "compiler": ">=17.11.2",
-      "lines": [],
-      "packNames": [
-       "@almadar/lolo-ar"
-      ],
-      "packCursor": 0
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LANG_PACK_NEXT",
-        "payload": {}
-       }
-      ],
-      "neverEmits": [
-       "LANG_PACK_FOUND"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "pack-checks-its-compiler-range",
-   "steps": [
-    {
-     "trait": "OrbLanguageEngine",
-     "event": "LANG_PACK_CHECK",
-     "payload": {
-      "tag": "0"
-     },
-     "from": "scanning",
-     "entity": {
-      "id": "c",
-      "cwd": "/w",
-      "pkgs": [
-       {
-        "name": "@almadar/core",
-        "hint": "orb update",
-        "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
-       },
-       {
-        "name": "@almadar/std",
-        "hint": "orb update",
-        "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
-       }
-      ],
-      "roots": [
-       "/w/node_modules",
-       "/node_modules",
-       "~/.orb/node_modules"
-      ],
-      "cursor": 0,
-      "stage": 0,
-      "running": "18.0.5",
-      "ver": "10.128.0",
-      "kind": "",
-      "compiler": ">=17.11.2",
-      "lines": [],
-      "found": [
-       {
-        "name": "@almadar/lolo-ar",
-        "version": "1.3.0",
-        "stage": 0,
-        "compiler": ">=17.11.2",
-        "vocab": "vocabulary.json",
-        "code": ""
-       }
-      ],
-      "foundCursor": 0,
-      "codes": []
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LANG_SEMVER",
-        "payload": {
-         "requestId": "pack:0",
-         "version": "18.0.5",
-         "range": ">=17.11.2"
+      "id": "rangeless-package-prints-the-invalid-problem",
+      "steps": [
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_ROOT",
+          "payload": {
+            "path": "/repo/packages/almadar-core"
+          },
+          "from": "probing",
+          "entity": {
+            "id": "c",
+            "cwd": "/w",
+            "pkgs": [
+              {
+                "name": "@almadar/core",
+                "hint": "orb update",
+                "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
+              },
+              {
+                "name": "@almadar/std",
+                "hint": "orb update",
+                "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
+              }
+            ],
+            "roots": [
+              "/w/node_modules",
+              "/node_modules",
+              "~/.orb/node_modules"
+            ],
+            "cursor": 0,
+            "stage": 0,
+            "running": "18.0.5",
+            "ver": "10.128.0",
+            "kind": "range",
+            "compiler": ">=17.11.2",
+            "lines": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LANGUAGE_ROW",
+                "payload": {
+                  "line": "@almadar/core → ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at \"/repo/packages/almadar-core/package.json\": missing `orbLanguage.compiler` range"
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "pack-without-compiler-is-a-problem",
-   "steps": [
+    },
     {
-     "trait": "OrbLanguageEngine",
-     "event": "LANG_PACK_CHECK",
-     "payload": {
-      "tag": "0"
-     },
-     "from": "scanning",
-     "entity": {
-      "id": "c",
-      "cwd": "/w",
-      "pkgs": [
-       {
-        "name": "@almadar/core",
-        "hint": "orb update",
-        "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
-       },
-       {
-        "name": "@almadar/std",
-        "hint": "orb update",
-        "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
-       }
-      ],
-      "roots": [
-       "/w/node_modules",
-       "/node_modules",
-       "~/.orb/node_modules"
-      ],
-      "cursor": 0,
-      "stage": 0,
-      "running": "18.0.5",
-      "ver": "10.128.0",
-      "kind": "",
-      "compiler": ">=17.11.2",
-      "lines": [],
-      "found": [
-       {
-        "name": "@almadar/lolo-ar",
-        "version": "1.3.0",
-        "stage": 0,
-        "compiler": "",
-        "vocab": "vocabulary.json",
-        "code": ""
-       }
-      ],
-      "foundCursor": 0,
-      "codes": []
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LANG_PACK_PROBLEM",
-        "payload": {
-         "text": "ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at \"/w/node_modules/@almadar/lolo-ar/package.json\": @almadar/lolo-ar: `orbVocabulary.compiler` is missing"
+      "id": "incompatible-package-prints-the-incompatible-problem",
+      "steps": [
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_ROOT",
+          "payload": {
+            "path": "/repo/packages/almadar-core"
+          },
+          "from": "probing",
+          "entity": {
+            "id": "c",
+            "cwd": "/w",
+            "pkgs": [
+              {
+                "name": "@almadar/core",
+                "hint": "orb update",
+                "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
+              },
+              {
+                "name": "@almadar/std",
+                "hint": "orb update",
+                "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
+              }
+            ],
+            "roots": [
+              "/w/node_modules",
+              "/node_modules",
+              "~/.orb/node_modules"
+            ],
+            "cursor": 0,
+            "stage": 0,
+            "running": "18.0.5",
+            "ver": "10.128.0",
+            "kind": "incompat",
+            "compiler": ">=19.0.0",
+            "lines": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LANGUAGE_ROW",
+                "payload": {
+                  "line": "@almadar/core → ORB_LANGUAGE_DATA_INCOMPATIBLE: installed @almadar/core@10.128.0 requires orb >=19.0.0, but this orb is 18.0.5 — install a @almadar/core whose `orbLanguage.compiler` accepts 18.0.5, or upgrade orb"
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "pack-without-vocabulary-field-is-a-problem",
-   "steps": [
+    },
     {
-     "trait": "OrbLanguageEngine",
-     "event": "LANG_SAT",
-     "payload": {
-      "requestId": "pack:0",
-      "value": true
-     },
-     "from": "scanning",
-     "entity": {
-      "id": "c",
-      "cwd": "/w",
-      "pkgs": [
-       {
-        "name": "@almadar/core",
-        "hint": "orb update",
-        "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
-       },
-       {
-        "name": "@almadar/std",
-        "hint": "orb update",
-        "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
-       }
-      ],
-      "roots": [
-       "/w/node_modules",
-       "/node_modules",
-       "~/.orb/node_modules"
-      ],
-      "cursor": 0,
-      "stage": 0,
-      "running": "18.0.5",
-      "ver": "10.128.0",
-      "kind": "",
-      "compiler": ">=17.11.2",
-      "lines": [],
-      "found": [
-       {
-        "name": "@almadar/lolo-ar",
-        "version": "1.3.0",
-        "stage": 0,
-        "compiler": ">=17.11.2",
-        "vocab": "",
-        "code": ""
-       }
-      ],
-      "foundCursor": 0,
-      "codes": []
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LANG_PACK_PROBLEM",
-        "payload": {
-         "text": "ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at \"/w/node_modules/@almadar/lolo-ar/package.json\": @almadar/lolo-ar: `orbVocabulary.vocabulary` is missing"
+      "id": "non-semver-range-prints-the-invalid-problem",
+      "steps": [
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_ROOT",
+          "payload": {
+            "path": "/repo/packages/almadar-core"
+          },
+          "from": "probing",
+          "entity": {
+            "id": "c",
+            "cwd": "/w",
+            "pkgs": [
+              {
+                "name": "@almadar/core",
+                "hint": "orb update",
+                "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
+              },
+              {
+                "name": "@almadar/std",
+                "hint": "orb update",
+                "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
+              }
+            ],
+            "roots": [
+              "/w/node_modules",
+              "/node_modules",
+              "~/.orb/node_modules"
+            ],
+            "cursor": 0,
+            "stage": 0,
+            "running": "18.0.5",
+            "ver": "10.128.0",
+            "kind": "semver:range",
+            "compiler": "^1 || ^2",
+            "lines": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LANGUAGE_ROW",
+                "payload": {
+                  "line": "@almadar/core → ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at \"/repo/packages/almadar-core/package.json\": `orbLanguage.compiler` \"^1 || ^2\" is not a semver range: range"
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "unsatisfied-pack-is-incompatible",
-   "steps": [
+    },
     {
-     "trait": "OrbLanguageEngine",
-     "event": "LANG_SAT",
-     "payload": {
-      "requestId": "pack:0",
-      "value": false
-     },
-     "from": "scanning",
-     "entity": {
-      "id": "c",
-      "cwd": "/w",
-      "pkgs": [
-       {
-        "name": "@almadar/core",
-        "hint": "orb update",
-        "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
-       },
-       {
-        "name": "@almadar/std",
-        "hint": "orb update",
-        "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
-       }
-      ],
-      "roots": [
-       "/w/node_modules",
-       "/node_modules",
-       "~/.orb/node_modules"
-      ],
-      "cursor": 0,
-      "stage": 0,
-      "running": "18.0.5",
-      "ver": "10.128.0",
-      "kind": "",
-      "compiler": ">=17.11.2",
-      "lines": [],
-      "found": [
-       {
-        "name": "@almadar/lolo-ar",
-        "version": "1.3.0",
-        "stage": 0,
-        "compiler": ">=19.0.0",
-        "vocab": "vocabulary.json",
-        "code": ""
-       }
-      ],
-      "foundCursor": 0,
-      "codes": []
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LANG_PACK_PROBLEM",
-        "payload": {
-         "text": "ORB_LANGUAGE_DATA_INCOMPATIBLE: installed language pack @almadar/lolo-ar@1.3.0 requires orb >=19.0.0, but this orb is 18.0.5 \u2014 update the pack (`orb update`) or upgrade orb"
+      "id": "packages-done-starts-the-pack-scan",
+      "steps": [
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_NEXT",
+          "payload": {
+            "tag": "2"
+          },
+          "from": "probing",
+          "entity": {
+            "id": "c",
+            "cwd": "/w",
+            "pkgs": [
+              {
+                "name": "@almadar/core",
+                "hint": "orb update",
+                "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
+              },
+              {
+                "name": "@almadar/std",
+                "hint": "orb update",
+                "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
+              }
+            ],
+            "roots": [
+              "/w/node_modules",
+              "/node_modules",
+              "~/.orb/node_modules"
+            ],
+            "cursor": 2,
+            "stage": 0,
+            "running": "18.0.5",
+            "ver": "10.128.0",
+            "kind": "",
+            "compiler": ">=17.11.2",
+            "lines": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LANG_PACK_LIST",
+                "payload": {
+                  "tag": "0"
+                }
+              }
+            ],
+            "state": "scanning"
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "non-semver-pack-range-is-invalid",
-   "steps": [
+    },
     {
-     "trait": "OrbLanguageEngine",
-     "event": "LANG_SAT_REFUSED",
-     "payload": {
-      "requestId": "pack:0",
-      "operation": "satisfies",
-      "reason": "range"
-     },
-     "from": "scanning",
-     "entity": {
-      "id": "c",
-      "cwd": "/w",
-      "pkgs": [
-       {
-        "name": "@almadar/core",
-        "hint": "orb update",
-        "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
-       },
-       {
-        "name": "@almadar/std",
-        "hint": "orb update",
-        "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
-       }
-      ],
-      "roots": [
-       "/w/node_modules",
-       "/node_modules",
-       "~/.orb/node_modules"
-      ],
-      "cursor": 0,
-      "stage": 0,
-      "running": "18.0.5",
-      "ver": "10.128.0",
-      "kind": "",
-      "compiler": ">=17.11.2",
-      "lines": [],
-      "found": [
-       {
-        "name": "@almadar/lolo-ar",
-        "version": "1.3.0",
-        "stage": 0,
-        "compiler": "^1 || ^2",
-        "vocab": "vocabulary.json",
-        "code": ""
-       }
-      ],
-      "foundCursor": 0,
-      "codes": []
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LANG_PACK_PROBLEM",
-        "payload": {
-         "text": "ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at \"/w/node_modules/@almadar/lolo-ar/package.json\": @almadar/lolo-ar: `orbVocabulary.compiler` \"^1 || ^2\" is not a semver range: range"
+      "id": "vocabulary-manifest-is-a-pack",
+      "steps": [
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_PACK_MANIFEST",
+          "payload": {
+            "text": "{\"name\": \"@almadar/lolo-ar\", \"version\": \"1.3.0\", \"orbVocabulary\": {\"compiler\": \">=17.11.2\", \"vocabulary\": \"vocabulary.json\"}}"
+          },
+          "from": "scanning",
+          "entity": {
+            "id": "c",
+            "cwd": "/w",
+            "pkgs": [
+              {
+                "name": "@almadar/core",
+                "hint": "orb update",
+                "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
+              },
+              {
+                "name": "@almadar/std",
+                "hint": "orb update",
+                "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
+              }
+            ],
+            "roots": [
+              "/w/node_modules",
+              "/node_modules",
+              "~/.orb/node_modules"
+            ],
+            "cursor": 0,
+            "stage": 0,
+            "running": "18.0.5",
+            "ver": "10.128.0",
+            "kind": "",
+            "compiler": ">=17.11.2",
+            "lines": [],
+            "packNames": [
+              "@almadar/lolo-ar"
+            ],
+            "packCursor": 0
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LANG_PACK_FOUND",
+                "payload": {
+                  "name": "@almadar/lolo-ar",
+                  "version": "1.3.0",
+                  "compiler": ">=17.11.2",
+                  "vocab": "vocabulary.json"
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "vocabulary-with-a-new-code-resolves-the-root",
-   "steps": [
+    },
     {
-     "trait": "OrbLanguageEngine",
-     "event": "LANG_VOCAB_FILE",
-     "payload": {
-      "data": "eyJtZXRhIjogeyJjb2RlIjogImFyIn19"
-     },
-     "from": "scanning",
-     "entity": {
-      "id": "c",
-      "cwd": "/w",
-      "pkgs": [
-       {
-        "name": "@almadar/core",
-        "hint": "orb update",
-        "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
-       },
-       {
-        "name": "@almadar/std",
-        "hint": "orb update",
-        "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
-       }
-      ],
-      "roots": [
-       "/w/node_modules",
-       "/node_modules",
-       "~/.orb/node_modules"
-      ],
-      "cursor": 0,
-      "stage": 0,
-      "running": "18.0.5",
-      "ver": "10.128.0",
-      "kind": "",
-      "compiler": ">=17.11.2",
-      "lines": [],
-      "found": [
-       {
-        "name": "@almadar/lolo-ar",
-        "version": "1.3.0",
-        "stage": 0,
-        "compiler": ">=17.11.2",
-        "vocab": "vocabulary.json",
-        "code": ""
-       }
-      ],
-      "foundCursor": 0,
-      "codes": []
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LANG_PACK_REALASK",
-        "payload": {
-         "tag": "0"
+      "id": "manifest-without-orbVocabulary-is-no-pack-control",
+      "steps": [
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_PACK_MANIFEST",
+          "payload": {
+            "text": "{\"name\": \"@almadar/lolo-ar\", \"version\": \"1.3.0\"}"
+          },
+          "from": "scanning",
+          "entity": {
+            "id": "c",
+            "cwd": "/w",
+            "pkgs": [
+              {
+                "name": "@almadar/core",
+                "hint": "orb update",
+                "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
+              },
+              {
+                "name": "@almadar/std",
+                "hint": "orb update",
+                "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
+              }
+            ],
+            "roots": [
+              "/w/node_modules",
+              "/node_modules",
+              "~/.orb/node_modules"
+            ],
+            "cursor": 0,
+            "stage": 0,
+            "running": "18.0.5",
+            "ver": "10.128.0",
+            "kind": "",
+            "compiler": ">=17.11.2",
+            "lines": [],
+            "packNames": [
+              "@almadar/lolo-ar"
+            ],
+            "packCursor": 0
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LANG_PACK_NEXT",
+                "payload": {}
+              }
+            ],
+            "neverEmits": [
+              "LANG_PACK_FOUND"
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "vocabulary-replacing-english-is-a-problem",
-   "steps": [
+    },
     {
-     "trait": "OrbLanguageEngine",
-     "event": "LANG_VOCAB_FILE",
-     "payload": {
-      "data": "eyJtZXRhIjogeyJjb2RlIjogImVuIn19"
-     },
-     "from": "scanning",
-     "entity": {
-      "id": "c",
-      "cwd": "/w",
-      "pkgs": [
-       {
-        "name": "@almadar/core",
-        "hint": "orb update",
-        "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
-       },
-       {
-        "name": "@almadar/std",
-        "hint": "orb update",
-        "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
-       }
-      ],
-      "roots": [
-       "/w/node_modules",
-       "/node_modules",
-       "~/.orb/node_modules"
-      ],
-      "cursor": 0,
-      "stage": 0,
-      "running": "18.0.5",
-      "ver": "10.128.0",
-      "kind": "",
-      "compiler": ">=17.11.2",
-      "lines": [],
-      "found": [
-       {
-        "name": "@almadar/lolo-ar",
-        "version": "1.3.0",
-        "stage": 0,
-        "compiler": ">=17.11.2",
-        "vocab": "vocabulary.json",
-        "code": ""
-       }
-      ],
-      "foundCursor": 0,
-      "codes": []
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LANG_PACK_PROBLEM",
-        "payload": {
-         "text": "ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at \"@almadar/lolo-ar\": @almadar/lolo-ar: English is built in and cannot be replaced"
+      "id": "pack-checks-its-compiler-range",
+      "steps": [
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_PACK_CHECK",
+          "payload": {
+            "tag": "0"
+          },
+          "from": "scanning",
+          "entity": {
+            "id": "c",
+            "cwd": "/w",
+            "pkgs": [
+              {
+                "name": "@almadar/core",
+                "hint": "orb update",
+                "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
+              },
+              {
+                "name": "@almadar/std",
+                "hint": "orb update",
+                "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
+              }
+            ],
+            "roots": [
+              "/w/node_modules",
+              "/node_modules",
+              "~/.orb/node_modules"
+            ],
+            "cursor": 0,
+            "stage": 0,
+            "running": "18.0.5",
+            "ver": "10.128.0",
+            "kind": "",
+            "compiler": ">=17.11.2",
+            "lines": [],
+            "found": [
+              {
+                "name": "@almadar/lolo-ar",
+                "version": "1.3.0",
+                "stage": 0,
+                "compiler": ">=17.11.2",
+                "vocab": "vocabulary.json",
+                "code": ""
+              }
+            ],
+            "foundCursor": 0,
+            "codes": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LANG_SEMVER",
+                "payload": {
+                  "requestId": "pack:0",
+                  "version": "18.0.5",
+                  "range": ">=17.11.2"
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "second-pack-claiming-a-code-is-a-problem",
-   "steps": [
+    },
     {
-     "trait": "OrbLanguageEngine",
-     "event": "LANG_VOCAB_FILE",
-     "payload": {
-      "data": "eyJtZXRhIjogeyJjb2RlIjogImFyIn19"
-     },
-     "from": "scanning",
-     "entity": {
-      "id": "c",
-      "cwd": "/w",
-      "pkgs": [
-       {
-        "name": "@almadar/core",
-        "hint": "orb update",
-        "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
-       },
-       {
-        "name": "@almadar/std",
-        "hint": "orb update",
-        "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
-       }
-      ],
-      "roots": [
-       "/w/node_modules",
-       "/node_modules",
-       "~/.orb/node_modules"
-      ],
-      "cursor": 0,
-      "stage": 0,
-      "running": "18.0.5",
-      "ver": "10.128.0",
-      "kind": "",
-      "compiler": ">=17.11.2",
-      "lines": [],
-      "found": [
-       {
-        "name": "@almadar/lolo-ar",
-        "version": "1.3.0",
-        "stage": 0,
-        "compiler": ">=17.11.2",
-        "vocab": "vocabulary.json",
-        "code": ""
-       },
-       {
-        "name": "@almadar/lolo-x",
-        "version": "1.3.0",
-        "stage": 0,
-        "compiler": ">=17.11.2",
-        "vocab": "vocabulary.json",
-        "code": ""
-       }
-      ],
-      "foundCursor": 1,
-      "codes": [
-       "ar"
-      ]
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LANG_PACK_PROBLEM",
-        "payload": {
-         "text": "ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at \"@almadar/lolo-x\": language \"ar\" is claimed by two packs: @almadar/lolo-ar and @almadar/lolo-x"
+      "id": "pack-without-compiler-is-a-problem",
+      "steps": [
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_PACK_CHECK",
+          "payload": {
+            "tag": "0"
+          },
+          "from": "scanning",
+          "entity": {
+            "id": "c",
+            "cwd": "/w",
+            "pkgs": [
+              {
+                "name": "@almadar/core",
+                "hint": "orb update",
+                "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
+              },
+              {
+                "name": "@almadar/std",
+                "hint": "orb update",
+                "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
+              }
+            ],
+            "roots": [
+              "/w/node_modules",
+              "/node_modules",
+              "~/.orb/node_modules"
+            ],
+            "cursor": 0,
+            "stage": 0,
+            "running": "18.0.5",
+            "ver": "10.128.0",
+            "kind": "",
+            "compiler": ">=17.11.2",
+            "lines": [],
+            "found": [
+              {
+                "name": "@almadar/lolo-ar",
+                "version": "1.3.0",
+                "stage": 0,
+                "compiler": "",
+                "vocab": "vocabulary.json",
+                "code": ""
+              }
+            ],
+            "foundCursor": 0,
+            "codes": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LANG_PACK_PROBLEM",
+                "payload": {
+                  "text": "ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at \"/w/node_modules/@almadar/lolo-ar/package.json\": @almadar/lolo-ar: `orbVocabulary.compiler` is missing"
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "second-pack-with-another-code-is-fine-control",
-   "steps": [
+    },
     {
-     "trait": "OrbLanguageEngine",
-     "event": "LANG_VOCAB_FILE",
-     "payload": {
-      "data": "eyJtZXRhIjogeyJjb2RlIjogInNsIn19"
-     },
-     "from": "scanning",
-     "entity": {
-      "id": "c",
-      "cwd": "/w",
-      "pkgs": [
-       {
-        "name": "@almadar/core",
-        "hint": "orb update",
-        "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
-       },
-       {
-        "name": "@almadar/std",
-        "hint": "orb update",
-        "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
-       }
-      ],
-      "roots": [
-       "/w/node_modules",
-       "/node_modules",
-       "~/.orb/node_modules"
-      ],
-      "cursor": 0,
-      "stage": 0,
-      "running": "18.0.5",
-      "ver": "10.128.0",
-      "kind": "",
-      "compiler": ">=17.11.2",
-      "lines": [],
-      "found": [
-       {
-        "name": "@almadar/lolo-ar",
-        "version": "1.3.0",
-        "stage": 0,
-        "compiler": ">=17.11.2",
-        "vocab": "vocabulary.json",
-        "code": ""
-       },
-       {
-        "name": "@almadar/lolo-x",
-        "version": "1.3.0",
-        "stage": 0,
-        "compiler": ">=17.11.2",
-        "vocab": "vocabulary.json",
-        "code": ""
-       }
-      ],
-      "foundCursor": 1,
-      "codes": [
-       "ar"
+      "id": "pack-without-vocabulary-field-is-a-problem",
+      "steps": [
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_SAT",
+          "payload": {
+            "requestId": "pack:0",
+            "value": true
+          },
+          "from": "scanning",
+          "entity": {
+            "id": "c",
+            "cwd": "/w",
+            "pkgs": [
+              {
+                "name": "@almadar/core",
+                "hint": "orb update",
+                "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
+              },
+              {
+                "name": "@almadar/std",
+                "hint": "orb update",
+                "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
+              }
+            ],
+            "roots": [
+              "/w/node_modules",
+              "/node_modules",
+              "~/.orb/node_modules"
+            ],
+            "cursor": 0,
+            "stage": 0,
+            "running": "18.0.5",
+            "ver": "10.128.0",
+            "kind": "",
+            "compiler": ">=17.11.2",
+            "lines": [],
+            "found": [
+              {
+                "name": "@almadar/lolo-ar",
+                "version": "1.3.0",
+                "stage": 0,
+                "compiler": ">=17.11.2",
+                "vocab": "",
+                "code": ""
+              }
+            ],
+            "foundCursor": 0,
+            "codes": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LANG_PACK_PROBLEM",
+                "payload": {
+                  "text": "ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at \"/w/node_modules/@almadar/lolo-ar/package.json\": @almadar/lolo-ar: `orbVocabulary.vocabulary` is missing"
+                }
+              }
+            ]
+          }
+        }
       ]
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LANG_PACK_REALASK",
-        "payload": {
-         "tag": "1"
+    },
+    {
+      "id": "unsatisfied-pack-is-incompatible",
+      "steps": [
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_SAT",
+          "payload": {
+            "requestId": "pack:0",
+            "value": false
+          },
+          "from": "scanning",
+          "entity": {
+            "id": "c",
+            "cwd": "/w",
+            "pkgs": [
+              {
+                "name": "@almadar/core",
+                "hint": "orb update",
+                "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
+              },
+              {
+                "name": "@almadar/std",
+                "hint": "orb update",
+                "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
+              }
+            ],
+            "roots": [
+              "/w/node_modules",
+              "/node_modules",
+              "~/.orb/node_modules"
+            ],
+            "cursor": 0,
+            "stage": 0,
+            "running": "18.0.5",
+            "ver": "10.128.0",
+            "kind": "",
+            "compiler": ">=17.11.2",
+            "lines": [],
+            "found": [
+              {
+                "name": "@almadar/lolo-ar",
+                "version": "1.3.0",
+                "stage": 0,
+                "compiler": ">=19.0.0",
+                "vocab": "vocabulary.json",
+                "code": ""
+              }
+            ],
+            "foundCursor": 0,
+            "codes": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LANG_PACK_PROBLEM",
+                "payload": {
+                  "text": "ORB_LANGUAGE_DATA_INCOMPATIBLE: installed language pack @almadar/lolo-ar@1.3.0 requires orb >=19.0.0, but this orb is 18.0.5 — update the pack (`orb update`) or upgrade orb"
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "unparseable-vocabulary-is-a-problem",
-   "steps": [
+    },
     {
-     "trait": "OrbLanguageEngine",
-     "event": "LANG_VOCAB_FILE",
-     "payload": {
-      "data": "bm9wZQ=="
-     },
-     "from": "scanning",
-     "entity": {
-      "id": "c",
-      "cwd": "/w",
-      "pkgs": [
-       {
-        "name": "@almadar/core",
-        "hint": "orb update",
-        "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
-       },
-       {
-        "name": "@almadar/std",
-        "hint": "orb update",
-        "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
-       }
-      ],
-      "roots": [
-       "/w/node_modules",
-       "/node_modules",
-       "~/.orb/node_modules"
-      ],
-      "cursor": 0,
-      "stage": 0,
-      "running": "18.0.5",
-      "ver": "10.128.0",
-      "kind": "",
-      "compiler": ">=17.11.2",
-      "lines": [],
-      "found": [
-       {
-        "name": "@almadar/lolo-ar",
-        "version": "1.3.0",
-        "stage": 0,
-        "compiler": ">=17.11.2",
-        "vocab": "vocabulary.json",
-        "code": ""
-       }
-      ],
-      "foundCursor": 0,
-      "codes": []
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LANG_PACK_PROBLEM",
-        "payload": {
-         "text": "ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at \"/w/node_modules/@almadar/lolo-ar/vocabulary.json\": @almadar/lolo-ar: invalid JSON"
+      "id": "non-semver-pack-range-is-invalid",
+      "steps": [
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_SAT_REFUSED",
+          "payload": {
+            "requestId": "pack:0",
+            "operation": "satisfies",
+            "reason": "range"
+          },
+          "from": "scanning",
+          "entity": {
+            "id": "c",
+            "cwd": "/w",
+            "pkgs": [
+              {
+                "name": "@almadar/core",
+                "hint": "orb update",
+                "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
+              },
+              {
+                "name": "@almadar/std",
+                "hint": "orb update",
+                "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
+              }
+            ],
+            "roots": [
+              "/w/node_modules",
+              "/node_modules",
+              "~/.orb/node_modules"
+            ],
+            "cursor": 0,
+            "stage": 0,
+            "running": "18.0.5",
+            "ver": "10.128.0",
+            "kind": "",
+            "compiler": ">=17.11.2",
+            "lines": [],
+            "found": [
+              {
+                "name": "@almadar/lolo-ar",
+                "version": "1.3.0",
+                "stage": 0,
+                "compiler": "^1 || ^2",
+                "vocab": "vocabulary.json",
+                "code": ""
+              }
+            ],
+            "foundCursor": 0,
+            "codes": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LANG_PACK_PROBLEM",
+                "payload": {
+                  "text": "ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at \"/w/node_modules/@almadar/lolo-ar/package.json\": @almadar/lolo-ar: `orbVocabulary.compiler` \"^1 || ^2\" is not a semver range: range"
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "pack-prints-version-and-root",
-   "steps": [
+    },
     {
-     "trait": "OrbLanguageEngine",
-     "event": "LANG_PACK_ROOT",
-     "payload": {
-      "path": "/repo/packages/almadar-lolo-ar"
-     },
-     "from": "scanning",
-     "entity": {
-      "id": "c",
-      "cwd": "/w",
-      "pkgs": [
-       {
-        "name": "@almadar/core",
-        "hint": "orb update",
-        "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
-       },
-       {
-        "name": "@almadar/std",
-        "hint": "orb update",
-        "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
-       }
-      ],
-      "roots": [
-       "/w/node_modules",
-       "/node_modules",
-       "~/.orb/node_modules"
-      ],
-      "cursor": 0,
-      "stage": 0,
-      "running": "18.0.5",
-      "ver": "10.128.0",
-      "kind": "",
-      "compiler": ">=17.11.2",
-      "lines": [],
-      "found": [
-       {
-        "name": "@almadar/lolo-ar",
-        "version": "1.3.0",
-        "stage": 0,
-        "compiler": ">=17.11.2",
-        "vocab": "vocabulary.json",
-        "code": ""
-       }
-      ],
-      "foundCursor": 0,
-      "codes": []
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LANG_PACK_CHECK",
-        "payload": {
-         "tag": "1"
+      "id": "vocabulary-with-a-new-code-resolves-the-root",
+      "steps": [
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_VOCAB_FILE",
+          "payload": {
+            "data": "eyJtZXRhIjogeyJjb2RlIjogImFyIn19"
+          },
+          "from": "scanning",
+          "entity": {
+            "id": "c",
+            "cwd": "/w",
+            "pkgs": [
+              {
+                "name": "@almadar/core",
+                "hint": "orb update",
+                "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
+              },
+              {
+                "name": "@almadar/std",
+                "hint": "orb update",
+                "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
+              }
+            ],
+            "roots": [
+              "/w/node_modules",
+              "/node_modules",
+              "~/.orb/node_modules"
+            ],
+            "cursor": 0,
+            "stage": 0,
+            "running": "18.0.5",
+            "ver": "10.128.0",
+            "kind": "",
+            "compiler": ">=17.11.2",
+            "lines": [],
+            "found": [
+              {
+                "name": "@almadar/lolo-ar",
+                "version": "1.3.0",
+                "stage": 0,
+                "compiler": ">=17.11.2",
+                "vocab": "vocabulary.json",
+                "code": ""
+              }
+            ],
+            "foundCursor": 0,
+            "codes": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LANG_PACK_REALASK",
+                "payload": {
+                  "tag": "0"
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "done-answers-the-rows-in-order",
-   "steps": [
+    },
     {
-     "trait": "OrbLanguageEngine",
-     "event": "LANG_DONE",
-     "payload": {},
-     "from": "scanning",
-     "entity": {
-      "id": "c",
-      "cwd": "/w",
-      "pkgs": [
-       {
-        "name": "@almadar/core",
-        "hint": "orb update",
-        "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
-       },
-       {
-        "name": "@almadar/std",
-        "hint": "orb update",
-        "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
-       }
-      ],
-      "roots": [
-       "/w/node_modules",
-       "/node_modules",
-       "~/.orb/node_modules"
-      ],
-      "cursor": 0,
-      "stage": 0,
-      "running": "18.0.5",
-      "ver": "10.128.0",
-      "kind": "",
-      "compiler": ">=17.11.2",
-      "lines": [
-       "a \u2192 1",
-       "b \u2192 2"
-      ],
-      "packLines": [
-       "p@1 \u2192 /p"
+      "id": "vocabulary-replacing-english-is-a-problem",
+      "steps": [
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_VOCAB_FILE",
+          "payload": {
+            "data": "eyJtZXRhIjogeyJjb2RlIjogImVuIn19"
+          },
+          "from": "scanning",
+          "entity": {
+            "id": "c",
+            "cwd": "/w",
+            "pkgs": [
+              {
+                "name": "@almadar/core",
+                "hint": "orb update",
+                "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
+              },
+              {
+                "name": "@almadar/std",
+                "hint": "orb update",
+                "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
+              }
+            ],
+            "roots": [
+              "/w/node_modules",
+              "/node_modules",
+              "~/.orb/node_modules"
+            ],
+            "cursor": 0,
+            "stage": 0,
+            "running": "18.0.5",
+            "ver": "10.128.0",
+            "kind": "",
+            "compiler": ">=17.11.2",
+            "lines": [],
+            "found": [
+              {
+                "name": "@almadar/lolo-ar",
+                "version": "1.3.0",
+                "stage": 0,
+                "compiler": ">=17.11.2",
+                "vocab": "vocabulary.json",
+                "code": ""
+              }
+            ],
+            "foundCursor": 0,
+            "codes": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LANG_PACK_PROBLEM",
+                "payload": {
+                  "text": "ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at \"@almadar/lolo-ar\": @almadar/lolo-ar: English is built in and cannot be replaced"
+                }
+              }
+            ]
+          }
+        }
       ]
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "SCAN_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "a \u2192 1\nb \u2192 2\np@1 \u2192 /p",
-         "stderr": ""
-        }
-       }
-      ],
-      "state": "idle"
-     }
-    }
-   ]
-  },
-  {
-   "id": "a-pack-problem-replaces-the-pack-rows",
-   "steps": [
+    },
     {
-     "trait": "OrbLanguageEngine",
-     "event": "LANG_DONE",
-     "payload": {},
-     "from": "scanning",
-     "entity": {
-      "id": "c",
-      "cwd": "/w",
-      "pkgs": [
-       {
-        "name": "@almadar/core",
-        "hint": "orb update",
-        "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
-       },
-       {
-        "name": "@almadar/std",
-        "hint": "orb update",
-        "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
-       }
-      ],
-      "roots": [
-       "/w/node_modules",
-       "/node_modules",
-       "~/.orb/node_modules"
-      ],
-      "cursor": 0,
-      "stage": 0,
-      "running": "18.0.5",
-      "ver": "10.128.0",
-      "kind": "",
-      "compiler": ">=17.11.2",
-      "lines": [
-       "a \u2192 1"
-      ],
-      "packLines": [
-       "p@1 \u2192 /p"
-      ],
-      "packProblem": "ORB_X: bad"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "SCAN_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "a \u2192 1\nlanguage packs \u2192 ORB_X: bad",
-         "stderr": ""
+      "id": "second-pack-claiming-a-code-is-a-problem",
+      "steps": [
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_VOCAB_FILE",
+          "payload": {
+            "data": "eyJtZXRhIjogeyJjb2RlIjogImFyIn19"
+          },
+          "from": "scanning",
+          "entity": {
+            "id": "c",
+            "cwd": "/w",
+            "pkgs": [
+              {
+                "name": "@almadar/core",
+                "hint": "orb update",
+                "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
+              },
+              {
+                "name": "@almadar/std",
+                "hint": "orb update",
+                "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
+              }
+            ],
+            "roots": [
+              "/w/node_modules",
+              "/node_modules",
+              "~/.orb/node_modules"
+            ],
+            "cursor": 0,
+            "stage": 0,
+            "running": "18.0.5",
+            "ver": "10.128.0",
+            "kind": "",
+            "compiler": ">=17.11.2",
+            "lines": [],
+            "found": [
+              {
+                "name": "@almadar/lolo-ar",
+                "version": "1.3.0",
+                "stage": 0,
+                "compiler": ">=17.11.2",
+                "vocab": "vocabulary.json",
+                "code": ""
+              },
+              {
+                "name": "@almadar/lolo-x",
+                "version": "1.3.0",
+                "stage": 0,
+                "compiler": ">=17.11.2",
+                "vocab": "vocabulary.json",
+                "code": ""
+              }
+            ],
+            "foundCursor": 1,
+            "codes": [
+              "ar"
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LANG_PACK_PROBLEM",
+                "payload": {
+                  "text": "ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at \"@almadar/lolo-x\": language \"ar\" is claimed by two packs: @almadar/lolo-ar and @almadar/lolo-x"
+                }
+              }
+            ]
+          }
         }
-       }
-      ],
-      "state": "idle"
-     }
-    }
-   ]
-  },
-  {
-   "id": "scan-done-answers-the-hook",
-   "steps": [
-    {
-     "trait": "OrbLanguage",
-     "event": "SCAN_DONE",
-     "payload": {
-      "status": 200,
-      "body": "a \u2192 1",
-      "stderr": ""
-     },
-     "from": "scanning",
-     "expect": {
-      "emits": [
-       {
-        "event": "LANGUAGE_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "a \u2192 1",
-         "stderr": ""
-        }
-       }
-      ],
-      "state": "ready"
-     }
-    }
-   ]
-  },
-  {
-   "id": "scan-starts-versioning",
-   "steps": [
-    {
-     "trait": "OrbLanguageEngine",
-     "event": "LANG_SCAN",
-     "payload": {
-      "cwd": "/a/b"
-     },
-     "from": "idle",
-     "expect": {
-      "state": "versioning"
-     }
-    }
-   ]
-  },
-  {
-   "id": "done-announces-the-scan-end",
-   "steps": [
-    {
-     "trait": "OrbLanguageEngine",
-     "event": "LANG_DONE",
-     "payload": {},
-     "from": "scanning",
-     "entity": {
-      "id": "c",
-      "lines": [
-       "a"
-      ],
-      "packLines": [],
-      "packProblem": "ORB_X: bad"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LANGUAGE_PACKS_DONE",
-        "payload": {
-         "problem": "ORB_X: bad"
-        }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "done-without-a-problem-announces-empty-control",
-   "steps": [
+    },
     {
-     "trait": "OrbLanguageEngine",
-     "event": "LANG_DONE",
-     "payload": {},
-     "from": "scanning",
-     "entity": {
-      "id": "c",
-      "lines": [
-       "a"
-      ],
-      "packLines": [],
-      "packProblem": ""
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LANGUAGE_PACKS_DONE",
-        "payload": {
-         "problem": ""
+      "id": "second-pack-with-another-code-is-fine-control",
+      "steps": [
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_VOCAB_FILE",
+          "payload": {
+            "data": "eyJtZXRhIjogeyJjb2RlIjogInNsIn19"
+          },
+          "from": "scanning",
+          "entity": {
+            "id": "c",
+            "cwd": "/w",
+            "pkgs": [
+              {
+                "name": "@almadar/core",
+                "hint": "orb update",
+                "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
+              },
+              {
+                "name": "@almadar/std",
+                "hint": "orb update",
+                "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
+              }
+            ],
+            "roots": [
+              "/w/node_modules",
+              "/node_modules",
+              "~/.orb/node_modules"
+            ],
+            "cursor": 0,
+            "stage": 0,
+            "running": "18.0.5",
+            "ver": "10.128.0",
+            "kind": "",
+            "compiler": ">=17.11.2",
+            "lines": [],
+            "found": [
+              {
+                "name": "@almadar/lolo-ar",
+                "version": "1.3.0",
+                "stage": 0,
+                "compiler": ">=17.11.2",
+                "vocab": "vocabulary.json",
+                "code": ""
+              },
+              {
+                "name": "@almadar/lolo-x",
+                "version": "1.3.0",
+                "stage": 0,
+                "compiler": ">=17.11.2",
+                "vocab": "vocabulary.json",
+                "code": ""
+              }
+            ],
+            "foundCursor": 1,
+            "codes": [
+              "ar"
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LANG_PACK_REALASK",
+                "payload": {
+                  "tag": "1"
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "checked-pack-announces-its-vocabulary",
-   "steps": [
+    },
     {
-     "trait": "OrbLanguageEngine",
-     "event": "LANG_VOCAB_FILE",
-     "payload": {
-      "data": "eyJtZXRhIjp7ImNvZGUiOiJhciJ9fQ=="
-     },
-     "from": "scanning",
-     "entity": {
-      "id": "c",
-      "cwd": "/w",
-      "roots": [
-       "/w/node_modules",
-       "/node_modules",
-       "~/.orb/node_modules"
-      ],
-      "found": [
-       {
-        "name": "@almadar/lolo-ar",
-        "version": "1.3.0",
-        "stage": 0,
-        "compiler": ">=17.11.2",
-        "vocab": "vocabulary.json",
-        "code": ""
-       }
-      ],
-      "foundCursor": 0,
-      "codes": []
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LANGUAGE_PACK_VOCAB",
-        "payload": {
-         "name": "@almadar/lolo-ar",
-         "text": "{\"meta\":{\"code\":\"ar\"}}"
+      "id": "unparseable-vocabulary-is-a-problem",
+      "steps": [
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_VOCAB_FILE",
+          "payload": {
+            "data": "bm9wZQ=="
+          },
+          "from": "scanning",
+          "entity": {
+            "id": "c",
+            "cwd": "/w",
+            "pkgs": [
+              {
+                "name": "@almadar/core",
+                "hint": "orb update",
+                "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
+              },
+              {
+                "name": "@almadar/std",
+                "hint": "orb update",
+                "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
+              }
+            ],
+            "roots": [
+              "/w/node_modules",
+              "/node_modules",
+              "~/.orb/node_modules"
+            ],
+            "cursor": 0,
+            "stage": 0,
+            "running": "18.0.5",
+            "ver": "10.128.0",
+            "kind": "",
+            "compiler": ">=17.11.2",
+            "lines": [],
+            "found": [
+              {
+                "name": "@almadar/lolo-ar",
+                "version": "1.3.0",
+                "stage": 0,
+                "compiler": ">=17.11.2",
+                "vocab": "vocabulary.json",
+                "code": ""
+              }
+            ],
+            "foundCursor": 0,
+            "codes": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LANG_PACK_PROBLEM",
+                "payload": {
+                  "text": "ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at \"/w/node_modules/@almadar/lolo-ar/vocabulary.json\": @almadar/lolo-ar: invalid JSON"
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "version-probe-spawn-carries-the-path-in-its-env",
-   "entity": {
-    "id": "c"
-   },
-   "steps": [
+    },
     {
-     "trait": "OrbLanguageEngine",
-     "from": "versioning",
-     "event": "LANG_PATH_READ",
-     "payload": {
-      "value": "/usr/bin:/bin"
-     },
-     "expect": {
-      "effects": [
-       {
-        "type": "os/spawn",
-        "key": "spawn",
-        "optionsAt": 3,
-        "arg2": {
-         "cwd": null,
-         "detached": false,
-         "env": {
-          "PATH": [
-           "or",
-           "@payload.value",
-           ""
-          ]
-         },
-         "stderr": "null",
-         "stdin": "null",
-         "stdout": "pipe"
+      "id": "pack-prints-version-and-root",
+      "steps": [
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_PACK_ROOT",
+          "payload": {
+            "path": "/repo/packages/almadar-lolo-ar"
+          },
+          "from": "scanning",
+          "entity": {
+            "id": "c",
+            "cwd": "/w",
+            "pkgs": [
+              {
+                "name": "@almadar/core",
+                "hint": "orb update",
+                "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
+              },
+              {
+                "name": "@almadar/std",
+                "hint": "orb update",
+                "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
+              }
+            ],
+            "roots": [
+              "/w/node_modules",
+              "/node_modules",
+              "~/.orb/node_modules"
+            ],
+            "cursor": 0,
+            "stage": 0,
+            "running": "18.0.5",
+            "ver": "10.128.0",
+            "kind": "",
+            "compiler": ">=17.11.2",
+            "lines": [],
+            "found": [
+              {
+                "name": "@almadar/lolo-ar",
+                "version": "1.3.0",
+                "stage": 0,
+                "compiler": ">=17.11.2",
+                "vocab": "vocabulary.json",
+                "code": ""
+              }
+            ],
+            "foundCursor": 0,
+            "codes": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LANG_PACK_CHECK",
+                "payload": {
+                  "tag": "1"
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
+    },
+    {
+      "id": "done-answers-the-rows-in-order",
+      "steps": [
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_DONE",
+          "payload": {},
+          "from": "scanning",
+          "entity": {
+            "id": "c",
+            "cwd": "/w",
+            "pkgs": [
+              {
+                "name": "@almadar/core",
+                "hint": "orb update",
+                "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
+              },
+              {
+                "name": "@almadar/std",
+                "hint": "orb update",
+                "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
+              }
+            ],
+            "roots": [
+              "/w/node_modules",
+              "/node_modules",
+              "~/.orb/node_modules"
+            ],
+            "cursor": 0,
+            "stage": 0,
+            "running": "18.0.5",
+            "ver": "10.128.0",
+            "kind": "",
+            "compiler": ">=17.11.2",
+            "lines": [
+              "a → 1",
+              "b → 2"
+            ],
+            "packLines": [
+              "p@1 → /p"
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "SCAN_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "a → 1\nb → 2\np@1 → /p",
+                  "stderr": ""
+                }
+              }
+            ],
+            "state": "idle"
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-pack-problem-replaces-the-pack-rows",
+      "steps": [
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_DONE",
+          "payload": {},
+          "from": "scanning",
+          "entity": {
+            "id": "c",
+            "cwd": "/w",
+            "pkgs": [
+              {
+                "name": "@almadar/core",
+                "hint": "orb update",
+                "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
+              },
+              {
+                "name": "@almadar/std",
+                "hint": "orb update",
+                "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
+              }
+            ],
+            "roots": [
+              "/w/node_modules",
+              "/node_modules",
+              "~/.orb/node_modules"
+            ],
+            "cursor": 0,
+            "stage": 0,
+            "running": "18.0.5",
+            "ver": "10.128.0",
+            "kind": "",
+            "compiler": ">=17.11.2",
+            "lines": [
+              "a → 1"
+            ],
+            "packLines": [
+              "p@1 → /p"
+            ],
+            "packProblem": "ORB_X: bad"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "SCAN_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "a → 1\nlanguage packs → ORB_X: bad",
+                  "stderr": ""
+                }
+              }
+            ],
+            "state": "idle"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scan-done-answers-the-hook",
+      "steps": [
+        {
+          "trait": "OrbLanguage",
+          "event": "SCAN_DONE",
+          "payload": {
+            "status": 200,
+            "body": "a → 1",
+            "stderr": ""
+          },
+          "from": "scanning",
+          "expect": {
+            "emits": [
+              {
+                "event": "LANGUAGE_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "a → 1",
+                  "stderr": ""
+                }
+              }
+            ],
+            "state": "ready"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scan-starts-versioning",
+      "steps": [
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_SCAN",
+          "payload": {
+            "cwd": "/a/b"
+          },
+          "from": "idle",
+          "expect": {
+            "state": "versioning"
+          }
+        }
+      ]
+    },
+    {
+      "id": "done-announces-the-scan-end",
+      "steps": [
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_DONE",
+          "payload": {},
+          "from": "scanning",
+          "entity": {
+            "id": "c",
+            "lines": [
+              "a"
+            ],
+            "packLines": [],
+            "packProblem": "ORB_X: bad"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LANGUAGE_PACKS_DONE",
+                "payload": {
+                  "problem": "ORB_X: bad"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "done-without-a-problem-announces-empty-control",
+      "steps": [
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_DONE",
+          "payload": {},
+          "from": "scanning",
+          "entity": {
+            "id": "c",
+            "lines": [
+              "a"
+            ],
+            "packLines": [],
+            "packProblem": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LANGUAGE_PACKS_DONE",
+                "payload": {
+                  "problem": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "checked-pack-announces-its-vocabulary",
+      "steps": [
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_VOCAB_FILE",
+          "payload": {
+            "data": "eyJtZXRhIjp7ImNvZGUiOiJhciJ9fQ=="
+          },
+          "from": "scanning",
+          "entity": {
+            "id": "c",
+            "cwd": "/w",
+            "roots": [
+              "/w/node_modules",
+              "/node_modules",
+              "~/.orb/node_modules"
+            ],
+            "found": [
+              {
+                "name": "@almadar/lolo-ar",
+                "version": "1.3.0",
+                "stage": 0,
+                "compiler": ">=17.11.2",
+                "vocab": "vocabulary.json",
+                "code": ""
+              }
+            ],
+            "foundCursor": 0,
+            "codes": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LANGUAGE_PACK_VOCAB",
+                "payload": {
+                  "name": "@almadar/lolo-ar",
+                  "text": "{\"meta\":{\"code\":\"ar\"}}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "version-probe-spawn-carries-the-path-in-its-env",
+      "entity": {
+        "id": "c"
+      },
+      "steps": [
+        {
+          "trait": "OrbLanguageEngine",
+          "from": "versioning",
+          "event": "LANG_PATH_READ",
+          "payload": {
+            "value": "/usr/bin:/bin"
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "os/spawn",
+                "key": "spawn",
+                "optionsAt": 3,
+                "arg2": {
+                  "cwd": null,
+                  "detached": false,
+                  "env": {
+                    "PATH": [
+                      "or",
+                      "@payload.value",
+                      ""
+                    ]
+                  },
+                  "stderr": "null",
+                  "stdin": "null",
+                  "stdout": "pipe"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-compatible-core-row-names-the-core-root-on-packs-done",
+      "steps": [
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_ROOT",
+          "payload": {
+            "path": "/repo/packages/almadar-core"
+          },
+          "from": "probing",
+          "entity": {
+            "id": "c",
+            "cwd": "/w",
+            "pkgs": [
+              {
+                "name": "@almadar/core",
+                "hint": "orb update",
+                "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
+              },
+              {
+                "name": "@almadar/std",
+                "hint": "orb update",
+                "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
+              }
+            ],
+            "roots": [
+              "/w/node_modules",
+              "/node_modules",
+              "~/.orb/node_modules"
+            ],
+            "cursor": 0,
+            "stage": 0,
+            "running": "18.0.5",
+            "ver": "10.128.0",
+            "kind": "",
+            "compiler": ">=17.11.2",
+            "lines": [],
+            "packProblem": "",
+            "packLines": [],
+            "coreRoot": ""
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_DONE",
+          "payload": {},
+          "from": "scanning",
+          "expect": {
+            "emits": [
+              {
+                "event": "LANGUAGE_PACKS_DONE",
+                "payload": {
+                  "problem": "",
+                  "coreRoot": "/repo/packages/almadar-core",
+                  "stdRoot": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-incompatible-core-names-no-core-root",
+      "steps": [
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_ROOT",
+          "payload": {
+            "path": "/repo/packages/almadar-core"
+          },
+          "from": "probing",
+          "entity": {
+            "id": "c",
+            "cwd": "/w",
+            "pkgs": [
+              {
+                "name": "@almadar/core",
+                "hint": "orb update",
+                "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
+              },
+              {
+                "name": "@almadar/std",
+                "hint": "orb update",
+                "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
+              }
+            ],
+            "roots": [
+              "/w/node_modules",
+              "/node_modules",
+              "~/.orb/node_modules"
+            ],
+            "cursor": 0,
+            "stage": 0,
+            "running": "18.0.5",
+            "ver": "10.128.0",
+            "kind": "incompat",
+            "compiler": ">=17.11.2",
+            "lines": [],
+            "packProblem": "",
+            "packLines": [],
+            "coreRoot": ""
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_DONE",
+          "payload": {},
+          "from": "scanning",
+          "expect": {
+            "emits": [
+              {
+                "event": "LANGUAGE_PACKS_DONE",
+                "payload": {
+                  "problem": "",
+                  "coreRoot": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-std-row-names-no-core-root",
+      "steps": [
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_ROOT",
+          "payload": {
+            "path": "/repo/packages/almadar-core"
+          },
+          "from": "probing",
+          "entity": {
+            "id": "c",
+            "cwd": "/w",
+            "pkgs": [
+              {
+                "name": "@almadar/core",
+                "hint": "orb update",
+                "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
+              },
+              {
+                "name": "@almadar/std",
+                "hint": "orb update",
+                "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
+              }
+            ],
+            "roots": [
+              "/w/node_modules",
+              "/node_modules",
+              "~/.orb/node_modules"
+            ],
+            "cursor": 1,
+            "stage": 0,
+            "running": "18.0.5",
+            "ver": "10.128.0",
+            "kind": "",
+            "compiler": ">=17.11.2",
+            "lines": [],
+            "packProblem": "",
+            "packLines": [],
+            "coreRoot": ""
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_DONE",
+          "payload": {},
+          "from": "scanning",
+          "expect": {
+            "emits": [
+              {
+                "event": "LANGUAGE_PACKS_DONE",
+                "payload": {
+                  "problem": "",
+                  "coreRoot": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-compatible-std-row-names-the-std-root-on-packs-done",
+      "steps": [
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_ROOT",
+          "payload": {
+            "path": "/repo/packages/almadar-core"
+          },
+          "from": "probing",
+          "entity": {
+            "id": "c",
+            "cwd": "/w",
+            "pkgs": [
+              {
+                "name": "@almadar/core",
+                "hint": "orb update",
+                "code": "ORB_LANGUAGE_DATA_NOT_INSTALLED"
+              },
+              {
+                "name": "@almadar/std",
+                "hint": "orb update",
+                "code": "ORB_BEHAVIOR_PACKAGE_NOT_INSTALLED"
+              }
+            ],
+            "roots": [
+              "/w/node_modules",
+              "/node_modules",
+              "~/.orb/node_modules"
+            ],
+            "cursor": 1,
+            "stage": 0,
+            "running": "18.0.5",
+            "ver": "10.128.0",
+            "kind": "",
+            "compiler": ">=17.11.2",
+            "lines": [],
+            "packProblem": "",
+            "packLines": [],
+            "coreRoot": "",
+            "stdRoot": ""
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLanguageEngine",
+          "event": "LANG_DONE",
+          "payload": {},
+          "from": "scanning",
+          "expect": {
+            "emits": [
+              {
+                "event": "LANGUAGE_PACKS_DONE",
+                "payload": {
+                  "problem": "",
+                  "coreRoot": "",
+                  "stdRoot": "/repo/packages/almadar-core"
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
-   ]
-  }
- ]
+  ]
 }

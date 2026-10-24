@@ -408,7 +408,6 @@ orbital CouchdbOrbital {
         (emit COUCH_FAILED { op: @entity.op, status: @payload.status, message: (str/concat "CouchDB get answered " @payload.status ": " (object/get (json/parse @payload.body CouchError) reason "")) })
       COUCH_UNREACHABLE -> idle
         (emit COUCH_FAILED { op: @entity.op, status: 0, message: (str/concat "CouchDB request failed: " @payload.error) })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "CouchDB unavailable: " @payload.error) })
     }
 
     state ensuring {
@@ -436,7 +435,6 @@ orbital CouchdbOrbital {
         (emit COUCH_FAILED { op: @entity.op, status: @payload.status, message: (str/concat "CouchDB create database answered " @payload.status ": " (object/get (json/parse @payload.body CouchError) reason "")) })
       COUCH_UNREACHABLE -> idle
         (emit COUCH_FAILED { op: @entity.op, status: 0, message: (str/concat "CouchDB request failed: " @payload.error) })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "CouchDB unavailable: " @payload.error) })
     }
 
     state reading {
@@ -487,7 +485,6 @@ orbital CouchdbOrbital {
         (emit COUCH_FAILED { op: @entity.op, status: @payload.status, message: (str/concat "CouchDB get answered " @payload.status ": " (object/get (json/parse @payload.body CouchError) reason "")) })
       COUCH_UNREACHABLE -> idle
         (emit COUCH_FAILED { op: @entity.op, status: 0, message: (str/concat "CouchDB request failed: " @payload.error) })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "CouchDB unavailable: " @payload.error) })
     }
 
     state writing {
@@ -517,7 +514,6 @@ orbital CouchdbOrbital {
         (emit COUCH_FAILED { op: @entity.op, status: @payload.status, message: (str/concat "CouchDB " (if (= @entity.op "delete") "delete" "write") " answered " @payload.status ": " (object/get (json/parse @payload.body CouchError) reason "")) })
       COUCH_UNREACHABLE -> idle
         (emit COUCH_FAILED { op: @entity.op, status: 0, message: (str/concat "CouchDB request failed: " @payload.error) })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "CouchDB unavailable: " @payload.error) })
     }
 
     state listing {
@@ -532,7 +528,6 @@ orbital CouchdbOrbital {
         (emit COUCH_FAILED { op: @entity.op, status: @payload.status, message: (str/concat "CouchDB list answered " @payload.status ": " (object/get (json/parse @payload.body CouchError) reason "")) })
       COUCH_UNREACHABLE -> idle
         (emit COUCH_FAILED { op: @entity.op, status: 0, message: (str/concat "CouchDB request failed: " @payload.error) })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "CouchDB unavailable: " @payload.error) })
     }
 
     state finding {
@@ -586,7 +581,6 @@ orbital CouchdbOrbital {
         (emit COUCH_FAILED { op: @entity.op, status: @payload.status, message: (str/concat "CouchDB _find answered " @payload.status ": " (object/get (json/parse @payload.body CouchError) reason "")) })
       COUCH_UNREACHABLE -> idle
         (emit COUCH_FAILED { op: @entity.op, status: 0, message: (str/concat "CouchDB request failed: " @payload.error) })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "CouchDB unavailable: " @payload.error) })
     }
 
     state counting {
@@ -612,7 +606,6 @@ orbital CouchdbOrbital {
         (emit COUCH_FAILED { op: @entity.op, status: @payload.status, message: (str/concat "CouchDB _find answered " @payload.status ": " (object/get (json/parse @payload.body CouchError) reason "")) })
       COUCH_UNREACHABLE -> idle
         (emit COUCH_FAILED { op: @entity.op, status: 0, message: (str/concat "CouchDB request failed: " @payload.error) })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "CouchDB unavailable: " @payload.error) })
     }
 
     emits {
@@ -775,11 +768,6 @@ orbital CouchdbOrbital {
       writeCapabilities : WriteCapabilities = { guards: { leaves: ["compare", "member", "hasElement", "contains", "isNull"], combinators: ["all", "any", "not"], compareOps: ["==", "!=", "<", "<=", ">", ">="] }, conditional: true, returnsRow: true, stopRuns: true, atomicBatch: false }
         @description "What write the store honours: every guard form (tested in process on the row read), the row before an update or delete, stop runs, and no atomic batch."
         @tier "infra"
-      statusSlot : slot = system
-        @label "Status slot"
-        @description "Where the atom reports a failed call."
-        @synonyms "status area, slot"
-        @tier "presentation"
       origin : url = "http://couchdb.example.test:5984"
         @label "CouchDB origin"
         @description "The server as http(s)://host[:port], without credentials. Must be declared in the app egress list."
@@ -813,5 +801,5 @@ orbital CouchdbOrbital {
     }
   }
 
-  page "/couchdb" as CouchPage -> RowStoreDriver
+  page boot as CouchPage -> RowStoreDriver
 }

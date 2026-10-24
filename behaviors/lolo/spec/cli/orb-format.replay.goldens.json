@@ -506,6 +506,160 @@
      }
     }
    ]
+  },
+  {
+   "id": "an absolute file is read without the cwd anchor",
+   "entity": {
+    "cwd": "/w"
+   },
+   "steps": [
+    {
+     "from": "parsing",
+     "event": "FORMAT_ARGS_DONE",
+     "payload": {
+      "stage": "format",
+      "flags": {},
+      "positionals": [
+       "/tmp/a.lolo"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "reading",
+      "effects": [
+       {
+        "type": "os/read-file",
+        "key": "source",
+        "arg0": [
+         "str/concat",
+         "/",
+         [
+          "str/slice",
+          "@entity.path",
+          1,
+          [
+           "str/len",
+           "@entity.path"
+          ]
+         ]
+        ],
+        "optionsAt": 1
+       }
+      ]
+     },
+     "trait": "OrbFormat"
+    }
+   ]
+  },
+  {
+   "id": "control: a relative file is read under the cwd anchor",
+   "entity": {
+    "cwd": "/w"
+   },
+   "steps": [
+    {
+     "from": "parsing",
+     "event": "FORMAT_ARGS_DONE",
+     "payload": {
+      "stage": "format",
+      "flags": {},
+      "positionals": [
+       "a.lolo"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "reading",
+      "effects": [
+       {
+        "type": "os/read-file",
+        "key": "source",
+        "arg0": {
+         "anchor": "cwd",
+         "path": "@entity.path"
+        },
+        "optionsAt": 1
+       }
+      ]
+     },
+     "trait": "OrbFormat"
+    }
+   ]
+  },
+  {
+   "id": "an absolute file with --write is written without the cwd anchor",
+   "entity": {
+    "write": true,
+    "file": "/tmp/a.lolo",
+    "path": "/tmp/a.lolo"
+   },
+   "steps": [
+    {
+     "from": "printing",
+     "event": "FORMAT_PRINTED",
+     "payload": {
+      "result": "app x"
+     },
+     "expect": {
+      "state": "writing",
+      "effects": [
+       {
+        "type": "os/write-file",
+        "key": "formatted",
+        "arg0": [
+         "str/concat",
+         "/",
+         [
+          "str/slice",
+          "@entity.path",
+          1,
+          [
+           "str/len",
+           "@entity.path"
+          ]
+         ]
+        ],
+        "optionsAt": 2
+       }
+      ]
+     },
+     "trait": "OrbFormat"
+    }
+   ]
+  },
+  {
+   "id": "control: a relative file with --write is written under the cwd anchor",
+   "entity": {
+    "write": true,
+    "file": "a.lolo",
+    "path": "a.lolo"
+   },
+   "steps": [
+    {
+     "from": "printing",
+     "event": "FORMAT_PRINTED",
+     "payload": {
+      "result": "app x"
+     },
+     "expect": {
+      "state": "writing",
+      "effects": [
+       {
+        "type": "os/write-file",
+        "key": "formatted",
+        "arg0": {
+         "anchor": "cwd",
+         "path": "@entity.path"
+        },
+        "optionsAt": 2
+       }
+      ]
+     },
+     "trait": "OrbFormat"
+    }
+   ]
   }
  ]
 }

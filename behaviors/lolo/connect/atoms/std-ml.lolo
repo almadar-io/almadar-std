@@ -53,7 +53,6 @@ orbital MlOrbital {
         (emit ML_INFER_FAILED { code: "TIMEOUT_ERROR", message: (str/concat "ML service request timed out after " @config.timeoutMs "ms (model may be cold-starting)") })
       ML_CALL_FAILED -> idle when (!= @payload.kind "timeout")
         (emit ML_INFER_FAILED { code: "NETWORK_ERROR", message: "ML service request failed: fetch failed" })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "ML service unavailable: " @payload.error) })
     }
 
     emits {
@@ -106,11 +105,6 @@ orbital MlOrbital {
     }
 
     config {
-      statusSlot : slot = system
-        @label "Status slot"
-        @description "Where the atom reports an unreachable serving host; a page running it in the background keeps it in `system`"
-        @synonyms "status area, slot"
-        @tier "presentation"
       origin : url = "http://localhost:3000"
         @label "Serving orbital origin"
         @description "Origin (scheme://host[:port], no path) of the deployed model-serving orbital. Must be declared in the app egress list."
@@ -129,5 +123,5 @@ orbital MlOrbital {
     }
   }
 
-  page "/ml" as MlPage -> MlClient
+  page boot as MlPage -> MlClient
 }

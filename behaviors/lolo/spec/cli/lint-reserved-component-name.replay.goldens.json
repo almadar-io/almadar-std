@@ -1,0 +1,442 @@
+{
+  "atom": "cli/atoms/std-orb-lint-reserved-component-name.lolo",
+  "trait": "OrbLintReservedComponentName",
+  "note": "Cases mirror entity.rs validate_entity's RESERVED_COMPONENT_NAMES check, each with a paired control; component names come from LINT_COMPONENTS (the installed core component mapping).",
+  "cases": [
+    {
+      "id": "an-entity-named-like-a-component-collides",
+      "steps": [
+        {
+          "event": "LINT_COMPONENTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "names": [
+              "StatCard",
+              "TableView"
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "StatCard"
+                  }
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "reserved-component-name",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_E_INVALID_FIELD_NAME",
+                      "path": "orbitals[0].entity.name",
+                      "message": "Entity name 'StatCard' collides with a UI component name. This causes duplicate identifier errors in compiled output.",
+                      "suggestion": "Rename the entity to avoid the collision (e.g., 'StatCardEntry', 'StatCardRecord', 'StatCardData')",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-entity-with-its-own-name-is-clean",
+      "steps": [
+        {
+          "event": "LINT_COMPONENTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "names": [
+              "StatCard",
+              "TableView"
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "Task"
+                  }
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "reserved-component-name",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-auxiliary-entity-named-like-a-component-collides",
+      "steps": [
+        {
+          "event": "LINT_COMPONENTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "names": [
+              "StatCard",
+              "TableView"
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "Task"
+                  },
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Note"
+                    },
+                    {
+                      "name": "TableView"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "reserved-component-name",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_E_INVALID_FIELD_NAME",
+                      "path": "orbitals[0].auxiliaryEntities[1].name",
+                      "message": "Entity name 'TableView' collides with a UI component name. This causes duplicate identifier errors in compiled output.",
+                      "suggestion": "Rename the entity to avoid the collision (e.g., 'TableViewEntry', 'TableViewRecord', 'TableViewData')",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-spec-orbital-is-not-checked",
+      "steps": [
+        {
+          "event": "LINT_COMPONENTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "names": [
+              "StatCard",
+              "TableView"
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "spec": true,
+                  "entity": {
+                    "name": "StatCard"
+                  }
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "reserved-component-name",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "edge-a-name-differing-only-in-case-is-clean",
+      "steps": [
+        {
+          "event": "LINT_COMPONENTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "names": [
+              "StatCard",
+              "TableView"
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "Statcard"
+                  }
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "reserved-component-name",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "each-orbital-is-reported-at-its-own-path",
+      "steps": [
+        {
+          "event": "LINT_COMPONENTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "names": [
+              "StatCard",
+              "TableView"
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "Task"
+                  }
+                },
+                {
+                  "name": "B",
+                  "entity": {
+                    "name": "StatCard"
+                  }
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "reserved-component-name",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_E_INVALID_FIELD_NAME",
+                      "path": "orbitals[1].entity.name",
+                      "message": "Entity name 'StatCard' collides with a UI component name. This causes duplicate identifier errors in compiled output.",
+                      "suggestion": "Rename the entity to avoid the collision (e.g., 'StatCardEntry', 'StatCardRecord', 'StatCardData')",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

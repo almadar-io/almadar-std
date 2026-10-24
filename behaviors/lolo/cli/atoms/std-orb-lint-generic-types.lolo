@@ -4,11 +4,11 @@ app std-orb-lint-generic-types [
   env: ["PATH"],
   exec: ["orb"],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
-  description: "std-orb-lint-generic-types - the `orb lint generic-types <file>` command, the port of ORB_T_GENERIC_TYPE_DEPRECATED. It lowers the file with program/read and reports every inline trait config knob typed json, any or scalar (or a list of them) and every emit payload field typed json, any, scalar or shapeless object, with its path and suggestion (status 500, exit 1). Entity fields, the orbital types map and emit and event payloads are walked through nested properties and array items at any depth with tree/fold, like the Rust check. Clean answers `lint generic-types: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  description: "std-orb-lint-generic-types - the `orb lint generic-types <file>` command, the port of ORB_T_GENERIC_TYPE_DEPRECATED. It lowers the file with program/read and reports every inline trait config knob typed json, any or scalar (or a list of them) and every emit payload field typed json, any, scalar or shapeless object, with its path and suggestion (status 500, exit 1). Entity fields, the schema and orbital types maps and emit and event payloads are walked through nested properties and array items at any depth with tree/fold, like the Rust check. Clean answers `lint generic-types: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-generic-types"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
-type FieldShape = string | number | boolean | [FieldShape] | Map string FieldShape
+type FieldShape = string | number | boolean | [FieldShape?] | Map string FieldShape?
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 type GenericTypesEntity = { name : string, fields : [FieldShape] }
 type GenericTypesConfigKnob = { type : string }
@@ -18,13 +18,14 @@ type GenericTypesMachine = { events : [GenericTypesEvent] }
 type GenericTypesTrait = { name : string, config : Map string GenericTypesConfigKnob, emits : [GenericTypesEmit], stateMachine : GenericTypesMachine }
 type GenericTypesEntityRef = GenericTypesEntity | string
 type GenericTypesOrbital = { name : string, entity : GenericTypesEntityRef, auxiliaryEntities : [GenericTypesEntity], types : Map string [FieldShape], traits : [GenericTypesTrait] }
-type GenericTypesProgram = { orbitals : [GenericTypesOrbital]! }
+type GenericTypesProgram = { types : Map string [FieldShape], orbitals : [GenericTypesOrbital]! }
 
 orbital OrbLintGenericTypesOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
   entity OrbLintGenericTypesRun [runtime] {
     id : string!
+    scope : string = ""
     findings : [OrbFinding] = []
   }
 
@@ -34,6 +35,7 @@ orbital OrbLintGenericTypesOrbital {
     state ready {
       INIT -> ready
       LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
         (set @entity.findings (let ((orbitals : [GenericTypesOrbital] (object/get @payload.program "orbitals" [])))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
             (let ((orb (array/nth @orbitals @oi)))
@@ -46,7 +48,7 @@ orbital OrbLintGenericTypesOrbital {
                     (array/flatten (array/filter @k (fn r (validate/array @r))))
                     (if (validate/object @n)
                       (if (not (validate/string (object/get @n "type" 0)))
-                        (array/flatten (array/map (object/keys @k) (fn key (array/map (object/get @k @key) (fn h { rel: (str/concat "." @key (let ((r0 (object/get @h "rel" ""))) (if (validate/string @r0) @r0 ""))) })))))
+                        (array/flatten (array/map (object/keys @k) (fn key (array/map (or (object/get @k @key) []) (fn h { rel: (str/concat "." @key (let ((r0 (object/get @h "rel" ""))) (if (validate/string @r0) @r0 ""))) })))))
                       (let ((ft0 (object/get @n "type" "")))
                        (let ((ft (if (validate/string @ft0) @ft0 "")))
                         (if (= @ft "object")
@@ -61,8 +63,8 @@ orbital OrbLintGenericTypesOrbital {
                             (array/map (object/get @k "items" []) (fn h { rel: (str/concat "[]" (let ((r0 (object/get @h "rel" ""))) (if (validate/string @r0) @r0 ""))) }))
                             [])))))
                       []))) FieldShape) (fn h { code: "ORB_T_GENERIC_TYPE_DEPRECATED", path: (str/concat "entities." (object/get @en "name" "") ".fields." (if (validate/object @f) (let ((fn0 (object/get @f "name" "<unnamed>"))) (if (validate/string @fn0) @fn0 "<unnamed>")) "<unnamed>") (let ((r0 (object/get @h "rel" ""))) (if (validate/string @r0) @r0 ""))), message: (str/concat "Entity field declares the generic type '" "object (no declared properties — authored `object`/`json`)" "' — generic types (`json`, shapeless `object`, `any`, `scalar`) are not allowed in a declaration position."), suggestion: "Replace the generic type: renderable content → `node`; structured data → an inline `{ k: T }` shape, a named `type` alias, or `Map K V`; a value of several kinds → a named tagged-union `type` alias (or the concrete primitive); the row of an entity a config knob names → `@entity @config.<knob>`; the row of the linked entity → `@entity @config.<knob>`; genuinely polymorphic atoms → a declared type parameter.", severity: "error" }))))))))
-                  (let ((tys (object/get @orb "types" {})))
-                    (array/flatten (array/map (array/flatten (array/map (object/keys @tys) (fn al (array/map (object/get @tys @al) (fn pf { f: @pf, w: (str/concat "orbitals[" @oi "].types." @al) }))))) (fn x (array/map (tree/fold (object/get @x "f") (fn (n k)
+                  (let ((scopes (array/concat (if (= @oi 0) [{ tys: (object/get @payload.program "types" {}), pre: "types" }] []) [{ tys: (object/get @orb "types" {}), pre: (str/concat "orbitals[" @oi "].types") }])))
+                    (array/flatten (array/map (array/flatten (array/map @scopes (fn sc (let ((tys (object/get @sc "tys"))) (array/flatten (array/map (object/keys @tys) (fn al (array/map (object/get @tys @al) (fn pf { f: @pf, w: (str/concat (object/get @sc "pre") "." @al) }))))))))) (fn x (array/map (tree/fold (object/get @x "f") (fn (n k)
                   (if (validate/array @n)
                     (array/flatten (array/filter @k (fn r (validate/array @r))))
                     (if (validate/object @n)
@@ -126,11 +128,11 @@ orbital OrbLintGenericTypesOrbital {
                       []))) FieldShape) (fn h { code: "ORB_T_GENERIC_TYPE_DEPRECATED", path: (str/concat (object/get @x "w") (let ((r0 (object/get @h "rel" ""))) (if (validate/string @r0) @r0 ""))), message: (str/concat "Payload field declares the generic type '" (let ((t0 (object/get @h "ty" ""))) (if (validate/string @t0) @t0 "")) "' — generic types (`json`, shapeless `object`, `any`, `scalar`) are not allowed in a declaration position."), suggestion: "Replace the generic type: renderable content → `node`; structured data → an inline `{ k: T }` shape, a named `type` alias, or `Map K V`; a value of several kinds → a named tagged-union `type` alias (or the concrete primitive); the row of an entity a config knob names → `@entity @config.<knob>`; the row of the linked entity → `@entity @config.<knob>`; genuinely polymorphic atoms → a declared type parameter.", severity: "error" }))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
-        (emit LINT_FOUND { rule: "generic-types", findings: @entity.findings })
+        (emit LINT_FOUND { rule: "generic-types", scope: @entity.scope, findings: @entity.findings })
     }
 
     emits {
-      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
         @description "This rule's findings for the file, offered to the lint-all umbrella."
         @tier "internal"
       LINT_FINISH { }
@@ -139,7 +141,7 @@ orbital OrbLintGenericTypesOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : GenericTypesProgram }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : GenericTypesProgram  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -176,7 +178,7 @@ orbital OrbLintGenericTypesOrbital {
       LINT_REQUEST -> external { file : string! }
         @description "Ask the lint input to read and lower this file."
         @tier "internal"
-      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
         @description "The rule trait's findings for the file."
         @tier "internal"
       LINT_INPUT_UNREAD -> external { file : string! }

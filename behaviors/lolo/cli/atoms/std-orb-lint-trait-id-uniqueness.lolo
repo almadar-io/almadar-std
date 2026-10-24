@@ -18,6 +18,7 @@ orbital OrbLintTraitIdUniquenessOrbital {
 
   entity OrbLintTraitIdUniquenessRun [runtime] {
     id : string!
+    scope : string = ""
     findings : [OrbFinding] = []
   }
 
@@ -27,16 +28,17 @@ orbital OrbLintTraitIdUniquenessOrbital {
     state ready {
       INIT -> ready
       LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
         (set @entity.findings (let ((entries (array/flatten (array/map (object/get @payload.program "orbitals" []) (fn o (array/map (array/filter (object/get @o "traits" []) (fn t (object/has @t "id"))) (fn t { id: (object/get @t "id"), name: (str/concat (object/get @o "name") "." (object/get @t "name")) })))))))
           (array/map (array/filter (array/sort (array/map (array/unique (array/map @entries (fn e (object/get @e "id")))) (fn i { id: @i })) "id" "asc") (fn r (> (array/len (array/filter @entries (fn e (= (object/get @e "id") (object/get @r "id"))))) 1)))
             (fn r { code: "ORB_X_DUPLICATE_TRAIT_ID", path: "orbitals", message: (str/concat "trait id " (object/get @r "id") " is carried by " (str/join (array/map (array/filter @entries (fn e (= (object/get @e "id") (object/get @r "id")))) (fn e (object/get @e "name"))) ", ") "; listens match sources by id, so each of these hears the others' emits"), suggestion: "", severity: "error" }))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
-        (emit LINT_FOUND { rule: "trait-id-uniqueness", findings: @entity.findings })
+        (emit LINT_FOUND { rule: "trait-id-uniqueness", scope: @entity.scope, findings: @entity.findings })
     }
 
     emits {
-      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
         @description "This rule's findings for the file, offered to the lint-all umbrella."
         @tier "internal"
       LINT_FINISH { }
@@ -45,7 +47,7 @@ orbital OrbLintTraitIdUniquenessOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : TraitIdProgram }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : TraitIdProgram  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -82,7 +84,7 @@ orbital OrbLintTraitIdUniquenessOrbital {
       LINT_REQUEST -> external { file : string! }
         @description "Ask the lint input to read and lower this file."
         @tier "internal"
-      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
         @description "The rule trait's findings for the file."
         @tier "internal"
       LINT_INPUT_UNREAD -> external { file : string! }

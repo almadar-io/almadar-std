@@ -12,17 +12,7 @@ orbital PageOpenOrbital {
   trait PageOpen -> PageOpenRecord [client] {
     initial: ready
 
-    config {
-      statusSlot : slot = main
-        @label "Status slot"
-        @description "Where the atom shows its one-line status; an organism running it in the background sends it to `system`"
-        @synonyms "status area, slot"
-        @tier "presentation"
-    }
-
     state ready {
-      INIT -> ready
-        (render-ui @config.statusSlot { type: typography, variant: body, role: status, content: "Ready to open pages" })
       OPEN -> ready
         (browser/tab-open { url: ?url, active: true }
           { emit: { success: TAB_OPENED, failure: OPEN_CALL_FAILED } })
@@ -32,7 +22,6 @@ orbital PageOpenOrbital {
       OPEN_CALL_FAILED -> ready
         (set @entity.errorMessage ?error)
         (emit OPEN_FAILED { error: ?error })
-        (notify error (str/concat "Couldn't open the page — " ?error))
     }
 
     emits {
@@ -57,5 +46,5 @@ orbital PageOpenOrbital {
     }
   }
 
-  page "/page-open" as PageOpenPage -> PageOpen
+  page boot as PageOpenPage -> PageOpen
 }

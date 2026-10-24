@@ -110,7 +110,6 @@ orbital LlmLocalOrbital {
           action: (object/get (json/parse (let ((e (array/find @entity.pending (fn p (= @p.key @payload.key))))) (if (= @e null) @payload.key (object/get @e job ""))) LocalJob) action "")
         })
         (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key))))
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "On-device model " @payload.kind ": " @payload.error) })
 
       LLM_LOCAL_CANCELLED -> idle
         (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key))))
@@ -296,15 +295,7 @@ orbital LlmLocalOrbital {
         @description "Abort the classify, classifyMany or embed that carries this key and is still waiting for the device; it ends in LLM_CANCELLED. A key with nothing in flight is a no-op."
         @synonyms "abort, stop request, cancel call"
     }
-
-    config {
-      statusSlot : slot = system
-        @label "Status slot"
-        @description "Where the atom reports an on-device call that gave no answer; a page running it in the background keeps it in `system`"
-        @synonyms "status area, slot"
-        @tier "presentation"
-    }
   }
 
-  page "/llm-local" as LlmLocalPage -> LlmLocalClient
+  page boot as LlmLocalPage -> LlmLocalClient
 }

@@ -98,6 +98,7 @@ export type ReturnSemantics =
   | 'identity-of-arg<0>'
   | 'identity-of-arg<1>'
   | 'union-of-args'
+  | 'coalesce'
   | 'union-of-args<0,1>'
   | 'union-of-args<0,2>'
   | 'last-of-args'

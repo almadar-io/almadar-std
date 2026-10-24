@@ -6,7 +6,7 @@ app std-npm-lookup [
 uses Spec from "almadar-std/npm-lookup"
 type LookupDist = { tarball : string? }
 type LookupVersionDoc = { dist : LookupDist? }
-type LookupPackument = { versions : Map string LookupVersionDoc?, dist-tags : Map string string? }
+type LookupPackument = { versions : Map string LookupVersionDoc?, dist-tags : Map string string }
 
 orbital NpmLookupOrbital {
   entity NpmLookupAsk [runtime] {
@@ -44,11 +44,10 @@ orbital NpmLookupOrbital {
           timeoutMs: @config.timeoutMs
         } { key: "lookup", emit: { success: NPM_LOOKUP_PACKUMENT, failure: NPM_LOOKUP_UNREACHABLE } })
       NPM_LOOKUP_PACKUMENT -> idle when (= @payload.status 200)
-        (emit NPM_LOOKED { requestId: @entity.requestId, name: @entity.name, versions: (array/map (array/sort (array/map (object/keys (object/get (json/parse @payload.body LookupPackument) "versions" {})) (fn v { version: @v, key: (+ (* 1000000000000 (str/to-number (array/nth (str/split @v ".") 0))) (* 1000000 (str/to-number (array/nth (str/split @v ".") 1))) (str/to-number (array/nth (str/split (str/replace-pattern @v "-.*$" "") ".") 2))) })) "key" "asc") (fn r @r.version)), distTags: (object/get (json/parse @payload.body LookupPackument) "dist-tags" {}), tarballs: (object/mapValues (object/get (json/parse @payload.body LookupPackument) "versions" {}) (fn d (let ((u (object/get (object/get @d "dist" {}) "tarball" ""))) (if (str/startsWith @u @config.registry) @u "")))), version: (object/get (object/get (json/parse @payload.body LookupPackument) "dist-tags" {}) @entity.tag "") })
+        (emit NPM_LOOKED { requestId: @entity.requestId, name: @entity.name, versions: (array/map (array/sort (array/map (object/keys (object/get (json/parse @payload.body LookupPackument) "versions" {})) (fn v { version: @v, key: (+ (* 1000000000000 (str/to-number (array/nth (str/split @v ".") 0))) (* 1000000 (str/to-number (array/nth (str/split @v ".") 1))) (str/to-number (array/nth (str/split (str/replace-pattern @v "-.*$" "") ".") 2))) })) "key" "asc") (fn r @r.version)), distTags: (object/get (json/parse @payload.body LookupPackument) "dist-tags"), tarballs: (object/mapValues (object/get (json/parse @payload.body LookupPackument) "versions" {}) (fn d (let ((u (object/get (object/get @d "dist" {}) "tarball" ""))) (if (str/startsWith @u @config.registry) @u "")))), version: (object/get (object/get (json/parse @payload.body LookupPackument) "dist-tags" {}) @entity.tag "") })
       NPM_LOOKUP_PACKUMENT -> idle when (!= @payload.status 200)
         (emit NPM_LOOKUP_REFUSED { requestId: @entity.requestId, name: @entity.name, code: (if (or (= @payload.status 401) (= @payload.status 403)) "auth" (if (= @payload.status 404) "absent" (if (>= @payload.status 500) "unreachable" "unexpected"))), status: @payload.status, error: (str/concat "the registry answered " @payload.status " for " @entity.name) })
       NPM_LOOKUP_UNREACHABLE -> idle
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "The registry could not be reached: " @payload.error) })
         (emit NPM_LOOKUP_REFUSED { requestId: @entity.requestId, name: @entity.name, code: (if (= @payload.kind "unconfigured") "unconfigured" "unreachable"), status: 0, error: @payload.error })
     }
 
@@ -94,11 +93,6 @@ orbital NpmLookupOrbital {
         @description "Name of the credential holding the registry's bearer token (a GitHub token with read:packages for GitHub Packages)."
         @synonyms "npm token, github token"
         @tier "infra"
-      statusSlot : slot = system
-        @label "Status slot"
-        @description "Where the atom reports a registry read that failed to reach the registry; a page running it in the background keeps it in `system`."
-        @synonyms "status area, slot"
-        @tier "presentation"
       timeoutMs : number = 20000
         @label "Request timeout (ms)"
         @description "Milliseconds one registry read may take."
@@ -107,5 +101,5 @@ orbital NpmLookupOrbital {
     }
   }
 
-  page "/npm-lookup" as NpmLookupPage -> NpmLookup
+  page boot as NpmLookupPage -> NpmLookup
 }

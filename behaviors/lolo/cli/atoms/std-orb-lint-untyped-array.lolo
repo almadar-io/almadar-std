@@ -4,18 +4,18 @@ app std-orb-lint-untyped-array [
   env: ["PATH"],
   exec: ["orb"],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
-  description: "std-orb-lint-untyped-array — the `orb lint untyped-array <file>` command, the port of ORB_X_UNTYPED_ARRAY (array payload fields declare an element type). It lowers the file with program/read and checks the payload fields of every trait emit and event, through nested properties at any depth with tree/fold, and the top-level fields of each orbital's primary entity (an array without items, reported at `.items`). Status 500, exit 1. Clean answers `lint untyped-array: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  description: "std-orb-lint-untyped-array — the `orb lint untyped-array <file>` command, the port of ORB_X_UNTYPED_ARRAY (array payload fields declare an element type). It lowers the file with program/read and checks the payload fields of every trait emit and event, through nested properties at any depth with tree/fold, and the top-level fields of each non-spec orbital's primary and auxiliary entities (an array without items, reported at `.items`). Status 500, exit 1. Clean answers `lint untyped-array: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-untyped-array"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
-type FieldShape = string | number | boolean | [FieldShape] | Map string FieldShape
+type FieldShape = string | number | boolean | [FieldShape?] | Map string FieldShape?
 type UntypedField = { name : string, type : string, items : FieldShape }
 type UntypedEntity = { fields : [UntypedField] }
 type UntypedEmit = { event : string, payloadSchema : [FieldShape] }
 type UntypedEvent = { key : string, payloadSchema : [FieldShape] }
 type UntypedMachine = { events : [UntypedEvent] }
 type UntypedTrait = { name : string, emits : [UntypedEmit], stateMachine : UntypedMachine }
-type UntypedOrbital = { name : string, entity : UntypedEntity, traits : [UntypedTrait] }
+type UntypedOrbital = { name : string, entity : UntypedEntity, auxiliaryEntities : [UntypedEntity], traits : [UntypedTrait], spec : boolean }
 type UntypedProgram = { orbitals : [UntypedOrbital]! }
 type OrbFinding ={ code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
@@ -24,6 +24,7 @@ orbital OrbLintUntypedArrayOrbital {
 
   entity OrbLintUntypedArrayRun [runtime] {
     id : string!
+    scope : string = ""
     findings : [OrbFinding] = []
   }
 
@@ -33,18 +34,24 @@ orbital OrbLintUntypedArrayOrbital {
     state ready {
       INIT -> ready
       LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
         (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
             (let ((orb (array/nth @orbitals @oi)))
               (array/concat
-                (let ((ent (object/get @orb "entity" {})))
-                  (if (validate/object @ent)
-                    (array/flatten (array/map (array/range 0 (array/len (object/get @ent "fields" []))) (fn fi
-                      (let ((f (array/nth (object/get @ent "fields" []) @fi)))
-                        (if (and (= (object/get @f "type" "") "array") (not (object/has @f "items")))
-                          [{ code: "ORB_X_UNTYPED_ARRAY", path: (str/concat "orbitals[" @oi "].entity.fields[" @fi "].items"), message: (str/concat "Field '" (object/get @f "name" "<unnamed>") "' is typed `array` but its element type is undeclared."), suggestion: "Declare the element type as `[T]` (e.g. `[string]`) instead of the bare `array`.", severity: "error" }]
-                          [])))))
-                    []))
+                (let ((auxs (object/get @orb "auxiliaryEntities" [])))
+                  (array/flatten (array/map
+                    (array/concat [{ ent: (object/get @orb "entity" {}), base: (str/concat "orbitals[" @oi "].entity") }]
+                      (array/map (array/range 0 (array/len @auxs)) (fn ai { ent: (array/nth @auxs @ai), base: (str/concat "orbitals[" @oi "].auxiliaryEntities[" @ai "]") })))
+                    (fn eb
+                      (let ((ent (object/get @eb "ent")))
+                        (if (and (validate/object @ent) (not (object/get @orb "spec" false)))
+                          (array/flatten (array/map (array/range 0 (array/len (object/get @ent "fields" []))) (fn fi
+                            (let ((f (array/nth (object/get @ent "fields" []) @fi)))
+                              (if (and (= (object/get @f "type" "") "array") (not (object/has @f "items")))
+                                [{ code: "ORB_X_UNTYPED_ARRAY", path: (str/concat (object/get @eb "base") ".fields[" @fi "].items"), message: (str/concat "Field '" (object/get @f "name" "<unnamed>") "' is typed `array` but its element type is undeclared."), suggestion: "Declare the element type as `[T]` (e.g. `[string]`) instead of the bare `array`.", severity: "error" }]
+                                [])))))
+                          []))))))
                 (array/flatten (array/map (array/range 0 (array/len (object/get @orb "traits" []))) (fn ti
                   (let ((td (array/nth (object/get @orb "traits" []) @ti)))
                     (let ((tp (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].traits[" @ti " (" (object/get @td "name" "") ")]")))
@@ -71,11 +78,11 @@ orbital OrbLintUntypedArrayOrbital {
                                   []))) FieldShape) (fn h (let ((rel (let ((r0 (object/get @h "rel" ""))) (if (validate/string @r0) @r0 ""))) (hn (let ((n0 (object/get @h "nm" ""))) (if (validate/string @n0) @n0 "")))) { code: "ORB_X_UNTYPED_ARRAY", path: (str/concat (object/get @x "w") @rel "." @hn), message: (str/concat "Field '" @hn "' is typed `array` but its element type is undeclared."), suggestion: "Declare the element type as `[T]` (e.g. `[string]`) instead of the bare `array`.", severity: "error" })))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
-        (emit LINT_FOUND { rule: "untyped-array", findings: @entity.findings })
+        (emit LINT_FOUND { rule: "untyped-array", scope: @entity.scope, findings: @entity.findings })
     }
 
     emits {
-      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
         @description "This rule's findings for the file, offered to the lint-all umbrella."
         @tier "internal"
       LINT_FINISH { }
@@ -84,7 +91,7 @@ orbital OrbLintUntypedArrayOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : UntypedProgram }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : UntypedProgram  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -121,7 +128,7 @@ orbital OrbLintUntypedArrayOrbital {
       LINT_REQUEST -> external { file : string! }
         @description "Ask the lint input to read and lower this file."
         @tier "internal"
-      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
         @description "The rule trait's findings for the file."
         @tier "internal"
       LINT_INPUT_UNREAD -> external { file : string! }

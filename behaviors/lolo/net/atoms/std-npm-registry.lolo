@@ -23,11 +23,6 @@ orbital NpmRegistryOrbital {
       @description "Name of the credential holding the registry's bearer token (a GitHub PAT with read:packages for GitHub Packages)."
       @synonyms "npm token, github token"
       @tier "infra"
-    statusSlot : slot = system
-      @label "Status slot"
-      @description "Where the atom reports a registry read in flight or a failure; a page running it in the background keeps it in `system`."
-      @synonyms "status area, slot"
-      @tier "presentation"
     timeoutMs : number = 20000
       @label "Request timeout (ms)"
       @description "Milliseconds one registry read may take."
@@ -71,7 +66,6 @@ orbital NpmRegistryOrbital {
       registry: @config.registry
       authenticated: @config.authenticated
       token: @config.token
-      statusSlot: @config.statusSlot
       timeoutMs: @config.timeoutMs
     }
   }
@@ -116,7 +110,6 @@ orbital NpmRegistryOrbital {
 
       NPM_GET -> listing
         (emit NPM_LOOKUP_ASK { requestId: @payload.kind, name: @entity.name, tag: "latest" })
-        (render-ui @config.status { type: typography, variant: caption, role: status, content: (str/concat "Reading the registry for " @entity.name "…") })
 
       NPM_PACKUMENT_READ -> idle when (= @payload.requestId "versions")
         (emit NPM_VERSIONS_LISTED { name: @entity.name, versions: @payload.versions, tags: @payload.distTags })
@@ -148,7 +141,6 @@ orbital NpmRegistryOrbital {
 
       NPM_WAIT_ATTEMPT -> waiting
         (emit NPM_LOOKUP_ASK { requestId: "wait", name: @entity.name, tag: "latest" })
-        (render-ui @config.status { type: typography, variant: caption, role: status, content: (str/concat "Reading the registry for " @entity.name "…") })
 
       NPM_PACKUMENT_READ -> waiting when (and (array/includes @payload.versions @entity.version) (!= (str/default (array/nth (object/values (object/pick @payload.tarballs [@entity.version])) 0) "") ""))
         (emit NPM_WAIT_TARBALL { url: (str/default (array/nth (object/values (object/pick @payload.tarballs [@entity.version])) 0) "") })
@@ -158,11 +150,9 @@ orbital NpmRegistryOrbital {
         (emit NPM_WAIT_RETRY_CANCEL { })
         (emit NPM_FAILED { name: @entity.name, code: "auth", status: @payload.status, error: (str/concat "the registry refused the token (" @payload.status ") for " @entity.name) })
       NPM_PACKUMENT_REFUSED -> idle when (= @payload.code "unconfigured")
-        (render-ui @config.status { type: typography, variant: caption, role: status, content: (str/concat "The registry credential is not configured: " @payload.error) })
         (emit NPM_WAIT_RETRY_CANCEL { })
         (emit NPM_FAILED { name: @entity.name, code: "unconfigured", status: 0, error: @payload.error })
       NPM_PACKUMENT_REFUSED -> waiting when (and (!= @payload.code "auth") (!= @payload.code "unconfigured") (= @payload.status 0))
-        (render-ui @config.status { type: typography, variant: caption, role: status, content: (str/concat "The registry could not be reached, retrying: " @payload.error) })
         (emit NPM_WAIT_RETRY_FAILED { key: (as (str/concat "npm-wait:" (+ @entity.seq 1)) CallKey), error: @payload.error })
       NPM_PACKUMENT_REFUSED -> waiting when (and (!= @payload.code "auth") (!= @payload.code "unconfigured") (!= @payload.status 0))
         (emit NPM_WAIT_RETRY_FAILED { key: (as (str/concat "npm-wait:" (+ @entity.seq 1)) CallKey), error: (str/concat "not yet visible: " @entity.name (quote "@") @entity.version " (" @payload.status ")") })
@@ -173,7 +163,6 @@ orbital NpmRegistryOrbital {
           responseAs: "bytes",
           timeoutMs: @config.timeout
         } { emit: { success: NPM_WAIT_TARBALL_REPLIED, failure: NPM_WAIT_UNREACHABLE } })
-        (render-ui @config.status { type: typography, variant: caption, role: status, content: (str/concat "Reading the registry for " @entity.name "…") })
       NPM_WAIT_TARBALL -> waiting when @config.bearer
         (http GET @config.origin (str/slice @payload.url (str/len @config.origin) (str/len @payload.url)) {
           headers: { Range: "bytes=0-0" },
@@ -181,7 +170,6 @@ orbital NpmRegistryOrbital {
           responseAs: "bytes",
           timeoutMs: @config.timeout
         } { emit: { success: NPM_WAIT_TARBALL_REPLIED, failure: NPM_WAIT_UNREACHABLE } })
-        (render-ui @config.status { type: typography, variant: caption, role: status, content: (str/concat "Reading the registry for " @entity.name "…") })
       NPM_WAIT_TARBALL_REPLIED -> waiting when (or (= @payload.status 200) (= @payload.status 206))
         (emit NPM_WAIT_RETRY_SUCCEEDED { key: (as (str/concat "npm-wait:" (+ @entity.seq 1)) CallKey) })
       NPM_WAIT_TARBALL_REPLIED -> idle when (or (= @payload.status 401) (= @payload.status 403))
@@ -190,11 +178,9 @@ orbital NpmRegistryOrbital {
       NPM_WAIT_TARBALL_REPLIED -> waiting when (not (or (= @payload.status 200) (= @payload.status 206) (= @payload.status 401) (= @payload.status 403)))
         (emit NPM_WAIT_RETRY_FAILED { key: (as (str/concat "npm-wait:" (+ @entity.seq 1)) CallKey), error: (str/concat "version listed but its tarball is not downloadable yet (" @payload.status ")") })
       NPM_WAIT_UNREACHABLE -> idle when (= @payload.kind "unconfigured")
-        (render-ui @config.status { type: typography, variant: caption, role: status, content: (str/concat "The registry credential is not configured: " @payload.error) })
         (emit NPM_WAIT_RETRY_CANCEL { })
         (emit NPM_FAILED { name: @entity.name, code: "unconfigured", status: 0, error: @payload.error })
       NPM_WAIT_UNREACHABLE -> waiting when (!= @payload.kind "unconfigured")
-        (render-ui @config.status { type: typography, variant: caption, role: status, content: (str/concat "The registry could not be reached, retrying: " @payload.error) })
         (emit NPM_WAIT_RETRY_FAILED { key: (as (str/concat "npm-wait:" (+ @entity.seq 1)) CallKey), error: @payload.error })
 
       NPM_WAIT_DONE -> idle
@@ -291,10 +277,9 @@ orbital NpmRegistryOrbital {
       origin : url = @config.registry
       bearer : boolean = @config.authenticated
       credential : secret = @config.token
-      status : slot = @config.statusSlot
       timeout : number = @config.timeoutMs
     }
   }
 
-  page "/npm-registry" as NpmRegistryPage -> NpmRegistry, WaitRetry, PackumentLookup
+  page boot as NpmRegistryPage -> NpmRegistry, WaitRetry, PackumentLookup
 }

@@ -4,7 +4,7 @@ app std-orb-lint-slot [
   env: ["PATH"],
   exec: ["orb"],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
-  description: "std-orb-lint-slot — the `orb lint slot <file>` command, the port of the page slot checks ORB_SLOT_MAIN_NOT_COVERED, ORB_SLOT_CONTENTION, ORB_SLOT_CONTENTION_RUNTIME, ORB_SLOT_HUD_NON_GAME and ORB_SLOT_INVALID_NESTING (slot.rs validate_page_slots and validate_slot_nesting). It lowers the file with program/read and walks the traits of every route page (an endpoint or boot page is not checked), resolving by-ref page traits to their declarations (wider than Rust by owner ruling), leaving out a trait a sibling embeds with `@trait.X` (it paints inside that sibling, so it owns no page slot), reading a render-ui anywhere in an arm's effects (inside `if` and `do` too), counting a trait once per slot and never reporting contention on the shared overlay slots modal and toast, and reports each slot finding (a slot named by a `@config.<knob>` binding is read through the trait's declared default, as the compiler sees it after inlining) with the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint slot: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  description: "std-orb-lint-slot — the `orb lint slot <file>` command, the port of the page slot checks ORB_SLOT_MAIN_NOT_COVERED (a page passes when any trait on it paints a non-null render-ui on any slot in any transition), ORB_SLOT_CONTENTION, ORB_SLOT_CONTENTION_RUNTIME (slot.rs validate_page_slots) and ORB_SLOT_INVALID_NESTING, which by owner ruling (2026-10-24) flags real nesting only: a trait, in a state an arm entered by painting overlay A, takes a live arm that paints a different overlay B without clearing A, or one arm paints two overlays; two traits each owning one overlay never nest (slot.rs validate_slot_nesting flagged any two overlay slots on a page). It lowers the file with program/read and walks the traits of every route page (an endpoint or boot page is not checked), resolving by-ref page traits to their declarations (wider than Rust by owner ruling), leaving out a trait a sibling embeds with `@trait.X` (it paints inside that sibling, so it owns no page slot), reading a render-ui anywhere in an arm's effects (inside `if` and `do` too), counting a trait once per slot and never reporting contention on the shared overlay slots modal and toast, and reports each slot finding (a slot named by a `@config.<knob>` binding is read through the trait's declared default, as the compiler sees it after inlining) with the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint slot: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-slot"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -28,6 +28,7 @@ orbital OrbLintSlotOrbital {
 
   entity OrbLintSlotRun [runtime] {
     id : string!
+    scope : string = ""
     findings : [OrbFinding] = []
   }
 
@@ -37,8 +38,9 @@ orbital OrbLintSlotOrbital {
     state ready {
       INIT -> ready
       LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
         (set @entity.findings (let ((orbitals : [SlotOrbital] (object/get @payload.program "orbitals" [])))
-          (let ((isGame (str/includes (str/lower (object/get (object/get (array/first @orbitals) "domainContext" {}) "category" "")) @config.gameWord)))
+          
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
             (let ((pgList (object/get (array/nth @orbitals @oi) "pages" [])) (orbTraits (object/get (array/nth @orbitals @oi) "traits" [])))
               (array/flatten (array/map (array/range 0 (array/len @pgList)) (fn pj
@@ -48,13 +50,15 @@ orbital OrbLintSlotOrbital {
                         (if (not (validate/object @r)) []
                           (if (object/has @r "stateMachine") (array/map [0] (fn z @r))
                             (array/filter @orbTraits (fn t (= (object/get @t "name" "") (object/get @r "name" (object/get @r "ref" ""))))))))))))
-                  (let ((embedded (array/flatten (array/map @trs0 (fn t
+                  (let ((embedded (let ((kids (array/map (array/concat @orbTraits @trs0) (fn t
                           (let ((own (object/get @t "name" ""))
                                 (ns (array/concat
                                   (array/flatten (array/map (object/values (let ((cf (object/get @t "config" null))) (if (validate/object @cf) @cf {}))) (fn k (array/map (let ((nd (object/get @k "default" null))) (if (= @nd null) [] (json/parse (json/stringify (json/nodes @nd)) SlotForm))) (fn n (if (validate/string @n) (if (str/startsWith @n (quote "@trait.")) (array/first (str/split (array/first (str/split (str/slice @n 7 (str/len @n)) ".")) "[")) "") ""))))))
                                   (array/flatten (array/map (let ((trl (object/get (object/get @t "stateMachine" {}) "transitions" null))) (if (validate/array @trl) @trl [])) (fn a (array/concat (array/map (let ((nd (object/get @a "guard" null))) (if (= @nd null) [] (json/parse (json/stringify (json/nodes @nd)) SlotForm))) (fn n (if (validate/string @n) (if (str/startsWith @n (quote "@trait.")) (array/first (str/split (array/first (str/split (str/slice @n 7 (str/len @n)) ".")) "[")) "") ""))) (array/map (let ((nd (object/get @a "effects" []))) (if (= @nd null) [] (json/parse (json/stringify (json/nodes @nd)) SlotForm))) (fn n (if (validate/string @n) (if (str/startsWith @n (quote "@trait.")) (array/first (str/split (array/first (str/split (str/slice @n 7 (str/len @n)) ".")) "[")) "") "")))))))
                                   (array/flatten (array/map (let ((tks (object/get @t "ticks" null))) (if (validate/array @tks) @tks [])) (fn k (array/concat (array/map (let ((nd (object/get @k "guard" null))) (if (= @nd null) [] (json/parse (json/stringify (json/nodes @nd)) SlotForm))) (fn n (if (validate/string @n) (if (str/startsWith @n (quote "@trait.")) (array/first (str/split (array/first (str/split (str/slice @n 7 (str/len @n)) ".")) "[")) "") ""))) (array/map (let ((nd (object/get @k "effects" []))) (if (= @nd null) [] (json/parse (json/stringify (json/nodes @nd)) SlotForm))) (fn n (if (validate/string @n) (if (str/startsWith @n (quote "@trait.")) (array/first (str/split (array/first (str/split (str/slice @n 7 (str/len @n)) ".")) "[")) "") ""))))))))))
-                            (array/filter @ns (fn nm (and (!= @nm "") (!= @nm @own))))))))))
+                            { n: (object/get @t "name" ""), ns: (array/filter @ns (fn nm (and (!= @nm "") (!= @nm @own)))) })))))
+                          (array/reduce (array/range 0 (array/len @kids)) (array/flatten (array/map @trs0 (fn t (object/get (array/find @kids (fn k (= (object/get @k "n") (object/get @t "name" "")))) "ns" []))))
+                            (fn (cur i) (array/unique (array/concat @cur (array/flatten (array/map (array/filter @kids (fn k (array/includes @cur (object/get @k "n")))) (fn k (object/get @k "ns")))))))))))
                   (let ((trs (array/filter @trs0 (fn t (not (array/includes @embedded (object/get @t "name" "")))))))
                   (let ((facts (array/map @trs (fn t
                           (let ((sm (object/get @t "stateMachine" {})))
@@ -63,7 +67,7 @@ orbital OrbLintSlotOrbital {
                                     { froms: (let ((raw (object/get @a "from" ""))) (if (validate/array @raw) @raw (array/map [0] (fn z @raw))))
                                       to: (object/get @a "to" "")
                                       dead: (and (object/has @a "guard") (= (let ((g4 (object/get @a "guard" null))) (if (validate/array @g4) (if (validate/string (array/nth @g4 0)) (let ((op4 (array/nth @g4 0)) (cl (array/filter (array/map (array/range 1 9) (fn i4 (if (= (array/nth @g4 @i4) null) "N" (let ((a4 (array/nth @g4 @i4))) (let ((g3 @a4)) (if (validate/array @g3) (if (validate/string (array/nth @g3 0)) (let ((op3 (array/nth @g3 0)) (cl (array/filter (array/map (array/range 1 9) (fn i3 (if (= (array/nth @g3 @i3) null) "N" (let ((a3 (array/nth @g3 @i3))) (let ((g2 @a3)) (if (validate/array @g2) (if (validate/string (array/nth @g2 0)) (let ((op2 (array/nth @g2 0)) (cl (array/filter (array/map (array/range 1 9) (fn i2 (if (= (array/nth @g2 @i2) null) "N" (let ((a2 (array/nth @g2 @i2))) (let ((g1 @a2)) (if (validate/array @g1) (if (validate/string (array/nth @g1 0)) (let ((op1 (array/nth @g1 0)) (cl (array/filter (array/map (array/range 1 9) (fn i1 (if (= (array/nth @g1 @i1) null) "N" (let ((a1 (array/nth @g1 @i1))) (let ((g0 @a1)) (if (validate/array @g0) "U" (if (validate/boolean @g0) (if @g0 "T" "F") (if (= @g0 null) "F" (if (validate/number @g0) (if (= @g0 0) "F" "T") (if (validate/string @g0) (if (= @g0 "") "F" (if (str/startsWith @g0 (quote "@")) "U" "T")) (if (validate/object @g0) (if (= (array/len (object/keys @g0)) 0) "F" "T") "U"))))))))))) (fn c (!= @c "N"))))) (if (= @op1 "and") (if (array/includes @cl "F") "F" (if (and (> (array/len @cl) 0) (= (array/len (array/filter @cl (fn c (= @c "T")))) (array/len @cl))) "T" "U")) (if (= @op1 "or") (if (array/includes @cl "T") "T" (if (and (> (array/len @cl) 0) (= (array/len (array/filter @cl (fn c (= @c "F")))) (array/len @cl))) "F" "U")) (if (= @op1 "not") (if (= (array/len @cl) 1) (if (= (array/nth @cl 0) "T") "F" (if (= (array/nth @cl 0) "F") "T" "U")) "U") (if (or (= @op1 "=") (= @op1 "==") (= @op1 "!=")) (if (and (= (array/len @cl) 2) (or (validate/boolean (array/nth @g1 1)) (validate/number (array/nth @g1 1)) (= (array/nth @g1 1) null) (let ((q11 (array/nth @g1 1))) (and (validate/string @q11) (not (str/startsWith @q11 (quote "@")))))) (or (validate/boolean (array/nth @g1 2)) (validate/number (array/nth @g1 2)) (= (array/nth @g1 2) null) (let ((q12 (array/nth @g1 2))) (and (validate/string @q12) (not (str/startsWith @q12 (quote "@"))))))) (let ((eq (= (json/stringify (array/nth @g1 1)) (json/stringify (array/nth @g1 2))))) (if (= @eq (!= @op1 "!=")) "T" "F")) "U") "U"))))) (if (= (array/nth @g1 0) null) "F" "T")) (if (validate/boolean @g1) (if @g1 "T" "F") (if (= @g1 null) "F" (if (validate/number @g1) (if (= @g1 0) "F" "T") (if (validate/string @g1) (if (= @g1 "") "F" (if (str/startsWith @g1 (quote "@")) "U" "T")) (if (validate/object @g1) (if (= (array/len (object/keys @g1)) 0) "F" "T") "U"))))))))))) (fn c (!= @c "N"))))) (if (= @op2 "and") (if (array/includes @cl "F") "F" (if (and (> (array/len @cl) 0) (= (array/len (array/filter @cl (fn c (= @c "T")))) (array/len @cl))) "T" "U")) (if (= @op2 "or") (if (array/includes @cl "T") "T" (if (and (> (array/len @cl) 0) (= (array/len (array/filter @cl (fn c (= @c "F")))) (array/len @cl))) "F" "U")) (if (= @op2 "not") (if (= (array/len @cl) 1) (if (= (array/nth @cl 0) "T") "F" (if (= (array/nth @cl 0) "F") "T" "U")) "U") (if (or (= @op2 "=") (= @op2 "==") (= @op2 "!=")) (if (and (= (array/len @cl) 2) (or (validate/boolean (array/nth @g2 1)) (validate/number (array/nth @g2 1)) (= (array/nth @g2 1) null) (let ((q21 (array/nth @g2 1))) (and (validate/string @q21) (not (str/startsWith @q21 (quote "@")))))) (or (validate/boolean (array/nth @g2 2)) (validate/number (array/nth @g2 2)) (= (array/nth @g2 2) null) (let ((q22 (array/nth @g2 2))) (and (validate/string @q22) (not (str/startsWith @q22 (quote "@"))))))) (let ((eq (= (json/stringify (array/nth @g2 1)) (json/stringify (array/nth @g2 2))))) (if (= @eq (!= @op2 "!=")) "T" "F")) "U") "U"))))) (if (= (array/nth @g2 0) null) "F" "T")) (if (validate/boolean @g2) (if @g2 "T" "F") (if (= @g2 null) "F" (if (validate/number @g2) (if (= @g2 0) "F" "T") (if (validate/string @g2) (if (= @g2 "") "F" (if (str/startsWith @g2 (quote "@")) "U" "T")) (if (validate/object @g2) (if (= (array/len (object/keys @g2)) 0) "F" "T") "U"))))))))))) (fn c (!= @c "N"))))) (if (= @op3 "and") (if (array/includes @cl "F") "F" (if (and (> (array/len @cl) 0) (= (array/len (array/filter @cl (fn c (= @c "T")))) (array/len @cl))) "T" "U")) (if (= @op3 "or") (if (array/includes @cl "T") "T" (if (and (> (array/len @cl) 0) (= (array/len (array/filter @cl (fn c (= @c "F")))) (array/len @cl))) "F" "U")) (if (= @op3 "not") (if (= (array/len @cl) 1) (if (= (array/nth @cl 0) "T") "F" (if (= (array/nth @cl 0) "F") "T" "U")) "U") (if (or (= @op3 "=") (= @op3 "==") (= @op3 "!=")) (if (and (= (array/len @cl) 2) (or (validate/boolean (array/nth @g3 1)) (validate/number (array/nth @g3 1)) (= (array/nth @g3 1) null) (let ((q31 (array/nth @g3 1))) (and (validate/string @q31) (not (str/startsWith @q31 (quote "@")))))) (or (validate/boolean (array/nth @g3 2)) (validate/number (array/nth @g3 2)) (= (array/nth @g3 2) null) (let ((q32 (array/nth @g3 2))) (and (validate/string @q32) (not (str/startsWith @q32 (quote "@"))))))) (let ((eq (= (json/stringify (array/nth @g3 1)) (json/stringify (array/nth @g3 2))))) (if (= @eq (!= @op3 "!=")) "T" "F")) "U") "U"))))) (if (= (array/nth @g3 0) null) "F" "T")) (if (validate/boolean @g3) (if @g3 "T" "F") (if (= @g3 null) "F" (if (validate/number @g3) (if (= @g3 0) "F" "T") (if (validate/string @g3) (if (= @g3 "") "F" (if (str/startsWith @g3 (quote "@")) "U" "T")) (if (validate/object @g3) (if (= (array/len (object/keys @g3)) 0) "F" "T") "U"))))))))))) (fn c (!= @c "N"))))) (if (= @op4 "and") (if (array/includes @cl "F") "F" (if (and (> (array/len @cl) 0) (= (array/len (array/filter @cl (fn c (= @c "T")))) (array/len @cl))) "T" "U")) (if (= @op4 "or") (if (array/includes @cl "T") "T" (if (and (> (array/len @cl) 0) (= (array/len (array/filter @cl (fn c (= @c "F")))) (array/len @cl))) "F" "U")) (if (= @op4 "not") (if (= (array/len @cl) 1) (if (= (array/nth @cl 0) "T") "F" (if (= (array/nth @cl 0) "F") "T" "U")) "U") (if (or (= @op4 "=") (= @op4 "==") (= @op4 "!=")) (if (and (= (array/len @cl) 2) (or (validate/boolean (array/nth @g4 1)) (validate/number (array/nth @g4 1)) (= (array/nth @g4 1) null) (let ((q41 (array/nth @g4 1))) (and (validate/string @q41) (not (str/startsWith @q41 (quote "@")))))) (or (validate/boolean (array/nth @g4 2)) (validate/number (array/nth @g4 2)) (= (array/nth @g4 2) null) (let ((q42 (array/nth @g4 2))) (and (validate/string @q42) (not (str/startsWith @q42 (quote "@"))))))) (let ((eq (= (json/stringify (array/nth @g4 1)) (json/stringify (array/nth @g4 2))))) (if (= @eq (!= @op4 "!=")) "T" "F")) "U") "U"))))) (if (= (array/nth @g4 0) null) "F" "T")) (if (validate/boolean @g4) (if @g4 "T" "F") (if (= @g4 null) "F" (if (validate/number @g4) (if (= @g4 0) "F" "T") (if (validate/string @g4) (if (= @g4 "") "F" (if (str/startsWith @g4 (quote "@")) "U" "T")) (if (validate/object @g4) (if (= (array/len (object/keys @g4)) 0) "F" "T") "U"))))))) "F"))
-                                      slots: (array/filter (array/map (let ((nd (object/get @a "effects" []))) (if (= @nd null) [] (json/parse (json/stringify (json/nodes @nd)) SlotForm))) (fn f
+                                      rend: (array/filter (array/map (let ((nd (object/get @a "effects" []))) (if (= @nd null) [] (json/parse (json/stringify (json/nodes @nd)) SlotForm))) (fn f
                                         (if (validate/array @f)
                                           (let ((hd (array/nth @f 0)))
                                             (if (validate/string @hd)
@@ -71,8 +75,8 @@ orbital OrbLintSlotOrbital {
                                                 (let ((sv (array/nth @f 1)))
                                                   (if (validate/string @sv)
                                                     (if (= (str/slice @sv 0 8) (str/concat (str/decode-uri-component "%40") "config."))
-                                                      (let ((dv (object/get (object/get (object/get @t "config" {}) (str/slice @sv 8 (str/len @sv)) {}) "default" @sv))) (if (validate/string @dv) @dv @sv))
-                                                      @sv)
+                                                      { s: (let ((dv (object/get (object/get (object/get @t "config" {}) (str/slice @sv 8 (str/len @sv)) {}) "default" @sv))) (if (validate/string @dv) @dv @sv)), p: (!= (array/nth @f 2) null) }
+                                                      { s: @sv, p: (!= (array/nth @f 2) null) })
                                                     null))
                                                 null)
                                               null))
@@ -84,19 +88,20 @@ orbital OrbLintSlotOrbital {
                         )
                     (let ((initR (array/flatten (array/map @facts (fn f
                               (array/flatten (array/map (array/filter (object/get @f "arms") (fn a (and (= (object/get @a "event") "INIT") (!= (object/get @f "init") null) (array/some (object/get @a "froms") (fn x (or (= @x (object/get @f "init")) (= @x "*"))))))) (fn a
-                                (array/map (object/get @a "slots") (fn s { slot: @s, tn: (object/get @f "tn") })))))))))
-                          (allSlots (array/sort (array/unique (array/flatten (array/map @facts (fn f (array/flatten (array/map (object/get @f "arms") (fn a (object/get @a "slots"))))))))) ))
+                                (array/map (array/map (array/filter (object/get @a "rend") (fn r (object/get @r "p"))) (fn r (object/get @r "s"))) (fn s { slot: @s, tn: (object/get @f "tn") })))))))))
+                          (anyPaint (array/flatten (array/map @facts (fn f (array/flatten (array/map (object/get @f "arms") (fn a (array/map (array/filter (object/get @a "rend") (fn r (object/get @r "p"))) (fn r (object/get @r "s"))))))))))
+                          (allSlots (array/sort (array/unique (array/flatten (array/map @facts (fn f (array/flatten (array/map (object/get @f "arms") (fn a (array/map (object/get @a "rend") (fn r (object/get @r "s"))))))))))) ))
                       (let ((initSlots (array/sort (array/unique (array/map @initR (fn r (object/get @r "slot")))))))
                         (let ((runR (array/flatten (array/map @facts (fn f
                                 (if (= (object/get @f "init") null) []
                                   (array/flatten (array/map (object/get @f "arms") (fn a
                                     (array/flatten (array/map (object/get @a "froms") (fn fr
                                       (let ((states (if (= @fr "*") (array/filter (object/get @f "reach") (fn st (!= @st (object/get @f "init")))) (if (and (!= @fr (object/get @f "init")) (array/includes (object/get @f "reach") @fr)) [@fr] []))))
-                                        (array/flatten (array/map @states (fn st (array/map (object/get @a "slots") (fn s { state: @st, slot: @s, tn: (object/get @f "tn") }))))))))))))))))))
+                                        (array/flatten (array/map @states (fn st (array/map (array/map (array/filter (object/get @a "rend") (fn r (object/get @r "p"))) (fn r (object/get @r "s"))) (fn s { state: @st, slot: @s, tn: (object/get @f "tn") }))))))))))))))))))
                           (let ((keys (array/sort (array/unique (array/map @runR (fn r (str/concat (object/get @r "state") "|" (object/get @r "slot"))))))))
                             (array/flatten [
-                              (if (and (not (array/includes @initSlots @config.mainSlot)) (> (array/len @trs) 0))
-                                [{ code: "ORB_SLOT_MAIN_NOT_COVERED", path: @where, message: "Main slot is not covered by any trait on page load", suggestion: "Ensure at least one trait renders to 'main' slot in INIT transition", severity: "error" }] [])
+                              (if (and (= (array/len @anyPaint) 0) (> (array/len @trs) 0))
+                                [{ code: "ORB_SLOT_MAIN_NOT_COVERED", path: @where, message: "No trait on this page renders anything", suggestion: "Give a trait on this page a render-ui, or move its traits to a boot/protocol page", severity: "error" }] [])
                               (array/flatten (array/map @initSlots (fn sl
                                 (let ((names (array/unique (array/map (array/filter @initR (fn r (= (object/get @r "slot") @sl))) (fn r (object/get @r "tn"))))))
                                   (if (and (> (array/len @names) 1) (not (array/includes @config.sharedSlots @sl)))
@@ -108,20 +113,28 @@ orbital OrbLintSlotOrbital {
                                     (if (and (> (array/len @names) 1) (not (array/includes @config.sharedSlots (object/get (array/nth @hits 0) "slot"))))
                                       [{ code: "ORB_SLOT_CONTENTION_RUNTIME", path: @where, message: (str/concat "Slot '" (object/get (array/nth @hits 0) "slot") "' in state '" (object/get (array/nth @hits 0) "state") "' has contention: traits [" (str/join (array/map @names (fn n (json/stringify @n))) ", ") "] all render to it."), suggestion: "Each slot should be owned by exactly one trait per state", severity: "error" }]
                                       []))))))
-                              (if @isGame [] (array/map (array/filter @allSlots (fn sl (array/includes @config.hudSlots @sl))) (fn sl
-                                { code: "ORB_SLOT_HUD_NON_GAME", path: @where, message: (str/concat "Slot '" @sl "' is typically used in game context"), suggestion: "HUD slots are intended for game UIs", severity: "error" })))
-                              (let ((ov (array/filter @allSlots (fn sl (array/includes @config.overlaySlots @sl)))))
-                                (if (> (array/len @ov) 1)
-                                  [{ code: "ORB_SLOT_INVALID_NESTING", path: @where, message: (str/concat "Multiple overlay-type slots used: [" (str/join (array/map @ov (fn n (json/stringify @n))) ", ") "]. Consider if nesting is intended."), suggestion: "Avoid nesting modals within modals", severity: "error" }]
-                                  []))
-                            ]))))))))))))))))))))
+                              (array/map (array/unique (array/flatten (array/map @facts (fn f
+                                  (let ((live (array/filter (object/get @f "arms") (fn a (not (object/get @a "dead"))))))
+                                    (array/flatten (array/map (object/get @f "reach") (fn st
+                                      (let ((open (array/unique (array/flatten (array/map (array/filter @live (fn a (= (object/get @a "to") @st))) (fn a (array/map (array/filter (object/get @a "rend") (fn r (and (object/get @r "p") (array/includes @config.overlaySlots (object/get @r "s"))))) (fn r (object/get @r "s")))))))))
+                                        (array/flatten (array/map (array/filter @live (fn a (array/some (object/get @a "froms") (fn x (or (= @x @st) (= @x "*")))))) (fn a
+                                          (let ((paints (array/unique (array/map (array/filter (object/get @a "rend") (fn r (and (object/get @r "p") (array/includes @config.overlaySlots (object/get @r "s"))))) (fn r (object/get @r "s")))))
+                                                (clears (array/map (array/filter (object/get @a "rend") (fn r (not (object/get @r "p")))) (fn r (object/get @r "s")))))
+                                            (array/flatten (array/map @paints (fn b
+                                              (array/concat
+                                                (array/map (array/filter @open (fn o (and (!= @o @b) (not (array/includes @clears @o))))) (fn o
+                                                  (str/concat "Overlay '" @b "' opens over the open overlay '" @o "' in trait '" (object/get @f "tn") "' state '" @st "'. Consider if nesting is intended.")))
+                                                (array/map (array/filter @paints (fn o (and (!= @o @b) (= (array/nth (array/sort [@o, @b]) 0) @o)))) (fn o
+                                                  (str/concat "Overlays '" @o "' and '" @b "' open together in trait '" (object/get @f "tn") "' from state '" @st "'. Consider if nesting is intended."))))))))))))))))))))
+                                (fn m { code: "ORB_SLOT_INVALID_NESTING", path: @where, message: @m, suggestion: "Avoid nesting modals within modals", severity: "error" }))
+                            ])))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
-        (emit LINT_FOUND { rule: "slot", findings: @entity.findings })
+        (emit LINT_FOUND { rule: "slot", scope: @entity.scope, findings: @entity.findings })
     }
 
     emits {
-      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
         @description "This rule's findings for the file, offered to the lint-all umbrella."
         @tier "internal"
       LINT_FINISH { }
@@ -131,18 +144,9 @@ orbital OrbLintSlotOrbital {
 
 
     config {
-      mainSlot : string = "main"
-        @label "Main slot"
-        @description "The slot a page must cover on load."
-      hudSlots : [string] = ["hud-top", "hud-bottom"]
-        @label "Game-only slots"
-        @description "Slots meant for game pages only."
       overlaySlots : [string] = ["modal", "drawer", "overlay"]
         @label "Overlay slots"
         @description "Slots of which a page should use at most one."
-      gameWord : string = "game"
-        @label "Game category word"
-        @description "The first orbital is a game when its domainContext.category contains this word."
       renderOps : [string] = ["render-ui"]
         @label "Render operators"
         @description "The effect operators that paint a slot."
@@ -152,7 +156,7 @@ orbital OrbLintSlotOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : SlotProgram }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : SlotProgram  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -189,7 +193,7 @@ orbital OrbLintSlotOrbital {
       LINT_REQUEST -> external { file : string! }
         @description "Ask the lint input to read and lower this file."
         @tier "internal"
-      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
         @description "The rule trait's findings for the file."
         @tier "internal"
       LINT_INPUT_UNREAD -> external { file : string! }

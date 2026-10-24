@@ -40,7 +40,6 @@ orbital EsignOrbital {
         (emit ESIGN_SEND_ENVELOPE_FAILED { code: null, message: (str/concat "DocuSign error " @payload.status ": " (str/slice @payload.body 0 300)) })
       ESIGN_SEND_ENVELOPE_UNREACHED -> idle
         (emit ESIGN_SEND_ENVELOPE_FAILED { code: null, message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "DocuSign unavailable: " @payload.error) })
 
       ESIGN_GET_ENVELOPE_STATUS -> idle
         (http GET @config.origin (str/concat (if (str/endsWith @config.basePath "/") (str/slice @config.basePath 0 (- (str/len @config.basePath) 1)) @config.basePath) "/envelopes/" @payload.envelopeId) {
@@ -56,7 +55,6 @@ orbital EsignOrbital {
         (emit ESIGN_GET_ENVELOPE_STATUS_FAILED { code: null, message: (str/concat "DocuSign error " @payload.status ": " (str/slice @payload.body 0 300)) })
       ESIGN_GET_ENVELOPE_STATUS_UNREACHED -> idle
         (emit ESIGN_GET_ENVELOPE_STATUS_FAILED { code: null, message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "DocuSign unavailable: " @payload.error) })
 
       ESIGN_DOWNLOAD_DOCUMENT -> idle
         (http GET @config.origin (str/concat (if (str/endsWith @config.basePath "/") (str/slice @config.basePath 0 (- (str/len @config.basePath) 1)) @config.basePath) "/envelopes/" @payload.envelopeId "/documents/combined") {
@@ -73,7 +71,6 @@ orbital EsignOrbital {
         (emit ESIGN_DOWNLOAD_DOCUMENT_FAILED { code: null, message: (str/concat "DocuSign error " @payload.status ": " (str/slice (base64/decode @payload.body) 0 300)) })
       ESIGN_DOWNLOAD_DOCUMENT_UNREACHED -> idle
         (emit ESIGN_DOWNLOAD_DOCUMENT_FAILED { code: null, message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "DocuSign unavailable: " @payload.error) })
     }
 
     emits {
@@ -214,11 +211,6 @@ orbital EsignOrbital {
     }
 
     config {
-      statusSlot : slot = system
-        @label "Status slot"
-        @description "Where the atom reports an unreachable DocuSign call; a page running it in the background keeps it in `system`"
-        @synonyms "status area, slot"
-        @tier "presentation"
       origin : url = "https://demo.docusign.net"
         @label "DocuSign API origin"
         @description "The DocuSign base URI origin (scheme://host, no path) of the account; must be declared in the app egress list."
@@ -242,5 +234,5 @@ orbital EsignOrbital {
     }
   }
 
-  page "/esign" as EsignPage -> EsignClient
+  page boot as EsignPage -> EsignClient
 }

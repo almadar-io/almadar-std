@@ -72,7 +72,8 @@
                   ]
                 }
               ]
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "fired": true,
@@ -103,7 +104,8 @@
                       "suggestion": "Add a 'collection' property for database storage",
                       "severity": "error"
                     }
-                  ]
+                  ],
+                  "scope": ""
                 }
               }
             ]
@@ -182,7 +184,8 @@
                   ]
                 }
               ]
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "fired": true,
@@ -205,7 +208,8 @@
                 "event": "LINT_FOUND",
                 "payload": {
                   "rule": "entity-persistence",
-                  "findings": []
+                  "findings": [],
+                  "scope": ""
                 }
               }
             ]
@@ -283,7 +287,8 @@
                   ]
                 }
               ]
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "fired": true,
@@ -306,7 +311,8 @@
                 "event": "LINT_FOUND",
                 "payload": {
                   "rule": "entity-persistence",
-                  "findings": []
+                  "findings": [],
+                  "scope": ""
                 }
               }
             ]
@@ -383,7 +389,8 @@
                   ]
                 }
               ]
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "fired": true,
@@ -406,7 +413,8 @@
                 "event": "LINT_FOUND",
                 "payload": {
                   "rule": "entity-persistence",
-                  "findings": []
+                  "findings": [],
+                  "scope": ""
                 }
               }
             ]
@@ -539,7 +547,8 @@
                   ]
                 }
               ]
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "fired": true,
@@ -577,7 +586,8 @@
                       "suggestion": "Add a 'collection' property for database storage",
                       "severity": "error"
                     }
-                  ]
+                  ],
+                  "scope": ""
                 }
               }
             ]
@@ -655,7 +665,8 @@
                   ]
                 }
               ]
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "fired": true,
@@ -686,7 +697,8 @@
                       "suggestion": "Add an explicit `persistent: <collection>` or `runtime` persistence tag alongside `[shared]`.",
                       "severity": "error"
                     }
-                  ]
+                  ],
+                  "scope": ""
                 }
               }
             ]
@@ -766,7 +778,8 @@
                   ]
                 }
               ]
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "fired": true,
@@ -789,7 +802,8 @@
                 "event": "LINT_FOUND",
                 "payload": {
                   "rule": "entity-persistence",
-                  "findings": []
+                  "findings": [],
+                  "scope": ""
                 }
               }
             ]
@@ -868,7 +882,8 @@
                   ]
                 }
               ]
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "fired": true,
@@ -891,7 +906,8 @@
                 "event": "LINT_FOUND",
                 "payload": {
                   "rule": "entity-persistence",
-                  "findings": []
+                  "findings": [],
+                  "scope": ""
                 }
               }
             ]
@@ -1738,7 +1754,8 @@
                   }
                 }
               }
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "fired": true,
@@ -1823,7 +1840,8 @@
                   "spec": true
                 }
               ]
-            }
+            },
+            "scope": ""
           },
           "expect": {
             "fired": true,
@@ -1846,7 +1864,486 @@
                 "event": "LINT_FOUND",
                 "payload": {
                   "rule": "entity-persistence",
-                  "findings": []
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityPersistence"
+        }
+      ]
+    },
+    {
+      "id": "auxiliary-persistent-entity-without-collection",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ],
+                    "persistence": "runtime"
+                  },
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Row",
+                      "fields": [
+                        {
+                          "name": "id",
+                          "type": "string"
+                        }
+                      ],
+                      "persistence": "persistent"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityPersistence"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-persistence",
+                  "findings": [
+                    {
+                      "code": "ORB_E_MISSING_COLLECTION",
+                      "path": "orbitals[0].auxiliaryEntities[0].collection",
+                      "message": "Persistent entity requires a collection name",
+                      "suggestion": "Add a 'collection' property for database storage",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityPersistence"
+        }
+      ]
+    },
+    {
+      "id": "control-auxiliary-persistent-entity-with-collection",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ],
+                    "persistence": "runtime"
+                  },
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Row",
+                      "fields": [
+                        {
+                          "name": "id",
+                          "type": "string"
+                        }
+                      ],
+                      "persistence": "persistent",
+                      "collection": "rows"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityPersistence"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-persistence",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityPersistence"
+        }
+      ]
+    },
+    {
+      "id": "auxiliary-shared-entity-without-persistence-mode",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ],
+                    "persistence": "runtime"
+                  },
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Row",
+                      "fields": [
+                        {
+                          "name": "id",
+                          "type": "string"
+                        }
+                      ],
+                      "shared": true
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityPersistence"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-persistence",
+                  "findings": [
+                    {
+                      "code": "ORB_S_SHARED_WITHOUT_PERSISTENCE_MODE",
+                      "path": "orbitals[0].auxiliaryEntities[0].persistence",
+                      "message": "Entity 'Row' is [shared] but declares no persistence mode — nothing about a shared entity may be inferred.",
+                      "suggestion": "Add an explicit `persistent: <collection>` or `runtime` persistence tag alongside `[shared]`.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityPersistence"
+        }
+      ]
+    },
+    {
+      "id": "trait-data-entity-shared-without-persistence-mode",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ],
+                    "persistence": "runtime"
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "dataEntities": [
+                        {
+                          "name": "Cache",
+                          "fields": [
+                            {
+                              "name": "id",
+                              "type": "string"
+                            }
+                          ],
+                          "shared": true
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityPersistence"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-persistence",
+                  "findings": [
+                    {
+                      "code": "ORB_S_SHARED_WITHOUT_PERSISTENCE_MODE",
+                      "path": "orbitals[0 (A)].traits[0 (T)].dataEntities[0].persistence",
+                      "message": "Entity 'Cache' is [shared] but declares no persistence mode — nothing about a shared entity may be inferred.",
+                      "suggestion": "Add an explicit `persistent: <collection>` or `runtime` persistence tag alongside `[shared]`.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityPersistence"
+        }
+      ]
+    },
+    {
+      "id": "control-trait-data-entity-shared-with-persistence-mode",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ],
+                    "persistence": "runtime"
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "dataEntities": [
+                        {
+                          "name": "Cache",
+                          "fields": [
+                            {
+                              "name": "id",
+                              "type": "string"
+                            }
+                          ],
+                          "shared": true,
+                          "persistence": "runtime"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityPersistence"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-persistence",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityPersistence"
+        }
+      ]
+    },
+    {
+      "id": "control-trait-data-entity-not-shared-needs-no-persistence-mode",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ],
+                    "persistence": "runtime"
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "dataEntities": [
+                        {
+                          "name": "Cache",
+                          "fields": [
+                            {
+                              "name": "id",
+                              "type": "string"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityPersistence"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-persistence",
+                  "findings": [],
+                  "scope": ""
                 }
               }
             ]

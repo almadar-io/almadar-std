@@ -117,15 +117,10 @@ orbital FirestoreOrbital {
     errKind : string @description "decline, abort or fail" = ""
   }
 
-  trait RowStoreDriver -> FirestoreFlight [client] {
+  trait RowStoreDriver -> FirestoreFlight {
     initial: ready
 
     config {
-      statusSlot : slot = system
-        @label "Status slot"
-        @description "Where the atom reports an unreachable Firestore."
-        @synonyms "status area, slot"
-        @tier "presentation"
       origin : url = "http://127.0.0.1:8080"
         @label "Firestore origin"
         @description "The Firestore REST origin: the emulator as http://host:port or https://firestore.googleapis.com. Must be declared in the app egress list."
@@ -310,7 +305,6 @@ orbital FirestoreOrbital {
         (set @entity.errStatus "")
         (set @entity.errMessage @payload.error)
         (set @entity.errKind "fail")
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Firestore unavailable: " @payload.error) })
         (emit FS_ERRORED { })
 
       FS_ERRORED -> ready when (= @entity.errKind "decline")
@@ -511,5 +505,5 @@ orbital FirestoreOrbital {
     }
   }
 
-  page "/firestore" -> RowStoreDriver
+  page boot as FirestoreStart -> RowStoreDriver
 }

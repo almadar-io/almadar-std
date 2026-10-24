@@ -82,7 +82,6 @@ orbital ViewerOrbital {
         (emit VIEWER_PUMP {})
       DIRECTORY_ABSENT -> idle when (!= @payload.code "not-found")
         (emit VIEWER_REFUSED { requestId: @entity.requestId, reason: "no-lookup" })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Viewer lookup failed" })
         (emit VIEWER_PUMP {})
       DIRECTORY_FOUND -> idle
         (emit VIEWER_RESOLVED { requestId: @entity.requestId, viewer: { id: @entity.verified.uid, email: @entity.verified.email, name: (or @payload.data.name @entity.verified.name), role: @payload.data.role, permissions: [], claims: (array/map (object/entries (object/omit @payload.data ["id", "role"])) (fn t { name: (array/nth @t 0), value: (array/nth @t 1) })) } })
@@ -124,11 +123,6 @@ orbital ViewerOrbital {
     }
 
     config {
-      statusSlot : slot = system
-        @label "Status slot"
-        @description "Where the atom reports a failed identity lookup; a page running it in the background keeps it in `system`."
-        @synonyms "status area, slot"
-        @tier "presentation"
       maxQueue : number = 32
         @label "Queue limit"
         @description "How many resolutions may wait; one beyond is refused busy."
@@ -149,5 +143,5 @@ orbital ViewerOrbital {
     }
   }
 
-  page "/viewer" as ViewerPage -> ViewerResolver
+  page boot as ViewerPage -> ViewerResolver
 }

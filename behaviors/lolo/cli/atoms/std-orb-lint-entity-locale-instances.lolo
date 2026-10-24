@@ -12,8 +12,9 @@ type OrbFinding = { code : string!, path : string!, message : string!, suggestio
 type LocaleValue = string | number | boolean | [LocaleValue?] | Map string LocaleValue?
 type LocaleField = { name : string, required : boolean, default : LocaleValue }
 type LocaleRow = Map string LocaleValue?
-type LocaleEntity = { name : string, local : boolean, fields : [LocaleField], instances : [LocaleRow], localeInstances : Map string [LocaleRow] }
-type LocaleOrbital = { entity : LocaleEntity, auxiliaryEntities : [LocaleEntity] }
+type LocaleEntity = { name : string, browser : boolean, fields : [LocaleField], instances : [LocaleRow], localeInstances : Map string [LocaleRow] }
+type LocaleEntityRef = LocaleEntity | string
+type LocaleOrbital = { entity : LocaleEntityRef, auxiliaryEntities : [LocaleEntityRef], spec : boolean }
 type LocaleProgram = { orbitals : [LocaleOrbital]!, locales : [string] }
 
 orbital OrbLintEntityLocaleInstancesOrbital {
@@ -21,6 +22,7 @@ orbital OrbLintEntityLocaleInstancesOrbital {
 
   entity OrbLintEntityLocaleInstancesRun [runtime] {
     id : string!
+    scope : string = ""
     findings : [OrbFinding] = []
   }
 
@@ -30,15 +32,15 @@ orbital OrbLintEntityLocaleInstancesOrbital {
     state ready {
       INIT -> ready
       LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
         (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])) (decl (object/get @payload.program "locales" [])))
           (let ((ents (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
                   (let ((aux (object/get (array/nth @orbitals @oi) "auxiliaryEntities" [])))
-                    (array/filter
-                      (array/concat [{ pth: (str/concat "orbitals[" @oi "].entity"), ee: (object/get (array/nth @orbitals @oi) "entity" {}) }]
-                        (array/map (array/range 0 (array/len @aux)) (fn ai { pth: (str/concat "orbitals[" @oi "].auxiliaryEntities[" @ai "]"), ee: (array/nth @aux @ai) })))
-                      (fn it (validate/object (object/get @it "ee"))))))))))
+                    (array/concat
+                      (let ((e0 (object/get (array/nth @orbitals @oi) "entity" {}))) (if (validate/object @e0) [{ pth: (str/concat "orbitals[" @oi "].entity"), ee: @e0, sp: (object/get (array/nth @orbitals @oi) "spec" false) }] []))
+                      (array/flatten (array/map (array/range 0 (array/len @aux)) (fn ai (let ((ea (array/nth @aux @ai))) (if (validate/object @ea) [{ pth: (str/concat "orbitals[" @oi "].auxiliaryEntities[" @ai "]"), ee: @ea, sp: (object/get (array/nth @orbitals @oi) "spec" false) }] []))))))))))))
             (let ((jobs (array/flatten (array/map @ents (fn it
-                    (array/concat [{ ee: (object/get @it "ee"), rows: (object/get (object/get @it "ee") "instances" []), rp: (str/concat (object/get @it "pth") ".instances") }]
+                    (array/concat (if (object/get @it "sp") [] [{ ee: (object/get @it "ee"), rows: (object/get (object/get @it "ee") "instances" []), rp: (str/concat (object/get @it "pth") ".instances") }])
                       (array/map (object/keys (object/get (object/get @it "ee") "localeInstances" {})) (fn k { ee: (object/get @it "ee"), rows: (object/get (object/get (object/get @it "ee") "localeInstances") @k), rp: (str/concat (object/get @it "pth") ".localeInstances." @k) }))))))))
               (array/concat
                 (array/flatten (array/map @ents (fn it
@@ -48,7 +50,7 @@ orbital OrbLintEntityLocaleInstancesOrbital {
                         (if (= (array/len @keys) 0)
                           []
                           (array/flatten [
-                                (if (object/get @ee "local" false) [] [{ code: "ORB_E_LOCALE_INSTANCES_NOT_LOCAL", path: @bp, message: (str/concat "Entity '" @nm "' writes rows per locale but its rows are not browser-stored; a server's rows are shared by every viewer"), suggestion: "Add `local` (`[persistent: <collection>, local]`) or keep one `instances` block.", severity: "error" }])
+                                (if (object/get @ee "browser" false) [] [{ code: "ORB_E_LOCALE_INSTANCES_NOT_LOCAL", path: @bp, message: (str/concat "Entity '" @nm "' writes rows per locale but its rows are not browser-stored; a server's rows are shared by every viewer"), suggestion: "Add `browser` (`[persistent: <collection>, browser]`) or keep one `instances` block.", severity: "error" }])
                                 (array/flatten (array/map (array/filter @keys (fn k (or (not (array/includes @decl @k)) (and (> (array/len @decl) 0) (= @k @dflt))))) (fn k
                                   [{ code: "ORB_E_LOCALE_INSTANCES_UNKNOWN_LOCALE", path: (str/concat @bp "." @k), message: (if (and (> (array/len @decl) 0) (= @k @dflt))
                                       (str/concat "Entity '" @nm "' writes `instances " @k "`, but '" @k "' is the default locale: its rows are the plain `instances` block")
@@ -65,16 +67,16 @@ orbital OrbLintEntityLocaleInstancesOrbital {
                         { code: "ORB_E_INSTANCE_INVALID", path: (str/concat @rpi "." @key), message: (str/concat "Row " @i " of '" @nm "' sets '" @key "', which is not a field of the entity"), suggestion: "", severity: "error" }))
                       (array/map (array/filter @fields (fn fd (and (object/get @fd "required" false) (not (object/has @fd "default")) (validate/string (object/get @fd "name" null)) (not (object/has @row (object/get @fd "name")))))) (fn fd
                         { code: "ORB_E_INSTANCE_INVALID", path: @rpi, message: (str/concat "Row " @i " of '" @nm "' is missing required field '" (object/get @fd "name") "'"), suggestion: "", severity: "error" }))
-                      (if (and (object/get @ee "local" false) (not (object/has @row "id")))
+                      (if (and (object/get @ee "browser" false) (not (object/has @row "id")))
                         [{ code: "ORB_E_INSTANCE_INVALID", path: @rpi, message: (str/concat "Row " @i " of browser-stored '" @nm "' has no `id` — seeded rows need stable ids across reloads"), suggestion: "Give every written-out row an `id`.", severity: "error" }]
                         [])))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
-        (emit LINT_FOUND { rule: "entity-locale-instances", findings: @entity.findings })
+        (emit LINT_FOUND { rule: "entity-locale-instances", scope: @entity.scope, findings: @entity.findings })
     }
 
     emits {
-      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
         @description "This rule's findings for the file, offered to the lint-all umbrella."
         @tier "internal"
       LINT_FINISH { }
@@ -83,7 +85,7 @@ orbital OrbLintEntityLocaleInstancesOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : LocaleProgram }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : LocaleProgram  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -120,7 +122,7 @@ orbital OrbLintEntityLocaleInstancesOrbital {
       LINT_REQUEST -> external { file : string! }
         @description "Ask the lint input to read and lower this file."
         @tier "internal"
-      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
         @description "The rule trait's findings for the file."
         @tier "internal"
       LINT_INPUT_UNREAD -> external { file : string! }

@@ -1,7 +1,7 @@
 app std-orb-complete [
   version: "1.0.0",
   inbound: ["cli-complete"],
-  fs: { cwd: "**": [read] },
+  fs: { cwd: "**": [read], "/**": [read] },
   description: "std-orb-complete — the `orb complete <file.lolo> --offset <n>` command (spec/cli/orb-complete.lolo; port of orbital-lolo complete.rs). It answers one compact JSON line { candidates, context, prefix } (keys in alphabetical order). Offsets count characters, which equals the Rust byte offset for ASCII sources. Served from the source and the installed @almadar/core language tables, found through its package.json orbLanguage block (vocabulary: effects and types; patterns: tags and props): modifier-key and modifier-value (app and page brackets), trait-ref, orbital-ref, config-key, entity-field, trait-embed, pattern-tag, pattern-prop, effect, field-type and keyword. trait-ref, orbital-ref and config-key read the behavior a `uses` line names through behavior/describe. Import-path completion walks every installed package's `orb.source` tree (behavior/packages, each package.json, os/list-dir) and offers the `.lolo` file stems as Rust does; it needs each tree inside the working directory (G-STD-096 item 4). A `pages {}` remap-entry bracket offers the remap keys. --stdin answers status 400 (G-STD-094). The statement-keyword and modifier-key tables are literals here because they are Rust constants of the parser, not installed data (G-STD-096)."
 ]
 uses Spec from "almadar-std/orb-complete"
@@ -157,11 +157,16 @@ orbital OrbCompleteOrbital {
 
     state idle {
       INIT -> idle
-      COMPLETE_START -> loading
+      COMPLETE_START -> loading when (not (os/path-is-absolute @payload.file))
         (set @entity.file @payload.file)
         (set @entity.offset @payload.offset)
         (set @entity.cwd @payload.cwd)
         (os/read-file { anchor: "cwd" path: @payload.file } { key: "source" emit: { success: COMPLETE_SOURCE, failure: COMPLETE_FAILED } })
+      COMPLETE_START -> loading when (os/path-is-absolute @payload.file)
+        (set @entity.file @payload.file)
+        (set @entity.offset @payload.offset)
+        (set @entity.cwd @payload.cwd)
+        (os/read-file (str/concat "/" (str/slice @payload.file 1 (str/len @payload.file))) { key: "source" emit: { success: COMPLETE_SOURCE, failure: COMPLETE_FAILED } })
     }
 
     state loading {
@@ -231,7 +236,7 @@ orbital OrbCompleteOrbital {
       COMPLETE_DESCRIBE_FAILED -> loading
         (emit COMPLETE_CTX { context: "none", prefix: @entity.word, candidates: [] })
       COMPLETE_DESCRIBED -> loading
-        (emit COMPLETE_CTX { context: @entity.ctx, prefix: @entity.word, candidates: (array/sort (array/reduce (array/filter (if (= @entity.ctx "trait-ref") (array/map (array/flatten (array/map (or (object/get @payload.result "orbitals") []) (fn o (array/map (or (object/get @o "traits") []) (fn t @t))))) (fn t { label: (object/get @t "trait"), kind: "trait", detail: @entity.alias })) (if (= @entity.ctx "orbital-ref") (array/map (or (object/get @payload.result "orbitals") []) (fn o { label: (object/get (object/get @o "value") "orbital"), kind: "orbital", detail: @entity.alias })) (if (= @entity.member "traits") (array/map (object/keys (or (object/get (array/find (array/flatten (array/map (or (object/get @payload.result "orbitals") []) (fn o (array/map (or (object/get @o "traits") []) (fn t @t))))) (fn t (= (object/get @t "trait") @entity.name))) "config") (json/parse "{}" DescConfig))) (fn k { label: @k, kind: "config-key", detail: (object/get (object/get (or (object/get (array/find (array/flatten (array/map (or (object/get @payload.result "orbitals") []) (fn o (array/map (or (object/get @o "traits") []) (fn t @t))))) (fn t (= (object/get @t "trait") @entity.name))) "config") (json/parse "{}" DescConfig)) @k) "type") })) (if (= @entity.member "orbitals") (array/map (object/keys (or (object/get (array/find (or (object/get @payload.result "orbitals") []) (fn o (= (object/get (object/get @o "value") "orbital") @entity.name))) "config") (json/parse "{}" DescConfig))) (fn k { label: @k, kind: "config-key", detail: (object/get (object/get (or (object/get (array/find (or (object/get @payload.result "orbitals") []) (fn o (= (object/get (object/get @o "value") "orbital") @entity.name))) "config") (json/parse "{}" DescConfig)) @k) "type") })) [])))) (fn c (str/startsWith (str/lower (object/get @c "label")) (str/lower @entity.word)))) [] (fn a c (if (array/some @a (fn x (= (object/get @x "label") (object/get @c "label")))) @a (array/append @a @c)))) "label" "asc") })
+        (emit COMPLETE_CTX { context: @entity.ctx, prefix: @entity.word, candidates: (array/sort (array/reduce (array/filter (if (= @entity.ctx "trait-ref") (array/map (array/flatten (array/map (or (object/get @payload.result "orbitals") []) (fn o (array/map (or (object/get @o "traits") []) (fn t @t))))) (fn t { label: (object/get @t "trait" ""), kind: "trait", detail: @entity.alias })) (if (= @entity.ctx "orbital-ref") (array/map (or (object/get @payload.result "orbitals") []) (fn o { label: (object/get (object/get @o "value") "orbital" ""), kind: "orbital", detail: @entity.alias })) (if (= @entity.member "traits") (array/map (object/keys (or (object/get (array/find (array/flatten (array/map (or (object/get @payload.result "orbitals") []) (fn o (array/map (or (object/get @o "traits") []) (fn t @t))))) (fn t (= (object/get @t "trait") @entity.name))) "config") (json/parse "{}" DescConfig))) (fn k { label: @k, kind: "config-key", detail: (object/get (object/get (or (object/get (array/find (array/flatten (array/map (or (object/get @payload.result "orbitals") []) (fn o (array/map (or (object/get @o "traits") []) (fn t @t))))) (fn t (= (object/get @t "trait") @entity.name))) "config") (json/parse "{}" DescConfig)) @k) "type") })) (if (= @entity.member "orbitals") (array/map (object/keys (or (object/get (array/find (or (object/get @payload.result "orbitals") []) (fn o (= (object/get (object/get @o "value") "orbital") @entity.name))) "config") (json/parse "{}" DescConfig))) (fn k { label: @k, kind: "config-key", detail: (object/get (object/get (or (object/get (array/find (or (object/get @payload.result "orbitals") []) (fn o (= (object/get (object/get @o "value") "orbital") @entity.name))) "config") (json/parse "{}" DescConfig)) @k) "type") })) [])))) (fn c (str/startsWith (str/lower (object/get @c "label")) (str/lower @entity.word)))) [] (fn a c (if (array/some @a (fn x (= (object/get @x "label") (object/get @c "label")))) @a (array/append @a @c)))) "label" "asc") })
       COMPLETE_PACKAGES -> loading
         (set @entity.packages @payload.result)
         (emit COMPLETE_PKG_NEXT { })

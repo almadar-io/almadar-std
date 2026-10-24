@@ -77,11 +77,9 @@ orbital OtelOrbital {
           (emit START_SPAN_RESULT { spanId: @spanId, traceId: @traceId })))
       OTEL_RANDOM_FAILED -> idle
         (emit OTEL_EXPORT_FAILED { signal: "traces", kind: "random", error: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "OpenTelemetry export unavailable: " @payload.error) })
       OTEL_SPAN_STORED -> idle
       OTEL_STORE_FAILED -> idle
         (emit OTEL_EXPORT_FAILED { signal: "store", kind: "store", error: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "OpenTelemetry export unavailable: " @payload.error) })
 
       ADD_EVENT -> idle
         (persist batch [
@@ -92,7 +90,6 @@ orbital OtelOrbital {
         (emit ADD_EVENT_RESULT { added: true })
       OTEL_EVENT_REFUSED -> idle
         (emit ADD_EVENT_RESULT { added: false, error: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "OpenTelemetry export unavailable: " @payload.error) })
 
       END_SPAN -> idle
         (persist update OtelSpan {
@@ -104,7 +101,6 @@ orbital OtelOrbital {
         } { emit: { success: OTEL_SPAN_STAMPED, failure: OTEL_SPAN_NOT_ENDED } })
       OTEL_SPAN_NOT_ENDED -> idle
         (emit END_SPAN_RESULT { ended: false, error: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "OpenTelemetry export unavailable: " @payload.error) })
       OTEL_SPAN_STAMPED -> idle
         (emit END_SPAN_RESULT { ended: true })
         (fetch OtelSpan { filter: { state: "ending" }, orderBy: "startTime", emit: { success: OTEL_ENDING_LOADED, failure: OTEL_READ_FAILED } })
@@ -182,7 +178,6 @@ orbital OtelOrbital {
         (emit RECORD_METRIC_RESULT { recorded: true })
       OTEL_METRIC_NOT_STORED -> idle
         (emit RECORD_METRIC_RESULT { recorded: false, error: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "OpenTelemetry export unavailable: " @payload.error) })
 
       OTEL_SEND -> idle when (not @config.authenticated)
         (http POST @config.endpoint @payload.path {
@@ -199,7 +194,6 @@ orbital OtelOrbital {
         } { key: @payload.key, emit: { success: OTEL_REPLIED, failure: OTEL_SEND_FAILED } })
       OTEL_SEND_FAILED -> idle
         (emit OTEL_EXPORT_FAILED { signal: (object/get (json/parse @payload.key OtelSendKey) signal ""), kind: @payload.kind, error: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "OpenTelemetry export unavailable: " @payload.error) })
       OTEL_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (emit OTEL_EXPORT_FAILED { signal: (object/get (json/parse @payload.key OtelSendKey) signal ""), kind: "rejected", status: @payload.status, error: @payload.body })
       OTEL_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= (object/get (json/parse @payload.key OtelSendKey) signal "") "traces") (= (array/count (object/get (json/parse @payload.key OtelSendKey) eventIds [])) 0))
@@ -216,13 +210,11 @@ orbital OtelOrbital {
       OTEL_METRIC_MARKED -> idle
       OTEL_MARK_FAILED -> idle
         (emit OTEL_EXPORT_FAILED { signal: "store", kind: "store", error: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "OpenTelemetry export unavailable: " @payload.error) })
 
       GET_SPAN -> idle
         (fetch OtelSpan { id: @payload.spanId, emit: { success: OTEL_SPAN_LOADED, failure: OTEL_SPAN_MISSING } })
       OTEL_SPAN_MISSING -> idle
         (emit GET_SPAN_RESULT { found: false })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "No span has that id" })
       OTEL_SPAN_LOADED -> idle
         (set @entity.spans [@payload.data])
         (fetch OtelSpanEvent { filter: { spanId: (object/get @payload.data id "") }, orderBy: "timestamp", emit: { success: OTEL_SPAN_EVENTS_LOADED, failure: OTEL_READ_FAILED } })
@@ -252,7 +244,6 @@ orbital OtelOrbital {
               { name: @n, metricType: (object/get (array/first @rows) metricType "counter"), value: (object/get @acc value 0), values: (object/get @acc values []), labels: (object/get (array/last @rows) labels {}) })))) })
       OTEL_READ_FAILED -> idle
         (emit OTEL_EXPORT_FAILED { signal: "store", kind: "store", error: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "OpenTelemetry export unavailable: " @payload.error) })
     }
 
     emits {
@@ -594,11 +585,6 @@ orbital OtelOrbital {
     }
 
     config {
-      statusSlot : slot = system
-        @label "Status slot"
-        @description "Where the atom reports a failed export or store step; a page running it in the background keeps it in `system`."
-        @synonyms "status area, slot"
-        @tier "presentation"
       endpoint : url = "http://localhost:4318"
         @label "OTLP/HTTP endpoint"
         @description "The collector's OTLP/HTTP origin (scheme://host[:port]); requests go to <endpoint>/v1/traces and <endpoint>/v1/metrics. 4318 is the OTLP/HTTP port OTEL_EXPORTER_OTLP_ENDPOINT conventionally names. Must be declared in the app egress list."
@@ -637,5 +623,5 @@ orbital OtelOrbital {
     }
   }
 
-  page "/otel" as OtelPage -> OtelExporter
+  page boot as OtelPage -> OtelExporter
 }

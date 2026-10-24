@@ -412,6 +412,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Logical OR (returns the first truthy value, NOT a boolean — short-circuit)',
     hasSideEffects: false,
     returnType: tv('T'),
+    returnSemantics: 'coalesce',
     params: [{ name: '...operands', type: tv('T'), description: 'Operands; the first truthy one is returned' }],
     example: '["or", ["=", "admin", "user"], ["=", "admin", "owner"]]',
   },
@@ -470,6 +471,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       'Resolved IR only, never written in .lolo: the value, checked to be of the type the program declared for it. `orb resolve` writes it at an operator argument whose declared type is a list of a union or of SExpr, so the kernel binds the operator\'s type variable to that declared type instead of reading one from the items. An item outside the declared type is a type mismatch.',
     hasSideEffects: false,
     returnType: tv('T'),
+    returnSemantics: 'identity-of-arg<0>',
     params: [
       { name: 'value', type: tv('T'), description: 'The argument value' },
       { name: 'type', type: 'string', description: 'The declared type, as the JSON of an IR type' },

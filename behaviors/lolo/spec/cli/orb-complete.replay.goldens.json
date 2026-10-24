@@ -5197,6 +5197,73 @@
     "dcursor": 0,
     "imports": []
    }
+  },
+  {
+   "id": "an absolute source file is read without the cwd anchor",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "COMPLETE_START",
+     "payload": {
+      "file": "/tmp/a.lolo",
+      "offset": 0,
+      "cwd": "/w"
+     },
+     "expect": {
+      "state": "loading",
+      "effects": [
+       {
+        "type": "os/read-file",
+        "key": "source",
+        "arg0": [
+         "str/concat",
+         "/",
+         [
+          "str/slice",
+          "@payload.file",
+          1,
+          [
+           "str/len",
+           "@payload.file"
+          ]
+         ]
+        ],
+        "optionsAt": 1
+       }
+      ]
+     },
+     "trait": "CompleteEngine"
+    }
+   ]
+  },
+  {
+   "id": "control: a relative source file is read under the cwd anchor",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "COMPLETE_START",
+     "payload": {
+      "file": "a.lolo",
+      "offset": 0,
+      "cwd": "/w"
+     },
+     "expect": {
+      "state": "loading",
+      "effects": [
+       {
+        "type": "os/read-file",
+        "key": "source",
+        "arg0": {
+         "anchor": "cwd",
+         "path": "@payload.file"
+        },
+        "optionsAt": 1
+       }
+      ]
+     },
+     "trait": "CompleteEngine"
+    }
+   ]
   }
  ]
 }

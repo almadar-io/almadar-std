@@ -58,7 +58,6 @@ orbital ArxivOrbital {
         (emit ARXIV_SEARCH_RESULT { results: [] })
       ARXIV_SEARCH_FAILED -> idle
         (emit ARXIV_SEARCH_ERROR { error: @payload.error, kind: @payload.kind })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "arXiv unavailable: " @payload.error) })
     }
 
     emits {
@@ -109,11 +108,6 @@ orbital ArxivOrbital {
     }
 
     config {
-      statusSlot : slot = system
-        @label "Status slot"
-        @description "Where the atom reports an unreachable arXiv call; a page running it in the background keeps it in `system`"
-        @synonyms "status area, slot"
-        @tier "presentation"
       origin : url = "https://export.arxiv.org"
         @label "arXiv API origin"
         @description "The arXiv API origin (scheme://host, no path). Must be declared in the app egress list."
@@ -127,5 +121,5 @@ orbital ArxivOrbital {
     }
   }
 
-  page "/arxiv" as ArxivPage -> ArxivClient
+  page boot as ArxivPage -> ArxivClient
 }

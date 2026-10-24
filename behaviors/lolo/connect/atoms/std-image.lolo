@@ -1,12 +1,12 @@
 app std-image [
   version: "1.0.0",
-  description: "std-image — image generation over the OpenAI-compatible /images API, OpenRouter's /images and the local flux server: text-to-image and image-to-image with reference images, seed, steps, size and a transparent background. The provider, its origin, base path and default model are config knobs, never inferred; the credential is a secret knob naming the host env var (the local server has none). A request that cannot be answered ends in IMAGE_FAILED. A request marked `checked` on OpenRouter first reads the model's supported parameters and strips the ones it lacks (background, seed, steps, strength, references), naming them in `dropped`; on the local server the checked set is fixed. A fetch failure or a 5xx is retried twice on every provider but the local one.",
+  description: "std-image — image generation over the OpenAI-compatible /images API, OpenRouter's /images and the local flux server: text-to-image and image-to-image with reference images, seed, steps, size and a transparent background. The provider, its origin, base path and default model are config knobs, never inferred; the credential is a secret knob naming the host env var (the local server has none). A request that cannot be answered, or a reply image with neither base64 data nor a url, ends in IMAGE_FAILED. A request marked `checked` on OpenRouter first reads the model's supported parameters and strips the ones it lacks (background, seed, steps, strength, references), naming them in `dropped`; on the local server the checked set is fixed. A fetch failure or a 5xx is retried twice on every provider but the local one.",
   egress: ["https://openrouter.ai", "https://api.openai.com", "http://127.0.0.1:8180"]
 ]
 type ImageRef = { url : string! }
 type ImageRequest = { prompt : string!, model : string, n : number, size : string, resolution : string, aspectRatio : string, quality : string, background : string, seed : number, steps : number, strength : number, references : [ImageRef], checked : boolean }
 type ImageJob = { request : ImageRequest!, attempt : number!, delayMs : number!, dropped : [string]!, supported : [string]! }
-type ImageDatum = { b64_json : string, media_type : string }
+type ImageDatum = { b64_json : string, url : string, media_type : string }
 type ImageUsage = { cost : number, total_tokens : number }
 type ImageErrorObject = { message : string }
 type ImageReply = { data : [ImageDatum], usage : ImageUsage, error : ImageErrorObject }
@@ -64,7 +64,6 @@ orbital ImageOrbital {
 
       IMAGE_CAPS_HTTP_FAILED -> idle
         (emit IMAGE_FAILED { code: "SERVICE_ERROR", message: (str/concat "ImageClient: " @config.provider " capabilities request failed: " @payload.error) })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Image generation unavailable: " @payload.error) })
       IMAGE_CAPS_HTTP_OK -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (emit IMAGE_FAILED { code: "SERVICE_ERROR", message: (str/concat "ImageClient: " @config.provider " returned " @payload.status ": " @payload.body) })
       IMAGE_CAPS_HTTP_OK -> idle when (and (>= @payload.status 200) (< @payload.status 300))
@@ -165,10 +164,8 @@ orbital ImageOrbital {
           job: (let ((j (json/parse @payload.key ImageJob)))
             (json/stringify { request: @j.request, attempt: (+ @j.attempt 1), delayMs: (array/nth [500, 2000] @j.attempt), supported: @j.supported, dropped: @j.dropped }))
         })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Image generation unavailable: " @payload.error) })
       IMAGE_HTTP_FAILED -> idle when (or (= @config.provider "local") (>= (object/get (json/parse @payload.key ImageJob) attempt 0) 2))
         (emit IMAGE_FAILED { code: "SERVICE_ERROR", message: (str/concat "ImageClient: " @config.provider " request failed: " @payload.error) })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Image generation unavailable: " @payload.error) })
 
       IMAGE_HTTP_OK -> idle when (and (>= @payload.status 500) (!= @config.provider "local") (< (object/get (json/parse @payload.key ImageJob) attempt 0) 2))
         (emit IMAGE_DISPATCH {
@@ -189,14 +186,14 @@ orbital ImageOrbital {
       IMAGE_HTTP_OK -> idle when (and (>= @payload.status 200) (< @payload.status 300) (!= (json/parse @payload.body ImageReply) null)
           (= (object/get (object/get (json/parse @payload.body ImageReply) error {}) message "") "")
           (!= (object/get (json/parse @payload.body ImageReply) data null) null)
-          (> (array/count (object/get (json/parse @payload.body ImageReply) data []) (fn (d) (= @d.b64_json ""))) 0))
-        (emit IMAGE_FAILED { code: "SERVICE_ERROR", message: (str/concat "ImageClient: " @config.provider " response data is missing `b64_json`: " @payload.body) })
+          (> (array/count (object/get (json/parse @payload.body ImageReply) data []) (fn (d) (and (not (validate/required @d.b64_json)) (not (validate/required @d.url))))) 0))
+        (emit IMAGE_FAILED { code: "SERVICE_ERROR", message: (str/concat "ImageClient: " @config.provider " response data has neither `b64_json` nor `url`: " @payload.body) })
       IMAGE_HTTP_OK -> idle when (and (>= @payload.status 200) (< @payload.status 300) (!= (json/parse @payload.body ImageReply) null)
           (= (object/get (object/get (json/parse @payload.body ImageReply) error {}) message "") "")
           (!= (object/get (json/parse @payload.body ImageReply) data null) null)
-          (= (array/count (object/get (json/parse @payload.body ImageReply) data []) (fn (d) (= @d.b64_json ""))) 0))
+          (= (array/count (object/get (json/parse @payload.body ImageReply) data []) (fn (d) (and (not (validate/required @d.b64_json)) (not (validate/required @d.url))))) 0))
         (emit IMAGE_GENERATED {
-          images: (array/map (object/get (json/parse @payload.body ImageReply) data []) (fn (d) { data: @d.b64_json, mediaType: (str/default (object/get @d media_type "") "image/png") })),
+          images: (array/map (object/get (json/parse @payload.body ImageReply) data []) (fn (d) { data: (if (validate/required @d.b64_json) @d.b64_json null), url: (if (validate/required @d.b64_json) null @d.url), mimeType: (str/default (object/get @d media_type "") "image/png") })),
           model: (object/get (object/get (json/parse @payload.key ImageJob) request) model ""),
           cost: (object/get (object/get (json/parse @payload.body ImageReply) usage {}) cost 0),
           totalTokens: (object/get (object/get (json/parse @payload.body ImageReply) usage {}) total_tokens 0),
@@ -206,13 +203,13 @@ orbital ImageOrbital {
 
     emits {
       IMAGE_GENERATED -> external {
-        images : [{ data : string!, mediaType : string! }]!
+        images : [{ data : string?, url : string?, mimeType : string! }]!
         model : string!
         cost : number!
         totalTokens : number!
         dropped : [string]!
       }
-        @description "The generated images as base64 data with their media type, the model that made them, the reported cost and tokens (zero when the provider reports none), and the request fields stripped before sending."
+        @description "The generated images, each carrying either base64 `data` or a `url` (whichever the provider returned) with its mime type, the model that made them, the reported cost and tokens (zero when the provider reports none), and the request fields stripped before sending."
         @synonyms "generated pictures, rendered images, image result"
         @tier "primary"
       IMAGE_FAILED -> external {
@@ -295,11 +292,6 @@ orbital ImageOrbital {
     }
 
     config {
-      statusSlot : slot = system
-        @label "Status slot"
-        @description "Where the atom reports an unreachable image call; a page running it in the background keeps it in `system`"
-        @synonyms "status area, slot"
-        @tier "presentation"
       provider : "openrouter" | "openai" | "local" = openrouter
         @label "Image provider"
         @description "The image API: openrouter (POST /images), openai (POST /images/generations) or local (the unauthenticated flux server, POST /images/generations)."
@@ -333,5 +325,5 @@ orbital ImageOrbital {
     }
   }
 
-  page "/image" as ImagePage -> ImageClient
+  page boot as ImagePage -> ImageClient
 }

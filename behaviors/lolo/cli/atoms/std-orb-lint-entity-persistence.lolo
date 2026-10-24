@@ -4,13 +4,14 @@ app std-orb-lint-entity-persistence [
   env: ["PATH"],
   exec: ["orb"],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
-  description: "std-orb-lint-entity-persistence — the `orb lint entity-persistence <file>` command, the port of ORB_E_MISSING_COLLECTION and ORB_S_SHARED_WITHOUT_PERSISTENCE_MODE (entity.rs validate_entity). It lowers the file with program/read and reports each orbital entity that is persistent and carries no collection name, and each shared entity with no persistence mode, with its path and suggestion (status 500, exit 1). Orbitals marked `spec` are skipped, as validate_all_entities skips them. Clean answers `lint entity-persistence: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  description: "std-orb-lint-entity-persistence — the `orb lint entity-persistence <file>` command, the port of ORB_E_MISSING_COLLECTION and ORB_S_SHARED_WITHOUT_PERSISTENCE_MODE (entity.rs validate_entity and validate_all_entities). It lowers the file with program/read and reports each primary and auxiliary entity that is persistent and carries no collection name, and each shared entity (primary, auxiliary or a trait's data entity) with no persistence mode, with its path and suggestion (status 500, exit 1). Orbitals marked `spec` are skipped, as validate_all_entities skips them. Clean answers `lint entity-persistence: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-entity-persistence"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 type PersistenceEntity = { name : string, persistence : string, collection : string, shared : boolean }
-type PersistenceOrbital = { entity : PersistenceEntity, spec : boolean }
+type PersistenceTrait = { name : string, dataEntities : [PersistenceEntity] }
+type PersistenceOrbital = { name : string, entity : PersistenceEntity, auxiliaryEntities : [PersistenceEntity], traits : [PersistenceTrait], spec : boolean }
 type PersistenceProgram = { orbitals : [PersistenceOrbital] }
 
 orbital OrbLintEntityPersistenceOrbital {
@@ -18,6 +19,7 @@ orbital OrbLintEntityPersistenceOrbital {
 
   entity OrbLintEntityPersistenceRun [runtime] {
     id : string!
+    scope : string = ""
     findings : [OrbFinding] = []
   }
 
@@ -27,25 +29,39 @@ orbital OrbLintEntityPersistenceOrbital {
     state ready {
       INIT -> ready
       LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
         (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
-            (let ((ent (object/get (array/nth @orbitals @oi) "entity" {})))
-              (if (and (validate/object @ent) (not (object/get (array/nth @orbitals @oi) "spec" false)))
-                (array/concat
-                  (if (and (= (object/get @ent "persistence" "") "persistent") (not (object/has @ent "collection")))
-                    [{ code: "ORB_E_MISSING_COLLECTION", path: (str/concat "orbitals[" @oi "].entity.collection"), message: "Persistent entity requires a collection name", suggestion: "Add a 'collection' property for database storage", severity: "error" }]
-                    [])
-                  (if (and (= (object/get @ent "shared" false) true) (not (object/has @ent "persistence")))
-                    [{ code: "ORB_S_SHARED_WITHOUT_PERSISTENCE_MODE", path: (str/concat "orbitals[" @oi "].entity.persistence"), message: (str/concat "Entity '" (object/get @ent "name" "") "' is [shared] but declares no persistence mode — nothing about a shared entity may be inferred."), suggestion: "Add an explicit `persistent: <collection>` or `runtime` persistence tag alongside `[shared]`.", severity: "error" }]
-                    []))
-                [])))))))
+            (let ((orb (array/nth @orbitals @oi)) (auxs (object/get (array/nth @orbitals @oi) "auxiliaryEntities" [])) (trList (object/get (array/nth @orbitals @oi) "traits" [])))
+              (array/concat
+                (array/flatten (array/map
+                  (array/concat [{ ent: (object/get @orb "entity" {}), base: (str/concat "orbitals[" @oi "].entity") }]
+                    (array/map (array/range 0 (array/len @auxs)) (fn ai { ent: (array/nth @auxs @ai), base: (str/concat "orbitals[" @oi "].auxiliaryEntities[" @ai "]") })))
+                  (fn eb
+                    (let ((ent (object/get @eb "ent")) (base (object/get @eb "base")))
+                      (if (and (validate/object @ent) (not (object/get @orb "spec" false)))
+                        (array/concat
+                          (if (and (= (object/get @ent "persistence" "") "persistent") (not (object/has @ent "collection")))
+                            [{ code: "ORB_E_MISSING_COLLECTION", path: (str/concat @base ".collection"), message: "Persistent entity requires a collection name", suggestion: "Add a 'collection' property for database storage", severity: "error" }]
+                            [])
+                          (if (and (= (object/get @ent "shared" false) true) (not (object/has @ent "persistence")))
+                            [{ code: "ORB_S_SHARED_WITHOUT_PERSISTENCE_MODE", path: (str/concat @base ".persistence"), message: (str/concat "Entity '" (object/get @ent "name" "") "' is [shared] but declares no persistence mode — nothing about a shared entity may be inferred."), suggestion: "Add an explicit `persistent: <collection>` or `runtime` persistence tag alongside `[shared]`.", severity: "error" }]
+                            []))
+                        [])))))
+                (array/flatten (array/map (array/range 0 (array/len @trList)) (fn ti
+                  (let ((td (array/nth @trList @ti)) (des (object/get (array/nth @trList @ti) "dataEntities" [])))
+                    (array/flatten (array/map (array/range 0 (array/len @des)) (fn di
+                      (let ((de (array/nth @des @di)))
+                        (if (and (validate/object @de) (= (object/get @de "shared" false) true) (not (object/has @de "persistence")))
+                          [{ code: "ORB_S_SHARED_WITHOUT_PERSISTENCE_MODE", path: (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].traits[" @ti " (" (object/get @td "name" "") ")].dataEntities[" @di "].persistence"), message: (str/concat "Entity '" (object/get @de "name" "") "' is [shared] but declares no persistence mode — nothing about a shared entity may be inferred."), suggestion: "Add an explicit `persistent: <collection>` or `runtime` persistence tag alongside `[shared]`.", severity: "error" }]
+                          []))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
-        (emit LINT_FOUND { rule: "entity-persistence", findings: @entity.findings })
+        (emit LINT_FOUND { rule: "entity-persistence", scope: @entity.scope, findings: @entity.findings })
     }
 
     emits {
-      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
         @description "This rule's findings for the file, offered to the lint-all umbrella."
         @tier "internal"
       LINT_FINISH { }
@@ -54,7 +70,7 @@ orbital OrbLintEntityPersistenceOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PersistenceProgram }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PersistenceProgram  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -91,7 +107,7 @@ orbital OrbLintEntityPersistenceOrbital {
       LINT_REQUEST -> external { file : string! }
         @description "Ask the lint input to read and lower this file."
         @tier "internal"
-      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
         @description "The rule trait's findings for the file."
         @tier "internal"
       LINT_INPUT_UNREAD -> external { file : string! }

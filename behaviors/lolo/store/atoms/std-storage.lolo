@@ -214,7 +214,6 @@ orbital StorageOrbital {
         (emit STORAGE_FAILED { code: null, message: (if (= (str/trim @payload.text) "") "UnknownError" (if (not (xml/valid @payload.text)) (str/concat (str/slice "a@" 1) "aws-sdk XML parse error: unexpected content.\n  Deserialization error: to see the raw response, inspect the hidden field {error}.$response on this object.") (let ((doc (xml/parse @payload.text S3ErrorDoc))) (str/default (object/get @doc Message "") (str/default (object/get @doc message "") "UnknownError"))))) })
       STORAGE_HTTP_FAILED -> idle
         (emit STORAGE_FAILED { code: null, message: (if (= @payload.kind "timeout") "Connection timed out" (if (= @payload.kind "unconfigured") (str/concat "Storage credential not configured: " @payload.credential) @payload.error)) })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Storage unavailable: " @payload.error) })
     }
 
     emits {
@@ -503,11 +502,6 @@ orbital StorageOrbital {
     }
 
     config {
-      statusSlot : slot = system
-        @label "Status slot"
-        @description "Where the atom reports an unreachable store; a page running it in the background keeps it in `system`"
-        @synonyms "status area, slot"
-        @tier "presentation"
       endpoint : string = ""
         @label "S3 endpoint"
         @description "Empty selects AWS S3 (virtual-hosted https://<bucket>.s3.<region>.amazonaws.com, path-style https://s3.<region>.amazonaws.com for buckets that are not DNS-compatible). Set scheme://host[:port][/prefix] for an S3-compatible service; local development uses an emulator, for example http://127.0.0.1:9000. Every origin the atom can reach must be in the app egress list."
@@ -546,5 +540,5 @@ orbital StorageOrbital {
     }
   }
 
-  page "/storage" as StoragePage -> StorageClient
+  page boot as StoragePage -> StorageClient
 }

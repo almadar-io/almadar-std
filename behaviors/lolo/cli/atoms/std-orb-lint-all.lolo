@@ -9,7 +9,7 @@ app std-orb-lint-all [
 uses Spec from "almadar-std/lint-all"
 uses LintEngine from "std/behaviors/std-orb-lint-engine"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
-type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error", validValues : [string] }
 type RuleFound = { rule : string!, findings : [OrbFinding]! }
 
 orbital OrbLintAllOrbital {
@@ -38,7 +38,7 @@ orbital OrbLintAllOrbital {
     state waiting {
       INIT -> waiting
       LINT_INPUT_UNREAD -> ready
-        (emit LINT_ANSWERED { status: 500, body: "lint all: the file could not be read or lowered" })
+        (emit LINT_ANSWERED { status: 500, body: (str/concat "lint all: the file could not be read or lowered" (if (= @payload.error "") "" (str/concat ": " @payload.error))) })
       LINT_COLLECTED -> waiting
         (set @entity.found @payload.found)
         (set @entity.all @payload.findings)
@@ -73,7 +73,7 @@ orbital OrbLintAllOrbital {
       }
         @description "Run `orb lint all` with its arguments and working directory."
         @synonyms "orb lint all, run every lint rule"
-      LINT_INPUT_UNREAD { file : string! }
+      LINT_INPUT_UNREAD { file : string!  error : string! }
         @description "The lint input could not read or lower the file."
       LINT_COLLECTED { findings : [OrbFinding]!  found : [RuleFound]! }
         @description "The engine's answer: every rule's findings for the file, flattened, and the findings by rule."

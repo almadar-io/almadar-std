@@ -140,21 +140,21 @@ orbital RecordItemOrbital {
         ;; (object/merge … {}) is a type adapter only: type_compat lacks "declared object accepts a named row type" (ledgered)
         (set @entity.loadedRow (object/merge ?data {}))
         (set @entity.id (object/get ?data id))
-        (set @entity.name (if (> (array/len @config.titleFields) 0) (str/join (array/map @config.titleFields (fn f (str/default (object/get ?data @f) ""))) " ") (object/get ?data @config.titleField)))
-        (set @entity.description (str/default (object/get ?data @config.subtitleField) ""))
-        (set @entity.content (object/get ?data @config.contentField))
-        (set @entity.coverUrl (if (= @config.coverField "") "" (str/default (object/get ?data @config.coverField) "")))
-        (set @entity.iconName (if (= @config.iconField "") "" (str/default (object/get ?data @config.iconField) "")))
+        (set @entity.name (if (> (array/len @config.titleFields) 0) (str/join (array/map @config.titleFields (fn f (str/default (object/get ?data @f) ""))) " ") (str/default (object/get ?data @config.titleField) "")))
+        (set @entity.description (if (!= @config.subtitleRelation null) (str/default (object/get (object/get ?data @config.subtitleRelation) @config.subtitleRelatedField) "") (if (validate/required @config.subtitleField) (str/default (object/get ?data @config.subtitleField) "") "")))
+        (set @entity.content (if (validate/required @config.contentField) (str/default (object/get ?data @config.contentField) "") ""))
+        (set @entity.coverUrl (if (validate/required @config.coverField) (str/default (object/get ?data @config.coverField) "") ""))
+        (set @entity.iconName (if (validate/required @config.iconField) (str/default (object/get ?data @config.iconField) "") ""))
         (render-ui main @config.documentEditingContent)
       RecordItemLoaded -> viewing when (or (!= @config.detailLook document) (!= (str/default (object/get @entity openDraft) "") "1"))
         ;; (object/merge … {}) is a type adapter only: type_compat lacks "declared object accepts a named row type" (ledgered)
         (set @entity.loadedRow (object/merge ?data {}))
         (set @entity.id (object/get ?data id))
-        (set @entity.name (if (> (array/len @config.titleFields) 0) (str/join (array/map @config.titleFields (fn f (str/default (object/get ?data @f) ""))) " ") (object/get ?data @config.titleField)))
-        (set @entity.description (str/default (object/get ?data @config.subtitleField) ""))
-        (set @entity.content (object/get ?data @config.contentField))
-        (set @entity.coverUrl (if (= @config.coverField "") "" (str/default (object/get ?data @config.coverField) "")))
-        (set @entity.iconName (if (= @config.iconField "") "" (str/default (object/get ?data @config.iconField) "")))
+        (set @entity.name (if (> (array/len @config.titleFields) 0) (str/join (array/map @config.titleFields (fn f (str/default (object/get ?data @f) ""))) " ") (str/default (object/get ?data @config.titleField) "")))
+        (set @entity.description (if (!= @config.subtitleRelation null) (str/default (object/get (object/get ?data @config.subtitleRelation) @config.subtitleRelatedField) "") (if (validate/required @config.subtitleField) (str/default (object/get ?data @config.subtitleField) "") "")))
+        (set @entity.content (if (validate/required @config.contentField) (str/default (object/get ?data @config.contentField) "") ""))
+        (set @entity.coverUrl (if (validate/required @config.coverField) (str/default (object/get ?data @config.coverField) "") ""))
+        (set @entity.iconName (if (validate/required @config.iconField) (str/default (object/get ?data @config.iconField) "") ""))
         (if (= @config.detailLook document)
           (render-ui main @config.documentBodyContent)
           (if (= @config.detailLook slide-over)
@@ -165,20 +165,20 @@ orbital RecordItemOrbital {
       RecordItemSlugLoaded -> editing when (and (> (array/len ?data) 0) (= @config.detailLook document) (= (str/default (object/get @entity openDraft) "") "1"))
         (set @entity.loadedRow (array/first ?data))
         (set @entity.id (object/get (array/first ?data) id))
-        (set @entity.name (if (> (array/len @config.titleFields) 0) (str/join (array/map @config.titleFields (fn f (str/default (object/get (array/first ?data) @f) ""))) " ") (object/get (array/first ?data) @config.titleField)))
-        (set @entity.description (str/default (object/get (array/first ?data) @config.subtitleField) ""))
-        (set @entity.content (object/get (array/first ?data) @config.contentField))
-        (set @entity.coverUrl (if (= @config.coverField "") "" (str/default (object/get (array/first ?data) @config.coverField) "")))
-        (set @entity.iconName (if (= @config.iconField "") "" (str/default (object/get (array/first ?data) @config.iconField) "")))
+        (set @entity.name (if (> (array/len @config.titleFields) 0) (str/join (array/map @config.titleFields (fn f (str/default (object/get (array/first ?data) @f) ""))) " ") (str/default (object/get (array/first ?data) @config.titleField) "")))
+        (set @entity.description (if (!= @config.subtitleRelation null) (str/default (object/get (object/get (array/first ?data) @config.subtitleRelation) @config.subtitleRelatedField) "") (if (validate/required @config.subtitleField) (str/default (object/get (array/first ?data) @config.subtitleField) "") "")))
+        (set @entity.content (if (validate/required @config.contentField) (str/default (object/get (array/first ?data) @config.contentField) "") ""))
+        (set @entity.coverUrl (if (validate/required @config.coverField) (str/default (object/get (array/first ?data) @config.coverField) "") ""))
+        (set @entity.iconName (if (validate/required @config.iconField) (str/default (object/get (array/first ?data) @config.iconField) "") ""))
         (render-ui main @config.documentEditingContent)
       RecordItemSlugLoaded -> viewing when (and (> (array/len ?data) 0) (or (!= @config.detailLook document) (!= (str/default (object/get @entity openDraft) "") "1")))
         (set @entity.loadedRow (array/first ?data))
         (set @entity.id (object/get (array/first ?data) id))
-        (set @entity.name (if (> (array/len @config.titleFields) 0) (str/join (array/map @config.titleFields (fn f (str/default (object/get (array/first ?data) @f) ""))) " ") (object/get (array/first ?data) @config.titleField)))
-        (set @entity.description (str/default (object/get (array/first ?data) @config.subtitleField) ""))
-        (set @entity.content (object/get (array/first ?data) @config.contentField))
-        (set @entity.coverUrl (if (= @config.coverField "") "" (str/default (object/get (array/first ?data) @config.coverField) "")))
-        (set @entity.iconName (if (= @config.iconField "") "" (str/default (object/get (array/first ?data) @config.iconField) "")))
+        (set @entity.name (if (> (array/len @config.titleFields) 0) (str/join (array/map @config.titleFields (fn f (str/default (object/get (array/first ?data) @f) ""))) " ") (str/default (object/get (array/first ?data) @config.titleField) "")))
+        (set @entity.description (if (!= @config.subtitleRelation null) (str/default (object/get (object/get (array/first ?data) @config.subtitleRelation) @config.subtitleRelatedField) "") (if (validate/required @config.subtitleField) (str/default (object/get (array/first ?data) @config.subtitleField) "") "")))
+        (set @entity.content (if (validate/required @config.contentField) (str/default (object/get (array/first ?data) @config.contentField) "") ""))
+        (set @entity.coverUrl (if (validate/required @config.coverField) (str/default (object/get (array/first ?data) @config.coverField) "") ""))
+        (set @entity.iconName (if (validate/required @config.iconField) (str/default (object/get (array/first ?data) @config.iconField) "") ""))
         (if (= @config.detailLook document)
           (render-ui main @config.documentBodyContent)
           (if (= @config.detailLook slide-over)
@@ -223,7 +223,7 @@ orbital RecordItemOrbital {
         (render-ui main @config.loadingContent)
       CONTENT_CHANGE -> editing
         (set @entity.content ?value)
-        (set @entity.loadedRow (object/set @entity.loadedRow @config.contentField ?value))
+        (set @entity.loadedRow (if (validate/required @config.contentField) (object/set @entity.loadedRow @config.contentField ?value) @entity.loadedRow))
         (emit CONTENT_SAVED { id: @entity.id, content: @entity.content })
       TITLE_COMMITTED -> editing
         (set @entity.name ?title)
@@ -265,11 +265,11 @@ orbital RecordItemOrbital {
         ;; (object/merge … {}) is a type adapter only: type_compat lacks "declared object accepts a named row type" (ledgered)
         (set @entity.loadedRow (object/merge ?data {}))
         (set @entity.id (object/get ?data id))
-        (set @entity.name (if (> (array/len @config.titleFields) 0) (str/join (array/map @config.titleFields (fn f (str/default (object/get ?data @f) ""))) " ") (object/get ?data @config.titleField)))
-        (set @entity.description (str/default (object/get ?data @config.subtitleField) ""))
-        (set @entity.content (object/get ?data @config.contentField))
-        (set @entity.coverUrl (if (= @config.coverField "") "" (str/default (object/get ?data @config.coverField) "")))
-        (set @entity.iconName (if (= @config.iconField "") "" (str/default (object/get ?data @config.iconField) "")))
+        (set @entity.name (if (> (array/len @config.titleFields) 0) (str/join (array/map @config.titleFields (fn f (str/default (object/get ?data @f) ""))) " ") (str/default (object/get ?data @config.titleField) "")))
+        (set @entity.description (if (!= @config.subtitleRelation null) (str/default (object/get (object/get ?data @config.subtitleRelation) @config.subtitleRelatedField) "") (if (validate/required @config.subtitleField) (str/default (object/get ?data @config.subtitleField) "") "")))
+        (set @entity.content (if (validate/required @config.contentField) (str/default (object/get ?data @config.contentField) "") ""))
+        (set @entity.coverUrl (if (validate/required @config.coverField) (str/default (object/get ?data @config.coverField) "") ""))
+        (set @entity.iconName (if (validate/required @config.iconField) (str/default (object/get ?data @config.iconField) "") ""))
         (if (= @config.detailLook document)
           (render-ui main @config.documentBodyContent)
           (if (= @config.detailLook slide-over)
@@ -280,11 +280,11 @@ orbital RecordItemOrbital {
       RecordItemSlugLoaded -> viewing when (> (array/len ?data) 0)
         (set @entity.loadedRow (array/first ?data))
         (set @entity.id (object/get (array/first ?data) id))
-        (set @entity.name (if (> (array/len @config.titleFields) 0) (str/join (array/map @config.titleFields (fn f (str/default (object/get (array/first ?data) @f) ""))) " ") (object/get (array/first ?data) @config.titleField)))
-        (set @entity.description (str/default (object/get (array/first ?data) @config.subtitleField) ""))
-        (set @entity.content (object/get (array/first ?data) @config.contentField))
-        (set @entity.coverUrl (if (= @config.coverField "") "" (str/default (object/get (array/first ?data) @config.coverField) "")))
-        (set @entity.iconName (if (= @config.iconField "") "" (str/default (object/get (array/first ?data) @config.iconField) "")))
+        (set @entity.name (if (> (array/len @config.titleFields) 0) (str/join (array/map @config.titleFields (fn f (str/default (object/get (array/first ?data) @f) ""))) " ") (str/default (object/get (array/first ?data) @config.titleField) "")))
+        (set @entity.description (if (!= @config.subtitleRelation null) (str/default (object/get (object/get (array/first ?data) @config.subtitleRelation) @config.subtitleRelatedField) "") (if (validate/required @config.subtitleField) (str/default (object/get (array/first ?data) @config.subtitleField) "") "")))
+        (set @entity.content (if (validate/required @config.contentField) (str/default (object/get (array/first ?data) @config.contentField) "") ""))
+        (set @entity.coverUrl (if (validate/required @config.coverField) (str/default (object/get (array/first ?data) @config.coverField) "") ""))
+        (set @entity.iconName (if (validate/required @config.iconField) (str/default (object/get (array/first ?data) @config.iconField) "") ""))
         (if (= @config.detailLook document)
           (render-ui main @config.documentBodyContent)
           (if (= @config.detailLook slide-over)
@@ -516,20 +516,32 @@ orbital RecordItemOrbital {
       ;; empty subtitle, which is exactly what the first migration of std-crm
       ;; ContactDetail hit. Naming the source field instead lets the atom do the
       ;; (set) itself off the payload, so the trap cannot be reintroduced.
-      titleField : string = name
+      titleField : field @entity string = name
         @label "Which field is the record's title?"
         @description "Name of the field on the loaded record shown as the panel title (e.g. contactName, subject, title)."
         @synonyms "title field, heading field, name field, label field"
         @tier "presentation"
-      titleFields : [string] = []
+      titleFields : [field @entity string] = []
         @label "Which fields make up the title, in order?"
         @description "For records whose name is split across fields (firstName + lastName): the listed fields' values joined with spaces become the title, and override titleField. Empty = titleField alone, the default."
         @synonyms "full name, name parts, composite title, first and last name"
         @tier "presentation"
-      subtitleField : string = description
+      subtitleField : field @entity string
         @label "Which field is the subtitle?"
-        @description "Name of the field shown under the title (e.g. company, category). Set to \"\" for no subtitle at all — the right choice for the document look, whose metadata lives in the properties strip, not a second line."
+        @description "Name of the field shown under the title (e.g. company, category). Leave unset for no subtitle at all — the right choice for the document look, whose metadata lives in the properties strip, not a second line."
         @synonyms "subtitle field, secondary field, subheading, no subtitle"
+        @tier "presentation"
+      subtitleEntity : entity = RecordItem
+        @label "Subtitle's related entity"
+        @description "The entity subtitleRelation points at."
+        @tier "presentation"
+      subtitleRelation : (field @entity (@entity @config.subtitleEntity))?
+        @label "Subtitle through a relation"
+        @description "A relation field whose related row supplies the subtitle (list it in include so it is hydrated). When set it replaces subtitleField."
+        @tier "presentation"
+      subtitleRelatedField : field (@entity @config.subtitleEntity) string = name
+        @label "Related subtitle field"
+        @description "Field of the related row shown as the subtitle when subtitleRelation is set."
         @tier "presentation"
       include : [string] = []
         @label "Which relation fields to hydrate?"
@@ -551,17 +563,17 @@ orbital RecordItemOrbital {
         @description "How the record itself is arranged inside the panel/slide-over/page frame, so not every app reads as an admin form. panel = labelled field grid (default); profile = a person or member: avatar + cover hero (avatarField, coverField); showcase = image-first product or listing with a gallery (mediaField); workflow = a lifecycle stepper over the record (stageField, stages); map = a place: location map hero (latitudeField, longitudeField); ledger = an invoice/order document: line items then totals (lineItemsField, lineItemColumns, totals); conversation = a ticket or thread: the messages beside the record facts (threadField); workspace = a hub record with tabs (tabs). Regions with no data simply do not render. A region fed by a separate trait (replies with their composer, editable order lines, activity history) is composed by overriding the body and passing detail-panel's threadContent / lineItemsContent / activityContent."
         @synonyms "record style, profile page, product page, listing page, invoice view, ticket view, timeline view, tabbed record, location page"
         @tier "presentation"
-      avatarField : string = ""
+      avatarField : field @entity string
         @label "Which field is the avatar?"
         @description "Name of the image field shown as the profile look's avatar; the title supplies initials when it is empty."
         @synonyms "photo field, avatar field, picture field"
         @tier "presentation"
-      mediaField : string = ""
+      mediaField : field @entity
         @label "Which field holds the images?"
         @description "Name of the field the showcase look leads with: one image URL, a list of URLs, or a list of { src, caption }."
         @synonyms "gallery field, photos field, images field, media field"
         @tier "presentation"
-      stageField : string = ""
+      stageField : field @entity string
         @label "Which field is the lifecycle stage?"
         @description "Name of the field holding the record's current stage; the workflow look marks it on the stepper."
         @synonyms "stage field, status field, phase field, step field"
@@ -571,15 +583,15 @@ orbital RecordItemOrbital {
         @description "The workflow look's stepper: one { value, label } per stage, value matching stageField's enum."
         @synonyms "lifecycle, pipeline stages, steps, phases"
         @tier "presentation"
-      latitudeField : string = ""
+      latitudeField : field @entity number
         @label "Which field is the latitude?"
         @description "Name of the latitude field the map look pins."
         @tier "presentation"
-      longitudeField : string = ""
+      longitudeField : field @entity number
         @label "Which field is the longitude?"
         @description "Name of the longitude field the map look pins."
         @tier "presentation"
-      lineItemsField : string = ""
+      lineItemsField : field @entity
         @label "Which relation holds the line items?"
         @description "Name of the hydrated relation (list it in include) whose rows the ledger look tables."
         @synonyms "line items field, order lines, invoice lines, child rows"
@@ -593,7 +605,7 @@ orbital RecordItemOrbital {
         @description "Record fields shown under the line items in order (e.g. subtotal, tax, total); the last is emphasised."
         @synonyms "totals, subtotal, grand total, amount due"
         @tier "presentation"
-      threadField : string = ""
+      threadField : field @entity
         @label "Which relation holds the thread?"
         @description "Name of the hydrated relation (list it in include) whose messages the conversation look shows."
         @synonyms "messages field, replies field, comments field, thread field"
@@ -603,19 +615,19 @@ orbital RecordItemOrbital {
         @description "The workspace look's tabs after Overview: each lists field names, or composes a related trait as content (e.g. a company's deals list)."
         @synonyms "tabs, record tabs, sub pages, related lists"
         @tier "presentation"
-      contentField : string = content
+      contentField : field @entity string
         @label "Which field holds the document body?"
         @description "Name of the field on the loaded record that carries the rich-text HTML body the document look renders and edits (e.g. content, body, articleText)."
         @synonyms "body field, content field, document field"
         @tier "presentation"
-      coverField : string = ""
+      coverField : field @entity string
         @label "Which field is the cover image?"
-        @description "Name of the image-typed field on the loaded record painted as the hero banner of the document look and of the profile record look (e.g. coverImage, heroImage). Empty = no banner, the default."
+        @description "Name of the image-typed field on the loaded record painted as the hero banner of the document look and of the profile record look (e.g. coverImage, heroImage). Unset = no banner, the default."
         @synonyms "cover field, hero image field, banner field"
         @tier "presentation"
-      iconField : string = ""
+      iconField : field @entity string
         @label "Which field is the document icon?"
-        @description "Name of the field on the loaded record whose icon name renders beside the document title (e.g. icon). Empty = no icon, the default."
+        @description "Name of the field on the loaded record whose icon name renders beside the document title (e.g. icon). Unset = no icon, the default."
         @synonyms "icon field, glyph field"
         @tier "presentation"
       editLabel : string = "Edit"
@@ -663,10 +675,10 @@ orbital RecordItemOrbital {
           stages: @config.stages
           latitudeField: @config.latitudeField
           longitudeField: @config.longitudeField
-          lineItems: (object/get @entity.loadedRow @config.lineItemsField)
+          lineItems: (if (validate/required @config.lineItemsField) (object/get @entity.loadedRow @config.lineItemsField) null)
           lineItemColumns: @config.lineItemColumns
           totals: @config.totals
-          thread: (object/get @entity.loadedRow @config.threadField)
+          thread: (if (validate/required @config.threadField) (object/get @entity.loadedRow @config.threadField) null)
           tabs: @config.tabs
           type: detail-panel
         }]
@@ -698,10 +710,10 @@ orbital RecordItemOrbital {
           stages: @config.stages
           latitudeField: @config.latitudeField
           longitudeField: @config.longitudeField
-          lineItems: (object/get @entity.loadedRow @config.lineItemsField)
+          lineItems: (if (validate/required @config.lineItemsField) (object/get @entity.loadedRow @config.lineItemsField) null)
           lineItemColumns: @config.lineItemColumns
           totals: @config.totals
-          thread: (object/get @entity.loadedRow @config.threadField)
+          thread: (if (validate/required @config.threadField) (object/get @entity.loadedRow @config.threadField) null)
           tabs: @config.tabs
           type: detail-panel
         }]
@@ -732,10 +744,10 @@ orbital RecordItemOrbital {
           stages: @config.stages
           latitudeField: @config.latitudeField
           longitudeField: @config.longitudeField
-          lineItems: (object/get @entity.loadedRow @config.lineItemsField)
+          lineItems: (if (validate/required @config.lineItemsField) (object/get @entity.loadedRow @config.lineItemsField) null)
           lineItemColumns: @config.lineItemColumns
           totals: @config.totals
-          thread: (object/get @entity.loadedRow @config.threadField)
+          thread: (if (validate/required @config.threadField) (object/get @entity.loadedRow @config.threadField) null)
           tabs: @config.tabs
           type: detail-panel
         }]

@@ -1,7 +1,8 @@
 app std-stats [
   version: "3.2.0",
-  description: "std-stats — embeddable analytics-card atom. ITEMS_LOADED aggregates @payload.data per @config.metrics (count|sum|avg|min|max|variance with optional filter, baselineFilter, format, icon, max, target, trend, trendPolarity, sparkline) and renders one stat-display per entry. Variance metrics compute actual - baseline using `filter` + `baselineFilter` lambdas and report the signed delta as trend. clickEvent emits UI:{clickEvent} { metricLabel } when a card is clicked. Drop into a dashboard alongside std-browse / std-search / std-filter. `config.statsLook` switches the whole body between the default per-metric card grid ('cards'), a Stripe-dashboard KPI tile row ('kpi-tiles'), a single hero metric card ('hero-metric'), and a chart-first sparkline tile grid ('sparkline-row')."
+  description: "std-stats — embeddable analytics-card atom. ITEMS_LOADED aggregates @payload.data per @config.metrics (count|sum|avg|min|max|variance with optional where, baselineWhere (typed MetricWhere AND lists: = != < <= > >= against value/bound or another column via otherField, `in` over values, relative windows within / older-than / older-than-ms over days), format, icon, max, target, trend, trendPolarity, sparkline) and renders one stat-display per entry. Variance metrics compute actual - baseline using the `where` and `baselineWhere` row conditions and report the signed delta as trend. clickEvent emits UI:{clickEvent} { metricLabel } when a card is clicked. Drop into a dashboard alongside std-browse / std-search / std-filter. `config.statsLook` switches the whole body between the default per-metric card grid ('cards'), a Stripe-dashboard KPI tile row ('kpi-tiles'), a single hero metric card ('hero-metric'), and a chart-first sparkline tile grid ('sparkline-row')."
 ]
+type MetricWhere = { field : string!, op : "=" | "!=" | "<" | "<=" | ">" | ">=" | "in" | "within" | "older-than" | "older-than-ms", value : string | number | boolean, bound : number, values : [string], days : number, otherField : string }
 type ObjectSpec = { id : string, label : string, value : string }
 orbital StatsItemOrbital {
     type StatCard = { label : string!, position : number, value : number, icon : string, format : "number" | "currency" | "percent", variant : "default" | "primary" | "success" | "warning" | "error" | "info", prefix : string, suffix : string, max : number, target : number, trend : number, trendPolarity : "higher-is-better" | "lower-is-better", trendFormat : "absolute" | "percent", sparklineData : [number], clickEvent : string }
@@ -9,11 +10,17 @@ orbital StatsItemOrbital {
   ;; Author-side metric definition. Superset of StatCard with the
   ;; aggregation knobs (aggregation/field) the trait consumes on
   ;; ITEMS_LOADED to compute `value` from @payload.data.
-  ;; `filter` / `baselineFilter` are author-only SExpr predicate slots
-  ;; the runtime reads via `(object/get @metric "filter" true)` — they're
-  ;; intentionally absent from the typed shape because lolo has no
-  ;; "predicate" type today; authors can still pass them inline.
-    type MetricSpec = { label : string!, value : number, icon : string, format : "number" | "currency" | "percent", variant : "default" | "primary" | "success" | "warning" | "error" | "info", prefix : string, suffix : string, max : number, target : number, trend : number, trendPolarity : "higher-is-better" | "lower-is-better", trendFormat : "absolute" | "percent", sparklineData : [number], clickEvent : string, aggregation : "count" | "sum" | "avg" | "min" | "max" | "variance", field : string }
+  ;; `where` / `baselineWhere` are AND lists of MetricWhere row conditions:
+  ;; `=`/`!=` compare against `value`, ordering ops compare numerically
+  ;; against `bound`; with `otherField` set they compare against that column
+  ;; of the same row instead. `in` matches when the field equals one of
+  ;; `values`. Relative windows read `days`: `within` keeps rows whose ISO
+  ;; date/datetime field is at or after now minus `days` days, `older-than`
+  ;; keeps those strictly before it (days 0 = already past), and
+  ;; `older-than-ms` is `older-than` for epoch-millisecond number fields.
+  ;; Two conditions on one field give a window (older-than 30 + within 60).
+  ;; An empty or missing list counts every row.
+    type MetricSpec = { label : string!, value : number, icon : string, format : "number" | "currency" | "percent", variant : "default" | "primary" | "success" | "warning" | "error" | "info", prefix : string, suffix : string, max : number, target : number, trend : number, trendPolarity : "higher-is-better" | "lower-is-better", trendFormat : "absolute" | "percent", sparklineData : [number], clickEvent : string, aggregation : "count" | "sum" | "avg" | "min" | "max" | "variance", field : string, where : [MetricWhere], baselineWhere : [MetricWhere] }
 
   entity StatsItem [runtime] {
     id : string!
@@ -55,7 +62,7 @@ orbital StatsItemOrbital {
       ;; honor it (useful for default / standalone previews); otherwise
       ;; render 0 until ITEMS_LOADED recomputes.
       ITEMS_LOADED -> idle
-        (set @entity.cards (array/map @config.metrics (fn metric {
+        (set @entity.cards (array/map @config.metrics (fn metric (let ((rows (array/filter ?data (fn row (array/every (object/get @metric where []) (fn w (if (= @w.op "=") (if (validate/required @w.otherField) (= (object/get @row @w.field) (object/get @row @w.otherField)) (= (object/get @row @w.field) @w.value)) (if (= @w.op "!=") (if (validate/required @w.otherField) (!= (object/get @row @w.field) (object/get @row @w.otherField)) (!= (object/get @row @w.field) @w.value)) (if (= @w.op "<") (if (validate/required @w.otherField) (and (validate/required (object/get @row @w.otherField)) (< (str/to-number (object/get @row @w.field)) (str/to-number (object/get @row @w.otherField)))) (and (validate/required @w.bound) (< (str/to-number (object/get @row @w.field)) @w.bound))) (if (= @w.op "<=") (if (validate/required @w.otherField) (and (validate/required (object/get @row @w.otherField)) (<= (str/to-number (object/get @row @w.field)) (str/to-number (object/get @row @w.otherField)))) (and (validate/required @w.bound) (<= (str/to-number (object/get @row @w.field)) @w.bound))) (if (= @w.op ">") (if (validate/required @w.otherField) (and (validate/required (object/get @row @w.otherField)) (> (str/to-number (object/get @row @w.field)) (str/to-number (object/get @row @w.otherField)))) (and (validate/required @w.bound) (> (str/to-number (object/get @row @w.field)) @w.bound))) (if (= @w.op ">=") (if (validate/required @w.otherField) (and (validate/required (object/get @row @w.otherField)) (>= (str/to-number (object/get @row @w.field)) (str/to-number (object/get @row @w.otherField)))) (and (validate/required @w.bound) (>= (str/to-number (object/get @row @w.field)) @w.bound))) (if (= @w.op "in") (and (validate/required @w.values) (array/includes @w.values (object/get @row @w.field))) (if (= @w.op "within") (and (validate/required @w.days) (>= (time/parse (object/get @row @w.field)) (time/subtract (time/now) @w.days "day"))) (if (= @w.op "older-than") (and (validate/required @w.days) (< (time/parse (object/get @row @w.field)) (time/subtract (time/now) @w.days "day"))) (and (validate/required @w.days) (< (str/to-number (object/get @row @w.field)) (time/subtract (time/now) @w.days "day"))))))))))))))))) (baseRows (array/filter ?data (fn row (array/every (object/get @metric baselineWhere []) (fn w (if (= @w.op "=") (if (validate/required @w.otherField) (= (object/get @row @w.field) (object/get @row @w.otherField)) (= (object/get @row @w.field) @w.value)) (if (= @w.op "!=") (if (validate/required @w.otherField) (!= (object/get @row @w.field) (object/get @row @w.otherField)) (!= (object/get @row @w.field) @w.value)) (if (= @w.op "<") (if (validate/required @w.otherField) (and (validate/required (object/get @row @w.otherField)) (< (str/to-number (object/get @row @w.field)) (str/to-number (object/get @row @w.otherField)))) (and (validate/required @w.bound) (< (str/to-number (object/get @row @w.field)) @w.bound))) (if (= @w.op "<=") (if (validate/required @w.otherField) (and (validate/required (object/get @row @w.otherField)) (<= (str/to-number (object/get @row @w.field)) (str/to-number (object/get @row @w.otherField)))) (and (validate/required @w.bound) (<= (str/to-number (object/get @row @w.field)) @w.bound))) (if (= @w.op ">") (if (validate/required @w.otherField) (and (validate/required (object/get @row @w.otherField)) (> (str/to-number (object/get @row @w.field)) (str/to-number (object/get @row @w.otherField)))) (and (validate/required @w.bound) (> (str/to-number (object/get @row @w.field)) @w.bound))) (if (= @w.op ">=") (if (validate/required @w.otherField) (and (validate/required (object/get @row @w.otherField)) (>= (str/to-number (object/get @row @w.field)) (str/to-number (object/get @row @w.otherField)))) (and (validate/required @w.bound) (>= (str/to-number (object/get @row @w.field)) @w.bound))) (if (= @w.op "in") (and (validate/required @w.values) (array/includes @w.values (object/get @row @w.field))) (if (= @w.op "within") (and (validate/required @w.days) (>= (time/parse (object/get @row @w.field)) (time/subtract (time/now) @w.days "day"))) (if (= @w.op "older-than") (and (validate/required @w.days) (< (time/parse (object/get @row @w.field)) (time/subtract (time/now) @w.days "day"))) (and (validate/required @w.days) (< (str/to-number (object/get @row @w.field)) (time/subtract (time/now) @w.days "day")))))))))))))))))) {
           clickEvent: (object/get @metric clickEvent "")
           format: (object/get @metric format number)
           icon: (object/get @metric icon "")
@@ -66,12 +73,12 @@ orbital StatsItemOrbital {
           sparklineData: (object/get @metric sparklineData [])
           suffix: (object/get @metric suffix "")
           target: (object/get @metric target 0)
-          trend: (if (= (object/get @metric aggregation count) variance) (- (array/sum (array/filter ?data (object/get @metric filter true)) (object/get @metric field "")) (array/sum (array/filter ?data (object/get @metric baselineFilter true)) (object/get @metric field ""))) (object/get @metric trend))
+          trend: (if (= (object/get @metric aggregation count) variance) (- (array/sum @rows (object/get @metric field "")) (array/sum @baseRows (object/get @metric field ""))) (object/get @metric trend))
           trendFormat: (object/get @metric trendFormat absolute)
           trendPolarity: (object/get @metric trendPolarity higher-is-better)
-          value: (if (= (object/get @metric aggregation count) sum) (array/sum (array/filter ?data (object/get @metric filter true)) (object/get @metric field "")) (if (= (object/get @metric aggregation count) avg) (array/avg (array/filter ?data (object/get @metric filter true)) (object/get @metric field "")) (if (= (object/get @metric aggregation count) min) (array/min (array/filter ?data (object/get @metric filter true)) (object/get @metric field "")) (if (= (object/get @metric aggregation count) max) (array/max (array/filter ?data (object/get @metric filter true)) (object/get @metric field "")) (if (= (object/get @metric aggregation count) variance) (array/sum (array/filter ?data (object/get @metric filter true)) (object/get @metric field "")) (array/len (array/filter ?data (object/get @metric filter true))))))))
+          value: (if (= (object/get @metric aggregation count) sum) (array/sum @rows (object/get @metric field "")) (if (= (object/get @metric aggregation count) avg) (array/avg @rows (object/get @metric field "")) (if (= (object/get @metric aggregation count) min) (array/min @rows (object/get @metric field "")) (if (= (object/get @metric aggregation count) max) (array/max @rows (object/get @metric field "")) (if (= (object/get @metric aggregation count) variance) (array/sum @rows (object/get @metric field "")) (array/len @rows))))))
           variant: (object/get @metric variant default)
-        })))
+        }))))
         (if (= @config.statsLook kpi-tiles)
           (render-ui main @config.kpiTilesBodyContent)
           (if (= @config.statsLook hero-metric)
@@ -412,7 +419,7 @@ orbital StatsItemOrbital {
     }
   }
 
-  ;; Variance is computed as actual - baseline using `filter` + `baselineFilter`.
+  ;; Variance is computed as actual - baseline using `where` + `baselineWhere`.
   ;; For variance, `trend` carries the signed delta (StatDisplay renders it as ↑/↓ with
   ;; success/error coloring based on trendPolarity). For other aggregations, `trend`
   ;; falls back to the metric's authored value (defaults to 0).

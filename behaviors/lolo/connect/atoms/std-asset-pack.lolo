@@ -6,7 +6,7 @@ app std-asset-pack [
 uses Spec from "almadar-std/asset-pack"
 
 orbital StdAssetPackOrbital {
-  type Asset = {
+  type PackAsset = {
     key : string!
     url : asset
     atlas : asset
@@ -25,13 +25,13 @@ orbital StdAssetPackOrbital {
     pack : string!
     version : number!
     base : string!
-    assets : [Asset]
+    assets : [PackAsset]
   }
 
   entity StdAssetPack [runtime, shared] {
     id : string!
-    assetByKey : Map string Asset = {}
-    assetManifest : Map string Map string Asset = {}
+    assetByKey : Map string PackAsset = {}
+    assetManifest : Map string Map string PackAsset = {}
     assetPackStatus : string = "idle"
     assetPackMissing : [string] = []
     assetPackCursor : number = 0
@@ -54,7 +54,6 @@ orbital StdAssetPackOrbital {
         (set @entity.assetPackStatus "loading")
         (set @entity.assetByKey (object/fromEntries (array/map @config.expectedKeys (fn k [@k { url: @config.placeholderUrl, role: "loading", category: "loading", name: @k }]))))
         (set @entity.assetManifest (object/fromEntries (array/map @config.groups (fn g [@g (object/fromEntries (array/map (array/filter (object/entries @entity.assetByKey) (fn e (str/startsWith (array/nth @e 0) (str/concat @g "/")))) (fn e [(str/replace (array/nth @e 0) (str/concat @g "/") "") (array/nth @e 1)])))]))))
-        (os/read-file { anchor: "cwd" path: (str/concat @config.assetsRoot @config.packPath) } { key: "pack" emit: { success: PACK_FILE_READ, failure: PACK_LOAD_FAILED } })
     }
 
     state loading {
@@ -148,9 +147,6 @@ orbital StdAssetPackOrbital {
       PACK_HTTP_REPLIED { status : number!  headers : Map string string  body : string! }
         @description "Internal: the http reply for the pack manifest."
         @tier "internal"
-      PACK_FILE_READ { data : bytes! }
-        @description "Internal: the pack manifest file read."
-        @tier "internal"
       PACK_LOAD_FAILED { error : string!  kind : string }
         @description "Internal: the pack manifest could not be fetched or read."
         @tier "internal"
@@ -182,7 +178,7 @@ orbital StdAssetPackOrbital {
         @label "Assets Root"
         @description "file transport: cwd-relative directory of the brand assets checkout (e.g. almadar-assets/kflow-assets)."
         @tier "domain"
-      packPath : string = ""
+      packPath : string!
         @label "Pack Path"
         @description "Path of the pack manifest under the origin or assetsRoot, starting with / (e.g. /shared/ui-battle-board/assets.json)."
         @tier "domain"
@@ -205,5 +201,43 @@ orbital StdAssetPackOrbital {
     }
   }
 
-  page "/std-asset-pack" as StdAssetPackPage -> AssetPackLoader
+  trait AssetPackFileReader -> @rebindable StdAssetPack [server] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (and (!= @config.assetPack "") (= @config.transport "file"))
+        (os/read-file { anchor: "cwd" path: (str/concat @config.assetsRoot @config.packPath) } { key: "pack" emit: { success: PACK_FILE_READ, failure: PACK_LOAD_FAILED } })
+      INIT -> idle when (or (= @config.assetPack "") (!= @config.transport "file"))
+    }
+
+    emits {
+      PACK_FILE_READ { data : bytes! }
+        @description "Internal: the pack manifest file read."
+        @tier "internal"
+      PACK_LOAD_FAILED { error : string!  kind : string }
+        @description "Internal: the pack manifest file could not be read."
+        @tier "internal"
+    }
+
+    config {
+      assetPack : string = ""
+        @label "Asset Pack"
+        @description "The pack id this board declares; empty = the reader does nothing."
+        @tier "domain"
+      transport : string = "http"
+        @label "Transport"
+        @description "The reader acts only when this is file; http is fetched by the loader."
+        @tier "domain"
+      assetsRoot : string = ""
+        @label "Assets Root"
+        @description "cwd-relative directory of the brand assets checkout (e.g. almadar-assets/kflow-assets)."
+        @tier "domain"
+      packPath : string!
+        @label "Pack Path"
+        @description "Path of the pack manifest under assetsRoot, starting with / (e.g. /shared/ui-battle-board/assets.json)."
+        @tier "domain"
+    }
+  }
+
+  page "/std-asset-pack" as StdAssetPackPage -> AssetPackLoader, AssetPackFileReader
 }

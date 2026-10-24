@@ -4,7 +4,7 @@ app std-orb-mcp [
   inbound: ["cli-mcp"],
   exec: ["orb"],
   stdio: [in, out],
-  fs: { cwd: "**": [read, write], "~/.orb/**": [read] },
+  fs: { cwd: "**": [read, write], "/**": [read, write], "~/.orb/**": [read] },
   description: "std-orb-mcp — the `orb mcp [--program <file>]` command: the MCP server as a std program (spec/cli/mcp-server.lolo). The hook cli-mcp takes argv; `--program <file>` names the program whose inbound hooks are served as tools beside the language's. The server version is what `orb --version` answers (`orb X.Y.Z`), run from PATH (os/spawn takes a literal command, so the running binary's own path cannot be spawned). Stdin line framing is owned by std-stdio-lines; each line is acknowledged only after its tool answers, preserving serial requests, fragmented UTF-8 and the final unterminated line. Replies are compact JSON lines on stdout; EOF ends the command after every request is answered. Protocol: initialize, ping, tools/list, tools/call, prompts/list, prompts/get; a parse error is code -32700 with the text `parse error: invalid JSON` (the Rust server's serde wording is not reproduced), an unknown method -32601, an unknown prompt -32602, an unknown tool a tool result with isError. Tools served: validate, format (the text read from the file formatted by program/print { source }, comments kept; with `write: true` the file is rewritten with that text and the answer is still { source }), behaviors (with `scopes`: those registry folders cataloged; without: every installed package from behavior/packages cataloged one package at a time, vectors omitted, answering { behaviors, skipped: [{ package, error }] } where a package whose behaviors do not lower is reported and skipped; the host indexes a package whole, so the unit skipped is the package, not one behavior), describe_behavior, read_behavior ({ path, source } through behavior/source file: true), play, operators, patterns, evaluate (the expression in a one-transition program built with quasiquote, played through program/step with the request entity and payload). complete, reference and test run std-orb-complete, std-orb-reference and std-orb-test. Hook tools from --program are listed from program/inputs and called by program/dispatch with inbound; the guest-binding gap is recorded in the std ledger."
 ]
 uses Spec from "almadar-std/mcp-server"
@@ -23,8 +23,12 @@ uses Credit from "std/behaviors/std-verify-credit"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
 type McpJson = string | number | boolean | [McpJson] | Map string McpJson
+type McpInputRow = { event : string! }
+type McpInputsResult = { inputs : [McpInputRow]? }
+type McpParseError = { jsonrpc : string!, id : McpJson?, error : McpErrorBody! }
+type McpErrorBody = { code : number!, message : string! }
 type McpStep = { trait : string!, event : string!, payload : Map string McpJson?, from : string? }
-type McpArgs = { path : string?, final : boolean?, write : boolean?, name : string?, category : string?, scopes : [string]?, exposure : [string]?, spec : string?, steps : [McpStep]?, topic : string?, offset : number?, expr : McpJson?, entity : Map string McpJson?, payload : Map string McpJson?, body : McpJson?, headers : Map string string? }
+type McpArgs = { path : string?, final : boolean?, write : boolean?, name : string?, category : string?, scopes : [string]?, exposure : [string]?, spec : string?, steps : [McpStep]?, topic : string?, offset : number?, expr : McpJson?, entity : Map string McpJson?, payload : Map string McpJson?, body : McpJson?, headers : Map string string?, app : string? }
 type McpParams = { protocolVersion : string?, name : string?, arguments : McpArgs? }
 type McpPackage = { root : string!, prefix : string!, vectors : string? }
 type McpMessage = { id : McpJson?, method : string?, params : McpParams? }
@@ -210,7 +214,7 @@ orbital OrbMcpOrbital {
         ])
         (program/inputs { key: "inputs" emit: { success: MCP_INPUTS, failure: MCP_START_FAILED } })
       MCP_INPUTS -> versioning
-        (set @entity.hookNames (array/map (object/get @payload.result "inputs") (fn i (object/get @i "event"))))
+        (set @entity.hookNames (array/map (object/get @payload.result "inputs" []) (fn i (object/get @i "event"))))
         (emit MCP_LISTEN { })
       MCP_LISTEN -> serving
         (emit MCP_INPUT_START {})
@@ -227,7 +231,7 @@ orbital OrbMcpOrbital {
       MCP_LINE_IN -> serving when (= (str/trim @payload.line) "")
         (emit MCP_PUMP { })
       MCP_LINE_IN -> serving when (and (!= (str/trim @payload.line) "") (not (json/valid @payload.line)))
-        (set @entity.reply (json/stringify { jsonrpc: "2.0" id: null error: { code: -32700 message: "parse error: invalid JSON" } }))
+        (set @entity.reply (json/stringify (let ((reply : McpParseError { jsonrpc: "2.0" id: null error: { code: -32700 message: "parse error: invalid JSON" } })) @reply)))
         (emit MCP_LINE_OUT { line: @entity.reply })
         (emit MCP_PUMP { })
       MCP_LINE_IN -> serving when (and (json/valid @payload.line) (not (object/has (json/parse @payload.line McpMessage) "id")))
@@ -276,8 +280,10 @@ orbital OrbMcpOrbital {
       INIT -> working
       MCP_EOF -> starting
         (emit MCP_ANSWERED { status: 200, body: "" })
-      MCP_RUN -> working when (or (= @entity.tool "validate") (= @entity.tool "format") (= @entity.tool "play"))
+      MCP_RUN -> working when (and (or (= @entity.tool "validate") (= @entity.tool "format") (= @entity.tool "play")) (not (os/path-is-absolute (str/default (object/get @entity.args "path") ""))))
         (os/read-file { anchor: "cwd" path: (object/get @entity.args "path") } { key: "source" emit: { success: MCP_FILE, failure: MCP_TOOL_FAILED } })
+      MCP_RUN -> working when (and (or (= @entity.tool "validate") (= @entity.tool "format") (= @entity.tool "play")) (os/path-is-absolute (str/default (object/get @entity.args "path") "")))
+        (os/read-file (str/concat "/" (str/slice (str/default (object/get @entity.args "path") "") 1 (str/len (str/default (object/get @entity.args "path") "")))) { key: "source" emit: { success: MCP_FILE, failure: MCP_TOOL_FAILED } })
       MCP_FILE -> working when (!= @entity.tool "format")
         (program/read (bytes/to-string @payload.data) { key: "program" emit: { success: MCP_PROGRAM, failure: MCP_TOOL_FAILED } })
       MCP_FILE -> working when (= @entity.tool "format")
@@ -288,9 +294,12 @@ orbital OrbMcpOrbital {
         (program/step @payload.result (object/get @entity.args "steps") { emit: { success: MCP_TOOL_DONE, failure: MCP_TOOL_FAILED } })
       MCP_PRINTED -> working when (!= (object/get @entity.args "write") true)
         (emit MCP_TOOL_DONE { result: { source: @payload.result } })
-      MCP_PRINTED -> working when (= (object/get @entity.args "write") true)
+      MCP_PRINTED -> working when (and (= (object/get @entity.args "write") true) (not (os/path-is-absolute (str/default (object/get @entity.args "path") ""))))
         (set @entity.source @payload.result)
         (os/write-file { anchor: "cwd" path: (object/get @entity.args "path") } (bytes/from-string @payload.result) { key: "formatted" emit: { success: MCP_FORMAT_WRITTEN, failure: MCP_TOOL_FAILED } })
+      MCP_PRINTED -> working when (and (= (object/get @entity.args "write") true) (os/path-is-absolute (str/default (object/get @entity.args "path") "")))
+        (set @entity.source @payload.result)
+        (os/write-file (str/concat "/" (str/slice (str/default (object/get @entity.args "path") "") 1 (str/len (str/default (object/get @entity.args "path") "")))) (bytes/from-string @payload.result) { key: "formatted" emit: { success: MCP_FORMAT_WRITTEN, failure: MCP_TOOL_FAILED } })
       MCP_FORMAT_WRITTEN -> working
         (emit MCP_TOOL_DONE { result: { source: @entity.source } })
       MCP_RUN -> working when (= @entity.tool "describe_behavior")
@@ -328,13 +337,13 @@ orbital OrbMcpOrbital {
       MCP_EVAL_FAILED -> working
         (emit MCP_TOOL_FAILED { error: @payload.error })
       MCP_RUN -> working when (= @entity.tool "complete")
-        (emit MCP_COMPLETE_START { file: (object/get @entity.args "path"), offset: (object/get @entity.args "offset") })
+        (emit MCP_COMPLETE_START { file: (object/get @entity.args "path"), offset: (object/get @entity.args "offset"), cwd: @entity.cwd })
       MCP_COMPLETE_ANSWERED -> working when (= @payload.status 200)
         (emit MCP_TOOL_DONE { result: (json/parse @payload.body McpJson) })
       MCP_COMPLETE_ANSWERED -> working when (!= @payload.status 200)
         (emit MCP_TOOL_FAILED { error: @payload.body })
       MCP_RUN -> working when (= @entity.tool "reference")
-        (emit MCP_REFERENCE_START { topic: (or (object/get @entity.args "topic") "") })
+        (emit MCP_REFERENCE_START { topic: (or (object/get @entity.args "topic") ""), cwd: @entity.cwd })
       MCP_REFERENCE_ANSWERED -> working when (= @payload.status 200)
         (emit MCP_TOOL_DONE { result: (json/parse @payload.body McpJson) })
       MCP_REFERENCE_ANSWERED -> working when (!= @payload.status 200)
@@ -361,7 +370,7 @@ orbital OrbMcpOrbital {
       MCP_TABLE -> working when (= (object/get @entity.args "name") null)
         (emit MCP_TABLE_READ { table: (object/get (json/parse (bytes/to-string @payload.data) McpJson) (if (= @entity.tool "operators") "operators" "patterns")) })
       MCP_TABLE_READ -> working when (and (!= (object/get @entity.args "name") null) (object/has @payload.table (object/get @entity.args "name")))
-        (emit MCP_TOOL_DONE { result: { name: (object/get @entity.args "name") entry: (object/get @payload.table (object/get @entity.args "name")) } })
+        (emit MCP_TOOL_DONE { result: { name: (object/get @entity.args "name" "") entry: (object/get @payload.table (object/get @entity.args "name")) } })
       MCP_TABLE_READ -> working when (and (!= (object/get @entity.args "name") null) (not (object/has @payload.table (object/get @entity.args "name"))))
         (emit MCP_TOOL_FAILED { error: (str/concat "no " @entity.tool " entry named `" (object/get @entity.args "name") "`") })
       MCP_TABLE_READ -> working when (= (object/get @entity.args "name") null)
@@ -369,7 +378,7 @@ orbital OrbMcpOrbital {
       MCP_RUN -> working when (array/includes @entity.hookNames @entity.tool)
         (program/dispatch { inbound: @entity.tool body: (if (= (object/get @entity.args "body") null) "" (json/stringify (object/get @entity.args "body"))) headers: (or (object/get @entity.args "headers") (json/parse "{}" McpJson)) } { emit: { success: MCP_TOOL_DONE, failure: MCP_TOOL_FAILED } })
       MCP_TOOL_DONE -> serving
-        (set @entity.reply (json/stringify { jsonrpc: "2.0" id: @entity.rid result: { content: [{ type: "text" text: (json/stringify (if (object/has @payload.result "__none") @payload.result @payload.result)) }] structuredContent: (if (object/has @payload.result "__none") @payload.result @payload.result) isError: false } }))
+        (set @entity.reply (json/stringify { jsonrpc: "2.0" id: @entity.rid result: { content: [{ type: "text" text: (json/stringify @payload.result) }] structuredContent: @payload.result isError: false } }))
         (emit MCP_LINE_OUT { line: @entity.reply })
         (emit MCP_PUMP { })
       MCP_TOOL_FAILED -> serving
@@ -447,7 +456,7 @@ orbital OrbMcpOrbital {
         @description "os/read-file or os/stdin-read failed."
         @tier "internal"
       MCP_INPUTS {
-        result : McpJson
+        result : McpInputsResult
       }
         @description "program/inputs: the hosted program's declared inputs."
         @tier "internal"
@@ -514,12 +523,14 @@ orbital OrbMcpOrbital {
         @tier "internal"
       MCP_REFERENCE_START {
         topic : string!
+        cwd : string!
       }
         @description "Internal: run std-orb-reference for the reference tool."
         @tier "internal"
       MCP_COMPLETE_START {
         file : string!
         offset : number!
+        cwd : string!
       }
         @description "Internal: run std-orb-complete for the complete tool."
         @tier "internal"

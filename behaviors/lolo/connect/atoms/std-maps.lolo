@@ -53,7 +53,6 @@ orbital MapsOrbital {
 
       MAPS_REQUEST_FAILED -> idle
         (emit MAPS_FAILURE { error: @payload.error, code: @payload.kind })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Maps unavailable: " @payload.error) })
     }
 
     emits {
@@ -144,11 +143,6 @@ orbital MapsOrbital {
     }
 
     config {
-      statusSlot : slot = system
-        @label "Status slot"
-        @description "Where the atom reports an unreachable Nominatim call; a page running it in the background keeps it in `system`"
-        @synonyms "status area, slot"
-        @tier "presentation"
       origin : url = "https://nominatim.openstreetmap.org"
         @label "Nominatim origin"
         @description "The Nominatim API origin (scheme://host, no path). Must be declared in the app egress list."
@@ -167,5 +161,5 @@ orbital MapsOrbital {
     }
   }
 
-  page "/maps" as MapsPage -> MapsClient
+  page boot as MapsPage -> MapsClient
 }

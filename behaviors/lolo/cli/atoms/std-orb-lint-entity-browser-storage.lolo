@@ -8,7 +8,7 @@ app std-orb-lint-entity-browser-storage [
 ]
 uses Spec from "almadar-std/lint-entity-browser-storage"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
-type BrowserEntity = { name : string, local : boolean, seedMock : boolean, identity : boolean, persistence : string }
+type BrowserEntity = { name : string, browser : boolean, identity : boolean, persistence : string }
 type BrowserOrbital = { spec : boolean, entity : BrowserEntity, auxiliaryEntities : [BrowserEntity] }
 type BrowserProgram = { orbitals : [BrowserOrbital] }
 type OrbFinding ={ code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
@@ -18,6 +18,7 @@ orbital OrbLintEntityBrowserStorageOrbital {
 
   entity OrbLintEntityBrowserStorageRun [runtime] {
     id : string!
+    scope : string = ""
     findings : [OrbFinding] = []
   }
 
@@ -27,6 +28,7 @@ orbital OrbLintEntityBrowserStorageOrbital {
     state ready {
       INIT -> ready
       LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
         (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
             (let ((auxs (object/get (array/nth @orbitals @oi) "auxiliaryEntities" [])))
@@ -35,17 +37,17 @@ orbital OrbLintEntityBrowserStorageOrbital {
                 (array/map (array/range 0 (array/len @auxs)) (fn ai { ent: (array/nth @auxs @ai), base: (str/concat "orbitals[" @oi "].auxiliaryEntities[" @ai "]") })))
               (fn eb
             (let ((ent (object/get @eb "ent")))
-              (if (and (validate/object @ent) (not (object/get (array/nth @orbitals @oi) "spec" false))) (let ((nm (object/get @ent "name" "")) (lc (object/get @ent "local" false)) (idn (object/get @ent "identity" false)) (rt (= (object/get @ent "persistence" "") "runtime")))
+              (if (and (validate/object @ent) (not (object/get (array/nth @orbitals @oi) "spec" false))) (let ((nm (object/get @ent "name" "")) (lc (object/get @ent "browser" false)) (idn (object/get @ent "identity" false)) (rt (= (object/get @ent "persistence" "") "runtime")))
                 (array/concat
-                  (if (and @lc @rt) [{ code: "ORB_E_LOCAL_REQUIRES_PERSISTENT", path: (str/concat (object/get @eb "base") ".local"), message: (str/concat "Entity '" @nm "' is [runtime, local] — a runtime entity's frame already lives in the client; `local` declares where PERSISTED rows live"), suggestion: "Use `[persistent: <collection>, local]` for rows stored in the browser, or drop `local`.", severity: "error" }] [])
-                  (if (and @idn @lc) [{ code: "ORB_E_IDENTITY_LOCAL", path: (str/concat (object/get @eb "base") ".local"), message: (str/concat "Entity '" @nm "' is [identity] and `local` — the viewer directory is never browser-resident"), suggestion: "Drop `local` from the identity entity.", severity: "error" }] []))) [])))))))))))
+                  (if (and @lc @rt) [{ code: "ORB_E_LOCAL_REQUIRES_PERSISTENT", path: (str/concat (object/get @eb "base") ".browser"), message: (str/concat "Entity '" @nm "' is [runtime, browser] — a runtime entity's frame already lives in the client; `browser` declares where PERSISTED rows live"), suggestion: "Use `[persistent: <collection>, browser]` for rows stored in the browser, or drop `browser`.", severity: "error" }] [])
+                  (if (and @idn @lc) [{ code: "ORB_E_IDENTITY_LOCAL", path: (str/concat (object/get @eb "base") ".browser"), message: (str/concat "Entity '" @nm "' is [identity] and `browser` — the viewer directory is never browser-resident"), suggestion: "Drop `browser` from the identity entity.", severity: "error" }] []))) [])))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
-        (emit LINT_FOUND { rule: "entity-browser-storage", findings: @entity.findings })
+        (emit LINT_FOUND { rule: "entity-browser-storage", scope: @entity.scope, findings: @entity.findings })
     }
 
     emits {
-      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
         @description "This rule's findings for the file, offered to the lint-all umbrella."
         @tier "internal"
       LINT_FINISH { }
@@ -54,7 +56,7 @@ orbital OrbLintEntityBrowserStorageOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : BrowserProgram }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : BrowserProgram  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -91,7 +93,7 @@ orbital OrbLintEntityBrowserStorageOrbital {
       LINT_REQUEST -> external { file : string! }
         @description "Ask the lint input to read and lower this file."
         @tier "internal"
-      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
         @description "The rule trait's findings for the file."
         @tier "internal"
       LINT_INPUT_UNREAD -> external { file : string! }

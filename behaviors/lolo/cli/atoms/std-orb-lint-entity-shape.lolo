@@ -4,14 +4,14 @@ app std-orb-lint-entity-shape [
   env: ["PATH"],
   exec: ["orb"],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
-  description: "std-orb-lint-entity-shape — the `orb lint entity-shape <file>` command, the port. It lowers the file with program/read and reports an entity with no name (ORB_E_MISSING_NAME) and an entity with no fields (ORB_E_NO_FIELDS), the validate_entity checks, for every orbital's inline entity, with the Rust path, message and suggestion (status 500, exit 1). Orbitals marked `spec` are skipped, as validate_all_entities skips them. Clean answers `lint entity-shape: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  description: "std-orb-lint-entity-shape — the `orb lint entity-shape <file>` command, the port. It lowers the file with program/read and reports an entity with no name (ORB_E_MISSING_NAME), a non-PascalCase entity name (ORB_E_INVALID_FIELD_NAME, an English program only) and an entity with no fields (ORB_E_NO_FIELDS), the validate_entity checks, for every orbital's inline primary and auxiliary entity, with the Rust path, message and suggestion (status 500, exit 1). Orbitals marked `spec` are skipped, as validate_all_entities skips them. Clean answers `lint entity-shape: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-entity-shape"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 type EntityShapeField = { name : string }
 type EntityShapeEntity = { name : string, fields : [EntityShapeField] }
-type EntityShapeOrbital = { entity : EntityShapeEntity, spec : boolean }
+type EntityShapeOrbital = { entity : EntityShapeEntity, auxiliaryEntities : [EntityShapeEntity], spec : boolean }
 type EntityShapeProgram = { orbitals : [EntityShapeOrbital]! }
 
 orbital OrbLintEntityShapeOrbital {
@@ -19,6 +19,7 @@ orbital OrbLintEntityShapeOrbital {
 
   entity OrbLintEntityShapeRun [runtime] {
     id : string!
+    scope : string = ""
     findings : [OrbFinding] = []
   }
 
@@ -28,23 +29,31 @@ orbital OrbLintEntityShapeOrbital {
     state ready {
       INIT -> ready
       LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
         (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
-            (let ((ent (object/get (array/nth @orbitals @oi) "entity" {})))
-              (if (and (validate/object @ent) (not (object/get (array/nth @orbitals @oi) "spec" false))) (array/concat
-                (if (= (object/get @ent "name" "") "")
-                  [{ code: "ORB_E_MISSING_NAME", path: (str/concat "orbitals[" @oi "].entity.name"), message: "Entity name is required", suggestion: "Add a name for your entity using PascalCase (e.g., 'Task', 'User')", severity: "error" }]
-                  [])
-                (if (= (array/len (object/get @ent "fields" [])) 0)
-                  [{ code: "ORB_E_NO_FIELDS", path: (str/concat "orbitals[" @oi "].entity.fields"), message: "Entity must have at least one field", suggestion: "Add at least one field to define the entity's data structure", severity: "error" }]
-                  [])) [])))))))
+            (let ((auxs (object/get (array/nth @orbitals @oi) "auxiliaryEntities" [])))
+              (array/flatten (array/map
+                (array/concat [{ ent: (object/get (array/nth @orbitals @oi) "entity" {}), base: (str/concat "orbitals[" @oi "].entity") }]
+                  (array/map (array/range 0 (array/len @auxs)) (fn ai { ent: (array/nth @auxs @ai), base: (str/concat "orbitals[" @oi "].auxiliaryEntities[" @ai "]") })))
+                (fn eb
+                  (let ((ent (object/get @eb "ent")) (base (object/get @eb "base")))
+                    (if (and (validate/object @ent) (not (object/get (array/nth @orbitals @oi) "spec" false))) (array/concat
+                      (if (= (object/get @ent "name" "") "")
+                        [{ code: "ORB_E_MISSING_NAME", path: (str/concat @base ".name"), message: "Entity name is required", suggestion: "Add a name for your entity using PascalCase (e.g., 'Task', 'User')", severity: "error" }]
+                        (if (and @payload.latin (not (validate/pattern (object/get @ent "name" "") "^[A-Z][a-zA-Z0-9]*$")))
+                          [{ code: "ORB_E_INVALID_FIELD_NAME", path: (str/concat @base ".name"), message: (str/concat "Entity name '" (object/get @ent "name" "") "' should be PascalCase"), suggestion: "Use PascalCase for entity names (e.g., 'Task', 'UserProfile')", severity: "error" }]
+                          []))
+                      (if (= (array/len (object/get @ent "fields" [])) 0)
+                        [{ code: "ORB_E_NO_FIELDS", path: (str/concat @base ".fields"), message: "Entity must have at least one field", suggestion: "Add at least one field to define the entity's data structure", severity: "error" }]
+                        [])) [])))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
-        (emit LINT_FOUND { rule: "entity-shape", findings: @entity.findings })
+        (emit LINT_FOUND { rule: "entity-shape", scope: @entity.scope, findings: @entity.findings })
     }
 
     emits {
-      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
         @description "This rule's findings for the file, offered to the lint-all umbrella."
         @tier "internal"
       LINT_FINISH { }
@@ -53,7 +62,7 @@ orbital OrbLintEntityShapeOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : EntityShapeProgram }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : EntityShapeProgram  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -90,7 +99,7 @@ orbital OrbLintEntityShapeOrbital {
       LINT_REQUEST -> external { file : string! }
         @description "Ask the lint input to read and lower this file."
         @tier "internal"
-      LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
         @description "The rule trait's findings for the file."
         @tier "internal"
       LINT_INPUT_UNREAD -> external { file : string! }

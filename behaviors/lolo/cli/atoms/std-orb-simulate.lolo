@@ -1,7 +1,7 @@
 app std-orb-simulate [
   version: "1.0.0",
   inbound: ["cli-simulate"],
-  fs: { cwd: "**": [read] },
+  fs: { cwd: "**": [read], "/**": [read] },
   description: "std-orb-simulate — the `orb simulate <file>` command, the port of `orb validate --simulate` (orbital-cli commands/simulate.rs; spec/cli/orb-simulate.lolo). It lowers the file with program/read and, for every inline page of every orbital, walks each inline trait the page names breadth first from its first initial state, reporting per transition the fetches, the render-ui slots with their pattern type and props, the entity-prop-without-fetch warning and the states never reached; status 200 (exit 0) with the whole report as the body. Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/orb-simulate"
@@ -30,8 +30,10 @@ orbital OrbSimulateOrbital {
       INIT -> ready
       SIMULATE_CALLED -> ready when (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
         (emit SIMULATE_ANSWERED { status: 400, body: "usage: orb simulate <file>" })
-      SIMULATE_CALLED -> reading when (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+      SIMULATE_CALLED -> reading when (and (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1) (not (os/path-is-absolute (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))))
         (os/read-file { anchor: "cwd" path: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) } { key: "file" emit: { success: SIMULATE_FILE_READ, failure: SIMULATE_UNREAD } })
+      SIMULATE_CALLED -> reading when (and (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1) (os/path-is-absolute (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv"))))
+        (os/read-file (str/concat "/" (str/slice (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1 (str/len (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv"))))) { key: "file" emit: { success: SIMULATE_FILE_READ, failure: SIMULATE_UNREAD } })
     }
 
     state reading {
@@ -72,7 +74,7 @@ orbital OrbSimulateOrbital {
                                                 (let ((slot (if (validate/string (array/nth @e 1)) (array/nth @e 1) "?"))
                                                       (pat (array/nth @e 2)))
                                                   (let ((isObj (validate/object @pat)) (isClear (and (= @pat null) (> (array/len @e) 2))))
-                                                    (let ((ptype (if @isObj (if (validate/string (object/get @pat "type" null)) (object/get @pat "type") "?") (if @isClear "null (clear)" "?")))
+                                                    (let ((ptype (if @isObj (let ((ty (object/get @pat "type" null))) (if (validate/string @ty) @ty "?")) (if @isClear "null (clear)" "?")))
                                                           (props (if @isObj (array/filter (object/keys @pat) (fn k (!= @k "type"))) [])))
                                                       (array/concat
                                                         [(str/concat "      " (if @isClear "🗑️" "✅") " Slot " (json/stringify @slot) " ← [" @ptype "]" (if (> (array/len @props) 0) (str/concat " (" (str/join @props ", ") ")") ""))]

@@ -24,17 +24,7 @@ orbital PageTreatOrbital {
   trait PageTreat -> PageTreatRecord [client] {
     initial: ready
 
-    config {
-      statusSlot : slot = main
-        @label "Status slot"
-        @description "Where the atom shows its one-line status; an organism running it in the background sends it to `system`"
-        @synonyms "status area, slot"
-        @tier "presentation"
-    }
-
     state ready {
-      INIT -> ready
-        (render-ui @config.statusSlot { type: typography, variant: body, role: status, content: "Ready to treat page elements" })
       TREAT -> ready
         (browser/tab-apply { tab: ?tab, elementId: ?elementId, treatment: ?treatment, label: ?label }
           { emit: { success: APPLIED, failure: APPLY_FAILED } })
@@ -50,7 +40,6 @@ orbital PageTreatOrbital {
       APPLY_FAILED -> ready
         (set @entity.errorMessage ?error)
         (emit TREAT_FAILED { error: ?error })
-        (render-ui @config.statusSlot { type: typography, variant: body, role: status, content: (str/concat "Couldn't treat a page element: " ?error) })
     }
 
     emits {
@@ -84,5 +73,5 @@ orbital PageTreatOrbital {
     }
   }
 
-  page "/page-treat" as PageTreatPage -> PageTreat
+  page boot as PageTreatPage -> PageTreat
 }

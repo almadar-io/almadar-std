@@ -1,0 +1,21 @@
+app lint-reserved-component-name-spec [
+  version: "1.0.0",
+  description: "Design contract for the `orb lint reserved-component-name <file>` command, the port of the entity.rs validate_entity UI-component name check: every primary or auxiliary entity of a non-spec orbital whose name is an installed @almadar/core component name is ORB_E_INVALID_FIELD_NAME at `<entity path>.name` (status 500, exit 1). Clean answers `lint reserved-component-name: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintReservedComponentNameSpec {
+  expects trait OrbLintReservedComponentName {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintReservedComponentNameCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintReservedComponentName, OrbLintReservedComponentNameCli
+}
