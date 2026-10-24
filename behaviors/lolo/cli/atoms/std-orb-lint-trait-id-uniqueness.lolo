@@ -7,56 +7,35 @@ app std-orb-lint-trait-id-uniqueness [
 uses Spec from "almadar-std/lint-trait-id-uniqueness"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type TraitIdTrait = { id : string, name : string }
+type TraitIdOrbital = { name : string, traits : [TraitIdTrait] }
+type TraitIdProgram = { orbitals : [TraitIdOrbital] }
 
 orbital OrbLintTraitIdUniquenessOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
   entity OrbLintTraitIdUniquenessRun [runtime] {
     id : string!
     findings : [OrbFinding] = []
   }
 
-  trait OrbLintTraitIdUniqueness -> OrbLintTraitIdUniquenessRun [integration] {
+  trait OrbLintTraitIdUniqueness -> OrbLintTraitIdUniquenessRun [optimistic] {
     initial: ready
 
     state ready {
       INIT -> ready
-      LINT_RUN -> reading
-        (set @entity.findings [])
-        (os/read-file { anchor: "cwd" path: @payload.file } { key: "file" emit: { success: LINT_FILE_READ, failure: LINT_FILE_UNREAD } })
+      LINT_INPUT -> ready
+        (set @entity.findings (let ((entries (array/flatten (array/map (object/get @payload.program "orbitals" []) (fn o (array/map (array/filter (object/get @o "traits" []) (fn t (object/has @t "id"))) (fn t { id: (object/get @t "id"), name: (str/concat (object/get @o "name") "." (object/get @t "name")) })))))))
+          (array/map (array/filter (array/sort (array/map (array/unique (array/map @entries (fn e (object/get @e "id")))) (fn i { id: @i })) "id" "asc") (fn r (> (array/len (array/filter @entries (fn e (= (object/get @e "id") (object/get @r "id"))))) 1)))
+            (fn r { code: "ORB_X_DUPLICATE_TRAIT_ID", path: "orbitals", message: (str/concat "trait id " (object/get @r "id") " is carried by " (str/join (array/map (array/filter @entries (fn e (= (object/get @e "id") (object/get @r "id")))) (fn e (object/get @e "name"))) ", ") "; listens match sources by id, so each of these hears the others' emits"), suggestion: "", severity: "error" }))))
+        (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "trait-id-uniqueness", findings: @entity.findings })
     }
 
-    state reading {
-      INIT -> reading
-      LINT_FILE_READ -> reading
-        (program/read (bytes/to-string @payload.data) { emit: { success: LINT_PROGRAM_READ, failure: LINT_FILE_UNREAD } })
-      LINT_PROGRAM_READ -> ready
-        (set @entity.findings (let ((entries (array/flatten (array/map (object/get @payload.result "orbitals") (fn o (array/map (array/filter (object/get @o "traits" []) (fn t (object/has @t "id"))) (fn t { id: (object/get @t "id"), name: (str/concat (object/get @o "name") "." (object/get @t "name")) })))))))
-          (array/map (array/filter (array/sort (array/map (array/unique (array/map @entries (fn e (object/get @e "id")))) (fn i { id: @i })) "id" "asc") (fn r (> (array/len (array/filter @entries (fn e (= (object/get @e "id") (object/get @r "id"))))) 1)))
-            (fn r { code: "ORB_X_DUPLICATE_TRAIT_ID", path: "orbitals", message: (str/concat "trait id " (object/get @r "id") " is carried by " (str/join (array/map (array/filter @entries (fn e (= (object/get @e "id") (object/get @r "id")))) (fn e (object/get @e "name"))) ", ") "; listens match sources by id, so each of these hears the others' emits"), suggestion: "", severity: "error" }))))
-        (emit LINT_FINISH { })
-      LINT_FILE_UNREAD -> ready
-        (emit LINT_UNREAD { rule: "trait-id-uniqueness" })
-    }
-
     emits {
-      LINT_UNREAD -> external { rule : string! }
-        @description "This rule could not read or lower the file."
-        @tier "internal"
-      LINT_RUN -> external { file : string! }
-        @description "The lint request this trait answers, from the cli trait or the umbrella."
-        @tier "internal"
       LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
         @description "This rule's findings for the file, offered to the lint-all umbrella."
-        @tier "internal"
-      LINT_FILE_READ { data : bytes! }
-        @description "The file read."
-        @tier "internal"
-      LINT_FILE_UNREAD { error : string }
-        @description "The file could not be read or lowered."
-        @tier "internal"
-      LINT_PROGRAM_READ { result : string }
-        @description "The file lowered by program/read."
         @tier "internal"
       LINT_FINISH { }
         @description "Internal: answer with the verdict."
@@ -64,11 +43,13 @@ orbital OrbLintTraitIdUniquenessOrbital {
     }
 
     listens {
-      OrbLintTraitIdUniquenessCli.LINT_RUN -> LINT_RUN
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : TraitIdProgram }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
   }
 
-  trait OrbLintTraitIdUniquenessCli -> OrbLintTraitIdUniquenessRun [integration] {
+  trait OrbLintTraitIdUniquenessCli -> OrbLintTraitIdUniquenessRun [client] {
     initial: ready
 
     state ready {
@@ -76,7 +57,7 @@ orbital OrbLintTraitIdUniquenessOrbital {
       LINT_CALLED -> ready when (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint trait-id-uniqueness <file>" })
       LINT_CALLED -> waiting when (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
-        (emit LINT_RUN { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
     }
 
     state waiting {
@@ -85,7 +66,7 @@ orbital OrbLintTraitIdUniquenessOrbital {
         (emit LINT_ANSWERED { status: 200, body: "lint trait-id-uniqueness: clean" })
       LINT_FOUND -> ready when (and (= @payload.rule "trait-id-uniqueness") (> (array/len @payload.findings) 0))
         (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
-      LINT_UNREAD -> ready when (= @payload.rule "trait-id-uniqueness")
+      LINT_INPUT_UNREAD -> ready
         (emit LINT_ANSWERED { status: 500, body: "lint trait-id-uniqueness: the file could not be read or lowered" })
     }
 
@@ -96,14 +77,14 @@ orbital OrbLintTraitIdUniquenessOrbital {
       }
         @description "Internal: the command's answer, which the cli hook prints."
         @tier "internal"
-      LINT_RUN -> external { file : string! }
-        @description "Ask the rule trait to lint this file."
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
         @tier "internal"
       LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
         @description "The rule trait's findings for the file."
         @tier "internal"
-      LINT_UNREAD -> external { rule : string! }
-        @description "The rule trait could not read or lower the file."
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
         @tier "internal"
     }
 
@@ -115,9 +96,30 @@ orbital OrbLintTraitIdUniquenessOrbital {
         @description "Run `orb lint trait-id-uniqueness` with its arguments and working directory."
         @synonyms "orb lint trait-id-uniqueness, duplicate trait ids"
       OrbLintTraitIdUniqueness.LINT_FOUND -> LINT_FOUND
-      OrbLintTraitIdUniqueness.LINT_UNREAD -> LINT_UNREAD
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
     }
   }
 
-  page "/orb-lint-trait-id-uniqueness" as OrbLintTraitIdUniquenessPage -> OrbLintTraitIdUniqueness, OrbLintTraitIdUniquenessCli
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintTraitIdUniquenessCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintTraitIdUniquenessOrbitalStart -> OrbLintTraitIdUniqueness, OrbLintTraitIdUniquenessCli, OrbLintInput, Packs, Versions
 }

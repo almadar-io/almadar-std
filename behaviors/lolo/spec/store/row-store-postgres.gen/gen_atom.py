@@ -1121,20 +1121,20 @@ for name in sorted(_used):
 EMITS += '    }\n'
 
 LISTENS = '''    listens {
-      ROW_READ -> external {
+      ROW_READ -> input {
         key : string!
         entityType : string!
         id : string!
       }
         @description "Read one row of an entity type by id."
         @tier "internal"
-      ROW_LIST -> external {
+      ROW_LIST -> input {
         key : string!
         entityType : string!
       }
         @description "List every row of an entity type."
         @tier "internal"
-      ROWS_QUERY -> external {
+      ROWS_QUERY -> input {
         key : string!
         entityType : string!
         query : RowQuery!
@@ -1142,13 +1142,13 @@ LISTENS = '''    listens {
       }
         @description "A query ask, pushed down as one parameterised SELECT."
         @tier "internal"
-      ROWS_WRITE -> external {
+      ROWS_WRITE -> input {
         key : string!
         batch : RowWriteBatch!
       }
         @description "Apply a batch of create, upsert, update and delete ops, atomic in BEGIN and COMMIT or stop at the first op that is not applied."
         @tier "internal"
-      ROW_COLLECTION -> external {
+      ROW_COLLECTION -> input {
         entityType : string!
         collection : string!
       }
@@ -1159,7 +1159,7 @@ LISTENS = '''    listens {
 
 header = 'app std-row-store-postgres [\n  version: "1.0.0",\n  net: { "postgres.example.test:5432": [tcp] },\n  description: ' + S(DESCRIPTION) + '\n]\nuses Spec from "almadar-std/row-store-postgres"\n\n'
 body = ('orbital RowStorePostgresOrbital {\n' + types_block + LOCAL_TYPES + '\n' + ENTITY + '\n'
-        '  trait RowStoreDriver -> RowStoreFlight [integration, instance] {\n    initial: ready\n\n' + CONFIG + '\n'
+        '  trait RowStoreDriver -> RowStoreFlight [optimistic] {\n    initial: ready\n\n' + CONFIG + '\n'
         + '\n\n'.join(blocks) + '\n\n' + EMITS + '\n' + LISTENS + '  }\n\n  page "/row-store-postgres" -> RowStoreDriver\n}\n')
 text = header + body
 bad = []

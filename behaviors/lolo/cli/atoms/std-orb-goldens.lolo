@@ -8,7 +8,7 @@ uses Spec from "almadar-std/orb-goldens"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type GoldenValue = string | number | boolean | [GoldenValue?] | Map string GoldenValue?
 type GoldenPayload = Map string GoldenValue?
-type GoldenEmit = { event : string!, payload : GoldenPayload }
+type GoldenEmit = { event : string!, payload : GoldenPayload, optionsAt : number }
 type GoldenEmitted = { type : string!, payload : GoldenPayload }
 type GoldenExpect = { fired : boolean, state : string, emits : [GoldenEmit], neverEmits : [string], exactEmits : [GoldenEmit], emitCounts : Map string number, effects : [GoldenPayload], entity : GoldenPayload }
 type GoldenStep = { keep : string, keepField : string, now : number, viewer : GoldenPayload, entity : GoldenPayload, trait : string, orbital : string, from : string, event : string!, payload : GoldenPayload, expect : GoldenExpect }
@@ -20,8 +20,10 @@ type GoldenTraitRef = { name : string! }
 type GoldenOrbitalRef = { name : string!, traits : [GoldenTraitRef] }
 type GoldenProgramRef = { orbitals : [GoldenOrbitalRef]! }
 type GoldenState = { before : string, after : string }
-type GoldenResult = { transitionFired : boolean!, guard : string, state : GoldenState!, emitted : [GoldenEmitted]! }
-type GoldenPlayed = { trait : string!, event : string!, result : GoldenResult! }
+type GoldenEffect = { type : string, args : [GoldenValue?]!, status : string, error : string }
+type GoldenOutcome = { emitted : [GoldenEmitted], emits : [GoldenEmitted] }
+type GoldenResult = { transitionFired : boolean!, guard : string, state : GoldenState!, emitted : [GoldenEmitted]!, outcomes : [GoldenOutcome], effects : [GoldenEffect] }
+type GoldenPlayed = { trait : string!, event : string!, result : GoldenResult!, outcomes : [GoldenOutcome] }
 
 orbital GoldensOrbital {
   entity GoldensRun [runtime] {
@@ -43,7 +45,7 @@ orbital GoldensOrbital {
     failed : number! = 0
   }
 
-  trait OrbGoldens -> GoldensRun [integration] {
+  trait OrbGoldens -> GoldensRun [optimistic] {
     initial: ready
 
     state ready {
@@ -121,27 +123,27 @@ orbital GoldensOrbital {
         (emit GOLDENS_NEXT { at: @entity.cursor })
       GOLDENS_PREFLIGHT -> running when (= (array/len @entity.fails) 0)
         (program/step (json/parse @entity.program GoldenFull)
-          (array/reduce (array/take (object/get (json/parse @entity.curCase GoldenCase) "steps") (if (array/some (object/get (json/parse @entity.curCase GoldenCase) "steps") (fn s (object/has @s "keep"))) (+ @entity.upto 1) (array/len (object/get (json/parse @entity.curCase GoldenCase) "steps")))) [] (fn acc s
+          (let ((cc (json/parse @entity.curCase GoldenCase)) (gf (json/parse @entity.golden GoldenFile)) (pr (json/parse @entity.program GoldenProgramRef))) (array/reduce (array/take (object/get @cc "steps") (if (array/some (object/get @cc "steps") (fn s (object/has @s "keep"))) (+ @entity.upto 1) (array/len (object/get @cc "steps")))) [] (fn acc s
             (array/append @acc (object/merge
-              { orbital: (object/get @s "orbital" (object/get (json/parse @entity.golden GoldenFile) "orbital" (object/get (array/find (object/get (json/parse @entity.program GoldenProgramRef) "orbitals") (fn o (array/some (object/get @o "traits" []) (fn t (= (object/get @t "name") (object/get @s "trait" (object/get (json/parse @entity.golden GoldenFile) "trait")))))) ) "name"))),
-                trait: (object/get @s "trait" (object/get (json/parse @entity.golden GoldenFile) "trait")),
+              { orbital: (object/get @s "orbital" (object/get @gf "orbital" (object/get (array/find (object/get @pr "orbitals") (fn o (array/some (object/get @o "traits" []) (fn t (= (object/get @t "name") (object/get @s "trait" (object/get @gf "trait")))))) ) "name"))),
+                trait: (object/get @s "trait" (object/get @gf "trait")),
                 from: (object/get @s "from" ""),
                 event: (object/get @s "event"),
                 payload: (array/reduce (object/keys (object/get @s "payload" {})) (object/get @s "payload" {}) (fn pl k
                   (if (str/startsWith (json/stringify (object/get (object/get @s "payload" {}) @k)) "\"$")
                     (object/set @pl @k (object/get @entity.vars (str/slice (object/get (object/get @s "payload" {}) @k) 1 (str/len (object/get (object/get @s "payload" {}) @k)))))
                     @pl))) }
-              (let ((seed (object/merge (if (= (array/len @acc) 0) (object/get (json/parse @entity.curCase GoldenCase) "entity" {}) {}) (object/get @s "entity" {}))))
+              (let ((seed (object/merge (if (= (array/len @acc) 0) (object/get @cc "entity" {}) {}) (object/get @s "entity" {}))))
                 (if (= (array/len (object/keys @seed)) 0) {} { entity: @seed }))
-              (if (object/has @s "now") { now: (object/get @s "now") } (if (object/has (json/parse @entity.curCase GoldenCase) "now") { now: (object/get (json/parse @entity.curCase GoldenCase) "now") } {}))
-              (if (object/has @s "viewer") { viewer: (object/get @s "viewer") } {})))))
+              (if (object/has @s "now") { now: (object/get @s "now") } (if (object/has @cc "now") { now: (object/get @cc "now") } {}))
+              (if (object/has @s "viewer") { viewer: (object/get @s "viewer") } {}))))))
           { key: "steps" emit: { success: GOLDENS_STEPPED, failure: GOLDENS_CASE_FAILED } })
       GOLDENS_STEPPED -> running when (and (array/some (object/get (json/parse @entity.curCase GoldenCase) "steps") (fn s (object/has @s "keep"))) (< (+ @entity.upto 1) (array/len (object/get (json/parse @entity.curCase GoldenCase) "steps"))))
-        (set @entity.vars (if (object/has (array/nth (object/get (json/parse @entity.curCase GoldenCase) "steps") @entity.upto) "keep")
-          (object/set @entity.vars (object/get (array/nth (object/get (json/parse @entity.curCase GoldenCase) "steps") @entity.upto) "keep")
+        (set @entity.vars (let ((st (array/nth (object/get (json/parse @entity.curCase GoldenCase) "steps") @entity.upto))) (if (object/has @st "keep")
+          (object/set @entity.vars (object/get @st "keep")
             (object/get (array/find (array/reduce (object/get (object/get (array/nth @payload.result @entity.upto) "result") "emitted") [] (fn l em (array/append @l (object/get @em "payload" {}))))
-              (fn pl (object/has @pl (object/get (array/nth (object/get (json/parse @entity.curCase GoldenCase) "steps") @entity.upto) "keepField")))) (object/get (array/nth (object/get (json/parse @entity.curCase GoldenCase) "steps") @entity.upto) "keepField")))
-          @entity.vars))
+              (fn pl (object/has @pl (object/get @st "keepField")))) (object/get @st "keepField")))
+          @entity.vars)))
         (set @entity.upto (+ @entity.upto 1))
         (emit GOLDENS_NEXT {})
       GOLDENS_STEPPED -> running when (not (and (array/some (object/get (json/parse @entity.curCase GoldenCase) "steps") (fn s (object/has @s "keep"))) (< (+ @entity.upto 1) (array/len (object/get (json/parse @entity.curCase GoldenCase) "steps")))))
@@ -161,7 +163,7 @@ orbital GoldensOrbital {
                 (let ((wantE (object/get @ex "effects" null)) (gotE (object/get @rr "effects" [])))
                   (if (== @wantE null)
                     []
-                    (let ((hitE (object/get (array/reduce @gotE { k: 0 } (fn m e (if (and (< (object/get @m "k") (array/len @wantE)) (let ((x (array/nth @wantE (object/get @m "k")))) (array/every (array/filter (object/keys @x) (fn key (!= @key "optionsAt"))) (fn key (= (json/stringify (if (= @key "key") (object/get (array/nth (object/get @e "args") (object/get @x "optionsAt" 2)) "key") (if (str/startsWith @key "arg") (array/nth (object/get @e "args") (str/to-number (str/slice @key 3 (str/len @key)))) (object/get @e @key)))) (json/stringify (object/get @x @key))))))) { k: (+ (object/get @m "k") 1) } @m))) "k")))
+                    (let ((hitE (object/get (array/reduce @gotE { k: 0 } (fn m e (if (and (< (object/get @m "k") (array/len @wantE)) (let ((x (array/nth @wantE (object/get @m "k")))) (array/every (array/filter (object/keys @x) (fn key (!= @key "optionsAt"))) (fn key (= (json/stringify (if (= @key "key") (let ((ka (array/nth (object/get @e "args") (let ((oa (object/get @x "optionsAt" 2))) (if (validate/number @oa) @oa 2))))) (if (validate/object @ka) (object/get @ka "key") null)) (if (str/startsWith @key "arg") (array/nth (object/get @e "args") (str/to-number (str/slice @key 3 (str/len @key)))) (object/get @e @key null)))) (json/stringify (object/get @x @key))))))) { k: (+ (object/get @m "k") 1) } @m))) "k")))
                       (if (< @hitE (array/len @wantE)) [(str/concat "step " (array/len @acc) ": effect " @hitE " " (json/stringify (array/nth @wantE @hitE)) " not found in order; actual effects: " (json/stringify @gotE))] []))))
                 (let ((wantX (object/get @ex "exactEmits" null)))
                   (if (== @wantX null)
@@ -234,5 +236,5 @@ orbital GoldensOrbital {
     }
   }
 
-  page "/orb-goldens" as GoldensPage -> OrbGoldens
+  page boot as GoldensOrbitalStart -> OrbGoldens
 }

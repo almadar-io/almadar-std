@@ -135,7 +135,7 @@ orbital RowStorePostgresOrbital {
     countBinds : [PgBind] @description "The binds of the count statement" = []
   }
 
-  trait RowStoreDriver -> RowStoreFlight [integration, instance] {
+  trait RowStoreDriver -> RowStoreFlight [optimistic] {
     initial: ready
 
     config {
@@ -1633,20 +1633,20 @@ orbital RowStorePostgresOrbital {
     }
 
     listens {
-      ROW_READ -> external {
+      ROW_READ -> input {
         key : string!
         entityType : string!
         id : string!
       }
         @description "Read one row of an entity type by id."
         @tier "internal"
-      ROW_LIST -> external {
+      ROW_LIST -> input {
         key : string!
         entityType : string!
       }
         @description "List every row of an entity type."
         @tier "internal"
-      ROWS_QUERY -> external {
+      ROWS_QUERY -> input {
         key : string!
         entityType : string!
         query : RowQuery!
@@ -1654,13 +1654,13 @@ orbital RowStorePostgresOrbital {
       }
         @description "A query ask, pushed down as one parameterised SELECT."
         @tier "internal"
-      ROWS_WRITE -> external {
+      ROWS_WRITE -> input {
         key : string!
         batch : RowWriteBatch!
       }
         @description "Apply a batch of create, upsert, update and delete ops, atomic in BEGIN and COMMIT or stop at the first op that is not applied."
         @tier "internal"
-      ROW_COLLECTION -> external {
+      ROW_COLLECTION -> input {
         entityType : string!
         collection : string!
       }

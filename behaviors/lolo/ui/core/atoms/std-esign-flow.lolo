@@ -33,7 +33,7 @@ orbital SignatureSessionOrbital {
     pendingId : string @description "Unique identifier for a pending action or task." @synonyms "taskId, pendingKey, referenceId" = ""
   }
 
-  trait SignatureSessionBrowse -> SignatureSession [interaction, collection] {
+  trait SignatureSessionBrowse -> SignatureSession {
     initial: loading
 
     state loading {
@@ -323,7 +323,7 @@ orbital SignatureSessionOrbital {
     }
   }
 
-  trait SignatureSessionPersistor -> SignatureSession [lifecycle, instance] {
+  trait SignatureSessionPersistor -> SignatureSession {
     initial: idle
 
     state idle {
@@ -396,7 +396,7 @@ orbital SignatureSessionOrbital {
   ;; completed/delivered/declined onto the session's signed/viewed/declined.
   ;; The send step: a row's "Send for signature" opens a drop zone; dropping the document fires
   ;; SEND_ENVELOPE with the row, which EnvelopeDispatcher dispatches.
-  trait EnvelopeSendDialog -> SignatureSession [interaction, instance] {
+  trait EnvelopeSendDialog -> SignatureSession {
     initial: closed
 
     state closed {
@@ -451,7 +451,7 @@ orbital SignatureSessionOrbital {
     }
   }
 
-  trait EnvelopeDispatcher -> SignatureSession [lifecycle, instance] {
+  trait EnvelopeDispatcher -> SignatureSession {
     initial: idle
 
     state idle {
@@ -461,7 +461,7 @@ orbital SignatureSessionOrbital {
           documentContent: (object/get (array/first ?files) content)
           documentName: (object/get ?row documentName)
           emailSubject: (str/concat "Signature requested: " (object/get ?row documentName))
-          recipientEmail: (object/get ?row recipientEmail)
+          recipientEmail: (str/concat "" (object/get ?row recipientEmail))
           recipientName: (object/get ?row recipientName)
         })
       CHECK_ENVELOPE_STATUS -> polling when (!= (object/get ?row envelopeId) "")

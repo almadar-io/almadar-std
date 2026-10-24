@@ -18,12 +18,12 @@ orbital MlTokenizerOrbital {
     text       : string  = ""
     tokens     : [string] = []
     tokenIds   : [int]    = []
-    tokenCount : int      = 0
+    tokenCount : number   = 0
     request    : DecisionRequest = {}
     status     : "idle" | "checked" = idle
   }
 
-  trait TokenizerRun -> TokenSequence [lifecycle, instance] {
+  trait TokenizerRun -> TokenSequence [client] {
     initial: idle
 
     config {
@@ -101,7 +101,7 @@ orbital MlTokenizerOrbital {
       TOKENIZED -> external {
         tokens : [string]!
         tokenIds : [int]!
-        tokenCount : int!
+        tokenCount : number!
       }
         @description "Text tokenized into a normalized, truncated token sequence with vocabulary ids"
         @tier "primary"
@@ -115,5 +115,5 @@ orbital MlTokenizerOrbital {
     }
   }
 
-  page "/ml-tokenizer" as MlTokenizerPage -> TokenizerRun
+  page boot as MlTokenizerOrbitalStart -> TokenizerRun
 }

@@ -17,7 +17,7 @@ type CrTemplateMeta = { annotations : Map string string }
 type CrTemplate = { metadata : CrTemplateMeta, spec : CrTemplateSpec }
 type CrSpec = { template : CrTemplate }
 type CrDescribe = { spec : CrSpec }
-type CrResources = { known : boolean, cpu : number, memoryGb : number, minInstances : number, maxInstances : number, concurrency : number, gpuCount : number, gpu : string, zonal : boolean }
+type CrResources = { known : boolean, cpu : number, memoryGb : number, minInstances : number, maxInstances : number, concurrency : number, gpuCount : number!, gpu : string, zonal : boolean }
 type CrMonValue = { doubleValue : number, int64Value : string }
 type CrMonPoint = { value : CrMonValue }
 type CrMonLabels = { service_name : string }
@@ -26,9 +26,9 @@ type CrMonSeries = { resource : CrMonResource, points : [CrMonPoint] }
 type CrMonReply = { timeSeries : [CrMonSeries] }
 type CrSeriesSum = { svc : string, value : number }
 type CrSeriesSums = [CrSeriesSum]
-type CrCostRow = { svc : string, gross : string, net : string }
+type CrCostRow = { svc : string, gross : string!, net : string! }
 type CrCost = { svc : string, gross : number, net : number }
-type CrBillRow = { service_name : string, total_cost : string, currency : string }
+type CrBillRow = { service_name : string, total_cost : string!, currency : string }
 type CrApiConfig = { name : string, title : string }
 type CrApi = { config : CrApiConfig }
 type CrEntry = { service : string, cost : number, currency : string }
@@ -82,7 +82,7 @@ orbital CloudRunBoardOrbital {
     }
   }
 
-  trait CloudRunStatus -> CloudRunBoard [integration, instance] {
+  trait CloudRunStatus -> CloudRunBoard [client] {
     initial: idle
 
     state idle {
@@ -324,10 +324,10 @@ orbital CloudRunBoardOrbital {
     }
 
     listens {
-      CLOUD_RUN_LOAD -> external { }
+      CLOUD_RUN_LOAD -> input { }
         @description "Answer the Google Cloud board, from the cache while it is fresh."
         @synonyms "show cloud run, gcp cost"
-      CLOUD_RUN_REFRESH -> external { }
+      CLOUD_RUN_REFRESH -> input { }
         @description "Read the Google Cloud board afresh."
         @synonyms "refresh cloud run"
       CR_RAN {

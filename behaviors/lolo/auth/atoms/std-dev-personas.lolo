@@ -14,11 +14,11 @@ orbital DevPersonasOrbital {
   entity DevPersona [persistent: dev_personas] {
     id : string!
     name : string @description "Shown on the persona switcher and set as the emulator user's display name."
-    email : string @description "Kept off the token claims."
+    email : email @description "Kept off the token claims."
     role : string @description "What a guard on the viewer's role reads; travels as a custom claim so the persona is the same viewer after sign-in."
   }
 
-  trait DevPersonas -> @rebindable DevPersona [integration] {
+  trait DevPersonas -> @rebindable DevPersona {
     initial: ready
 
     state ready {
@@ -183,5 +183,5 @@ orbital DevPersonasOrbital {
     }
   }
 
-  page "/dev-personas" as DevPersonasPage -> DevPersonas
+  page boot as DevPersonasOrbitalStart -> DevPersonas
 }

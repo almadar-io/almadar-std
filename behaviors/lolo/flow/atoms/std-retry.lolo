@@ -12,7 +12,7 @@ orbital RetryOrbital {
     dueAt : number @description "Epoch milliseconds at which the next attempt starts; 0 when none is scheduled." = 0
   }
 
-  trait Retry -> @rebindable RetryRun [lifecycle, instance] {
+  trait Retry -> @rebindable RetryRun [optimistic] {
     initial: idle
 
     state idle {
@@ -150,5 +150,5 @@ orbital RetryOrbital {
     }
   }
 
-  page "/retry" as RetryPage -> Retry
+  page boot as RetryOrbitalStart -> Retry
 }

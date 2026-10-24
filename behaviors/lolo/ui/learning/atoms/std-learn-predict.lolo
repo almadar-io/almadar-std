@@ -38,7 +38,7 @@ orbital PredictOrbital {
     frameIndex : number = 0
     frameCaption : string
     frameValue : number = 0
-    revealSamples : [PredictSample]
+    revealSamples : [PredictSample] = []
     revealCurves : [PredictCurve]
     score : number = 0
     done : boolean = false
@@ -51,7 +51,7 @@ orbital PredictOrbital {
     view : [node]
   }
 
-  trait PredictSim -> @rebindable PredictScene [interaction, instance] {
+  trait PredictSim -> @rebindable PredictScene [client] {
     initial: idle
 
     state idle {
@@ -283,12 +283,13 @@ orbital PredictOrbital {
             (set @entity.correctIndex (if @finished @entity.correctIndex (object/get @next correctIndex)))
             (set @entity.explanation (if @finished @entity.explanation (object/get @next explanation "")))
             (set @entity.feedback (if @finished (str/concat "Round complete — " (str/concat "" @entity.score) " of " (str/concat "" @entity.totalScenarios) " predictions correct.") ""))
-            (set @entity.view (if @finished
-              [
+            (when @finished
+              (set @entity.view [
                 { type: typography, variant: h4, content: "Round Complete" },
                 { type: stat-display, label: "Correct predictions", value: @entity.score, max: @entity.totalScenarios }
-              ]
-              [
+              ]))
+            (when (not @finished)
+              (set @entity.view [
                 { type: card, variant: bordered, padding: md, children: [
                     { type: typography, variant: body, content: @entity.setupText },
                     { type: typography, variant: h4, content: @entity.question }

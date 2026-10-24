@@ -12,7 +12,7 @@ orbital RecordStoreOrbital {
     createdAt : string
   }
 
-  trait RecordStore -> @rebindable StoredRecord [lifecycle, instance] {
+  trait RecordStore -> @rebindable StoredRecord {
     initial: ready
 
     state ready {
@@ -67,19 +67,19 @@ orbital RecordStoreOrbital {
     }
 
     listens {
-      DO_CREATE -> external {
+      DO_CREATE -> input {
         data : @entity!
       }
         @description "Save a new record from a submitted form."
         @synonyms "create, add, save new, submit"
         @tier "domain"
-      DO_UPDATE -> external {
+      DO_UPDATE -> input {
         data : @entity!
       }
         @description "Save the changes to an existing record."
         @synonyms "update, edit, save changes"
         @tier "domain"
-      DO_DELETE -> external {
+      DO_DELETE -> input {
         id : string
       }
         @description "Remove a record."

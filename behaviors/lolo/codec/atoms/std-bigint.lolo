@@ -16,7 +16,7 @@ orbital BigIntOrbital {
     ret : string @description "Which caller the engine that just finished returns to." = ""
   }
 
-  trait BigIntCodec -> BigIntRun [integration, instance] {
+  trait BigIntCodec -> BigIntRun [client] {
     initial: idle
 
     config {
@@ -4392,52 +4392,52 @@ orbital BigIntOrbital {
     }
 
     listens {
-      FROM_BYTES -> external {
+      FROM_BYTES -> input {
         data : string!
       }
         @description "Decode big-endian base64 bytes into limbs."
-      TO_BYTES -> external {
+      TO_BYTES -> input {
         value : [number]!
         size : number
       }
         @description "Encode limbs as big-endian base64, left-padded to size bytes when given."
-      ADD -> external {
+      ADD -> input {
         a : [number]!
         b : [number]!
       }
         @description "Add two numbers."
-      SUB -> external {
+      SUB -> input {
         a : [number]!
         b : [number]!
       }
         @description "Subtract b from a (a >= b)."
-      MUL -> external {
+      MUL -> input {
         a : [number]!
         b : [number]!
       }
         @description "Multiply two numbers."
-      COMPARE -> external {
+      COMPARE -> input {
         a : [number]!
         b : [number]!
       }
         @description "Compare two numbers."
-      DIVMOD -> external {
+      DIVMOD -> input {
         a : [number]!
         b : [number]!
       }
         @description "Quotient and remainder."
-      MOD -> external {
+      MOD -> input {
         a : [number]!
         b : [number]!
       }
         @description "Remainder."
-      MODPOW -> external {
+      MODPOW -> input {
         a : [number]!
         e : [number]!
         m : [number]!
       }
         @description "Modular exponentiation."
-      MODINV -> external {
+      MODINV -> input {
         a : [number]!
         m : [number]!
       }
@@ -4445,5 +4445,5 @@ orbital BigIntOrbital {
     }
   }
 
-  page "/bigint" as BigIntPage -> BigIntCodec
+  page boot as BigIntOrbitalStart -> BigIntCodec
 }

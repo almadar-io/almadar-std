@@ -25,7 +25,7 @@ orbital NameClaimOrbital {
     asking : string @description "The name or holder a NAME_OF / HOLDER_OF read is for." = ""
   }
 
-  trait NameClaimer -> NameClaimRun [integration, instance] {
+  trait NameClaimer -> NameClaimRun [optimistic] {
     initial: idle
 
     config {
@@ -205,18 +205,18 @@ orbital NameClaimOrbital {
     }
 
     listens {
-      CLAIM_NAME -> external {
+      CLAIM_NAME -> input {
         name : string!
         holder : string!
         keepHeld : boolean
       }
         @description "Claim this name for this holder; keepHeld says the holder may not move off the name it already holds."
         @synonyms "claim handle, reserve name, choose username"
-      NAME_OF -> external {
+      NAME_OF -> input {
         holder : string!
       }
         @description "Which name this holder holds."
-      HOLDER_OF -> external {
+      HOLDER_OF -> input {
         name : string!
       }
         @description "Who holds this name."

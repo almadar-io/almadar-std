@@ -7,6 +7,7 @@ app std-semantic-index [
 type SemanticItem = { id : string!, graphId : string, nodeType : string!, name : string, texts : Map string string, numbers : Map string number, lists : Map string [string] }
 type SemanticItems = [SemanticItem]
 type SemanticTextItem = { id : string!, text : string! }
+type SemanticTextItems = [SemanticTextItem]
 type SemanticHit = { id : string!, graphId : string!, nodeId : string!, nodeType : string!, name : string!, score : number! }
 type SemanticHits = [SemanticHit]
 type SemanticResolution = { id : string!, adopted : boolean!, matchId : string!, matchName : string!, score : number! }
@@ -63,7 +64,7 @@ orbital SemanticIndexOrbital {
     semNodeTypes : [string] @intrinsic
     semAnyGraph : boolean @intrinsic = true
     semAnyType : boolean @intrinsic = true
-    semItems : [SemanticItem] @intrinsic
+    semItems : [SemanticItem] @intrinsic = []
     semSkipped : [string] @intrinsic
     semTexts : [SemanticTextItem] @intrinsic
     semQueryVector : [number] @intrinsic
@@ -73,7 +74,7 @@ orbital SemanticIndexOrbital {
     semPendingId : string @intrinsic = ""
     semReply : string @intrinsic = ""
     semReplyMessage : string @intrinsic = ""
-    semEmbeddings : [[number]] @intrinsic
+    semEmbeddings : [[number]] @intrinsic = []
   }
 
   entity SemanticPending [runtime] {
@@ -102,7 +103,7 @@ orbital SemanticIndexOrbital {
     }
   }
 
-  trait SemanticIndex -> @rebindable SemanticRow [integration, instance] {
+  trait SemanticIndex -> @rebindable SemanticRow {
     initial: idle
 
     state idle {
@@ -304,7 +305,7 @@ orbital SemanticIndexOrbital {
           key: @entity.semKey,
           query: @entity.semQuery,
           hits: (array/filter
-            (array/map ?data (fn r { id: @r.id, graphId: @r.graphId, nodeId: @r.nodeId, nodeType: @r.nodeType, name: @r.name, score: (array/cosine @r.embedding @entity.semQueryVector) }))
+            (array/map ?data (fn r { id: @r.id, graphId: (object/get @r graphId ""), nodeId: (object/get @r nodeId ""), nodeType: (object/get @r nodeType ""), name: (object/get @r name ""), score: (array/cosine @r.embedding @entity.semQueryVector) }))
             (fn h (>= @h.score @entity.semFloor)))
         })
 
@@ -391,7 +392,7 @@ orbital SemanticIndexOrbital {
       }
       SemanticPendingDeleted
       SemanticResume {
-        embeddings : [[number]]
+        embeddings : [[number]]!
         model : string
       }
       SEMANTIC_PREPARE
@@ -430,7 +431,7 @@ orbital SemanticIndexOrbital {
       }
       SemanticPendingDeleted
       SemanticResume {
-        embeddings : [[number]]
+        embeddings : [[number]]!
         model : string
       }
       SemanticEmbedFailed {

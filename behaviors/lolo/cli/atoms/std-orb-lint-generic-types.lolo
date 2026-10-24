@@ -8,31 +8,30 @@ uses Spec from "almadar-std/lint-generic-types"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type FieldShape = string | number | boolean | [FieldShape] | Map string FieldShape
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type GenericTypesEntity = { name : string, fields : [FieldShape] }
+type GenericTypesConfigKnob = { type : string }
+type GenericTypesEmit = { event : string, payloadSchema : [FieldShape] }
+type GenericTypesEvent = { key : string, payloadSchema : [FieldShape] }
+type GenericTypesMachine = { events : [GenericTypesEvent] }
+type GenericTypesTrait = { name : string, config : Map string GenericTypesConfigKnob, emits : [GenericTypesEmit], stateMachine : GenericTypesMachine }
+type GenericTypesOrbital = { name : string, entity : GenericTypesEntity, auxiliaryEntities : [GenericTypesEntity], types : Map string [FieldShape], traits : [GenericTypesTrait] }
+type GenericTypesProgram = { orbitals : [GenericTypesOrbital]! }
 
 orbital OrbLintGenericTypesOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
   entity OrbLintGenericTypesRun [runtime] {
     id : string!
     findings : [OrbFinding] = []
   }
 
-  trait OrbLintGenericTypes -> OrbLintGenericTypesRun [integration] {
+  trait OrbLintGenericTypes -> OrbLintGenericTypesRun [optimistic] {
     initial: ready
 
     state ready {
       INIT -> ready
-      LINT_RUN -> reading
-        (set @entity.findings [])
-        (os/read-file { anchor: "cwd" path: @payload.file } { key: "file" emit: { success: LINT_FILE_READ, failure: LINT_FILE_UNREAD } })
-      LINT_FINISH -> ready
-        (emit LINT_FOUND { rule: "generic-types", findings: @entity.findings })
-    }
-
-    state reading {
-      INIT -> reading
-      LINT_FILE_READ -> reading
-        (program/read (bytes/to-string @payload.data) { emit: { success: LINT_PROGRAM_READ, failure: LINT_FILE_UNREAD } })
-      LINT_PROGRAM_READ -> ready
-        (set @entity.findings (let ((orbitals (object/get @payload.result "orbitals")))
+      LINT_INPUT -> ready
+        (set @entity.findings (let ((orbitals : [GenericTypesOrbital] (object/get @payload.program "orbitals" [])))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
             (let ((orb (array/nth @orbitals @oi)))
               (array/concat
@@ -117,28 +116,13 @@ orbital OrbLintGenericTypesOrbital {
                             (array/map (object/get @k "properties" []) (fn h { rel: (str/concat "." @nm (object/get @h "rel")), ty: (object/get @h "ty") })))))
                       []))) FieldShape) (fn h { code: "ORB_T_GENERIC_TYPE_DEPRECATED", path: (str/concat (object/get @x "w") (object/get @h "rel")), message: (str/concat "Payload field declares the generic type '" (object/get @h "ty") "' — generic types (`json`, shapeless `object`, `any`, `scalar`) are not allowed in a declaration position."), suggestion: "Replace the generic type: renderable content → `node`; structured data → an inline `{ k: T }` shape, a named `type` alias, or `Map K V`; a value of several kinds → a named tagged-union `type` alias (or the concrete primitive); the row of an entity a config knob names → `@entity @config.<knob>`; the row of the linked entity → `@entity @config.<knob>`; genuinely polymorphic atoms → a declared type parameter.", severity: "error" }))))))))))))))))))
         (emit LINT_FINISH { })
-      LINT_FILE_UNREAD -> ready
-        (emit LINT_UNREAD { rule: "generic-types" })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "generic-types", findings: @entity.findings })
     }
 
     emits {
-      LINT_UNREAD -> external { rule : string! }
-        @description "This rule could not read or lower the file."
-        @tier "internal"
-      LINT_RUN -> external { file : string! }
-        @description "The lint request this trait answers, from the cli trait or the umbrella."
-        @tier "internal"
       LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
         @description "This rule's findings for the file, offered to the lint-all umbrella."
-        @tier "internal"
-      LINT_FILE_READ { data : bytes! }
-        @description "The file read."
-        @tier "internal"
-      LINT_FILE_UNREAD { error : string }
-        @description "The file could not be read or lowered."
-        @tier "internal"
-      LINT_PROGRAM_READ { result : string }
-        @description "The file lowered by program/read."
         @tier "internal"
       LINT_FINISH { }
         @description "Internal: answer with the verdict."
@@ -146,11 +130,13 @@ orbital OrbLintGenericTypesOrbital {
     }
 
     listens {
-      OrbLintGenericTypesCli.LINT_RUN -> LINT_RUN
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : GenericTypesProgram }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
   }
 
-  trait OrbLintGenericTypesCli -> OrbLintGenericTypesRun [integration] {
+  trait OrbLintGenericTypesCli -> OrbLintGenericTypesRun [client] {
     initial: ready
 
     state ready {
@@ -158,7 +144,7 @@ orbital OrbLintGenericTypesOrbital {
       LINT_CALLED -> ready when (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint generic-types <file>" })
       LINT_CALLED -> waiting when (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
-        (emit LINT_RUN { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
     }
 
     state waiting {
@@ -167,7 +153,7 @@ orbital OrbLintGenericTypesOrbital {
         (emit LINT_ANSWERED { status: 200, body: "lint generic-types: clean" })
       LINT_FOUND -> ready when (and (= @payload.rule "generic-types") (> (array/len @payload.findings) 0))
         (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
-      LINT_UNREAD -> ready when (= @payload.rule "generic-types")
+      LINT_INPUT_UNREAD -> ready
         (emit LINT_ANSWERED { status: 500, body: "lint generic-types: the file could not be read or lowered" })
     }
 
@@ -178,14 +164,14 @@ orbital OrbLintGenericTypesOrbital {
       }
         @description "Internal: the command's answer, which the cli hook prints."
         @tier "internal"
-      LINT_RUN -> external { file : string! }
-        @description "Ask the rule trait to lint this file."
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
         @tier "internal"
       LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
         @description "The rule trait's findings for the file."
         @tier "internal"
-      LINT_UNREAD -> external { rule : string! }
-        @description "The rule trait could not read or lower the file."
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
         @tier "internal"
     }
 
@@ -197,9 +183,30 @@ orbital OrbLintGenericTypesOrbital {
         @description "Run `orb lint generic-types` with its arguments and working directory."
         @synonyms "orb lint generic-types, duplicate field names"
       OrbLintGenericTypes.LINT_FOUND -> LINT_FOUND
-      OrbLintGenericTypes.LINT_UNREAD -> LINT_UNREAD
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
     }
   }
 
-  page "/orb-lint-generic-types" as OrbLintGenericTypesPage -> OrbLintGenericTypes, OrbLintGenericTypesCli
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintGenericTypesCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintGenericTypesOrbitalStart -> OrbLintGenericTypes, OrbLintGenericTypesCli, OrbLintInput, Packs, Versions
 }

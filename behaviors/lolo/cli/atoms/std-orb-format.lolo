@@ -1,0 +1,131 @@
+app std-orb-format [
+  version: "1.0.0",
+  inbound: ["cli-format"],
+  fs: { cwd: "**": [read, write] },
+  description: "std-orb-format — the `orb format <file> [--write]` command (spec/cli/orb-format.lolo; port of orbital-cli commands/parse.rs format_schema). It reads the file (os/read-file) and formats its text with program/print { source }: a .lolo file through the authored-AST formatter with its comments kept, a .orb file as JSON with sorted keys. Without --write the formatted text is the answer. With --write the file is rewritten (os/write-file) and the answer is `Formatted <path> (<n> bytes)`, n the byte length of the formatted text. The file must lie under the working directory (the program's fs grant is anchored at cwd; an absolute path outside it is refused by the host). A read, format or write failure answers status 500 with `Error: <message>` on stderr (as the Rust anyhow exit); a missing file, a second word or an unknown flag answers the usage (status 400, exit 2)."
+]
+uses Spec from "almadar-std/orb-format"
+uses Args from "std/behaviors/std-args"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
+
+orbital OrbFormatOrbital {
+  entity FormatRun [runtime] {
+    id : string!
+    cwd : string = ""
+    file : string = ""
+    path : string = ""
+    write : boolean = false
+    text : string = ""
+  }
+
+  trait ArgsCli = Args.traits.ArgsParser {
+    listens {
+      OrbFormat.FORMAT_ARGS_PARSE -> ARGS_PARSE
+    }
+  }
+
+  trait OrbFormat -> FormatRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      FORMAT_CALLED -> parsing
+        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
+        (emit FORMAT_ARGS_PARSE { stage: "format" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "write" aliases: [] takesValue: false repeatable: false }] })
+    }
+
+    state parsing {
+      INIT -> parsing
+      FORMAT_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (!= (array/len @payload.positionals) 1))
+        (emit FORMAT_ANSWERED { status: 400, body: "usage: orb format <file> [--write]" })
+      FORMAT_ARGS_DONE -> reading when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1))
+        (set @entity.file (array/first @payload.positionals))
+        (set @entity.path (if (os/path-is-absolute (array/first @payload.positionals)) (os/path-relative @entity.cwd (array/first @payload.positionals)) (array/first @payload.positionals)))
+        (set @entity.write (!= (object/get @payload.flags "write") null))
+        (os/read-file { anchor: "cwd" path: (if (os/path-is-absolute (array/first @payload.positionals)) (os/path-relative @entity.cwd (array/first @payload.positionals)) (array/first @payload.positionals)) } { key: "source" emit: { success: FORMAT_READ, failure: FORMAT_READ_FAILED } })
+    }
+
+    state reading {
+      INIT -> reading
+      FORMAT_READ_FAILED -> ready
+        (emit FORMAT_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: Could not read " @entity.file ": " @payload.error) })
+      FORMAT_READ -> printing
+        (program/print null { source: (bytes/to-string @payload.data) } { emit: { success: FORMAT_PRINTED, failure: FORMAT_PRINT_FAILED } })
+    }
+
+    state printing {
+      INIT -> printing
+      FORMAT_PRINT_FAILED -> ready
+        (emit FORMAT_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " @payload.error) })
+      FORMAT_PRINTED -> ready when (not @entity.write)
+        (emit FORMAT_ANSWERED { status: 200, body: @payload.result })
+      FORMAT_PRINTED -> writing when @entity.write
+        (set @entity.text @payload.result)
+        (os/write-file { anchor: "cwd" path: @entity.path } (bytes/from-string @payload.result) { key: "formatted" emit: { success: FORMAT_WRITTEN, failure: FORMAT_WRITE_FAILED } })
+    }
+
+    state writing {
+      INIT -> writing
+      FORMAT_WRITE_FAILED -> ready
+        (emit FORMAT_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: Could not write " @entity.file ": " @payload.error) })
+      FORMAT_WRITTEN -> ready
+        (emit FORMAT_ANSWERED { status: 200, body: (str/concat "Formatted " @entity.file " (" (bytes/length (bytes/from-string @entity.text)) " bytes)") })
+    }
+
+    emits {
+      FORMAT_ANSWERED -> internal {
+        status : number!
+        body : string!
+        stderr : string
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      FORMAT_ARGS_PARSE {
+        stage : string!
+        argv : [string]!
+        flags : [ArgFlag]!
+      }
+        @description "Internal: parse the call's words."
+        @tier "internal"
+      FORMAT_READ { data : bytes! }
+        @description "The file read."
+        @tier "internal"
+      FORMAT_READ_FAILED { error : string }
+        @description "The file could not be read."
+        @tier "internal"
+      FORMAT_PRINTED { result : string! }
+        @description "The formatted text."
+        @tier "internal"
+      FORMAT_PRINT_FAILED { error : string }
+        @description "The text could not be formatted."
+        @tier "internal"
+      FORMAT_WRITTEN { bytes : number }
+        @description "The file rewritten."
+        @tier "internal"
+      FORMAT_WRITE_FAILED { error : string }
+        @description "The file could not be written."
+        @tier "internal"
+    }
+
+    listens {
+      FORMAT_CALLED -> inbound "cli-format" answers FORMAT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb format`."
+        @synonyms "orb format, pretty-print a program, format a lolo file, rewrite a file formatted"
+      FORMAT_ARGS_DONE {
+        stage : string!
+        flags : Map string [string]!
+        positionals : [string]!
+        errors : [string]!
+        words : [string]!
+      }
+        @description "std-args's ARGS_PARSED."
+      ArgsCli.ARGS_PARSED -> FORMAT_ARGS_DONE
+    }
+  }
+
+  page boot as OrbFormatOrbitalStart -> OrbFormat, ArgsCli
+}

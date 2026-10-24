@@ -1,0 +1,19 @@
+app orb-format-spec [
+  version: "1.0.0",
+  inbound: ["cli-format"],
+  description: "Design contract for `orb format <file> [--write]` (port of orbital-cli commands/parse.rs format_schema). The file is read and its text formatted by program/print { source }: .lolo through the authored-AST formatter (comments kept), .orb JSON with sorted keys. FORMAT_PRINTED { result } answers FORMAT_ANSWERED { status: 200, body: result }; with --write the file is rewritten first (os/write-file of the formatted text) and the body is `Formatted <path> (<n> bytes)`, n the byte length. A failure answers status 500 with an empty body and on stderr `Error: Could not read <path>: <reason>`, `Error: Could not write <path>: <reason>` or `Error: <format message>` (Rust's anyhow exit). An empty file answers an empty body, which the hook prints as nothing (Rust prints one newline). No file, a second word or an unknown flag answers 400 `usage: orb format <file> [--write]` (exit 2). Replay goldens: orb-format.replay.goldens.json."
+]
+
+orbital OrbFormatSpec {
+  expects trait OrbFormat {
+    state ready
+    state parsing
+    state reading
+    state printing
+    state writing
+    emits {
+      FORMAT_ANSWERED { status : number!  body : string!  stderr : string }
+    }
+  }
+  expects page boot -> OrbFormat
+}

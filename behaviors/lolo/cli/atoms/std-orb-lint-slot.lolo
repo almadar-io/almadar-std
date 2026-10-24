@@ -7,31 +7,32 @@ app std-orb-lint-slot [
 uses Spec from "almadar-std/lint-slot"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type SlotExpr = string | number | boolean | [SlotExpr?] | Map string SlotExpr?
+type SlotState = { name : string, isInitial : boolean }
+type SlotArm = { from : SlotExpr, to : string, guard : SlotExpr?, effects : [SlotExpr?], event : string }
+type SlotMachine = { states : [SlotState], transitions : [SlotArm] }
+type SlotConfigKnob = { default : SlotExpr }
+type SlotTrait = { name : string, ref : string, stateMachine : SlotMachine, config : Map string SlotConfigKnob }
+type SlotPage = { traits : [SlotTrait] }
+type SlotDomainContext = { category : string }
+type SlotOrbital = { domainContext : SlotDomainContext, pages : [SlotPage], traits : [SlotTrait] }
+type SlotProgram = { orbitals : [SlotOrbital] }
 
 orbital OrbLintSlotOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
   entity OrbLintSlotRun [runtime] {
     id : string!
     findings : [OrbFinding] = []
   }
 
-  trait OrbLintSlot -> OrbLintSlotRun [integration] {
+  trait OrbLintSlot -> OrbLintSlotRun [optimistic] {
     initial: ready
 
     state ready {
       INIT -> ready
-      LINT_RUN -> reading
-        (set @entity.findings [])
-        (os/read-file { anchor: "cwd" path: @payload.file } { key: "file" emit: { success: LINT_FILE_READ, failure: LINT_FILE_UNREAD } })
-      LINT_FINISH -> ready
-        (emit LINT_FOUND { rule: "slot", findings: @entity.findings })
-    }
-
-    state reading {
-      INIT -> reading
-      LINT_FILE_READ -> reading
-        (program/read (bytes/to-string @payload.data) { emit: { success: LINT_PROGRAM_READ, failure: LINT_FILE_UNREAD } })
-      LINT_PROGRAM_READ -> ready
-        (set @entity.findings (let ((orbitals (object/get @payload.result "orbitals" [])))
+      LINT_INPUT -> ready
+        (set @entity.findings (let ((orbitals : [SlotOrbital] (object/get @payload.program "orbitals" [])))
           (let ((isGame (str/includes (str/lower (object/get (object/get (array/first @orbitals) "domainContext" {}) "category" "")) @config.gameWord)))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
             (let ((pgList (object/get (array/nth @orbitals @oi) "pages" [])) (orbTraits (object/get (array/nth @orbitals @oi) "traits" [])))
@@ -47,13 +48,13 @@ orbital OrbLintSlotOrbital {
                                   (arms (array/map (object/get @sm "transitions" []) (fn a
                                     { froms: (let ((raw (object/get @a "from" ""))) (if (validate/array @raw) @raw (array/map [0] (fn z @raw))))
                                       to: (object/get @a "to" "")
-                                      dead: (and (object/has @a "guard") (= (let ((g4 (object/get @a "guard" null))) (if (validate/array @g4) (if (validate/string (array/nth @g4 0)) (let ((op4 (array/nth @g4 0)) (cl (array/filter (array/map (array/range 1 9) (fn i4 (if (= (array/nth @g4 @i4) null) "N" (let ((a4 (array/nth @g4 @i4))) (let ((g3 @a4)) (if (validate/array @g3) (if (validate/string (array/nth @g3 0)) (let ((op3 (array/nth @g3 0)) (cl (array/filter (array/map (array/range 1 9) (fn i3 (if (= (array/nth @g3 @i3) null) "N" (let ((a3 (array/nth @g3 @i3))) (let ((g2 @a3)) (if (validate/array @g2) (if (validate/string (array/nth @g2 0)) (let ((op2 (array/nth @g2 0)) (cl (array/filter (array/map (array/range 1 9) (fn i2 (if (= (array/nth @g2 @i2) null) "N" (let ((a2 (array/nth @g2 @i2))) (let ((g1 @a2)) (if (validate/array @g1) (if (validate/string (array/nth @g1 0)) (let ((op1 (array/nth @g1 0)) (cl (array/filter (array/map (array/range 1 9) (fn i1 (if (= (array/nth @g1 @i1) null) "N" (let ((a1 (array/nth @g1 @i1))) (let ((g0 @a1)) (if (validate/array @g0) "U" (if (validate/boolean @g0) (if @g0 "T" "F") (if (= @g0 null) "F" (if (validate/number @g0) (if (= @g0 0) "F" "T") (if (validate/string @g0) (if (= @g0 "") "F" (if (str/startsWith @g0 (quote "@")) "U" "T")) (if (validate/object @g0) (if (= (array/len (object/keys @g0)) 0) "F" "T") "U"))))))))))) (fn c (!= @c "N"))))) (if (= @op1 "and") (if (array/includes @cl "F") "F" (if (and (> (array/len @cl) 0) (= (array/len (array/filter @cl (fn c (= @c "T")))) (array/len @cl))) "T" "U")) (if (= @op1 "or") (if (array/includes @cl "T") "T" (if (and (> (array/len @cl) 0) (= (array/len (array/filter @cl (fn c (= @c "F")))) (array/len @cl))) "F" "U")) (if (= @op1 "not") (if (= (array/len @cl) 1) (if (= (array/nth @cl 0) "T") "F" (if (= (array/nth @cl 0) "F") "T" "U")) "U") (if (or (= @op1 "=") (= @op1 "==") (= @op1 "!=")) (if (and (= (array/len @cl) 2) (or (validate/boolean (array/nth @g1 1)) (validate/number (array/nth @g1 1)) (= (array/nth @g1 1) null) (and (validate/string (array/nth @g1 1)) (not (str/startsWith (array/nth @g1 1) (quote "@"))))) (or (validate/boolean (array/nth @g1 2)) (validate/number (array/nth @g1 2)) (= (array/nth @g1 2) null) (and (validate/string (array/nth @g1 2)) (not (str/startsWith (array/nth @g1 2) (quote "@")))))) (let ((eq (= (json/stringify (array/nth @g1 1)) (json/stringify (array/nth @g1 2))))) (if (= @eq (!= @op1 "!=")) "T" "F")) "U") "U"))))) (if (= (array/nth @g1 0) null) "F" "T")) (if (validate/boolean @g1) (if @g1 "T" "F") (if (= @g1 null) "F" (if (validate/number @g1) (if (= @g1 0) "F" "T") (if (validate/string @g1) (if (= @g1 "") "F" (if (str/startsWith @g1 (quote "@")) "U" "T")) (if (validate/object @g1) (if (= (array/len (object/keys @g1)) 0) "F" "T") "U"))))))))))) (fn c (!= @c "N"))))) (if (= @op2 "and") (if (array/includes @cl "F") "F" (if (and (> (array/len @cl) 0) (= (array/len (array/filter @cl (fn c (= @c "T")))) (array/len @cl))) "T" "U")) (if (= @op2 "or") (if (array/includes @cl "T") "T" (if (and (> (array/len @cl) 0) (= (array/len (array/filter @cl (fn c (= @c "F")))) (array/len @cl))) "F" "U")) (if (= @op2 "not") (if (= (array/len @cl) 1) (if (= (array/nth @cl 0) "T") "F" (if (= (array/nth @cl 0) "F") "T" "U")) "U") (if (or (= @op2 "=") (= @op2 "==") (= @op2 "!=")) (if (and (= (array/len @cl) 2) (or (validate/boolean (array/nth @g2 1)) (validate/number (array/nth @g2 1)) (= (array/nth @g2 1) null) (and (validate/string (array/nth @g2 1)) (not (str/startsWith (array/nth @g2 1) (quote "@"))))) (or (validate/boolean (array/nth @g2 2)) (validate/number (array/nth @g2 2)) (= (array/nth @g2 2) null) (and (validate/string (array/nth @g2 2)) (not (str/startsWith (array/nth @g2 2) (quote "@")))))) (let ((eq (= (json/stringify (array/nth @g2 1)) (json/stringify (array/nth @g2 2))))) (if (= @eq (!= @op2 "!=")) "T" "F")) "U") "U"))))) (if (= (array/nth @g2 0) null) "F" "T")) (if (validate/boolean @g2) (if @g2 "T" "F") (if (= @g2 null) "F" (if (validate/number @g2) (if (= @g2 0) "F" "T") (if (validate/string @g2) (if (= @g2 "") "F" (if (str/startsWith @g2 (quote "@")) "U" "T")) (if (validate/object @g2) (if (= (array/len (object/keys @g2)) 0) "F" "T") "U"))))))))))) (fn c (!= @c "N"))))) (if (= @op3 "and") (if (array/includes @cl "F") "F" (if (and (> (array/len @cl) 0) (= (array/len (array/filter @cl (fn c (= @c "T")))) (array/len @cl))) "T" "U")) (if (= @op3 "or") (if (array/includes @cl "T") "T" (if (and (> (array/len @cl) 0) (= (array/len (array/filter @cl (fn c (= @c "F")))) (array/len @cl))) "F" "U")) (if (= @op3 "not") (if (= (array/len @cl) 1) (if (= (array/nth @cl 0) "T") "F" (if (= (array/nth @cl 0) "F") "T" "U")) "U") (if (or (= @op3 "=") (= @op3 "==") (= @op3 "!=")) (if (and (= (array/len @cl) 2) (or (validate/boolean (array/nth @g3 1)) (validate/number (array/nth @g3 1)) (= (array/nth @g3 1) null) (and (validate/string (array/nth @g3 1)) (not (str/startsWith (array/nth @g3 1) (quote "@"))))) (or (validate/boolean (array/nth @g3 2)) (validate/number (array/nth @g3 2)) (= (array/nth @g3 2) null) (and (validate/string (array/nth @g3 2)) (not (str/startsWith (array/nth @g3 2) (quote "@")))))) (let ((eq (= (json/stringify (array/nth @g3 1)) (json/stringify (array/nth @g3 2))))) (if (= @eq (!= @op3 "!=")) "T" "F")) "U") "U"))))) (if (= (array/nth @g3 0) null) "F" "T")) (if (validate/boolean @g3) (if @g3 "T" "F") (if (= @g3 null) "F" (if (validate/number @g3) (if (= @g3 0) "F" "T") (if (validate/string @g3) (if (= @g3 "") "F" (if (str/startsWith @g3 (quote "@")) "U" "T")) (if (validate/object @g3) (if (= (array/len (object/keys @g3)) 0) "F" "T") "U"))))))))))) (fn c (!= @c "N"))))) (if (= @op4 "and") (if (array/includes @cl "F") "F" (if (and (> (array/len @cl) 0) (= (array/len (array/filter @cl (fn c (= @c "T")))) (array/len @cl))) "T" "U")) (if (= @op4 "or") (if (array/includes @cl "T") "T" (if (and (> (array/len @cl) 0) (= (array/len (array/filter @cl (fn c (= @c "F")))) (array/len @cl))) "F" "U")) (if (= @op4 "not") (if (= (array/len @cl) 1) (if (= (array/nth @cl 0) "T") "F" (if (= (array/nth @cl 0) "F") "T" "U")) "U") (if (or (= @op4 "=") (= @op4 "==") (= @op4 "!=")) (if (and (= (array/len @cl) 2) (or (validate/boolean (array/nth @g4 1)) (validate/number (array/nth @g4 1)) (= (array/nth @g4 1) null) (and (validate/string (array/nth @g4 1)) (not (str/startsWith (array/nth @g4 1) (quote "@"))))) (or (validate/boolean (array/nth @g4 2)) (validate/number (array/nth @g4 2)) (= (array/nth @g4 2) null) (and (validate/string (array/nth @g4 2)) (not (str/startsWith (array/nth @g4 2) (quote "@")))))) (let ((eq (= (json/stringify (array/nth @g4 1)) (json/stringify (array/nth @g4 2))))) (if (= @eq (!= @op4 "!=")) "T" "F")) "U") "U"))))) (if (= (array/nth @g4 0) null) "F" "T")) (if (validate/boolean @g4) (if @g4 "T" "F") (if (= @g4 null) "F" (if (validate/number @g4) (if (= @g4 0) "F" "T") (if (validate/string @g4) (if (= @g4 "") "F" (if (str/startsWith @g4 (quote "@")) "U" "T")) (if (validate/object @g4) (if (= (array/len (object/keys @g4)) 0) "F" "T") "U"))))))) "F"))
+                                      dead: (and (object/has @a "guard") (= (let ((g4 (object/get @a "guard" null))) (if (validate/array @g4) (if (validate/string (array/nth @g4 0)) (let ((op4 (array/nth @g4 0)) (cl (array/filter (array/map (array/range 1 9) (fn i4 (if (= (array/nth @g4 @i4) null) "N" (let ((a4 (array/nth @g4 @i4))) (let ((g3 @a4)) (if (validate/array @g3) (if (validate/string (array/nth @g3 0)) (let ((op3 (array/nth @g3 0)) (cl (array/filter (array/map (array/range 1 9) (fn i3 (if (= (array/nth @g3 @i3) null) "N" (let ((a3 (array/nth @g3 @i3))) (let ((g2 @a3)) (if (validate/array @g2) (if (validate/string (array/nth @g2 0)) (let ((op2 (array/nth @g2 0)) (cl (array/filter (array/map (array/range 1 9) (fn i2 (if (= (array/nth @g2 @i2) null) "N" (let ((a2 (array/nth @g2 @i2))) (let ((g1 @a2)) (if (validate/array @g1) (if (validate/string (array/nth @g1 0)) (let ((op1 (array/nth @g1 0)) (cl (array/filter (array/map (array/range 1 9) (fn i1 (if (= (array/nth @g1 @i1) null) "N" (let ((a1 (array/nth @g1 @i1))) (let ((g0 @a1)) (if (validate/array @g0) "U" (if (validate/boolean @g0) (if @g0 "T" "F") (if (= @g0 null) "F" (if (validate/number @g0) (if (= @g0 0) "F" "T") (if (validate/string @g0) (if (= @g0 "") "F" (if (str/startsWith @g0 (quote "@")) "U" "T")) (if (validate/object @g0) (if (= (array/len (object/keys @g0)) 0) "F" "T") "U"))))))))))) (fn c (!= @c "N"))))) (if (= @op1 "and") (if (array/includes @cl "F") "F" (if (and (> (array/len @cl) 0) (= (array/len (array/filter @cl (fn c (= @c "T")))) (array/len @cl))) "T" "U")) (if (= @op1 "or") (if (array/includes @cl "T") "T" (if (and (> (array/len @cl) 0) (= (array/len (array/filter @cl (fn c (= @c "F")))) (array/len @cl))) "F" "U")) (if (= @op1 "not") (if (= (array/len @cl) 1) (if (= (array/nth @cl 0) "T") "F" (if (= (array/nth @cl 0) "F") "T" "U")) "U") (if (or (= @op1 "=") (= @op1 "==") (= @op1 "!=")) (if (and (= (array/len @cl) 2) (or (validate/boolean (array/nth @g1 1)) (validate/number (array/nth @g1 1)) (= (array/nth @g1 1) null) (let ((q11 (array/nth @g1 1))) (and (validate/string @q11) (not (str/startsWith @q11 (quote "@")))))) (or (validate/boolean (array/nth @g1 2)) (validate/number (array/nth @g1 2)) (= (array/nth @g1 2) null) (let ((q12 (array/nth @g1 2))) (and (validate/string @q12) (not (str/startsWith @q12 (quote "@"))))))) (let ((eq (= (json/stringify (array/nth @g1 1)) (json/stringify (array/nth @g1 2))))) (if (= @eq (!= @op1 "!=")) "T" "F")) "U") "U"))))) (if (= (array/nth @g1 0) null) "F" "T")) (if (validate/boolean @g1) (if @g1 "T" "F") (if (= @g1 null) "F" (if (validate/number @g1) (if (= @g1 0) "F" "T") (if (validate/string @g1) (if (= @g1 "") "F" (if (str/startsWith @g1 (quote "@")) "U" "T")) (if (validate/object @g1) (if (= (array/len (object/keys @g1)) 0) "F" "T") "U"))))))))))) (fn c (!= @c "N"))))) (if (= @op2 "and") (if (array/includes @cl "F") "F" (if (and (> (array/len @cl) 0) (= (array/len (array/filter @cl (fn c (= @c "T")))) (array/len @cl))) "T" "U")) (if (= @op2 "or") (if (array/includes @cl "T") "T" (if (and (> (array/len @cl) 0) (= (array/len (array/filter @cl (fn c (= @c "F")))) (array/len @cl))) "F" "U")) (if (= @op2 "not") (if (= (array/len @cl) 1) (if (= (array/nth @cl 0) "T") "F" (if (= (array/nth @cl 0) "F") "T" "U")) "U") (if (or (= @op2 "=") (= @op2 "==") (= @op2 "!=")) (if (and (= (array/len @cl) 2) (or (validate/boolean (array/nth @g2 1)) (validate/number (array/nth @g2 1)) (= (array/nth @g2 1) null) (let ((q21 (array/nth @g2 1))) (and (validate/string @q21) (not (str/startsWith @q21 (quote "@")))))) (or (validate/boolean (array/nth @g2 2)) (validate/number (array/nth @g2 2)) (= (array/nth @g2 2) null) (let ((q22 (array/nth @g2 2))) (and (validate/string @q22) (not (str/startsWith @q22 (quote "@"))))))) (let ((eq (= (json/stringify (array/nth @g2 1)) (json/stringify (array/nth @g2 2))))) (if (= @eq (!= @op2 "!=")) "T" "F")) "U") "U"))))) (if (= (array/nth @g2 0) null) "F" "T")) (if (validate/boolean @g2) (if @g2 "T" "F") (if (= @g2 null) "F" (if (validate/number @g2) (if (= @g2 0) "F" "T") (if (validate/string @g2) (if (= @g2 "") "F" (if (str/startsWith @g2 (quote "@")) "U" "T")) (if (validate/object @g2) (if (= (array/len (object/keys @g2)) 0) "F" "T") "U"))))))))))) (fn c (!= @c "N"))))) (if (= @op3 "and") (if (array/includes @cl "F") "F" (if (and (> (array/len @cl) 0) (= (array/len (array/filter @cl (fn c (= @c "T")))) (array/len @cl))) "T" "U")) (if (= @op3 "or") (if (array/includes @cl "T") "T" (if (and (> (array/len @cl) 0) (= (array/len (array/filter @cl (fn c (= @c "F")))) (array/len @cl))) "F" "U")) (if (= @op3 "not") (if (= (array/len @cl) 1) (if (= (array/nth @cl 0) "T") "F" (if (= (array/nth @cl 0) "F") "T" "U")) "U") (if (or (= @op3 "=") (= @op3 "==") (= @op3 "!=")) (if (and (= (array/len @cl) 2) (or (validate/boolean (array/nth @g3 1)) (validate/number (array/nth @g3 1)) (= (array/nth @g3 1) null) (let ((q31 (array/nth @g3 1))) (and (validate/string @q31) (not (str/startsWith @q31 (quote "@")))))) (or (validate/boolean (array/nth @g3 2)) (validate/number (array/nth @g3 2)) (= (array/nth @g3 2) null) (let ((q32 (array/nth @g3 2))) (and (validate/string @q32) (not (str/startsWith @q32 (quote "@"))))))) (let ((eq (= (json/stringify (array/nth @g3 1)) (json/stringify (array/nth @g3 2))))) (if (= @eq (!= @op3 "!=")) "T" "F")) "U") "U"))))) (if (= (array/nth @g3 0) null) "F" "T")) (if (validate/boolean @g3) (if @g3 "T" "F") (if (= @g3 null) "F" (if (validate/number @g3) (if (= @g3 0) "F" "T") (if (validate/string @g3) (if (= @g3 "") "F" (if (str/startsWith @g3 (quote "@")) "U" "T")) (if (validate/object @g3) (if (= (array/len (object/keys @g3)) 0) "F" "T") "U"))))))))))) (fn c (!= @c "N"))))) (if (= @op4 "and") (if (array/includes @cl "F") "F" (if (and (> (array/len @cl) 0) (= (array/len (array/filter @cl (fn c (= @c "T")))) (array/len @cl))) "T" "U")) (if (= @op4 "or") (if (array/includes @cl "T") "T" (if (and (> (array/len @cl) 0) (= (array/len (array/filter @cl (fn c (= @c "F")))) (array/len @cl))) "F" "U")) (if (= @op4 "not") (if (= (array/len @cl) 1) (if (= (array/nth @cl 0) "T") "F" (if (= (array/nth @cl 0) "F") "T" "U")) "U") (if (or (= @op4 "=") (= @op4 "==") (= @op4 "!=")) (if (and (= (array/len @cl) 2) (or (validate/boolean (array/nth @g4 1)) (validate/number (array/nth @g4 1)) (= (array/nth @g4 1) null) (let ((q41 (array/nth @g4 1))) (and (validate/string @q41) (not (str/startsWith @q41 (quote "@")))))) (or (validate/boolean (array/nth @g4 2)) (validate/number (array/nth @g4 2)) (= (array/nth @g4 2) null) (let ((q42 (array/nth @g4 2))) (and (validate/string @q42) (not (str/startsWith @q42 (quote "@"))))))) (let ((eq (= (json/stringify (array/nth @g4 1)) (json/stringify (array/nth @g4 2))))) (if (= @eq (!= @op4 "!=")) "T" "F")) "U") "U"))))) (if (= (array/nth @g4 0) null) "F" "T")) (if (validate/boolean @g4) (if @g4 "T" "F") (if (= @g4 null) "F" (if (validate/number @g4) (if (= @g4 0) "F" "T") (if (validate/string @g4) (if (= @g4 "") "F" (if (str/startsWith @g4 (quote "@")) "U" "T")) (if (validate/object @g4) (if (= (array/len (object/keys @g4)) 0) "F" "T") "U"))))))) "F"))
                                       slots: (array/filter (array/map (object/get @a "effects" []) (fn e
                                         (if (validate/array @e)
-                                          (if (and (array/includes @config.renderOps (array/nth @e 0)) (validate/string (array/nth @e 1))) (let ((sv (array/nth @e 1))) (if (= (str/slice @sv 0 8) (str/concat (str/decode-uri-component "%40") "config.")) (let ((dv (object/get (object/get (object/get @t "config" {}) (str/slice @sv 8 (str/len @sv)) {}) "default" @sv))) (if (validate/string @dv) @dv @sv)) @sv)) null)
+                                          (let ((sv (array/nth @e 1))) (if (and (array/includes @config.renderOps (array/nth @e 0)) (validate/string @sv)) (if (= (str/slice @sv 0 8) (str/concat (str/decode-uri-component "%40") "config.")) (let ((dv (object/get (object/get (object/get @t "config" {}) (str/slice @sv 8 (str/len @sv)) {}) "default" @sv))) (if (validate/string @dv) @dv @sv)) @sv) null))
                                           (if (and (validate/object @e) (array/some @config.renderOps (fn k (object/has @e @k))))
                                             (let ((rk (array/find @config.renderOps (fn k (object/has @e @k)))))
-                                              (let ((sl (object/get (object/get @e @rk) "slot" null))) (if (validate/string @sl) @sl null)))
+                                              (let ((rv (object/get @e @rk))) (if (validate/object @rv) (let ((sl (object/get @rv "slot" null))) (if (validate/string @sl) @sl null)) null)))
                                             null)))) (fn x (!= @x null)))
                                       event: (object/get @a "event" "") }))))
                               (let ((reach (if (= @init null) [] (array/reduce (object/get @sm "states" []) (array/map [0] (fn z @init))
@@ -94,28 +95,13 @@ orbital OrbLintSlotOrbital {
                                   []))
                             ])))))))))))))))))
         (emit LINT_FINISH { })
-      LINT_FILE_UNREAD -> ready
-        (emit LINT_UNREAD { rule: "slot" })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "slot", findings: @entity.findings })
     }
 
     emits {
-      LINT_UNREAD -> external { rule : string! }
-        @description "This rule could not read or lower the file."
-        @tier "internal"
-      LINT_RUN -> external { file : string! }
-        @description "The lint request this trait answers, from the cli trait or the umbrella."
-        @tier "internal"
       LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
         @description "This rule's findings for the file, offered to the lint-all umbrella."
-        @tier "internal"
-      LINT_FILE_READ { data : bytes! }
-        @description "The file read."
-        @tier "internal"
-      LINT_FILE_UNREAD { error : string }
-        @description "The file could not be read or lowered."
-        @tier "internal"
-      LINT_PROGRAM_READ { result : string }
-        @description "The file lowered by program/read."
         @tier "internal"
       LINT_FINISH { }
         @description "Internal: answer with the verdict."
@@ -142,11 +128,13 @@ orbital OrbLintSlotOrbital {
     }
 
     listens {
-      OrbLintSlotCli.LINT_RUN -> LINT_RUN
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : SlotProgram }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
   }
 
-  trait OrbLintSlotCli -> OrbLintSlotRun [integration] {
+  trait OrbLintSlotCli -> OrbLintSlotRun [client] {
     initial: ready
 
     state ready {
@@ -154,7 +142,7 @@ orbital OrbLintSlotOrbital {
       LINT_CALLED -> ready when (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint slot <file>" })
       LINT_CALLED -> waiting when (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
-        (emit LINT_RUN { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
     }
 
     state waiting {
@@ -163,7 +151,7 @@ orbital OrbLintSlotOrbital {
         (emit LINT_ANSWERED { status: 200, body: "lint slot: clean" })
       LINT_FOUND -> ready when (and (= @payload.rule "slot") (> (array/len @payload.findings) 0))
         (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
-      LINT_UNREAD -> ready when (= @payload.rule "slot")
+      LINT_INPUT_UNREAD -> ready
         (emit LINT_ANSWERED { status: 500, body: "lint slot: the file could not be read or lowered" })
     }
 
@@ -174,14 +162,14 @@ orbital OrbLintSlotOrbital {
       }
         @description "Internal: the command's answer, which the cli hook prints."
         @tier "internal"
-      LINT_RUN -> external { file : string! }
-        @description "Ask the rule trait to lint this file."
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
         @tier "internal"
       LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
         @description "The rule trait's findings for the file."
         @tier "internal"
-      LINT_UNREAD -> external { rule : string! }
-        @description "The rule trait could not read or lower the file."
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
         @tier "internal"
     }
 
@@ -193,9 +181,30 @@ orbital OrbLintSlotOrbital {
         @description "Run `orb lint slot` with its arguments and working directory."
         @synonyms "orb lint slot, seed source"
       OrbLintSlot.LINT_FOUND -> LINT_FOUND
-      OrbLintSlot.LINT_UNREAD -> LINT_UNREAD
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
     }
   }
 
-  page "/orb-lint-slot" as OrbLintSlotPage -> OrbLintSlot, OrbLintSlotCli
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintSlotCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintSlotOrbitalStart -> OrbLintSlot, OrbLintSlotCli, OrbLintInput, Packs, Versions
 }

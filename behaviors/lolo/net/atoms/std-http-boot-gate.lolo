@@ -21,7 +21,7 @@ orbital HttpBootGateOrbital {
     checked : string @description "The environment check so far: pending, clear or refused." = "pending"
   }
 
-  trait BootGate -> BootRun [integration, instance] {
+  trait BootGate -> BootRun [optimistic] {
     initial: reading
 
     config {
@@ -97,7 +97,6 @@ orbital HttpBootGateOrbital {
           held: (array/map (array/filter @payload.entries (fn e @e.configured)) (fn e @e.envVar))
         })
       CRED_UNLISTED -> reading
-        (notify error (str/concat "Couldn't read the credential catalog — " ?error))
         (emit ENV_ASK { missing: [], error: @payload.error })
       CRED_ADMIN_OWED -> reading
         (emit ENV_ASK { missing: @payload.owed, error: "" })
@@ -326,5 +325,29 @@ orbital HttpBootGateOrbital {
     }
   }
 
-  page "/boot-gate" as HttpBootGatePage -> BootGate
+  page boot as HttpBootGateStart -> BootGate
+
+  entity BootGateDemoView [runtime] {
+    id : string!
+  }
+
+  trait BootGateDemo -> BootGateDemoView [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      CATALOG_FAILED -> idle when (!= @payload.error "")
+        (notify error (str/concat "Couldn't read the credential catalog — " @payload.error))
+    }
+
+    listens {
+      BootGate.ENV_ASK -> CATALOG_FAILED
+      CATALOG_FAILED {
+        missing : [string]!
+        error : string!
+      }
+    }
+  }
+
+  page "/boot-gate" as HttpBootGateDemoPage -> BootGateDemo
 }

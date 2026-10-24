@@ -1,0 +1,819 @@
+{
+ "atom": "cli/atoms/std-orb-evaluate.lolo",
+ "trait": "EvaluateEngine",
+ "cases": [
+  {
+   "id": "the call asks std-args to parse the three flags",
+   "steps": [
+    {
+     "trait": "OrbEvaluate",
+     "from": "ready",
+     "event": "EVALUATE_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"[\\\"+\\\",2,3]\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "EVALUATE_ARGS_PARSE",
+        "payload": {
+         "stage": "evaluate",
+         "argv": [
+          "[\"+\",2,3]"
+         ],
+         "flags": [
+          {
+           "name": "entity",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": false
+          },
+          {
+           "name": "payload",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": false
+          },
+          {
+           "name": "output",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an expression argument and flags start the evaluation",
+   "steps": [
+    {
+     "trait": "OrbEvaluate",
+     "from": "parsing",
+     "event": "EVALUATE_ARGS_DONE",
+     "payload": {
+      "stage": "evaluate",
+      "flags": {
+       "entity": [
+        "{\"n\":41}"
+       ],
+       "output": [
+        "json"
+       ]
+      },
+      "positionals": [
+       "[\"+\",\"@entity.n\",1]"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "working",
+      "emits": [
+       {
+        "event": "EVALUATE_START",
+        "payload": {
+         "expr": "[\"+\",\"@entity.n\",1]",
+         "hasExpr": true,
+         "entity": "{\"n\":41}",
+         "hasEntity": true,
+         "payload": "",
+         "hasPayload": false,
+         "output": "json"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "no expression reads standard input and the output defaults to value",
+   "steps": [
+    {
+     "trait": "OrbEvaluate",
+     "from": "parsing",
+     "event": "EVALUATE_ARGS_DONE",
+     "payload": {
+      "stage": "evaluate",
+      "flags": {},
+      "positionals": [],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "working",
+      "emits": [
+       {
+        "event": "EVALUATE_START",
+        "payload": {
+         "expr": "",
+         "hasExpr": false,
+         "entity": "",
+         "hasEntity": false,
+         "payload": "",
+         "hasPayload": false,
+         "output": "value"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a second expression is an unexpected argument",
+   "steps": [
+    {
+     "trait": "OrbEvaluate",
+     "from": "parsing",
+     "event": "EVALUATE_ARGS_DONE",
+     "payload": {
+      "stage": "evaluate",
+      "flags": {},
+      "positionals": [
+       "1",
+       "2"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EVALUATE_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "error: unexpected argument '2' found\n\nUsage: orb evaluate [OPTIONS] [EXPR]\n\nFor more information, try '--help'."
+        }
+       }
+      ],
+      "neverEmits": [
+       "EVALUATE_START"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: an unknown flag is the usage",
+   "steps": [
+    {
+     "trait": "OrbEvaluate",
+     "from": "parsing",
+     "event": "EVALUATE_ARGS_DONE",
+     "payload": {
+      "stage": "evaluate",
+      "flags": {},
+      "positionals": [],
+      "errors": [
+       "unknown flag: --x"
+      ],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EVALUATE_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "error: unknown flag: --x\n\nUsage: orb evaluate [OPTIONS] [EXPR]\n\nFor more information, try '--help'."
+        }
+       }
+      ],
+      "neverEmits": [
+       "EVALUATE_START"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "EVALUATE_START idle",
+   "steps": [
+    {
+     "trait": "EvaluateEngine",
+     "from": "idle",
+     "event": "EVALUATE_START",
+     "payload": {
+      "expr": "[\"+\",2,3]",
+      "hasExpr": true,
+      "entity": "",
+      "hasEntity": false,
+      "payload": "",
+      "hasPayload": false,
+      "output": "value"
+     },
+     "expect": {
+      "state": "checking",
+      "emits": [
+       {
+        "event": "EVALUATE_CHECK",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "EVALUATE_START idle",
+   "steps": [
+    {
+     "trait": "EvaluateEngine",
+     "from": "idle",
+     "event": "EVALUATE_START",
+     "payload": {
+      "expr": "",
+      "hasExpr": false,
+      "entity": "",
+      "hasEntity": false,
+      "payload": "",
+      "hasPayload": false,
+      "output": "value"
+     },
+     "expect": {
+      "state": "reading"
+     }
+    }
+   ]
+  },
+  {
+   "id": "the last chunk of standard input is the expression",
+   "steps": [
+    {
+     "trait": "EvaluateEngine",
+     "from": "reading",
+     "event": "EVALUATE_CHUNK",
+     "payload": {
+      "data": "",
+      "eof": true
+     },
+     "expect": {
+      "state": "checking",
+      "emits": [
+       {
+        "event": "EVALUATE_CHECK",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "source": "WyIrIiwxLDFd"
+   }
+  },
+  {
+   "id": "EVALUATE_CHECK checking",
+   "steps": [
+    {
+     "trait": "EvaluateEngine",
+     "from": "checking",
+     "event": "EVALUATE_CHECK",
+     "payload": {},
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "EVALUATE_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "Error: No S-expression provided. Pass it as an argument or via stdin."
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "text": "  ",
+    "hasEntity": false,
+    "hasPayload": false,
+    "output": "value",
+    "entityText": "",
+    "payloadText": ""
+   }
+  },
+  {
+   "id": "EVALUATE_CHECK checking",
+   "steps": [
+    {
+     "trait": "EvaluateEngine",
+     "from": "checking",
+     "event": "EVALUATE_CHECK",
+     "payload": {},
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "EVALUATE_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "Error: --entity JSON parse error: invalid JSON"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "text": "[\"+\",2,3]",
+    "hasEntity": true,
+    "hasPayload": false,
+    "output": "value",
+    "entityText": "{",
+    "payloadText": ""
+   }
+  },
+  {
+   "id": "EVALUATE_CHECK checking",
+   "steps": [
+    {
+     "trait": "EvaluateEngine",
+     "from": "checking",
+     "event": "EVALUATE_CHECK",
+     "payload": {},
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "EVALUATE_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "Error: --payload JSON parse error: invalid JSON"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "text": "[\"+\",2,3]",
+    "hasEntity": false,
+    "hasPayload": true,
+    "output": "value",
+    "entityText": "",
+    "payloadText": "{"
+   }
+  },
+  {
+   "id": "EVALUATE_CHECK checking",
+   "steps": [
+    {
+     "trait": "EvaluateEngine",
+     "from": "checking",
+     "event": "EVALUATE_CHECK",
+     "payload": {},
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "EVALUATE_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "Error: JSON parse error: invalid JSON"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "text": "not json",
+    "hasEntity": false,
+    "hasPayload": false,
+    "output": "value",
+    "entityText": "",
+    "payloadText": ""
+   }
+  },
+  {
+   "id": "EVALUATE_CHECK checking",
+   "steps": [
+    {
+     "trait": "EvaluateEngine",
+     "from": "checking",
+     "event": "EVALUATE_CHECK",
+     "payload": {},
+     "expect": {
+      "state": "persona",
+      "neverEmits": [
+       "EVALUATE_ANSWERED"
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "text": "[\"+\",2,3]",
+    "hasEntity": false,
+    "hasPayload": false,
+    "output": "value",
+    "entityText": "",
+    "payloadText": ""
+   }
+  },
+  {
+   "id": "EVALUATE_ENV persona",
+   "steps": [
+    {
+     "trait": "EvaluateEngine",
+     "from": "persona",
+     "event": "EVALUATE_ENV",
+     "payload": {
+      "value": ""
+     },
+     "expect": {
+      "state": "evaluating",
+      "emits": [
+       {
+        "event": "EVALUATE_EVAL",
+        "payload": {
+         "expr": [
+          "+",
+          2,
+          3
+         ],
+         "entity": {},
+         "payload": {},
+         "hasViewer": true
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "text": "[\"+\",2,3]",
+    "hasEntity": false,
+    "hasPayload": false,
+    "output": "value",
+    "entityText": "",
+    "payloadText": ""
+   }
+  },
+  {
+   "id": "EVALUATE_ENV persona",
+   "steps": [
+    {
+     "trait": "EvaluateEngine",
+     "from": "persona",
+     "event": "EVALUATE_ENV",
+     "payload": {
+      "value": "{\"id\":\"m1\",\"role\":\"member\"}"
+     },
+     "expect": {
+      "state": "evaluating",
+      "emits": [
+       {
+        "event": "EVALUATE_EVAL",
+        "payload": {
+         "expr": [
+          "+",
+          2,
+          3
+         ],
+         "entity": {},
+         "payload": {},
+         "hasViewer": true,
+         "viewer": {
+          "id": "m1",
+          "role": "member"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "text": "[\"+\",2,3]",
+    "hasEntity": false,
+    "hasPayload": false,
+    "output": "value",
+    "entityText": "",
+    "payloadText": ""
+   }
+  },
+  {
+   "id": "EVALUATE_ENV persona",
+   "steps": [
+    {
+     "trait": "EvaluateEngine",
+     "from": "persona",
+     "event": "EVALUATE_ENV",
+     "payload": {
+      "value": "{bad"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "EVALUATE_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "Error: Persona is not valid JSON: {bad"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "text": "[\"+\",2,3]",
+    "hasEntity": false,
+    "hasPayload": false,
+    "output": "value",
+    "entityText": "",
+    "payloadText": ""
+   }
+  },
+  {
+   "id": "EVALUATE_ENV persona",
+   "steps": [
+    {
+     "trait": "EvaluateEngine",
+     "from": "persona",
+     "event": "EVALUATE_ENV",
+     "payload": {
+      "value": "{\"role\":\"member\"}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "EVALUATE_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "Error: Persona needs an \"id\" (or \"uid\"): {\"role\":\"member\"}"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "text": "[\"+\",2,3]",
+    "hasEntity": false,
+    "hasPayload": false,
+    "output": "value",
+    "entityText": "",
+    "payloadText": ""
+   }
+  },
+  {
+   "id": "EVALUATE_ENV persona",
+   "steps": [
+    {
+     "trait": "EvaluateEngine",
+     "from": "persona",
+     "event": "EVALUATE_ENV",
+     "payload": {
+      "value": "admin"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "EVALUATE_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "Error: Persona \"admin\" is a bare id/role, which resolves against an app's declared [identity] roster \u2014 this schema-less probe accepts only the JSON persona form (e.g. {\"id\":\"member-1\",\"role\":\"member\"})."
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "text": "[\"+\",2,3]",
+    "hasEntity": false,
+    "hasPayload": false,
+    "output": "value",
+    "entityText": "",
+    "payloadText": ""
+   }
+  },
+  {
+   "id": "EVALUATE_VALUE evaluating",
+   "steps": [
+    {
+     "trait": "EvaluateEngine",
+     "from": "evaluating",
+     "event": "EVALUATE_VALUE",
+     "payload": {
+      "value": 5
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "EVALUATE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "5"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "text": "[\"+\",2,3]",
+    "hasEntity": false,
+    "hasPayload": false,
+    "output": "value",
+    "entityText": "",
+    "payloadText": ""
+   }
+  },
+  {
+   "id": "EVALUATE_VALUE evaluating",
+   "steps": [
+    {
+     "trait": "EvaluateEngine",
+     "from": "evaluating",
+     "event": "EVALUATE_VALUE",
+     "payload": {
+      "value": "ab"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "EVALUATE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "ab"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "text": "[\"+\",2,3]",
+    "hasEntity": false,
+    "hasPayload": false,
+    "output": "value",
+    "entityText": "",
+    "payloadText": ""
+   }
+  },
+  {
+   "id": "EVALUATE_VALUE evaluating",
+   "steps": [
+    {
+     "trait": "EvaluateEngine",
+     "from": "evaluating",
+     "event": "EVALUATE_VALUE",
+     "payload": {
+      "value": "ab"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "EVALUATE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "\"ab\""
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "text": "[\"+\",2,3]",
+    "hasEntity": false,
+    "hasPayload": false,
+    "output": "json",
+    "entityText": "",
+    "payloadText": ""
+   }
+  },
+  {
+   "id": "EVALUATE_VALUE evaluating",
+   "steps": [
+    {
+     "trait": "EvaluateEngine",
+     "from": "evaluating",
+     "event": "EVALUATE_VALUE",
+     "payload": {
+      "value": {
+       "a": 1
+      }
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "EVALUATE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "{\n  \"a\": 1\n}"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "text": "[\"+\",2,3]",
+    "hasEntity": false,
+    "hasPayload": false,
+    "output": "pretty",
+    "entityText": "",
+    "payloadText": ""
+   }
+  },
+  {
+   "id": "EVALUATE_VALUE evaluating",
+   "steps": [
+    {
+     "trait": "EvaluateEngine",
+     "from": "evaluating",
+     "event": "EVALUATE_VALUE",
+     "payload": {
+      "value": [
+       1,
+       2
+      ]
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "EVALUATE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "[1,2]"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "text": "[\"+\",2,3]",
+    "hasEntity": false,
+    "hasPayload": false,
+    "output": "yaml",
+    "entityText": "",
+    "payloadText": ""
+   }
+  },
+  {
+   "id": "EVALUATE_REFUSED evaluating",
+   "steps": [
+    {
+     "trait": "EvaluateEngine",
+     "from": "evaluating",
+     "event": "EVALUATE_REFUSED",
+     "payload": {
+      "error": "program/step: boom"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "EVALUATE_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "Error: Evaluation error: program/step: boom"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "text": "[\"+\",2,3]",
+    "hasEntity": false,
+    "hasPayload": false,
+    "output": "value",
+    "entityText": "",
+    "payloadText": ""
+   }
+  }
+ ]
+}

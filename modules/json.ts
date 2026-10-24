@@ -10,7 +10,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
-import { SHAPE, STRING, childrenOf, fn, tv } from '../signature.js';
+import { BOOLEAN, SHAPE, STRING, childrenOf, fn, openShape, tv } from '../signature.js';
 
 export const JSON_OPERATORS: Record<string, StdOperatorMeta> = {
   'json/valid': {
@@ -72,11 +72,14 @@ export const JSON_OPERATORS: Record<string, StdOperatorMeta> = {
     module: 'json',
     category: 'std-json',
     minArity: 1,
-    maxArity: 1,
-    description: 'Serialize any value to a JSON string',
+    maxArity: 2,
+    description: 'Serialize any value to a JSON string, compact and in insertion order. `sorted: true` sorts every object\'s keys (canonical JSON); `pretty: true` indents two spaces, as `JSON.stringify(v, null, 2)`.',
     hasSideEffects: false,
     returnType: 'string',
-    params: [{ name: 'v', type: tv('T'), description: 'The value to serialize' }],
+    params: [
+      { name: 'v', type: tv('T'), description: 'The value to serialize' },
+      { name: 'options', type: openShape({ pretty: BOOLEAN, sorted: BOOLEAN }), description: 'Optional `pretty` and `sorted` flags', optional: true },
+    ],
     example: '["json/stringify", {a: 1}] // => "{\\"a\\":1}"',
   },
 };

@@ -18,16 +18,16 @@ type SampleValueMap = Map string MockValue?
 type ProbeCell = { path : string!, kind : string!, text : string, num : number, url : string, mime : string, kids : [string], keys : [string], val : MockValue? }
 orbital RowResultProbe {
   entity Probe [runtime] { id : string! }
-  trait RowBuilder -> Probe [integration] {
+  trait RowBuilder -> Probe {
     initial: ready
     state ready {
       ASSEMBLE -> ready
         (emit ROW_DONE { row: (object/set EXPR "id" "row") })
     }
-    listens { ASSEMBLE -> external { cells : [ProbeCell]! } }
+    listens { ASSEMBLE -> input { cells : [ProbeCell]! } }
     emits { ROW_DONE -> external { row : Map string MockValue? } }
   }
-  page "/probe" -> RowBuilder
+  page boot as RowResultProbeStart -> RowBuilder
 }
 '''.replace('EXPR', expression)
 with tempfile.NamedTemporaryFile(mode='w', suffix='.lolo', prefix='.seed-row-result-',

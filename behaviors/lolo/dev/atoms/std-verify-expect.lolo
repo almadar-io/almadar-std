@@ -17,15 +17,15 @@ orbital VerifyExpectOrbital {
     expectation : Expectation
   }
 
-  trait Expect -> ExpectRun [integration] {
+  trait Expect -> ExpectRun [client] {
     initial: ready
 
     state ready {
       INIT -> ready
       EXPECT_REQUEST -> ready
-        (let ((pre (object/get @payload.step "precondition" {})))
+        (let ((pre (object/get @payload.step "precondition" { kind: "" })))
           (let ((kind (object/get @pre "kind" ""))
-                (proof (object/get @pre "proof" {})))
+                (proof (object/get @pre "proof" { kind: "" })))
             (let ((gap (if (= @kind "established")
                          (if (> (array/len (object/get @pre "unplannedFields" [])) 0) "multiple-preconditions-unplanned"
                            (if (= (object/get @proof "kind" "") "unproven") (object/get @proof "reason" "") ""))
@@ -48,11 +48,11 @@ orbital VerifyExpectOrbital {
     }
 
     listens {
-      EXPECT_REQUEST -> external { step : ExpectStep! }
+      EXPECT_REQUEST -> input { step : ExpectStep! }
         @description "Project one planned step to its expectation."
         @synonyms "verify expect, step expectation, oracle, precondition gap"
     }
   }
 
-  page "/verify-expect" as VerifyExpectPage -> Expect
+  page boot as VerifyExpectOrbitalStart -> Expect
 }

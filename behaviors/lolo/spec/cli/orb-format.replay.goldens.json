@@ -1,0 +1,511 @@
+{
+ "atom": "cli/atoms/std-orb-format.lolo",
+ "trait": "OrbFormat",
+ "cases": [
+  {
+   "id": "a call parses its words against the write flag",
+   "steps": [
+    {
+     "trait": "OrbFormat",
+     "from": "ready",
+     "event": "FORMAT_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\": [\"a.lolo\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "FORMAT_ARGS_PARSE",
+        "payload": {
+         "stage": "format",
+         "argv": [
+          "a.lolo"
+         ],
+         "flags": [
+          {
+           "name": "write",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: --write is among the words handed to the parser",
+   "steps": [
+    {
+     "trait": "OrbFormat",
+     "from": "ready",
+     "event": "FORMAT_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\": [\"a.lolo\", \"--write\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "FORMAT_ARGS_PARSE",
+        "payload": {
+         "argv": [
+          "a.lolo",
+          "--write"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "one file reads it",
+   "entity": {
+    "cwd": "/w"
+   },
+   "steps": [
+    {
+     "trait": "OrbFormat",
+     "from": "parsing",
+     "event": "FORMAT_ARGS_DONE",
+     "payload": {
+      "stage": "format",
+      "flags": {},
+      "positionals": [
+       "a.lolo"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "reading",
+      "neverEmits": [
+       "FORMAT_ANSWERED"
+      ],
+      "effects": [
+       {
+        "type": "os/read-file",
+        "key": "source",
+        "optionsAt": 1
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: one file with --write reads it too",
+   "entity": {
+    "cwd": "/w"
+   },
+   "steps": [
+    {
+     "trait": "OrbFormat",
+     "from": "parsing",
+     "event": "FORMAT_ARGS_DONE",
+     "payload": {
+      "stage": "format",
+      "flags": {
+       "write": []
+      },
+      "positionals": [
+       "a.lolo"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "reading",
+      "neverEmits": [
+       "FORMAT_ANSWERED"
+      ],
+      "effects": [
+       {
+        "type": "os/read-file",
+        "key": "source",
+        "optionsAt": 1
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "no file answers the usage",
+   "steps": [
+    {
+     "trait": "OrbFormat",
+     "from": "parsing",
+     "event": "FORMAT_ARGS_DONE",
+     "payload": {
+      "stage": "format",
+      "flags": {},
+      "positionals": [],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "exactEmits": [
+       {
+        "event": "FORMAT_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "usage: orb format <file> [--write]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a second word answers the usage",
+   "steps": [
+    {
+     "trait": "OrbFormat",
+     "from": "parsing",
+     "event": "FORMAT_ARGS_DONE",
+     "payload": {
+      "stage": "format",
+      "flags": {},
+      "positionals": [
+       "a.lolo",
+       "b.lolo"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "exactEmits": [
+       {
+        "event": "FORMAT_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "usage: orb format <file> [--write]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an unknown flag answers the usage",
+   "steps": [
+    {
+     "trait": "OrbFormat",
+     "from": "parsing",
+     "event": "FORMAT_ARGS_DONE",
+     "payload": {
+      "stage": "format",
+      "flags": {},
+      "positionals": [
+       "a.lolo"
+      ],
+      "errors": [
+       "unknown flag --bogus"
+      ],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "exactEmits": [
+       {
+        "event": "FORMAT_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "usage: orb format <file> [--write]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a file that cannot be read fails on stderr with its name",
+   "entity": {
+    "file": "a.lolo"
+   },
+   "steps": [
+    {
+     "trait": "OrbFormat",
+     "from": "reading",
+     "event": "FORMAT_READ_FAILED",
+     "payload": {
+      "error": "No such file"
+     },
+     "expect": {
+      "state": "ready",
+      "exactEmits": [
+       {
+        "event": "FORMAT_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "Error: Could not read a.lolo: No such file"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a file read is formatted from its text",
+   "steps": [
+    {
+     "trait": "OrbFormat",
+     "from": "reading",
+     "event": "FORMAT_READ",
+     "payload": {
+      "data": "YXBwICAgeA=="
+     },
+     "expect": {
+      "fired": true,
+      "state": "printing",
+      "effects": [
+       {
+        "type": "program/print"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: an unreadable file is not formatted",
+   "entity": {
+    "file": "a.lolo"
+   },
+   "steps": [
+    {
+     "trait": "OrbFormat",
+     "from": "reading",
+     "event": "FORMAT_READ_FAILED",
+     "payload": {
+      "error": "x"
+     },
+     "expect": {
+      "neverEmits": [
+       "FORMAT_ARGS_PARSE"
+      ],
+      "effects": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "a format failure fails on stderr",
+   "steps": [
+    {
+     "trait": "OrbFormat",
+     "from": "printing",
+     "event": "FORMAT_PRINT_FAILED",
+     "payload": {
+      "error": "Parse error in source: boom"
+     },
+     "expect": {
+      "state": "ready",
+      "exactEmits": [
+       {
+        "event": "FORMAT_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "Error: Parse error in source: boom"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "formatted text without --write is the answer",
+   "entity": {
+    "write": false,
+    "file": "a.lolo"
+   },
+   "steps": [
+    {
+     "trait": "OrbFormat",
+     "from": "printing",
+     "event": "FORMAT_PRINTED",
+     "payload": {
+      "result": "app x [\n  version: \"1.0.0\"\n]"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "exactEmits": [
+       {
+        "event": "FORMAT_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "app x [\n  version: \"1.0.0\"\n]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: the same text with --write is written, not answered",
+   "entity": {
+    "write": true,
+    "file": "a.lolo",
+    "path": "/w/a.lolo"
+   },
+   "steps": [
+    {
+     "trait": "OrbFormat",
+     "from": "printing",
+     "event": "FORMAT_PRINTED",
+     "payload": {
+      "result": "app x [\n  version: \"1.0.0\"\n]"
+     },
+     "expect": {
+      "state": "writing",
+      "neverEmits": [
+       "FORMAT_ANSWERED"
+      ],
+      "effects": [
+       {
+        "type": "os/write-file",
+        "key": "formatted",
+        "optionsAt": 2
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "empty formatted text is an empty answer",
+   "entity": {
+    "write": false
+   },
+   "steps": [
+    {
+     "trait": "OrbFormat",
+     "from": "printing",
+     "event": "FORMAT_PRINTED",
+     "payload": {
+      "result": ""
+     },
+     "expect": {
+      "state": "ready",
+      "exactEmits": [
+       {
+        "event": "FORMAT_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a write failure fails on stderr with its name",
+   "entity": {
+    "file": "a.lolo"
+   },
+   "steps": [
+    {
+     "trait": "OrbFormat",
+     "from": "writing",
+     "event": "FORMAT_WRITE_FAILED",
+     "payload": {
+      "error": "read-only"
+     },
+     "expect": {
+      "state": "ready",
+      "exactEmits": [
+       {
+        "event": "FORMAT_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "Error: Could not write a.lolo: read-only"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a written file reports its path and byte length",
+   "entity": {
+    "file": "a.lolo",
+    "text": "app x"
+   },
+   "steps": [
+    {
+     "trait": "OrbFormat",
+     "from": "writing",
+     "event": "FORMAT_WRITTEN",
+     "payload": {
+      "bytes": 5
+     },
+     "expect": {
+      "state": "ready",
+      "exactEmits": [
+       {
+        "event": "FORMAT_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "Formatted a.lolo (5 bytes)"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a multi-byte text counts its bytes (3 characters, 5 bytes)",
+   "entity": {
+    "file": "a.lolo",
+    "text": "é é"
+   },
+   "steps": [
+    {
+     "trait": "OrbFormat",
+     "from": "writing",
+     "event": "FORMAT_WRITTEN",
+     "payload": {
+      "bytes": 5
+     },
+     "expect": {
+      "state": "ready",
+      "exactEmits": [
+       {
+        "event": "FORMAT_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "Formatted a.lolo (5 bytes)"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -41,7 +41,7 @@ orbital StepRunnerOrbital {
     }
   }
 
-  trait StepRunner -> StepRun [integration, instance] {
+  trait StepRunner -> StepRun [client] {
     initial: idle
 
     state idle {
@@ -138,7 +138,7 @@ orbital StepRunnerOrbital {
     }
 
     listens {
-      STEPS_RUN -> external {
+      STEPS_RUN -> input {
         requestId : string!
         steps : [StepRunStep]!
         prefix : [string]!
@@ -170,5 +170,5 @@ orbital StepRunnerOrbital {
     }
   }
 
-  page "/step-runner" as StepRunnerPage -> StepRunner, StepCli
+  page boot as StepRunnerOrbitalStart -> StepRunner, StepCli
 }

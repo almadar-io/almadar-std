@@ -4,13 +4,14 @@ app std-orb-mcp [
   inbound: ["cli-mcp"],
   exec: ["orb"],
   stdio: [in, out],
-  fs: { cwd: "**": [read], "~/.orb/**": [read] },
-  description: "std-orb-mcp — the `orb mcp [--program <file>]` command: the MCP server as a std program (spec/cli/mcp-server.lolo). The hook cli-mcp takes argv; `--program <file>` names the program whose inbound hooks are served as tools beside the language's. The server version is what `orb --version` answers (`orb X.Y.Z`), run from PATH (os/spawn takes a literal command, so the running binary's own path cannot be spawned). Stdin line framing is owned by std-stdio-lines; each line is acknowledged only after its tool answers, preserving serial requests, fragmented UTF-8 and the final unterminated line. Replies are compact JSON lines on stdout; EOF ends the command after every request is answered. Protocol: initialize, ping, tools/list, tools/call, prompts/list, prompts/get; a parse error is code -32700 with the text `parse error: invalid JSON` (the Rust server's serde wording is not reproduced), an unknown method -32601, an unknown prompt -32602, an unknown tool a tool result with isError. Tools served: validate, format (without write), behaviors (with scopes), describe_behavior, read_behavior ({ path, source } through behavior/source file: true), play, operators, patterns, evaluate (the expression in a one-transition program built with quasiquote, played through program/step with the request entity and payload). Pending, answered with isError naming the reason: complete (the lolo completion rules are not ported), test (result shape), format with write, behaviors without scopes. Hook tools from --program are listed from program/inputs and called by program/dispatch with inbound; the guest-binding gap is recorded in the std ledger."
+  fs: { cwd: "**": [read, write], "~/.orb/**": [read] },
+  description: "std-orb-mcp — the `orb mcp [--program <file>]` command: the MCP server as a std program (spec/cli/mcp-server.lolo). The hook cli-mcp takes argv; `--program <file>` names the program whose inbound hooks are served as tools beside the language's. The server version is what `orb --version` answers (`orb X.Y.Z`), run from PATH (os/spawn takes a literal command, so the running binary's own path cannot be spawned). Stdin line framing is owned by std-stdio-lines; each line is acknowledged only after its tool answers, preserving serial requests, fragmented UTF-8 and the final unterminated line. Replies are compact JSON lines on stdout; EOF ends the command after every request is answered. Protocol: initialize, ping, tools/list, tools/call, prompts/list, prompts/get; a parse error is code -32700 with the text `parse error: invalid JSON` (the Rust server's serde wording is not reproduced), an unknown method -32601, an unknown prompt -32602, an unknown tool a tool result with isError. Tools served: validate, format (the text read from the file formatted by program/print { source }, comments kept; with `write: true` the file is rewritten with that text and the answer is still { source }), behaviors (with `scopes`: those registry folders cataloged; without: every installed package from behavior/packages cataloged one package at a time, vectors omitted, answering { behaviors, skipped: [{ package, error }] } where a package whose behaviors do not lower is reported and skipped; the host indexes a package whole, so the unit skipped is the package, not one behavior), describe_behavior, read_behavior ({ path, source } through behavior/source file: true), play, operators, patterns, evaluate (the expression in a one-transition program built with quasiquote, played through program/step with the request entity and payload). complete, reference and test run std-orb-complete, std-orb-reference and std-orb-test. Hook tools from --program are listed from program/inputs and called by program/dispatch with inbound; the guest-binding gap is recorded in the std ledger."
 ]
 uses Spec from "almadar-std/mcp-server"
 uses Args from "std/behaviors/std-args"
 uses Lines from "std/behaviors/std-stdio-lines"
 uses Complete from "std/behaviors/std-orb-complete"
+uses Eval from "std/behaviors/std-orb-eval"
 uses Reference from "std/behaviors/std-orb-reference"
 uses Test from "std/behaviors/std-orb-test"
 uses Walk from "std/behaviors/std-verify-walk"
@@ -25,9 +26,7 @@ type McpJson = string | number | boolean | [McpJson] | Map string McpJson
 type McpStep = { trait : string!, event : string!, payload : Map string McpJson?, from : string? }
 type McpArgs = { path : string?, final : boolean?, write : boolean?, name : string?, category : string?, scopes : [string]?, exposure : [string]?, spec : string?, steps : [McpStep]?, topic : string?, offset : number?, expr : McpJson?, entity : Map string McpJson?, payload : Map string McpJson?, body : McpJson?, headers : Map string string? }
 type McpParams = { protocolVersion : string?, name : string?, arguments : McpArgs? }
-type McpEmitted = { payload : Map string McpJson? }
-type McpPlayedResult = { emitted : [McpEmitted]? }
-type McpPlayed = { result : McpPlayedResult? }
+type McpPackage = { root : string!, prefix : string!, vectors : string? }
 type McpMessage = { id : McpJson?, method : string?, params : McpParams? }
 
 orbital OrbMcpOrbital {
@@ -46,6 +45,10 @@ orbital OrbMcpOrbital {
     source : string = ""
     cwd : string = ""
     hookNames : [string] = []
+    pkgs : [string] = []
+    pkgCursor : number = 0
+    found : [McpJson] = []
+    skipped : [McpJson] = []
     instructions : string = ""
     tools : [McpJson] = []
   }
@@ -128,7 +131,13 @@ orbital OrbMcpOrbital {
     }
   }
 
-  trait McpServer -> McpSession [integration] {
+  trait EvalEngine = Eval.traits.ExprEvaluator {
+    listens {
+      McpServer.MCP_EVAL_START -> EXPR_EVAL_START
+    }
+  }
+
+  trait McpServer -> McpSession [optimistic] {
     initial: starting
 
     state starting {
@@ -173,7 +182,7 @@ orbital OrbMcpOrbital {
     { name: "format" description: "Pretty-print a .lolo or .orb file in the syntax it is written in. Returns the text; `write: true` also rewrites the file." inputSchema: { type: "object" properties: { path: { type: "string" } write: { type: "boolean" description: "Rewrite the file in place" } } required: ["path"] } }
     { name: "operators" description: "The language's operators (the only functions and effects a program can call). With `name`: that operator's full entry (params, return type, examples). Without: every operator's name, category and description, optionally for one `category`." inputSchema: { type: "object" properties: { name: { type: "string" } category: { type: "string" } } required: [] } }
     { name: "patterns" description: "The UI patterns `render-ui` accepts. With `name`: that pattern's full entry (every prop with its types and enum values). Without: every pattern's name, category and description, optionally for one `category`." inputSchema: { type: "object" properties: { name: { type: "string" } category: { type: "string" } } required: [] } }
-    { name: "behaviors" description: "The installed behaviors you compose with `uses`. With no `scopes`: each installed package's prefix and its topics with a count. With `scopes` (e.g. `almadar-std/ui/core` or a `<prefix>/<topic>`): every behavior there with its description, capabilities, level and traits." inputSchema: { type: "object" properties: { scopes: { type: "array" items: { type: "string" } } exposure: { type: "array" items: { type: "string" enum: ["app", "experience", "palette", "both", "internal"] } } } required: [] } }
+    { name: "behaviors" description: "The installed behaviors you compose with `uses`. With no `scopes`: every installed package's behaviors, a package that does not lower listed under `skipped`. With `scopes` (e.g. `almadar-std/ui/core` or a `<prefix>/<topic>`): every behavior there with its description, capabilities, level and traits." inputSchema: { type: "object" properties: { scopes: { type: "array" items: { type: "string" } } exposure: { type: "array" items: { type: "string" enum: ["app", "experience", "palette", "both", "internal"] } } } required: [] } }
     { name: "describe_behavior" description: "One behavior's contract: its knobs (typed config), events, transitions and pages. `spec` is `<prefix>/<name>`, `<prefix>/<name>.traits.<Trait>` or `<prefix>/<name>.orbitals.<Orbital>`." inputSchema: { type: "object" properties: { spec: { type: "string" } } required: ["spec"] } }
     { name: "read_behavior" description: "A behavior's source file, to read as a worked example of the language. `spec` as in `describe_behavior`." inputSchema: { type: "object" properties: { spec: { type: "string" } } required: ["spec"] } }
     { name: "play" description: "Fire events through a program's state machines in the real kernel, in order. Each step names a `trait` and an `event`, with an optional `payload` and an optional `from` state to start that trait in. Returns, per step, every trait that moved: the transition, the guards tried, the effects run and the events emitted, plus each trait's state after the step." inputSchema: { type: "object" properties: { path: { type: "string" } steps: { type: "array" items: { type: "object" properties: { trait: { type: "string" } event: { type: "string" } payload: { type: "object" } from: { type: "string" } } required: ["trait", "event"] } } } required: ["path", "steps"] } }
@@ -191,7 +200,7 @@ orbital OrbMcpOrbital {
     { name: "format" description: "Pretty-print a .lolo or .orb file in the syntax it is written in. Returns the text; `write: true` also rewrites the file." inputSchema: { type: "object" properties: { path: { type: "string" } write: { type: "boolean" description: "Rewrite the file in place" } } required: ["path"] } }
     { name: "operators" description: "The language's operators (the only functions and effects a program can call). With `name`: that operator's full entry (params, return type, examples). Without: every operator's name, category and description, optionally for one `category`." inputSchema: { type: "object" properties: { name: { type: "string" } category: { type: "string" } } required: [] } }
     { name: "patterns" description: "The UI patterns `render-ui` accepts. With `name`: that pattern's full entry (every prop with its types and enum values). Without: every pattern's name, category and description, optionally for one `category`." inputSchema: { type: "object" properties: { name: { type: "string" } category: { type: "string" } } required: [] } }
-    { name: "behaviors" description: "The installed behaviors you compose with `uses`. With no `scopes`: each installed package's prefix and its topics with a count. With `scopes` (e.g. `almadar-std/ui/core` or a `<prefix>/<topic>`): every behavior there with its description, capabilities, level and traits." inputSchema: { type: "object" properties: { scopes: { type: "array" items: { type: "string" } } exposure: { type: "array" items: { type: "string" enum: ["app", "experience", "palette", "both", "internal"] } } } required: [] } }
+    { name: "behaviors" description: "The installed behaviors you compose with `uses`. With no `scopes`: every installed package's behaviors, a package that does not lower listed under `skipped`. With `scopes` (e.g. `almadar-std/ui/core` or a `<prefix>/<topic>`): every behavior there with its description, capabilities, level and traits." inputSchema: { type: "object" properties: { scopes: { type: "array" items: { type: "string" } } exposure: { type: "array" items: { type: "string" enum: ["app", "experience", "palette", "both", "internal"] } } } required: [] } }
     { name: "describe_behavior" description: "One behavior's contract: its knobs (typed config), events, transitions and pages. `spec` is `<prefix>/<name>`, `<prefix>/<name>.traits.<Trait>` or `<prefix>/<name>.orbitals.<Orbital>`." inputSchema: { type: "object" properties: { spec: { type: "string" } } required: ["spec"] } }
     { name: "read_behavior" description: "A behavior's source file, to read as a worked example of the language. `spec` as in `describe_behavior`." inputSchema: { type: "object" properties: { spec: { type: "string" } } required: ["spec"] } }
     { name: "play" description: "Fire events through a program's state machines in the real kernel, in order. Each step names a `trait` and an `event`, with an optional `payload` and an optional `from` state to start that trait in. Returns, per step, every trait that moved: the transition, the guards tried, the effects run and the events emitted, plus each trait's state after the step." inputSchema: { type: "object" properties: { path: { type: "string" } steps: { type: "array" items: { type: "object" properties: { trait: { type: "string" } event: { type: "string" } payload: { type: "object" } from: { type: "string" } } required: ["trait", "event"] } } } required: ["path", "steps"] } }
@@ -271,30 +280,53 @@ orbital OrbMcpOrbital {
         (os/read-file { anchor: "cwd" path: (object/get @entity.args "path") } { key: "source" emit: { success: MCP_FILE, failure: MCP_TOOL_FAILED } })
       MCP_FILE -> working when (!= @entity.tool "format")
         (program/read (bytes/to-string @payload.data) { key: "program" emit: { success: MCP_PROGRAM, failure: MCP_TOOL_FAILED } })
-      MCP_FILE -> working when (and (= @entity.tool "format") (= (object/get @entity.args "write") true))
-        (emit MCP_TOOL_FAILED { error: "format with write is pending its port" })
-      MCP_FILE -> working when (and (= @entity.tool "format") (!= (object/get @entity.args "write") true))
-        (program/read (bytes/to-string @payload.data) { key: "program" emit: { success: MCP_PROGRAM, failure: MCP_TOOL_FAILED } })
+      MCP_FILE -> working when (= @entity.tool "format")
+        (program/print null { source: (bytes/to-string @payload.data) } { emit: { success: MCP_PRINTED, failure: MCP_TOOL_FAILED } })
       MCP_PROGRAM -> working when (= @entity.tool "validate")
         (program/validate @payload.result { final: (= (object/get @entity.args "final") true) emit: { success: MCP_TOOL_DONE, failure: MCP_TOOL_FAILED } })
-      MCP_PROGRAM -> working when (= @entity.tool "format")
-        (program/print @payload.result { emit: { success: MCP_PRINTED, failure: MCP_TOOL_FAILED } })
       MCP_PROGRAM -> working when (= @entity.tool "play")
         (program/step @payload.result (object/get @entity.args "steps") { emit: { success: MCP_TOOL_DONE, failure: MCP_TOOL_FAILED } })
-      MCP_PRINTED -> working
+      MCP_PRINTED -> working when (!= (object/get @entity.args "write") true)
         (emit MCP_TOOL_DONE { result: { source: @payload.result } })
+      MCP_PRINTED -> working when (= (object/get @entity.args "write") true)
+        (set @entity.source @payload.result)
+        (os/write-file { anchor: "cwd" path: (object/get @entity.args "path") } (bytes/from-string @payload.result) { key: "formatted" emit: { success: MCP_FORMAT_WRITTEN, failure: MCP_TOOL_FAILED } })
+      MCP_FORMAT_WRITTEN -> working
+        (emit MCP_TOOL_DONE { result: { source: @entity.source } })
       MCP_RUN -> working when (= @entity.tool "describe_behavior")
         (behavior/describe { behavior: (array/first (str/split (object/get @entity.args "spec") ".traits.")) } { emit: { success: MCP_TOOL_DONE, failure: MCP_TOOL_FAILED } })
       MCP_RUN -> working when (= @entity.tool "read_behavior")
         (behavior/source { behavior: (array/first (str/split (object/get @entity.args "spec") ".traits.")) } { file: true emit: { success: MCP_TOOL_DONE, failure: MCP_TOOL_FAILED } })
       MCP_RUN -> working when (and (= @entity.tool "behaviors") (> (array/len (or (object/get @entity.args "scopes") [])) 0))
-        (behavior/catalog { paths: (object/get @entity.args "scopes"), exposure: (or (object/get @entity.args "exposure") []) } { vectors: false emit: { success: MCP_TOOL_DONE, failure: MCP_TOOL_FAILED } })
+        (behavior/catalog { paths: (object/get @entity.args "scopes"), exposure: (or (object/get @entity.args "exposure") []) } { vectors: false } { emit: { success: MCP_CATALOGED, failure: MCP_TOOL_FAILED } })
+      MCP_CATALOGED -> working
+        (emit MCP_TOOL_DONE { result: { behaviors: @payload.result } })
       MCP_RUN -> working when (and (= @entity.tool "behaviors") (= (array/len (or (object/get @entity.args "scopes") [])) 0))
-        (emit MCP_TOOL_FAILED { error: "behaviors without scopes (installed topics) is pending its port" })
+        (behavior/packages { emit: { success: MCP_PACKAGES, failure: MCP_TOOL_FAILED } })
+      MCP_PACKAGES -> working
+        (set @entity.pkgs (array/map @payload.result (fn p (object/get @p "prefix"))))
+        (set @entity.pkgCursor 0)
+        (set @entity.found [])
+        (set @entity.skipped [])
+        (emit MCP_PKG_NEXT { })
+      MCP_PKG_NEXT -> working when (< @entity.pkgCursor (array/len @entity.pkgs))
+        (behavior/catalog { paths: [(array/nth @entity.pkgs @entity.pkgCursor)], exposure: (or (object/get @entity.args "exposure") []) } { vectors: false } { emit: { success: MCP_PKG_CATALOGED, failure: MCP_PKG_FAILED } })
+      MCP_PKG_NEXT -> working when (>= @entity.pkgCursor (array/len @entity.pkgs))
+        (emit MCP_TOOL_DONE { result: { behaviors: @entity.found, skipped: @entity.skipped } })
+      MCP_PKG_CATALOGED -> working
+        (set @entity.found (array/concat @entity.found @payload.result))
+        (set @entity.pkgCursor (+ @entity.pkgCursor 1))
+        (emit MCP_PKG_NEXT { })
+      MCP_PKG_FAILED -> working
+        (set @entity.skipped (array/append @entity.skipped { package: (array/nth @entity.pkgs @entity.pkgCursor), error: @payload.error }))
+        (set @entity.pkgCursor (+ @entity.pkgCursor 1))
+        (emit MCP_PKG_NEXT { })
       MCP_RUN -> working when (= @entity.tool "evaluate")
-        (program/step (quasiquote { name: "evalprog" version: "1.0.0" orbitals: [{ name: "EvalOrbital" entity: { name: "EvalRow" persistence: "runtime" fields: [{ name: "id" type: "string" required: true }] } traits: [{ name: "Eval" category: "integration" linkedEntity: "EvalRow" emits: [{ event: "EVALUATED", payloadSchema: [{ name: "value", type: "string" }] }] stateMachine: { states: [{ name: "idle" isInitial: true }] events: [{ key: "INIT" name: "Initialize" }, { key: "EVAL" name: "Eval" }] transitions: [{ from: "idle" to: "idle" event: "INIT" }, { from: "idle" to: "idle" event: "EVAL" effects: [["emit", "EVALUATED", { value: (unquote (object/get @entity.args "expr")) }]] }] } scope: "instance" }] pages: [{ name: "Eval" path: "/eval" traits: [{ ref: "Eval" }] }] }] schemaVersion: 1 }) [{ orbital: "EvalOrbital" trait: "Eval" from: "idle" event: "EVAL" payload: (or (object/get @entity.args "payload") (json/parse "{}" McpJson)) entity: (object/merge { id: "e" } (or (object/get @entity.args "entity") (json/parse "{}" McpJson))) }] { emit: { success: MCP_STEPPED, failure: MCP_TOOL_FAILED } })
-      MCP_STEPPED -> working
-        (emit MCP_TOOL_DONE { result: { value: (object/get (object/get (array/first (object/get (object/get (array/first @payload.result) "result") "emitted")) "payload") "value") } })
+        (emit MCP_EVAL_START { expr: (object/get @entity.args "expr"), entity: (or (object/get @entity.args "entity") (json/parse "{}" McpJson)), payload: (or (object/get @entity.args "payload") (json/parse "{}" McpJson)), hasViewer: false })
+      MCP_EVAL_DONE -> working
+        (emit MCP_TOOL_DONE { result: { value: @payload.value } })
+      MCP_EVAL_FAILED -> working
+        (emit MCP_TOOL_FAILED { error: @payload.error })
       MCP_RUN -> working when (= @entity.tool "complete")
         (emit MCP_COMPLETE_START { file: (object/get @entity.args "path"), offset: (object/get @entity.args "offset") })
       MCP_COMPLETE_ANSWERED -> working when (= @payload.status 200)
@@ -308,7 +340,7 @@ orbital OrbMcpOrbital {
       MCP_REFERENCE_ANSWERED -> working when (!= @payload.status 200)
         (emit MCP_TOOL_FAILED { error: @payload.body })
       MCP_RUN -> working when (= @entity.tool "test")
-        (emit MCP_TEST_START { cwd: @entity.cwd, file: (object/get @entity.args "path"), traitFilter: "", report: "json", verbose: false })
+        (emit MCP_TEST_START { cwd: @entity.cwd, file: (object/get @entity.args "path"), traitFilter: "", report: "json" })
       MCP_TEST_ANSWERED -> working when (and (json/valid @payload.body) (str/startsWith (str/trim @payload.body) "{"))
         (emit MCP_TOOL_DONE { result: (json/parse @payload.body McpJson) })
       MCP_TEST_ANSWERED -> working when (not (and (json/valid @payload.body) (str/startsWith (str/trim @payload.body) "{")))
@@ -425,14 +457,42 @@ orbital OrbMcpOrbital {
         @description "os/read-file: the tool's file."
         @tier "internal"
       MCP_PROGRAM {
-        result : string
+        result : SExpr!
       }
         @description "program/read's success."
         @tier "internal"
       MCP_PRINTED {
-        result : string
+        result : string!
       }
         @description "program/print's success."
+        @tier "internal"
+      MCP_FORMAT_WRITTEN {
+        bytes : number
+      }
+        @description "os/write-file: the formatted file is rewritten."
+        @tier "internal"
+      MCP_CATALOGED {
+        result : [McpJson]!
+      }
+        @description "behavior/catalog's success for the requested scopes."
+        @tier "internal"
+      MCP_PACKAGES {
+        result : [McpPackage]!
+      }
+        @description "behavior/packages: the installed behavior packages."
+        @tier "internal"
+      MCP_PKG_NEXT { }
+        @description "Internal: catalog the next installed package, or answer when all are done."
+        @tier "internal"
+      MCP_PKG_CATALOGED {
+        result : [McpJson]!
+      }
+        @description "behavior/catalog's success for one installed package."
+        @tier "internal"
+      MCP_PKG_FAILED {
+        error : string
+      }
+        @description "behavior/catalog failed for one installed package: it is reported under skipped."
         @tier "internal"
       MCP_TABLE {
         data : bytes!
@@ -449,7 +509,6 @@ orbital OrbMcpOrbital {
         file : string!
         traitFilter : string!
         report : string!
-        verbose : boolean!
       }
         @description "Internal: run std-orb-test for the test tool."
         @tier "internal"
@@ -464,10 +523,13 @@ orbital OrbMcpOrbital {
       }
         @description "Internal: run std-orb-complete for the complete tool."
         @tier "internal"
-      MCP_STEPPED {
-        result : [McpPlayed]
+      MCP_EVAL_START {
+        expr : McpJson
+        entity : Map string McpJson?
+        payload : Map string McpJson?
+        hasViewer : boolean!
       }
-        @description "program/step: the played request."
+        @description "Internal: run std-orb-eval for the evaluate tool."
         @tier "internal"
       MCP_TOOL_DONE {
         result : McpJson
@@ -503,6 +565,14 @@ orbital OrbMcpOrbital {
         body : string!
       }
         @description "std-orb-complete's COMPLETE_ANSWERED."
+      MCP_EVAL_DONE {
+        value : McpJson
+      }
+        @description "std-orb-eval's EXPR_EVAL_DONE."
+      MCP_EVAL_FAILED {
+        error : string
+      }
+        @description "std-orb-eval's EXPR_EVAL_FAILED."
       MCP_ARGS_DONE {
         stage : string!
         flags : Map string [string]!
@@ -520,10 +590,12 @@ orbital OrbMcpOrbital {
       McpTransport.STDIO_ERROR -> MCP_START_FAILED
       ArgsCli.ARGS_PARSED -> MCP_ARGS_DONE
       CompleteEngine.COMPLETE_ANSWERED -> MCP_COMPLETE_ANSWERED
+      EvalEngine.EXPR_EVAL_DONE -> MCP_EVAL_DONE
+      EvalEngine.EXPR_EVAL_FAILED -> MCP_EVAL_FAILED
       ReferenceEngine.REFERENCE_ANSWERED -> MCP_REFERENCE_ANSWERED
       TestEngine.TEST_ANSWERED -> MCP_TEST_ANSWERED
     }
   }
 
-  page "/mcp" as OrbMcpPage -> McpServer, McpTransport, ArgsCli, CompleteEngine, ReferenceEngine, TestEngine, TestWalk, TestMachine, TestPlan, TestJudge, TestCreditor, MockSeed, MockStream
+  page stdio as Mcp -> McpServer, McpTransport, ArgsCli, CompleteEngine, EvalEngine, ReferenceEngine, TestEngine, TestWalk, TestMachine, TestPlan, TestJudge, TestCreditor, MockSeed, MockStream
 }

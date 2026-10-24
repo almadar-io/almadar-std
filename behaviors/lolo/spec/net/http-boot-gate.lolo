@@ -4,6 +4,7 @@ app http-boot-gate-spec [
 ]
 
 type GateVar = { name : string!, value : string! }
+type BootGateEnv = { authProvider : string, oidcIssuerUrl : string, oidcAudience : string, firebaseProjectId : string, firebaseServiceAccountPath : string, firebaseAuthEmulatorHost : string, firestoreEmulatorHost : string, integrationsMock : boolean }
 
 orbital HttpBootGateSpec {
   expects entity BootRun [runtime] {
@@ -38,11 +39,12 @@ orbital HttpBootGateSpec {
     emits {
       ENV_ASK { missing : [string]!  error : string! }
       CRED_ADMIN_BOOT_CHECK { services : [string]!  held : [string]! }
-      ENV_CHECK { env : Map string string!  production : boolean!  mock : boolean!  missingCredentials : [string]  catalogError : string }
+      ENV_CHECK { env : BootGateEnv!  production : boolean!  mock : boolean!  missingCredentials : [string]  catalogError : string }
       BOOT_CLEARED { }
       BOOT_WARNED { problems : [string]! }
       BOOT_REFUSED { problems : [string]! }
     }
   }
-  expects page "/boot-gate" -> BootGate
+  expects page boot -> BootGate
+  expects page "/boot-gate" -> BootGateDemo
 }

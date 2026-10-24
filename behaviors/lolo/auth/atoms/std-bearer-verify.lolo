@@ -39,7 +39,7 @@ orbital BearerVerifyOrbital {
     @invariant (>= @entity.attempt 0)
   }
 
-  trait BearerVerifier -> BearerCheck [integration, instance] {
+  trait BearerVerifier -> BearerCheck [optimistic] {
     initial: idle
 
     state idle {
@@ -189,7 +189,6 @@ orbital BearerVerifyOrbital {
             (emit X509_PARSE { pem: (array/nth (array/first (object/entries @certs)) 1) })))
       JWKS_UNREACHABLE -> idle
         (emit BEARER_REFUSED { requestId: @entity.requestId, reason: "keys-unavailable" })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Key set unavailable: " @payload.error) })
         (emit BEARER_PUMP {})
     }
 
@@ -401,7 +400,7 @@ orbital BearerVerifyOrbital {
     }
 
     listens {
-      BEARER_VERIFY -> external {
+      BEARER_VERIFY -> input {
         requestId : number
         authorization : string
       }
@@ -440,11 +439,6 @@ orbital BearerVerifyOrbital {
     }
 
     config {
-      statusSlot : slot = system
-        @label "Status slot"
-        @description "Where the atom reports an unreachable key set."
-        @synonyms "status area, slot"
-        @tier "presentation"
       jwksOrigin : url = "https://www.googleapis.com"
         @label "JWKS origin"
         @description "The origin (scheme://host, no path) the signing keys are published at; it must be in the app egress list."
@@ -508,5 +502,36 @@ orbital BearerVerifyOrbital {
     }
   }
 
-  page "/bearer-verify" as BearerVerifyPage -> BearerVerifier
+  page boot as BearerVerifyStart -> BearerVerifier
+
+  entity BearerVerifierDemoView [runtime] {
+    id : string!
+  }
+
+  trait BearerVerifierDemo -> BearerVerifierDemoView [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      REFUSED -> idle when (= @payload.reason "keys-unavailable")
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Key set unavailable" })
+    }
+
+    listens {
+      BearerVerifier.BEARER_REFUSED -> REFUSED
+      REFUSED {
+        reason : string!
+      }
+    }
+
+    config {
+      statusSlot : slot = main
+        @label "Status slot"
+        @description "Where the demo page reports an unreachable key set."
+        @synonyms "status area, slot"
+        @tier "presentation"
+    }
+  }
+
+  page "/bearer-verify" as BearerVerifyDemoPage -> BearerVerifierDemo
 }

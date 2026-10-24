@@ -15,7 +15,7 @@ orbital StoreSelectionOrbital {
     poolMax : number @description "PGPOOL_MAX as a u32; absent when unset or not one."
   }
 
-  trait StoreSelection -> StoreChoice [integration, instance] {
+  trait StoreSelection -> StoreChoice [optimistic] {
     initial: idle
 
     state idle {
@@ -124,12 +124,12 @@ orbital StoreSelectionOrbital {
     }
 
     listens {
-      STORE_SELECT -> external {
+      STORE_SELECT -> input {
       }
         @description "Read the environment and choose the row store."
         @synonyms "select store, choose data backend"
     }
   }
 
-  page "/store-selection" as StoreSelectionPage -> StoreSelection
+  page boot as StoreSelectionOrbitalStart -> StoreSelection
 }

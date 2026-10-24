@@ -67,7 +67,7 @@ orbital OrbPackagesOrbital {
     }
   }
 
-  trait OrbPackages -> PackageCall [integration] {
+  trait OrbPackages -> PackageCall [optimistic] {
     initial: ready
 
     state ready {
@@ -316,7 +316,7 @@ orbital OrbPackagesOrbital {
       PKG_TARGET_NEXT -> resolving when (and (< @entity.cursor (array/len @entity.targets)) (= (object/get (array/nth @entity.targets @entity.cursor) "url") ""))
         (http GET @config.registry (str/concat "/packages/" (str/encode-uri-component (object/get (array/nth @entity.targets @entity.cursor) "name")) "/" (object/get (array/nth @entity.targets @entity.cursor) "version")) { headers: { "accept": "application/json" } } { key: "resolve" emit: { success: PKG_RESOLVED, failure: PKG_RESOLVE_FAILED } })
       PKG_RESOLVED -> downloading when (and (= @payload.status 200) (!= (json/parse @payload.body Resolved) null))
-        (set @entity.targets (array/map (array/range 0 (array/len @entity.targets)) (fn i (if (= @i @entity.cursor) { name: (object/get (array/nth @entity.targets @i) "name"), version: (object/get (array/nth @entity.targets @i) "version"), url: (object/get (json/parse @payload.body Resolved) "url"), integrity: (object/get (json/parse @payload.body Resolved) "integrity") } (array/nth @entity.targets @i)))))
+        (set @entity.targets (let ((resolved (json/parse @payload.body Resolved))) (array/map (array/range 0 (array/len @entity.targets)) (fn i (if (= @i @entity.cursor) { name: (object/get (array/nth @entity.targets @i) "name"), version: (object/get (array/nth @entity.targets @i) "version"), url: (object/get @resolved "url"), integrity: (object/get @resolved "integrity") } (array/nth @entity.targets @i))))))
         (emit PKG_DOWNLOAD { url: (object/get (json/parse @payload.body Resolved) "url") })
       PKG_RESOLVED -> resolving when (or (!= @payload.status 200) (= (json/parse @payload.body Resolved) null))
         (set @entity.refused (array/append @entity.refused (str/concat (object/get (array/nth @entity.targets @entity.cursor) "name") " version " (object/get (array/nth @entity.targets @entity.cursor) "version") ": ORB_PACKAGE_NOT_FOUND (registry answered " @payload.status ")")))
@@ -342,7 +342,7 @@ orbital OrbPackagesOrbital {
         (set @entity.tarballSize (bytes/length @payload.body))
         (set @entity.digest "")
         (set @entity.unpacked false)
-        (emit PKG_HASH { requestId: "tarball", data: @payload.body, encoding: "hex" })
+        (emit PKG_HASH { requestId: "tarball", data: (bytes/from-base64 @payload.body), encoding: "hex" })
       PKG_DOWNLOADED -> resolving when (!= @payload.status 200)
         (set @entity.refused (array/append @entity.refused (str/concat (object/get (array/nth @entity.targets @entity.cursor) "name") ": ORB_PACKAGE_DOWNLOAD (the tarball url answered " @payload.status ")")))
         (emit PACKAGE_REFUSED { name: (object/get (array/nth @entity.targets @entity.cursor) "name"), problem: "ORB_PACKAGE_DOWNLOAD" })
@@ -419,7 +419,7 @@ orbital OrbPackagesOrbital {
       PKG_LOCK_ABSENT { kind : string  error : string }
         @description "Internal: the lockfile read failed."
         @tier "internal"
-      PKG_ROOT { entries : [Scanned] }
+      PKG_ROOT { entries : [Scanned]! }
         @description "Internal: node_modules entries."
         @tier "internal"
       PKG_ROOT_ABSENT { kind : string  error : string }
@@ -428,7 +428,7 @@ orbital OrbPackagesOrbital {
       PKG_SCOPE { }
         @description "Internal: list the next scope directory."
         @tier "internal"
-      PKG_SCOPED { entries : [Scanned] }
+      PKG_SCOPED { entries : [Scanned]! }
         @description "Internal: a scope directory listing."
         @tier "internal"
       PKG_SCOPE_FAILED { kind : string  error : string }
@@ -584,5 +584,5 @@ orbital OrbPackagesOrbital {
     }
   }
 
-  page "/orb-packages" as OrbPackagesPage -> OrbPackages, ArgsCli, Digest
+  page boot as OrbPackagesOrbitalStart -> OrbPackages, ArgsCli, Digest
 }

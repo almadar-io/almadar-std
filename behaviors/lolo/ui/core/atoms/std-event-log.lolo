@@ -3,7 +3,6 @@ app std-event-log [
   description: "std-event-log — generic chronological event feed (Stripe activity log / GitHub PR timeline / Linear event feed style). Renders a vertical `timeline` with type-coded dots, a single horizontal chip-bar of kind filters (All + per-kind), reverse-chronological sort, and an inline form for logging events that weren't auto-captured. `config.kindOptions` maps each kind → status/icon/label so consuming molecules/organisms get type-coded visuals without re-implementing topology. Topology = loading / viewing / backfilling / error."
 ]
 type ObjectSpec = { id : string, label : string, value : string }
-type KindOption = { label : string!, value : string! }
 type FilterSpec = { field : string!, label : string, options : [string] }
 orbital EventLogOrbital {
     type EventLogEntry = { id : string!, title : string!, description : string, date : string, status : "complete" | "active" | "pending" | "error", kind : "created" | "updated" | "approved" | "rejected" }
@@ -12,7 +11,7 @@ orbital EventLogOrbital {
 
     type FilterChip = { id : string!, label : string!, icon : string }
 
-    type EventLogLoaded = Event { data : [ObjectSpec] } "Fired when event entries finish loading"
+    type EventLogLoaded = Event { data : [ObjectSpec]! } "Fired when event entries finish loading"
 
     type EventLogLoadFailed = Event { error : string, code : string } "Fired when fetch fails"
 
@@ -37,7 +36,7 @@ orbital EventLogOrbital {
     errorMessage : string @description "A human-readable message indicating an error condition." @synonyms "error, error message, problem, issue" = ""
   }
 
-  trait EventLogTimeline -> @rebindable EventLogView [interaction, instance] {
+  trait EventLogTimeline -> @rebindable EventLogView   [client]{
     initial: loading
 
     state loading {
@@ -520,7 +519,7 @@ orbital EventLogOrbital {
         @synonyms "abort, stop, dismiss, undo"
         @tier "presentation"
       EventLogLoaded {
-        data : [ObjectSpec]
+        data : [ObjectSpec]!
       }
         @description "Signals the event log has finished loading."
         @synonyms "loaded, ready, initialized"
@@ -567,7 +566,7 @@ orbital EventLogOrbital {
         @synonyms "abort, stop, dismiss, undo"
         @tier "presentation"
       EventLogLoaded {
-        data : [ObjectSpec]
+        data : [ObjectSpec]!
       }
         @description "Signals the event log has finished loading."
         @synonyms "loaded, ready, initialized"

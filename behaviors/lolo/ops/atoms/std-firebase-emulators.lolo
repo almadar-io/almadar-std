@@ -24,7 +24,7 @@ orbital FirebaseEmulatorsOrbital {
     deadline : number @description "When waiting for the ports gives up (ms since the epoch)." = 0
   }
 
-  trait FirebaseEmulators -> EmulatorSuite [integration, instance] {
+  trait FirebaseEmulators -> EmulatorSuite [optimistic] {
     initial: idle
 
     state idle {
@@ -257,12 +257,12 @@ orbital FirebaseEmulatorsOrbital {
     }
 
     listens {
-      EMULATORS_START -> external {
+      EMULATORS_START -> input {
       }
         @description "Start the emulator suite, or reuse the one already listening."
         @synonyms "start emulators, run firebase emulators"
     }
   }
 
-  page "/firebase-emulators" as FirebaseEmulatorsPage -> FirebaseEmulators
+  page boot as FirebaseEmulatorsOrbitalStart -> FirebaseEmulators
 }

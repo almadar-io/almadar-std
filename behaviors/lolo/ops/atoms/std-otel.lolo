@@ -49,10 +49,10 @@ orbital OtelOrbital {
 
   entity OtelExport [runtime] {
     id : string!
-    spans : [OtelSpanRow] = []
+    spans : [OtelSpan] = []
   }
 
-  trait OtelExporter -> OtelExport [integration, instance] {
+  trait OtelExporter -> OtelExport [optimistic] {
     initial: idle
 
     state idle {
@@ -457,7 +457,7 @@ orbital OtelOrbital {
     }
 
     listens {
-      START_SPAN -> external {
+      START_SPAN -> input {
         name : string!
         traceId : string
         parentSpanId : string
@@ -466,21 +466,21 @@ orbital OtelOrbital {
       }
         @description "Start a span. A traceId (32 lowercase hex characters) joins an existing trace; without one a new trace id is minted."
         @synonyms "begin span, open span, start trace"
-      END_SPAN -> external {
+      END_SPAN -> input {
         spanId : string!
         status : "ok" | "error"
         statusMessage : string
       }
         @description "End a span and export every ended span with its events to the collector."
         @synonyms "finish span, close span, stop span"
-      ADD_EVENT -> external {
+      ADD_EVENT -> input {
         spanId : string!
         name : string!
         attributes : Map string OtelAttrValue
       }
         @description "Attach a timed event to an in-flight span."
         @synonyms "span event, annotate span, log on span"
-      RECORD_METRIC -> external {
+      RECORD_METRIC -> input {
         name : string!
         value : number
         type : "counter" | "gauge" | "histogram"
@@ -489,12 +489,12 @@ orbital OtelOrbital {
       }
         @description "Record one metric sample and export it to the collector; type defaults to counter and value to 0."
         @synonyms "emit metric, add sample, increment counter"
-      GET_SPAN -> external {
+      GET_SPAN -> input {
         spanId : string!
       }
         @description "Read a span and its events from the local store."
         @synonyms "inspect span, span lookup"
-      GET_METRICS -> external {
+      GET_METRICS -> input {
       }
         @description "Read the locally stored samples, aggregated per metric name."
         @synonyms "read metrics, metric totals"

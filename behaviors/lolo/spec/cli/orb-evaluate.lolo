@@ -1,0 +1,27 @@
+app orb-evaluate-spec [
+  version: "1.0.0",
+  inbound: ["cli-evaluate"],
+  description: "Design contract for `orb evaluate [EXPR] [--entity JSON] [--payload JSON] [--output value|json|pretty]` (port of orbital-cli utils/evaluate.rs evaluate_sexpr). EVALUATE_START { expr, hasExpr, entity, hasEntity, payload, hasPayload, output } takes the expression from the argument or standard input, checks the JSON of the flags and the expression, resolves @user from ALMADAR_PERSONA (unset: null; a JSON user with an id or uid: that user; a bare id or role is refused), hands the expression to std-orb-eval and prints its value: a string bare and anything else as JSON for value, compact JSON for json, indented JSON for pretty. A refusal answers status 500 on stderr `Error: <reason>`; an unknown flag or a second expression answers the usage (status 400, exit 2)."
+]
+
+orbital OrbEvaluateSpec {
+  expects trait OrbEvaluate {
+    state ready
+    state parsing
+    state working
+    emits {
+      EVALUATE_ANSWERED { status : number!  body : string!  stderr : string }
+    }
+  }
+  expects trait EvaluateEngine {
+    state idle
+    state reading
+    state checking
+    state persona
+    state evaluating
+    emits {
+      EVALUATE_ANSWERED { status : number!  body : string!  stderr : string }
+    }
+  }
+  expects page "/orb-evaluate" -> OrbEvaluate
+}

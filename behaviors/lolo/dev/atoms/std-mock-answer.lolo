@@ -16,7 +16,7 @@ orbital MockAnswerOrbital {
     answer : string @description "The last answer as JSON text." = ""
   }
 
-  trait MockAnswerer -> MockAnswerRun [lifecycle, instance] {
+  trait MockAnswerer -> MockAnswerRun [client] {
     initial: ready
 
     state ready {
@@ -46,13 +46,13 @@ orbital MockAnswerOrbital {
     }
 
     listens {
-      MOCK_VALUE -> external {
+      MOCK_VALUE -> input {
         key : string!
         type : string!
       }
         @description "Answer one flat response-shape field by its type."
         @synonyms "mock field value"
-      MOCK_ANSWER -> external {
+      MOCK_ANSWER -> input {
         action : string!
         shape : Map string ShapeField!
       }
@@ -61,5 +61,5 @@ orbital MockAnswerOrbital {
     }
   }
 
-  page "/mock-answer" as MockAnswerPage -> MockAnswerer
+  page boot as MockAnswerOrbitalStart -> MockAnswerer
 }

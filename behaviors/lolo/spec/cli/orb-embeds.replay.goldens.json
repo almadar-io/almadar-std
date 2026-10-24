@@ -1,0 +1,735 @@
+{
+ "atom": "cli/atoms/std-orb-embeds.lolo",
+ "trait": "EmbedsEngine",
+ "cases": [
+  {
+   "id": "the call asks std-args to parse with the stdin flag table",
+   "steps": [
+    {
+     "trait": "OrbEmbeds",
+     "from": "ready",
+     "event": "EMBEDS_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"a.lolo\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "EMBEDS_ARGS_PARSE",
+        "payload": {
+         "stage": "embeds",
+         "argv": [
+          "a.lolo"
+         ],
+         "flags": [
+          {
+           "name": "stdin",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "one file starts the listing of that file",
+   "steps": [
+    {
+     "trait": "OrbEmbeds",
+     "from": "parsing",
+     "event": "EMBEDS_ARGS_DONE",
+     "payload": {
+      "stage": "embeds",
+      "flags": {},
+      "positionals": [
+       "a.lolo"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "working",
+      "emits": [
+       {
+        "event": "EMBEDS_START",
+        "payload": {
+         "file": "a.lolo",
+         "stdin": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "--stdin starts the listing of standard input",
+   "steps": [
+    {
+     "trait": "OrbEmbeds",
+     "from": "parsing",
+     "event": "EMBEDS_ARGS_DONE",
+     "payload": {
+      "stage": "embeds",
+      "flags": {
+       "stdin": [
+        "true"
+       ]
+      },
+      "positionals": [],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "working",
+      "emits": [
+       {
+        "event": "EMBEDS_START",
+        "payload": {
+         "file": "",
+         "stdin": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "--stdin wins over a named file",
+   "steps": [
+    {
+     "trait": "OrbEmbeds",
+     "from": "parsing",
+     "event": "EMBEDS_ARGS_DONE",
+     "payload": {
+      "stage": "embeds",
+      "flags": {
+       "stdin": [
+        "true"
+       ]
+      },
+      "positionals": [
+       "a.lolo"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "working",
+      "emits": [
+       {
+        "event": "EMBEDS_START",
+        "payload": {
+         "file": "",
+         "stdin": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: no file and no --stdin answers 500 like Rust",
+   "steps": [
+    {
+     "trait": "OrbEmbeds",
+     "from": "parsing",
+     "event": "EMBEDS_ARGS_DONE",
+     "payload": {
+      "stage": "embeds",
+      "flags": {},
+      "positionals": [],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMBEDS_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "Error: orb embeds: pass a .lolo file or --stdin"
+        }
+       }
+      ],
+      "neverEmits": [
+       "EMBEDS_START"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: two files are the usage",
+   "steps": [
+    {
+     "trait": "OrbEmbeds",
+     "from": "parsing",
+     "event": "EMBEDS_ARGS_DONE",
+     "payload": {
+      "stage": "embeds",
+      "flags": {},
+      "positionals": [
+       "a.lolo",
+       "b.lolo"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMBEDS_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb embeds <file.lolo> | --stdin"
+        }
+       }
+      ],
+      "neverEmits": [
+       "EMBEDS_START"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: two files beside --stdin are the usage",
+   "steps": [
+    {
+     "trait": "OrbEmbeds",
+     "from": "parsing",
+     "event": "EMBEDS_ARGS_DONE",
+     "payload": {
+      "stage": "embeds",
+      "flags": {
+       "stdin": [
+        "true"
+       ]
+      },
+      "positionals": [
+       "a.lolo",
+       "b.lolo"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMBEDS_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb embeds <file.lolo> | --stdin"
+        }
+       }
+      ],
+      "neverEmits": [
+       "EMBEDS_START"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: an unknown flag is the usage",
+   "steps": [
+    {
+     "trait": "OrbEmbeds",
+     "from": "parsing",
+     "event": "EMBEDS_ARGS_DONE",
+     "payload": {
+      "stage": "embeds",
+      "flags": {},
+      "positionals": [],
+      "errors": [
+       "unknown flag: --bogus"
+      ],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMBEDS_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb embeds <file.lolo> | --stdin"
+        }
+       }
+      ],
+      "neverEmits": [
+       "EMBEDS_START"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: an unknown flag beside a file is the usage",
+   "steps": [
+    {
+     "trait": "OrbEmbeds",
+     "from": "parsing",
+     "event": "EMBEDS_ARGS_DONE",
+     "payload": {
+      "stage": "embeds",
+      "flags": {},
+      "positionals": [
+       "a.lolo"
+      ],
+      "errors": [
+       "unknown flag: --bogus"
+      ],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMBEDS_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb embeds <file.lolo> | --stdin"
+        }
+       }
+      ],
+      "neverEmits": [
+       "EMBEDS_START"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: --stdin given a value is the usage",
+   "steps": [
+    {
+     "trait": "OrbEmbeds",
+     "from": "parsing",
+     "event": "EMBEDS_ARGS_DONE",
+     "payload": {
+      "stage": "embeds",
+      "flags": {},
+      "positionals": [],
+      "errors": [
+       "flag takes no value: --stdin"
+      ],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMBEDS_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb embeds <file.lolo> | --stdin"
+        }
+       }
+      ],
+      "neverEmits": [
+       "EMBEDS_START"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the engine answer is relayed with its stderr",
+   "steps": [
+    {
+     "trait": "OrbEmbeds",
+     "from": "working",
+     "event": "EMBEDS_DONE",
+     "payload": {
+      "status": 500,
+      "body": "",
+      "stderr": "Error: x"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMBEDS_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "Error: x"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the engine answer is relayed without a stderr",
+   "steps": [
+    {
+     "trait": "OrbEmbeds",
+     "from": "working",
+     "event": "EMBEDS_DONE",
+     "payload": {
+      "status": 200,
+      "body": "[]"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMBEDS_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "[]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a relative file is read from the working directory",
+   "steps": [
+    {
+     "trait": "EmbedsEngine",
+     "from": "idle",
+     "event": "EMBEDS_START",
+     "payload": {
+      "file": "a.lolo",
+      "stdin": false
+     },
+     "expect": {
+      "state": "reading"
+     }
+    }
+   ]
+  },
+  {
+   "id": "an absolute file is read",
+   "steps": [
+    {
+     "trait": "EmbedsEngine",
+     "from": "idle",
+     "event": "EMBEDS_START",
+     "payload": {
+      "file": "/tmp/a.lolo",
+      "stdin": false
+     },
+     "expect": {
+      "state": "reading"
+     }
+    }
+   ]
+  },
+  {
+   "id": "--stdin starts reading standard input",
+   "steps": [
+    {
+     "trait": "EmbedsEngine",
+     "from": "idle",
+     "event": "EMBEDS_START",
+     "payload": {
+      "file": "",
+      "stdin": true
+     },
+     "expect": {
+      "state": "reading"
+     }
+    }
+   ],
+   "entity": {
+    "source": "b2xk"
+   }
+  },
+  {
+   "id": "a read file goes to program/read",
+   "steps": [
+    {
+     "trait": "EmbedsEngine",
+     "from": "reading",
+     "event": "EMBEDS_FILE",
+     "payload": {
+      "data": "YXBwIGEgW3ZlcnNpb246ICIxLjAuMCJdCg=="
+     },
+     "expect": {
+      "state": "listing"
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: an unreadable file answers 500 with the reason",
+   "steps": [
+    {
+     "trait": "EmbedsEngine",
+     "from": "reading",
+     "event": "EMBEDS_FAILED",
+     "payload": {
+      "error": "a.lolo: No such file or directory"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "EMBEDS_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "Error: a.lolo: No such file or directory"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a middle chunk of standard input keeps reading and prints nothing",
+   "steps": [
+    {
+     "trait": "EmbedsEngine",
+     "from": "reading",
+     "event": "EMBEDS_CHUNK",
+     "payload": {
+      "data": "YXBwIGE=",
+      "eof": false
+     },
+     "expect": {
+      "state": "reading",
+      "neverEmits": [
+       "EMBEDS_ANSWERED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the final chunk of standard input goes to program/read",
+   "steps": [
+    {
+     "trait": "EmbedsEngine",
+     "from": "reading",
+     "event": "EMBEDS_CHUNK",
+     "payload": {
+      "data": "",
+      "eof": true
+     },
+     "expect": {
+      "state": "listing"
+     }
+    }
+   ]
+  },
+  {
+   "id": "two chunks then the end are read in order",
+   "steps": [
+    {
+     "trait": "EmbedsEngine",
+     "from": "reading",
+     "event": "EMBEDS_CHUNK",
+     "payload": {
+      "data": "YXBwIGEgW3ZlcnM=",
+      "eof": false
+     },
+     "expect": {
+      "state": "reading"
+     }
+    },
+    {
+     "trait": "EmbedsEngine",
+     "from": "reading",
+     "event": "EMBEDS_CHUNK",
+     "payload": {
+      "data": "aW9uOiAiMSJd",
+      "eof": false
+     },
+     "expect": {
+      "state": "reading"
+     }
+    },
+    {
+     "trait": "EmbedsEngine",
+     "from": "reading",
+     "event": "EMBEDS_CHUNK",
+     "payload": {
+      "data": "",
+      "eof": true
+     },
+     "expect": {
+      "state": "listing"
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a failed read of standard input answers 500",
+   "steps": [
+    {
+     "trait": "EmbedsEngine",
+     "from": "reading",
+     "event": "EMBEDS_FAILED",
+     "payload": {
+      "error": "stdin closed"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "EMBEDS_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "Error: stdin closed"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "one embed prints as one compact JSON line",
+   "steps": [
+    {
+     "trait": "EmbedsEngine",
+     "from": "listing",
+     "event": "EMBEDS_LISTED",
+     "payload": {
+      "result": [
+       {
+        "orbital": "O",
+        "trait": "InlineButtonRender1",
+        "behavior": "Button.traits.ButtonRender",
+        "line": 11,
+        "col": 25
+       }
+      ]
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "EMBEDS_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "[{\"orbital\":\"O\",\"trait\":\"InlineButtonRender1\",\"behavior\":\"Button.traits.ButtonRender\",\"line\":11,\"col\":25}]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "two embeds print in order",
+   "steps": [
+    {
+     "trait": "EmbedsEngine",
+     "from": "listing",
+     "event": "EMBEDS_LISTED",
+     "payload": {
+      "result": [
+       {
+        "orbital": "O",
+        "trait": "InlineButtonRender1",
+        "behavior": "Button.traits.ButtonRender",
+        "line": 11,
+        "col": 25
+       },
+       {
+        "orbital": "P",
+        "trait": "InlineStackRender2",
+        "behavior": "Stack.traits.StackRender",
+        "line": 3,
+        "col": 7
+       }
+      ]
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "EMBEDS_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "[{\"orbital\":\"O\",\"trait\":\"InlineButtonRender1\",\"behavior\":\"Button.traits.ButtonRender\",\"line\":11,\"col\":25},{\"orbital\":\"P\",\"trait\":\"InlineStackRender2\",\"behavior\":\"Stack.traits.StackRender\",\"line\":3,\"col\":7}]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a program with no embed prints an empty array",
+   "steps": [
+    {
+     "trait": "EmbedsEngine",
+     "from": "listing",
+     "event": "EMBEDS_LISTED",
+     "payload": {
+      "result": []
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "EMBEDS_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "[]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a source that does not lower answers 500 with the reason",
+   "steps": [
+    {
+     "trait": "EmbedsEngine",
+     "from": "listing",
+     "event": "EMBEDS_REFUSED",
+     "payload": {
+      "error": "program/read: ORB_L_OPTION_UNKNOWN: `orbital` is not a app modifier at 2:2"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "EMBEDS_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "Error: orb embeds: program/read: ORB_L_OPTION_UNKNOWN: `orbital` is not a app modifier at 2:2"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

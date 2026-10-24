@@ -40,7 +40,7 @@ uses Llm from "std/behaviors/std-llm"
 orbital AgentMemoryOrbital {
   type AgentMemoriesLoaded = Event { data : [AgentMemory]! } "Fired when the stored memories finish loading"
   type AgentMemoriesLoadFailed = Event { error : string, code : string } "Fired when the stored memories fail to load"
-  type MemoryEmbedded = Event { embeddings : [[number]] } "Fired when a memory or query has been embedded"
+  type MemoryEmbedded = Event { embeddings : [[number]]! } "Fired when a memory or query has been embedded"
   type MemoryEmbedFailed = Event { code : string, message : string! } "Fired when embedding fails"
 
   entity AgentMemory [persistent: agentMemories] {
@@ -61,7 +61,7 @@ orbital AgentMemoryOrbital {
     }
   }
 
-  trait AgentMemoryRecall -> @rebindable AgentMemory [lifecycle] {
+  trait AgentMemoryRecall -> @rebindable AgentMemory {
     config {
       recallLimit : number = 3
         @label "Memories recalled per request"
@@ -204,7 +204,7 @@ orbital AgentMemoryOrbital {
       AgentMemoryLlm.LLM_EMBED_RESULT -> MemoryEmbedded
       AgentMemoryLlm.LLM_FAILED -> MemoryEmbedFailed
       MemoryEmbedded {
-        embeddings : [[number]]
+        embeddings : [[number]]!
       }
       MemoryEmbedFailed {
         code : string
@@ -228,7 +228,7 @@ orbital AgentMemoryOrbital {
     }
   }
 
-  trait AgentMemoryBrowse -> @rebindable AgentMemory [interaction, collection] {
+  trait AgentMemoryBrowse -> @rebindable AgentMemory {
     initial: browsing
 
     state browsing {

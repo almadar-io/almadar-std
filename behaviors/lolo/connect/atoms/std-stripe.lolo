@@ -23,7 +23,7 @@ orbital StripeOrbital {
     id : string!
   }
 
-  trait StripeClient -> StripeCall [integration, instance] {
+  trait StripeClient -> StripeCall [optimistic] {
     initial: idle
 
     state idle {
@@ -321,32 +321,32 @@ orbital StripeOrbital {
     }
 
     listens {
-      STRIPE_CREATE_PAYMENT_INTENT -> external {
+      STRIPE_CREATE_PAYMENT_INTENT -> input {
         amount : number!
         currency : string!
         metadata : Map string string
       }
         @description "Create a PaymentIntent for a one-off charge; amount is in the currency's smallest unit."
         @synonyms "charge, pay, one-off payment"
-      STRIPE_CONFIRM_PAYMENT -> external {
+      STRIPE_CONFIRM_PAYMENT -> input {
         paymentIntentId : string!
       }
         @description "Confirm a PaymentIntent, attempting to complete the charge."
         @synonyms "confirm payment, complete charge"
-      STRIPE_REFUND -> external {
+      STRIPE_REFUND -> input {
         paymentIntentId : string!
         amount : number
       }
         @description "Refund a PaymentIntent in full, or in part when amount is given."
         @synonyms "refund payment, return money"
-      STRIPE_CREATE_CUSTOMER -> external {
+      STRIPE_CREATE_CUSTOMER -> input {
         email : string!
         almadarUid : string!
         displayName : string
       }
         @description "Create a Stripe Customer for an Almadar user; the user id is stored as Stripe metadata."
         @synonyms "new customer, billing customer"
-      STRIPE_CREATE_CHECKOUT_SESSION -> external {
+      STRIPE_CREATE_CHECKOUT_SESSION -> input {
         customerId : string
         tier : string!
         quantity : number!
@@ -356,18 +356,18 @@ orbital StripeOrbital {
       }
         @description "Create a hosted Checkout Session subscribing a customer to the solo or teams tier."
         @synonyms "start checkout, subscribe checkout"
-      STRIPE_CREATE_PORTAL_SESSION -> external {
+      STRIPE_CREATE_PORTAL_SESSION -> input {
         customerId : string!
         returnUrl : string!
       }
         @description "Create a hosted Billing Portal session for plan self-service."
         @synonyms "manage billing, customer portal"
-      STRIPE_GET_SUBSCRIPTION -> external {
+      STRIPE_GET_SUBSCRIPTION -> input {
         subscriptionId : string!
       }
         @description "Fetch one subscription in canonical form."
         @synonyms "get subscription, subscription status"
-      STRIPE_CREATE_SUBSCRIPTION -> external {
+      STRIPE_CREATE_SUBSCRIPTION -> input {
         customerId : string!
         tier : string!
         quantity : number!
@@ -375,14 +375,14 @@ orbital StripeOrbital {
       }
         @description "Subscribe a customer to the solo or teams tier directly, without Checkout."
         @synonyms "subscribe customer, create plan"
-      STRIPE_UPDATE_SUBSCRIPTION -> external {
+      STRIPE_UPDATE_SUBSCRIPTION -> input {
         subscriptionId : string!
         quantity : number
         cancelAtPeriodEnd : boolean
       }
         @description "Change a subscription's seat count or its cancel-at-period-end flag."
         @synonyms "change seats, resume subscription"
-      STRIPE_CANCEL_SUBSCRIPTION -> external {
+      STRIPE_CANCEL_SUBSCRIPTION -> input {
         subscriptionId : string!
         atPeriodEnd : boolean
       }

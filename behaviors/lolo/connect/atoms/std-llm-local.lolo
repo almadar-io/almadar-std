@@ -13,7 +13,7 @@ orbital LlmLocalOrbital {
     pending : [LocalPending] = []
   }
 
-  trait LlmLocalClient -> @rebindable LlmLocalCall [integration, instance] {
+  trait LlmLocalClient -> @rebindable LlmLocalCall [optimistic] {
     initial: idle
 
     state idle {
@@ -267,7 +267,7 @@ orbital LlmLocalOrbital {
     }
 
     listens {
-      LLM_CLASSIFY -> external {
+      LLM_CLASSIFY -> input {
         text : string!
         categories : [string]!
         model : string
@@ -275,7 +275,7 @@ orbital LlmLocalOrbital {
       }
         @description "Classify a text into one of the given categories on the device's model. An optional key names the call for LLM_CANCEL."
         @synonyms "label text, categorize"
-      LLM_CLASSIFY_MANY -> external {
+      LLM_CLASSIFY_MANY -> input {
         items : [{ id : string!, text : string! }]!
         categories : [string]!
         model : string
@@ -283,14 +283,14 @@ orbital LlmLocalOrbital {
       }
         @description "Classify many texts in one model call on the device's model; every item's id comes back once with a declared category. An optional key names the call for LLM_CANCEL."
         @synonyms "batch classify, label many"
-      LLM_EMBED -> external {
+      LLM_EMBED -> input {
         texts : [string]!
         model : string
         key : string
       }
         @description "Embed texts into vectors on the device's embedder. An optional key names the call for LLM_CANCEL."
         @synonyms "vectorize, text embedding"
-      LLM_CANCEL -> external {
+      LLM_CANCEL -> input {
         key : string!
       }
         @description "Abort the classify, classifyMany or embed that carries this key and is still waiting for the device; it ends in LLM_CANCELLED. A key with nothing in flight is a no-op."

@@ -24,7 +24,7 @@ orbital ApiKeyVerifierOrbital {
     requestId : number @description "The request whose bearer is being verified; echoed on the answer." = 0
   }
 
-  trait ApiKeyVerifier -> ApiKeyCheck [integration, instance] {
+  trait ApiKeyVerifier -> ApiKeyCheck [optimistic] {
     initial: idle
 
     state idle {
@@ -38,7 +38,6 @@ orbital ApiKeyVerifierOrbital {
       KEY_PUMP -> idle when (= (array/len @entity.queue) 0)
       KEY_PUMP -> idle when (and (> (array/len @entity.queue) 0) (!= (str/slice (object/get (array/first @entity.queue) "token") 0 (str/len @config.prefix)) @config.prefix))
         (emit API_KEY_REFUSED { requestId: (or (object/get (array/first @entity.queue) "requestId") 0), reason: "not-a-key", message: "not an API key" })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "API key refused" })
         (set @entity.queue (array/slice @entity.queue 1))
         (emit KEY_NEXT {})
       KEY_NEXT -> idle
@@ -65,27 +64,21 @@ orbital ApiKeyVerifierOrbital {
         (emit API_KEY_REFUSED { requestId: (or @payload.requestId 0), reason: "busy", message: "too many API keys waiting" })
       SALT_UNUSABLE -> idle
         (emit API_KEY_REFUSED { requestId: @entity.requestId, reason: "salt", message: "the API key salt must be non-empty hex" })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "API key refused" })
         (emit KEY_PUMP {})
       KEY_ABSENT -> idle when (= @payload.code "not-found")
         (emit API_KEY_REFUSED { requestId: @entity.requestId, reason: "unknown", message: "unknown API key" })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "API key refused" })
         (emit KEY_PUMP {})
       KEY_ABSENT -> idle when (!= @payload.code "not-found")
         (emit API_KEY_REFUSED { requestId: @entity.requestId, reason: "lookup", message: @payload.error })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "API key refused" })
         (emit KEY_PUMP {})
       KEY_FOUND -> idle when (= (or @payload.data.owner "") "")
         (emit API_KEY_REFUSED { requestId: @entity.requestId, reason: "lookup", message: (str/concat "the API key row " @entity.keyHash " names no owner") })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "API key refused" })
         (emit KEY_PUMP {})
       KEY_FOUND -> idle when (and (!= (or @payload.data.owner "") "") (= @payload.data.revoked true))
         (emit API_KEY_REFUSED { requestId: @entity.requestId, reason: "revoked", message: "revoked API key" })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "API key refused" })
         (emit KEY_PUMP {})
       KEY_FOUND -> idle when (and (!= (or @payload.data.owner "") "") (!= @payload.data.revoked true) (> (or @payload.data.expiresAt 0) 0) (<= (or @payload.data.expiresAt 0) @now))
         (emit API_KEY_REFUSED { requestId: @entity.requestId, reason: "expired", message: "expired API key" })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "API key refused" })
         (emit KEY_PUMP {})
       KEY_FOUND -> idle when (and (!= (or @payload.data.owner "") "") (!= @payload.data.revoked true) (not (and (> (or @payload.data.expiresAt 0) 0) (<= (or @payload.data.expiresAt 0) @now))))
         (emit API_KEY_VERIFIED { requestId: @entity.requestId, owner: @payload.data.owner, claims: (array/map (object/entries (object/omit @payload.data ["id", "owner", "revoked", "expiresAt"])) (fn e { name: (array/nth @e 0), value: (str/concat (array/nth @e 1)) })) })
@@ -141,11 +134,6 @@ orbital ApiKeyVerifierOrbital {
     }
 
     config {
-      statusSlot : slot = system
-        @label "Status slot"
-        @description "Where the atom reports a refused key; a page running it in the background keeps it in `system`."
-        @synonyms "status area, slot"
-        @tier "presentation"
       salt : secret = "ALMADAR_API_KEY_SALT"
         @label "Hash salt"
         @description "Name of the credential holding the hex salt keys are hashed with; the same one std-api-keys minted them with."
@@ -164,5 +152,37 @@ orbital ApiKeyVerifierOrbital {
     }
   }
 
-  page "/key-verify" as ApiKeyVerifierPage -> ApiKeyVerifier
+  page boot as ApiKeyVerifierStart -> ApiKeyVerifier
+
+  entity ApiKeyVerifierDemoView [runtime] {
+    id : string!
+  }
+
+  trait ApiKeyVerifierDemo -> ApiKeyVerifierDemoView [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      REFUSED -> idle when (!= @payload.reason "busy")
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "API key refused" })
+    }
+
+    listens {
+      ApiKeyVerifier.API_KEY_REFUSED -> REFUSED
+      REFUSED {
+        reason : string!
+        message : string!
+      }
+    }
+
+    config {
+      statusSlot : slot = main
+        @label "Status slot"
+        @description "Where the demo page reports a refused key."
+        @synonyms "status area, slot"
+        @tier "presentation"
+    }
+  }
+
+  page "/key-verify" as ApiKeyVerifierDemoPage -> ApiKeyVerifierDemo
 }

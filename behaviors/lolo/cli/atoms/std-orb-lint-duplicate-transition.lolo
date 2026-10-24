@@ -6,32 +6,30 @@ app std-orb-lint-duplicate-transition [
 ]
 uses Spec from "almadar-std/lint-duplicate-transition"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
-type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type DupFrom = string | [string]
+type DupGuard = string | number | boolean | [DupGuard] | Map string DupGuard
+type DupTransition = { from : DupFrom, event : string, guard : DupGuard }
+type DupMachine = { transitions : [DupTransition] }
+type DupTrait = { stateMachine : DupMachine }
+type DupOrbital = { traits : [DupTrait] }
+type DupProgram = { orbitals : [DupOrbital] }
+type OrbFinding ={ code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
 orbital OrbLintDuplicateTransitionOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
   entity OrbLintDuplicateTransitionRun [runtime] {
     id : string!
     findings : [OrbFinding] = []
   }
 
-  trait OrbLintDuplicateTransition -> OrbLintDuplicateTransitionRun [integration] {
+  trait OrbLintDuplicateTransition -> OrbLintDuplicateTransitionRun [optimistic] {
     initial: ready
 
     state ready {
       INIT -> ready
-      LINT_RUN -> reading
-        (set @entity.findings [])
-        (os/read-file { anchor: "cwd" path: @payload.file } { key: "file" emit: { success: LINT_FILE_READ, failure: LINT_FILE_UNREAD } })
-      LINT_FINISH -> ready
-        (emit LINT_FOUND { rule: "duplicate-transition", findings: @entity.findings })
-    }
-
-    state reading {
-      INIT -> reading
-      LINT_FILE_READ -> reading
-        (program/read (bytes/to-string @payload.data) { emit: { success: LINT_PROGRAM_READ, failure: LINT_FILE_UNREAD } })
-      LINT_PROGRAM_READ -> ready
-        (set @entity.findings (let ((orbitals (object/get @payload.result "orbitals" [])))
+      LINT_INPUT -> ready
+        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
             (let ((trList (object/get (array/nth @orbitals @oi) "traits" [])))
               (array/flatten (array/map (array/range 0 (array/len @trList)) (fn ti
@@ -40,40 +38,25 @@ orbital OrbLintDuplicateTransitionOrbital {
                     []
                     (let ((tx (object/get (object/get @td "stateMachine") "transitions" [])) (where (str/concat "orbitals[" @oi "].traits[" @ti "].stateMachine.transitions")))
                       (array/flatten (array/map (array/range 0 (array/len @tx)) (fn k
-                        (let ((tk (array/nth @tx @k)))
-                          (if (not (validate/string (object/get @tk "from" null)))
+                        (let ((tk (array/nth @tx @k)) (fr (object/get (array/nth @tx @k) "from" null)))
+                          (if (not (validate/string @fr))
                             []
                             (let ((grp (array/filter (array/range 0 (array/len @tx)) (fn j (and (= (object/get (array/nth @tx @j) "from" null) (object/get @tk "from")) (= (object/get (array/nth @tx @j) "event" "") (object/get @tk "event" "")))))))
                               (if (or (< (array/len @grp) 2) (!= (array/first @grp) @k))
                                 []
                                 (if (< (array/len (array/filter @grp (fn j (object/has (array/nth @tx @j) "guard")))) (- (array/len @grp) 1))
-                                  [{ code: "ORB_T_DUPLICATE_TRANSITION", path: @where, message: (str/concat "Duplicate transitions from '" (object/get @tk "from") "' on event '" (object/get @tk "event" "") "' without guards"), suggestion: "Add guard conditions to distinguish transitions", severity: "error" }]
+                                  [{ code: "ORB_T_DUPLICATE_TRANSITION", path: @where, message: (str/concat "Duplicate transitions from '" @fr "' on event '" (object/get @tk "event" "") "' without guards"), suggestion: "Add guard conditions to distinguish transitions", severity: "error" }]
                                   (if (array/some @grp (fn a (and (object/has (array/nth @tx @a) "guard") (array/some @grp (fn b (and (> @b @a) (= (json/stringify (object/get (array/nth @tx @a) "guard")) (json/stringify (object/get (array/nth @tx @b) "guard")))))))))
-                                    [{ code: "ORB_T_DUPLICATE_TRANSITION", path: @where, message: (str/concat "Duplicate transitions from '" (object/get @tk "from") "' on event '" (object/get @tk "event" "") "' with the same guard"), suggestion: "Remove the repeated arm, or give each arm its own guard", severity: "error" }]
+                                    [{ code: "ORB_T_DUPLICATE_TRANSITION", path: @where, message: (str/concat "Duplicate transitions from '" @fr "' on event '" (object/get @tk "event" "") "' with the same guard"), suggestion: "Remove the repeated arm, or give each arm its own guard", severity: "error" }]
                                     [])))))))))))))))))))))
         (emit LINT_FINISH { })
-      LINT_FILE_UNREAD -> ready
-        (emit LINT_UNREAD { rule: "duplicate-transition" })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "duplicate-transition", findings: @entity.findings })
     }
 
     emits {
-      LINT_UNREAD -> external { rule : string! }
-        @description "This rule could not read or lower the file."
-        @tier "internal"
-      LINT_RUN -> external { file : string! }
-        @description "The lint request this trait answers, from the cli trait or the umbrella."
-        @tier "internal"
       LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
         @description "This rule's findings for the file, offered to the lint-all umbrella."
-        @tier "internal"
-      LINT_FILE_READ { data : bytes! }
-        @description "The file read."
-        @tier "internal"
-      LINT_FILE_UNREAD { error : string }
-        @description "The file could not be read or lowered."
-        @tier "internal"
-      LINT_PROGRAM_READ { result : string }
-        @description "The file lowered by program/read."
         @tier "internal"
       LINT_FINISH { }
         @description "Internal: answer with the verdict."
@@ -81,11 +64,13 @@ orbital OrbLintDuplicateTransitionOrbital {
     }
 
     listens {
-      OrbLintDuplicateTransitionCli.LINT_RUN -> LINT_RUN
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : DupProgram }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
   }
 
-  trait OrbLintDuplicateTransitionCli -> OrbLintDuplicateTransitionRun [integration] {
+  trait OrbLintDuplicateTransitionCli -> OrbLintDuplicateTransitionRun [client] {
     initial: ready
 
     state ready {
@@ -93,7 +78,7 @@ orbital OrbLintDuplicateTransitionOrbital {
       LINT_CALLED -> ready when (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint duplicate-transition <file>" })
       LINT_CALLED -> waiting when (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
-        (emit LINT_RUN { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
     }
 
     state waiting {
@@ -102,7 +87,7 @@ orbital OrbLintDuplicateTransitionOrbital {
         (emit LINT_ANSWERED { status: 200, body: "lint duplicate-transition: clean" })
       LINT_FOUND -> ready when (and (= @payload.rule "duplicate-transition") (> (array/len @payload.findings) 0))
         (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
-      LINT_UNREAD -> ready when (= @payload.rule "duplicate-transition")
+      LINT_INPUT_UNREAD -> ready
         (emit LINT_ANSWERED { status: 500, body: "lint duplicate-transition: the file could not be read or lowered" })
     }
 
@@ -113,14 +98,14 @@ orbital OrbLintDuplicateTransitionOrbital {
       }
         @description "Internal: the command's answer, which the cli hook prints."
         @tier "internal"
-      LINT_RUN -> external { file : string! }
-        @description "Ask the rule trait to lint this file."
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
         @tier "internal"
       LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
         @description "The rule trait's findings for the file."
         @tier "internal"
-      LINT_UNREAD -> external { rule : string! }
-        @description "The rule trait could not read or lower the file."
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
         @tier "internal"
     }
 
@@ -132,9 +117,30 @@ orbital OrbLintDuplicateTransitionOrbital {
         @description "Run `orb lint duplicate-transition` with its arguments and working directory."
         @synonyms "orb lint duplicate-transition"
       OrbLintDuplicateTransition.LINT_FOUND -> LINT_FOUND
-      OrbLintDuplicateTransition.LINT_UNREAD -> LINT_UNREAD
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
     }
   }
 
-  page "/orb-lint-duplicate-transition" as OrbLintDuplicateTransitionPage -> OrbLintDuplicateTransition, OrbLintDuplicateTransitionCli
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintDuplicateTransitionCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintDuplicateTransitionOrbitalStart -> OrbLintDuplicateTransition, OrbLintDuplicateTransitionCli, OrbLintInput, Packs, Versions
 }

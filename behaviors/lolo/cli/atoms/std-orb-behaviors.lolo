@@ -1,8 +1,8 @@
 app std-orb-behaviors [
   version: "1.0.0",
-  inbound: ["cli-behaviors-catalog", "cli-behaviors-describe", "cli-behaviors-source"],
-  fs: { "/dev/fd/0": [read] },
-  description: "std-orb-behaviors — the `orb behaviors catalog|describe|source` commands over the behavior reflection operators. `catalog <scope…> [--exposure <e>]… [--json] [--no-vectors]` lists the installed behaviors under the scopes (`behavior/catalog`; `--no-vectors` is its `vectors: false` option, reading no vector store) as one table row each, or as JSON with --json; `describe <behavior>.traits.<Trait>|<behavior>|<behavior>.orbitals.<Orbital>|- [--json] [--knob-vectors]` prints the description as JSON (`behavior/describe`; `-` reads a trait or orbital value as JSON from stdin; `--knob-vectors` attaches each knob's embedding vector, `behavior/describe`'s `knobVectors` option); `source <behavior> [--json]` prints the behavior's program as JSON (`behavior/source`). Each answers status 200 (exit 0). Each subcommand is its own cli hook, so the other `orb behaviors` subcommands stay with the Rust command. A missing operand answers the usage (status 400, exit 2); a failed reflection answers its error (status 500, exit 1)."
+  inbound: ["cli-behaviors-catalog", "cli-behaviors-describe", "cli-behaviors-source", "cli-behaviors-which", "cli-behaviors-texts", "cli-behaviors-expects"],
+  fs: { "/dev/fd/0": [read], cwd: "**": [read] },
+  description: "std-orb-behaviors — the `orb behaviors catalog|describe|source|which|texts|expects` commands over the behavior reflection operators. `catalog <scope…> [--exposure <e>]… [--json] [--no-vectors]` lists the installed behaviors under the scopes (`behavior/catalog`; `--no-vectors` is its `vectors: false` option, reading no vector store) as one table row each, or as JSON with --json; `describe <behavior>.traits.<Trait>|<behavior>|<behavior>.orbitals.<Orbital>|- [--json] [--knob-vectors]` prints the description as JSON (`behavior/describe`; `-` reads a trait or orbital value as JSON from stdin; `--knob-vectors` attaches each knob's embedding vector, `behavior/describe`'s `knobVectors` option); `source <behavior> [--json]` prints the behavior's program as JSON (`behavior/source`); `which <spec>` prints `<path> (<owner>)`, the file the specifier resolves to and the package that owns it (`behavior/resolve` with `path: true`); `texts <scope…> [--kind organism|capability|knob] [--json]` prints the embedding texts under the scopes as one compact JSON array of { key, text, hash } (`behavior/texts`; `--json` is accepted, the only format). `expects <file.orb|spec> [--json]` prints each orbital's derived expectations as one compact JSON line, `{ <orbital>: { expectations, diagnostics } }` (`behavior/resolve` with `expects: true`; a spec naming an existing file under the working directory is read as that file, an absolute path when relative to the hook's cwd, `--json` is accepted, the only format). Each answers status 200 (exit 0). Each subcommand is its own cli hook, so the other `orb behaviors` subcommands (vectors) stay with the Rust command. A missing operand answers the usage (status 400, exit 2); a failed reflection answers its error (status 500, exit 1)."
 ]
 uses Spec from "almadar-std/orb-behaviors"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -20,6 +20,9 @@ type OrbBehaviorsCatalogHit = {
   vectors : Map string [number]
   model : string
 }
+type OrbBehaviorsWhich = { path : string!, owner : string! }
+type OrbBehaviorsText = { key : string!, text : string!, hash : string! }
+type ExpectValue = string | number | boolean | [ExpectValue?] | Map string ExpectValue?
 type DescribeValue = { behavior : string!, trait : string, orbital : string }
 type OrbBehaviorsKnobField = {
   key : string!
@@ -57,6 +60,8 @@ orbital OrbBehaviorsOrbital {
     spec : string = ""
     noVectors : boolean = false
     knobVectors : boolean = false
+    kind : string = ""
+    cwd : string = ""
   }
 
   trait ArgsCli = Args.traits.ArgsParser {
@@ -65,7 +70,7 @@ orbital OrbBehaviorsOrbital {
     }
   }
 
-  trait OrbBehaviors -> OrbBehaviorsRun [integration] {
+  trait OrbBehaviors -> OrbBehaviorsRun [optimistic] {
     initial: ready
 
     state ready {
@@ -79,17 +84,43 @@ orbital OrbBehaviorsOrbital {
       SOURCE_CALLED -> parsing
         (set @entity.sub "source")
         (emit BEHAVIORS_ARGS_PARSE { stage: "behaviors" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "json" aliases: [] takesValue: false repeatable: false }] })
+      WHICH_CALLED -> parsing
+        (set @entity.sub "which")
+        (emit BEHAVIORS_ARGS_PARSE { stage: "behaviors" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [] })
+      EXPECTS_CALLED -> parsing
+        (set @entity.sub "expects")
+        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
+        (emit BEHAVIORS_ARGS_PARSE { stage: "behaviors" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "json" aliases: [] takesValue: false repeatable: false }] })
+      TEXTS_CALLED -> parsing
+        (set @entity.sub "texts")
+        (emit BEHAVIORS_ARGS_PARSE { stage: "behaviors" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "json" aliases: [] takesValue: false repeatable: false }, { name: "kind" aliases: [] takesValue: true repeatable: false }] })
     }
 
     state parsing {
       INIT -> parsing
-      BEHAVIORS_ARGS_DONE -> ready when (and (= @entity.sub "catalog") (or (> (array/len @payload.errors) 0) (= (array/len @payload.words) 0)))
+      BEHAVIORS_ARGS_DONE -> ready when (and (= @entity.sub "catalog") (or (> (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0)))
         (emit BEHAVIORS_ANSWERED { status: 400, body: "usage: orb behaviors catalog <scope…> [--exposure <e>]… [--json] [--no-vectors]" })
       BEHAVIORS_ARGS_DONE -> ready when (and (= @entity.sub "describe") (or (> (array/len @payload.errors) 0) (!= (array/len @payload.positionals) 1)))
         (emit BEHAVIORS_ANSWERED { status: 400, body: "usage: orb behaviors describe <behavior>.traits.<Trait>" })
       BEHAVIORS_ARGS_DONE -> ready when (and (= @entity.sub "source") (or (> (array/len @payload.errors) 0) (!= (array/len @payload.positionals) 1)))
         (emit BEHAVIORS_ANSWERED { status: 400, body: "usage: orb behaviors source <behavior>" })
-      BEHAVIORS_ARGS_DONE -> working when (and (= @entity.sub "catalog") (= (array/len @payload.errors) 0) (> (array/len @payload.words) 0))
+      BEHAVIORS_ARGS_DONE -> ready when (and (= @entity.sub "which") (or (> (array/len @payload.errors) 0) (!= (array/len @payload.positionals) 1)))
+        (emit BEHAVIORS_ANSWERED { status: 400, body: "usage: orb behaviors which <spec>" })
+      BEHAVIORS_ARGS_DONE -> ready when (and (= @entity.sub "texts") (or (> (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0)))
+        (emit BEHAVIORS_ANSWERED { status: 400, body: "usage: orb behaviors texts <scope…> [--kind organism|capability|knob] [--json]" })
+      BEHAVIORS_ARGS_DONE -> ready when (and (= @entity.sub "expects") (or (> (array/len @payload.errors) 0) (!= (array/len @payload.positionals) 1)))
+        (emit BEHAVIORS_ANSWERED { status: 400, body: "usage: orb behaviors expects <spec>" })
+      BEHAVIORS_ARGS_DONE -> working when (and (= @entity.sub "expects") (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1))
+        (set @entity.spec (array/nth @payload.positionals 0))
+        (emit BEHAVIORS_EXPECTS { })
+      BEHAVIORS_ARGS_DONE -> working when (and (= @entity.sub "which") (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1))
+        (set @entity.spec (array/nth @payload.positionals 0))
+        (emit BEHAVIORS_WHICH { })
+      BEHAVIORS_ARGS_DONE -> working when (and (= @entity.sub "texts") (= (array/len @payload.errors) 0) (> (array/len @payload.positionals) 0))
+        (set @entity.paths @payload.positionals)
+        (set @entity.kind (or (array/first (or (object/get @payload.flags "kind") [])) ""))
+        (emit BEHAVIORS_TEXTS { })
+      BEHAVIORS_ARGS_DONE -> working when (and (= @entity.sub "catalog") (= (array/len @payload.errors) 0) (> (array/len @payload.positionals) 0))
         (set @entity.json (!= (object/get @payload.flags "json") null))
         (set @entity.noVectors (!= (object/get @payload.flags "no-vectors") null))
         (set @entity.exposure (or (object/get @payload.flags "exposure") []))
@@ -135,17 +166,51 @@ orbital OrbBehaviorsOrbital {
         (behavior/source { behavior: (array/first (str/split @entity.spec ".traits.")) } {
           emit: { success: SOURCED, failure: BEHAVIORS_FAILED }
         })
-      CATALOG_LISTED -> ready when @entity.json
+      BEHAVIORS_WHICH -> working
+        (behavior/resolve { behavior: @entity.spec } { path: true } {
+          emit: { success: WHICH_RESOLVED, failure: BEHAVIORS_FAILED }
+        })
+      BEHAVIORS_TEXTS -> working when (= @entity.kind "")
+        (behavior/texts { paths: @entity.paths } {
+          emit: { success: TEXTS_LISTED, failure: BEHAVIORS_FAILED }
+        })
+      BEHAVIORS_TEXTS -> working when (!= @entity.kind "")
+        (behavior/texts { paths: @entity.paths, kind: @entity.kind } {
+          emit: { success: TEXTS_LISTED, failure: BEHAVIORS_FAILED }
+        })
+      BEHAVIORS_EXPECTS -> working when (str/startsWith @entity.spec "/")
+        (behavior/resolve { behavior: @entity.spec } { expects: true } {
+          emit: { success: EXPECTS_DERIVED, failure: BEHAVIORS_FAILED }
+        })
+      BEHAVIORS_EXPECTS -> working when (not (str/startsWith @entity.spec "/"))
+        (os/exists { anchor: "cwd" path: @entity.spec } { key: "expects" emit: { success: EXPECTS_EXISTS, failure: EXPECTS_EXISTS_FAILED } })
+      EXPECTS_EXISTS -> working when @payload.ok
+        (behavior/resolve { behavior: (str/concat @entity.cwd "/" @entity.spec) } { expects: true } {
+          emit: { success: EXPECTS_DERIVED, failure: BEHAVIORS_FAILED }
+        })
+      EXPECTS_EXISTS -> working when (not @payload.ok)
+        (behavior/resolve { behavior: @entity.spec } { expects: true } {
+          emit: { success: EXPECTS_DERIVED, failure: BEHAVIORS_FAILED }
+        })
+      EXPECTS_DERIVED -> ready
         (emit BEHAVIORS_ANSWERED { status: 200, body: (json/stringify @payload.result) })
+      WHICH_RESOLVED -> ready
+        (emit BEHAVIORS_ANSWERED { status: 200, body: (str/concat @payload.result.path " (" @payload.result.owner ")") })
+      TEXTS_LISTED -> ready
+        (emit BEHAVIORS_ANSWERED { status: 200, body: (json/stringify @payload.result) })
+      CATALOG_LISTED -> ready when @entity.json
+        (emit BEHAVIORS_ANSWERED { status: 200, body: (json/stringify @payload.result { pretty: true }) })
       CATALOG_LISTED -> ready when (not @entity.json)
         (emit BEHAVIORS_ANSWERED { status: 200, body: (str/join (array/map @payload.result (fn e (str/concat (str/padEnd (object/get @e behavior "") 48 " ") " " (str/padEnd (object/get @e level "") 9 " ") " " (str/padEnd (object/get @e exposure "-") 10 " ") " " (object/get @e description "")))) "\n") })
       TRAIT_DESCRIBED -> ready
-        (emit BEHAVIORS_ANSWERED { status: 200, body: (json/stringify @payload.result) })
+        (emit BEHAVIORS_ANSWERED { status: 200, body: (json/stringify @payload.result { pretty: true }) })
       BEHAVIOR_DESCRIBED -> ready
-        (emit BEHAVIORS_ANSWERED { status: 200, body: (json/stringify @payload.result) })
+        (emit BEHAVIORS_ANSWERED { status: 200, body: (json/stringify @payload.result { pretty: true }) })
       SOURCED -> ready
-        (emit BEHAVIORS_ANSWERED { status: 200, body: (json/stringify @payload.result) })
+        (emit BEHAVIORS_ANSWERED { status: 200, body: (json/stringify @payload.result { pretty: true }) })
       BEHAVIORS_FAILED -> ready
+        (emit BEHAVIORS_ANSWERED { status: 500, body: @payload.error })
+      EXPECTS_EXISTS_FAILED -> ready
         (emit BEHAVIORS_ANSWERED { status: 500, body: @payload.error })
       STDIN_FAILED -> ready
         (emit BEHAVIORS_ANSWERED { status: 500, body: (str/concat "stdin is not readable: " @payload.error) })
@@ -171,9 +236,28 @@ orbital OrbBehaviorsOrbital {
       BEHAVIORS_DESCRIBE { }
         @description "Internal: describe the named trait or behavior."
         @tier "internal"
+      BEHAVIORS_EXPECTS { }
+        @description "Internal: derive the expectations of the named behavior or file."
+        @tier "internal"
+      EXPECTS_EXISTS {
+        ok : boolean!
+      }
+        @description "Internal: os/exists's success, whether the operand is a file under the working directory."
+        @tier "internal"
+      EXPECTS_EXISTS_FAILED {
+        error : string!
+        kind : string
+      }
+        @description "Internal: os/exists's failure."
+        @tier "internal"
+      BEHAVIORS_WHICH { }
+        @description "Internal: resolve the specifier to its file and owner."
+        @tier "internal"
+      BEHAVIORS_TEXTS { }
+        @description "Internal: list the embedding texts under the scopes."
+        @tier "internal"
       STDIN_READ {
         data : bytes!
-        eof : boolean
       }
         @description "Internal: os/read's success, the bytes read from stdin."
         @tier "internal"
@@ -210,6 +294,24 @@ orbital OrbBehaviorsOrbital {
       }
         @description "Run `orb behaviors source` with its operand."
         @synonyms "orb behaviors source, behavior source"
+      WHICH_CALLED -> inbound "cli-behaviors-which" answers BEHAVIORS_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb behaviors which` with its specifier."
+        @synonyms "orb behaviors which, where a behavior resolves"
+      EXPECTS_CALLED -> inbound "cli-behaviors-expects" answers BEHAVIORS_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb behaviors expects` with its specifier or file."
+        @synonyms "orb behaviors expects, derive a behavior's expectations"
+      TEXTS_CALLED -> inbound "cli-behaviors-texts" answers BEHAVIORS_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb behaviors texts` with its scopes."
+        @synonyms "orb behaviors texts, behavior embedding texts"
       BEHAVIORS_ARGS_DONE {
         stage : string!
         flags : Map string [string]!
@@ -227,7 +329,6 @@ orbital OrbBehaviorsOrbital {
         @description "Self: describe the value on stdin."
       STDIN_READ {
         data : bytes!
-        eof : boolean
       }
         @description "os/read's success: the bytes read from stdin."
       STDIN_FAILED {
@@ -237,6 +338,33 @@ orbital OrbBehaviorsOrbital {
         @description "os/read's failure."
       BEHAVIORS_SOURCE { }
         @description "Self: read the program."
+      BEHAVIORS_WHICH { }
+        @description "Self: resolve the specifier."
+      BEHAVIORS_EXPECTS { }
+        @description "Self: derive the expectations."
+      EXPECTS_EXISTS {
+        ok : boolean!
+      }
+        @description "os/exists's success: whether the operand is a file."
+      EXPECTS_EXISTS_FAILED {
+        error : string!
+        kind : string
+      }
+        @description "os/exists's failure."
+      EXPECTS_DERIVED {
+        result : Map string ExpectValue!
+      }
+        @description "behavior/resolve's success with expects: true."
+      BEHAVIORS_TEXTS { }
+        @description "Self: list the embedding texts."
+      WHICH_RESOLVED {
+        result : OrbBehaviorsWhich!
+      }
+        @description "behavior/resolve's success with path: true."
+      TEXTS_LISTED {
+        result : [OrbBehaviorsText]!
+      }
+        @description "behavior/texts's success."
       CATALOG_LISTED {
         result : [OrbBehaviorsCatalogHit]!
       }
@@ -260,5 +388,5 @@ orbital OrbBehaviorsOrbital {
     }
   }
 
-  page "/orb-behaviors" as OrbBehaviorsPage -> OrbBehaviors, ArgsCli
+  page boot as OrbBehaviorsOrbitalStart -> OrbBehaviors, ArgsCli
 }

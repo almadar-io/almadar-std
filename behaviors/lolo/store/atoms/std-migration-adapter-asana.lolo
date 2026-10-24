@@ -27,7 +27,7 @@ orbital MigrationAdapterAsanaOrbital {
     level : number = 0
   }
 
-  trait MigrationAdapterAsana -> MigrationAdapterAsanaRun [integration, instance] {
+  trait MigrationAdapterAsana -> MigrationAdapterAsanaRun [client] {
     initial: idle
 
     state idle {
@@ -91,7 +91,7 @@ orbital MigrationAdapterAsanaOrbital {
                         parentRef: null,
                         source: "asana",
                         span: (object/get @d ref),
-                        metadata: { source: "asana", taskCount: (array/len (object/get @d tasks)) }
+                        metadata: { source: "asana", taskCount: (array/len (object/get @d tasks [])) }
                       }
               })))
         (set @entity.skips [])
@@ -102,10 +102,10 @@ orbital MigrationAdapterAsanaOrbital {
               @entity.documents
               (fn d p
                 (array/map
-                  (array/range (array/len (object/get @d tasks)))
+                  (array/range (array/len (object/get @d tasks [])))
                   (fn i
                     {
-                      task: (array/nth (object/get @d tasks) @i),
+                      task: (array/nth (object/get @d tasks []) @i),
                       index: @i,
                       parentRef: (str/concat "asana:" (object/get @d ref)),
                       kind: root,
@@ -291,7 +291,7 @@ orbital MigrationAdapterAsanaOrbital {
     }
 
     listens {
-      MIGRATION_EXTRACT -> external {
+      MIGRATION_EXTRACT -> input {
         adapter : string!
         documents : [ImportRawDocument]!
       }
@@ -301,5 +301,5 @@ orbital MigrationAdapterAsanaOrbital {
     }
   }
 
-  page "/migration-adapter-asana" as MigrationAdapterAsanaPage -> MigrationAdapterAsana
+  page boot as MigrationAdapterAsanaOrbitalStart -> MigrationAdapterAsana
 }

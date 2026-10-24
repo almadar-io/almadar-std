@@ -11,7 +11,7 @@ orbital GzipOrbital {
     crc : number = 0
     result : GzipResult
   }
-  trait Gunzip -> GzipRun [integration, instance] {
+  trait Gunzip -> GzipRun [client] {
     initial: idle
     config {
       level : number = 6
@@ -54,13 +54,13 @@ orbital GzipOrbital {
         @tier "primary"
     }
     listens {
-      GZIP -> external { data : bytes! }
+      GZIP -> input { data : bytes! }
         @description "Pack these bytes as a gzip member."
         @synonyms "gzip, compress gzip, deflate, pack gzip"
-      GUNZIP -> external { data : bytes! maxBytes : number }
+      GUNZIP -> input { data : bytes! maxBytes : number }
         @description "Unpack this gzip input within the stated output cap."
         @synonyms "gunzip, ungzip, decompress gzip, unpack tarball"
     }
   }
-  page "/gzip" -> Gunzip
+  page boot as GzipOrbitalStart -> Gunzip
 }

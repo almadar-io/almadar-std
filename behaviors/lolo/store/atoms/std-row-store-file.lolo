@@ -73,7 +73,7 @@ orbital RowStoreFileOrbital {
     changes : [ChangeRecord] @description "The whole change log read from the entity's file; a write saves it plus logged" = []
   }
 
-  trait RowStoreDriver -> RowStoreFlight [integration, instance] {
+  trait RowStoreDriver -> RowStoreFlight [optimistic] {
     initial: ready
 
     config {
@@ -159,8 +159,8 @@ orbital RowStoreFileOrbital {
         (emit STORE_FAILED { key: @entity.key, message: "the rows file must be JSON of the shape { rows, changes }; a bare array (the retired format) or malformed JSON is not accepted, recreate the file" })
       FILE_READ -> loading when (and (json/valid (bytes/to-string @payload.data)) (!= (json/parse (bytes/to-string @payload.data) RowFile) null))
         (set @entity.logged [])
-        (set @entity.rows (object/get (json/parse (base64/decode @payload.data) RowFile) "rows" []))
-        (set @entity.changes (object/get (json/parse (base64/decode @payload.data) RowFile) "changes" []))
+        (set @entity.rows (object/get (json/parse (bytes/to-string @payload.data) RowFile) "rows" []))
+        (set @entity.changes (object/get (json/parse (bytes/to-string @payload.data) RowFile) "changes" []))
         (emit ROWS_LOADED { })
       FILE_READ_FAILED -> loading when (= @payload.kind "not-found")
         (set @entity.logged [])
@@ -185,7 +185,7 @@ orbital RowStoreFileOrbital {
       ROWS_LOADED -> writing when (= @entity.op "write")
         (set @entity.run (array/reduce @entity.batch.ops { rows: @entity.rows, outcomes: [], halted: false } (fn acc op (if @acc.halted @acc (let ((id (if (!= (object/get @op "id" "") "") (object/get @op "id" "") (object/get (object/get @op "data" {}) "id" "")))) (let ((ex (array/find @acc.rows (fn r (= (object/get @r "id" "") @id))))) (let ((guard (object/get @op "guard" null))) (let ((out (if (and (= (object/get @op "id" "") "") (= @id "") (or (= @op.kind "create") (= @op.kind "upsert"))) { kind: "failed", message: (str/concat "a " @op.kind " needs a string id") } (if (= @op.kind "create") (if (!= @ex null) { kind: "duplicate-id" } { kind: "created", row: (object/set @op.data "id" @id) }) (if (= @op.kind "upsert") (if (!= @ex null) { kind: "updated", row: (if (!= (object/get @ex "createdAt" null) null) (object/set (object/set @op.data "id" @id) "createdAt" (object/get @ex "createdAt" null)) (object/set @op.data "id" @id)) } { kind: "created", row: (object/set @op.data "id" @id) }) (if (= @ex null) { kind: "not-found" } (if (and (!= @guard null) (!= (row/matches @guard @ex) true)) { kind: "refused" } (if (= @op.kind "update") (if (!= @guard null) { kind: "updated", row: (object/set (object/merge @ex @op.data) "id" @id), before: @ex } { kind: "updated", row: (object/set (object/merge @ex @op.data) "id" @id) }) (if (!= @guard null) { kind: "deleted", before: @ex } { kind: "deleted" }))))))))) (let ((ok (or (= @out.kind "created") (= @out.kind "updated") (= @out.kind "deleted")))) { rows: (if (not @ok) @acc.rows (if (= @out.kind "deleted") (array/filter @acc.rows (fn r (!= (object/get @r "id" "") @id))) (if (= @ex null) (array/append @acc.rows @out.row) (array/map @acc.rows (fn r (if (= (object/get @r "id" "") @id) @out.row @r)))))) outcomes: (array/append @acc.outcomes @out), halted: (not @ok) })))))))))
         (set @entity.run (if (and @entity.run.halted (= @entity.batch.onFailure "atomic")) { rows: @entity.rows, outcomes: (array/append (array/map (array/take @entity.run.outcomes (- (array/len @entity.run.outcomes) 1)) (fn o { kind: "rolled-back" })) (array/last @entity.run.outcomes)), halted: true } @entity.run))
-        (set @entity.logged (if (and @entity.run.halted (= @entity.batch.onFailure "atomic")) [] (let ((scan (array/reduce @entity.run.outcomes { i: 0, recs: [] } (fn acc o (let ((src (array/nth @entity.batch.ops @acc.i))) { i: (+ @acc.i 1), recs: (if (= @o.kind "created") (array/append @acc.recs { op: "create", entityType: @entity.entityType, id: (str/concat (object/get @o.row "id" "")), row: @o.row, at: (time/now) }) (if (= @o.kind "updated") (array/append @acc.recs { op: "update", entityType: @entity.entityType, id: (str/concat (object/get @o.row "id" "")), row: @o.row, at: (time/now) }) (if (= @o.kind "deleted") (array/append @acc.recs { op: "delete", entityType: @entity.entityType, id: (str/concat (object/get @src "id" "")), at: (time/now) }) @acc.recs))) }))))) @scan.recs)))
+        (set @entity.logged (if (and @entity.run.halted (= @entity.batch.onFailure "atomic")) [] (let ((scan (array/reduce @entity.run.outcomes { i: 0, recs: [] } (fn acc o (let ((src (array/nth @entity.batch.ops @acc.i))) { i: (+ @acc.i 1), recs: (if (= @o.kind "created") (array/append @acc.recs { op: "create", entityType: @entity.entityType, id: (str/template "{{v}}" { v: (object/get @o.row "id" "") }), row: @o.row, at: (time/now) }) (if (= @o.kind "updated") (array/append @acc.recs { op: "update", entityType: @entity.entityType, id: (str/template "{{v}}" { v: (object/get @o.row "id" "") }), row: @o.row, at: (time/now) }) (if (= @o.kind "deleted") (array/append @acc.recs { op: "delete", entityType: @entity.entityType, id: (str/concat (object/get @src "id" "")), at: (time/now) }) @acc.recs))) }))))) @scan.recs)))
         (os/mkdir { anchor: "cwd" path: @config.dir } true { emit: { success: DIR_READY, failure: WRITE_FAILED } })
     }
 
@@ -281,20 +281,20 @@ orbital RowStoreFileOrbital {
     }
 
     listens {
-      ROW_READ -> external {
+      ROW_READ -> input {
         key : string!
         entityType : string!
         id : string!
       }
         @description "Read one row of an entity type by id."
         @tier "internal"
-      ROW_LIST -> external {
+      ROW_LIST -> input {
         key : string!
         entityType : string!
       }
         @description "List every row of an entity type."
         @tier "internal"
-      ROWS_QUERY -> external {
+      ROWS_QUERY -> input {
         key : string!
         entityType : string!
         query : RowQuery!
@@ -302,7 +302,7 @@ orbital RowStoreFileOrbital {
       }
         @description "A query ask; the file store pushes none down."
         @tier "internal"
-      ROWS_WRITE -> external {
+      ROWS_WRITE -> input {
         key : string!
         batch : RowWriteBatch!
       }
@@ -311,5 +311,5 @@ orbital RowStoreFileOrbital {
     }
   }
 
-  page "/row-store-file" -> RowStoreDriver
+  page boot as RowStoreFileOrbitalStart -> RowStoreDriver
 }

@@ -9,7 +9,7 @@ uses Spec from "almadar-std/app-hosting-board"
 type AhRequest = { kind : "status" | "logs" | "build-logs", backendId : string, force : boolean, cloudBuildId : string, region : string }
 type AhStatus = { rolloutState : string, rolloutId : string, rolloutTime : string, commitMessage : string, commitHash : string, commitUrl : string, buildLogsUrl : string, cloudBuildId : string, cloudBuildRegion : string, errorSource : string }
 type AhLogLine = { ts : string, severity : string, revision : string, msg : string }
-type AhRollout = { name : string, createTime : string, updateTime : string, state : string, build : string }
+type AhRollout = { name : string, createTime : string!, updateTime : string, state : string, build : string }
 type AhRollouts = { rollouts : [AhRollout] }
 type AhCodebase = { branch : string, hash : string, commitMessage : string, uri : string }
 type AhSource = { codebase : AhCodebase }
@@ -50,7 +50,7 @@ orbital AppHostingBoardOrbital {
     }
   }
 
-  trait AppHostingStatus -> AppHostingBoard [integration, instance] {
+  trait AppHostingStatus -> AppHostingBoard [client] {
     initial: idle
 
     state idle {
@@ -345,24 +345,24 @@ orbital AppHostingBoardOrbital {
     }
 
     listens {
-      AH_STATUS_LOAD -> external {
+      AH_STATUS_LOAD -> input {
         backendId : string!
         force : boolean
       }
         @description "Answer this backend's latest rollout; force skips the cache."
         @synonyms "deploy status, rollout"
-      AH_LOGS_LOAD -> external {
+      AH_LOGS_LOAD -> input {
         backendId : string!
       }
         @description "Answer this backend's recent log lines."
         @synonyms "backend logs"
-      AH_BUILD_LOGS_LOAD -> external {
+      AH_BUILD_LOGS_LOAD -> input {
         cloudBuildId : string!
         region : string
       }
         @description "Answer this Cloud Build's log; the region knob when none is given."
         @synonyms "build logs, why did the deploy fail"
-      AH_REFRESH_ALL -> external { }
+      AH_REFRESH_ALL -> input { }
         @description "Read every listed backend's status afresh."
         @synonyms "refresh app hosting"
       AH_BACKEND_OPEN {

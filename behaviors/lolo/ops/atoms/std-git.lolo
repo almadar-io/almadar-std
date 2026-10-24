@@ -34,7 +34,7 @@ orbital GitOrbital {
     }
   }
 
-  trait GitStepRunner -> GitRun [integration, instance] {
+  trait GitStepRunner -> GitRun [client] {
     initial: idle
 
     state idle {
@@ -160,7 +160,7 @@ orbital GitOrbital {
     }
 
     listens {
-      GIT_STEP -> external {
+      GIT_STEP -> input {
         requestId : string!
         cwd : string!
         op : string!
@@ -200,5 +200,5 @@ orbital GitOrbital {
     }
   }
 
-  page "/git" as GitPage -> GitStepRunner, GitSteps, GitCli
+  page boot as GitOrbitalStart -> GitStepRunner, GitSteps, GitCli
 }

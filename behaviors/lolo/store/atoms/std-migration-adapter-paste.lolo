@@ -12,7 +12,7 @@ orbital MigrationAdapterPasteOrbital {
     id : string!
   }
 
-  trait MigrationAdapterPaste -> MigrationAdapterPasteRun [integration, instance] {
+  trait MigrationAdapterPaste -> MigrationAdapterPasteRun [client] {
     initial: idle
 
     state idle {
@@ -39,7 +39,7 @@ orbital MigrationAdapterPasteOrbital {
     }
 
     listens {
-      MIGRATION_EXTRACT -> external {
+      MIGRATION_EXTRACT -> input {
         adapter : string!
         documents : [ImportRawDocument]!
       }
@@ -49,5 +49,5 @@ orbital MigrationAdapterPasteOrbital {
     }
   }
 
-  page "/migration-adapter-paste" as MigrationAdapterPastePage -> MigrationAdapterPaste
+  page boot as MigrationAdapterPasteOrbitalStart -> MigrationAdapterPaste
 }

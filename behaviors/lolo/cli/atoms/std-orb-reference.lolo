@@ -2,7 +2,7 @@ app std-orb-reference [
   version: "1.0.0",
   inbound: ["cli-reference"],
   fs: { cwd: "**": [read] },
-  description: "std-orb-reference — the `orb reference [TOPIC]` command (spec/cli/orb-reference.lolo; port of orbital-cli commands/reference.rs). It reads the installed @almadar/core package.json, follows its orbLanguage block to the constructs, validation-codes and vocabulary tables, and answers one compact JSON line (a value read from the tables keeps the table's key order as the Rust verb prints it; the index's own keys come out alphabetical, codes then constructs then vocabulary): no topic lists the constructs, the vocabulary and the code topics (codes/<category> with a count); `vocabulary` prints the vocabulary; `codes/<category>` lists that category's codes; any other topic names a construct (case-insensitive) with its doc and fields. examples is always [] until program/print can print one node (G-ORB-453). An unknown topic or an empty category answers status 500 (exit 1); more than one word or an unknown flag answers the usage (status 400, exit 2)."
+  description: "std-orb-reference — the `orb reference [TOPIC]` command (spec/cli/orb-reference.lolo; port of orbital-cli commands/reference.rs). It reads the installed @almadar/core package.json, follows its orbLanguage block to the constructs, validation-codes and vocabulary tables, and answers one compact JSON line (a value read from the tables keeps the table's key order as the Rust verb prints it; the index's own keys come out alphabetical, codes then constructs then vocabulary): no topic lists the constructs, the vocabulary and the code topics (codes/<category> with a count); `vocabulary` prints the vocabulary; `codes/<category>` lists that category's codes; any other topic names a construct (case-insensitive) with its doc and fields. examples are cut from the installed almadar-std `.lolo` tree as orbital_lolo::reference::examples does: every `.lolo` file under the package's orb.source in path order, each construct the config's examplePaths names printed by program/print `{ source, nodes }` (comments dropped; a file that does not parse gives none), stable-sorted by byte length, adjacent repeats dropped, then the item at index n/2 and the one at n*9/10 (sorted, unique); a construct with no entry has none, and a std package without an orb.source tree is an error. The scan runs twice (counts per length, then the two items). An unknown topic or an empty category answers status 500 (exit 1); more than one word or an unknown flag answers the usage (status 400, exit 2)."
 ]
 uses Spec from "almadar-std/orb-reference"
 uses Args from "std/behaviors/std-args"
@@ -15,6 +15,15 @@ type RefConstruct = { name : string!, kind : string!, doc : string!, fields : [R
 type RefConstructs = [RefConstruct]
 type RefCode = { code : string!, category : string!, description : string! }
 type RefCodes = [RefCode]
+type RefPackage = { root : string!, prefix : string!, vectors : string? }
+type RefPackageManifest = { orb : RefPackageOrb? }
+type RefPackageOrb = { source : string? }
+type RefEntry = { name : string!, kind : string! }
+type RefKeyedPath = { key : string!, path : string! }
+type RefTally = { counts : Map string number!, lasts : Map string string!, pick : [string]! }
+type RefGroup = { key : string!, n : number!, last : string! }
+type RefAcc = { key : string!, prev : string!, n : number!, groups : [RefGroup]!, picks : [string]! }
+type RefRanks = { cum : number!, a : number!, ak : number!, fa : boolean!, b : number!, bk : number!, fb : boolean! }
 type RefVocabulary = { keywords : [string]!, shapes : [string]!, tags : [string]!, categories : [string]!, capabilities : [string]!, annotations : [string]!, sigils : [string]!, effects : [string]!, types : [string]!, units : [string]!, literals : [string]!, reservedEvents : [string]! }
 
 orbital OrbReferenceOrbital {
@@ -26,6 +35,23 @@ orbital OrbReferenceOrbital {
     codesPath : string = ""
     vocabulary : RefVocabulary = { keywords: [], shapes: [], tags: [], categories: [], capabilities: [], annotations: [], sigils: [], effects: [], types: [], units: [], literals: [], reservedEvents: [] }
     constructs : [RefConstruct] = []
+    hit : RefConstruct = { name: "", kind: "", doc: "", fields: [] }
+    stdTree : string = ""
+    dirs : [string] = []
+    dcursor : number = 0
+    files : [string] = []
+    fcursor : number = 0
+    fd : number = 0
+    source : string = ""
+    jobs : [string] = []
+    jcursor : number = 0
+    tally : RefTally = { counts: {}, lasts: {}, pick: [] }
+    pass : number = 1
+    acc : RefAcc = { key: "", prev: "", n: 0, groups: [], picks: [] }
+    wantA : number = 0
+    wantAk : number = 0
+    wantB : number = 0
+    wantBk : number = 0
   }
 
   trait ArgsCli = Args.traits.ArgsParser {
@@ -34,7 +60,7 @@ orbital OrbReferenceOrbital {
     }
   }
 
-  trait OrbReference -> ReferenceRun [integration] {
+  trait OrbReference -> ReferenceRun [client] {
     initial: ready
 
     state ready {
@@ -49,7 +75,7 @@ orbital OrbReferenceOrbital {
       REFERENCE_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (> (array/len @payload.positionals) 1))
         (emit REFERENCE_ANSWERED { status: 400, body: "usage: orb reference [TOPIC]" })
       REFERENCE_ARGS_DONE -> working when (and (= (array/len @payload.errors) 0) (<= (array/len @payload.positionals) 1))
-        (emit REFERENCE_START { topic: (str/default (array/first @payload.positionals) "") })
+        (emit REFERENCE_START { topic: (str/default (array/first @payload.positionals) ""), cwd: @entity.cwd })
     }
 
     state working {
@@ -74,6 +100,7 @@ orbital OrbReferenceOrbital {
         @tier "internal"
       REFERENCE_START {
         topic : string!
+        cwd : string!
       }
         @description "Internal: answer the topic."
         @tier "internal"
@@ -102,13 +129,14 @@ orbital OrbReferenceOrbital {
     }
   }
 
-  trait ReferenceEngine -> ReferenceRun [integration] {
+  trait ReferenceEngine -> ReferenceRun [optimistic] {
     initial: idle
 
     state idle {
       INIT -> idle
       REFERENCE_START -> loading
         (set @entity.topic @payload.topic)
+        (set @entity.cwd @payload.cwd)
         (os/read-file { anchor: "cwd" path: "node_modules/@almadar/core/package.json" } { key: "manifest" emit: { success: REFERENCE_MANIFEST, failure: REFERENCE_FAILED } })
     }
 
@@ -138,10 +166,103 @@ orbital OrbReferenceOrbital {
         (emit REFERENCE_ANSWERED { status: 200, body: (json/stringify { category: (str/slice @payload.topic 6 (str/len @payload.topic)), codes: (array/filter @payload.codes (fn c (= (object/get @c "category") (str/slice @payload.topic 6 (str/len @payload.topic))))) }) })
       REFERENCE_RUN -> idle when (and (str/startsWith @payload.topic "codes/") (= (array/len (array/filter @payload.codes (fn c (= (object/get @c "category") (str/slice @payload.topic 6 (str/len @payload.topic)))))) 0))
         (emit REFERENCE_ANSWERED { status: 500, body: (str/concat "Error: no validation codes in category `" (str/slice @payload.topic 6 (str/len @payload.topic)) "`") })
-      REFERENCE_RUN -> idle when (and (!= @payload.topic "") (!= @payload.topic "vocabulary") (not (str/startsWith @payload.topic "codes/")) (array/some @payload.constructs (fn c (= (str/lower (object/get @c "name")) (str/lower @payload.topic)))))
+      REFERENCE_RUN -> idle when (and (!= @payload.topic "") (!= @payload.topic "vocabulary") (not (str/startsWith @payload.topic "codes/")) (array/some @payload.constructs (fn c (= (str/lower (object/get @c "name")) (str/lower @payload.topic)))) (= (object/get @config.examplePaths (object/get (array/find @payload.constructs (fn c (= (str/lower (object/get @c "name")) (str/lower @payload.topic)))) "name")) null))
         (emit REFERENCE_ANSWERED { status: 200, body: (json/stringify (object/merge (array/find @payload.constructs (fn c (= (str/lower (object/get @c "name")) (str/lower @payload.topic)))) { examples: [] })) })
+      REFERENCE_RUN -> finding when (and (!= @payload.topic "") (!= @payload.topic "vocabulary") (not (str/startsWith @payload.topic "codes/")) (array/some @payload.constructs (fn c (= (str/lower (object/get @c "name")) (str/lower @payload.topic)))) (!= (object/get @config.examplePaths (object/get (array/find @payload.constructs (fn c (= (str/lower (object/get @c "name")) (str/lower @payload.topic)))) "name")) null))
+        (set @entity.hit (array/find @payload.constructs (fn c (= (str/lower (object/get @c "name")) (str/lower @payload.topic)))))
+        (set @entity.constructs [])
+        (set @entity.vocabulary { keywords: [], shapes: [], tags: [], categories: [], capabilities: [], annotations: [], sigils: [], effects: [], types: [], units: [], literals: [], reservedEvents: [] })
+        (set @entity.tally { counts: {}, lasts: {}, pick: [] })
+        (set @entity.pass 1)
+        (set @entity.files [])
+        (set @entity.dirs [])
+        (set @entity.dcursor 0)
+        (set @entity.fcursor 0)
+        (behavior/packages { key: "packages" emit: { success: EXAMPLES_PACKAGES, failure: EXAMPLES_FAILED } })
       REFERENCE_RUN -> idle when (and (!= @payload.topic "") (!= @payload.topic "vocabulary") (not (str/startsWith @payload.topic "codes/")) (not (array/some @payload.constructs (fn c (= (str/lower (object/get @c "name")) (str/lower @payload.topic))))))
         (emit REFERENCE_ANSWERED { status: 500, body: (str/concat "Error: no reference topic `" @payload.topic "`; `orb reference` lists them") })
+    }
+
+    state finding {
+      INIT -> finding
+      EXAMPLES_FAILED -> idle
+        (emit REFERENCE_ANSWERED { status: 500, body: (str/concat "orb reference: " @payload.error) })
+      EXAMPLES_PACKAGES -> idle when (not (array/some @payload.result (fn p (= (object/get @p "prefix") "almadar-std"))))
+        (emit REFERENCE_ANSWERED { status: 200, body: (json/stringify (object/merge @entity.hit { examples: [] })) })
+      EXAMPLES_PACKAGES -> finding when (array/some @payload.result (fn p (= (object/get @p "prefix") "almadar-std")))
+        (set @entity.stdTree (os/path-relative @entity.cwd (object/get (array/find @payload.result (fn p (= (object/get @p "prefix") "almadar-std"))) "root")))
+        (os/read-file { anchor: "cwd" path: (os/path-join (os/path-relative @entity.cwd (object/get (array/find @payload.result (fn p (= (object/get @p "prefix") "almadar-std"))) "root")) "package.json") } { key: "stdmanifest" emit: { success: EXAMPLES_MANIFEST, failure: EXAMPLES_FAILED } })
+      EXAMPLES_MANIFEST -> idle when (= (object/get (object/get (json/parse (bytes/to-string @payload.data) RefPackageManifest) "orb") "source") null)
+        (emit REFERENCE_ANSWERED { status: 500, body: "orb reference: the installed almadar-std ships a materialized registry, not a .lolo tree to cut examples from" })
+      EXAMPLES_MANIFEST -> finding when (!= (object/get (object/get (json/parse (bytes/to-string @payload.data) RefPackageManifest) "orb") "source") null)
+        (set @entity.dirs [(os/path-join @entity.stdTree (object/get (object/get (json/parse (bytes/to-string @payload.data) RefPackageManifest) "orb") "source"))])
+        (emit EXAMPLES_WALK { })
+      EXAMPLES_WALK -> finding when (< @entity.dcursor (array/len @entity.dirs))
+        (os/list-dir { anchor: "cwd" path: (array/nth @entity.dirs @entity.dcursor) } { key: "dir" emit: { success: EXAMPLES_LISTED, failure: EXAMPLES_FAILED } })
+      EXAMPLES_WALK -> finding when (>= @entity.dcursor (array/len @entity.dirs))
+        (set @entity.dirs [])
+        (set @entity.files (array/map (array/sort (array/map @entity.files (fn f { key: (str/replaceAll @f "/" "\t"), path: @f })) "key" "asc") (fn r (object/get @r "path"))))
+        (emit EXAMPLES_NEXT { })
+      EXAMPLES_LISTED -> finding
+        (set @entity.files (array/concat @entity.files (array/map (array/filter @payload.entries (fn e (and (= (object/get @e "kind") "file") (str/endsWith (object/get @e "name") ".lolo") (> (str/len (object/get @e "name")) 5)))) (fn e (os/path-join (array/nth @entity.dirs @entity.dcursor) (object/get @e "name"))))))
+        (set @entity.dirs (array/concat @entity.dirs (array/map (array/filter @payload.entries (fn e (= (object/get @e "kind") "dir"))) (fn e (os/path-join (array/nth @entity.dirs @entity.dcursor) (object/get @e "name"))))))
+        (set @entity.dcursor (+ @entity.dcursor 1))
+        (emit EXAMPLES_WALK { })
+      EXAMPLES_NEXT -> finding when (< @entity.fcursor (array/len @entity.files))
+        (os/read-file { anchor: "cwd" path: (array/nth @entity.files @entity.fcursor) } { key: "file" emit: { success: EXAMPLES_READ, failure: EXAMPLES_FAILED } })
+      EXAMPLES_NEXT -> finding when (and (>= @entity.fcursor (array/len @entity.files)) (= @entity.pass 1) (= (array/sum (object/values (object/get @entity.tally "counts"))) 0))
+        (emit EXAMPLES_FINISH { })
+      EXAMPLES_NEXT -> finding when (and (>= @entity.fcursor (array/len @entity.files)) (= @entity.pass 1) (> (array/sum (object/values (object/get @entity.tally "counts"))) 0))
+        (let ((ranks (array/reduce (array/sort (array/map (object/keys (object/get @entity.tally "counts")) (fn k (str/to-int (str/slice @k 1 (str/len @k)))))) { cum: 0, a: 0, ak: 0, fa: false, b: 0, bk: 0, fb: false } (fn r l (let ((c (object/get (object/get @entity.tally "counts") (str/concat "l" @l)))) (let ((hitA (and (not (object/get @r "fa")) (< (math/floor (/ (array/sum (object/values (object/get @entity.tally "counts"))) 2)) (+ (object/get @r "cum") @c)))) (hitB (and (not (object/get @r "fb")) (< (math/floor (/ (* (array/sum (object/values (object/get @entity.tally "counts"))) 9) 10)) (+ (object/get @r "cum") @c))))) { cum: (+ (object/get @r "cum") @c), a: (if @hitA @l (object/get @r "a")), ak: (if @hitA (- (math/floor (/ (array/sum (object/values (object/get @entity.tally "counts"))) 2)) (object/get @r "cum")) (object/get @r "ak")), fa: (or (object/get @r "fa") @hitA), b: (if @hitB @l (object/get @r "b")), bk: (if @hitB (- (math/floor (/ (* (array/sum (object/values (object/get @entity.tally "counts"))) 9) 10)) (object/get @r "cum")) (object/get @r "bk")), fb: (or (object/get @r "fb") @hitB) }))))))
+          (do
+            (set @entity.wantA (object/get @ranks "a"))
+            (set @entity.wantAk (object/get @ranks "ak"))
+            (set @entity.wantB (object/get @ranks "b"))
+            (set @entity.wantBk (object/get @ranks "bk"))
+            (set @entity.tally { counts: {}, lasts: {}, pick: [] })
+            (set @entity.pass 2)
+            (set @entity.fcursor 0)
+            (emit EXAMPLES_SECOND { })))
+      EXAMPLES_SECOND -> finding
+        (emit EXAMPLES_NEXT { })
+      EXAMPLES_NEXT -> finding when (and (>= @entity.fcursor (array/len @entity.files)) (= @entity.pass 2))
+        (emit EXAMPLES_FINISH { })
+      EXAMPLES_READ -> finding when (> (array/len (object/get @config.examplePaths (object/get @entity.hit "name"))) 0)
+        (set @entity.source (bytes/to-string @payload.data))
+        (set @entity.jobs (object/get @config.examplePaths (object/get @entity.hit "name")))
+        (set @entity.jcursor 0)
+        (emit EXAMPLES_PRINT { })
+      EXAMPLES_READ -> finding when (= (array/len (object/get @config.examplePaths (object/get @entity.hit "name"))) 0)
+        (set @entity.source (bytes/to-string @payload.data))
+        (program/print null { source: (bytes/to-string @payload.data), nodes: "orbitals[*]" } { key: "count" emit: { success: EXAMPLES_COUNTED, failure: EXAMPLES_UNPARSED } })
+      EXAMPLES_COUNTED -> finding
+        (set @entity.jobs (array/flatten (array/map (array/range (array/len @payload.result)) (fn i (if (= (object/get @entity.hit "name") "EntityField") [(str/concat "orbitals[" @i "].entity.fields[*]"), (str/concat "orbitals[" @i "].entities[*].fields[*]")] [(str/concat "orbitals[" @i "].entity"), (str/concat "orbitals[" @i "].entities[*]")])))))
+        (set @entity.jcursor 0)
+        (emit EXAMPLES_PRINT { })
+      EXAMPLES_UNPARSED -> finding
+        (set @entity.fcursor (+ @entity.fcursor 1))
+        (emit EXAMPLES_NEXT { })
+      EXAMPLES_PRINT -> finding when (< @entity.jcursor (array/len @entity.jobs))
+        (program/print null { source: @entity.source, nodes: (array/nth @entity.jobs @entity.jcursor) } { key: "print" emit: { success: EXAMPLES_PRINTED, failure: EXAMPLES_SKIPPED } })
+      EXAMPLES_PRINT -> finding when (>= @entity.jcursor (array/len @entity.jobs))
+        (set @entity.fcursor (+ @entity.fcursor 1))
+        (emit EXAMPLES_NEXT { })
+      EXAMPLES_PRINTED -> finding
+        (set @entity.acc (let ((init : RefAcc { key: "", prev: "", n: 0, groups: [], picks: [] }) (lasts (object/get @entity.tally "lasts")) (counts (object/get @entity.tally "counts"))) (array/reduce (array/sort (array/map @payload.result (fn s { len: (bytes/length (bytes/from-string @s)), text: @s })) "len" "asc") @init (fn a r (let ((key (str/concat "l" (object/get @r "len")))) (let ((same (= (object/get @a "key") @key))) (let ((start (if @same (object/get @a "prev") (or (object/get @lasts @key) "")))) (let ((n0 (if @same (object/get @a "n") 0)) (kept (if @same (!= (object/get @r "text") @start) (!= (hash/sha256 (object/get @r "text") "hex" "text") @start)))) (object/merge { key: @key, prev: (if @kept (object/get @r "text") @start), n: (+ @n0 (if @kept 1 0)) } { groups: (if (or @same (= (object/get @a "key") "")) (object/get @a "groups") (array/append (object/get @a "groups") (object/merge { key: (object/get @a "key"), n: (object/get @a "n") } { last: (hash/sha256 (object/get @a "prev") "hex" "text") }))), picks: (if (and @kept (= @entity.pass 2) (or (and (= @key (str/concat "l" @entity.wantA)) (= (+ (or (object/get @counts @key) 0) @n0) @entity.wantAk)) (and (= @key (str/concat "l" @entity.wantB)) (= (+ (or (object/get @counts @key) 0) @n0) @entity.wantBk)))) (array/append (object/get @a "picks") (object/get @r "text")) (object/get @a "picks")) })))))))))
+        (set @entity.tally (let ((counts (object/get @entity.tally "counts")) (lasts (object/get @entity.tally "lasts")) (groups (array/filter (array/append (object/get @entity.acc "groups") (object/merge { key: (object/get @entity.acc "key"), n: (object/get @entity.acc "n") } { last: (hash/sha256 (object/get @entity.acc "prev") "hex" "text") })) (fn g (> (object/get @g "n") 0)))) (pick (object/get @entity.tally "pick"))) (object/merge { counts: (object/merge @counts (array/reduce @groups {} (fn o g (object/set @o (object/get @g "key") (+ (or (object/get @counts (object/get @g "key")) 0) (object/get @g "n")))))) } { lasts: (object/merge @lasts (array/reduce @groups {} (fn o g (object/set @o (object/get @g "key") (object/get @g "last"))))), pick: (array/concat @pick (object/get @entity.acc "picks")) })))
+        (set @entity.jcursor (+ @entity.jcursor 1))
+        (emit EXAMPLES_PRINT { })
+      EXAMPLES_SKIPPED -> finding
+        (set @entity.jcursor (+ @entity.jcursor 1))
+        (emit EXAMPLES_PRINT { })
+      EXAMPLES_FINISH -> idle
+        (emit REFERENCE_ANSWERED { status: 200, body: (json/stringify (object/merge @entity.hit { examples: (array/sort (array/unique (object/get @entity.tally "pick"))) })) })
+    }
+
+    config {
+      examplePaths : Map string [string] = { Orbital: ["orbitals[*]"], UseDecl: ["uses[*]", "orbitals[*].uses[*]"], ExpectsDecl: ["orbitals[*].expects[*]"], TypeAlias: ["typeAliases[*]", "orbitals[*].typeAliases[*]"], Entity: [], EntityField: [], Page: ["orbitals[*].pages[*]"], Trait: ["orbitals[*].traits[*]"], State: ["orbitals[*].traits[*].states[*]"], Transition: ["orbitals[*].traits[*].states[*].transitions[*]"], Emit: ["orbitals[*].traits[*].emits[*]"], Listen: ["orbitals[*].traits[*].listens[*]"], Tick: ["orbitals[*].traits[*].ticks[*]"], ConfigField: ["orbitals[*].traits[*].config[*]"] }
+        @label "Example paths"
+        @description "For each construct, the paths of its occurrences in an installed std program, in the order orbital_lolo::reference::examples reads them; a construct with no entry has no examples, and one with an empty list is read per orbital."
     }
 
     emits {
@@ -158,6 +279,71 @@ orbital OrbReferenceOrbital {
         codes : [RefCode]!
       }
         @description "Internal: answer the topic against the loaded language tables."
+        @tier "internal"
+      EXAMPLES_PACKAGES {
+        result : [RefPackage]!
+      }
+        @description "behavior/packages: the installed packages."
+        @tier "internal"
+      EXAMPLES_MANIFEST {
+        data : bytes!
+      }
+        @description "os/read-file: the installed std package.json."
+        @tier "internal"
+      EXAMPLES_LISTED {
+        entries : [RefEntry]!
+      }
+        @description "os/list-dir: one directory of the std tree."
+        @tier "internal"
+      EXAMPLES_READ {
+        data : bytes!
+      }
+        @description "os/read: the std file text."
+        @tier "internal"
+      EXAMPLES_PRINTED {
+        result : [string]!
+      }
+        @description "program/print: the matched constructs, formatted."
+        @tier "internal"
+      EXAMPLES_SKIPPED {
+        error : string
+      }
+        @description "program/print failed: the path matches nothing in this file, so it gives no example."
+        @tier "internal"
+      EXAMPLES_COUNTED {
+        result : [string]!
+      }
+        @description "program/print: every orbital of the file, counted."
+        @tier "internal"
+      EXAMPLES_UNPARSED {
+        error : string
+      }
+        @description "program/print failed: the file does not parse, so it gives no example."
+        @tier "internal"
+      EXAMPLES_FAILED {
+        error : string
+      }
+        @description "A read of the std tree failed."
+        @tier "internal"
+      EXAMPLES_WALK {
+      }
+        @description "Internal: list the next directory."
+        @tier "internal"
+      EXAMPLES_NEXT {
+      }
+        @description "Internal: read the next std file."
+        @tier "internal"
+      EXAMPLES_PRINT {
+      }
+        @description "Internal: print the next path of this file."
+        @tier "internal"
+      EXAMPLES_SECOND {
+      }
+        @description "Internal: scan the files again for the two chosen examples."
+        @tier "internal"
+      EXAMPLES_FINISH {
+      }
+        @description "Internal: pick the examples."
         @tier "internal"
       REFERENCE_FAILED {
         error : string
@@ -189,11 +375,12 @@ orbital OrbReferenceOrbital {
     listens {
       REFERENCE_START {
         topic : string!
+        cwd : string!
       }
         @description "Answer a reference topic."
       OrbReference.REFERENCE_START -> REFERENCE_START
     }
   }
 
-  page "/orb-reference" as OrbReferencePage -> OrbReference, ArgsCli, ReferenceEngine
+  page boot as OrbReferenceOrbitalStart -> OrbReference, ArgsCli, ReferenceEngine
 }

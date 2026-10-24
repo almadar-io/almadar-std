@@ -79,7 +79,7 @@ orbital LearnStepperOrbital {
     filterButtons : [node]
   }
 
-  trait LearnStepperSim -> @rebindable LearnStepperScene [interaction, instance] {
+  trait LearnStepperSim -> @rebindable LearnStepperScene [client] {
     initial: idle
 
     state idle {
@@ -105,12 +105,23 @@ orbital LearnStepperOrbital {
             (tallyItems (array/map @entity.categories (fn cc { label: (object/get @cc label), count: (array/len (array/filter @entity.stages (fn s (and (<= @s.position @currentPosition) (== @s.category (object/get @cc category)))))) })))
             (visibleThreadNote (if (== @entity.activeFilter "all") @config.allSummary (object/get (array/first (array/filter @entity.categorySummaries (fn cs (== @cs.category @entity.activeFilter)))) summary)))
             (axisWidth (- @config.width (+ @config.axisMarginLeft @config.axisMarginRight)))
-            (baseShapes [
+            (filterButtons (array/concat [
+                { type: button, action: FILTER_CATEGORY, actionPayload: { category: "all" }, label: @config.allLabel, variant: (if (== @entity.activeFilter "all") "secondary" "ghost"), size: sm, aria-pressed: (if (== @entity.activeFilter "all") "true" "false") }
+              ] (array/map @entity.categories (fn cc { type: button, action: FILTER_CATEGORY, actionPayload: { category: (object/get @cc category) }, label: (object/get @cc label), variant: (if (== @entity.activeFilter (object/get @cc category)) "secondary" "ghost"), size: sm, aria-pressed: (if (== @entity.activeFilter (object/get @cc category)) "true" "false") }))))
+          )
+          (do
+            (set @entity.narration @narration)
+            (set @entity.currentStageLabel @stageLabel)
+            (set @entity.currentStageDescription @boundedDescription)
+            (set @entity.categoryTally @categoryTally)
+            (set @entity.tallyItems @tallyItems)
+            (set @entity.visibleThreadNote @visibleThreadNote)
+            (set @entity.shapes [
               { type: line, id: "axis", x1: @config.axisMarginLeft, y1: @config.axisY, x2: (- @config.width @config.axisMarginRight), y2: @config.axisY, tone: "axis", stroke: "normal", opacity: 1 },
               { type: text, id: "minPositionLabel", x: @config.axisMarginLeft, y: (+ @config.axisY 26), text: (str/concat "" @config.minPosition), textSize: "xs", align: "left", tone: "label" },
               { type: text, id: "maxPositionLabel", x: (- @config.width @config.axisMarginRight), y: (+ @config.axisY 26), text: (str/concat "" @config.maxPosition), textSize: "xs", align: "right", tone: "label" }
             ])
-            (markerShapes (array/flatten (array/map @entity.stages (fn s (let (
+            (set @entity.shapes (array/reduce @entity.stages @entity.shapes (fn acc s (let (
                 (isRevealed (<= @s.position @currentPosition))
                 (isCurrent (== @s.position @currentPosition))
                 (matchesFilter (or (== @entity.activeFilter "all") (== @s.category @entity.activeFilter)))
@@ -123,32 +134,16 @@ orbital LearnStepperOrbital {
                 (rad (if @isCurrent @config.markerHighlightRadius @config.markerRadius))
               )
               (if @isCurrent
-                [
-                  { type: circle, id: (str/concat "ring-" @s.position), x: @xPos, y: @config.axisY, radius: (+ @rad 5), tone: @catColor, fillStyle: "outline", stroke: "bold", opacity: 1 },
-                  { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, tone: @col, fillTone: @col, fillStyle: "solid", opacity: @finalOpacity }
-                ]
-                [
-                  { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, tone: @col, fillTone: @col, fillStyle: "solid", opacity: @finalOpacity }
-                ]
+                (array/append (array/append @acc { type: circle, id: (str/concat "ring-" @s.position), x: @xPos, y: @config.axisY, radius: (+ @rad 5), tone: @catColor, fillStyle: "outline", stroke: "bold", opacity: 1 }) { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, tone: @col, fillTone: @col, fillStyle: "solid", opacity: @finalOpacity })
+                (array/append @acc { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, tone: @col, fillTone: @col, fillStyle: "solid", opacity: @finalOpacity })
               )
-            )))))
-            (legendShapes (array/flatten (array/map @entity.categories [
-                { type: circle, id: (str/concat "legend-dot-" @index), x: (+ @config.axisMarginLeft (* @index (/ @axisWidth (array/len @entity.categories)))), y: 22, radius: 5, tone: (object/get @item color), fillTone: (object/get @item color), fillStyle: "solid", opacity: 1 },
-                { type: text, id: (str/concat "legend-label-" @index), x: (+ (+ @config.axisMarginLeft (* @index (/ @axisWidth (array/len @entity.categories)))) 12), y: 26, text: (object/get @item label), textSize: "xs", align: "left", tone: "label" }
-              ])))
-            (allShapes (array/concat @baseShapes @markerShapes @legendShapes))
-            (filterButtons (array/concat [
-                { type: button, action: FILTER_CATEGORY, actionPayload: { category: "all" }, label: @config.allLabel, variant: (if (== @entity.activeFilter "all") "secondary" "ghost"), size: sm, aria-pressed: (if (== @entity.activeFilter "all") "true" "false") }
-              ] (array/map @entity.categories (fn cc { type: button, action: FILTER_CATEGORY, actionPayload: { category: (object/get @cc category) }, label: (object/get @cc label), variant: (if (== @entity.activeFilter (object/get @cc category)) "secondary" "ghost"), size: sm, aria-pressed: (if (== @entity.activeFilter (object/get @cc category)) "true" "false") }))))
-          )
-          (do
-            (set @entity.narration @narration)
-            (set @entity.currentStageLabel @stageLabel)
-            (set @entity.currentStageDescription @boundedDescription)
-            (set @entity.categoryTally @categoryTally)
-            (set @entity.tallyItems @tallyItems)
-            (set @entity.visibleThreadNote @visibleThreadNote)
-            (set @entity.shapes @allShapes)
+            ))))
+            (set @entity.shapes (array/reduce (array/range (array/len @entity.categories)) @entity.shapes (fn acc i (let (
+                (item (array/nth @entity.categories @i))
+                (legendX (+ @config.axisMarginLeft (* @i (/ @axisWidth (array/len @entity.categories)))))
+              )
+              (array/append (array/append @acc { type: circle, id: (str/concat "legend-dot-" @i), x: @legendX, y: 22, radius: 5, tone: (object/get @item color), fillTone: (object/get @item color), fillStyle: "solid", opacity: 1 }) { type: text, id: (str/concat "legend-label-" @i), x: (+ @legendX 12), y: 26, text: (object/get @item label), textSize: "xs", align: "left", tone: "label" })
+            ))))
             (set @entity.filterButtons @filterButtons)
           )
         )
@@ -208,12 +203,23 @@ orbital LearnStepperOrbital {
             (tallyItems (array/map @entity.categories (fn cc { label: (object/get @cc label), count: (array/len (array/filter @entity.stages (fn s (and (<= @s.position @currentPosition) (== @s.category (object/get @cc category)))))) })))
             (visibleThreadNote (if (== @entity.activeFilter "all") @config.allSummary (object/get (array/first (array/filter @entity.categorySummaries (fn cs (== @cs.category @entity.activeFilter)))) summary)))
             (axisWidth (- @config.width (+ @config.axisMarginLeft @config.axisMarginRight)))
-            (baseShapes [
+            (filterButtons (array/concat [
+                { type: button, action: FILTER_CATEGORY, actionPayload: { category: "all" }, label: @config.allLabel, variant: (if (== @entity.activeFilter "all") "secondary" "ghost"), size: sm, aria-pressed: (if (== @entity.activeFilter "all") "true" "false") }
+              ] (array/map @entity.categories (fn cc { type: button, action: FILTER_CATEGORY, actionPayload: { category: (object/get @cc category) }, label: (object/get @cc label), variant: (if (== @entity.activeFilter (object/get @cc category)) "secondary" "ghost"), size: sm, aria-pressed: (if (== @entity.activeFilter (object/get @cc category)) "true" "false") }))))
+          )
+          (do
+            (set @entity.narration @narration)
+            (set @entity.currentStageLabel @stageLabel)
+            (set @entity.currentStageDescription @boundedDescription)
+            (set @entity.categoryTally @categoryTally)
+            (set @entity.tallyItems @tallyItems)
+            (set @entity.visibleThreadNote @visibleThreadNote)
+            (set @entity.shapes [
               { type: line, id: "axis", x1: @config.axisMarginLeft, y1: @config.axisY, x2: (- @config.width @config.axisMarginRight), y2: @config.axisY, tone: "axis", stroke: "normal", opacity: 1 },
               { type: text, id: "minPositionLabel", x: @config.axisMarginLeft, y: (+ @config.axisY 26), text: (str/concat "" @config.minPosition), textSize: "xs", align: "left", tone: "label" },
               { type: text, id: "maxPositionLabel", x: (- @config.width @config.axisMarginRight), y: (+ @config.axisY 26), text: (str/concat "" @config.maxPosition), textSize: "xs", align: "right", tone: "label" }
             ])
-            (markerShapes (array/flatten (array/map @entity.stages (fn s (let (
+            (set @entity.shapes (array/reduce @entity.stages @entity.shapes (fn acc s (let (
                 (isRevealed (<= @s.position @currentPosition))
                 (isCurrent (== @s.position @currentPosition))
                 (matchesFilter (or (== @entity.activeFilter "all") (== @s.category @entity.activeFilter)))
@@ -226,32 +232,16 @@ orbital LearnStepperOrbital {
                 (rad (if @isCurrent @config.markerHighlightRadius @config.markerRadius))
               )
               (if @isCurrent
-                [
-                  { type: circle, id: (str/concat "ring-" @s.position), x: @xPos, y: @config.axisY, radius: (+ @rad 5), tone: @catColor, fillStyle: "outline", stroke: "bold", opacity: 1 },
-                  { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, tone: @col, fillTone: @col, fillStyle: "solid", opacity: @finalOpacity }
-                ]
-                [
-                  { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, tone: @col, fillTone: @col, fillStyle: "solid", opacity: @finalOpacity }
-                ]
+                (array/append (array/append @acc { type: circle, id: (str/concat "ring-" @s.position), x: @xPos, y: @config.axisY, radius: (+ @rad 5), tone: @catColor, fillStyle: "outline", stroke: "bold", opacity: 1 }) { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, tone: @col, fillTone: @col, fillStyle: "solid", opacity: @finalOpacity })
+                (array/append @acc { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, tone: @col, fillTone: @col, fillStyle: "solid", opacity: @finalOpacity })
               )
-            )))))
-            (legendShapes (array/flatten (array/map @entity.categories [
-                { type: circle, id: (str/concat "legend-dot-" @index), x: (+ @config.axisMarginLeft (* @index (/ @axisWidth (array/len @entity.categories)))), y: 22, radius: 5, tone: (object/get @item color), fillTone: (object/get @item color), fillStyle: "solid", opacity: 1 },
-                { type: text, id: (str/concat "legend-label-" @index), x: (+ (+ @config.axisMarginLeft (* @index (/ @axisWidth (array/len @entity.categories)))) 12), y: 26, text: (object/get @item label), textSize: "xs", align: "left", tone: "label" }
-              ])))
-            (allShapes (array/concat @baseShapes @markerShapes @legendShapes))
-            (filterButtons (array/concat [
-                { type: button, action: FILTER_CATEGORY, actionPayload: { category: "all" }, label: @config.allLabel, variant: (if (== @entity.activeFilter "all") "secondary" "ghost"), size: sm, aria-pressed: (if (== @entity.activeFilter "all") "true" "false") }
-              ] (array/map @entity.categories (fn cc { type: button, action: FILTER_CATEGORY, actionPayload: { category: (object/get @cc category) }, label: (object/get @cc label), variant: (if (== @entity.activeFilter (object/get @cc category)) "secondary" "ghost"), size: sm, aria-pressed: (if (== @entity.activeFilter (object/get @cc category)) "true" "false") }))))
-          )
-          (do
-            (set @entity.narration @narration)
-            (set @entity.currentStageLabel @stageLabel)
-            (set @entity.currentStageDescription @boundedDescription)
-            (set @entity.categoryTally @categoryTally)
-            (set @entity.tallyItems @tallyItems)
-            (set @entity.visibleThreadNote @visibleThreadNote)
-            (set @entity.shapes @allShapes)
+            ))))
+            (set @entity.shapes (array/reduce (array/range (array/len @entity.categories)) @entity.shapes (fn acc i (let (
+                (item (array/nth @entity.categories @i))
+                (legendX (+ @config.axisMarginLeft (* @i (/ @axisWidth (array/len @entity.categories)))))
+              )
+              (array/append (array/append @acc { type: circle, id: (str/concat "legend-dot-" @i), x: @legendX, y: 22, radius: 5, tone: (object/get @item color), fillTone: (object/get @item color), fillStyle: "solid", opacity: 1 }) { type: text, id: (str/concat "legend-label-" @i), x: (+ @legendX 12), y: 26, text: (object/get @item label), textSize: "xs", align: "left", tone: "label" })
+            ))))
             (set @entity.filterButtons @filterButtons)
           )
         )
@@ -307,12 +297,23 @@ orbital LearnStepperOrbital {
             (tallyItems (array/map @entity.categories (fn cc { label: (object/get @cc label), count: (array/len (array/filter @entity.stages (fn s (and (<= @s.position @currentPosition) (== @s.category (object/get @cc category)))))) })))
             (visibleThreadNote (if (== @entity.activeFilter "all") @config.allSummary (object/get (array/first (array/filter @entity.categorySummaries (fn cs (== @cs.category @entity.activeFilter)))) summary)))
             (axisWidth (- @config.width (+ @config.axisMarginLeft @config.axisMarginRight)))
-            (baseShapes [
+            (filterButtons (array/concat [
+                { type: button, action: FILTER_CATEGORY, actionPayload: { category: "all" }, label: @config.allLabel, variant: (if (== @entity.activeFilter "all") "secondary" "ghost"), size: sm, aria-pressed: (if (== @entity.activeFilter "all") "true" "false") }
+              ] (array/map @entity.categories (fn cc { type: button, action: FILTER_CATEGORY, actionPayload: { category: (object/get @cc category) }, label: (object/get @cc label), variant: (if (== @entity.activeFilter (object/get @cc category)) "secondary" "ghost"), size: sm, aria-pressed: (if (== @entity.activeFilter (object/get @cc category)) "true" "false") }))))
+          )
+          (do
+            (set @entity.narration @narration)
+            (set @entity.currentStageLabel @stageLabel)
+            (set @entity.currentStageDescription @boundedDescription)
+            (set @entity.categoryTally @categoryTally)
+            (set @entity.tallyItems @tallyItems)
+            (set @entity.visibleThreadNote @visibleThreadNote)
+            (set @entity.shapes [
               { type: line, id: "axis", x1: @config.axisMarginLeft, y1: @config.axisY, x2: (- @config.width @config.axisMarginRight), y2: @config.axisY, tone: "axis", stroke: "normal", opacity: 1 },
               { type: text, id: "minPositionLabel", x: @config.axisMarginLeft, y: (+ @config.axisY 26), text: (str/concat "" @config.minPosition), textSize: "xs", align: "left", tone: "label" },
               { type: text, id: "maxPositionLabel", x: (- @config.width @config.axisMarginRight), y: (+ @config.axisY 26), text: (str/concat "" @config.maxPosition), textSize: "xs", align: "right", tone: "label" }
             ])
-            (markerShapes (array/flatten (array/map @entity.stages (fn s (let (
+            (set @entity.shapes (array/reduce @entity.stages @entity.shapes (fn acc s (let (
                 (isRevealed (<= @s.position @currentPosition))
                 (isCurrent (== @s.position @currentPosition))
                 (matchesFilter (or (== @entity.activeFilter "all") (== @s.category @entity.activeFilter)))
@@ -325,32 +326,16 @@ orbital LearnStepperOrbital {
                 (rad (if @isCurrent @config.markerHighlightRadius @config.markerRadius))
               )
               (if @isCurrent
-                [
-                  { type: circle, id: (str/concat "ring-" @s.position), x: @xPos, y: @config.axisY, radius: (+ @rad 5), tone: @catColor, fillStyle: "outline", stroke: "bold", opacity: 1 },
-                  { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, tone: @col, fillTone: @col, fillStyle: "solid", opacity: @finalOpacity }
-                ]
-                [
-                  { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, tone: @col, fillTone: @col, fillStyle: "solid", opacity: @finalOpacity }
-                ]
+                (array/append (array/append @acc { type: circle, id: (str/concat "ring-" @s.position), x: @xPos, y: @config.axisY, radius: (+ @rad 5), tone: @catColor, fillStyle: "outline", stroke: "bold", opacity: 1 }) { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, tone: @col, fillTone: @col, fillStyle: "solid", opacity: @finalOpacity })
+                (array/append @acc { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, tone: @col, fillTone: @col, fillStyle: "solid", opacity: @finalOpacity })
               )
-            )))))
-            (legendShapes (array/flatten (array/map @entity.categories [
-                { type: circle, id: (str/concat "legend-dot-" @index), x: (+ @config.axisMarginLeft (* @index (/ @axisWidth (array/len @entity.categories)))), y: 22, radius: 5, tone: (object/get @item color), fillTone: (object/get @item color), fillStyle: "solid", opacity: 1 },
-                { type: text, id: (str/concat "legend-label-" @index), x: (+ (+ @config.axisMarginLeft (* @index (/ @axisWidth (array/len @entity.categories)))) 12), y: 26, text: (object/get @item label), textSize: "xs", align: "left", tone: "label" }
-              ])))
-            (allShapes (array/concat @baseShapes @markerShapes @legendShapes))
-            (filterButtons (array/concat [
-                { type: button, action: FILTER_CATEGORY, actionPayload: { category: "all" }, label: @config.allLabel, variant: (if (== @entity.activeFilter "all") "secondary" "ghost"), size: sm, aria-pressed: (if (== @entity.activeFilter "all") "true" "false") }
-              ] (array/map @entity.categories (fn cc { type: button, action: FILTER_CATEGORY, actionPayload: { category: (object/get @cc category) }, label: (object/get @cc label), variant: (if (== @entity.activeFilter (object/get @cc category)) "secondary" "ghost"), size: sm, aria-pressed: (if (== @entity.activeFilter (object/get @cc category)) "true" "false") }))))
-          )
-          (do
-            (set @entity.narration @narration)
-            (set @entity.currentStageLabel @stageLabel)
-            (set @entity.currentStageDescription @boundedDescription)
-            (set @entity.categoryTally @categoryTally)
-            (set @entity.tallyItems @tallyItems)
-            (set @entity.visibleThreadNote @visibleThreadNote)
-            (set @entity.shapes @allShapes)
+            ))))
+            (set @entity.shapes (array/reduce (array/range (array/len @entity.categories)) @entity.shapes (fn acc i (let (
+                (item (array/nth @entity.categories @i))
+                (legendX (+ @config.axisMarginLeft (* @i (/ @axisWidth (array/len @entity.categories)))))
+              )
+              (array/append (array/append @acc { type: circle, id: (str/concat "legend-dot-" @i), x: @legendX, y: 22, radius: 5, tone: (object/get @item color), fillTone: (object/get @item color), fillStyle: "solid", opacity: 1 }) { type: text, id: (str/concat "legend-label-" @i), x: (+ @legendX 12), y: 26, text: (object/get @item label), textSize: "xs", align: "left", tone: "label" })
+            ))))
             (set @entity.filterButtons @filterButtons)
           )
         )
@@ -405,12 +390,23 @@ orbital LearnStepperOrbital {
             (tallyItems (array/map @entity.categories (fn cc { label: (object/get @cc label), count: (array/len (array/filter @entity.stages (fn s (and (<= @s.position @currentPosition) (== @s.category (object/get @cc category)))))) })))
             (visibleThreadNote (if (== @entity.activeFilter "all") @config.allSummary (object/get (array/first (array/filter @entity.categorySummaries (fn cs (== @cs.category @entity.activeFilter)))) summary)))
             (axisWidth (- @config.width (+ @config.axisMarginLeft @config.axisMarginRight)))
-            (baseShapes [
+            (filterButtons (array/concat [
+                { type: button, action: FILTER_CATEGORY, actionPayload: { category: "all" }, label: @config.allLabel, variant: (if (== @entity.activeFilter "all") "secondary" "ghost"), size: sm, aria-pressed: (if (== @entity.activeFilter "all") "true" "false") }
+              ] (array/map @entity.categories (fn cc { type: button, action: FILTER_CATEGORY, actionPayload: { category: (object/get @cc category) }, label: (object/get @cc label), variant: (if (== @entity.activeFilter (object/get @cc category)) "secondary" "ghost"), size: sm, aria-pressed: (if (== @entity.activeFilter (object/get @cc category)) "true" "false") }))))
+          )
+          (do
+            (set @entity.narration @narration)
+            (set @entity.currentStageLabel @stageLabel)
+            (set @entity.currentStageDescription @boundedDescription)
+            (set @entity.categoryTally @categoryTally)
+            (set @entity.tallyItems @tallyItems)
+            (set @entity.visibleThreadNote @visibleThreadNote)
+            (set @entity.shapes [
               { type: line, id: "axis", x1: @config.axisMarginLeft, y1: @config.axisY, x2: (- @config.width @config.axisMarginRight), y2: @config.axisY, tone: "axis", stroke: "normal", opacity: 1 },
               { type: text, id: "minPositionLabel", x: @config.axisMarginLeft, y: (+ @config.axisY 26), text: (str/concat "" @config.minPosition), textSize: "xs", align: "left", tone: "label" },
               { type: text, id: "maxPositionLabel", x: (- @config.width @config.axisMarginRight), y: (+ @config.axisY 26), text: (str/concat "" @config.maxPosition), textSize: "xs", align: "right", tone: "label" }
             ])
-            (markerShapes (array/flatten (array/map @entity.stages (fn s (let (
+            (set @entity.shapes (array/reduce @entity.stages @entity.shapes (fn acc s (let (
                 (isRevealed (<= @s.position @currentPosition))
                 (isCurrent (== @s.position @currentPosition))
                 (matchesFilter (or (== @entity.activeFilter "all") (== @s.category @entity.activeFilter)))
@@ -423,32 +419,16 @@ orbital LearnStepperOrbital {
                 (rad (if @isCurrent @config.markerHighlightRadius @config.markerRadius))
               )
               (if @isCurrent
-                [
-                  { type: circle, id: (str/concat "ring-" @s.position), x: @xPos, y: @config.axisY, radius: (+ @rad 5), tone: @catColor, fillStyle: "outline", stroke: "bold", opacity: 1 },
-                  { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, tone: @col, fillTone: @col, fillStyle: "solid", opacity: @finalOpacity }
-                ]
-                [
-                  { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, tone: @col, fillTone: @col, fillStyle: "solid", opacity: @finalOpacity }
-                ]
+                (array/append (array/append @acc { type: circle, id: (str/concat "ring-" @s.position), x: @xPos, y: @config.axisY, radius: (+ @rad 5), tone: @catColor, fillStyle: "outline", stroke: "bold", opacity: 1 }) { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, tone: @col, fillTone: @col, fillStyle: "solid", opacity: @finalOpacity })
+                (array/append @acc { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, tone: @col, fillTone: @col, fillStyle: "solid", opacity: @finalOpacity })
               )
-            )))))
-            (legendShapes (array/flatten (array/map @entity.categories [
-                { type: circle, id: (str/concat "legend-dot-" @index), x: (+ @config.axisMarginLeft (* @index (/ @axisWidth (array/len @entity.categories)))), y: 22, radius: 5, tone: (object/get @item color), fillTone: (object/get @item color), fillStyle: "solid", opacity: 1 },
-                { type: text, id: (str/concat "legend-label-" @index), x: (+ (+ @config.axisMarginLeft (* @index (/ @axisWidth (array/len @entity.categories)))) 12), y: 26, text: (object/get @item label), textSize: "xs", align: "left", tone: "label" }
-              ])))
-            (allShapes (array/concat @baseShapes @markerShapes @legendShapes))
-            (filterButtons (array/concat [
-                { type: button, action: FILTER_CATEGORY, actionPayload: { category: "all" }, label: @config.allLabel, variant: (if (== @entity.activeFilter "all") "secondary" "ghost"), size: sm, aria-pressed: (if (== @entity.activeFilter "all") "true" "false") }
-              ] (array/map @entity.categories (fn cc { type: button, action: FILTER_CATEGORY, actionPayload: { category: (object/get @cc category) }, label: (object/get @cc label), variant: (if (== @entity.activeFilter (object/get @cc category)) "secondary" "ghost"), size: sm, aria-pressed: (if (== @entity.activeFilter (object/get @cc category)) "true" "false") }))))
-          )
-          (do
-            (set @entity.narration @narration)
-            (set @entity.currentStageLabel @stageLabel)
-            (set @entity.currentStageDescription @boundedDescription)
-            (set @entity.categoryTally @categoryTally)
-            (set @entity.tallyItems @tallyItems)
-            (set @entity.visibleThreadNote @visibleThreadNote)
-            (set @entity.shapes @allShapes)
+            ))))
+            (set @entity.shapes (array/reduce (array/range (array/len @entity.categories)) @entity.shapes (fn acc i (let (
+                (item (array/nth @entity.categories @i))
+                (legendX (+ @config.axisMarginLeft (* @i (/ @axisWidth (array/len @entity.categories)))))
+              )
+              (array/append (array/append @acc { type: circle, id: (str/concat "legend-dot-" @i), x: @legendX, y: 22, radius: 5, tone: (object/get @item color), fillTone: (object/get @item color), fillStyle: "solid", opacity: 1 }) { type: text, id: (str/concat "legend-label-" @i), x: (+ @legendX 12), y: 26, text: (object/get @item label), textSize: "xs", align: "left", tone: "label" })
+            ))))
             (set @entity.filterButtons @filterButtons)
           )
         )
@@ -499,12 +479,23 @@ orbital LearnStepperOrbital {
             (tallyItems (array/map @entity.categories (fn cc { label: (object/get @cc label), count: (array/len (array/filter @entity.stages (fn s (and (<= @s.position @currentPosition) (== @s.category (object/get @cc category)))))) })))
             (visibleThreadNote (if (== @entity.activeFilter "all") @config.allSummary (object/get (array/first (array/filter @entity.categorySummaries (fn cs (== @cs.category @entity.activeFilter)))) summary)))
             (axisWidth (- @config.width (+ @config.axisMarginLeft @config.axisMarginRight)))
-            (baseShapes [
+            (filterButtons (array/concat [
+                { type: button, action: FILTER_CATEGORY, actionPayload: { category: "all" }, label: @config.allLabel, variant: (if (== @entity.activeFilter "all") "secondary" "ghost"), size: sm, aria-pressed: (if (== @entity.activeFilter "all") "true" "false") }
+              ] (array/map @entity.categories (fn cc { type: button, action: FILTER_CATEGORY, actionPayload: { category: (object/get @cc category) }, label: (object/get @cc label), variant: (if (== @entity.activeFilter (object/get @cc category)) "secondary" "ghost"), size: sm, aria-pressed: (if (== @entity.activeFilter (object/get @cc category)) "true" "false") }))))
+          )
+          (do
+            (set @entity.narration @narration)
+            (set @entity.currentStageLabel @stageLabel)
+            (set @entity.currentStageDescription @boundedDescription)
+            (set @entity.categoryTally @categoryTally)
+            (set @entity.tallyItems @tallyItems)
+            (set @entity.visibleThreadNote @visibleThreadNote)
+            (set @entity.shapes [
               { type: line, id: "axis", x1: @config.axisMarginLeft, y1: @config.axisY, x2: (- @config.width @config.axisMarginRight), y2: @config.axisY, tone: "axis", stroke: "normal", opacity: 1 },
               { type: text, id: "minPositionLabel", x: @config.axisMarginLeft, y: (+ @config.axisY 26), text: (str/concat "" @config.minPosition), textSize: "xs", align: "left", tone: "label" },
               { type: text, id: "maxPositionLabel", x: (- @config.width @config.axisMarginRight), y: (+ @config.axisY 26), text: (str/concat "" @config.maxPosition), textSize: "xs", align: "right", tone: "label" }
             ])
-            (markerShapes (array/flatten (array/map @entity.stages (fn s (let (
+            (set @entity.shapes (array/reduce @entity.stages @entity.shapes (fn acc s (let (
                 (isRevealed (<= @s.position @currentPosition))
                 (isCurrent (== @s.position @currentPosition))
                 (matchesFilter (or (== @entity.activeFilter "all") (== @s.category @entity.activeFilter)))
@@ -517,32 +508,16 @@ orbital LearnStepperOrbital {
                 (rad (if @isCurrent @config.markerHighlightRadius @config.markerRadius))
               )
               (if @isCurrent
-                [
-                  { type: circle, id: (str/concat "ring-" @s.position), x: @xPos, y: @config.axisY, radius: (+ @rad 5), tone: @catColor, fillStyle: "outline", stroke: "bold", opacity: 1 },
-                  { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, tone: @col, fillTone: @col, fillStyle: "solid", opacity: @finalOpacity }
-                ]
-                [
-                  { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, tone: @col, fillTone: @col, fillStyle: "solid", opacity: @finalOpacity }
-                ]
+                (array/append (array/append @acc { type: circle, id: (str/concat "ring-" @s.position), x: @xPos, y: @config.axisY, radius: (+ @rad 5), tone: @catColor, fillStyle: "outline", stroke: "bold", opacity: 1 }) { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, tone: @col, fillTone: @col, fillStyle: "solid", opacity: @finalOpacity })
+                (array/append @acc { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, tone: @col, fillTone: @col, fillStyle: "solid", opacity: @finalOpacity })
               )
-            )))))
-            (legendShapes (array/flatten (array/map @entity.categories [
-                { type: circle, id: (str/concat "legend-dot-" @index), x: (+ @config.axisMarginLeft (* @index (/ @axisWidth (array/len @entity.categories)))), y: 22, radius: 5, tone: (object/get @item color), fillTone: (object/get @item color), fillStyle: "solid", opacity: 1 },
-                { type: text, id: (str/concat "legend-label-" @index), x: (+ (+ @config.axisMarginLeft (* @index (/ @axisWidth (array/len @entity.categories)))) 12), y: 26, text: (object/get @item label), textSize: "xs", align: "left", tone: "label" }
-              ])))
-            (allShapes (array/concat @baseShapes @markerShapes @legendShapes))
-            (filterButtons (array/concat [
-                { type: button, action: FILTER_CATEGORY, actionPayload: { category: "all" }, label: @config.allLabel, variant: (if (== @entity.activeFilter "all") "secondary" "ghost"), size: sm, aria-pressed: (if (== @entity.activeFilter "all") "true" "false") }
-              ] (array/map @entity.categories (fn cc { type: button, action: FILTER_CATEGORY, actionPayload: { category: (object/get @cc category) }, label: (object/get @cc label), variant: (if (== @entity.activeFilter (object/get @cc category)) "secondary" "ghost"), size: sm, aria-pressed: (if (== @entity.activeFilter (object/get @cc category)) "true" "false") }))))
-          )
-          (do
-            (set @entity.narration @narration)
-            (set @entity.currentStageLabel @stageLabel)
-            (set @entity.currentStageDescription @boundedDescription)
-            (set @entity.categoryTally @categoryTally)
-            (set @entity.tallyItems @tallyItems)
-            (set @entity.visibleThreadNote @visibleThreadNote)
-            (set @entity.shapes @allShapes)
+            ))))
+            (set @entity.shapes (array/reduce (array/range (array/len @entity.categories)) @entity.shapes (fn acc i (let (
+                (item (array/nth @entity.categories @i))
+                (legendX (+ @config.axisMarginLeft (* @i (/ @axisWidth (array/len @entity.categories)))))
+              )
+              (array/append (array/append @acc { type: circle, id: (str/concat "legend-dot-" @i), x: @legendX, y: 22, radius: 5, tone: (object/get @item color), fillTone: (object/get @item color), fillStyle: "solid", opacity: 1 }) { type: text, id: (str/concat "legend-label-" @i), x: (+ @legendX 12), y: 26, text: (object/get @item label), textSize: "xs", align: "left", tone: "label" })
+            ))))
             (set @entity.filterButtons @filterButtons)
           )
         )
@@ -593,12 +568,23 @@ orbital LearnStepperOrbital {
             (tallyItems (array/map @entity.categories (fn cc { label: (object/get @cc label), count: (array/len (array/filter @entity.stages (fn s (and (<= @s.position @currentPosition) (== @s.category (object/get @cc category)))))) })))
             (visibleThreadNote (if (== @entity.activeFilter "all") @config.allSummary (object/get (array/first (array/filter @entity.categorySummaries (fn cs (== @cs.category @entity.activeFilter)))) summary)))
             (axisWidth (- @config.width (+ @config.axisMarginLeft @config.axisMarginRight)))
-            (baseShapes [
+            (filterButtons (array/concat [
+                { type: button, action: FILTER_CATEGORY, actionPayload: { category: "all" }, label: @config.allLabel, variant: (if (== @entity.activeFilter "all") "secondary" "ghost"), size: sm, aria-pressed: (if (== @entity.activeFilter "all") "true" "false") }
+              ] (array/map @entity.categories (fn cc { type: button, action: FILTER_CATEGORY, actionPayload: { category: (object/get @cc category) }, label: (object/get @cc label), variant: (if (== @entity.activeFilter (object/get @cc category)) "secondary" "ghost"), size: sm, aria-pressed: (if (== @entity.activeFilter (object/get @cc category)) "true" "false") }))))
+          )
+          (do
+            (set @entity.narration @narration)
+            (set @entity.currentStageLabel @stageLabel)
+            (set @entity.currentStageDescription @boundedDescription)
+            (set @entity.categoryTally @categoryTally)
+            (set @entity.tallyItems @tallyItems)
+            (set @entity.visibleThreadNote @visibleThreadNote)
+            (set @entity.shapes [
               { type: line, id: "axis", x1: @config.axisMarginLeft, y1: @config.axisY, x2: (- @config.width @config.axisMarginRight), y2: @config.axisY, tone: "axis", stroke: "normal", opacity: 1 },
               { type: text, id: "minPositionLabel", x: @config.axisMarginLeft, y: (+ @config.axisY 26), text: (str/concat "" @config.minPosition), textSize: "xs", align: "left", tone: "label" },
               { type: text, id: "maxPositionLabel", x: (- @config.width @config.axisMarginRight), y: (+ @config.axisY 26), text: (str/concat "" @config.maxPosition), textSize: "xs", align: "right", tone: "label" }
             ])
-            (markerShapes (array/flatten (array/map @entity.stages (fn s (let (
+            (set @entity.shapes (array/reduce @entity.stages @entity.shapes (fn acc s (let (
                 (isRevealed (<= @s.position @currentPosition))
                 (isCurrent (== @s.position @currentPosition))
                 (matchesFilter (or (== @entity.activeFilter "all") (== @s.category @entity.activeFilter)))
@@ -611,32 +597,16 @@ orbital LearnStepperOrbital {
                 (rad (if @isCurrent @config.markerHighlightRadius @config.markerRadius))
               )
               (if @isCurrent
-                [
-                  { type: circle, id: (str/concat "ring-" @s.position), x: @xPos, y: @config.axisY, radius: (+ @rad 5), tone: @catColor, fillStyle: "outline", stroke: "bold", opacity: 1 },
-                  { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, tone: @col, fillTone: @col, fillStyle: "solid", opacity: @finalOpacity }
-                ]
-                [
-                  { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, tone: @col, fillTone: @col, fillStyle: "solid", opacity: @finalOpacity }
-                ]
+                (array/append (array/append @acc { type: circle, id: (str/concat "ring-" @s.position), x: @xPos, y: @config.axisY, radius: (+ @rad 5), tone: @catColor, fillStyle: "outline", stroke: "bold", opacity: 1 }) { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, tone: @col, fillTone: @col, fillStyle: "solid", opacity: @finalOpacity })
+                (array/append @acc { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, tone: @col, fillTone: @col, fillStyle: "solid", opacity: @finalOpacity })
               )
-            )))))
-            (legendShapes (array/flatten (array/map @entity.categories [
-                { type: circle, id: (str/concat "legend-dot-" @index), x: (+ @config.axisMarginLeft (* @index (/ @axisWidth (array/len @entity.categories)))), y: 22, radius: 5, tone: (object/get @item color), fillTone: (object/get @item color), fillStyle: "solid", opacity: 1 },
-                { type: text, id: (str/concat "legend-label-" @index), x: (+ (+ @config.axisMarginLeft (* @index (/ @axisWidth (array/len @entity.categories)))) 12), y: 26, text: (object/get @item label), textSize: "xs", align: "left", tone: "label" }
-              ])))
-            (allShapes (array/concat @baseShapes @markerShapes @legendShapes))
-            (filterButtons (array/concat [
-                { type: button, action: FILTER_CATEGORY, actionPayload: { category: "all" }, label: @config.allLabel, variant: (if (== @entity.activeFilter "all") "secondary" "ghost"), size: sm, aria-pressed: (if (== @entity.activeFilter "all") "true" "false") }
-              ] (array/map @entity.categories (fn cc { type: button, action: FILTER_CATEGORY, actionPayload: { category: (object/get @cc category) }, label: (object/get @cc label), variant: (if (== @entity.activeFilter (object/get @cc category)) "secondary" "ghost"), size: sm, aria-pressed: (if (== @entity.activeFilter (object/get @cc category)) "true" "false") }))))
-          )
-          (do
-            (set @entity.narration @narration)
-            (set @entity.currentStageLabel @stageLabel)
-            (set @entity.currentStageDescription @boundedDescription)
-            (set @entity.categoryTally @categoryTally)
-            (set @entity.tallyItems @tallyItems)
-            (set @entity.visibleThreadNote @visibleThreadNote)
-            (set @entity.shapes @allShapes)
+            ))))
+            (set @entity.shapes (array/reduce (array/range (array/len @entity.categories)) @entity.shapes (fn acc i (let (
+                (item (array/nth @entity.categories @i))
+                (legendX (+ @config.axisMarginLeft (* @i (/ @axisWidth (array/len @entity.categories)))))
+              )
+              (array/append (array/append @acc { type: circle, id: (str/concat "legend-dot-" @i), x: @legendX, y: 22, radius: 5, tone: (object/get @item color), fillTone: (object/get @item color), fillStyle: "solid", opacity: 1 }) { type: text, id: (str/concat "legend-label-" @i), x: (+ @legendX 12), y: 26, text: (object/get @item label), textSize: "xs", align: "left", tone: "label" })
+            ))))
             (set @entity.filterButtons @filterButtons)
           )
         )
@@ -688,12 +658,23 @@ orbital LearnStepperOrbital {
             (tallyItems (array/map @entity.categories (fn cc { label: (object/get @cc label), count: (array/len (array/filter @entity.stages (fn s (and (<= @s.position @currentPosition) (== @s.category (object/get @cc category)))))) })))
             (visibleThreadNote (if (== @entity.activeFilter "all") @config.allSummary (object/get (array/first (array/filter @entity.categorySummaries (fn cs (== @cs.category @entity.activeFilter)))) summary)))
             (axisWidth (- @config.width (+ @config.axisMarginLeft @config.axisMarginRight)))
-            (baseShapes [
+            (filterButtons (array/concat [
+                { type: button, action: FILTER_CATEGORY, actionPayload: { category: "all" }, label: @config.allLabel, variant: (if (== @entity.activeFilter "all") "secondary" "ghost"), size: sm, aria-pressed: (if (== @entity.activeFilter "all") "true" "false") }
+              ] (array/map @entity.categories (fn cc { type: button, action: FILTER_CATEGORY, actionPayload: { category: (object/get @cc category) }, label: (object/get @cc label), variant: (if (== @entity.activeFilter (object/get @cc category)) "secondary" "ghost"), size: sm, aria-pressed: (if (== @entity.activeFilter (object/get @cc category)) "true" "false") }))))
+          )
+          (do
+            (set @entity.narration @narration)
+            (set @entity.currentStageLabel @stageLabel)
+            (set @entity.currentStageDescription @boundedDescription)
+            (set @entity.categoryTally @categoryTally)
+            (set @entity.tallyItems @tallyItems)
+            (set @entity.visibleThreadNote @visibleThreadNote)
+            (set @entity.shapes [
               { type: line, id: "axis", x1: @config.axisMarginLeft, y1: @config.axisY, x2: (- @config.width @config.axisMarginRight), y2: @config.axisY, tone: "axis", stroke: "normal", opacity: 1 },
               { type: text, id: "minPositionLabel", x: @config.axisMarginLeft, y: (+ @config.axisY 26), text: (str/concat "" @config.minPosition), textSize: "xs", align: "left", tone: "label" },
               { type: text, id: "maxPositionLabel", x: (- @config.width @config.axisMarginRight), y: (+ @config.axisY 26), text: (str/concat "" @config.maxPosition), textSize: "xs", align: "right", tone: "label" }
             ])
-            (markerShapes (array/flatten (array/map @entity.stages (fn s (let (
+            (set @entity.shapes (array/reduce @entity.stages @entity.shapes (fn acc s (let (
                 (isRevealed (<= @s.position @currentPosition))
                 (isCurrent (== @s.position @currentPosition))
                 (matchesFilter (or (== @entity.activeFilter "all") (== @s.category @entity.activeFilter)))
@@ -706,32 +687,16 @@ orbital LearnStepperOrbital {
                 (rad (if @isCurrent @config.markerHighlightRadius @config.markerRadius))
               )
               (if @isCurrent
-                [
-                  { type: circle, id: (str/concat "ring-" @s.position), x: @xPos, y: @config.axisY, radius: (+ @rad 5), tone: @catColor, fillStyle: "outline", stroke: "bold", opacity: 1 },
-                  { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, tone: @col, fillTone: @col, fillStyle: "solid", opacity: @finalOpacity }
-                ]
-                [
-                  { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, tone: @col, fillTone: @col, fillStyle: "solid", opacity: @finalOpacity }
-                ]
+                (array/append (array/append @acc { type: circle, id: (str/concat "ring-" @s.position), x: @xPos, y: @config.axisY, radius: (+ @rad 5), tone: @catColor, fillStyle: "outline", stroke: "bold", opacity: 1 }) { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, tone: @col, fillTone: @col, fillStyle: "solid", opacity: @finalOpacity })
+                (array/append @acc { type: circle, id: (str/concat "marker-" @s.position), x: @xPos, y: @config.axisY, radius: @rad, tone: @col, fillTone: @col, fillStyle: "solid", opacity: @finalOpacity })
               )
-            )))))
-            (legendShapes (array/flatten (array/map @entity.categories [
-                { type: circle, id: (str/concat "legend-dot-" @index), x: (+ @config.axisMarginLeft (* @index (/ @axisWidth (array/len @entity.categories)))), y: 22, radius: 5, tone: (object/get @item color), fillTone: (object/get @item color), fillStyle: "solid", opacity: 1 },
-                { type: text, id: (str/concat "legend-label-" @index), x: (+ (+ @config.axisMarginLeft (* @index (/ @axisWidth (array/len @entity.categories)))) 12), y: 26, text: (object/get @item label), textSize: "xs", align: "left", tone: "label" }
-              ])))
-            (allShapes (array/concat @baseShapes @markerShapes @legendShapes))
-            (filterButtons (array/concat [
-                { type: button, action: FILTER_CATEGORY, actionPayload: { category: "all" }, label: @config.allLabel, variant: (if (== @entity.activeFilter "all") "secondary" "ghost"), size: sm, aria-pressed: (if (== @entity.activeFilter "all") "true" "false") }
-              ] (array/map @entity.categories (fn cc { type: button, action: FILTER_CATEGORY, actionPayload: { category: (object/get @cc category) }, label: (object/get @cc label), variant: (if (== @entity.activeFilter (object/get @cc category)) "secondary" "ghost"), size: sm, aria-pressed: (if (== @entity.activeFilter (object/get @cc category)) "true" "false") }))))
-          )
-          (do
-            (set @entity.narration @narration)
-            (set @entity.currentStageLabel @stageLabel)
-            (set @entity.currentStageDescription @boundedDescription)
-            (set @entity.categoryTally @categoryTally)
-            (set @entity.tallyItems @tallyItems)
-            (set @entity.visibleThreadNote @visibleThreadNote)
-            (set @entity.shapes @allShapes)
+            ))))
+            (set @entity.shapes (array/reduce (array/range (array/len @entity.categories)) @entity.shapes (fn acc i (let (
+                (item (array/nth @entity.categories @i))
+                (legendX (+ @config.axisMarginLeft (* @i (/ @axisWidth (array/len @entity.categories)))))
+              )
+              (array/append (array/append @acc { type: circle, id: (str/concat "legend-dot-" @i), x: @legendX, y: 22, radius: 5, tone: (object/get @item color), fillTone: (object/get @item color), fillStyle: "solid", opacity: 1 }) { type: text, id: (str/concat "legend-label-" @i), x: (+ @legendX 12), y: 26, text: (object/get @item label), textSize: "xs", align: "left", tone: "label" })
+            ))))
             (set @entity.filterButtons @filterButtons)
           )
         )

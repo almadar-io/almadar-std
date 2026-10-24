@@ -13,7 +13,7 @@ orbital ArgsOrbital {
     acc : ArgsAcc = { flags: {}, positionals: [], errors: [], words: [], pending: "" }
   }
 
-  trait ArgsParser -> ArgsRun [integration, instance] {
+  trait ArgsParser -> ArgsRun [client] {
     initial: idle
 
     state idle {
@@ -59,7 +59,7 @@ orbital ArgsOrbital {
     }
 
     listens {
-      ARGS_PARSE -> external {
+      ARGS_PARSE -> input {
         stage : string!
         argv : [string]!
         flags : [ArgsFlag]!
@@ -69,5 +69,5 @@ orbital ArgsOrbital {
     }
   }
 
-  page "/args" -> ArgsParser
+  page boot as ArgsOrbitalStart -> ArgsParser
 }

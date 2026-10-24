@@ -76,7 +76,7 @@ orbital VerifyPlanOrbital {
   trait MockStream = Seed.traits.MockStream {
   }
 
-  trait Plan -> PlanRun [integration] {
+  trait Plan -> PlanRun [optimistic] {
     initial: ready
 
     state ready {
@@ -87,8 +87,8 @@ orbital VerifyPlanOrbital {
         (set @entity.owners (object/get @payload "owners" {}))
         (let ((names (array/unique (array/map (array/reduce (object/get (json/parse @entity.program PlanSeedProgram) "orbitals" []) (json/parse "[]" PlanSeedEntities) (fn (acc o) (array/concat (array/concat @acc [(object/get @o "entity")]) (object/get @o "auxiliaryEntities" [])))) (fn e (object/get @e "name" ""))))))
           (do
-            (set @entity.seedIds (object/fromEntries (array/map @names (fn name [@name, (if (and (object/has @entity.viewer "id") (array/includes (object/get @entity.owners (str/lower @name) []) "id")) (object/get @entity.viewer "id") (str/concat @name "-verify-seed-1"))]))))
-            (set @entity.newIds (object/fromEntries (array/map @names (fn name [@name, (if (and (object/has @entity.viewer "id") (array/includes (object/get @entity.owners (str/lower @name) []) "id")) (object/get @entity.viewer "id") (str/concat @name "-verify-new-1"))]))))))
+            (set @entity.seedIds (object/fromEntries (array/map @names (fn name [@name, (if (and (object/has @entity.viewer "id") (array/includes (object/get @entity.owners (str/lower @name) []) "id")) (str/template "{{v}}" { v: (object/get @entity.viewer "id") }) (str/concat @name "-verify-seed-1"))]))))
+            (set @entity.newIds (object/fromEntries (array/map @names (fn name [@name, (if (and (object/has @entity.viewer "id") (array/includes (object/get @entity.owners (str/lower @name) []) "id")) (str/template "{{v}}" { v: (object/get @entity.viewer "id") }) (str/concat @name "-verify-new-1"))]))))))
         (let ((progTraits (array/flatten (array/map (object/get (json/parse (json/stringify @payload.program) PlanProgram) "orbitals") (fn o (array/map (object/get @o "traits" []) (fn t (object/set @t "orbital" (object/get @o "name")))))))))
           (do (set @entity.steps (array/map @payload.rows (fn r
             (let ((tr (array/find @progTraits (fn t (and (= (object/get @t "name") (object/get @r "trait")) (= (object/get @t "orbital") (object/get @r "orbital")))))))
@@ -101,7 +101,7 @@ orbital VerifyPlanOrbital {
                                    (fn (acc s)
                                      (object/set @acc (object/get @s "name") (json/parse
                                        (if (and (!= @seed "") (or (array/includes @keys (object/get @s "name")) (= (object/get @s "name") "id"))) (json/stringify @seed)
-                                       (if (object/has @s "values") (json/stringify (array/nth (object/get @s "values") 0))
+                                       (if (object/has @s "values") (json/stringify (array/nth (object/get @s "values" []) 0))
                                        (if (or (object/has @s "entity") (= (object/get @s "type") (quote "@entity")) (= (object/get @s "type") "[@entity]")) (if (str/startsWith (object/get @s "type") "[") (json/stringify [{ id: @seed }]) (json/stringify { id: @seed }))
                                        (if (array/includes ["number" "int" "integer" "float"] (object/get @s "type")) "1"
                                        (if (array/includes ["boolean" "bool"] (object/get @s "type")) "true"
@@ -216,7 +216,7 @@ orbital VerifyPlanOrbital {
       PLAN_COMPUTED -> ready when (and (= (array/len @entity.rowJobs) 0) (= (array/len @entity.probes) 0))
         (emit PLAN_ANSWERED { steps: @entity.steps })
       PLAN_COMPUTED -> ready when (and (= (array/len @entity.rowJobs) 0) (> (array/len @entity.probes) 0))
-        (let ((orbs (object/get (json/parse @entity.program PlanProgram) "orbitals")))
+        (let ((orbs (object/get (json/parse @entity.program PlanProgram) "orbitals" [])))
           (program/step (json/parse @entity.program PlanFull) (array/reduce @entity.probes [] (fn (acc p)
             (let ((r (object/get @p "r")))
               (let ((o (array/find @orbs (fn o (= (object/get @o "name") (object/get @r "orbital"))))))
@@ -265,7 +265,7 @@ orbital VerifyPlanOrbital {
       ROWS_DONE { rows : [Map string PlanMockValue?]! }
         @description "Internal: the composed mock seed answered the sample row."
         @tier "internal"
-      PLAN_REQUEST -> external { program : SExpr!, rows : [PlanRow]!, viewer : Map string PlanMockValue?, owners : Map string [string] }
+      PLAN_REQUEST -> input { program : SExpr!, rows : [PlanRow]!, viewer : Map string PlanMockValue?, owners : Map string [string] }
         @description "Plan a payload for each machine row of a resolved program."
         @synonyms "verify plan, plan transitions, synthesize payloads, seed row id"
     }

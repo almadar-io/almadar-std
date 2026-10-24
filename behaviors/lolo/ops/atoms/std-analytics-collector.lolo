@@ -35,7 +35,7 @@ orbital AnalyticsCollectorOrbital {
     statsLimit : number @description "The row limit of the stats query in flight." = 100
   }
 
-  trait AnalyticsIntake -> AnalyticsCollector [integration, instance] {
+  trait AnalyticsIntake -> AnalyticsCollector [optimistic] {
     initial: ready
 
     config {
@@ -188,7 +188,7 @@ orbital AnalyticsCollectorOrbital {
     }
   }
 
-  trait AnalyticsStats -> AnalyticsCollector [integration, instance] {
+  trait AnalyticsStats -> AnalyticsCollector [optimistic] {
     initial: ready
 
     state ready {
@@ -270,7 +270,7 @@ orbital AnalyticsCollectorOrbital {
     }
 
     listens {
-      ANALYTICS_STATS -> external {
+      ANALYTICS_STATS -> input {
         domain : string
         from : number
         to : number

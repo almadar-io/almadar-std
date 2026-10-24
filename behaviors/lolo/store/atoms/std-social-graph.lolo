@@ -11,6 +11,7 @@ type SocialPeer = { peerRef : string, handle : string, conceptsCompleted : numbe
 type SocialPeers = [SocialPeer]
 type SocialViewBadge = { id : string, label : string, kind : string, active : boolean }
 type SocialViewMessage = { id : string, fromViewer : boolean, content : string, createdAt : number, flagged : boolean, moderationReason : string }
+type SocialConnectionRow = { id : string!, callerId : string, peerId : string, participants : [string], originKind : string, originId : string, badges : [SocialBadge], activeBadgeId : string, status : "active" | "archived", lastActivityAt : number, archivedAt : number }
 orbital SocialGraphOrbital {
   entity NodePresence [persistent: node_presence] {
     id : string!
@@ -57,7 +58,7 @@ orbital SocialGraphOrbital {
     reqLabels : [string] @intrinsic
     reqScore : number @intrinsic = 0
     reqReason : string @intrinsic = ""
-    scratchConn : [SocialConnection] @intrinsic = []
+    scratchConn : [SocialConnectionRow] @intrinsic = []
     scratchStatus : string @intrinsic = ""
     resultMessage : string @intrinsic = ""
   }
@@ -86,7 +87,7 @@ orbital SocialGraphOrbital {
     moderationReason : string @description "Why moderation flagged it." @synonyms "reason" = ""
   }
 
-  trait SocialPresence -> NodePresence [lifecycle, instance] {
+  trait SocialPresence -> NodePresence {
     initial: idle
 
     state idle {
@@ -204,14 +205,14 @@ orbital SocialGraphOrbital {
     }
 
     listens {
-      SOCIAL_TOUCH -> external {
+      SOCIAL_TOUCH -> input {
         memberId : string!
         nodeKey : string!
       }
         @description "Record that a member is on a node (kind:id) right now."
         @synonyms "touch node, presence, visit"
         @tier "domain"
-      SOCIAL_PEERS -> external {
+      SOCIAL_PEERS -> input {
         memberId : string!
         nodeKey : string!
         memberStats : [SocialMemberStat]
@@ -261,7 +262,7 @@ orbital SocialGraphOrbital {
     }
   }
 
-  trait SocialConnections -> SocialConnection [lifecycle, instance] {
+  trait SocialConnections -> SocialConnection {
     initial: idle
 
     state idle {
@@ -582,7 +583,7 @@ orbital SocialGraphOrbital {
       }
         @tier "internal"
       ConnLoaded {
-        data : [SocialConnection]!
+        data : [SocialConnectionRow]!
       }
         @tier "internal"
       ConnArchived
@@ -610,7 +611,7 @@ orbital SocialGraphOrbital {
     }
 
     listens {
-      SOCIAL_OPEN -> external {
+      SOCIAL_OPEN -> input {
         memberId : string!
         peerRef : string!
         originKind : string!
@@ -627,14 +628,14 @@ orbital SocialGraphOrbital {
         key : CallKey!
         error : string
       }
-      SOCIAL_VIEW -> external {
+      SOCIAL_VIEW -> input {
         memberId : string!
         connectionId : string!
       }
         @description "Read a connection and its messages; only a participant may."
         @synonyms "open conversation, read thread"
         @tier "domain"
-      SOCIAL_SET_BADGE -> external {
+      SOCIAL_SET_BADGE -> input {
         memberId : string!
         connectionId : string!
         badgeId : string!
@@ -642,7 +643,7 @@ orbital SocialGraphOrbital {
         @description "Choose the active badge of an active connection."
         @synonyms "choose topic, pick badge"
         @tier "domain"
-      SOCIAL_SEND -> external {
+      SOCIAL_SEND -> input {
         memberId : string!
         connectionId : string!
         content : string!
@@ -651,7 +652,7 @@ orbital SocialGraphOrbital {
         @description "Send a message on an active connection under the given or current badge."
         @synonyms "send message, post message, reply"
         @tier "domain"
-      SOCIAL_MODERATION_SCORED -> external {
+      SOCIAL_MODERATION_SCORED -> input {
         key : CallKey!
         score : number!
         reason : string
@@ -659,7 +660,7 @@ orbital SocialGraphOrbital {
         @description "The relevance a std-llm step gave a message, from 0 to 1; below the flag threshold it is flagged."
         @synonyms "relevance score, moderation result"
         @tier "secondary"
-      SOCIAL_MODERATION_FAILED -> external {
+      SOCIAL_MODERATION_FAILED -> input {
         key : CallKey!
         error : string
       }
@@ -690,7 +691,7 @@ orbital SocialGraphOrbital {
         id : string!
       }
       ConnLoaded {
-        data : [SocialConnection]!
+        data : [SocialConnectionRow]!
       }
       ConnArchived
       ConnReady

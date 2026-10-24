@@ -10,14 +10,14 @@ type S3Listing = { Contents : [S3Entry], IsTruncated : string, NextContinuationT
 type StorageFile = { name : string, size : number, type : string, content : string }
 type StorageKey = { key : string, size : number, lastModified : number }
 type StorageItem = { id : string, key : string, url : string, name : string, sizeBytes : number, mimeType : string }
-type StoragePending = { mode : string, bucket : string, key : string, size : number, isPublic : boolean, fileName : string, fileSize : number, fileKind : string, etag : string, batch : string }
-type StorageBatch = { files : [StorageFile], idx : number, acl : string, maxSize : number, bucket : string, items : [StorageItem] }
+type StoragePending = { mode : string, bucket : string!, key : string!, size : number, isPublic : boolean, fileName : string, fileSize : number, fileKind : string, etag : string, batch : string }
+type StorageBatch = { files : [StorageFile]!, idx : number, acl : string, maxSize : number, bucket : string, items : [StorageItem]! }
 orbital StorageOrbital {
   entity StorageObject [runtime] {
     id : string!
   }
 
-  trait StorageClient -> @rebindable StorageObject [integration, instance] {
+  trait StorageClient -> @rebindable StorageObject [optimistic] {
     initial: idle
 
     state idle {
@@ -374,7 +374,7 @@ orbital StorageOrbital {
     }
 
     listens {
-      STORAGE_UPLOAD -> external {
+      STORAGE_UPLOAD -> input {
         bucket : string
         key : string
         content : string
@@ -387,7 +387,7 @@ orbital StorageOrbital {
       }
         @description "Store one object: a file payload (name, size, type, content as a base64 data URL; the key becomes <epoch ms>-<sanitised name>) or a key + content pair. acl public returns a public url."
         @synonyms "upload file, put object, store file"
-      STORAGE_UPLOAD_MANY -> external {
+      STORAGE_UPLOAD_MANY -> input {
         bucket : string
         files : [StorageFile]
         acl : string
@@ -395,14 +395,14 @@ orbital StorageOrbital {
       }
         @description "Store a batch of file payloads in order; the first failure stops the batch."
         @synonyms "upload files, batch upload, drop zone upload"
-      STORAGE_DOWNLOAD -> external {
+      STORAGE_DOWNLOAD -> input {
         bucket : string
         key : string!
         requestId : string
       }
         @description "Fetch an object as base64."
         @synonyms "download file, get object, read file"
-      STORAGE_LIST -> external {
+      STORAGE_LIST -> input {
         bucket : string
         prefix : string
         maxKeys : number
@@ -411,14 +411,14 @@ orbital StorageOrbital {
       }
         @description "List a page of keys; maxKeys defaults to 1000."
         @synonyms "list files, list objects, browse bucket"
-      STORAGE_DELETE -> external {
+      STORAGE_DELETE -> input {
         bucket : string
         key : string!
         requestId : string
       }
         @description "Delete an object."
         @synonyms "delete file, remove object"
-      STORAGE_GET_SIGNED_URL -> external {
+      STORAGE_GET_SIGNED_URL -> input {
         bucket : string
         key : string!
         expiresIn : number

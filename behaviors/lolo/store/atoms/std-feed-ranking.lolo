@@ -17,7 +17,7 @@ orbital FeedRankingOrbital {
     id : string!
   }
 
-  trait FeedRanker -> FeedRun [lifecycle, instance] {
+  trait FeedRanker -> FeedRun [client] {
     initial: idle
 
     state idle {
@@ -117,7 +117,7 @@ orbital FeedRankingOrbital {
     }
 
     listens {
-      FEED_RANK -> external {
+      FEED_RANK -> input {
         candidates : [FeedCandidate]!
         explore : [FeedExploreItem]
         limit : number
@@ -187,5 +187,5 @@ orbital FeedRankingOrbital {
     }
   }
 
-  page "/feed-ranking" as FeedRankingPage -> FeedRanker
+  page boot as FeedRankingOrbitalStart -> FeedRanker
 }

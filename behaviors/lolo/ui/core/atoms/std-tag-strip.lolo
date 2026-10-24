@@ -4,6 +4,8 @@ app std-tag-strip [
 ]
 ;; @capabilities "inline tags, tag chips on a document, add tag from taxonomy, create tag by typing, remove tag chip, tag editing in place"
 orbital TagStripOrbital {
+    type TagRef = { id : string! }
+
     type TagStripOptions = Event { data : [StripTag]! } "The shared tag store loaded for the strip's display pass"
 
     type TagStripAddOptions = Event { data : [StripTag]! } "The shared tag store loaded to resolve a typed tag name on add"
@@ -26,7 +28,7 @@ orbital TagStripOrbital {
     pendingNames : [string] @intrinsic @description "The chip names remaining after a remove, held across the resolve fetch." @synonyms "remaining tags, kept names" = []
   }
 
-  trait TagStrip -> @rebindable StripTag [interaction, collection] {
+  trait TagStrip -> @rebindable StripTag {
     initial: idle
 
     state idle {
@@ -269,7 +271,7 @@ orbital TagStripOrbital {
     listens {
       SHOW_TAG_STRIP {
         id : string!
-        tagIds : [string]
+        tagIds : [string | TagRef]!
       }
         @description "Scope the strip to the open record — routed from the document's load events; carries the record's id and current tag ids (hydrated tag rows are normalized to their ids at stash time, so include-hydrated fetches route straight through)."
         @synonyms "load tags, scope tag strip, show tags"

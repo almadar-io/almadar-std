@@ -1,0 +1,285 @@
+{
+ "atom": "cli/atoms/std-orb-lower.lolo",
+ "trait": "LowerEngine",
+ "cases": [
+  {
+   "id": "the call asks std-args to parse with no flags",
+   "steps": [
+    {
+     "trait": "OrbLower",
+     "from": "ready",
+     "event": "LOWER_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"a.lolo\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "LOWER_ARGS_PARSE",
+        "payload": {
+         "stage": "lower",
+         "argv": [
+          "a.lolo"
+         ],
+         "flags": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "every positional file is lowered, in order",
+   "steps": [
+    {
+     "trait": "OrbLower",
+     "from": "parsing",
+     "event": "LOWER_ARGS_DONE",
+     "payload": {
+      "stage": "lower",
+      "flags": {},
+      "positionals": [
+       "a.lolo",
+       "b.lolo"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "working",
+      "emits": [
+       {
+        "event": "LOWER_START",
+        "payload": {
+         "files": [
+          "a.lolo",
+          "b.lolo"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: no file is the usage",
+   "steps": [
+    {
+     "trait": "OrbLower",
+     "from": "parsing",
+     "event": "LOWER_ARGS_DONE",
+     "payload": {
+      "stage": "lower",
+      "flags": {},
+      "positionals": [],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LOWER_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "error: the following required arguments were not provided:\n  <FILE>...\n\nUsage: orb lower <FILE>...\n\nFor more information, try '--help'."
+        }
+       }
+      ],
+      "neverEmits": [
+       "LOWER_START"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: an unknown flag is the usage",
+   "steps": [
+    {
+     "trait": "OrbLower",
+     "from": "parsing",
+     "event": "LOWER_ARGS_DONE",
+     "payload": {
+      "stage": "lower",
+      "flags": {},
+      "positionals": [
+       "a.lolo"
+      ],
+      "errors": [
+       "unknown flag: --x"
+      ],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LOWER_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "error: unknown flag: --x\n\nUsage: orb lower <FILE>...\n\nFor more information, try '--help'."
+        }
+       }
+      ],
+      "neverEmits": [
+       "LOWER_START"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the engine starts at the first file",
+   "steps": [
+    {
+     "trait": "LowerEngine",
+     "from": "idle",
+     "event": "LOWER_START",
+     "payload": {
+      "files": [
+       "a.lolo",
+       "b.lolo"
+      ]
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "LOWER_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a lowered file prints its path and program and moves on",
+   "steps": [
+    {
+     "trait": "LowerEngine",
+     "from": "reading",
+     "event": "LOWER_LOWERED",
+     "payload": {
+      "result": {
+       "name": "A"
+      }
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "LOWER_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "files": [
+     "a.lolo",
+     "b.lolo"
+    ],
+    "cursor": 0,
+    "lines": []
+   }
+  },
+  {
+   "id": "control: an unreadable or unlowerable file prints its path and error and moves on",
+   "steps": [
+    {
+     "trait": "LowerEngine",
+     "from": "reading",
+     "event": "LOWER_UNREAD",
+     "payload": {
+      "error": "No such file or directory (os error 2)"
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "LOWER_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "files": [
+     "gone.lolo",
+     "b.lolo"
+    ],
+    "cursor": 0,
+    "lines": []
+   }
+  },
+  {
+   "id": "past the last file the lines are the answer, one per file",
+   "steps": [
+    {
+     "trait": "LowerEngine",
+     "from": "reading",
+     "event": "LOWER_NEXT",
+     "payload": {},
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "LOWER_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "{\"path\":\"a.lolo\",\"orb\":{\"name\":\"A\"}}\n{\"path\":\"gone.lolo\",\"error\":\"No such file or directory (os error 2)\"}"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "files": [
+     "a.lolo",
+     "gone.lolo"
+    ],
+    "cursor": 2,
+    "lines": [
+     "{\"path\":\"a.lolo\",\"orb\":{\"name\":\"A\"}}",
+     "{\"path\":\"gone.lolo\",\"error\":\"No such file or directory (os error 2)\"}"
+    ]
+   }
+  },
+  {
+   "id": "control: before the last file nothing is answered",
+   "steps": [
+    {
+     "trait": "LowerEngine",
+     "from": "reading",
+     "event": "LOWER_NEXT",
+     "payload": {},
+     "expect": {
+      "state": "reading",
+      "neverEmits": [
+       "LOWER_ANSWERED"
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "files": [
+     "a.lolo",
+     "b.lolo"
+    ],
+    "cursor": 0,
+    "lines": []
+   }
+  }
+ ]
+}

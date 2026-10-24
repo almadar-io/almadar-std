@@ -34,7 +34,7 @@ orbital RecordItemOrbital {
     createdAt : string
   }
 
-  trait RecordItemDetail -> @rebindable RecordItem [interaction, instance] {
+  trait RecordItemDetail -> @rebindable RecordItem {
     ;; One machine, two shapes. A page detail (`openOn: init`, the default)
     ;; falls straight through idle on INIT and behaves exactly as before. An
     ;; overlay (`openOn: event`) stays blank until a row-click OPEN_VIEW hands
@@ -143,8 +143,8 @@ orbital RecordItemOrbital {
         (set @entity.name (if (> (array/len @config.titleFields) 0) (str/join (array/map @config.titleFields (fn f (str/default (object/get ?data @f) ""))) " ") (object/get ?data @config.titleField)))
         (set @entity.description (str/default (object/get ?data @config.subtitleField) ""))
         (set @entity.content (object/get ?data @config.contentField))
-        (set @entity.coverUrl (str/default (object/get ?data @config.coverField) ""))
-        (set @entity.iconName (str/default (object/get ?data @config.iconField) ""))
+        (set @entity.coverUrl (if (= @config.coverField "") "" (str/default (object/get ?data @config.coverField) "")))
+        (set @entity.iconName (if (= @config.iconField "") "" (str/default (object/get ?data @config.iconField) "")))
         (render-ui main @config.documentEditingContent)
       RecordItemLoaded -> viewing when (or (!= @config.detailLook document) (!= (str/default (object/get @entity openDraft) "") "1"))
         ;; (object/merge … {}) is a type adapter only: type_compat lacks "declared object accepts a named row type" (ledgered)
@@ -153,8 +153,8 @@ orbital RecordItemOrbital {
         (set @entity.name (if (> (array/len @config.titleFields) 0) (str/join (array/map @config.titleFields (fn f (str/default (object/get ?data @f) ""))) " ") (object/get ?data @config.titleField)))
         (set @entity.description (str/default (object/get ?data @config.subtitleField) ""))
         (set @entity.content (object/get ?data @config.contentField))
-        (set @entity.coverUrl (str/default (object/get ?data @config.coverField) ""))
-        (set @entity.iconName (str/default (object/get ?data @config.iconField) ""))
+        (set @entity.coverUrl (if (= @config.coverField "") "" (str/default (object/get ?data @config.coverField) "")))
+        (set @entity.iconName (if (= @config.iconField "") "" (str/default (object/get ?data @config.iconField) "")))
         (if (= @config.detailLook document)
           (render-ui main @config.documentBodyContent)
           (if (= @config.detailLook slide-over)
@@ -168,8 +168,8 @@ orbital RecordItemOrbital {
         (set @entity.name (if (> (array/len @config.titleFields) 0) (str/join (array/map @config.titleFields (fn f (str/default (object/get (array/first ?data) @f) ""))) " ") (object/get (array/first ?data) @config.titleField)))
         (set @entity.description (str/default (object/get (array/first ?data) @config.subtitleField) ""))
         (set @entity.content (object/get (array/first ?data) @config.contentField))
-        (set @entity.coverUrl (str/default (object/get (array/first ?data) @config.coverField) ""))
-        (set @entity.iconName (str/default (object/get (array/first ?data) @config.iconField) ""))
+        (set @entity.coverUrl (if (= @config.coverField "") "" (str/default (object/get (array/first ?data) @config.coverField) "")))
+        (set @entity.iconName (if (= @config.iconField "") "" (str/default (object/get (array/first ?data) @config.iconField) "")))
         (render-ui main @config.documentEditingContent)
       RecordItemSlugLoaded -> viewing when (and (> (array/len ?data) 0) (or (!= @config.detailLook document) (!= (str/default (object/get @entity openDraft) "") "1")))
         (set @entity.loadedRow (array/first ?data))
@@ -177,8 +177,8 @@ orbital RecordItemOrbital {
         (set @entity.name (if (> (array/len @config.titleFields) 0) (str/join (array/map @config.titleFields (fn f (str/default (object/get (array/first ?data) @f) ""))) " ") (object/get (array/first ?data) @config.titleField)))
         (set @entity.description (str/default (object/get (array/first ?data) @config.subtitleField) ""))
         (set @entity.content (object/get (array/first ?data) @config.contentField))
-        (set @entity.coverUrl (str/default (object/get (array/first ?data) @config.coverField) ""))
-        (set @entity.iconName (str/default (object/get (array/first ?data) @config.iconField) ""))
+        (set @entity.coverUrl (if (= @config.coverField "") "" (str/default (object/get (array/first ?data) @config.coverField) "")))
+        (set @entity.iconName (if (= @config.iconField "") "" (str/default (object/get (array/first ?data) @config.iconField) "")))
         (if (= @config.detailLook document)
           (render-ui main @config.documentBodyContent)
           (if (= @config.detailLook slide-over)
@@ -268,8 +268,8 @@ orbital RecordItemOrbital {
         (set @entity.name (if (> (array/len @config.titleFields) 0) (str/join (array/map @config.titleFields (fn f (str/default (object/get ?data @f) ""))) " ") (object/get ?data @config.titleField)))
         (set @entity.description (str/default (object/get ?data @config.subtitleField) ""))
         (set @entity.content (object/get ?data @config.contentField))
-        (set @entity.coverUrl (str/default (object/get ?data @config.coverField) ""))
-        (set @entity.iconName (str/default (object/get ?data @config.iconField) ""))
+        (set @entity.coverUrl (if (= @config.coverField "") "" (str/default (object/get ?data @config.coverField) "")))
+        (set @entity.iconName (if (= @config.iconField "") "" (str/default (object/get ?data @config.iconField) "")))
         (if (= @config.detailLook document)
           (render-ui main @config.documentBodyContent)
           (if (= @config.detailLook slide-over)
@@ -283,8 +283,8 @@ orbital RecordItemOrbital {
         (set @entity.name (if (> (array/len @config.titleFields) 0) (str/join (array/map @config.titleFields (fn f (str/default (object/get (array/first ?data) @f) ""))) " ") (object/get (array/first ?data) @config.titleField)))
         (set @entity.description (str/default (object/get (array/first ?data) @config.subtitleField) ""))
         (set @entity.content (object/get (array/first ?data) @config.contentField))
-        (set @entity.coverUrl (str/default (object/get (array/first ?data) @config.coverField) ""))
-        (set @entity.iconName (str/default (object/get (array/first ?data) @config.iconField) ""))
+        (set @entity.coverUrl (if (= @config.coverField "") "" (str/default (object/get (array/first ?data) @config.coverField) "")))
+        (set @entity.iconName (if (= @config.iconField "") "" (str/default (object/get (array/first ?data) @config.iconField) "")))
         (if (= @config.detailLook document)
           (render-ui main @config.documentBodyContent)
           (if (= @config.detailLook slide-over)
@@ -802,7 +802,7 @@ orbital RecordItemOrbital {
   ;; normal actions (the settings modal, favorite/status workflows). The
   ;; META_CHANGE → META_SAVED commit circuit stays available for a call-site
   ;; detailsContent override that opts back into in-place editing.
-  trait RecordItemDetails -> @rebindable RecordItem [interaction, instance] {
+  trait RecordItemDetails -> @rebindable RecordItem {
     initial: idle
 
     state idle {

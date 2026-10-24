@@ -15,7 +15,7 @@ orbital SeedFingerprintOrbital {
     digest : string = ""
   }
 
-  trait SeedFingerprint -> FingerprintRun [integration] {
+  trait SeedFingerprint -> FingerprintRun [client] {
     initial: ready
 
     config {
@@ -55,11 +55,11 @@ orbital SeedFingerprintOrbital {
     }
 
     listens {
-      FINGERPRINT -> external { fields : [FingerprintField]! }
+      FINGERPRINT -> input { fields : [FingerprintField]! }
         @description "Fingerprint the field declarations a mock seed is built from."
         @synonyms "seed fingerprint, stale seed detector, reseed hash"
     }
   }
 
-  page "/seed-fingerprint" as SeedFingerprintPage -> SeedFingerprint
+  page boot as SeedFingerprintOrbitalStart -> SeedFingerprint
 }

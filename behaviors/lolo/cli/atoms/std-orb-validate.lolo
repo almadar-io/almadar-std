@@ -1,0 +1,229 @@
+app std-orb-validate [
+  version: "1.0.0",
+  inbound: ["cli-validate", "cli-lint-all"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-validate — the `orb validate <file> [--json] [--deny-warnings] [--final] [--patterns <path>] [--services <path>]` command (spec/cli/orb-validate.lolo; port of orbital-cli commands/validate.rs validate_schema). The core checks are the host op `(program/validate null { report: true path final denyWarnings patterns services })`, which answers exactly the report `orb validate --json` printed: { success, valid, errors?, warnings?, stats? }. The path is the working directory joined to the file when relative. --json prints that report as 2-space pretty JSON (status 200, as Rust exited 0 for an invalid program). The text form prints `Validating schema: <file>` on stdout, then on errors `Schema validation errors:` and one `  ❌ [CODE] path: message @ line:col 💡 suggestion` line per error on stderr followed by `Error: Schema validation failed with N error(s)` (status 500); on warnings alone `Schema validation warnings:` and `  ⚠️  …` lines on stdout, and under --deny-warnings `Error: Schema validation failed: N warning(s) under --deny-warnings` on stderr (status 500). A file the host could not read (FILE_READ_ERROR) prints `Error: <reason>` on stderr (status 500). Policy lints (the std-orb-lint-all umbrella, composed here; it answers LINT_COLLECTED) merge into the report: an error-severity lint finding joins errors, a warning joins warnings. Usage error: status 400 (exit 2). Known differences from the Rust bytes: a finding the host reports without a line prints no ` @ line:col`; lint findings carry no source position."
+]
+uses Spec from "almadar-std/orb-validate"
+uses Args from "std/behaviors/std-args"
+uses LintAll from "std/behaviors/std-orb-lint-all"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type ReportFinding = { code : string!, path : string, message : string!, suggestion : string, fixGuidance : string, expectedShape : string, validValues : [string], line : number, column : number, endLine : number, endColumn : number, approximate : boolean, needsInstall : boolean }
+type ReportStats = { orbitals : number!, entities : number!, traits : number!, pages : number! }
+type ValidationReport = { success : boolean!, valid : boolean!, errors : [ReportFinding], warnings : [ReportFinding], stats : ReportStats }
+
+orbital Lint = LintAll.orbitals.OrbLintAllOrbital {
+}
+
+orbital OrbValidateOrbital {
+  entity ValidateRun [runtime] {
+    id : string!
+    cwd : string = ""
+    file : string = ""
+    json : boolean = false
+    denyWarnings : boolean = false
+    report : ValidationReport
+    errors : [ReportFinding] = []
+    warnings : [ReportFinding] = []
+    valid : boolean = false
+  }
+
+  trait ArgsCli = Args.traits.ArgsParser {
+    listens {
+      OrbValidate.VALIDATE_ARGS_PARSE -> ARGS_PARSE
+    }
+  }
+
+  trait OrbValidate -> ValidateRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      VALIDATE_CALLED -> parsing
+        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
+        (emit VALIDATE_ARGS_PARSE { stage: "validate" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "json" aliases: [] takesValue: false repeatable: false }, { name: "deny-warnings" aliases: [] takesValue: false repeatable: false }, { name: "final" aliases: [] takesValue: false repeatable: false }, { name: "patterns" aliases: [] takesValue: true repeatable: false }, { name: "services" aliases: [] takesValue: true repeatable: false }] })
+    }
+
+    state parsing {
+      INIT -> parsing
+      VALIDATE_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (!= (array/len @payload.positionals) 1))
+        (emit VALIDATE_ANSWERED { status: 400, body: "", stderr: "usage: orb validate <FILE> [--json] [--patterns <PATH>] [--services <PATH>] [--deny-warnings] [--final]" })
+      VALIDATE_ARGS_DONE -> working when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1))
+        (emit VALIDATE_START { file: (array/first @payload.positionals), path: (if (os/path-is-absolute (array/first @payload.positionals)) (array/first @payload.positionals) (os/path-join @entity.cwd (array/first @payload.positionals))), cwd: @entity.cwd, json: (!= (object/get @payload.flags "json") null), denyWarnings: (!= (object/get @payload.flags "deny-warnings") null), finalProgram: (!= (object/get @payload.flags "final") null), hasPatterns: (!= (object/get @payload.flags "patterns") null), patterns: (str/default (array/first (or (object/get @payload.flags "patterns") [""])) ""), hasServices: (!= (object/get @payload.flags "services") null), services: (str/default (array/first (or (object/get @payload.flags "services") [""])) "") })
+    }
+
+    state working {
+      INIT -> working
+      VALIDATE_DONE -> ready
+        (emit VALIDATE_ANSWERED { status: @payload.status, body: @payload.body, stderr: @payload.stderr })
+    }
+
+    emits {
+      VALIDATE_ANSWERED -> internal {
+        status : number!
+        body : string!
+        stderr : string
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      VALIDATE_ARGS_PARSE {
+        stage : string!
+        argv : [string]!
+        flags : [ArgFlag]!
+      }
+        @description "Internal: parse the call's words."
+        @tier "internal"
+      VALIDATE_START {
+        file : string!
+        path : string!
+        cwd : string!
+        json : boolean!
+        denyWarnings : boolean!
+        finalProgram : boolean!
+        hasPatterns : boolean!
+        patterns : string!
+        hasServices : boolean!
+        services : string!
+      }
+        @description "Internal: validate the program at the absolute path."
+        @tier "internal"
+    }
+
+    listens {
+      VALIDATE_CALLED -> inbound "cli-validate" answers VALIDATE_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb validate`."
+        @synonyms "orb validate, check a program, the 0 errors 0 warnings bar, validate a lolo file"
+      VALIDATE_ARGS_DONE {
+        stage : string!
+        flags : Map string [string]!
+        positionals : [string]!
+        errors : [string]!
+        words : [string]!
+      }
+        @description "std-args's ARGS_PARSED."
+      ArgsCli.ARGS_PARSED -> VALIDATE_ARGS_DONE
+      ValidateEngine.VALIDATE_ANSWERED -> VALIDATE_DONE
+      VALIDATE_DONE { status : number!  body : string!  stderr : string }
+        @description "Internal: the engine's answer, relayed to the hook by its handler."
+        @tier "internal"
+    }
+  }
+
+  trait ValidateEngine -> ValidateRun [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      VALIDATE_START -> validating
+        (set @entity.cwd @payload.cwd)
+        (set @entity.file @payload.file)
+        (set @entity.json @payload.json)
+        (set @entity.denyWarnings @payload.denyWarnings)
+        (program/validate null (object/merge (object/merge { report: true path: @payload.path final: @payload.finalProgram denyWarnings: @payload.denyWarnings } (if @payload.hasPatterns { patterns: @payload.patterns } {})) (if @payload.hasServices { services: @payload.services } {})) { key: "validate" emit: { success: VALIDATE_CHECKED, failure: VALIDATE_REFUSED } })
+    }
+
+    state validating {
+      INIT -> validating
+      VALIDATE_REFUSED -> idle
+        (emit VALIDATE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " @payload.error) })
+      VALIDATE_CHECKED -> linting
+        (set @entity.report @payload.result)
+        (emit LINT_CALLED { headers: (object/fromEntries []), rawBody: (json/stringify { argv: [@entity.file, "--json"], cwd: @entity.cwd }) })
+    }
+
+    state linting {
+      INIT -> linting
+      LINT_COLLECTED -> merging
+        (emit VALIDATE_MERGE { findings: @payload.findings })
+      LINT_INPUT_UNREAD -> idle
+        (emit VALIDATE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: the file could not be read or lowered for the lint rules: " @payload.file) })
+    }
+
+    state merging {
+      INIT -> merging
+      VALIDATE_MERGE -> rendering
+        (set @entity.errors (array/concat (object/get @entity.report "errors" []) (array/map (array/filter @payload.findings (fn x (= (object/get @x "severity") "error"))) (fn x (if (= (object/get @x "suggestion") "") { code: (object/get @x "code"), path: (object/get @x "path"), message: (object/get @x "message") } { code: (object/get @x "code"), path: (object/get @x "path"), message: (object/get @x "message"), suggestion: (object/get @x "suggestion") })))))
+        (set @entity.warnings (array/concat (object/get @entity.report "warnings" []) (array/map (array/filter @payload.findings (fn x (= (object/get @x "severity") "warning"))) (fn x (if (= (object/get @x "suggestion") "") { code: (object/get @x "code"), path: (object/get @x "path"), message: (object/get @x "message") } { code: (object/get @x "code"), path: (object/get @x "path"), message: (object/get @x "message"), suggestion: (object/get @x "suggestion") })))))
+        (set @entity.valid (and (object/get @entity.report "valid" false) (= (array/len (array/filter @payload.findings (fn x (= (object/get @x "severity") "error")))) 0) (or (not @entity.denyWarnings) (= (array/len (array/filter @payload.findings (fn x (= (object/get @x "severity") "warning")))) 0))))
+        (emit VALIDATE_RENDER { })
+    }
+
+    state rendering {
+      INIT -> rendering
+      VALIDATE_RENDER -> idle when @entity.json
+        (emit VALIDATE_ANSWERED { status: 200, body: (json/stringify (object/merge (object/merge (object/merge { success: (object/get @entity.report "success" true), valid: @entity.valid } (if (> (array/len @entity.errors) 0) { errors: @entity.errors } {})) (if (> (array/len @entity.warnings) 0) { warnings: @entity.warnings } {})) (if (object/has @entity.report "stats") { stats: (object/get @entity.report "stats") } {})) { pretty: true }) })
+      VALIDATE_RENDER -> idle when (and (not @entity.json) (> (array/len @entity.errors) 0) (= (object/get (array/first @entity.errors) "code" "") "FILE_READ_ERROR"))
+        (emit VALIDATE_ANSWERED { status: 500, body: (str/concat "Validating schema: " @entity.file), stderr: (str/concat "Error: " (str/replace (object/get (array/first @entity.errors) "message" "") "Failed to read schema file: " "")) })
+      VALIDATE_RENDER -> idle when (and (not @entity.json) (> (array/len @entity.errors) 0) (!= (object/get (array/first @entity.errors) "code" "") "FILE_READ_ERROR"))
+        (emit VALIDATE_ANSWERED { status: 500, body: (str/concat "Validating schema: " @entity.file), stderr: (str/join (array/concat ["Schema validation errors:"] (array/map @entity.errors (fn f (str/concat "  ❌ " (if (= (object/get @f "code" "") "") "" (str/concat "[" (object/get @f "code") "] " (object/get @f "path" "") ": ")) (object/get @f "message") (if (object/has @f "line") (str/concat " @ " (object/get @f "line") ":" (object/get @f "column" 0)) "") (if (object/has @f "suggestion") (str/concat " 💡 " (object/get @f "suggestion")) "")))) [(str/concat "Error: Schema validation failed with " (array/len @entity.errors) " error(s)")]) "\n") })
+      VALIDATE_RENDER -> idle when (and (not @entity.json) (= (array/len @entity.errors) 0) (> (array/len @entity.warnings) 0))
+        (emit VALIDATE_ANSWERED { status: (if @entity.denyWarnings 500 200), body: (str/join (array/concat [(str/concat "Validating schema: " @entity.file), "Schema validation warnings:"] (array/map @entity.warnings (fn f (str/concat "  ⚠️  " (if (= (object/get @f "code" "") "") "" (str/concat "[" (object/get @f "code") "] " (object/get @f "path" "") ": ")) (object/get @f "message") (if (object/has @f "line") (str/concat " @ " (object/get @f "line") ":" (object/get @f "column" 0)) "") (if (object/has @f "suggestion") (str/concat " 💡 " (object/get @f "suggestion")) ""))))) "\n"), stderr: (if @entity.denyWarnings (str/concat "Error: Schema validation failed: " (array/len @entity.warnings) " warning(s) under --deny-warnings") "") })
+      VALIDATE_RENDER -> idle when (and (not @entity.json) (= (array/len @entity.errors) 0) (= (array/len @entity.warnings) 0))
+        (emit VALIDATE_ANSWERED { status: 200, body: (str/concat "Validating schema: " @entity.file) })
+    }
+
+    emits {
+      VALIDATE_ANSWERED -> external {
+        status : number!
+        body : string!
+        stderr : string
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      VALIDATE_REFUSED {
+        error : string
+      }
+        @description "The host could not run the validation."
+        @tier "internal"
+      VALIDATE_CHECKED {
+        result : ValidationReport!
+      }
+        @description "program/validate: the report orb validate --json prints."
+        @tier "internal"
+      LINT_CALLED -> external {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Ask the std-orb-lint-all umbrella to lint the file (its LINT_CALLED); it answers LINT_COLLECTED."
+        @tier "internal"
+      VALIDATE_MERGE {
+        findings : [OrbFinding]!
+      }
+        @description "Internal: the policy lint findings to merge into the report."
+        @tier "internal"
+      VALIDATE_RENDER { }
+        @description "Internal: the report is merged, print it."
+        @tier "internal"
+    }
+
+    listens {
+      VALIDATE_START {
+        file : string!
+        path : string!
+        cwd : string!
+        json : boolean!
+        denyWarnings : boolean!
+        finalProgram : boolean!
+        hasPatterns : boolean!
+        patterns : string!
+        hasServices : boolean!
+        services : string!
+      }
+        @description "Validate the program at the absolute path."
+      OrbValidate.VALIDATE_START -> VALIDATE_START
+      LINT_COLLECTED { findings : [OrbFinding]! }
+        @description "std-orb-lint-all's LINT_COLLECTED: every rule's findings for the file."
+      LINT_INPUT_UNREAD { file : string! }
+        @description "std-orb-lint-input's LINT_INPUT_UNREAD: the file could not be read or lowered."
+    }
+  }
+
+  page "/orb-validate" as OrbValidatePage -> OrbValidate, ArgsCli, ValidateEngine
+}

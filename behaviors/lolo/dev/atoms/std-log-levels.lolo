@@ -16,7 +16,7 @@ orbital LogLevelsOrbital {
     count : number = 0
   }
 
-  trait LogLevels -> LogLevelsRun [integration] {
+  trait LogLevels -> LogLevelsRun [client] {
     initial: ready
 
     state ready {
@@ -59,17 +59,17 @@ orbital LogLevelsOrbital {
     }
 
     listens {
-      LOG_TOGGLE -> external { key : string!, isNamespace : boolean!, on : boolean!, detail : boolean!, overrides : [LevelEntry]! }
+      LOG_TOGGLE -> input { key : string!, isNamespace : boolean!, on : boolean!, detail : boolean!, overrides : [LevelEntry]! }
         @description "Turn a namespace group on or off, clearing the explicit levels beneath it."
         @synonyms "logging toggle, namespace on off, log level change"
-      LOG_DETAIL -> external { detail : boolean!, overrides : [LevelEntry]! }
+      LOG_DETAIL -> input { detail : boolean!, overrides : [LevelEntry]! }
         @description "Move every shown explicit level between INFO and DEBUG."
         @synonyms "logging detail, debug detail switch"
-      LOG_SHOWN -> external { namespaces : [string]!, levels : [LevelEntry]! }
+      LOG_SHOWN -> input { namespaces : [string]!, levels : [LevelEntry]! }
         @description "Count the namespaces logging at INFO or more detailed."
         @synonyms "shown count, logging console count"
     }
   }
 
-  page "/log-levels" as LogLevelsPage -> LogLevels
+  page boot as LogLevelsOrbitalStart -> LogLevels
 }

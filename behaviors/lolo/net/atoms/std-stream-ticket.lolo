@@ -25,7 +25,7 @@ orbital StreamTicketOrbital {
     queue : [StreamTicketJob] @description "Requests that arrived while one was in flight, oldest first; each is started when the one before it is answered." = []
   }
 
-  trait StreamTicketer -> StreamTicketRun [integration, instance] {
+  trait StreamTicketer -> StreamTicketRun [optimistic] {
     initial: idle
 
     state idle {
@@ -71,7 +71,6 @@ orbital StreamTicketOrbital {
         })
       SEED_FAILED -> idle
         (emit TICKET_REFUSED { code: "seed", message: @payload.error, requestId: @entity.mintRequest })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Stream ticket refused" })
         (emit TICKET_PUMP {})
     }
 
@@ -91,7 +90,6 @@ orbital StreamTicketOrbital {
         (emit TICKET_PUMP {})
       TICKET_NOT_SAVED -> idle
         (emit TICKET_REFUSED { code: "store", message: @payload.error, requestId: @entity.mintRequest })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Stream ticket refused" })
         (emit TICKET_PUMP {})
     }
 
@@ -108,11 +106,9 @@ orbital StreamTicketOrbital {
 
       TICKET_ABSENT -> idle when (= @payload.code "not-found")
         (emit TICKET_REFUSED { code: "unknown", message: "no such stream ticket", ticket: @entity.ticket })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Stream ticket refused" })
         (emit TICKET_PUMP {})
       TICKET_ABSENT -> idle when (!= @payload.code "not-found")
         (emit TICKET_REFUSED { code: "store", message: @payload.error, ticket: @entity.ticket })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Stream ticket refused" })
         (emit TICKET_PUMP {})
       TICKET_LOADED -> spending
         (set @entity.holder @payload.data.viewer)
@@ -135,14 +131,12 @@ orbital StreamTicketOrbital {
 
       TICKET_SPENT -> idle when @entity.expired
         (emit TICKET_REFUSED { code: "expired", message: "the stream ticket has expired", ticket: @entity.ticket })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Stream ticket refused" })
         (emit TICKET_PUMP {})
       TICKET_SPENT -> idle when (not @entity.expired)
         (emit TICKET_TAKEN { ticket: @entity.ticket, viewer: @entity.holder })
         (emit TICKET_PUMP {})
       TICKET_NOT_SPENT -> idle
         (emit TICKET_REFUSED { code: "used", message: "the stream ticket was already spent", ticket: @entity.ticket })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Stream ticket refused" })
         (emit TICKET_PUMP {})
     }
 
@@ -234,11 +228,6 @@ orbital StreamTicketOrbital {
     }
 
     config {
-      statusSlot : slot = system
-        @label "Status slot"
-        @description "Where the atom reports a refused ticket; a page running it in the background keeps it in `system`."
-        @synonyms "status area, slot"
-        @tier "presentation"
       maxQueue : number = 256
         @label "Queue bound"
         @description "How many requests may wait behind the one in flight; one beyond it is refused with `busy`."
@@ -252,5 +241,37 @@ orbital StreamTicketOrbital {
     }
   }
 
-  page "/stream-ticket" as StreamTicketPage -> StreamTicketer
+  page boot as StreamTicketStart -> StreamTicketer
+
+  entity StreamTicketDemoView [runtime] {
+    id : string!
+  }
+
+  trait StreamTicketDemo -> StreamTicketDemoView [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      REFUSED -> idle when (!= @payload.code "busy")
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Stream ticket refused" })
+    }
+
+    listens {
+      StreamTicketer.TICKET_REFUSED -> REFUSED
+      REFUSED {
+        code : string!
+        message : string!
+      }
+    }
+
+    config {
+      statusSlot : slot = main
+        @label "Status slot"
+        @description "Where the demo page reports a refused ticket."
+        @synonyms "status area, slot"
+        @tier "presentation"
+    }
+  }
+
+  page "/stream-ticket" as StreamTicketDemoPage -> StreamTicketDemo
 }

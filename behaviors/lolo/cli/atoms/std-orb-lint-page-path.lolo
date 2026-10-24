@@ -7,80 +7,27 @@ app std-orb-lint-page-path [
   description: "std-orb-lint-page-path — the `orb lint page-path <file>` command, the port. It lowers the file with program/read and, for every inline page, reports a missing or non-PascalCase page name (the PascalCase check applies to an English program only), an empty path, a path that does not start with '/', and a path starting with '/api', each with the Rust path, message and suggestion (status 500, exit 1). The character-set check (letters, numbers, hyphens, underscores, colons and slashes) applies only to an English program, as in the compiler: the program's language is decided from the raw file against the installed language packs (a .orb document by its top-level keys, a .lolo source by its first token), the packs being scanned by std-orb-language's engine. Clean answers `lint page-path: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-page-path"
-uses Language from "std/behaviors/std-orb-language"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
-type PackText = { name : string!, text : string! }
-type PackMeta = { code : string! }
-type PackVocab = { meta : PackMeta!, keywords : Map string string, orb : Map string string }
-type DocValue = string | number | boolean | [DocValue] | Map string DocValue
+type PagePathPage = { name : string, path : string, protocol : string }
+type PagePathOrbital = { pages : [PagePathPage] }
+type PagePathProgram = { orbitals : [PagePathOrbital]! }
 
 orbital OrbLintPagePathOrbital {
-  uses Semver from "std/behaviors/std-semver"
+  uses Input from "std/behaviors/std-orb-lint-input"
 
   entity OrbLintPagePathRun [runtime] {
     id : string!
     findings : [OrbFinding] = []
-    raw : string = ""
-    packs : [PackText] = []
-    latin : boolean = true
   }
 
-  trait Versions = Semver.traits.Semver {
-    listens {
-      Packs.LANG_SEMVER -> SEMVER_SATISFIES
-    }
-  }
-
-  trait Packs = Language.traits.OrbLanguageEngine {
-    listens {
-      OrbLintPagePath.LINT_PACKS_RUN -> LANG_SCAN
-      LANG_SAT { requestId : string!  value : boolean! }
-        @description "std-semver's SEMVER_SATISFIED: the range check answered."
-      LANG_SAT_REFUSED { requestId : string!  operation : string!  reason : string! }
-        @description "std-semver's SEMVER_REFUSED: the range check refused."
-      Versions.SEMVER_SATISFIED -> LANG_SAT
-      Versions.SEMVER_REFUSED -> LANG_SAT_REFUSED
-    }
-  }
-
-  trait OrbLintPagePath -> OrbLintPagePathRun [integration] {
+  trait OrbLintPagePath -> OrbLintPagePathRun [optimistic] {
     initial: ready
 
     state ready {
       INIT -> ready
-      LINT_RUN -> reading
-        (set @entity.findings [])
-        (os/read-file { anchor: "cwd" path: @payload.file } { key: "file" emit: { success: LINT_FILE_READ, failure: LINT_FILE_UNREAD } })
-      LINT_FINISH -> ready
-        (emit LINT_FOUND { rule: "page-path", findings: @entity.findings })
-    }
-
-    state reading {
-      INIT -> reading
-      LINT_FILE_READ -> reading
-        (set @entity.raw (bytes/to-string @payload.data))
-        (set @entity.packs [])
-        (os/realpath { anchor: "cwd" path: "." } { key: "cwd" emit: { success: LINT_CWD, failure: LINT_FILE_UNREAD } })
-      LINT_CWD -> reading
-        (emit LINT_PACKS_RUN { cwd: @payload.path })
-      LANGUAGE_PACK_VOCAB_HEARD -> reading
-        (set @entity.packs (array/append @entity.packs { name: @payload.name, text: @payload.text }))
-      LANG_SCAN_ANSWERED -> ready when (!= @payload.status 200)
-        (emit LINT_UNREAD { rule: "page-path" })
-      LANGUAGE_PACKS_DONE_HEARD -> ready when (!= @payload.problem "")
-        (emit LINT_UNREAD { rule: "page-path" })
-      LANGUAGE_PACKS_DONE_HEARD -> reading when (= @payload.problem "")
-        (set @entity.latin (let ((words ["app", "uses", "expects", "type", "theme", "orbital"]) (vocabs (array/map @entity.packs (fn k (json/parse (object/get @k "text") PackVocab)))))
-          (if (str/startsWith (str/trim @entity.raw) "{")
-            (let ((keys (object/keys (json/parse @entity.raw (quote DocValue)))))
-              (or (array/includes @keys "orbitals") (not (array/some @vocabs (fn v (array/includes @keys (object/get (object/get @v "orb" {}) "orbitals" "")))))))
-            (let ((tok (array/first (str/split (array/first (str/split (array/first (str/split (str/trim (array/find (str/split @entity.raw "\n") (fn l (let ((t (str/trim @l))) (and (!= @t "") (not (str/startsWith @t ";;"))))))) " ")) "[")) "("))))
-              (or (array/includes @words @tok) (not (array/some @vocabs (fn v (array/some @words (fn w (= (object/get (object/get @v "keywords" {}) @w "") @tok)))))))))))
-        (emit LINT_LANGUAGE { latin: @entity.latin })
-        (program/read @entity.raw { emit: { success: LINT_PROGRAM_READ, failure: LINT_FILE_UNREAD } })
-      LINT_PROGRAM_READ -> ready
-        (set @entity.findings (let ((orbitals (object/get @payload.result "orbitals")))
+      LINT_INPUT -> ready
+        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
             (let ((pgList (object/get (array/nth @orbitals @oi) "pages" [])))
               (array/flatten (array/map (array/range 0 (array/len @pgList)) (fn pj
@@ -89,50 +36,26 @@ orbital OrbLintPagePathOrbital {
                   (let ((nm (object/get @pg "name" "")))
                     (if (= @nm "")
                       [{ code: "ORB_P_MISSING_NAME", path: (str/concat "orbitals[" @oi "].pages[" @pj "].name"), message: "Page name is required", suggestion: "Add a PascalCase name for the page (e.g., 'TaskList', 'UserProfile')", severity: "error" }]
-                      (if (and @entity.latin (not (validate/pattern @nm "^[A-Z][a-zA-Z0-9]*$")))
+                      (if (and @payload.latin (not (validate/pattern @nm "^[A-Z][a-zA-Z0-9]*$")))
                         [{ code: "ORB_P_MISSING_NAME", path: (str/concat "orbitals[" @oi "].pages[" @pj "].name"), message: (str/concat "Page name '" @nm "' should be PascalCase"), suggestion: "Use PascalCase for page names (e.g., 'TaskList', 'Dashboard')", severity: "error" }]
                         [])))
-                  (if (not (object/has @pg "path"))
+                  (if (or (object/has @pg "protocol") (not (object/has @pg "path")))
                     []
                     (let ((route (object/get @pg "path")))
                       (let ((where (str/concat "orbitals[" @oi "].pages[" @pj "].path")))
                         (array/flatten [
                           (if (= @route "") [{ code: "ORB_P_MISSING_PATH", path: @where, message: "Page path is required", suggestion: "Add a path starting with / (e.g., '/tasks', '/users/:id')", severity: "error" }] [])
                           (if (and (!= @route "") (not (str/startsWith @route "/"))) [{ code: "ORB_P_INVALID_PATH", path: @where, message: (str/concat "Page path must start with '/': '" @route "'"), suggestion: "Prefix the path with / (e.g., '/tasks' instead of 'tasks')", severity: "error" }] [])
-                          (if (and (!= @route "") @entity.latin (not (validate/pattern @route "^/[a-zA-Z0-9\\-_/:]*$"))) [{ code: "ORB_P_INVALID_PATH", path: @where, message: (str/concat "Invalid page path format: '" @route "'"), suggestion: "Use valid path characters: letters, numbers, hyphens, underscores, and colons for params", severity: "error" }] [])
+                          (if (and (!= @route "") @payload.latin (not (validate/pattern @route "^/[a-zA-Z0-9\\-_/:]*$"))) [{ code: "ORB_P_INVALID_PATH", path: @where, message: (str/concat "Invalid page path format: '" @route "'"), suggestion: "Use valid path characters: letters, numbers, hyphens, underscores, and colons for params", severity: "error" }] [])
                           (if (str/startsWith @route "/api") [{ code: "ORB_P_INVALID_PATH", path: @where, message: (str/concat "Page path '" @route "' starts with '/api' which collides with the API server proxy"), suggestion: "Choose a different path that doesn't start with '/api' (e.g., '/requests' instead of '/apirequests')", severity: "error" }] [])])))))))))))))))
         (emit LINT_FINISH { })
-      LINT_FILE_UNREAD -> ready
-        (emit LINT_UNREAD { rule: "page-path" })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "page-path", findings: @entity.findings })
     }
 
     emits {
-      LINT_UNREAD -> external { rule : string! }
-        @description "This rule could not read or lower the file."
-        @tier "internal"
-      LINT_RUN -> external { file : string! }
-        @description "The lint request this trait answers, from the cli trait or the umbrella."
-        @tier "internal"
       LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
         @description "This rule's findings for the file, offered to the lint-all umbrella."
-        @tier "internal"
-      LINT_FILE_READ { data : bytes! }
-        @description "The file read."
-        @tier "internal"
-      LINT_FILE_UNREAD { error : string }
-        @description "The file could not be read or lowered."
-        @tier "internal"
-      LINT_PROGRAM_READ { result : string }
-        @description "The file lowered by program/read."
-        @tier "internal"
-      LINT_LANGUAGE -> external { latin : boolean! }
-        @description "The program's language was decided: true for an English program, whose page paths are held to the character set."
-        @tier "internal"
-      LINT_PACKS_RUN { cwd : string! }
-        @description "Ask the language engine to scan the installed language packs."
-        @tier "internal"
-      LINT_CWD { path : string! }
-        @description "The working directory read."
         @tier "internal"
       LINT_FINISH { }
         @description "Internal: answer with the verdict."
@@ -140,20 +63,13 @@ orbital OrbLintPagePathOrbital {
     }
 
     listens {
-      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
-        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
-      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
-        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
-      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
-        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
-      OrbLintPagePathCli.LINT_RUN -> LINT_RUN
-      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
-      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
-      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PagePathProgram }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
   }
 
-  trait OrbLintPagePathCli -> OrbLintPagePathRun [integration] {
+  trait OrbLintPagePathCli -> OrbLintPagePathRun [client] {
     initial: ready
 
     state ready {
@@ -161,7 +77,7 @@ orbital OrbLintPagePathOrbital {
       LINT_CALLED -> ready when (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint page-path <file>" })
       LINT_CALLED -> waiting when (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
-        (emit LINT_RUN { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
     }
 
     state waiting {
@@ -170,7 +86,7 @@ orbital OrbLintPagePathOrbital {
         (emit LINT_ANSWERED { status: 200, body: "lint page-path: clean" })
       LINT_FOUND -> ready when (and (= @payload.rule "page-path") (> (array/len @payload.findings) 0))
         (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
-      LINT_UNREAD -> ready when (= @payload.rule "page-path")
+      LINT_INPUT_UNREAD -> ready
         (emit LINT_ANSWERED { status: 500, body: "lint page-path: the file could not be read or lowered" })
     }
 
@@ -181,14 +97,14 @@ orbital OrbLintPagePathOrbital {
       }
         @description "Internal: the command's answer, which the cli hook prints."
         @tier "internal"
-      LINT_RUN -> external { file : string! }
-        @description "Ask the rule trait to lint this file."
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
         @tier "internal"
       LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
         @description "The rule trait's findings for the file."
         @tier "internal"
-      LINT_UNREAD -> external { rule : string! }
-        @description "The rule trait could not read or lower the file."
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
         @tier "internal"
     }
 
@@ -200,9 +116,30 @@ orbital OrbLintPagePathOrbital {
         @description "Run `orb lint page-path` with its arguments and working directory."
         @synonyms "orb lint page-path, page route path"
       OrbLintPagePath.LINT_FOUND -> LINT_FOUND
-      OrbLintPagePath.LINT_UNREAD -> LINT_UNREAD
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
     }
   }
 
-  page "/orb-lint-page-path" as OrbLintPagePathPage -> OrbLintPagePath, OrbLintPagePathCli, Packs, Versions
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintPagePathCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintPagePathOrbitalStart -> OrbLintPagePath, OrbLintPagePathCli, OrbLintInput, Packs, Versions, Packs, Versions
 }

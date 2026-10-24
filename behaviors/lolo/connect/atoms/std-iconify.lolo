@@ -11,7 +11,7 @@ orbital IconifyOrbital {
     id : string!
   }
 
-  trait IconifyClient -> IconifyLookup [integration, instance] {
+  trait IconifyClient -> IconifyLookup [client] {
     initial: idle
 
     state idle {
@@ -132,18 +132,18 @@ orbital IconifyOrbital {
     }
 
     listens {
-      ICONIFY_SVG_EXISTS -> external {
+      ICONIFY_SVG_EXISTS -> input {
         path : string!
       }
         @description "Probe whether an Iconify path (for example logos/github-icon.svg) exists."
         @synonyms "check logo, svg exists, probe icon path"
-      ICONIFY_SEARCH -> external {
+      ICONIFY_SEARCH -> input {
         query : string!
         limit : number
       }
         @description "Search Iconify for icon ids matching a query; limit defaults to 1."
         @synonyms "find icon, search icons, look up brand logo"
-      ICONIFY_GET_ICON_BODY -> external {
+      ICONIFY_GET_ICON_BODY -> input {
         iconId : string!
       }
         @description "Resolve an icon id (prefix:name) to its SVG body."

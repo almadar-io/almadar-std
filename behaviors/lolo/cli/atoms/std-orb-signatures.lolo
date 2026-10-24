@@ -1,0 +1,265 @@
+app std-orb-signatures [
+  version: "1.0.0",
+  inbound: ["cli-signatures"],
+  fs: { cwd: "**": [read, write, create], "/**": [write, create] },
+  description: "std-orb-signatures — the `orb signatures [--out FILE]` command (spec/cli/orb-signatures.lolo; port of orbital-cli lib.rs print_lolo_signatures and commands/reference.rs everything()). It reads the installed language tables the way std-orb-reference does (constructs, validation codes and vocabulary from the file set @almadar/core declares under orbLanguage, plus its patterns registry; the operator table from the file @almadar/std declares as orbLanguage.operators) and answers one pretty JSON object { codes, constructs, operators, patterns, vocabulary }, sorted-key (canonical: every object's keys sorted, indented two spaces). --out FILE (relative to the directory the command runs in, or absolute) writes it there instead and reports `Wrote N bytes to FILE` on stderr (status 200, empty body). A flag it does not know, a repeated --out, a missing value or any word answers the usage (status 400, exit 2); an unreadable or missing table answers status 500 (exit 1) on stderr."
+]
+uses Spec from "almadar-std/orb-signatures"
+uses Args from "std/behaviors/std-args"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
+type SigJson = string | number | boolean | [SigJson?] | Map string SigJson?
+type SigLanguage = { constructs : string?, validationCodes : string?, vocabulary : string?, patterns : string?, operators : string? }
+type SigManifest = { orbLanguage : SigLanguage? }
+type SigOperatorTable = { operators : SigJson }
+type SigPatternTable = { patterns : SigJson }
+
+orbital OrbSignaturesOrbital {
+  entity SignaturesRun [runtime] {
+    id : string!
+    out : string = ""
+    constructsPath : string = ""
+    vocabularyPath : string = ""
+    codesPath : string = ""
+    patternsPath : string = ""
+    operatorsPath : string = ""
+    catalog : string = ""
+    constructs : SigJson = []
+    vocabulary : SigJson = []
+    codes : SigJson = []
+    operators : SigJson = []
+  }
+
+  trait ArgsCli = Args.traits.ArgsParser {
+    listens {
+      OrbSignatures.SIGNATURES_ARGS_PARSE -> ARGS_PARSE
+    }
+  }
+
+  trait OrbSignatures -> SignaturesRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      SIGNATURES_CALLED -> parsing
+        (emit SIGNATURES_ARGS_PARSE { stage: "signatures" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "out" aliases: [] takesValue: true repeatable: false }] })
+    }
+
+    state parsing {
+      INIT -> parsing
+      SIGNATURES_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (> (array/len @payload.positionals) 0))
+        (emit SIGNATURES_ANSWERED { status: 400, body: "", stderr: "usage: orb signatures [--out FILE]" })
+      SIGNATURES_ARGS_DONE -> working when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0))
+        (emit SIGNATURES_START { out: (str/default (array/first (or (object/get @payload.flags "out") [""])) "") })
+    }
+
+    state working {
+      INIT -> working
+      SIGNATURES_DONE -> ready
+        (emit SIGNATURES_ANSWERED { status: @payload.status, body: @payload.body, stderr: @payload.stderr })
+    }
+
+    emits {
+      SIGNATURES_ANSWERED -> internal {
+        status : number!
+        body : string!
+        stderr : string
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      SIGNATURES_ARGS_PARSE {
+        stage : string!
+        argv : [string]!
+        flags : [ArgFlag]!
+      }
+        @description "Internal: parse the call's words."
+        @tier "internal"
+      SIGNATURES_START {
+        out : string!
+      }
+        @description "Internal: print or write the catalog."
+        @tier "internal"
+    }
+
+    listens {
+      SIGNATURES_CALLED -> inbound "cli-signatures" answers SIGNATURES_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb signatures`."
+        @synonyms "orb signatures, the language catalog, every construct operator and pattern"
+      SIGNATURES_ARGS_DONE {
+        stage : string!
+        flags : Map string [string]!
+        positionals : [string]!
+        errors : [string]!
+        words : [string]!
+      }
+        @description "std-args's ARGS_PARSED."
+      ArgsCli.ARGS_PARSED -> SIGNATURES_ARGS_DONE
+      SignaturesEngine.SIGNATURES_ANSWERED -> SIGNATURES_DONE
+      SIGNATURES_DONE { status : number!  body : string!  stderr : string }
+        @description "Internal: the engine's answer, relayed to the hook by its handler."
+        @tier "internal"
+    }
+  }
+
+  trait SignaturesEngine -> SignaturesRun [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      SIGNATURES_START -> core
+        (set @entity.out @payload.out)
+        (os/read-file { anchor: "cwd" path: "node_modules/@almadar/core/package.json" } { key: "core" emit: { success: SIGNATURES_CORE, failure: SIGNATURES_FAILED } })
+    }
+
+    state core {
+      INIT -> core
+      SIGNATURES_FAILED -> idle
+        (emit SIGNATURES_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb signatures: " @payload.error) })
+      SIGNATURES_CORE -> idle when (let ((lang (object/get (json/parse (bytes/to-string @payload.data) SigManifest) "orbLanguage"))) (or (= @lang null) (= (object/get @lang "constructs") null) (= (object/get @lang "validationCodes") null) (= (object/get @lang "vocabulary") null) (= (object/get @lang "patterns") null)))
+        (emit SIGNATURES_ANSWERED { status: 500, body: "", stderr: "Error: orb signatures: the installed @almadar/core declares no orbLanguage constructs, validationCodes, vocabulary and patterns" })
+      SIGNATURES_CORE -> std when (let ((lang (object/get (json/parse (bytes/to-string @payload.data) SigManifest) "orbLanguage"))) (and (!= @lang null) (!= (object/get @lang "constructs") null) (!= (object/get @lang "validationCodes") null) (!= (object/get @lang "vocabulary") null) (!= (object/get @lang "patterns") null)))
+        (set @entity.constructsPath (str/concat "node_modules/@almadar/core/" (object/get (object/get (json/parse (bytes/to-string @payload.data) SigManifest) "orbLanguage") "constructs")))
+        (set @entity.codesPath (str/concat "node_modules/@almadar/core/" (object/get (object/get (json/parse (bytes/to-string @payload.data) SigManifest) "orbLanguage") "validationCodes")))
+        (set @entity.vocabularyPath (str/concat "node_modules/@almadar/core/" (object/get (object/get (json/parse (bytes/to-string @payload.data) SigManifest) "orbLanguage") "vocabulary")))
+        (set @entity.patternsPath (str/concat "node_modules/@almadar/core/" (object/get (object/get (json/parse (bytes/to-string @payload.data) SigManifest) "orbLanguage") "patterns")))
+        (os/read-file { anchor: "cwd" path: "node_modules/@almadar/std/package.json" } { key: "std" emit: { success: SIGNATURES_STD, failure: SIGNATURES_FAILED } })
+    }
+
+    state std {
+      INIT -> std
+      SIGNATURES_FAILED -> idle
+        (emit SIGNATURES_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb signatures: " @payload.error) })
+      SIGNATURES_STD -> idle when (let ((lang (object/get (json/parse (bytes/to-string @payload.data) SigManifest) "orbLanguage"))) (or (= @lang null) (= (object/get @lang "operators") null)))
+        (emit SIGNATURES_ANSWERED { status: 500, body: "", stderr: "Error: orb signatures: the installed @almadar/std declares no orbLanguage operators" })
+      SIGNATURES_STD -> constructs when (let ((lang (object/get (json/parse (bytes/to-string @payload.data) SigManifest) "orbLanguage"))) (and (!= @lang null) (!= (object/get @lang "operators") null)))
+        (set @entity.operatorsPath (str/concat "node_modules/@almadar/std/" (object/get (object/get (json/parse (bytes/to-string @payload.data) SigManifest) "orbLanguage") "operators")))
+        (os/read-file { anchor: "cwd" path: @entity.constructsPath } { key: "constructs" emit: { success: SIGNATURES_CONSTRUCTS, failure: SIGNATURES_FAILED } })
+    }
+
+    state constructs {
+      INIT -> constructs
+      SIGNATURES_FAILED -> idle
+        (emit SIGNATURES_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb signatures: " @payload.error) })
+      SIGNATURES_CONSTRUCTS -> vocabulary
+        (set @entity.constructs (json/parse (bytes/to-string @payload.data) SigJson))
+        (os/read-file { anchor: "cwd" path: @entity.vocabularyPath } { key: "vocabulary" emit: { success: SIGNATURES_VOCABULARY, failure: SIGNATURES_FAILED } })
+    }
+
+    state vocabulary {
+      INIT -> vocabulary
+      SIGNATURES_FAILED -> idle
+        (emit SIGNATURES_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb signatures: " @payload.error) })
+      SIGNATURES_VOCABULARY -> codes
+        (set @entity.vocabulary (json/parse (bytes/to-string @payload.data) SigJson))
+        (os/read-file { anchor: "cwd" path: @entity.codesPath } { key: "codes" emit: { success: SIGNATURES_CODES, failure: SIGNATURES_FAILED } })
+    }
+
+    state codes {
+      INIT -> codes
+      SIGNATURES_FAILED -> idle
+        (emit SIGNATURES_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb signatures: " @payload.error) })
+      SIGNATURES_CODES -> operators
+        (set @entity.codes (json/parse (bytes/to-string @payload.data) SigJson))
+        (os/read-file { anchor: "cwd" path: @entity.operatorsPath } { key: "operators" emit: { success: SIGNATURES_OPERATORS, failure: SIGNATURES_FAILED } })
+    }
+
+    state operators {
+      INIT -> operators
+      SIGNATURES_FAILED -> idle
+        (emit SIGNATURES_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb signatures: " @payload.error) })
+      SIGNATURES_OPERATORS -> patterns
+        (set @entity.operators (object/get (json/parse (bytes/to-string @payload.data) SigOperatorTable) "operators"))
+        (os/read-file { anchor: "cwd" path: @entity.patternsPath } { key: "patterns" emit: { success: SIGNATURES_PATTERNS, failure: SIGNATURES_FAILED } })
+    }
+
+    state patterns {
+      INIT -> patterns
+      SIGNATURES_FAILED -> idle
+        (emit SIGNATURES_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb signatures: " @payload.error) })
+      SIGNATURES_PATTERNS -> idle when (= @entity.out "")
+        (emit SIGNATURES_ANSWERED { status: 200, body: (json/stringify { codes: @entity.codes, constructs: @entity.constructs, operators: @entity.operators, patterns: (object/get (json/parse (bytes/to-string @payload.data) SigPatternTable) "patterns"), vocabulary: @entity.vocabulary } { pretty: true sorted: true }) })
+      SIGNATURES_PATTERNS -> writing when (and (!= @entity.out "") (not (os/path-is-absolute @entity.out)))
+        (set @entity.catalog (json/stringify { codes: @entity.codes, constructs: @entity.constructs, operators: @entity.operators, patterns: (object/get (json/parse (bytes/to-string @payload.data) SigPatternTable) "patterns"), vocabulary: @entity.vocabulary } { pretty: true sorted: true }))
+        (os/write-file { anchor: "cwd" path: @entity.out } (bytes/from-string @entity.catalog) { key: "catalog" emit: { success: SIGNATURES_WRITTEN, failure: SIGNATURES_FAILED } })
+      SIGNATURES_PATTERNS -> writing when (and (!= @entity.out "") (os/path-is-absolute @entity.out))
+        (set @entity.catalog (json/stringify { codes: @entity.codes, constructs: @entity.constructs, operators: @entity.operators, patterns: (object/get (json/parse (bytes/to-string @payload.data) SigPatternTable) "patterns"), vocabulary: @entity.vocabulary } { pretty: true sorted: true }))
+        (os/write-file (str/concat "/" (str/slice @entity.out 1 (str/len @entity.out))) (bytes/from-string @entity.catalog) { key: "catalog" emit: { success: SIGNATURES_WRITTEN, failure: SIGNATURES_FAILED } })
+    }
+
+    state writing {
+      INIT -> writing
+      SIGNATURES_FAILED -> idle
+        (emit SIGNATURES_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb signatures: " @payload.error) })
+      SIGNATURES_WRITTEN -> idle
+        (emit SIGNATURES_ANSWERED { status: 200, body: "", stderr: (str/concat "Wrote " (bytes/length (bytes/from-string @entity.catalog)) " bytes to " @entity.out) })
+    }
+
+    emits {
+      SIGNATURES_ANSWERED -> external {
+        status : number!
+        body : string!
+        stderr : string
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      SIGNATURES_FAILED {
+        error : string
+      }
+        @description "A read or the write failed."
+        @tier "internal"
+      SIGNATURES_CORE {
+        data : bytes!
+      }
+        @description "os/read-file: the installed @almadar/core package.json."
+        @tier "internal"
+      SIGNATURES_STD {
+        data : bytes!
+      }
+        @description "os/read-file: the installed @almadar/std package.json."
+        @tier "internal"
+      SIGNATURES_CONSTRUCTS {
+        data : bytes!
+      }
+        @description "os/read-file: the installed constructs table."
+        @tier "internal"
+      SIGNATURES_VOCABULARY {
+        data : bytes!
+      }
+        @description "os/read-file: the installed vocabulary."
+        @tier "internal"
+      SIGNATURES_CODES {
+        data : bytes!
+      }
+        @description "os/read-file: the installed validation codes."
+        @tier "internal"
+      SIGNATURES_OPERATORS {
+        data : bytes!
+      }
+        @description "os/read-file: the installed operator table."
+        @tier "internal"
+      SIGNATURES_PATTERNS {
+        data : bytes!
+      }
+        @description "os/read-file: the installed pattern registry."
+        @tier "internal"
+      SIGNATURES_WRITTEN {
+        bytes : number
+      }
+        @description "os/write-file: the catalog is saved."
+        @tier "internal"
+    }
+
+    listens {
+      SIGNATURES_START {
+        out : string!
+      }
+        @description "Print or write the catalog."
+      OrbSignatures.SIGNATURES_START -> SIGNATURES_START
+    }
+  }
+
+  page "/orb-signatures" as OrbSignaturesPage -> OrbSignatures, ArgsCli, SignaturesEngine
+}

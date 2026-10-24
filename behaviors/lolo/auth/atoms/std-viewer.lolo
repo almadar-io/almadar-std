@@ -22,7 +22,7 @@ orbital ViewerOrbital {
     queue : [ViewerJob] @description "Resolutions that arrived while a directory row was being read, oldest first; each starts when the one before it is answered." = []
   }
 
-  trait ViewerResolver -> ViewerCheck [integration, instance] {
+  trait ViewerResolver -> ViewerCheck [optimistic] {
     initial: idle
 
     state idle {
@@ -54,7 +54,7 @@ orbital ViewerOrbital {
                 (emit VIEWER_NEXT {})))))
       VIEWER_PUMP -> idle when (and (> (array/len @entity.queue) 0) (= (object/get (array/first @entity.queue) "sourceKind") "claims") (!= (object/get (array/first @entity.queue) "verified") null))
         (let ((job (array/first @entity.queue)))
-          (let ((tok (object/get @job "verified")) (declared (array/filter (object/get @job "sourceFields") (fn f (not (array/includes ["id", "email", "name"] @f))))))
+          (let ((tok (object/get @job "verified")) (declared (array/filter (object/get @job "sourceFields" []) (fn f (not (array/includes ["id", "email", "name"] @f))))))
             (let ((read (array/filter (object/get @tok "claims") (fn c (array/includes @declared (object/get @c "name"))))))
               (let ((named (array/filter @read (fn c (= (object/get @c "name") "role")))))
                 (do

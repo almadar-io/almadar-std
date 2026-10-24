@@ -4,11 +4,13 @@ app std-graph [
 ]
 type GraphPropertyValue = string | number | boolean | [string]
 type GraphStrings = [string]
-type GraphLayerRecord = { id : string, depth : number, deps : [string], closure : [string] }
+type GraphLayerRecord = { id : string!, depth : number!, deps : [string]!, closure : [string]! }
 type GraphLayerRecords = [GraphLayerRecord]
-type GraphDepRow = { id : string, deps : [string] }
+type GraphDepRow = { id : string!, deps : [string]! }
 type GraphDepRows = [GraphDepRow]
 type GraphNodeUpdate = { rowId : string, depth : number, dependencyIds : [string], dependencyClosure : [string] }
+type GraphNodeRow = { id : string!, graphId : string, nodeId : string, nodeType : string, name : string, layer : number, sequence : number, depth : number, dependencyIds : [string], dependencyClosure : [string], properties : Map string GraphPropertyValue, embedding : [number], embeddedText : string, embeddingModel : string, createdAt : string, updatedAt : string }
+type GraphEdgeRow = { id : string!, graphId : string, relId : string, source : string, target : string, edgeType : string, direction : string, strength : number, sourceGraphId : string, targetGraphId : string, metadata : Map string string, createdAt : string }
 orbital GraphOrbital {
   entity GraphNode [persistent: graph_nodes] {
     id : string!
@@ -36,9 +38,9 @@ orbital GraphOrbital {
     reqDirection : string @intrinsic = ""
     reqStrength : number @intrinsic = 0
     reqMetadata : Map string string @intrinsic
-    reqEdgeTypes : [string] @intrinsic
-    scratchNodes : [GraphNode] @intrinsic = []
-    scratchEdges : [GraphEdge] @intrinsic
+    reqEdgeTypes : [string] @intrinsic = []
+    scratchNodes : [GraphNodeRow] @intrinsic = []
+    scratchEdges : [GraphEdgeRow] @intrinsic = []
     pendingUpdates : [GraphNodeUpdate] @intrinsic
     engineCyclic : boolean @intrinsic = false
     edgeEndpointsExist : boolean @intrinsic = false
@@ -63,7 +65,7 @@ orbital GraphOrbital {
     createdAt : string
   }
 
-  trait GraphStore -> GraphNode [lifecycle, instance] {
+  trait GraphStore -> GraphNode {
     initial: idle
 
     state idle {
@@ -160,22 +162,22 @@ orbital GraphOrbital {
         (set @entity.reachIds
           (array/reject
             (object/get
-              (array/reduce (array/range 0 (+ (array/len ?data) 1)) { seen: (json/parse "[]" GraphStrings), frontier: [@entity.reqNodeId] }
+              (array/reduce (array/range 0 (+ (array/len ?data) 1)) { seen: (json/parse "[]" GraphStrings), frontier: (array/append (json/parse "[]" GraphStrings) @entity.reqNodeId) }
                 (fn acc i
-                  (let ((seen (array/unique (array/concat (object/get @acc seen []) (object/get @acc frontier [])))))
+                  (let ((seen (array/unique (array/concat (object/get @acc seen (json/parse "[]" GraphStrings)) (object/get @acc frontier (json/parse "[]" GraphStrings))))))
                     {
                       seen: @seen
                       frontier: (array/reject
                         (array/unique
                           (array/flatten
-                            (array/map (object/get @acc frontier [])
+                            (array/map (object/get @acc frontier (json/parse "[]" GraphStrings))
                               (fn nid
                                 (array/map
                                   (array/filter ?data
                                     (fn e (and
                                       (array/includes @entity.reqEdgeTypes (object/get @e edgeType ""))
-                                      (= (object/get @e (if (= @entity.reqDirection "descendants") "source" "target") "") @nid))))
-                                  (fn e (object/get @e (if (= @entity.reqDirection "descendants") "target" "source") "")))))))
+                                      (= (if (= @entity.reqDirection "descendants") (object/get @e source "") (object/get @e target "")) @nid))))
+                                  (fn e (if (= @entity.reqDirection "descendants") (object/get @e target "") (object/get @e source ""))))))))
                         (fn nid (array/includes @seen @nid)))
                     })))
               seen [])
@@ -330,11 +332,11 @@ orbital GraphOrbital {
         @synonyms "topo sort, topological order, cycle check"
         @tier "primary"
       GraphNodesLoaded {
-        data : [GraphNode]!
+        data : [GraphNodeRow]!
       }
         @tier "internal"
       GraphEdgesLoaded {
-        data : [GraphEdge]!
+        data : [GraphEdgeRow]!
       }
         @tier "internal"
       GraphComputed
@@ -349,7 +351,7 @@ orbital GraphOrbital {
     }
 
     listens {
-      GRAPH_ADD_NODE -> external {
+      GRAPH_ADD_NODE -> input {
         graphId : string!
         nodeId : string!
         nodeType : string!
@@ -361,7 +363,7 @@ orbital GraphOrbital {
         @description "Add a node of a declared type to a graph."
         @synonyms "create node, add concept, add vertex"
         @tier "domain"
-      GRAPH_UPDATE_NODE -> external {
+      GRAPH_UPDATE_NODE -> input {
         graphId : string!
         nodeId : string!
         name : string
@@ -372,14 +374,14 @@ orbital GraphOrbital {
         @description "Change a node's name, layer, sequence or properties; only the fields sent change."
         @synonyms "edit node, rename node"
         @tier "domain"
-      GRAPH_REMOVE_NODE -> external {
+      GRAPH_REMOVE_NODE -> input {
         graphId : string!
         nodeId : string!
       }
         @description "Remove a node and every edge that touches it, then recompute depths and closures."
         @synonyms "delete node, drop vertex"
         @tier "domain"
-      GRAPH_ADD_EDGE -> external {
+      GRAPH_ADD_EDGE -> input {
         graphId : string!
         source : string!
         target : string!
@@ -391,7 +393,7 @@ orbital GraphOrbital {
         @description "Add an edge of a declared type; an order-type edge that would close a cycle is refused. The edge id is rel-{source}-{type}-{target}."
         @synonyms "connect nodes, add relationship, link"
         @tier "domain"
-      GRAPH_REMOVE_EDGE -> external {
+      GRAPH_REMOVE_EDGE -> input {
         graphId : string!
         source : string!
         target : string!
@@ -400,7 +402,7 @@ orbital GraphOrbital {
         @description "Remove one edge, then recompute depths and closures."
         @synonyms "disconnect, delete relationship, unlink"
         @tier "domain"
-      GRAPH_REACH -> external {
+      GRAPH_REACH -> input {
         graphId : string!
         nodeId : string!
         direction : "descendants" | "ancestors"!
@@ -409,23 +411,23 @@ orbital GraphOrbital {
         @description "Find every node reached from a node over the given edge types, going forward (descendants) or backward (ancestors)."
         @synonyms "descendants, ancestors, traverse, reachable"
         @tier "domain"
-      GRAPH_ORDER -> external {
+      GRAPH_ORDER -> input {
         graphId : string!
       }
         @description "Topologically sort a graph over its order edge types and report the nodes on or behind a cycle."
         @synonyms "topo sort, cycle check, dependency order"
         @tier "domain"
-      GRAPH_RECOMPUTE -> external {
+      GRAPH_RECOMPUTE -> input {
         graphId : string!
       }
         @description "Recompute and store every node's depth and dependency closure; use after loading a graph in bulk."
         @synonyms "rebuild closure, recompute layers, refresh depth"
         @tier "domain"
       GraphNodesLoaded {
-        data : [GraphNode]!
+        data : [GraphNodeRow]!
       }
       GraphEdgesLoaded {
-        data : [GraphEdge]!
+        data : [GraphEdgeRow]!
       }
       GraphComputed
       GraphWritten

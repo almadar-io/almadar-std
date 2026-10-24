@@ -18,7 +18,7 @@ orbital MigrationAdapterClockifyOrbital {
     documents : [ClockifyDocument] = []
   }
 
-  trait MigrationAdapterClockify -> MigrationAdapterClockifyRun [integration, instance] {
+  trait MigrationAdapterClockify -> MigrationAdapterClockifyRun [client] {
     initial: idle
 
     state idle {
@@ -283,7 +283,7 @@ orbital MigrationAdapterClockifyOrbital {
     }
 
     listens {
-      MIGRATION_EXTRACT -> external {
+      MIGRATION_EXTRACT -> input {
         adapter : string!
         documents : [ImportRawDocument]!
       }
@@ -293,5 +293,5 @@ orbital MigrationAdapterClockifyOrbital {
     }
   }
 
-  page "/migration-adapter-clockify" as MigrationAdapterClockifyPage -> MigrationAdapterClockify
+  page boot as MigrationAdapterClockifyOrbitalStart -> MigrationAdapterClockify
 }

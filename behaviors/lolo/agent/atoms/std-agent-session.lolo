@@ -132,7 +132,7 @@ orbital AgentSessionOrbital {
     chatAvatar : string @description "The ephemeral conversation's header avatar image." = ""
   }
 
-  trait AgentThread -> @rebindable AgentMessage [lifecycle] {
+  trait AgentThread -> @rebindable AgentMessage {
     initial: ready
 
     state ready {
@@ -212,7 +212,7 @@ orbital AgentSessionOrbital {
         @description "The conversation could not be loaded."
         @tier "internal"
       AgentConversationLoaded -> internal {
-        data : [AgentMessage]
+        data : [AgentMessage]!
       }
         @tier "internal"
       AgentMessageSaved
@@ -248,7 +248,7 @@ orbital AgentSessionOrbital {
     }
   }
 
-  trait AgentConversation -> @rebindable AgentConversationView [interaction, instance] {
+  trait AgentConversation -> @rebindable AgentConversationView [client] {
     config {
       placeholder : string = "Ask the assistant…"
         @label "Message placeholder"
@@ -578,7 +578,7 @@ orbital AgentSessionOrbital {
         (set @entity.entries (array/append @entity.entries { type: message, role: user, content: ?message, timestamp: @now }))
         (set @entity.working true)
         (emit ASSISTANT_EPHEMERAL_SEND {
-          messages: (array/map (array/filter @entity.entries (fn item (= @item.type "message"))) (fn item { role: @item.role, content: @item.content }))
+          messages: (array/map (array/filter @entity.entries (fn item (= @item.type "message"))) (fn item { role: (object/get @item role "user"), content: (object/get @item content "") }))
           instructions: @entity.chatInstructions
           tools: @entity.chatTools
           ephemeral: true
@@ -1355,7 +1355,7 @@ orbital AgentSessionOrbital {
       }
         @description "Back to the conversation."
       THREAD_LOADED {
-        data : [AgentThreadRow]
+        data : [AgentThreadRow]!
       }
         @description "Show the stored conversation."
       STEP {
@@ -1400,7 +1400,7 @@ orbital AgentChatsOrbital {
   ;; It starts, reopens and touches conversations and tells AgentThread which
   ;; one a request belongs to, so only this trait (bound to AgentChat) touches
   ;; conversation rows.
-  trait AgentChatKeeper -> @rebindable AgentChat [lifecycle] {
+  trait AgentChatKeeper -> @rebindable AgentChat {
     initial: ready
 
     state ready {
@@ -1592,7 +1592,7 @@ orbital AgentChatsOrbital {
     }
   }
 
-  trait AgentChatList -> @rebindable AgentChat [interaction, instance] {
+  trait AgentChatList -> @rebindable AgentChat {
     config {
       newChatLabel : string = "New conversation"
         @label "New conversation button"

@@ -27,7 +27,7 @@ orbital DriveOrbital {
     id : string!
   }
 
-  trait DriveClient -> DriveRequest [integration, instance] {
+  trait DriveClient -> DriveRequest [optimistic] {
     initial: idle
 
     state idle {
@@ -480,19 +480,19 @@ orbital DriveOrbital {
     }
 
     listens {
-      DRIVE_LIST_FILES -> external {
+      DRIVE_LIST_FILES -> input {
         folderId : string
         query : string
         maxResults : number
       }
         @description "List non-trashed Drive files, optionally inside a folder and filtered by a Drive query; maxResults defaults to 100."
         @synonyms "list files, drive files"
-      DRIVE_GET_FILE -> external {
+      DRIVE_GET_FILE -> input {
         fileId : string!
       }
         @description "Fetch a file's metadata and base64 content."
         @synonyms "download file, get file"
-      DRIVE_UPLOAD_FILE -> external {
+      DRIVE_UPLOAD_FILE -> input {
         name : string!
         content : string!
         mimeType : string
@@ -500,13 +500,13 @@ orbital DriveOrbital {
       }
         @description "Upload a file; content is text or a base64 data URL, the folder defaults to the configured one."
         @synonyms "upload file, save file"
-      DRIVE_CREATE_FOLDER -> external {
+      DRIVE_CREATE_FOLDER -> input {
         name : string!
         parentId : string
       }
         @description "Create a folder, optionally inside a parent."
         @synonyms "new folder, make folder"
-      DRIVE_SHARE_FILE -> external {
+      DRIVE_SHARE_FILE -> input {
         fileId : string!
         email : string!
         role : string

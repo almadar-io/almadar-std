@@ -31,7 +31,7 @@ orbital HttpDispatchOrbital {
     frames : [DispatchFrames] @description "Server-sent frames still to write, per streamed request, oldest first." = []
   }
 
-  trait ServerDispatch -> DispatchRun [integration, instance] {
+  trait ServerDispatch -> DispatchRun [optimistic] {
     initial: serving
 
     config {
@@ -406,5 +406,5 @@ orbital HttpDispatchOrbital {
     }
   }
 
-  page "/server" as HttpDispatchPage -> ServerDispatch
+  page boot as HttpDispatchOrbitalStart -> ServerDispatch
 }

@@ -7,31 +7,30 @@ app std-orb-lint-empty-event-name [
 uses Spec from "almadar-std/lint-empty-event-name"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type EmptyEventState = { name : string }
+type EmptyEventKey = { key : string }
+type EmptyEventTransition = { event : string }
+type EmptyEventMachine = { states : [EmptyEventState], events : [EmptyEventKey], transitions : [EmptyEventTransition] }
+type EmptyEventEmit = { event : string }
+type EmptyEventTrait = { stateMachine : EmptyEventMachine, emits : [EmptyEventEmit] }
+type EmptyEventOrbital = { traits : [EmptyEventTrait] }
+type EmptyEventProgram = { orbitals : [EmptyEventOrbital] }
 
 orbital OrbLintEmptyEventNameOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
   entity OrbLintEmptyEventNameRun [runtime] {
     id : string!
     findings : [OrbFinding] = []
   }
 
-  trait OrbLintEmptyEventName -> OrbLintEmptyEventNameRun [integration] {
+  trait OrbLintEmptyEventName -> OrbLintEmptyEventNameRun [optimistic] {
     initial: ready
 
     state ready {
       INIT -> ready
-      LINT_RUN -> reading
-        (set @entity.findings [])
-        (os/read-file { anchor: "cwd" path: @payload.file } { key: "file" emit: { success: LINT_FILE_READ, failure: LINT_FILE_UNREAD } })
-      LINT_FINISH -> ready
-        (emit LINT_FOUND { rule: "empty-event-name", findings: @entity.findings })
-    }
-
-    state reading {
-      INIT -> reading
-      LINT_FILE_READ -> reading
-        (program/read (bytes/to-string @payload.data) { emit: { success: LINT_PROGRAM_READ, failure: LINT_FILE_UNREAD } })
-      LINT_PROGRAM_READ -> ready
-        (set @entity.findings (let ((orbitals (object/get @payload.result "orbitals" [])))
+      LINT_INPUT -> ready
+        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
             (let ((trList (object/get (array/nth @orbitals @oi) "traits" [])))
               (array/flatten (array/map (array/range 0 (array/len @trList)) (fn ti
@@ -47,28 +46,13 @@ orbital OrbLintEmptyEventNameOrbital {
                             (array/flatten (array/map (array/range 0 (array/len (object/get @td "emits" []))) (fn k (if (= (object/get (array/nth (object/get @td "emits" []) @k) "event" "") "") [{ code: "ORB_T_EMPTY_EVENT_NAME", path: (str/concat @tpath ".emits" "[" @k "].event"), message: "Event name is empty", suggestion: "Name the event, or remove it; an unset optional event knob declares no event", severity: "error" }] []))))
                             (array/flatten (array/map (array/range 0 (array/len (object/get @sm "transitions" []))) (fn k (if (= (object/get (array/nth (object/get @sm "transitions" []) @k) "event" "") "") [{ code: "ORB_T_EMPTY_EVENT_NAME", path: (str/concat @where ".transitions" "[" @k "].event"), message: "Event name is empty", suggestion: "Name the event, or remove it; an unset optional event knob declares no event", severity: "error" }] []))))])))))))))))))))
         (emit LINT_FINISH { })
-      LINT_FILE_UNREAD -> ready
-        (emit LINT_UNREAD { rule: "empty-event-name" })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "empty-event-name", findings: @entity.findings })
     }
 
     emits {
-      LINT_UNREAD -> external { rule : string! }
-        @description "This rule could not read or lower the file."
-        @tier "internal"
-      LINT_RUN -> external { file : string! }
-        @description "The lint request this trait answers, from the cli trait or the umbrella."
-        @tier "internal"
       LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
         @description "This rule's findings for the file, offered to the lint-all umbrella."
-        @tier "internal"
-      LINT_FILE_READ { data : bytes! }
-        @description "The file read."
-        @tier "internal"
-      LINT_FILE_UNREAD { error : string }
-        @description "The file could not be read or lowered."
-        @tier "internal"
-      LINT_PROGRAM_READ { result : string }
-        @description "The file lowered by program/read."
         @tier "internal"
       LINT_FINISH { }
         @description "Internal: answer with the verdict."
@@ -76,11 +60,13 @@ orbital OrbLintEmptyEventNameOrbital {
     }
 
     listens {
-      OrbLintEmptyEventNameCli.LINT_RUN -> LINT_RUN
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : EmptyEventProgram }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
   }
 
-  trait OrbLintEmptyEventNameCli -> OrbLintEmptyEventNameRun [integration] {
+  trait OrbLintEmptyEventNameCli -> OrbLintEmptyEventNameRun [client] {
     initial: ready
 
     state ready {
@@ -88,7 +74,7 @@ orbital OrbLintEmptyEventNameOrbital {
       LINT_CALLED -> ready when (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint empty-event-name <file>" })
       LINT_CALLED -> waiting when (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
-        (emit LINT_RUN { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
     }
 
     state waiting {
@@ -97,7 +83,7 @@ orbital OrbLintEmptyEventNameOrbital {
         (emit LINT_ANSWERED { status: 200, body: "lint empty-event-name: clean" })
       LINT_FOUND -> ready when (and (= @payload.rule "empty-event-name") (> (array/len @payload.findings) 0))
         (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
-      LINT_UNREAD -> ready when (= @payload.rule "empty-event-name")
+      LINT_INPUT_UNREAD -> ready
         (emit LINT_ANSWERED { status: 500, body: "lint empty-event-name: the file could not be read or lowered" })
     }
 
@@ -108,14 +94,14 @@ orbital OrbLintEmptyEventNameOrbital {
       }
         @description "Internal: the command's answer, which the cli hook prints."
         @tier "internal"
-      LINT_RUN -> external { file : string! }
-        @description "Ask the rule trait to lint this file."
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
         @tier "internal"
       LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
         @description "The rule trait's findings for the file."
         @tier "internal"
-      LINT_UNREAD -> external { rule : string! }
-        @description "The rule trait could not read or lower the file."
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
         @tier "internal"
     }
 
@@ -127,9 +113,30 @@ orbital OrbLintEmptyEventNameOrbital {
         @description "Run `orb lint empty-event-name` with its arguments and working directory."
         @synonyms "orb lint empty-event-name"
       OrbLintEmptyEventName.LINT_FOUND -> LINT_FOUND
-      OrbLintEmptyEventName.LINT_UNREAD -> LINT_UNREAD
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
     }
   }
 
-  page "/orb-lint-empty-event-name" as OrbLintEmptyEventNamePage -> OrbLintEmptyEventName, OrbLintEmptyEventNameCli
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintEmptyEventNameCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintEmptyEventNameOrbitalStart -> OrbLintEmptyEventName, OrbLintEmptyEventNameCli, OrbLintInput, Packs, Versions
 }

@@ -6,19 +6,24 @@ orbital MigrationAdapterMarkdownOrbital {
   type ImportFieldValue = string | number | boolean
   type ImportRawDocument = { ref : string!, raw : string! }
   type ImportSkip = { ref : string!, reason : string! }
+  type ImportSkips = [ImportSkip]
   type ExtractedUnit = { ref : string!, kind : "root" | "folder" | "section" | "qa", title : string, content : string, parentRef : string, metadata : Map string ImportFieldValue, source : string!, span : string }
+  type ExtractedUnits = [ExtractedUnit]
   type MarkdownPair = { front : string!, back : string!, line : number! }
   type MarkdownQa = { pairs : [MarkdownPair], remaining : string! }
   type MarkdownSection = { heading : string!, depth : number!, headingLine : number!, bodyStartLine : number!, bodyEndLine : number!, body : string!, slug : string!, ref : string!, parentRef : string!, qa : MarkdownQa }
   type MarkdownFolder = { path : string!, title : string!, parentRef : string }
-  type MarkdownDocument = { ref : string!, lineCount : number!, title : string!, titleFromHeading : boolean!, preamble : string!, titleBody : string!, titleBodyStart : number!, folderParent : string, newFolders : [MarkdownFolder], preQa : MarkdownQa, bodyQa : MarkdownQa, sections : [MarkdownSection] }
+  type MarkdownSlugItem = { k : number!, slug : string!, ref : string!, parentRef : string! }
+  type MarkdownSlugItems = [MarkdownSlugItem]
+  type MarkdownSlugBases = [string]
+  type MarkdownDocument = { ref : string!, lineCount : number!, title : string!, titleFromHeading : boolean!, preamble : string!, titleBody : string!, titleBodyStart : number!, folderParent : string, newFolders : [MarkdownFolder], preQa : MarkdownQa, bodyQa : MarkdownQa, sections : [MarkdownSection]! }
 
   entity MigrationAdapterMarkdownRun [runtime] {
     id : string!
     documents : [MarkdownDocument] = []
   }
 
-  trait MigrationAdapterMarkdown -> MigrationAdapterMarkdownRun [integration, instance] {
+  trait MigrationAdapterMarkdown -> MigrationAdapterMarkdownRun [client] {
     initial: idle
 
     state idle {
@@ -95,7 +100,7 @@ orbital MigrationAdapterMarkdownOrbital {
                     (preRaw (str/join (array/slice @lines 0 (- @firstHeadingLine 1)) "\n"))
                     (secs (array/reduce
                            (array/range @startK @m)
-                           { items: [], bases: [] }
+                           { items: (json/parse "[]" MarkdownSlugItems), bases: (json/parse "[]" MarkdownSlugBases) }
                            (fn acc k
                              (let ((base (let ((s1 (str/replace-pattern
                                                    (str/lower (object/get (array/nth @heads @k) "heading"))
@@ -753,7 +758,7 @@ orbital MigrationAdapterMarkdownOrbital {
                                (= (object/get @d "titleBody") "")
                                (= (array/len (object/get @d "sections")) 0)
                                (not (object/get @d "titleFromHeading")))
-                             []
+                             (json/parse "[]" ExtractedUnits)
                              (array/concat
                                [
                                 (let ((rc (str/join
@@ -945,7 +950,7 @@ orbital MigrationAdapterMarkdownOrbital {
                                 reason: "empty document: no title, no body, no headings"
                               }
                              ]
-                             []))))
+                             (json/parse "[]" ImportSkips)))))
           })
     }
 
@@ -960,7 +965,7 @@ orbital MigrationAdapterMarkdownOrbital {
     }
 
     listens {
-      MIGRATION_EXTRACT -> external {
+      MIGRATION_EXTRACT -> input {
         adapter : string!
         documents : [ImportRawDocument]!
       }
@@ -970,5 +975,5 @@ orbital MigrationAdapterMarkdownOrbital {
     }
   }
 
-  page "/migration-adapter-markdown" as MigrationAdapterMarkdownPage -> MigrationAdapterMarkdown
+  page boot as MigrationAdapterMarkdownOrbitalStart -> MigrationAdapterMarkdown
 }

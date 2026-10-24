@@ -21,7 +21,7 @@ orbital PageTreatOrbital {
     errorMessage : string @description "Why the last treatment failed; blank = none" @synonyms "error, failure reason" = ""
   }
 
-  trait PageTreat -> PageTreatRecord [interaction, instance] {
+  trait PageTreat -> PageTreatRecord [client] {
     initial: ready
 
     config {
@@ -77,9 +77,9 @@ orbital PageTreatOrbital {
     }
 
     listens {
-      TREAT -> external { tab : number!, elementId : string!, treatment : "hide" | "blur" | "highlight" | "label" | "restore", label : string }
+      TREAT -> input { tab : number!, elementId : string!, treatment : "hide" | "blur" | "highlight" | "label" | "restore", label : string }
         @description "Treat one page element; `label` is the text shown with it (for example why it was hidden)"
-      TREAT_MANY -> external { items : [PageTreatment] }
+      TREAT_MANY -> input { items : [PageTreatment] }
         @description "Treat a list of page elements in one call, each with its own treatment and label"
     }
   }

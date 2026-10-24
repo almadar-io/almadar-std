@@ -84,6 +84,9 @@ export type OperatorCategory = (typeof OPERATOR_CATEGORIES)[number];
  *   `'union-of-args<i,j>'` restricts that to the listed arg indices: arg 0 is the list, the other listed index is
  *   the single element the operator adds (`array/append`/`array/prepend` are `<0,1>`, `array/insert` is `<0,2>`).
  * - `'last-of-args'` — the result is the last arg's value (`do`).
+ * - `'integer-closed'` — an integer when every argument is an integer (a literal without a fraction counts), else the declared number (`+`, `-`, `*`, `%`, `math/min`).
+ * - `'integer-result'` — an integer when called with one argument (`math/floor`; `math/round` without decimals).
+ * - `'tuple-element'` — a tuple's element at a literal index (`array/nth`).
  *
  * An operator whose result elements are NOT provably drawn from its inputs (`array/range`, `array/zip`,
  * `array/groupBy`, `array/partition`, `array/flatten`) declares nothing and the walk treats it as opaque.
@@ -97,7 +100,10 @@ export type ReturnSemantics =
   | 'union-of-args'
   | 'union-of-args<0,1>'
   | 'union-of-args<0,2>'
-  | 'last-of-args';
+  | 'last-of-args'
+  | 'integer-closed'
+  | 'integer-result'
+  | 'tuple-element';
 
 /** Where an effect executes: a client host delegates `server` effects, a server ships `client` effects back, `any` runs wherever it is dispatched. */
 export type RunsOn = 'client' | 'server' | 'any';

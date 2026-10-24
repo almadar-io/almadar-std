@@ -16,7 +16,7 @@ orbital OwnerOverlayOrbital {
     rows : [OverlayRow] = []
   }
 
-  trait OwnerOverlay -> OverlayRun [integration] {
+  trait OwnerOverlay -> OverlayRun [client] {
     initial: ready
 
     state ready {
@@ -54,14 +54,14 @@ orbital OwnerOverlayOrbital {
     }
 
     listens {
-      OVERLAY_PICK -> external { rows : [OverlayRow]!, ownerId : string! }
+      OVERLAY_PICK -> input { rows : [OverlayRow]!, ownerId : string! }
         @description "Pick, deterministically from the viewer alone, which shared row stands for the viewer."
         @synonyms "owner overlay, viewer row, deterministic row pick"
-      OVERLAY_APPLY -> external { rows : [OverlayRow]!, fields : [string]!, ownerId : string! }
+      OVERLAY_APPLY -> input { rows : [OverlayRow]!, fields : [string]!, ownerId : string! }
         @description "Stamp the viewer onto the named owner fields of the picked row, leaving every other row as it is."
         @synonyms "owner overlay apply, stamp viewer on shared row"
     }
   }
 
-  page "/owner-overlay" as OwnerOverlayPage -> OwnerOverlay
+  page boot as OwnerOverlayOrbitalStart -> OwnerOverlay
 }

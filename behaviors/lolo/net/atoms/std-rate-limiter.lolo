@@ -30,13 +30,13 @@ orbital RateBucketOrbital {
     @invariant (and (> @entity.limit 0) (>= @entity.resetIn 0) (<= @entity.resetIn @entity.window))
   }
 
-  trait ShieldIcon = Icon.traits.IconRender -> RateBucket {
+  trait ShieldIcon = Icon.traits.IconRender -> RateBucket [client] {
     config {
       name: shield
     }
   }
 
-  trait RateBucketTitle = Typography.traits.TypographyRender -> RateBucket {
+  trait RateBucketTitle = Typography.traits.TypographyRender -> RateBucket [client] {
     config {
       content: "RateBucket Rate Limiter"
       variant: h2
@@ -59,14 +59,14 @@ orbital RateBucketOrbital {
     }
   }
 
-  trait RateLimitAlert = Alert.traits.AlertRender -> RateBucket {
+  trait RateLimitAlert = Alert.traits.AlertRender -> RateBucket [client] {
     config {
       message: "Rate limit exceeded. Requests are being throttled."
       variant: error
     }
   }
 
-  trait RequestsStat = StatDisplay.traits.StatDisplayRender -> RateBucket {
+  trait RequestsStat = StatDisplay.traits.StatDisplayRender -> RateBucket [client] {
     config {
       label: Requests
       look: @config.statLook
@@ -74,7 +74,7 @@ orbital RateBucketOrbital {
     }
   }
 
-  trait WindowStat = StatDisplay.traits.StatDisplayRender -> RateBucket {
+  trait WindowStat = StatDisplay.traits.StatDisplayRender -> RateBucket [client] {
     config {
       label: Window
       look: @config.statLook
@@ -82,7 +82,7 @@ orbital RateBucketOrbital {
     }
   }
 
-  trait CountMeter = Meter.traits.MeterRender -> RateBucket {
+  trait CountMeter = Meter.traits.MeterRender -> RateBucket [client] {
     config {
       max: @entity.limit
       min: 0
@@ -125,7 +125,7 @@ orbital RateBucketOrbital {
     }
   }
 
-  trait RateBucketDivider = Divider.traits.DividerRender -> RateBucket {
+  trait RateBucketDivider = Divider.traits.DividerRender -> RateBucket [client] {
     config {}
   }
 
@@ -136,7 +136,7 @@ orbital RateBucketOrbital {
     }
   }
 
-  trait RateBucketRateLimiter -> RateBucket [interaction, collection, rate-limit] {
+  trait RateBucketRateLimiter -> RateBucket [client] {
     initial: open
 
     state open {

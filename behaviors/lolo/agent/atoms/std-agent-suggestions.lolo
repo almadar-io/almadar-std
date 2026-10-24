@@ -209,7 +209,7 @@ orbital AgentSuggestionsOrbital {
     id : string!
   }
 
-  trait AgentSuggestionProposer -> @rebindable AgentSuggestion [lifecycle] {
+  trait AgentSuggestionProposer -> @rebindable AgentSuggestion {
     config {
       pendingLimit : number = @config.maxPending
         @label "How many suggestions may wait at once?"
@@ -340,7 +340,7 @@ orbital AgentSuggestionsOrbital {
     }
 
     listens {
-      PROPOSE_SUGGESTION -> external {
+      PROPOSE_SUGGESTION -> input {
         kind : string!
         title : string!
         body : string
@@ -354,7 +354,7 @@ orbital AgentSuggestionsOrbital {
     }
   }
 
-  trait AgentSuggestionInbox -> @rebindable AgentSuggestion [interaction, collection] {
+  trait AgentSuggestionInbox -> @rebindable AgentSuggestion {
     config {
       heading : string = @config.title
         @label "Inbox heading"
@@ -684,7 +684,7 @@ orbital AgentSuggestionsOrbital {
     }
   }
 
-  trait AgentSuggestionTrigger -> @rebindable AgentSuggestionRun [lifecycle] {
+  trait AgentSuggestionTrigger -> @rebindable AgentSuggestionRun {
     config {
       gapMinutes : number = @config.cooldownMinutes
         @label "Minutes between proactive runs"
@@ -739,7 +739,7 @@ orbital AgentSuggestionsOrbital {
     }
   }
 
-  trait AgentSuggestionRunner -> @rebindable AgentSuggestionRun [lifecycle] {
+  trait AgentSuggestionRunner -> @rebindable AgentSuggestionRun {
     config {
       request : string = @config.prompt
         @label "What does the agent look into?"
@@ -905,7 +905,7 @@ orbital AgentSuggestionRecordsOrbital {
     ranAt : number @description "When the agent was last asked to look (ms)." @synonyms "time, started" = 0
   }
 
-  trait AgentSuggestionHistory -> @rebindable AgentSuggestion [interaction, collection] {
+  trait AgentSuggestionHistory -> @rebindable AgentSuggestion {
     config {
       emptyHeading : string = "Nothing suggested yet"
         @label "What shows when nothing was ever suggested?"

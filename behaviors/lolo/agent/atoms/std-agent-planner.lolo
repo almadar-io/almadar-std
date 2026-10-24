@@ -24,7 +24,7 @@ orbital AgentPlannerOrbital {
     }
   }
 
-  trait PlannerExecution -> PlannerPlan [lifecycle, instance] {
+  trait PlannerExecution -> PlannerPlan [client] {
     initial: idle
 
     state idle {
@@ -61,11 +61,11 @@ orbital AgentPlannerOrbital {
       PLAN_GENERATED -> planned
         (set @entity.plan ?content)
         (set @entity.status planned)
-        (emit PLANNED { plan: @entity.plan, memoryCount: @entity.memories })
+        (emit PLANNED { plan: @entity.plan, memoryCount: (array/len @entity.memories) })
       PLAN_GENERATION_FAILED -> planned
         (set @entity.plan "")
         (set @entity.status planned)
-        (emit PLANNED { plan: @entity.plan, memoryCount: @entity.memories })
+        (emit PLANNED { plan: @entity.plan, memoryCount: (array/len @entity.memories) })
     }
 
     state planned {
@@ -109,7 +109,7 @@ orbital AgentPlannerOrbital {
     }
   }
 
-  trait PlannerListener -> PlannerPlan [lifecycle, instance] {
+  trait PlannerListener -> PlannerPlan [client] {
     initial: waiting
 
     state waiting {

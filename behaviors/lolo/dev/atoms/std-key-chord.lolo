@@ -17,7 +17,7 @@ orbital KeyChordOrbital {
     table : Map string KeyCaptureEntry @description "The last merged capture table." = {}
   }
 
-  trait KeyChord -> KeyChordRun [lifecycle, instance] {
+  trait KeyChord -> KeyChordRun [client] {
     initial: ready
 
     state ready {
@@ -60,7 +60,7 @@ orbital KeyChordOrbital {
         (set @entity.skipped false)
         (set @entity.editorId "")
         (set @entity.captured false)
-        (set @entity.table (array/reduce ?tables {} (fn acc t (array/reduce (object/keys @t) @acc (fn a target (if (not (object/has @a @target)) (object/set @a @target { mode: (object/get (object/get @t @target) "mode"), keys: (array/sort (array/unique (object/get (object/get @t @target) "keys"))) }) (object/set @a @target { mode: (if (or (= (object/get (object/get @a @target) "mode") "any") (= (object/get (object/get @t @target) "mode") "any")) "any" (if (= (object/get (object/get @a @target) "mode") (object/get (object/get @t @target) "mode")) (object/get (object/get @a @target) "mode") (str/join (array/sort (array/unique (array/append (str/split (object/get (object/get @a @target) "mode") "|") (object/get (object/get @t @target) "mode")))) "|"))), keys: (array/sort (array/unique (array/concat (object/get (object/get @a @target) "keys") (object/get (object/get @t @target) "keys")))) })))))))
+        (set @entity.table (array/reduce ?tables (let ((empty : Map string KeyCaptureEntry {})) @empty) (fn acc t (array/reduce (object/keys @t) @acc (fn a target (if (not (object/has @a @target)) (object/set @a @target { mode: (object/get (object/get @t @target) "mode"), keys: (array/sort (array/unique (object/get (object/get @t @target) "keys"))) }) (object/set @a @target { mode: (if (or (= (object/get (object/get @a @target) "mode") "any") (= (object/get (object/get @t @target) "mode") "any")) "any" (if (= (object/get (object/get @a @target) "mode") (object/get (object/get @t @target) "mode")) (object/get (object/get @a @target) "mode") (str/join (array/sort (array/unique (array/append (str/split (object/get (object/get @a @target) "mode") "|") (object/get (object/get @t @target) "mode")))) "|"))), keys: (array/sort (array/unique (array/concat (object/get (object/get @a @target) "keys") (object/get (object/get @t @target) "keys")))) })))))))
         (emit KEY_RESULT { value: @entity.value, hit: @entity.hit, skipped: @entity.skipped, editorId: @entity.editorId, captured: @entity.captured, table: @entity.table })
       ROUTE_KEY -> ready
         (set @entity.value "")
@@ -108,5 +108,5 @@ orbital KeyChordOrbital {
     }
   }
 
-  page "/key-chord" as KeyChordPage -> KeyChord
+  page boot as KeyChordOrbitalStart -> KeyChord
 }

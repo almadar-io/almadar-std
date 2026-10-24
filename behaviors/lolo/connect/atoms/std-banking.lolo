@@ -14,7 +14,7 @@ orbital BankingOrbital {
     id : string!
   }
 
-  trait BankingClient -> BankingRequest [integration, instance] {
+  trait BankingClient -> BankingRequest [optimistic] {
     initial: idle
 
     state idle {
@@ -209,19 +209,19 @@ orbital BankingOrbital {
     }
 
     listens {
-      BANKING_CREATE_REQUISITION -> external {
+      BANKING_CREATE_REQUISITION -> input {
         institutionId : string!
         redirectUrl : string!
         reference : string
       }
         @description "Start a bank-connection requisition for an institution; the user is redirected back to redirectUrl after consent, and reference correlates the requisition."
         @synonyms "connect bank, link bank account, start bank consent"
-      BANKING_LIST_ACCOUNTS -> external {
+      BANKING_LIST_ACCOUNTS -> input {
         requisitionId : string!
       }
         @description "List the account ids linked under a completed requisition."
         @synonyms "list bank accounts, linked accounts"
-      BANKING_LIST_TRANSACTIONS -> external {
+      BANKING_LIST_TRANSACTIONS -> input {
         accountId : string!
         dateFrom : string
         dateTo : string

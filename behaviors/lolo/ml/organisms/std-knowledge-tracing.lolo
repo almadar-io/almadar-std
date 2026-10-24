@@ -18,7 +18,7 @@ orbital KnowledgeTracingOrbital {
     mean : float = 0
     intervalLow : float = 0
     intervalHigh : float = 0
-    observations : int = 0
+    observations : number = 0
     status : "idle" | "insufficient" | "mastered" | "remediate" = idle
     input : string = ""
     verdict : string = ""
@@ -28,7 +28,7 @@ orbital KnowledgeTracingOrbital {
     recordedAt : number = 0
   }
 
-  trait ObservationRelay -> KnowledgeState [lifecycle, instance] {
+  trait ObservationRelay -> KnowledgeState [client] {
     initial: idle
 
     state idle {
@@ -106,7 +106,7 @@ orbital KnowledgeTracingOrbital {
     }
   }
 
-  trait Labels :: i ObservationLabelInput v ObservationLabelVerdict o boolean = LabelCap.traits.LabelCaptureListener -> KnowledgeState {
+  trait Labels :: i ObservationLabelInput v ObservationLabelVerdict o boolean = LabelCap.traits.LabelCaptureListener -> KnowledgeState [optimistic] {
     config {
       sink: "knowledge-tracing"
       sampleRate: 1
@@ -117,5 +117,5 @@ orbital KnowledgeTracingOrbital {
     }
   }
 
-  page "/knowledge-tracing" as KnowledgeTracingPage -> ObservationRelay, PosteriorTracker, Labels
+  page boot as KnowledgeTracingOrbitalStart -> ObservationRelay, PosteriorTracker, Labels
 }

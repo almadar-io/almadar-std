@@ -15,7 +15,7 @@ orbital ForkEnvOrbital {
     root : string = ""
   }
 
-  trait ForkEnv -> ForkEnvRun [integration] {
+  trait ForkEnv -> ForkEnvRun [client] {
     initial: ready
 
     state ready {
@@ -49,14 +49,14 @@ orbital ForkEnvOrbital {
     }
 
     listens {
-      FORK_ENV -> external { base : Map string string!, credentialVars : [string]!, allowReal : boolean!, agentMock : boolean!, mockLLM : boolean!, integrationEnv : Map string string! }
+      FORK_ENV -> input { base : Map string string!, credentialVars : [string]!, allowReal : boolean!, agentMock : boolean!, mockLLM : boolean!, integrationEnv : Map string string! }
         @description "Build the environment a forked server sees."
         @synonyms "fork env, sandbox environment, credential scrub, hermetic env"
-      FORK_ROOT -> external { env : Map string string!, schemaDir : string!, cwd : string! }
+      FORK_ROOT -> input { env : Map string string!, schemaDir : string!, cwd : string! }
         @description "Pick the fork's project root; an empty schemaDir means none."
         @synonyms "project root, fork root"
     }
   }
 
-  page "/fork-env" -> ForkEnv
+  page boot as ForkEnvOrbitalStart -> ForkEnv
 }

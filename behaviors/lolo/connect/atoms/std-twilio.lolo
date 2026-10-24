@@ -10,7 +10,7 @@ orbital TwilioOrbital {
     id : string!
   }
 
-  trait TwilioClient -> TwilioMessageRequest [integration, instance] {
+  trait TwilioClient -> TwilioMessageRequest [optimistic] {
     initial: idle
 
     state idle {
@@ -123,14 +123,14 @@ orbital TwilioOrbital {
     }
 
     listens {
-      TWILIO_SEND_SMS -> external {
+      TWILIO_SEND_SMS -> input {
         to : string!
         body : string!
         from : string
       }
         @description "Send an SMS; from defaults to the configured phone number when empty or absent."
         @synonyms "send text message, text, sms"
-      TWILIO_SEND_WHATSAPP -> external {
+      TWILIO_SEND_WHATSAPP -> input {
         to : string!
         body : string!
       }

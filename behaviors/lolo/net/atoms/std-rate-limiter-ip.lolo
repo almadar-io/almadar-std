@@ -12,7 +12,7 @@ orbital RateClientOrbital {
     buckets : [RateKey] @description "One count and window start per client address, rolled lazily at the first request at or after start plus window." @synonyms "windows, per-ip counts, client buckets" = []
   }
 
-  trait RateKeyRateLimiter -> RateClient [integration, instance, rate-limit] {
+  trait RateKeyRateLimiter -> RateClient [client] {
     initial: counting
 
     state counting {
@@ -79,5 +79,5 @@ orbital RateClientOrbital {
     }
   }
 
-  page "/rate-clients/limiter" as RateKeyRateLimiterPage -> RateKeyRateLimiter
+  page boot as RateClientOrbitalStart -> RateKeyRateLimiter
 }

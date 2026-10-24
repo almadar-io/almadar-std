@@ -1,0 +1,795 @@
+{
+ "atom": "cli/atoms/std-orb-resolve.lolo",
+ "trait": "ResolveEngine",
+ "cases": [
+  {
+   "id": "the call asks std-args to parse with the output flag table and its -o alias",
+   "steps": [
+    {
+     "trait": "OrbResolve",
+     "from": "ready",
+     "event": "RESOLVE_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"a.lolo\", \"-o\", \"r.orb\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "RESOLVE_ARGS_PARSE",
+        "payload": {
+         "stage": "resolve",
+         "argv": [
+          "a.lolo",
+          "-o",
+          "r.orb"
+         ],
+         "flags": [
+          {
+           "name": "output",
+           "aliases": [
+            "-o"
+           ],
+           "takesValue": true,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a relative file is joined to the working directory",
+   "steps": [
+    {
+     "trait": "OrbResolve",
+     "from": "ready",
+     "event": "RESOLVE_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"a/b.lolo\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing"
+     }
+    },
+    {
+     "trait": "OrbResolve",
+     "from": "parsing",
+     "event": "RESOLVE_ARGS_DONE",
+     "payload": {
+      "stage": "resolve",
+      "flags": {},
+      "positionals": [
+       "a/b.lolo"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "working",
+      "emits": [
+       {
+        "event": "RESOLVE_START",
+        "payload": {
+         "path": "/w/a/b.lolo",
+         "output": "",
+         "hasOutput": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an absolute file is kept as given",
+   "steps": [
+    {
+     "trait": "OrbResolve",
+     "from": "ready",
+     "event": "RESOLVE_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"/x/b.lolo\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing"
+     }
+    },
+    {
+     "trait": "OrbResolve",
+     "from": "parsing",
+     "event": "RESOLVE_ARGS_DONE",
+     "payload": {
+      "stage": "resolve",
+      "flags": {},
+      "positionals": [
+       "/x/b.lolo"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "working",
+      "emits": [
+       {
+        "event": "RESOLVE_START",
+        "payload": {
+         "path": "/x/b.lolo",
+         "output": "",
+         "hasOutput": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a ../ file is normalized against the working directory",
+   "steps": [
+    {
+     "trait": "OrbResolve",
+     "from": "ready",
+     "event": "RESOLVE_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"../b.lolo\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing"
+     }
+    },
+    {
+     "trait": "OrbResolve",
+     "from": "parsing",
+     "event": "RESOLVE_ARGS_DONE",
+     "payload": {
+      "stage": "resolve",
+      "flags": {},
+      "positionals": [
+       "../b.lolo"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "working",
+      "emits": [
+       {
+        "event": "RESOLVE_START",
+        "payload": {
+         "path": "/b.lolo",
+         "output": "",
+         "hasOutput": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "--output carries the output path as given",
+   "steps": [
+    {
+     "trait": "OrbResolve",
+     "from": "ready",
+     "event": "RESOLVE_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"a.lolo\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing"
+     }
+    },
+    {
+     "trait": "OrbResolve",
+     "from": "parsing",
+     "event": "RESOLVE_ARGS_DONE",
+     "payload": {
+      "stage": "resolve",
+      "flags": {
+       "output": [
+        "out/r.orb"
+       ]
+      },
+      "positionals": [
+       "a.lolo"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "working",
+      "emits": [
+       {
+        "event": "RESOLVE_START",
+        "payload": {
+         "path": "/w/a.lolo",
+         "output": "out/r.orb",
+         "hasOutput": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: without --output the start says so",
+   "steps": [
+    {
+     "trait": "OrbResolve",
+     "from": "ready",
+     "event": "RESOLVE_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"a.lolo\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing"
+     }
+    },
+    {
+     "trait": "OrbResolve",
+     "from": "parsing",
+     "event": "RESOLVE_ARGS_DONE",
+     "payload": {
+      "stage": "resolve",
+      "flags": {},
+      "positionals": [
+       "a.lolo"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "working",
+      "emits": [
+       {
+        "event": "RESOLVE_START",
+        "payload": {
+         "hasOutput": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: no file is the usage",
+   "steps": [
+    {
+     "trait": "OrbResolve",
+     "from": "parsing",
+     "event": "RESOLVE_ARGS_DONE",
+     "payload": {
+      "stage": "resolve",
+      "flags": {},
+      "positionals": [],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RESOLVE_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb resolve <FILE> [-o|--output FILE]"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESOLVE_START"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: no file beside --output is the usage",
+   "steps": [
+    {
+     "trait": "OrbResolve",
+     "from": "parsing",
+     "event": "RESOLVE_ARGS_DONE",
+     "payload": {
+      "stage": "resolve",
+      "flags": {
+       "output": [
+        "r.orb"
+       ]
+      },
+      "positionals": [],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RESOLVE_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb resolve <FILE> [-o|--output FILE]"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESOLVE_START"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: two files are the usage",
+   "steps": [
+    {
+     "trait": "OrbResolve",
+     "from": "parsing",
+     "event": "RESOLVE_ARGS_DONE",
+     "payload": {
+      "stage": "resolve",
+      "flags": {},
+      "positionals": [
+       "a.lolo",
+       "b.lolo"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RESOLVE_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb resolve <FILE> [-o|--output FILE]"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESOLVE_START"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: an unknown flag is the usage",
+   "steps": [
+    {
+     "trait": "OrbResolve",
+     "from": "parsing",
+     "event": "RESOLVE_ARGS_DONE",
+     "payload": {
+      "stage": "resolve",
+      "flags": {},
+      "positionals": [
+       "a.lolo"
+      ],
+      "errors": [
+       "unknown flag: --bogus"
+      ],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RESOLVE_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb resolve <FILE> [-o|--output FILE]"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESOLVE_START"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a repeated --output is the usage",
+   "steps": [
+    {
+     "trait": "OrbResolve",
+     "from": "parsing",
+     "event": "RESOLVE_ARGS_DONE",
+     "payload": {
+      "stage": "resolve",
+      "flags": {
+       "output": [
+        "a",
+        "b"
+       ]
+      },
+      "positionals": [
+       "a.lolo"
+      ],
+      "errors": [
+       "repeated flag: --output"
+      ],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RESOLVE_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb resolve <FILE> [-o|--output FILE]"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESOLVE_START"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: --output without a value is the usage",
+   "steps": [
+    {
+     "trait": "OrbResolve",
+     "from": "parsing",
+     "event": "RESOLVE_ARGS_DONE",
+     "payload": {
+      "stage": "resolve",
+      "flags": {
+       "output": []
+      },
+      "positionals": [
+       "a.lolo"
+      ],
+      "errors": [
+       "missing value for --output"
+      ],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RESOLVE_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb resolve <FILE> [-o|--output FILE]"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESOLVE_START"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the engine answer is relayed with its stderr",
+   "steps": [
+    {
+     "trait": "OrbResolve",
+     "from": "working",
+     "event": "RESOLVE_DONE",
+     "payload": {
+      "status": 500,
+      "body": "",
+      "stderr": "Error: x"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RESOLVE_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "Error: x"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the engine answer is relayed without a stderr",
+   "steps": [
+    {
+     "trait": "OrbResolve",
+     "from": "working",
+     "event": "RESOLVE_DONE",
+     "payload": {
+      "status": 200,
+      "body": "{}"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RESOLVE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "{}"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "start without an output resolves the path",
+   "steps": [
+    {
+     "trait": "ResolveEngine",
+     "from": "idle",
+     "event": "RESOLVE_START",
+     "payload": {
+      "path": "/w/a.lolo",
+      "output": "",
+      "hasOutput": false
+     },
+     "expect": {
+      "state": "resolving"
+     }
+    }
+   ]
+  },
+  {
+   "id": "start with an output resolves the path and writes there",
+   "steps": [
+    {
+     "trait": "ResolveEngine",
+     "from": "idle",
+     "event": "RESOLVE_START",
+     "payload": {
+      "path": "/w/a.lolo",
+      "output": "r.orb",
+      "hasOutput": true
+     },
+     "expect": {
+      "state": "resolving"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a resolved program prints its text and drops the program tree",
+   "steps": [
+    {
+     "trait": "ResolveEngine",
+     "from": "idle",
+     "event": "RESOLVE_START",
+     "payload": {
+      "path": "/w/a.lolo",
+      "output": "",
+      "hasOutput": false
+     },
+     "expect": {
+      "state": "resolving"
+     }
+    },
+    {
+     "trait": "ResolveEngine",
+     "from": "resolving",
+     "event": "RESOLVE_RESOLVED",
+     "payload": {
+      "result": {
+       "program": {
+        "name": "a",
+        "orbitals": []
+       },
+       "text": "{\n  \"name\": \"a\",\n  \"orbitals\": []\n}"
+      }
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "RESOLVE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "{\n  \"name\": \"a\",\n  \"orbitals\": []\n}"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: with --output the resolved text is written by the host and not printed",
+   "steps": [
+    {
+     "trait": "ResolveEngine",
+     "from": "idle",
+     "event": "RESOLVE_START",
+     "payload": {
+      "path": "/w/a.lolo",
+      "output": "r.orb",
+      "hasOutput": true
+     },
+     "expect": {
+      "state": "resolving"
+     }
+    },
+    {
+     "trait": "ResolveEngine",
+     "from": "resolving",
+     "event": "RESOLVE_RESOLVED",
+     "payload": {
+      "result": {
+       "program": {
+        "name": "a"
+       },
+       "text": "{\n  \"name\": \"a\",\n  \"orbitals\": []\n}"
+      }
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "RESOLVE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a second run without --output prints again after a run with it",
+   "steps": [
+    {
+     "trait": "ResolveEngine",
+     "from": "idle",
+     "event": "RESOLVE_START",
+     "payload": {
+      "path": "/w/a.lolo",
+      "output": "r.orb",
+      "hasOutput": true
+     },
+     "expect": {
+      "state": "resolving"
+     }
+    },
+    {
+     "trait": "ResolveEngine",
+     "from": "resolving",
+     "event": "RESOLVE_RESOLVED",
+     "payload": {
+      "result": {
+       "program": {},
+       "text": "{\n  \"name\": \"a\",\n  \"orbitals\": []\n}"
+      }
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "RESOLVE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": ""
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "ResolveEngine",
+     "from": "idle",
+     "event": "RESOLVE_START",
+     "payload": {
+      "path": "/w/a.lolo",
+      "output": "",
+      "hasOutput": false
+     },
+     "expect": {
+      "state": "resolving"
+     }
+    },
+    {
+     "trait": "ResolveEngine",
+     "from": "resolving",
+     "event": "RESOLVE_RESOLVED",
+     "payload": {
+      "result": {
+       "program": {},
+       "text": "{\n  \"name\": \"a\",\n  \"orbitals\": []\n}"
+      }
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "RESOLVE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "{\n  \"name\": \"a\",\n  \"orbitals\": []\n}"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a refusal (missing file, lowering error, lazy or locales without --output, failed write) answers 500 with its reason",
+   "steps": [
+    {
+     "trait": "ResolveEngine",
+     "from": "resolving",
+     "event": "RESOLVE_REFUSED",
+     "payload": {
+      "error": "program/read: /w/a.lolo declares locales; each locale's catalog is written beside the resolved .orb — pass --output"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "RESOLVE_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "Error: program/read: /w/a.lolo declares locales; each locale's catalog is written beside the resolved .orb — pass --output"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a refusal with no reason still answers 500",
+   "steps": [
+    {
+     "trait": "ResolveEngine",
+     "from": "resolving",
+     "event": "RESOLVE_REFUSED",
+     "payload": {},
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "RESOLVE_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

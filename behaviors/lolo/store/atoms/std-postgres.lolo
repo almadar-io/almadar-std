@@ -11,7 +11,7 @@ orbital PostgresOrbital {
     id : string!
   }
 
-  trait PostgresClient -> PostgresCall [integration, instance] {
+  trait PostgresClient -> PostgresCall [optimistic] {
     initial: idle
 
     state idle {
@@ -67,7 +67,7 @@ orbital PostgresOrbital {
     }
 
     listens {
-      PG_QUERY -> external {
+      PG_QUERY -> input {
         sql : string!
         params : [PgCell]
       }

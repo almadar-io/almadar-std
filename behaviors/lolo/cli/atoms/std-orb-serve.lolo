@@ -1,0 +1,289 @@
+app std-orb-serve [
+  version: "1.0.0",
+  inbound: ["cli-serve"],
+  env: ["HOME"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.almadar/serve/**": [read, write, create] },
+  description: "std-orb-serve — the `orb serve <file> [--port N] [--host H] [--no-mock] [--client-dir DIR] [--open] [--no-emulators]` command (spec/cli/orb-serve.lolo; port of orbital-cli program_command.rs serve_program and server_overrides). It resolves the app with program/read { resolve: true, path }, resolves std/behaviors/std-http-server with behavior/resolve and composes the two with program/compose, naming the app, with the overrides the Rust server_overrides built: Http1.host, Http1.port, Http1.portFromEnv false, the listen grant for host:port and, with --client-dir (made absolute against the working directory, then required to lie under it), ServerStatic.clientDir relative to the working directory with its anchored cwd read grant. The command never runs the program: it answers a hand-off the bootloader acts on, status 200 with headers orb-run: server, orb-mock: on (default) or off (--no-mock), orb-app: the absolute app path, and the composed program's JSON as the body. --open and --no-emulators answer status 500 on stderr with the texts the Rust command bailed with; a port that is not an integer in 0..65535 answers status 400 on stderr; a client dir outside the working directory, an app that names no app or a program that does not resolve or compose answers status 500 on stderr `Error: <reason>`; a missing or second file or an unknown flag answers the usage (status 400, exit 2). Defaults: port 3030, host 127.0.0.1. The resolved app is written (with its catalogs and lazy behaviors) to ~/.almadar/serve/<app path with / as _>.orb, the directory read from the HOME env grant and written under the fs grant ~/.almadar/serve/**; orb-app names that file, so the bootloader finds the catalogs."
+]
+uses Spec from "almadar-std/orb-serve"
+uses Args from "std/behaviors/std-args"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
+type ServeProgram = { name : string }
+type ServeApp = { program : ServeProgram!, text : string! }
+
+orbital OrbServeOrbital {
+  entity ServeRun [runtime] {
+    id : string!
+    path : string = ""
+    host : string = ""
+    port : number = 0
+    rel : string = ""
+    hasClient : boolean = false
+    mock : boolean = true
+    out : string = ""
+    appName : string = ""
+    app : ServeProgram = { name: "" }
+  }
+
+  trait ArgsCli = Args.traits.ArgsParser {
+    listens {
+      OrbServe.SERVE_ARGS_PARSE -> ARGS_PARSE
+    }
+  }
+
+  trait OrbServe -> ServeRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      SERVE_CALLED -> parsing
+        (set @entity.path (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
+        (emit SERVE_ARGS_PARSE { stage: "serve" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "port" aliases: ["-p"] takesValue: true repeatable: false }, { name: "host" aliases: [] takesValue: true repeatable: false }, { name: "client-dir" aliases: [] takesValue: true repeatable: false }, { name: "no-mock" aliases: [] takesValue: false repeatable: false }, { name: "open" aliases: [] takesValue: false repeatable: false }, { name: "no-emulators" aliases: [] takesValue: false repeatable: false }] })
+    }
+
+    state parsing {
+      INIT -> parsing
+      SERVE_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (!= (array/len @payload.positionals) 1))
+        (emit SERVE_ANSWERED { status: 400, body: "", stderr: "usage: orb serve <FILE> [--port N] [--host H] [--no-mock] [--client-dir DIR] [--open] [--no-emulators]" })
+      SERVE_ARGS_DONE -> working when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1))
+        (emit SERVE_START {
+          cwd: @entity.path
+          path: (if (os/path-is-absolute (array/first @payload.positionals)) (array/first @payload.positionals) (os/path-join @entity.path (array/first @payload.positionals)))
+          portText: (array/first (or (object/get @payload.flags "port") ["3030"]))
+          portOk: (and (>= (str/to-number (array/first (or (object/get @payload.flags "port") ["3030"]))) 0) (<= (str/to-number (array/first (or (object/get @payload.flags "port") ["3030"]))) 65535) (= (str/to-int (array/first (or (object/get @payload.flags "port") ["3030"]))) (str/to-number (array/first (or (object/get @payload.flags "port") ["3030"])))))
+          host: (array/first (or (object/get @payload.flags "host") ["127.0.0.1"]))
+          hasClient: (!= (object/get @payload.flags "client-dir") null)
+          clientDir: (if (== (object/get @payload.flags "client-dir") null) "" (if (os/path-is-absolute (array/first (object/get @payload.flags "client-dir"))) (array/first (object/get @payload.flags "client-dir")) (os/path-join @entity.path (array/first (object/get @payload.flags "client-dir")))))
+          clientGiven: (array/first (or (object/get @payload.flags "client-dir") [""]))
+          clientInside: (if (== (object/get @payload.flags "client-dir") null) true (str/startsWith (if (os/path-is-absolute (array/first (object/get @payload.flags "client-dir"))) (array/first (object/get @payload.flags "client-dir")) (os/path-join @entity.path (array/first (object/get @payload.flags "client-dir")))) (str/concat @entity.path "/")))
+          mock: (== (object/get @payload.flags "no-mock") null)
+          open: (!= (object/get @payload.flags "open") null)
+          noEmulators: (!= (object/get @payload.flags "no-emulators") null)
+        })
+    }
+
+    state working {
+      INIT -> working
+      SERVE_DONE -> ready
+        (emit SERVE_ANSWERED { status: @payload.status, body: @payload.body, stderr: @payload.stderr, headers: @payload.headers })
+      SERVE_COMPOSE_READY -> composing when @payload.hasClient
+        (set @entity.mock @payload.mock)
+        (set @entity.path @payload.path)
+        (program/compose [@payload.app @payload.server] { appName: @payload.appName overrides: { "Http1.host": @payload.host, "Http1.port": @payload.port, "Http1.portFromEnv": false, "ServerStatic.clientDir": @payload.rel, grants: { net: [{ target: (str/concat @payload.host ":" @payload.port), kinds: ["listen"] }], anchored: { fs: [{ anchor: "cwd", glob: (str/concat @payload.rel "/**"), modes: ["read"] }] } } } } { key: "compose" emit: { success: SERVE_COMPOSED, failure: SERVE_COMPOSE_REFUSED } })
+      SERVE_COMPOSE_READY -> composing when (not @payload.hasClient)
+        (set @entity.mock @payload.mock)
+        (set @entity.path @payload.path)
+        (program/compose [@payload.app @payload.server] { appName: @payload.appName overrides: { "Http1.host": @payload.host, "Http1.port": @payload.port, "Http1.portFromEnv": false, grants: { net: [{ target: (str/concat @payload.host ":" @payload.port), kinds: ["listen"] }], anchored: {} } } } { key: "compose" emit: { success: SERVE_COMPOSED, failure: SERVE_COMPOSE_REFUSED } })
+    }
+
+    state composing {
+      INIT -> composing
+      SERVE_COMPOSE_REFUSED -> ready
+        (emit SERVE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " @payload.error) })
+      SERVE_COMPOSED -> ready when @entity.mock
+        (emit SERVE_ANSWERED { status: 200, body: (json/stringify @payload.result), headers: (object/fromEntries [["orb-run", "server"], ["orb-mock", "on"], ["orb-app", @entity.path]]) })
+      SERVE_COMPOSED -> ready when (not @entity.mock)
+        (emit SERVE_ANSWERED { status: 200, body: (json/stringify @payload.result), headers: (object/fromEntries [["orb-run", "server"], ["orb-mock", "off"], ["orb-app", @entity.path]]) })
+    }
+
+    emits {
+      SERVE_ANSWERED -> internal {
+        status : number!
+        body : string!
+        stderr : string
+        headers : Map string string
+      }
+        @description "Internal: the command's answer, which the cli hook prints; headers carry the bootloader hand-off."
+        @tier "internal"
+      SERVE_ARGS_PARSE {
+        stage : string!
+        argv : [string]!
+        flags : [ArgFlag]!
+      }
+        @description "Internal: parse the call's words."
+        @tier "internal"
+      SERVE_COMPOSED {
+        result : behavior
+      }
+        @description "program/compose: the app composed with the server."
+        @tier "internal"
+      SERVE_COMPOSE_REFUSED {
+        error : string
+      }
+        @description "The composition was refused."
+        @tier "internal"
+      SERVE_START {
+        cwd : string!
+        path : string!
+        portText : string!
+        portOk : boolean!
+        host : string!
+        hasClient : boolean!
+        clientDir : string!
+        clientGiven : string!
+        clientInside : boolean!
+        mock : boolean!
+        open : boolean!
+        noEmulators : boolean!
+      }
+        @description "Internal: the parsed serve request."
+        @tier "internal"
+    }
+
+    listens {
+      SERVE_CALLED -> inbound "cli-serve" answers SERVE_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb serve`."
+        @synonyms "orb serve, serve a program, run the app on a port, http server for a lolo program"
+      SERVE_ARGS_DONE {
+        stage : string!
+        flags : Map string [string]!
+        positionals : [string]!
+        errors : [string]!
+        words : [string]!
+      }
+        @description "std-args's ARGS_PARSED."
+      ArgsCli.ARGS_PARSED -> SERVE_ARGS_DONE
+      SERVE_COMPOSE_READY {
+        server : ServeProgram!
+        app : ServeProgram!
+        appName : string!
+        host : string!
+        port : number!
+        rel : string!
+        hasClient : boolean!
+        mock : boolean!
+        path : string!
+      }
+        @description "The resolved server, ready to compose with the app."
+      ServeEngine.SERVE_COMPOSE_READY -> SERVE_COMPOSE_READY
+      ServeEngine.SERVE_ANSWERED -> SERVE_DONE
+      SERVE_DONE { status : number!  body : string!  stderr : string  headers : Map string string }
+        @description "Internal: the engine's answer, relayed to the hook by its handler."
+        @tier "internal"
+    }
+  }
+
+  trait ServeEngine -> ServeRun [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      SERVE_START -> idle when @payload.open
+        (emit SERVE_ANSWERED { status: 500, body: "", stderr: "Error: orb serve --open has no declared counterpart in std-http-server: open the browser yourself" })
+      SERVE_START -> idle when (and (not @payload.open) @payload.noEmulators)
+        (emit SERVE_ANSWERED { status: 500, body: "", stderr: "Error: orb serve --no-emulators has no declared counterpart in std-http-server: sign-in is selected by AUTH_PROVIDER in the environment" })
+      SERVE_START -> idle when (and (not @payload.open) (not @payload.noEmulators) (not @payload.portOk))
+        (emit SERVE_ANSWERED { status: 400, body: "", stderr: (str/concat "error: invalid value '" @payload.portText "' for '--port <PORT>': not an integer from 0 to 65535") })
+      SERVE_START -> idle when (and (not @payload.open) (not @payload.noEmulators) @payload.portOk (not @payload.clientInside))
+        (emit SERVE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: --client-dir " @payload.clientGiven " is outside the working directory " @payload.cwd "; the server reads its client under it") })
+      SERVE_START -> homing when (and (not @payload.open) (not @payload.noEmulators) @payload.portOk @payload.clientInside)
+        (set @entity.path @payload.path)
+        (set @entity.host @payload.host)
+        (set @entity.port (str/to-number @payload.portText))
+        (set @entity.hasClient @payload.hasClient)
+        (set @entity.rel (if @payload.hasClient (str/slice @payload.clientDir (+ (str/len @payload.cwd) 1) (str/len @payload.clientDir)) ""))
+        (set @entity.mock @payload.mock)
+        (os/getenv "HOME" { key: "home" emit: { success: SERVE_HOME, failure: SERVE_REFUSED } })
+    }
+
+    state homing {
+      INIT -> homing
+      SERVE_REFUSED -> idle
+        (emit SERVE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " @payload.error) })
+      SERVE_HOME -> idle when (= @payload.value "")
+        (emit SERVE_ANSWERED { status: 500, body: "", stderr: "Error: HOME is not set; orb serve writes the resolved app under ~/.almadar/serve" })
+      SERVE_HOME -> reading when (!= @payload.value "")
+        (set @entity.out (os/path-join @payload.value ".almadar/serve" (str/concat (str/replaceAll @entity.path "/" "_") ".orb")))
+        (program/read "" { resolve: true path: @entity.path output: (os/path-join @payload.value ".almadar/serve" (str/concat (str/replaceAll @entity.path "/" "_") ".orb")) } { key: "app" emit: { success: SERVE_APP_READ, failure: SERVE_REFUSED } })
+    }
+
+    state reading {
+      INIT -> reading
+      SERVE_REFUSED -> idle
+        (emit SERVE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " @payload.error) })
+      SERVE_APP_READ -> idle when (= (str/default (object/get (object/get @payload.result "program") "name") "") "")
+        (emit SERVE_ANSWERED { status: 500, body: "", stderr: "Error: the program to serve names no app" })
+      SERVE_APP_READ -> resolving when (!= (str/default (object/get (object/get @payload.result "program") "name") "") "")
+        (set @entity.appName (object/get (object/get @payload.result "program") "name"))
+        (set @entity.app (object/get @payload.result "program"))
+        (behavior/resolve { behavior: "std/behaviors/std-http-server" } {} { key: "server" emit: { success: SERVE_SERVER_RESOLVED, failure: SERVE_REFUSED } })
+    }
+
+    state resolving {
+      INIT -> resolving
+      SERVE_REFUSED -> idle
+        (emit SERVE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " @payload.error) })
+      SERVE_SERVER_RESOLVED -> idle
+        (emit SERVE_COMPOSE_READY { server: @payload.result, app: @entity.app, appName: @entity.appName, host: @entity.host, port: @entity.port, rel: @entity.rel, hasClient: @entity.hasClient, mock: @entity.mock, path: @entity.out })
+    }
+
+    emits {
+      SERVE_ANSWERED -> external {
+        status : number!
+        body : string!
+        stderr : string
+        headers : Map string string
+      }
+        @description "The command's answer, which the cli hook prints; headers carry the bootloader hand-off."
+        @tier "internal"
+      SERVE_REFUSED {
+        error : string
+      }
+        @description "The app could not be read or the server could not be resolved."
+        @tier "internal"
+      SERVE_HOME {
+        value : string!
+      }
+        @description "os/getenv: the HOME directory."
+        @tier "internal"
+      SERVE_APP_READ {
+        result : ServeApp!
+      }
+        @description "program/read: the resolved app."
+        @tier "internal"
+      SERVE_SERVER_RESOLVED {
+        result : ServeProgram!
+      }
+        @description "behavior/resolve: the resolved std-http-server."
+        @tier "internal"
+      SERVE_COMPOSE_READY {
+        server : ServeProgram!
+        app : ServeProgram!
+        appName : string!
+        host : string!
+        port : number!
+        rel : string!
+        hasClient : boolean!
+        mock : boolean!
+        path : string!
+      }
+        @description "Internal: the resolved server, ready to compose with the app."
+        @tier "internal"
+    }
+
+    listens {
+      SERVE_START {
+        cwd : string!
+        path : string!
+        portText : string!
+        portOk : boolean!
+        host : string!
+        hasClient : boolean!
+        clientDir : string!
+        clientGiven : string!
+        clientInside : boolean!
+        mock : boolean!
+        open : boolean!
+        noEmulators : boolean!
+      }
+        @description "Compose the app with std-http-server."
+      OrbServe.SERVE_START -> SERVE_START
+    }
+  }
+
+  page "/orb-serve" as OrbServePage -> OrbServe, ArgsCli, ServeEngine
+}

@@ -1,0 +1,181 @@
+app std-orb-embeds [
+  version: "1.0.0",
+  inbound: ["cli-embeds"],
+  fs: { cwd: "**": [read], "/**": [read] },
+  stdio: [in],
+  description: "std-orb-embeds — the `orb embeds <file.lolo> | --stdin` command (spec/cli/orb-embeds.lolo; port of orbital-cli lib.rs print_embeds). It reads the source (the file, or standard input to its end; --stdin wins when both are given), asks program/read with { embeds: true } for the inline behavior embeds and answers them as one compact JSON line, an array of { orbital, trait, behavior, line, col } in source order (`[]` when there is none). A source that does not lower answers status 500 on stderr `Error: orb embeds: <reason>` (exit 1); an unreadable file answers `Error: <reason>`; no file and no --stdin answers `Error: orb embeds: pass a .lolo file or --stdin` (status 500); an unknown flag or more than one file answers the usage (status 400, exit 2). The reasons carry the host's own wording, not the Rust one."
+]
+uses Spec from "almadar-std/orb-embeds"
+uses Args from "std/behaviors/std-args"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
+type InlineEmbed = { orbital : string!, trait : string!, behavior : string!, line : number!, col : number! }
+
+orbital OrbEmbedsOrbital {
+  entity EmbedsRun [runtime] {
+    id : string!
+    source : bytes = ""
+  }
+
+  trait ArgsCli = Args.traits.ArgsParser {
+    listens {
+      OrbEmbeds.EMBEDS_ARGS_PARSE -> ARGS_PARSE
+    }
+  }
+
+  trait OrbEmbeds -> EmbedsRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      EMBEDS_CALLED -> parsing
+        (emit EMBEDS_ARGS_PARSE { stage: "embeds" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "stdin" aliases: [] takesValue: false repeatable: false }] })
+    }
+
+    state parsing {
+      INIT -> parsing
+      EMBEDS_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (> (array/len @payload.positionals) 1))
+        (emit EMBEDS_ANSWERED { status: 400, body: "", stderr: "usage: orb embeds <file.lolo> | --stdin" })
+      EMBEDS_ARGS_DONE -> ready when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0) (= (object/get @payload.flags "stdin") null))
+        (emit EMBEDS_ANSWERED { status: 500, body: "", stderr: "Error: orb embeds: pass a .lolo file or --stdin" })
+      EMBEDS_ARGS_DONE -> working when (and (= (array/len @payload.errors) 0) (<= (array/len @payload.positionals) 1) (!= (object/get @payload.flags "stdin") null))
+        (emit EMBEDS_START { file: "", stdin: true })
+      EMBEDS_ARGS_DONE -> working when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1) (= (object/get @payload.flags "stdin") null))
+        (emit EMBEDS_START { file: (array/first @payload.positionals), stdin: false })
+    }
+
+    state working {
+      INIT -> working
+      EMBEDS_DONE -> ready
+        (emit EMBEDS_ANSWERED { status: @payload.status, body: @payload.body, stderr: @payload.stderr })
+    }
+
+    emits {
+      EMBEDS_ANSWERED -> internal {
+        status : number!
+        body : string!
+        stderr : string
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      EMBEDS_ARGS_PARSE {
+        stage : string!
+        argv : [string]!
+        flags : [ArgFlag]!
+      }
+        @description "Internal: parse the call's words."
+        @tier "internal"
+      EMBEDS_START {
+        file : string!
+        stdin : boolean!
+      }
+        @description "Internal: list the embeds of the file or of standard input."
+        @tier "internal"
+    }
+
+    listens {
+      EMBEDS_CALLED -> inbound "cli-embeds" answers EMBEDS_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb embeds`."
+        @synonyms "orb embeds, the inline behavior embeds of a lolo file, list embedded behaviors"
+      EMBEDS_ARGS_DONE {
+        stage : string!
+        flags : Map string [string]!
+        positionals : [string]!
+        errors : [string]!
+        words : [string]!
+      }
+        @description "std-args's ARGS_PARSED."
+      ArgsCli.ARGS_PARSED -> EMBEDS_ARGS_DONE
+      EmbedsEngine.EMBEDS_ANSWERED -> EMBEDS_DONE
+      EMBEDS_DONE { status : number!  body : string!  stderr : string }
+        @description "Internal: the engine's answer, relayed to the hook by its handler."
+        @tier "internal"
+    }
+  }
+
+  trait EmbedsEngine -> EmbedsRun [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      EMBEDS_START -> reading when @payload.stdin
+        (set @entity.source (bytes/from-string ""))
+        (os/stdin-read 65536 { key: "stdin" emit: { success: EMBEDS_CHUNK, failure: EMBEDS_FAILED } })
+      EMBEDS_START -> reading when (and (not @payload.stdin) (not (os/path-is-absolute @payload.file)))
+        (os/read-file { anchor: "cwd" path: @payload.file } { key: "file" emit: { success: EMBEDS_FILE, failure: EMBEDS_FAILED } })
+      EMBEDS_START -> reading when (and (not @payload.stdin) (os/path-is-absolute @payload.file))
+        (os/read-file (str/concat "/" (str/slice @payload.file 1 (str/len @payload.file))) { key: "file" emit: { success: EMBEDS_FILE, failure: EMBEDS_FAILED } })
+    }
+
+    state reading {
+      INIT -> reading
+      EMBEDS_FAILED -> idle
+        (emit EMBEDS_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " @payload.error) })
+      EMBEDS_FILE -> listing
+        (program/read (bytes/to-string @payload.data) { embeds: true } { key: "embeds" emit: { success: EMBEDS_LISTED, failure: EMBEDS_REFUSED } })
+      EMBEDS_CHUNK -> reading when (not @payload.eof)
+        (set @entity.source (bytes/concat [@entity.source @payload.data]))
+        (os/stdin-read 65536 { key: "stdin" emit: { success: EMBEDS_CHUNK, failure: EMBEDS_FAILED } })
+      EMBEDS_CHUNK -> listing when @payload.eof
+        (program/read (bytes/to-string (bytes/concat [@entity.source @payload.data])) { embeds: true } { key: "embeds" emit: { success: EMBEDS_LISTED, failure: EMBEDS_REFUSED } })
+    }
+
+    state listing {
+      INIT -> listing
+      EMBEDS_LISTED -> idle
+        (emit EMBEDS_ANSWERED { status: 200, body: (json/stringify @payload.result) })
+      EMBEDS_REFUSED -> idle
+        (emit EMBEDS_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb embeds: " @payload.error) })
+    }
+
+    emits {
+      EMBEDS_ANSWERED -> external {
+        status : number!
+        body : string!
+        stderr : string
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      EMBEDS_FAILED {
+        error : string
+      }
+        @description "The file or standard input could not be read."
+        @tier "internal"
+      EMBEDS_REFUSED {
+        error : string
+      }
+        @description "The source did not lower."
+        @tier "internal"
+      EMBEDS_FILE {
+        data : bytes!
+      }
+        @description "os/read-file: the source file."
+        @tier "internal"
+      EMBEDS_CHUNK {
+        data : bytes!
+        eof : boolean!
+      }
+        @description "os/stdin-read: one chunk of standard input."
+        @tier "internal"
+      EMBEDS_LISTED {
+        result : [InlineEmbed]!
+      }
+        @description "program/read: the inline embeds of the source."
+        @tier "internal"
+    }
+
+    listens {
+      EMBEDS_START {
+        file : string!
+        stdin : boolean!
+      }
+        @description "List the embeds of the file or of standard input."
+      OrbEmbeds.EMBEDS_START -> EMBEDS_START
+    }
+  }
+
+  page "/orb-embeds" as OrbEmbedsPage -> OrbEmbeds, ArgsCli, EmbedsEngine
+}

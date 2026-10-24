@@ -119,7 +119,7 @@ orbital LearnGenerateOrbital {
     status : "idle" | "listing" | "sourcing" | "choosing" | "filling" | "done" | "failed" = idle
   }
 
-  trait LearnGenerate -> LearnGeneration [lifecycle, instance] {
+  trait LearnGenerate -> LearnGeneration [optimistic] {
     config {
       scope : [string] = ["almadar-std/ui/learning"]
         @label "Behavior folders"
@@ -375,16 +375,16 @@ orbital LearnGenerateOrbital {
     }
 
     listens {
-      GENERATE -> external {
+      GENERATE -> input {
         subject : string!
         context : string
       }
         @description "Generate an instrument and roster for this subject; `context` is any extra the model should know (the lesson's wording, what to visualise)"
         @synonyms "visualise, make an instrument, generate"
-      CHOOSE -> external {
+      CHOOSE -> input {
         choice : string!
       }
-      FILL -> external {
+      FILL -> input {
         roster : SExpr!
       }
       LearnGenerateTools.ASSISTANT_REPLIED -> ASSISTANT_REPLIED

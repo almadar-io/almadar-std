@@ -7,7 +7,7 @@ type ItemAction = { label : string!, event : event, navigatesTo : string, varian
 orbital RecurrenceOrbital {
     type OccurrenceItem = { id : string!, title : string!, description : string, date : string, status : "complete" | "active" | "pending" | "error", rawStatus : "scheduled" | "skipped" | "completed" | "rescheduled" }
 
-    type RecurrenceLoaded = Event { data : [ObjectSpec] } "Fired when occurrences finish loading"
+    type RecurrenceLoaded = Event { data : [ObjectSpec]! } "Fired when occurrences finish loading"
 
     type RecurrenceLoadFailed = Event { error : string, code : string } "Fired when fetch fails"
 
@@ -35,7 +35,7 @@ orbital RecurrenceOrbital {
     errorMessage : string @description "Error message displayed to the user." @synonyms "error, message, problem" = ""
   }
 
-  trait RecurrenceEditor -> @rebindable RecurrenceView [interaction, instance] {
+  trait RecurrenceEditor -> @rebindable RecurrenceView [optimistic] {
     initial: loading
 
     state loading {
@@ -480,7 +480,7 @@ orbital RecurrenceOrbital {
         @synonyms "reset, rerun, refresh"
         @tier "presentation"
       RecurrenceLoaded {
-        data : [ObjectSpec]
+        data : [ObjectSpec]!
       }
         @description "Signals successful loading of the recurrence rule and schedule."
         @synonyms "loaded, initialized, ready"
@@ -552,7 +552,7 @@ orbital RecurrenceOrbital {
         @synonyms "reset, refresh, rerun"
         @tier "presentation"
       RecurrenceLoaded {
-        data : [ObjectSpec]
+        data : [ObjectSpec]!
       }
         @description "Signals that the recurrence rule and upcoming runs have been successfully loaded."
         @synonyms "loaded, initialized, ready"

@@ -22,7 +22,7 @@ orbital MlLadderOrbital {
     status     : "idle" | "decided" | "failed" = idle
   }
 
-  trait LadderEntry (r : Entity) -> LadderRequest [lifecycle, instance] {
+  trait LadderEntry (r : Entity) -> LadderRequest [client] {
     initial: idle
 
     state idle {
@@ -60,7 +60,7 @@ orbital MlLadderOrbital {
 
     listens {
       RESET {}
-      DECIDE -> external {
+      DECIDE -> input {
         candidate  : string!
         key        : string!
         candidateNumber : number
@@ -73,7 +73,7 @@ orbital MlLadderOrbital {
     }
   }
 
-  trait LadderVerdictSink -> LadderVerdict [lifecycle, instance] {
+  trait LadderVerdictSink -> LadderVerdict [client] {
     initial: idle
 
     state idle {
@@ -175,5 +175,5 @@ orbital MlLadderOrbital {
     }
   }
 
-  page "/ladder" as MlLadderPage -> LadderEntry, LadderVerdictSink
+  page boot as MlLadderOrbitalStart -> LadderEntry, LadderVerdictSink
 }

@@ -9,7 +9,7 @@ orbital EsignOrbital {
     id : string!
   }
 
-  trait EsignClient -> EsignEnvelope [integration, instance] {
+  trait EsignClient -> EsignEnvelope [optimistic] {
     initial: idle
 
     state idle {
@@ -163,7 +163,7 @@ orbital EsignOrbital {
     }
 
     listens {
-      ESIGN_SEND_ENVELOPE -> external {
+      ESIGN_SEND_ENVELOPE -> input {
         recipientEmail : string!
         recipientName : string!
         documentName : string!
@@ -172,12 +172,12 @@ orbital EsignOrbital {
       }
         @description "Send a document to one signer; documentContent is a base64 data URL or raw base64, emailSubject defaults to Please sign: plus the document name."
         @synonyms "send for signature, create envelope, request e-signature"
-      ESIGN_GET_ENVELOPE_STATUS -> external {
+      ESIGN_GET_ENVELOPE_STATUS -> input {
         envelopeId : string!
       }
         @description "Poll the signing status of an envelope returned by a send."
         @synonyms "check envelope, signing status, poll signature"
-      ESIGN_DOWNLOAD_DOCUMENT -> external {
+      ESIGN_DOWNLOAD_DOCUMENT -> input {
         envelopeId : string!
       }
         @description "Download the combined signed document of an envelope as base64 PDF."

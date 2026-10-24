@@ -33,7 +33,7 @@ orbital GithubBillingOrbital {
     listens { GithubBilling.BILLING_USAGE -> GITHUB_BILLING_USAGE }
   }
 
-  trait GithubBilling -> GithubBillingBoard [integration, instance] {
+  trait GithubBilling -> GithubBillingBoard [client] {
     initial: idle
 
     state idle {
@@ -127,10 +127,10 @@ orbital GithubBillingOrbital {
     }
 
     listens {
-      BILLING_LOAD -> external { }
+      BILLING_LOAD -> input { }
         @description "Answer the billing board, from the cache while it is fresh."
         @synonyms "show github billing, github cost"
-      BILLING_REFRESH -> external { }
+      BILLING_REFRESH -> input { }
         @description "Read the billing board afresh."
         @synonyms "refresh github billing"
       BILLING_USAGE_READ {

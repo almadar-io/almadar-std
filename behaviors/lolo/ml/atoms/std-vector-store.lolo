@@ -46,7 +46,7 @@ orbital VectorStoreOrbital {
     }
   }
 
-  trait VectorLookup -> VectorRun [integration, instance] {
+  trait VectorLookup -> VectorRun [client] {
     initial: idle
 
     state idle {
@@ -144,14 +144,14 @@ orbital VectorStoreOrbital {
       SIG6_REFUSED {
         reason : string!
       }
-      VECTOR_LOOKUP_MANY -> external {
+      VECTOR_LOOKUP_MANY -> input {
         stores : [bytes]!
         origins : [string]
         model : string!
         texts : [string]!
       }
         @description "Look many texts up in these layered ORBVEC store files; answers one VECTOR_RESOLVED entry per text."
-      VECTOR_LOOKUP -> external {
+      VECTOR_LOOKUP -> input {
         stores : [bytes]!
         origins : [string]
         model : string!
@@ -162,5 +162,5 @@ orbital VectorStoreOrbital {
     }
   }
 
-  page "/vector-store" as VectorStorePage -> VectorLookup, StoreSig6, StoreBigCmp, StoreF32
+  page boot as VectorStoreOrbitalStart -> VectorLookup, StoreSig6, StoreBigCmp, StoreF32
 }

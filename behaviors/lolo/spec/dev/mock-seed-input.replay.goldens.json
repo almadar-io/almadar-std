@@ -1481,6 +1481,223 @@
           }
         }
       ]
+    },
+    {
+      "id": "a-boot-seed-already-running-ignores-another-start (each page mount runs INIT; a second run would race the first)",
+      "steps": [
+        {
+          "event": "INIT",
+          "payload": {}
+        },
+        {
+          "event": "DS_SELF_READ",
+          "payload": {
+            "result": {
+              "orbitals": [
+                {
+                  "entity": {
+                    "name": "LocalNote",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "label",
+                        "type": "string",
+                        "required": true
+                      }
+                    ],
+                    "instances": [
+                      {
+                        "id": "default",
+                        "label": "Default"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DS_PROGRAM_READ"
+              },
+              {
+                "event": "DS_WRITE_NEXT",
+                "payload": {
+                  "at": 1
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "DS_SELF_READ",
+          "payload": {
+            "result": {
+              "orbitals": [
+                {
+                  "entity": {
+                    "name": "LocalNote",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "label",
+                        "type": "string",
+                        "required": true
+                      }
+                    ],
+                    "instances": [
+                      {
+                        "id": "default",
+                        "label": "Default"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "neverEmits": [
+              "DS_PROGRAM_READ",
+              "DS_STORE",
+              "DS_WRITE_NEXT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-finished-boot-seed-may-start-again",
+      "steps": [
+        {
+          "event": "INIT",
+          "payload": {}
+        },
+        {
+          "event": "DS_SELF_READ",
+          "payload": {
+            "result": {
+              "orbitals": [
+                {
+                  "entity": {
+                    "name": "LocalNote",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "label",
+                        "type": "string",
+                        "required": true
+                      }
+                    ],
+                    "instances": [
+                      {
+                        "id": "default",
+                        "label": "Default"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DS_PROGRAM_READ"
+              },
+              {
+                "event": "DS_WRITE_NEXT",
+                "payload": {
+                  "at": 1
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "DS_CHUNK_DONE",
+          "payload": {
+            "result": {
+              "ok": true,
+              "emitted": [
+                {
+                  "event": "DS_CHUNK_WRITTEN"
+                }
+              ]
+            },
+            "key": "mock-seed-write"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DATASET_DONE"
+              }
+            ]
+          }
+        },
+        {
+          "event": "DS_SELF_READ",
+          "payload": {
+            "result": {
+              "orbitals": [
+                {
+                  "entity": {
+                    "name": "LocalNote",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "label",
+                        "type": "string",
+                        "required": true
+                      }
+                    ],
+                    "instances": [
+                      {
+                        "id": "default",
+                        "label": "Default"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DS_PROGRAM_READ"
+              },
+              {
+                "event": "DS_WRITE_NEXT",
+                "payload": {
+                  "at": 1
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

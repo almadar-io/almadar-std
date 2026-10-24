@@ -1,0 +1,148 @@
+app std-orb-execute [
+  version: "1.0.0",
+  inbound: ["cli-execute"],
+  fs: { cwd: "**": [read] },
+  description: "std-orb-execute — the `orb execute <file> --steps <json> [--live]` and `orb execute <file> --event <E> --trait <T> [--payload <json>] [--cascade]` command (spec/cli/orb-execute.lolo; port of orbital-cli commands/execute.rs execute_cascade_steps_cli and execute_cascade_cli). The program is read (os/read-file, program/read) and its steps are played in one run of the kernel by program/step { report: \"raw\" }, which answers exactly the cascade report `orb execute --steps` printed: { success, steps: [{ outcomes, states, entities, entityAfter }], dispatchModes }. `--event`/`--trait` is one step { trait, event, payload } whose steps[0].outcomes is also hoisted to the top-level `outcomes`; `--cascade` is accepted and implied. The answer is that report as 2-space pretty JSON (json/stringify { pretty: true }). A run that cannot start or fails answers { \"success\": false, \"error\": \"…\" } with status 200, as Rust printed it. Owner-sanctioned retirement: the plain `--event` DTO mode of Rust (execute_schema_cli: --json, --entity, the human print) is not ported, its only consumer (rust-harness.ts) is archived; `--event` without `--cascade` behaves as `--cascade`. Usage (status 400, exit 2): no file or a second word, an unknown flag, neither --steps nor --event, --steps with --event/--trait/--payload, --event without --trait, --live without --steps. The program file must lie under the working directory (the fs grant is anchored at cwd). Known differences from the Rust bytes: a number the kernel holds as a whole float prints `1`, not `1.0`; the wording of a JSON syntax error is `Invalid JSON: <text>` (not serde's position text); a step or file error names the host's wording."
+]
+uses Spec from "almadar-std/orb-execute"
+uses Args from "std/behaviors/std-args"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
+type ExecJson = string | number | boolean | [ExecJson?] | Map string ExecJson?
+type ExecStepIn = Map string ExecJson?
+type ExecSteps = [ExecStepIn]
+type ExecReport = Map string ExecJson?
+type ExecStepOut = { outcomes : [ExecJson?]? }
+type ExecHoist = { steps : [ExecStepOut]? }
+type PrettyAcc = { out : [string]!, depth : number!, inStr : boolean!, esc : boolean!, open : boolean! }
+
+orbital OrbExecuteOrbital {
+  entity ExecuteRun [runtime] {
+    id : string!
+    cwd : string = ""
+    file : string = ""
+    path : string = ""
+    mode : string = "steps"
+    live : boolean = false
+    argText : string = ""
+    stepsText : string = ""
+  }
+
+  trait ArgsCli = Args.traits.ArgsParser {
+    listens {
+      OrbExecute.EXEC_ARGS_PARSE -> ARGS_PARSE
+    }
+  }
+
+  trait OrbExecute -> ExecuteRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      EXEC_CALLED -> parsing
+        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
+        (emit EXEC_ARGS_PARSE { stage: "execute" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "steps" aliases: [] takesValue: true repeatable: false }, { name: "live" aliases: [] takesValue: false repeatable: false }, { name: "event" aliases: [] takesValue: true repeatable: false }, { name: "trait" aliases: [] takesValue: true repeatable: false }, { name: "payload" aliases: [] takesValue: true repeatable: false }, { name: "cascade" aliases: [] takesValue: false repeatable: false }] })
+    }
+
+    state parsing {
+      INIT -> parsing
+      EXEC_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (!= (array/len @payload.positionals) 1) (and (= (object/get @payload.flags "steps") null) (= (object/get @payload.flags "event") null)) (and (!= (object/get @payload.flags "steps") null) (or (!= (object/get @payload.flags "event") null) (!= (object/get @payload.flags "trait") null) (!= (object/get @payload.flags "payload") null) (!= (object/get @payload.flags "cascade") null))) (and (= (object/get @payload.flags "steps") null) (= (object/get @payload.flags "trait") null)) (and (= (object/get @payload.flags "steps") null) (!= (object/get @payload.flags "live") null)))
+        (emit EXEC_ANSWERED { status: 400, body: "usage: orb execute <file> --steps <json> [--live] | <file> --event <E> --trait <T> [--payload <json>] [--cascade]" })
+      EXEC_ARGS_DONE -> checking when (not (or (> (array/len @payload.errors) 0) (!= (array/len @payload.positionals) 1) (and (= (object/get @payload.flags "steps") null) (= (object/get @payload.flags "event") null)) (and (!= (object/get @payload.flags "steps") null) (or (!= (object/get @payload.flags "event") null) (!= (object/get @payload.flags "trait") null) (!= (object/get @payload.flags "payload") null) (!= (object/get @payload.flags "cascade") null))) (and (= (object/get @payload.flags "steps") null) (= (object/get @payload.flags "trait") null)) (and (= (object/get @payload.flags "steps") null) (!= (object/get @payload.flags "live") null))))
+        (set @entity.file (array/first @payload.positionals))
+        (set @entity.path (if (os/path-is-absolute (array/first @payload.positionals)) (os/path-relative @entity.cwd (array/first @payload.positionals)) (array/first @payload.positionals)))
+        (set @entity.mode (if (!= (object/get @payload.flags "steps") null) "steps" "event"))
+        (set @entity.live (!= (object/get @payload.flags "live") null))
+        (set @entity.argText (if (!= (object/get @payload.flags "steps") null) (str/default (array/first (object/get @payload.flags "steps")) "") (if (!= (object/get @payload.flags "payload") null) (str/default (array/first (object/get @payload.flags "payload")) "") "{}")))
+        (set @entity.stepsText (if (!= (object/get @payload.flags "steps") null) (str/default (array/first (object/get @payload.flags "steps")) "") (str/concat "[{\"trait\":" (json/stringify (str/default (array/first (object/get @payload.flags "trait")) "")) ",\"event\":" (json/stringify (str/default (array/first (object/get @payload.flags "event")) "")) ",\"payload\":" (if (!= (object/get @payload.flags "payload") null) (str/default (array/first (object/get @payload.flags "payload")) "") "{}") "}]")))
+        (emit EXEC_CHECK {})
+    }
+
+    state checking {
+      INIT -> checking
+      EXEC_CHECK -> ready when (not (json/valid @entity.argText))
+        (emit EXEC_ANSWERED { status: 200, body: (str/concat "{\n  \"success\": false,\n  \"error\": " (json/stringify (str/concat "Invalid JSON: " @entity.argText)) "\n}") })
+      EXEC_CHECK -> ready when (and (json/valid @entity.argText) (= (json/parse @entity.stepsText ExecSteps) null))
+        (emit EXEC_ANSWERED { status: 200, body: "{\n  \"success\": false,\n  \"error\": \"--steps must be a JSON array\"\n}" })
+      EXEC_CHECK -> reading when (and (json/valid @entity.argText) (!= (json/parse @entity.stepsText ExecSteps) null))
+        (os/read-file { anchor: "cwd" path: @entity.path } { key: "program" emit: { success: EXEC_READ, failure: EXEC_READ_FAILED } })
+    }
+
+    state reading {
+      INIT -> reading
+      EXEC_READ_FAILED -> ready
+        (emit EXEC_ANSWERED { status: 200, body: (str/concat "{\n  \"success\": false,\n  \"error\": " (json/stringify (str/concat "Failed to read " @entity.file ": " @payload.error)) "\n}") })
+      EXEC_READ -> reading
+        (program/read (bytes/to-string @payload.data) { key: "program" emit: { success: EXEC_PROGRAM, failure: EXEC_PROGRAM_FAILED } })
+      EXEC_PROGRAM_FAILED -> ready
+        (emit EXEC_ANSWERED { status: 200, body: (str/concat "{\n  \"success\": false,\n  \"error\": " (json/stringify @payload.error) "\n}") })
+      EXEC_PROGRAM -> stepping
+        (program/step @payload.result (json/parse @entity.stepsText ExecSteps) { report: "raw" live: @entity.live } { emit: { success: EXEC_STEPPED, failure: EXEC_STEP_FAILED } })
+    }
+
+    state stepping {
+      INIT -> stepping
+      EXEC_STEP_FAILED -> ready
+        (emit EXEC_ANSWERED { status: 200, body: (str/concat "{\n  \"success\": false,\n  \"error\": " (json/stringify (if (str/startsWith @payload.error "program/step: ") (str/slice @payload.error 14 (str/len @payload.error)) @payload.error)) "\n}") })
+      EXEC_STEPPED -> ready
+        (emit EXEC_ANSWERED { status: 200, body: (json/stringify (if (and (= @entity.mode "event") (> (array/len (object/get (json/parse (json/stringify @payload.result) ExecHoist) "steps" [])) 0) (!= (object/get (array/first (object/get (json/parse (json/stringify @payload.result) ExecHoist) "steps")) "outcomes") null)) (object/set @payload.result "outcomes" (object/get (array/first (object/get (json/parse (json/stringify @payload.result) ExecHoist) "steps")) "outcomes")) @payload.result) { pretty: true }) })
+    }
+
+    emits {
+      EXEC_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      EXEC_ARGS_PARSE {
+        stage : string!
+        argv : [string]!
+        flags : [ArgFlag]!
+      }
+        @description "Internal: parse the call's words."
+        @tier "internal"
+      EXEC_CHECK {}
+        @description "Internal: the step text is checked before the program is read."
+        @tier "internal"
+      EXEC_READ { data : bytes! }
+        @description "The program file read."
+        @tier "internal"
+      EXEC_READ_FAILED { error : string }
+        @description "The program file could not be read."
+        @tier "internal"
+      EXEC_PROGRAM { result : SExpr! }
+        @description "The program parsed."
+        @tier "internal"
+      EXEC_PROGRAM_FAILED { error : string }
+        @description "The program could not be parsed."
+        @tier "internal"
+      EXEC_STEPPED { result : Map string ExecJson? }
+        @description "The kernel's cascade report."
+        @tier "internal"
+      EXEC_STEP_FAILED { error : string }
+        @description "The run failed."
+        @tier "internal"
+    }
+
+    listens {
+      EXEC_CALLED -> inbound "cli-execute" answers EXEC_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb execute`."
+        @synonyms "orb execute, play events through the kernel, cascade report, run steps against a program"
+      EXEC_ARGS_DONE {
+        stage : string!
+        flags : Map string [string]!
+        positionals : [string]!
+        errors : [string]!
+        words : [string]!
+      }
+        @description "std-args's ARGS_PARSED."
+      ArgsCli.ARGS_PARSED -> EXEC_ARGS_DONE
+    }
+  }
+
+  page boot as OrbExecuteOrbitalStart -> OrbExecute, ArgsCli
+}

@@ -41,7 +41,7 @@ orbital VectorQuantizeOrbital {
     }
   }
 
-  trait VectorQuantize -> QuantizeRun [integration, instance] {
+  trait VectorQuantize -> QuantizeRun [client] {
     initial: idle
 
     state idle {
@@ -119,7 +119,7 @@ orbital VectorQuantizeOrbital {
         reason : string!
         tag : string
       }
-      QUANTIZE -> external {
+      QUANTIZE -> input {
         model : string!
         records : [VecRecord]!
       }
@@ -128,5 +128,5 @@ orbital VectorQuantizeOrbital {
     }
   }
 
-  page "/vector-quantize" as VectorQuantizePage -> VectorQuantize, QuantizeF32, Quantize2Sig6, Quantize2BigCmp
+  page boot as VectorQuantizeOrbitalStart -> VectorQuantize, QuantizeF32, Quantize2Sig6, Quantize2BigCmp
 }

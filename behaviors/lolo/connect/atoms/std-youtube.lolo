@@ -21,7 +21,7 @@ orbital YoutubeOrbital {
     id : string!
   }
 
-  trait YoutubeClient -> YoutubeLookup [integration, instance] {
+  trait YoutubeClient -> YoutubeLookup [optimistic] {
     initial: idle
 
     state idle {
@@ -222,19 +222,19 @@ orbital YoutubeOrbital {
     }
 
     listens {
-      YOUTUBE_SEARCH -> external {
+      YOUTUBE_SEARCH -> input {
         query : string!
         maxResults : number
         type : string
       }
         @description "Search YouTube for videos matching a query; maxResults defaults to 10, type filters the resource kind (video, channel, playlist)."
         @synonyms "search youtube, find videos, video search"
-      YOUTUBE_GET_VIDEO -> external {
+      YOUTUBE_GET_VIDEO -> input {
         videoId : string!
       }
         @description "Fetch a video's snippet and statistics."
         @synonyms "get video, video details, youtube video info"
-      YOUTUBE_GET_CHANNEL -> external {
+      YOUTUBE_GET_CHANNEL -> input {
         channelId : string!
       }
         @description "Fetch a channel's snippet and statistics."

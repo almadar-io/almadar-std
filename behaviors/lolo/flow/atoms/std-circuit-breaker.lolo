@@ -27,25 +27,25 @@ orbital ServiceNodeOrbital {
     openedAt : number @intrinsic @description "When the circuit last opened, in epoch milliseconds; the cooldown tick measures from it. 0 = never opened." @synonyms "tripped at, opened time" = 0
   }
 
-  trait ShieldIcon = Icon.traits.IconRender -> ServiceNode {
+  trait ShieldIcon = Icon.traits.IconRender -> ServiceNode [client] {
     config {
       name: shield
     }
   }
 
-  trait AlertTriangleIcon = Icon.traits.IconRender -> ServiceNode {
+  trait AlertTriangleIcon = Icon.traits.IconRender -> ServiceNode [client] {
     config {
       name: alert-triangle
     }
   }
 
-  trait ActivityIcon = Icon.traits.IconRender -> ServiceNode {
+  trait ActivityIcon = Icon.traits.IconRender -> ServiceNode [client] {
     config {
       name: activity
     }
   }
 
-  trait ServiceNodeLabel = Typography.traits.TypographyRender -> ServiceNode {
+  trait ServiceNodeLabel = Typography.traits.TypographyRender -> ServiceNode [client] {
     config {
       content: ServiceNode
       variant: h2
@@ -76,28 +76,28 @@ orbital ServiceNodeOrbital {
     }
   }
 
-  trait SuccessAlert = Alert.traits.AlertRender -> ServiceNode {
+  trait SuccessAlert = Alert.traits.AlertRender -> ServiceNode [client] {
     config {
       message: "Service is healthy. All requests are being processed."
       variant: success
     }
   }
 
-  trait ErrorAlert = Alert.traits.AlertRender -> ServiceNode {
+  trait ErrorAlert = Alert.traits.AlertRender -> ServiceNode [client] {
     config {
       message: "Circuit is open. Requests are being rejected to prevent cascading failures."
       variant: error
     }
   }
 
-  trait WarningAlert = Alert.traits.AlertRender -> ServiceNode {
+  trait WarningAlert = Alert.traits.AlertRender -> ServiceNode [client] {
     config {
       message: "Testing recovery. Limited requests are being allowed through."
       variant: warning
     }
   }
 
-  trait FailuresStat = StatDisplay.traits.StatDisplayRender -> ServiceNode {
+  trait FailuresStat = StatDisplay.traits.StatDisplayRender -> ServiceNode [client] {
     config {
       label: Failures
       look: @config.statLook
@@ -105,7 +105,7 @@ orbital ServiceNodeOrbital {
     }
   }
 
-  trait SuccessesStat = StatDisplay.traits.StatDisplayRender -> ServiceNode {
+  trait SuccessesStat = StatDisplay.traits.StatDisplayRender -> ServiceNode [client] {
     config {
       label: Successes
       look: @config.statLook
@@ -113,7 +113,7 @@ orbital ServiceNodeOrbital {
     }
   }
 
-  trait FailuresMeter = Meter.traits.MeterRender -> ServiceNode {
+  trait FailuresMeter = Meter.traits.MeterRender -> ServiceNode [client] {
     config {
       max: @entity.threshold
       min: 0
@@ -130,7 +130,7 @@ orbital ServiceNodeOrbital {
     }
   }
 
-  trait CircuitDivider = Divider.traits.DividerRender -> ServiceNode {
+  trait CircuitDivider = Divider.traits.DividerRender -> ServiceNode [client] {
     config {}
   }
 
@@ -141,7 +141,7 @@ orbital ServiceNodeOrbital {
     }
   }
 
-  trait ServiceNodeCircuitBreaker -> ServiceNode [interaction, collection] {
+  trait ServiceNodeCircuitBreaker -> ServiceNode [client] {
     initial: closed
 
     state closed {

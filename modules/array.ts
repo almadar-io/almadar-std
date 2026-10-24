@@ -73,6 +73,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Get element at index (element type of input array, may be undefined out-of-bounds). A pair or tuple of unlike types (an entry of object/entries) is indexed too; its element type is then not determined',
     hasSideEffects: false,
     returnType: tv('T'),
+    returnSemantics: 'tuple-element',
     params: [
       { name: 'arr', type: union(list(tv('T')), list(each('E'))), description: 'The array, or a tuple of unlike types' },
       { name: 'index', type: 'number', description: 'Index (0-based)' },

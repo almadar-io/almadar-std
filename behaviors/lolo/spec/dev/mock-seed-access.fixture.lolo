@@ -13,7 +13,7 @@ type SingletonTarget = { kind : "singleton" }
 type KeyTarget = { kind : "key", key : string! }
 type RowTarget = SingletonTarget | KeyTarget
 type SeedOwnerChange = { kind : "set" | "rekey", store : string!, id : string!, column : string!, ownerId : string!, target : RowTarget! }
-type SeedEntity = { name : string, persistence : string, collection : string, identity : boolean, local : boolean, seedMock : boolean, fields : [MockFieldSpec], instances : [Map string MockValue?], localeInstances : Map string [Map string MockValue?], read_policy : Expr, create_policy : Expr, update_policy : Expr, delete_policy : Expr }
+type SeedEntity = { name : string, persistence : string, collection : string, identity : boolean, browser : boolean, seedMock : boolean, fields : [MockFieldSpec], instances : [Map string MockValue?], localeInstances : Map string [Map string MockValue?], read_policy : Expr, create_policy : Expr, update_policy : Expr, delete_policy : Expr }
 type SeedOrbital = { entity : SeedEntity, auxiliaryEntities : [SeedEntity] }
 type SeedProgram = { orbitals : [SeedOrbital] }
 type MockValue = string | number | boolean | [MockValue?] | Map string MockValue?
@@ -25,7 +25,7 @@ type MockWalkCell = { path : string!, kind : string!, text : string, num : numbe
 type WalkOut = { cells : [MockWalkCell], s : number, value : MockValue? }
 type SeedEmitted = { event : string!, payload : Map string MockValue? }
 type SeedDispatchOutcome = { ok : boolean!, error : string, emitted : [SeedEmitted] }
-type SeedWriteRow = { store : string!, i : number!, label : string!, entity : string!, owner : string! }
+type SeedWriteRow = { store : string!, i : number!, label : string!, entity : string!, owner : string!, checked : boolean! }
 type SeedGroup = { owner : string!, ops : [[MockValue?]]! }
 type SeedWrite = { viewer : Map string MockValue?, ops : [[MockValue?]]! }
 type DsStamp = { store : string!, i : number!, col : string!, id : string, wasDeferred : boolean }
@@ -33,8 +33,9 @@ type DsOlink = { store : string!, field : string!, i : number!, target : string!
 type AccessReq = { entity : string!, action : string!, row : Map string MockValue?, viewer : Map string MockValue? }
 type AcPlan = { queue : [AccessReq], n : number, read : boolean, rel : boolean, ids : [string], viewer : boolean }
 type AcOut = { hit : boolean!, owner : string!, elig : [string]!, viewer : boolean! }
-type DsOut = { stores : Map string [Map string MockValue?], s : number, minted : number, stamps : [DsStamp] }
-type DatasetReg = { label : string!, store : string!, fields : [MockFieldSpec]!, identity : boolean!, runtime : boolean!, seeds : boolean!, ownerCols : [string]!, policyEntity : string!, hasRead : boolean!, instances : [Map string MockValue?]! }
+type DsBatch = { stores : Map string [Map string MockValue?]!, s : number!, minted : number!, stamps : [DsStamp]!, used : number!, halt : boolean! }
+type DatasetReg = { label : string!, store : string!, fields : [MockFieldSpec]!, identity : boolean!, runtime : boolean!, seeds : boolean!, ownerCols : [string]!, policyEntity : string!, hasRead : boolean!, hasCreate : boolean!, policyRefs : [string]!, instances : [Map string MockValue?]! }
+type StorePolicy = { name : string!, hasRead : boolean!, hasCreate : boolean!, refs : [string]! }
 type DatasetLink = { store : string!, field : string!, target : string!, scalar : boolean!, isOwner : boolean! }
 type DatasetProj = { store : string!, field : string!, target : string!, targetField : string!, isArray : boolean! }
 
@@ -92,7 +93,9 @@ orbital MockSeedHostOrbital {
     dsLinks : [DatasetLink] @description "The relation links to fill." = []
     dsProjs : [DatasetProj] @description "The projected fields to fill." = []
     dsStores : Map string [Map string MockValue?] @description "The rows of each store key." = {}
-    dsOut : DsOut @description "The last store step result." = { stores: {}, s: 42, minted: 0, stamps: [] }
+    dsOut : DsBatch @description "The last store batch: the registrations run in one step until one produced owner stamps; emptied once read." = { stores: {}, s: 0, minted: 0, stamps: [], used: 0, halt: false }
+    dsOlinkCache : Map string AcOut @description "Owner-link verdicts by store and field, kept only where the read and create policies read no row field but that one and no binding but @user." = {}
+    dsActive : boolean @description "A boot seed is running: every page mount runs INIT, and a second run started before the first writes its marker would race it." = false
     dsWork : number @description "Cascade steps the seed has spent since it last continued in a dispatch of its own." = 0
     dsNext : string @description "Where the seed continues after its resume dispatch answers: stamp or olink." = ""
     dsResumes : number @description "How many resume dispatches the seed has made." = 0
@@ -164,5 +167,13 @@ orbital MockSeedHostOrbital {
     @read (= @user.role "hr")
     id : string!
     staffAccount : FixtureViewer
+  }
+
+  entity HrShared [persistent: hrshared] {
+    @create (= @user.role "hr")
+    @read (or (= (object/get @entity staffAccount) @user.id) (= (object/get @entity visibility) "public"))
+    id : string!
+    staffAccount : FixtureViewer
+    visibility : string
   }
 }

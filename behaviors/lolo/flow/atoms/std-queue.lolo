@@ -117,7 +117,7 @@ orbital QueueOrbital {
     skipIds : [string] = []
   }
 
-  trait QueueProducer -> QueueCursor [lifecycle, instance] {
+  trait QueueProducer -> QueueCursor [optimistic] {
     initial: idle
 
     state idle {
@@ -214,7 +214,7 @@ orbital QueueOrbital {
     }
 
     listens {
-      ENQUEUE -> external {
+      ENQUEUE -> input {
         queue : string!
         job : @entity @config.jobEntity!
         delay : number
@@ -222,7 +222,7 @@ orbital QueueOrbital {
       }
         @description "Add a job to a queue, optionally delayed or prioritised."
         @tier "domain"
-      CANCEL -> external {
+      CANCEL -> input {
         jobId : string!
       }
         @description "Cancel a job that nobody has claimed."
@@ -267,7 +267,7 @@ orbital QueueOrbital {
     }
   }
 
-  trait QueueConsumer -> QueueCursor [lifecycle, instance] {
+  trait QueueConsumer -> QueueCursor [optimistic] {
     initial: idle
 
     state idle {
@@ -404,7 +404,7 @@ orbital QueueOrbital {
     }
 
     listens {
-      DEQUEUE -> external {
+      DEQUEUE -> input {
         queue : string!
       }
         @description "Lease the next eligible job: highest priority, then oldest; an expired lease makes a job eligible again."
@@ -454,7 +454,7 @@ orbital QueueOrbital {
     }
   }
 
-  trait QueueFinisher -> QueueCursor [lifecycle, instance] {
+  trait QueueFinisher -> QueueCursor [optimistic] {
     initial: idle
 
     state idle {
@@ -553,14 +553,14 @@ orbital QueueOrbital {
     }
 
     listens {
-      COMPLETE -> external {
+      COMPLETE -> input {
         jobId : string!
         attempt : number!
         result : string
       }
         @description "Settle a leased job as completed."
         @tier "domain"
-      FAIL -> external {
+      FAIL -> input {
         jobId : string!
         attempt : number!
         error : string
@@ -596,7 +596,7 @@ orbital QueueOrbital {
     }
   }
 
-  trait QueueInspector -> QueueCursor [lifecycle, instance] {
+  trait QueueInspector -> QueueCursor [optimistic] {
     initial: idle
 
     state idle {
@@ -678,12 +678,12 @@ orbital QueueOrbital {
     }
 
     listens {
-      JOB_STATUS -> external {
+      JOB_STATUS -> input {
         jobId : string!
       }
         @description "Ask for one job's status."
         @tier "domain"
-      QUEUE_SIZE -> external {
+      QUEUE_SIZE -> input {
         queue : string!
       }
         @description "Count a queue's pending and processing jobs."

@@ -21,7 +21,7 @@ orbital DependencyWavesOrbital {
     reach : Map string [string]
   }
 
-  trait Waves -> WavesRun [integration] {
+  trait Waves -> WavesRun [client] {
     initial: ready
 
     state ready {
@@ -68,11 +68,11 @@ orbital DependencyWavesOrbital {
     }
 
     listens {
-      WAVES_REQUEST -> external { nodes : [WaveNode]! }
+      WAVES_REQUEST -> input { nodes : [WaveNode]! }
         @description "Order a dependency graph and group it into parallel waves."
         @synonyms "dependency waves, publish order, topological sort, build order, cycle check"
     }
   }
 
-  page "/dependency-waves" as DependencyWavesPage -> Waves
+  page boot as DependencyWavesOrbitalStart -> Waves
 }

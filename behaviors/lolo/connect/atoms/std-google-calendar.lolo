@@ -24,7 +24,7 @@ orbital CalendarOrbital {
     id : string!
   }
 
-  trait CalendarClient -> CalendarRequest [integration, instance] {
+  trait CalendarClient -> CalendarRequest [optimistic] {
     initial: idle
 
     state idle {
@@ -264,7 +264,7 @@ orbital CalendarOrbital {
     }
 
     listens {
-      CALENDAR_LIST_EVENTS -> external {
+      CALENDAR_LIST_EVENTS -> input {
         calendarId : string
         timeMin : string
         timeMax : string
@@ -273,7 +273,7 @@ orbital CalendarOrbital {
       }
         @description "List events on a Google Calendar; pass syncToken for incremental sync instead of a time window (the API rejects combining them). calendarId defaults to the calendarId knob; maxResults defaults to 250."
         @synonyms "list events, calendar events, sync events"
-      CALENDAR_CREATE_EVENT -> external {
+      CALENDAR_CREATE_EVENT -> input {
         calendarId : string
         summary : string!
         description : string
@@ -284,7 +284,7 @@ orbital CalendarOrbital {
       }
         @description "Create a calendar event; an all-day event uses a 10-character (YYYY-MM-DD) start with no end, defaulting to the next day. A timed event needs an explicit end."
         @synonyms "create event, add calendar event, schedule meeting"
-      CALENDAR_UPDATE_EVENT -> external {
+      CALENDAR_UPDATE_EVENT -> input {
         calendarId : string
         eventId : string!
         summary : string
@@ -295,20 +295,20 @@ orbital CalendarOrbital {
       }
         @description "Patch an existing event's fields; only fields present in the payload are changed."
         @synonyms "update event, edit calendar event, reschedule"
-      CALENDAR_DELETE_EVENT -> external {
+      CALENDAR_DELETE_EVENT -> input {
         calendarId : string
         eventId : string!
       }
         @description "Delete a calendar event."
         @synonyms "delete event, remove calendar event, cancel event"
-      CALENDAR_FREE_BUSY -> external {
+      CALENDAR_FREE_BUSY -> input {
         calendarId : string
         timeMin : string!
         timeMax : string!
       }
         @description "Query busy time blocks on a calendar within a window."
         @synonyms "free busy, availability, busy slots"
-      CALENDAR_WATCH -> external {
+      CALENDAR_WATCH -> input {
         calendarId : string
         channelId : string!
         address : string!
@@ -316,7 +316,7 @@ orbital CalendarOrbital {
       }
         @description "Register a push-notification channel for calendar change events."
         @synonyms "watch calendar, push notifications, subscribe changes"
-      CALENDAR_STOP_WATCH -> external {
+      CALENDAR_STOP_WATCH -> input {
         channelId : string!
         resourceId : string!
       }
@@ -387,7 +387,7 @@ orbital CalendarOrbital {
     }
   }
 
-  trait CalendarPushInbound -> CalendarRequest [integration, instance] {
+  trait CalendarPushInbound -> CalendarRequest [client] {
     initial: idle
 
     state idle {

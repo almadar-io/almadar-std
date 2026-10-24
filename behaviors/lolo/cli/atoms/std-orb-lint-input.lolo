@@ -1,0 +1,128 @@
+app std-orb-lint-input [
+  version: "1.0.0",
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-input — the one place a lint run reads its file. For a LINT_REQUEST { file } it reads the file, scans the installed language packs (std-orb-language's engine, std-semver for the range check), decides from the raw text whether the program is in the English vocabulary (a .orb document by its top-level keys, a .lolo source by its first token), lowers it with program/read and answers LINT_INPUT { file, raw, latin, program } to every rule trait that listens; an unreadable or unlowerable file, or a failed pack scan, answers LINT_INPUT_UNREAD { file }. A rule trait only analyzes this input; the rule cli traits and the lint-all umbrella each issue one request."
+]
+uses Spec from "almadar-std/lint-input"
+uses Language from "std/behaviors/std-orb-language"
+type DocObject = Map string DocValue
+type DocValue = string | number | boolean | [DocValue] | Map string DocValue
+type LintValue = string | number | boolean | [LintValue?] | Map string LintValue?
+type PackText = { name : string!, text : string! }
+type PackMeta = { code : string! }
+type PackVocab = { meta : PackMeta!, keywords : Map string string, orb : Map string string }
+
+orbital OrbLintInputOrbital {
+  uses Semver from "std/behaviors/std-semver"
+
+  entity OrbLintInputRun [runtime] {
+    id : string!
+    file : string = ""
+    raw : string = ""
+    packs : [PackText] = []
+    latin : boolean = true
+  }
+
+  trait Versions = Semver.traits.Semver {
+    listens {
+      Packs.LANG_SEMVER -> SEMVER_SATISFIES
+    }
+  }
+
+  trait Packs = Language.traits.OrbLanguageEngine {
+    listens {
+      OrbLintInput.LINT_PACKS_RUN -> LANG_SCAN
+      LANG_SAT { requestId : string!  value : boolean! }
+        @description "std-semver's SEMVER_SATISFIED: the range check answered."
+      LANG_SAT_REFUSED { requestId : string!  operation : string!  reason : string! }
+        @description "std-semver's SEMVER_REFUSED: the range check refused."
+      Versions.SEMVER_SATISFIED -> LANG_SAT
+      Versions.SEMVER_REFUSED -> LANG_SAT_REFUSED
+    }
+  }
+
+  trait OrbLintInput -> OrbLintInputRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_REQUEST -> reading
+        (set @entity.file @payload.file)
+        (set @entity.packs [])
+        (os/read-file { anchor: "cwd" path: @payload.file } { key: "lint-input-file" emit: { success: LINT_FILE_READ, failure: LINT_FILE_UNREAD } })
+    }
+
+    state reading {
+      INIT -> reading
+      LINT_FILE_READ -> reading
+        (set @entity.raw (bytes/to-string @payload.data))
+        (os/realpath { anchor: "cwd" path: "." } { key: "lint-input-cwd" emit: { success: LINT_CWD, failure: LINT_FILE_UNREAD } })
+      LINT_CWD -> reading
+        (emit LINT_PACKS_RUN { cwd: @payload.path })
+      LANGUAGE_PACK_VOCAB_HEARD -> reading
+        (set @entity.packs (array/append @entity.packs { name: @payload.name, text: @payload.text }))
+      LANG_SCAN_ANSWERED -> ready when (!= @payload.status 200)
+        (emit LINT_INPUT_UNREAD { file: @entity.file })
+      LANGUAGE_PACKS_DONE_HEARD -> ready when (!= @payload.problem "")
+        (emit LINT_INPUT_UNREAD { file: @entity.file })
+      LANGUAGE_PACKS_DONE_HEARD -> reading when (= @payload.problem "")
+        (set @entity.latin (let ((words ["app", "uses", "expects", "type", "theme", "orbital"]) (vocabs (array/map @entity.packs (fn k (json/parse (object/get @k "text") PackVocab)))))
+          (if (str/startsWith (str/trim @entity.raw) "{")
+            (let ((keys (object/keys (json/parse @entity.raw DocObject))))
+              (or (array/includes @keys "orbitals") (not (array/some @vocabs (fn v (array/includes @keys (object/get (object/get @v "orb" {}) "orbitals" "")))))))
+            (let ((tok (array/first (str/split (array/first (str/split (array/first (str/split (str/trim (array/find (str/split @entity.raw "\n") (fn l (let ((t (str/trim @l))) (and (!= @t "") (not (str/startsWith @t ";;"))))))) " ")) "[")) "("))))
+              (or (array/includes @words @tok) (not (array/some @vocabs (fn v (array/some @words (fn w (= (object/get (object/get @v "keywords" {}) @w "") @tok)))))))))))
+        (emit LINT_LANGUAGE { latin: @entity.latin })
+        (program/read @entity.raw { emit: { success: LINT_PROGRAM_READ, failure: LINT_FILE_UNREAD } })
+      LINT_PROGRAM_READ -> ready
+        (emit LINT_INPUT { file: @entity.file, raw: @entity.raw, latin: @entity.latin, program: @payload.result })
+      LINT_FILE_UNREAD -> ready
+        (emit LINT_INPUT_UNREAD { file: @entity.file })
+    }
+
+    emits {
+      LINT_INPUT -> external { file : string!  raw : string!  latin : boolean!  program : LintValue! }
+        @description "The file read, its language decided and the program lowered, offered to every rule trait."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The file could not be read or lowered, or the language scan failed."
+        @tier "internal"
+      LINT_LANGUAGE -> external { latin : boolean! }
+        @description "The program's language was decided: true for an English program."
+        @tier "internal"
+      LINT_FILE_READ { data : bytes! }
+        @description "The file read."
+        @tier "internal"
+      LINT_FILE_UNREAD { error : string }
+        @description "The file could not be read or lowered."
+        @tier "internal"
+      LINT_PROGRAM_READ { result : LintValue! }
+        @description "The file lowered by program/read."
+        @tier "internal"
+      LINT_PACKS_RUN { cwd : string! }
+        @description "Ask the language engine to scan the installed language packs."
+        @tier "internal"
+      LINT_CWD { path : string! }
+        @description "The working directory read."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_REQUEST { file : string! }
+        @description "The lint request this trait answers: the cli trait of a rule or the umbrella routes its LINT_REQUEST here."
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintInputOrbitalStart -> OrbLintInput, Packs, Versions
+}

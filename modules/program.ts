@@ -17,32 +17,45 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
-import { BOOLEAN, EMIT_ENVELOPE, EVENT_KEY, NUMBER, STRING, list, mapOf, nullable, openShape, shape, union } from '../signature.js';
+import { BOOLEAN, EMIT_ENVELOPE, EVENT_KEY, NUMBER, STRING, list, lit, mapOf, nullable, openShape, shape, union } from '../signature.js';
 
 const EMIT_OPTIONS: NonNullable<StdOperatorMeta['params']>[number] = { name: 'options', type: EMIT_ENVELOPE, description: 'Emit configuration ({ emit: { success, failure } })', optional: true };
+
+const VALIDATION_FINDING = openShape({ code: STRING, path: STRING, message: STRING });
+const ValidationReport = shape({
+  success: BOOLEAN,
+  valid: BOOLEAN,
+  errors: nullable(list(VALIDATION_FINDING)),
+  warnings: nullable(list(VALIDATION_FINDING)),
+  stats: nullable(openShape({ orbitals: NUMBER, entities: NUMBER, traits: NUMBER, pages: NUMBER })),
+});
 
 export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
   'program/read': {
     module: 'program', category: 'std-program',
     minArity: 1, maxArity: 3,
-    description: 'Parse `.lolo` source text into a quoted program. With inspect:true and an absolute path, return the resolved program, original-source anchors and imported source provenance; version identifies the editor document.',
+    description: 'Parse `.lolo` source text into a quoted program. With inspect:true and an absolute path, return the resolved program, original-source anchors and imported source provenance; version identifies the editor document. With embeds:true, the text\'s inline behavior embeds `[{ orbital, trait, behavior, line, column }]` (what `orb embeds` prints). With resolve:true and the absolute path, the file resolved as `orb resolve` prints it, `{ program, text }`; with output, also written there with its catalogs and lazy behaviors (without it, a program with lazy behaviors or locales is refused).',
     hasSideEffects: true,
     runsOn: 'server',
     host: 'program',
     returnType: 'sexpr',
-    params: [{ name: 'text', type: 'string', description: '`.lolo` source' }, { name: 'inspection', type: openShape({ inspect: BOOLEAN, path: STRING, version: NUMBER }), description: 'Optional inspection request with original absolute source path and document version', optional: true }, EMIT_OPTIONS],
+    params: [{ name: 'text', type: 'string', description: '`.lolo` source' }, { name: 'inspection', type: openShape({ inspect: BOOLEAN, embeds: BOOLEAN, resolve: BOOLEAN, path: STRING, output: STRING, version: NUMBER }), description: 'Optional inspection (inspect, path, version), embed listing (embeds) or resolution (resolve, path, output) request', optional: true }, EMIT_OPTIONS],
     example: '["program/read", "@entity.draft", { "emit": { "success": "READ", "failure": "READ_FAILED" } }]',
   },
   'program/print': {
     module: 'program', category: 'std-program',
-    minArity: 1, maxArity: 2,
-    description: 'Format a quoted program as `.lolo` source text.',
+    minArity: 1, maxArity: 3,
+    description: 'Format a quoted program as `.lolo` source text. With `source`, format that authored `.lolo` text instead (comments kept, the bytes `orb format` prints; `.orb` JSON prints with sorted keys) and the program is not read: `node` prints the one construct at a path (`orbitals[0].traits[2]`, `orbitals[0].entity.fields[1]`), `nodes` every construct a path with `[*]` matches, as a list.',
     hasSideEffects: true,
     runsOn: 'server',
     host: 'program',
-    returnType: 'string',
-    params: [{ name: 'program', type: { kind: 'sexpr' }, description: 'A quoted program' }, EMIT_OPTIONS],
-    example: '["program/print", "@entity.program", { "emit": { "success": "PRINTED", "failure": "PRINT_FAILED" } }]',
+    returnType: union(STRING, list(STRING)),
+    params: [
+      { name: 'program', type: { kind: 'sexpr' }, description: 'A quoted program (not read when `source` is given)' },
+      { name: 'options', type: openShape({ source: STRING, node: STRING, nodes: STRING }), description: 'Authored `source` to format, at one `node` path or every `nodes` match', optional: true },
+      EMIT_OPTIONS,
+    ],
+    example: '["program/print", null, { "source": "@entity.text", "node": "orbitals[0].traits[0]" }, { "emit": { "success": "PRINTED", "failure": "PRINT_FAILED" } }]',
   },
   'program/eval': {
     module: 'program', category: 'std-program',
@@ -66,14 +79,14 @@ export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: true,
     runsOn: 'server',
     host: 'program',
-    returnType: shape({
+    returnType: union(ValidationReport, shape({
       valid: BOOLEAN,
       errors: list(openShape({ code: STRING, message: STRING })),
       warnings: list(openShape({ code: STRING, message: STRING })),
-    }),
+    })),
     params: [
       { name: 'program', type: { kind: 'sexpr' }, description: 'A quoted program' },
-      { name: 'options', type: EMIT_ENVELOPE, description: 'An optional prior program (`prior`) and `final` flag', optional: true },
+      { name: 'options', type: openShape({ prior: { kind: 'sexpr' }, final: BOOLEAN, report: BOOLEAN, path: STRING, denyWarnings: BOOLEAN, patterns: STRING, services: STRING }), description: 'An optional prior program (`prior`) and `final` flag; or `{ report: true, path, final?, denyWarnings?, patterns?, services? }`: the report `orb validate --json` prints for the file at the absolute `path` (the program argument is not read)', optional: true },
       EMIT_OPTIONS,
     ],
     example: '["program/validate", "@entity.program", { "emit": { "success": "CHECKED", "failure": "CHECK_FAILED" } }]',
@@ -91,8 +104,8 @@ export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'requests', type: { kind: 'array', of: { kind: 'object', fields: { orbital: 'string', trait: 'string', from: 'string', event: 'string' }, open: true } }, description: 'The transitions to play: `{ orbital, trait, from, event, payload, entity?, config?, viewer?, now?, settleMs? }` each' },
       {
         name: 'options',
-        type: openShape({ key: STRING, render: BOOLEAN, live: BOOLEAN, emit: openShape({ success: EVENT_KEY, failure: EVENT_KEY, cancelled: EVENT_KEY }) }),
-        description: 'Emit configuration ({ emit: { success, failure } }); `render: true` adds each result\'s `rendered` slot facts; `live: true` runs the requests on the native host',
+        type: openShape({ key: STRING, render: BOOLEAN, live: BOOLEAN, report: lit('raw'), emit: openShape({ success: EVENT_KEY, failure: EVENT_KEY, cancelled: EVENT_KEY }) }),
+        description: 'Emit configuration ({ emit: { success, failure } }); `render: true` adds each result\'s `rendered` slot facts; `live: true` runs the requests on the native host; `report: "raw"` answers the kernel\'s cascade report unshaped, exactly what `orb execute --steps` prints, and each request needs only `trait` and `event` (it dispatches from the held state)',
         optional: true,
       },
     ],

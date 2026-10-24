@@ -51,7 +51,7 @@ orbital OrbLanguageOrbital {
     }
   }
 
-  trait OrbLanguage -> LanguageCall [integration] {
+  trait OrbLanguage -> LanguageCall [client] {
     initial: ready
 
     state ready {
@@ -127,7 +127,7 @@ orbital OrbLanguageOrbital {
     }
   }
 
-  trait OrbLanguageEngine -> LanguageCall [integration] {
+  trait OrbLanguageEngine -> LanguageCall [optimistic] {
     initial: idle
 
     state idle {
@@ -305,7 +305,7 @@ orbital OrbLanguageOrbital {
       LANG_VOCAB_FILE -> scanning when (and (!= (json/parse (bytes/to-string @payload.data) VocabFile) null) (= (object/get (object/get (json/parse (bytes/to-string @payload.data) VocabFile) "meta") "code") "en"))
         (emit LANG_PACK_PROBLEM { text: (str/concat "ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at " (json/stringify (object/get (array/nth @entity.found @entity.foundCursor) "name")) ": " (object/get (array/nth @entity.found @entity.foundCursor) "name") ": English is built in and cannot be replaced") })
       LANG_VOCAB_FILE -> scanning when (and (!= (json/parse (bytes/to-string @payload.data) VocabFile) null) (!= (object/get (object/get (json/parse (bytes/to-string @payload.data) VocabFile) "meta") "code") "en") (array/includes @entity.codes (or (object/get (object/get (json/parse (bytes/to-string @payload.data) VocabFile) "meta") "code") "")))
-        (emit LANG_PACK_PROBLEM { text: (str/concat "ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at " (json/stringify (object/get (array/nth @entity.found @entity.foundCursor) "name")) ": language " (json/stringify (or (object/get (object/get (json/parse (bytes/to-string @payload.data) VocabFile) "meta") "code") "")) " is claimed by two packs: " (object/get (array/nth @entity.found (array/find (array/range 0 (array/len @entity.codes)) (fn i (= (array/nth @entity.codes @i) (or (object/get (object/get (json/parse (bytes/to-string @payload.data) VocabFile) "meta") "code") ""))))) "name") " and " (object/get (array/nth @entity.found @entity.foundCursor) "name")) })
+        (emit LANG_PACK_PROBLEM { text: (let ((code (or (object/get (object/get (json/parse (bytes/to-string @payload.data) VocabFile) "meta") "code") ""))) (str/concat "ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at " (json/stringify (object/get (array/nth @entity.found @entity.foundCursor) "name")) ": language " (json/stringify @code) " is claimed by two packs: " (object/get (array/nth @entity.found (array/find (array/range 0 (array/len @entity.codes)) (fn i (= (array/nth @entity.codes @i) @code)))) "name") " and " (object/get (array/nth @entity.found @entity.foundCursor) "name"))) })
       LANG_VOCAB_FILE -> scanning when (and (!= (json/parse (bytes/to-string @payload.data) VocabFile) null) (!= (object/get (object/get (json/parse (bytes/to-string @payload.data) VocabFile) "meta") "code") "en") (not (array/includes @entity.codes (or (object/get (object/get (json/parse (bytes/to-string @payload.data) VocabFile) "meta") "code") ""))))
         (set @entity.codes (array/append @entity.codes (or (object/get (object/get (json/parse (bytes/to-string @payload.data) VocabFile) "meta") "code") "")))
         (emit LANGUAGE_PACK_VOCAB { name: (object/get (array/nth @entity.found @entity.foundCursor) "name") text: (bytes/to-string @payload.data) })
@@ -386,7 +386,7 @@ orbital OrbLanguageOrbital {
       LANG_PACK_LIST { tag : string }
         @description "Internal: list a node_modules directory for packs."
         @tier "internal"
-      LANG_PACK_ROOTDIR { entries : [Scanned] }
+      LANG_PACK_ROOTDIR { entries : [Scanned]! }
         @description "Internal: node_modules entries."
         @tier "internal"
       LANG_PACK_NOROOT { kind : string  error : string }
@@ -395,7 +395,7 @@ orbital OrbLanguageOrbital {
       LANG_PACK_SCOPE { tag : string }
         @description "Internal: list the next scope."
         @tier "internal"
-      LANG_PACK_SCOPED { entries : [Scanned] }
+      LANG_PACK_SCOPED { entries : [Scanned]! }
         @description "Internal: a scope listing."
         @tier "internal"
       LANG_PACK_SCOPE_FAILED { kind : string  error : string }
@@ -461,5 +461,5 @@ orbital OrbLanguageOrbital {
     }
   }
 
-  page "/orb-language" as OrbLanguagePage -> OrbLanguage, OrbLanguageEngine, ArgsCli, Versions
+  page boot as OrbLanguageOrbitalStart -> OrbLanguage, OrbLanguageEngine, ArgsCli, Versions
 }

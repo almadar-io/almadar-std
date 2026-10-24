@@ -34,7 +34,7 @@ orbital MigrationAdapterFirestoreOrbital {
     ledger : [ImportSkip] = []
   }
 
-  trait MigrationAdapterFirestore -> MigrationAdapterFirestoreRun [integration, instance] {
+  trait MigrationAdapterFirestore -> MigrationAdapterFirestoreRun [optimistic] {
     initial: idle
 
     state idle {
@@ -104,7 +104,7 @@ orbital MigrationAdapterFirestoreOrbital {
                     title: null,
                     span: @path,
                     extra: { documentId: (array/last (str/split @path "/")), documentPath: @path },
-                    fields: (if (> (array/len (object/get @entity.recipe "documentSlots")) 0) (object/pick (object/get @d "fields") (object/get @entity.recipe "documentSlots")) (object/get @d "fields")),
+                    fields: (if (> (array/len (object/get @entity.recipe "documentSlots" [])) 0) (object/pick (object/get @d "fields" {}) (object/get @entity.recipe "documentSlots" [])) (object/get @d "fields")),
                     hidden: (array/filter [(object/get @entity.recipe "nodesField"), (object/get @entity.recipe "edgesField")] (fn h (!= @h "")))
                   })))
             []))
@@ -118,11 +118,11 @@ orbital MigrationAdapterFirestoreOrbital {
                   (array/map
                     (array/filter
                       @nodes
-                      (fn e (array/some (object/get @entity.recipe "nodeKinds") (fn k (= (object/get @k "nodeType") (object/get (object/get @e "1") "mapValue.fields.type.stringValue" ""))))))
+                      (fn e (array/some (object/get @entity.recipe "nodeKinds" []) (fn k (= (object/get @k "nodeType") (object/get (object/get @e "1") "mapValue.fields.type.stringValue" ""))))))
                     (fn e
                       {
                         ref: (str/concat "fs:" @path "#node:" (object/get @e "0")),
-                        kind: (object/get (array/find (object/get @entity.recipe "nodeKinds") (fn k (= (object/get @k "nodeType") (object/get (object/get @e "1") "mapValue.fields.type.stringValue" "")))) "kind"),
+                        kind: (object/get (array/find (object/get @entity.recipe "nodeKinds" []) (fn k (= (object/get @k "nodeType") (object/get (object/get @e "1") "mapValue.fields.type.stringValue" "")))) "kind"),
                         title: null,
                         span: (str/concat @path "#" (object/get @e "0")),
                         extra: {
@@ -136,7 +136,7 @@ orbital MigrationAdapterFirestoreOrbital {
                                             (object/mapKeys
                                               (object/omit (object/get (object/get @e "1") "mapValue.fields" {}) ["id", "type", "properties"])
                                               (fn k (str/concat "node_" @k)))))
-                                       (slots (object/get (array/find (object/get @entity.recipe "nodeKinds") (fn k (= (object/get @k "nodeType") (object/get (object/get @e "1") "mapValue.fields.type.stringValue" "")))) "slots" [])))
+                                       (slots (object/get (array/find (object/get @entity.recipe "nodeKinds" []) (fn k (= (object/get @k "nodeType") (object/get (object/get @e "1") "mapValue.fields.type.stringValue" "")))) "slots" [])))
                                   (if (> (array/len @slots) 0) (object/pick @all @slots) @all)),
                         hidden: []
                       })))))))
@@ -147,7 +147,7 @@ orbital MigrationAdapterFirestoreOrbital {
               (fn d
                 (let ((path (array/nth (str/split (object/get @d "name") "/documents/") 1))
                       (nodeIds (object/keys (object/get (object/get (object/get @d "fields") (object/get @entity.recipe "nodesField") {}) "mapValue.fields" {})))
-                      (emitted (array/map (array/filter (object/entries (object/get (object/get (object/get @d "fields") (object/get @entity.recipe "nodesField") {}) "mapValue.fields" {})) (fn e (array/some (object/get @entity.recipe "nodeKinds") (fn k (= (object/get @k "nodeType") (object/get (object/get @e "1") "mapValue.fields.type.stringValue" "")))))) (fn e (object/get @e "0")))))
+                      (emitted (array/map (array/filter (object/entries (object/get (object/get (object/get @d "fields") (object/get @entity.recipe "nodesField") {}) "mapValue.fields" {})) (fn e (array/some (object/get @entity.recipe "nodeKinds" []) (fn k (= (object/get @k "nodeType") (object/get (object/get @e "1") "mapValue.fields.type.stringValue" "")))))) (fn e (object/get @e "0")))))
                   (array/map
                     (array/filter
                       (object/get (object/get (object/get @d "fields") (object/get @entity.recipe "edgesField") {}) "arrayValue.values" [])
@@ -162,7 +162,7 @@ orbital MigrationAdapterFirestoreOrbital {
                         title: null,
                         span: @path,
                         extra: { documentId: (array/last (str/split @path "/")), documentPath: @path },
-                        fields: (if (> (array/len (object/get @entity.recipe "edgeSlots")) 0) (object/pick (object/get @v "mapValue.fields" {}) (object/get @entity.recipe "edgeSlots")) (object/get @v "mapValue.fields" {})),
+                        fields: (if (> (array/len (object/get @entity.recipe "edgeSlots" [])) 0) (object/pick (object/get @v "mapValue.fields" {}) (object/get @entity.recipe "edgeSlots" [])) (object/get @v "mapValue.fields" {})),
                         hidden: []
                       })))))))
         (set @entity.sets (array/concat @entity.docSets @entity.nodeSets @entity.edgeSets))
@@ -172,7 +172,7 @@ orbital MigrationAdapterFirestoreOrbital {
               @entity.docs
               (fn d
                 (let ((path (array/nth (str/split (object/get @d "name") "/documents/") 1))
-                      (emitted (array/map (array/filter (object/entries (object/get (object/get (object/get @d "fields") (object/get @entity.recipe "nodesField") {}) "mapValue.fields" {})) (fn e (array/some (object/get @entity.recipe "nodeKinds") (fn k (= (object/get @k "nodeType") (object/get (object/get @e "1") "mapValue.fields.type.stringValue" "")))))) (fn e (object/get @e "0")))))
+                      (emitted (array/map (array/filter (object/entries (object/get (object/get (object/get @d "fields") (object/get @entity.recipe "nodesField") {}) "mapValue.fields" {})) (fn e (array/some (object/get @entity.recipe "nodeKinds" []) (fn k (= (object/get @k "nodeType") (object/get (object/get @e "1") "mapValue.fields.type.stringValue" "")))))) (fn e (object/get @e "0")))))
                   (array/map
                     (array/filter
                       (object/get (object/get (object/get @d "fields") (object/get @entity.recipe "edgesField") {}) "arrayValue.values" [])
@@ -284,7 +284,7 @@ orbital MigrationAdapterFirestoreOrbital {
     }
 
     listens {
-      MIGRATION_EXTRACT -> external {
+      MIGRATION_EXTRACT -> input {
         adapter : string!
         documents : [ImportRawDocument]!
       }

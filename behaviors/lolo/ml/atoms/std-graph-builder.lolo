@@ -16,12 +16,12 @@ orbital GraphBuilderOrbital {
   entity GraphStructure [runtime] {
     nodes     : [GraphNode] = []
     edges     : [GraphBuilderEdge] = []
-    nodeCount : int = 0
-    edgeCount : int = 0
+    nodeCount : number = 0
+    edgeCount : number = 0
     status    : "idle" | "built" = idle
   }
 
-  trait GraphBuilderRun -> GraphStructure [lifecycle, instance] {
+  trait GraphBuilderRun -> GraphStructure [client] {
     initial: idle
 
     config {
@@ -87,8 +87,8 @@ orbital GraphBuilderOrbital {
       GRAPH_READY -> external {
         nodes : [GraphNode]!
         edges : [GraphBuilderEdge]!
-        nodeCount : int!
-        edgeCount : int!
+        nodeCount : number!
+        edgeCount : number!
         directed : boolean!
       }
         @description "Fired when node/edge structures have been built from the source entity collection"
@@ -102,5 +102,5 @@ orbital GraphBuilderOrbital {
     }
   }
 
-  page "/graph-builder" as GraphBuilderPage -> GraphBuilderRun
+  page boot as GraphBuilderOrbitalStart -> GraphBuilderRun
 }

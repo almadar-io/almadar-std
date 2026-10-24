@@ -1,0 +1,19 @@
+app orb-execute-spec [
+  version: "1.0.0",
+  inbound: ["cli-execute"],
+  description: "Design contract for `orb execute <file> --steps <json> [--live]` and `orb execute <file> --event <E> --trait <T> [--payload <json>] [--cascade]` (port of orbital-cli commands/execute.rs execute_cascade_steps_cli and execute_cascade_cli). The steps (a JSON array of { trait, event, payload?, from?, entity?, config?, now?, settleMs?, viewer? }) are checked first: text that is not JSON answers { success: false, error: `Invalid JSON: <text>` }, JSON that is not an array answers { success: false, error: `--steps must be a JSON array` }. The program file is then read (a failure answers { success: false, error: `Failed to read <file>: <reason>` }) and parsed (program/read), and program/step { report: \"raw\", live } plays the steps in one run of the kernel and answers the cascade report { success, steps: [{ outcomes, states, entities, entityAfter }], dispatchModes }. --event/--trait is one step { trait, event, payload } (payload defaults to {}) and the report also carries steps[0].outcomes at the top level as `outcomes`; --cascade is accepted and implied (owner-sanctioned retirement: the plain --event DTO mode, execute_schema_cli with --json and --entity, is not ported; its only consumer, rust-harness.ts, is archived). A failed run answers { success: false, error } with the run's message (the host's `program/step: ` prefix removed). Every answer is status 200 with the JSON re-indented with two spaces (serde's to_string_pretty layout; empty arrays and objects stay `[]` and `{}`). A usage error answers status 400 (exit 2): no file or a second word, an unknown flag, neither --steps nor --event, --steps with --event, --trait, --payload or --cascade, --event without --trait, --live without --steps. Replay goldens: orb-execute.replay.goldens.json."
+]
+
+orbital OrbExecuteSpec {
+  expects trait OrbExecute {
+    state ready
+    state parsing
+    state checking
+    state reading
+    state stepping
+    emits {
+      EXEC_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbExecute
+}

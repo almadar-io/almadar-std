@@ -35,7 +35,7 @@ orbital OrbCensusOrbital {
     }
   }
 
-  trait OrbCensus -> OrbCensusRun [integration] {
+  trait OrbCensus -> OrbCensusRun [optimistic] {
     initial: ready
 
     state ready {
@@ -136,16 +136,16 @@ orbital OrbCensusOrbital {
           (do
             (set @entity.ownDirs (array/concat @entity.ownDirs
               (if (and (str/endsWith @file "package.json") (json/valid @text))
-                (array/map (array/filter @entity.acc.names (fn n (= (object/get (json/parse @text Manifest) "name") @n))) (fn n { name: @n, dir: (str/replace @file "package.json" "") }))
+                (let ((m (json/parse @text Manifest))) (array/map (array/filter @entity.acc.names (fn n (= (object/get @m "name") @n))) (fn n { name: @n, dir: (str/replace @file "package.json" "") })))
                 [])))
             (set @entity.hits (array/concat @entity.hits
               (if (and (str/endsWith @file "package.json") (json/valid @text))
-                (array/flatten (array/map (array/filter @entity.acc.names (fn n (!= (object/get (json/parse @text Manifest) "name") @n))) (fn n
-                  (array/flatten (array/map [{ label: "dependencies", tbl: (object/get (json/parse @text Manifest) "dependencies") }, { label: "devDependencies", tbl: (object/get (json/parse @text Manifest) "devDependencies") }, { label: "peerDependencies", tbl: (object/get (json/parse @text Manifest) "peerDependencies") }, { label: "optionalDependencies", tbl: (object/get (json/parse @text Manifest) "optionalDependencies") }, { label: "pnpm.overrides", tbl: (object/get (json/parse @text Manifest) "pnpm.overrides") }, { label: "overrides", tbl: (object/get (json/parse @text Manifest) "overrides") }, { label: "resolutions", tbl: (object/get (json/parse @text Manifest) "resolutions") }] (fn k
+                (let ((m (json/parse @text Manifest))) (array/flatten (array/map (array/filter @entity.acc.names (fn n (!= (object/get @m "name") @n))) (fn n
+                  (array/flatten (array/map [{ label: "dependencies", tbl: (object/get @m "dependencies") }, { label: "devDependencies", tbl: (object/get @m "devDependencies") }, { label: "peerDependencies", tbl: (object/get @m "peerDependencies") }, { label: "optionalDependencies", tbl: (object/get @m "optionalDependencies") }, { label: "pnpm.overrides", tbl: (object/get @m "pnpm.overrides") }, { label: "overrides", tbl: (object/get @m "overrides") }, { label: "resolutions", tbl: (object/get @m "resolutions") }] (fn k
                     (let ((tbl (object/get @k "tbl")))
                       (if (and (!= @tbl null) (not (validate/string @tbl)) (array/includes (object/keys @tbl) @n))
                         [{ name: @n, file: @file, kind: "manifest", label: (object/get @k "label"), detail: (str/concat (object/get @tbl (str/replace @n "." "\\."))) }]
-                        []))))))))
+                        [])))))))))
                 [])))
             (set @entity.hits (array/concat @entity.hits
               (if (validate/pattern @file @config.sourcePattern)
@@ -250,5 +250,5 @@ orbital OrbCensusOrbital {
     }
   }
 
-  page "/orb-census" as OrbCensusPage -> OrbCensus, ArgsCli
+  page boot as OrbCensusOrbitalStart -> OrbCensus, ArgsCli
 }

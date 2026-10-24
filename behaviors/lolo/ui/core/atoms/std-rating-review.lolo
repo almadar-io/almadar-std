@@ -10,7 +10,7 @@ orbital RatingReviewOrbital {
 
     type StarBar = { label : string!, percentage : number }
 
-    type ReviewsLoaded = Event { data : [ObjectSpec] } "Fired when the reviews collection finishes loading"
+    type ReviewsLoaded = Event { data : [ObjectSpec]! } "Fired when the reviews collection finishes loading"
 
     type ReviewsLoadFailed = Event { error : string, code : string } "Fired when reviews fetch fails"
 
@@ -31,7 +31,7 @@ orbital RatingReviewOrbital {
     errorMessage : string @description "Text displayed when an error occurs during review submission." @synonyms "error text, error message, failure message" = ""
   }
 
-  trait RatingReviewBoard -> ReviewView [interaction, instance] {
+  trait RatingReviewBoard -> ReviewView [optimistic] {
     initial: loading
 
     state loading {
@@ -1308,7 +1308,7 @@ orbital RatingReviewOrbital {
         @synonyms "refresh, reload, reset"
         @tier "internal"
       ReviewsLoaded {
-        data : [ObjectSpec]
+        data : [ObjectSpec]!
       }
         @description "Signals that the reviews data has been successfully retrieved."
         @synonyms "loaded, fetched, ready, available"
@@ -1371,7 +1371,7 @@ orbital RatingReviewOrbital {
         @synonyms "refresh, reload, reset"
         @tier "internal"
       ReviewsLoaded {
-        data : [ObjectSpec]
+        data : [ObjectSpec]!
       }
         @description "Indicates that the reviews data has been successfully retrieved."
         @synonyms "loaded, fetched, received, populated"
@@ -1459,7 +1459,7 @@ orbital RatingReviewOrbital {
     }
   }
 
-  trait RatingReviewSubmit -> ReviewView [interaction, instance] {
+  trait RatingReviewSubmit -> ReviewView [optimistic] {
     initial: composing
 
     state composing {
@@ -1871,7 +1871,7 @@ orbital RatingReviewOrbital {
     }
   }
 
-  trait RatingReviewPageNav -> ReviewView [interaction, instance] {
+  trait RatingReviewPageNav -> ReviewView [client] {
     initial: ready
 
     state ready {

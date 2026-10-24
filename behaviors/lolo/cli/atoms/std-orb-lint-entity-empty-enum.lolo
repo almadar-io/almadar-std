@@ -7,31 +7,26 @@ app std-orb-lint-entity-empty-enum [
 uses Spec from "almadar-std/lint-entity-empty-enum"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type EmptyEnumField = { type : string, values : [string] }
+type EmptyEnumEntity = { fields : [EmptyEnumField] }
+type EmptyEnumOrbital = { entity : EmptyEnumEntity, spec : boolean }
+type EmptyEnumProgram = { orbitals : [EmptyEnumOrbital] }
 
 orbital OrbLintEntityEmptyEnumOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
   entity OrbLintEntityEmptyEnumRun [runtime] {
     id : string!
     findings : [OrbFinding] = []
   }
 
-  trait OrbLintEntityEmptyEnum -> OrbLintEntityEmptyEnumRun [integration] {
+  trait OrbLintEntityEmptyEnum -> OrbLintEntityEmptyEnumRun [optimistic] {
     initial: ready
 
     state ready {
       INIT -> ready
-      LINT_RUN -> reading
-        (set @entity.findings [])
-        (os/read-file { anchor: "cwd" path: @payload.file } { key: "file" emit: { success: LINT_FILE_READ, failure: LINT_FILE_UNREAD } })
-      LINT_FINISH -> ready
-        (emit LINT_FOUND { rule: "entity-empty-enum", findings: @entity.findings })
-    }
-
-    state reading {
-      INIT -> reading
-      LINT_FILE_READ -> reading
-        (program/read (bytes/to-string @payload.data) { emit: { success: LINT_PROGRAM_READ, failure: LINT_FILE_UNREAD } })
-      LINT_PROGRAM_READ -> ready
-        (set @entity.findings (let ((orbitals (object/get @payload.result "orbitals")))
+      LINT_INPUT -> ready
+        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
             (let ((ent (object/get (array/nth @orbitals @oi) "entity" {})))
               (if (and (validate/object @ent) (not (object/get (array/nth @orbitals @oi) "spec" false))) (let ((fields (object/get @ent "fields" [])))
@@ -45,28 +40,13 @@ orbital OrbLintEntityEmptyEnumOrbital {
                           [{ code: "ORB_E_EMPTY_ENUM_VALUES", path: (str/concat "orbitals[" @oi "].entity.fields[" @fi "].values"), message: "Enum field requires a 'values' array", suggestion: (str/concat "Add values: [" (json/stringify "option1") ", " (json/stringify "option2") "] for enum fields"), severity: "error" }])
                         []))))))) [])))))))
         (emit LINT_FINISH { })
-      LINT_FILE_UNREAD -> ready
-        (emit LINT_UNREAD { rule: "entity-empty-enum" })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "entity-empty-enum", findings: @entity.findings })
     }
 
     emits {
-      LINT_UNREAD -> external { rule : string! }
-        @description "This rule could not read or lower the file."
-        @tier "internal"
-      LINT_RUN -> external { file : string! }
-        @description "The lint request this trait answers, from the cli trait or the umbrella."
-        @tier "internal"
       LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
         @description "This rule's findings for the file, offered to the lint-all umbrella."
-        @tier "internal"
-      LINT_FILE_READ { data : bytes! }
-        @description "The file read."
-        @tier "internal"
-      LINT_FILE_UNREAD { error : string }
-        @description "The file could not be read or lowered."
-        @tier "internal"
-      LINT_PROGRAM_READ { result : string }
-        @description "The file lowered by program/read."
         @tier "internal"
       LINT_FINISH { }
         @description "Internal: answer with the verdict."
@@ -74,11 +54,13 @@ orbital OrbLintEntityEmptyEnumOrbital {
     }
 
     listens {
-      OrbLintEntityEmptyEnumCli.LINT_RUN -> LINT_RUN
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : EmptyEnumProgram }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
   }
 
-  trait OrbLintEntityEmptyEnumCli -> OrbLintEntityEmptyEnumRun [integration] {
+  trait OrbLintEntityEmptyEnumCli -> OrbLintEntityEmptyEnumRun [client] {
     initial: ready
 
     state ready {
@@ -86,7 +68,7 @@ orbital OrbLintEntityEmptyEnumOrbital {
       LINT_CALLED -> ready when (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint entity-empty-enum <file>" })
       LINT_CALLED -> waiting when (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
-        (emit LINT_RUN { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
     }
 
     state waiting {
@@ -95,7 +77,7 @@ orbital OrbLintEntityEmptyEnumOrbital {
         (emit LINT_ANSWERED { status: 200, body: "lint entity-empty-enum: clean" })
       LINT_FOUND -> ready when (and (= @payload.rule "entity-empty-enum") (> (array/len @payload.findings) 0))
         (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
-      LINT_UNREAD -> ready when (= @payload.rule "entity-empty-enum")
+      LINT_INPUT_UNREAD -> ready
         (emit LINT_ANSWERED { status: 500, body: "lint entity-empty-enum: the file could not be read or lowered" })
     }
 
@@ -106,14 +88,14 @@ orbital OrbLintEntityEmptyEnumOrbital {
       }
         @description "Internal: the command's answer, which the cli hook prints."
         @tier "internal"
-      LINT_RUN -> external { file : string! }
-        @description "Ask the rule trait to lint this file."
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
         @tier "internal"
       LINT_FOUND -> external { rule : string!  findings : [OrbFinding]! }
         @description "The rule trait's findings for the file."
         @tier "internal"
-      LINT_UNREAD -> external { rule : string! }
-        @description "The rule trait could not read or lower the file."
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
         @tier "internal"
     }
 
@@ -125,9 +107,30 @@ orbital OrbLintEntityEmptyEnumOrbital {
         @description "Run `orb lint entity-empty-enum` with its arguments and working directory."
         @synonyms "orb lint entity-empty-enum, duplicate field names"
       OrbLintEntityEmptyEnum.LINT_FOUND -> LINT_FOUND
-      OrbLintEntityEmptyEnum.LINT_UNREAD -> LINT_UNREAD
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
     }
   }
 
-  page "/orb-lint-entity-empty-enum" as OrbLintEntityEmptyEnumPage -> OrbLintEntityEmptyEnum, OrbLintEntityEmptyEnumCli
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintEntityEmptyEnumCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintEntityEmptyEnumOrbitalStart -> OrbLintEntityEmptyEnum, OrbLintEntityEmptyEnumCli, OrbLintInput, Packs, Versions
 }

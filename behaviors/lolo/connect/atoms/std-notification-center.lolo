@@ -52,7 +52,7 @@ orbital NotificationCenterOrbital {
     lastError : string @description "Last drain failure; blank = none." @synonyms "drain error, failure" = ""
   }
 
-  trait PushSubscriber -> PushSubscription [lifecycle, instance] {
+  trait PushSubscriber -> PushSubscription {
     initial: idle
 
     state idle {
@@ -108,11 +108,11 @@ orbital NotificationCenterOrbital {
     }
   }
 
-  trait PreferenceEditorButtonSubscribe = Button.traits.ButtonRender -> NotificationPreference { config { label: "Enable push notifications", action: OPEN_SUBSCRIBE } }
+  trait PreferenceEditorButtonSubscribe = Button.traits.ButtonRender -> NotificationPreference [server] { config { label: "Enable push notifications", action: OPEN_SUBSCRIBE } }
 
-  trait PreferenceEditorButtonDigest = Button.traits.ButtonRender -> NotificationPreference { config { label: "View notification digest", action: OPEN_DIGEST } }
+  trait PreferenceEditorButtonDigest = Button.traits.ButtonRender -> NotificationPreference [server] { config { label: "View notification digest", action: OPEN_DIGEST } }
 
-  trait PreferenceEditor -> NotificationPreference [lifecycle, instance] {
+  trait PreferenceEditor -> NotificationPreference {
     initial: idle
 
     state idle {
@@ -219,7 +219,7 @@ orbital NotificationCenterOrbital {
     }
   }
 
-  trait DigestDrain -> DigestRunView [lifecycle, instance] {
+  trait DigestDrain -> DigestRunView [optimistic] {
     initial: idle
 
     state idle {
@@ -261,7 +261,7 @@ orbital NotificationCenterOrbital {
 
     emits {
       DIGEST_ROWS_LOADED {
-        data : [NotifRow]
+        data : [NotifRow]!
       }
         @description "Undispatched digest/quiet-hours audit rows past minAgeHours, oldest batch first"
         @tier "secondary"
@@ -286,7 +286,7 @@ orbital NotificationCenterOrbital {
 
     listens {
       DIGEST_ROWS_LOADED {
-        data : [NotifRow]
+        data : [NotifRow]!
       }
       DigestMailer.EMAIL_SENT -> DIGEST_ITEM_SENT
       DigestMailer.EMAIL_SEND_FAILED -> DIGEST_MAIL_FAILED

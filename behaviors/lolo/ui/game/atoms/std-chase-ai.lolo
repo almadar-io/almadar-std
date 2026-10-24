@@ -10,7 +10,7 @@ orbital ChaseAiOrbital {
     y : number
     z : number
     team : string
-    health : number
+    health : number!
     maxHealth : number
     unitType : string
   }
@@ -32,10 +32,10 @@ orbital ChaseAiOrbital {
 
   entity ChaseState [runtime, shared] {
     id : string!
-    units : [Unit]
+    units : [Unit] = []
   }
 
-  trait ChaseAi -> @rebindable ChaseState [lifecycle] {
+  trait ChaseAi -> @rebindable ChaseState [client] {
     initial: active
 
     state active {
@@ -90,5 +90,5 @@ orbital ChaseAiOrbital {
     }
   }
 
-  page "/chase-ai" as ChaseAiPage -> ChaseAi
+  page boot as ChaseAiOrbitalStart -> ChaseAi
 }

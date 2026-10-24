@@ -6,6 +6,7 @@ app server-spec [
 type ServerHeader = { name : string!, value : string! }
 type KeyClaim = { name : string!, value : string! }
 type ServerErrorBody = { error : string!, code : string! }
+type ServerBootEnv = { authProvider : string, oidcIssuerUrl : string, oidcAudience : string, firebaseProjectId : string, firebaseServiceAccountPath : string, firebaseAuthEmulatorHost : string, firestoreEmulatorHost : string, integrationsMock : boolean }
 
 orbital ServerSpec {
   expects entity HttpServerProgram [runtime] {
@@ -25,7 +26,7 @@ orbital ServerSpec {
   }
   expects trait BootGuard {
     emits {
-      ENV_CHECK { env : Map string string!  production : boolean!  mock : boolean! }
+      ENV_CHECK { env : ServerBootEnv!  production : boolean!  mock : boolean! }
       BOOT_CLEARED { }
       BOOT_WARNED { problems : [string]! }
       BOOT_REFUSED { problems : [string]! }

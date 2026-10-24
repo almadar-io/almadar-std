@@ -41,7 +41,7 @@ orbital OrbMcpInstallOrbital {
     }
   }
 
-  trait OrbMcpInstall -> OrbMcpInstallRun [integration] {
+  trait OrbMcpInstall -> OrbMcpInstallRun [optimistic] {
     initial: ready
 
     state ready {
@@ -98,9 +98,9 @@ orbital OrbMcpInstallOrbital {
         (set @entity.config (object/set @entity.config @entity.serversKey (object/set (if (= (object/get @entity.config @entity.serversKey) null) (json/parse "{}" McpConfig) (object/get @entity.config @entity.serversKey)) "orb" (if (= @entity.client "vscode") { type: "stdio", command: "npx", args: ["-y", (str/slice "x@almadar/orb" 1), "mcp"] } { command: "npx", args: ["-y", (str/slice "x@almadar/orb" 1), "mcp"] }))))
         (os/mkdir { anchor: "cwd" path: @entity.dir } true { key: "dir" emit: { success: MCP_DIR_READY, failure: MCP_HOST_FAILED } })
       MCP_DIR_READY -> writing
-        (os/write-file { anchor: "cwd" path: @entity.path } (bytes/from-string (str/concat (json/stringify @entity.config) "\n")) { key: "config" emit: { success: MCP_WRITTEN, failure: MCP_HOST_FAILED } })
+        (os/write-file { anchor: "cwd" path: @entity.path } (bytes/from-string (str/concat (json/stringify @entity.config { pretty: true }) "\n")) { key: "config" emit: { success: MCP_WRITTEN, failure: MCP_HOST_FAILED } })
       MCP_WRITTEN -> setup
-        (emit MCP_SETUP_RUN { stage: "setup", argv: ["orb", "list", "--global"] })
+        (emit MCP_SETUP_RUN { stage: "setup", argv: ["list", "--global"] })
     }
 
     state setup {
@@ -194,5 +194,5 @@ orbital OrbMcpInstallOrbital {
     }
   }
 
-  page "/orb-mcp-install" as OrbMcpInstallPage -> OrbMcpInstall, ArgsCli, SetupCli
+  page boot as OrbMcpInstallOrbitalStart -> OrbMcpInstall, ArgsCli, SetupCli
 }

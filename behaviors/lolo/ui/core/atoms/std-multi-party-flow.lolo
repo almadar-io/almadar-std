@@ -7,7 +7,7 @@ type PartySpec = { id : string, key : string, name : string, label : string, tit
 orbital MultiPartyFlowOrbital {
     type PartyView = { id : string!, title : string!, description : string, icon : string, actionLabel : string, actionIcon : string, actor : string }
 
-    type AuditEvent = { id : string!, title : string!, description : string, timestamp : string, status : "complete" | "active" | "pending" | "error" }
+    type AuditEvent = { id : string!, title : string!, description : string, timestamp : string | number, status : "complete" | "active" | "pending" | "error" }
 
     type FlowLoaded = Event { data : [ObjectSpec] } "Fired when flow context finishes loading"
 
@@ -37,7 +37,7 @@ orbital MultiPartyFlowOrbital {
     errorMessage : string @description "A textual description of an error condition." @synonyms "error, error message, problem, issue" = ""
   }
 
-  trait MultiPartyTransaction -> @rebindable MultiPartyView [interaction, instance, multi-party] {
+  trait MultiPartyTransaction -> @rebindable MultiPartyView [optimistic] {
     initial: loading
 
     state loading {

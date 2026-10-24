@@ -1,0 +1,24 @@
+app orb-parse-spec [
+  version: "1.0.0",
+  inbound: ["cli-parse"],
+  description: "Design contract for `orb parse <FILE>` (port of orbital-cli commands/parse.rs parse_schema). PARSE_START { path } reads the file (a relative path from the directory the command runs in), lowers it with program/read and answers PARSE_ANSWERED { status: 200, body } with the summary: `Parsing schema: <path>`, a blank line, `Schema: <name>`, `Version:` and `Description:` when present, a blank line, `Orbitals (N):` and per orbital its name, entity, Fields, Traits and, when declared, Pages. An unreadable or unlowerable file answers status 500 with body `Parsing schema: <path>` and stderr `Error: <reason>`; no file, two files or an unknown flag answers the usage (status 400, exit 2)."
+]
+
+orbital OrbParseSpec {
+  expects trait OrbParse {
+    state ready
+    state parsing
+    state working
+    emits {
+      PARSE_ANSWERED { status : number!  body : string!  stderr : string }
+    }
+  }
+  expects trait ParseEngine {
+    state idle
+    state reading
+    emits {
+      PARSE_ANSWERED { status : number!  body : string!  stderr : string }
+    }
+  }
+  expects page "/orb-parse" -> OrbParse
+}

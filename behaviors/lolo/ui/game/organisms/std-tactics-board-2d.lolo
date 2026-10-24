@@ -32,11 +32,11 @@ orbital TacticsBoard2DOrbital {
     y : number
     z : number
     team : string
-    health : number
+    health : number!
     maxHealth : number
     unitType : string
     name : string
-    modelUrl : Asset!
+    modelUrl : Asset
     assetKey : string
   }
   type Tile = {
@@ -177,7 +177,7 @@ orbital TacticsBoard2DOrbital {
       MOVE { unitId : string, x : number, y : number }
       ATTACK { targetId : string }
       AI_TURN { turn : number }
-      SPAWN { id : string, x : number, y : number, team : string, health : number, maxHealth : number, unitType : string }
+      SPAWN { id : string, x : number, y : number, team : string, health : number!, maxHealth : number, unitType : string }
       HEAL { team : string, amount : number }
       PlayerIntent.AI_TURN -> AI_TURN
     }
@@ -227,7 +227,7 @@ orbital TacticsBoard2DOrbital {
     }
   }
 
-  trait PlayerIntent -> GameState [interaction, instance] {
+  trait PlayerIntent -> GameState [client] {
     initial: playing
 
     state playing {

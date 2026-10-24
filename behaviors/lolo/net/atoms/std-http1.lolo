@@ -10,6 +10,13 @@ type Http1Reason = { status : number!, text : string! }
 type Http1Conn = { sock : number!, key : string!, peer : string!, buf : bytes!, headLen : number!, need : number!, refuse : number!, method : string!, path : string!, query : string!, headers : [Http1Header]!, te : boolean!, dec : bytes!, dstate : string!, phase : string!, keepAlive : boolean!, http10 : boolean!, chunked : boolean!, served : number!, idle : number!, sends : number! }
 
 orbital Http1Orbital {
+  config {
+    listenHost : string = "127.0.0.1"
+      @description "The address the HTTP endpoint binds; the Http1 trait's host knob follows it."
+    listenPort : number = 3000
+      @description "The port the HTTP endpoint binds."
+  }
+
   entity Http1Server [runtime] {
     id : string!
     host : string @description "The address the stream is bound to." = ""
@@ -18,15 +25,15 @@ orbital Http1Orbital {
     @invariant (>= @entity.port 0)
   }
 
-  trait Http1 -> Http1Server [integration, instance] {
+  trait Http1 -> Http1Server [optimistic] {
     initial: booting
 
     config {
-      host : string = "127.0.0.1"
+      host : string = @config.listenHost
         @label "Host"
         @description "The address os/tcp-listen binds; a literal knob because the grant is checked against it."
         @tier "infra"
-      port : number = 3000
+      port : number = @config.listenPort
         @label "Port"
         @description "The port os/tcp-listen binds; a literal knob because the grant is checked against it."
         @tier "infra"
@@ -601,5 +608,5 @@ orbital Http1Orbital {
     }
   }
 
-  page "/http1" as Http1Page -> Http1
+  page http { host: @config.listenHost, port: @config.listenPort, path: "/" } as Http1Endpoint -> Http1
 }

@@ -80,7 +80,7 @@ orbital DependencyAuditOrbital {
     config { commands: ["python3"] }
   }
 
-  trait DependencyAuditor -> AuditRun [integration, instance] {
+  trait DependencyAuditor -> AuditRun [optimistic] {
     initial: idle
 
     state idle {
@@ -279,7 +279,7 @@ orbital DependencyAuditOrbital {
         (emit AUD_NODE_OUTDATED { })
       AUD_RAN -> auditing when (and (= @payload.stage "audit") (or (= @payload.exitCode 0) (== (object/get (json/parse @payload.stdout NodeAuditJson) "advisories") null)) (!= (object/get (json/parse @payload.stdout NodeAuditJson) "vulnerabilities") null))
         (set @entity.vulns (array/flatten (array/map (array/concat (array/map (array/sort (array/map (array/filter (array/range 0 (array/len (object/keys (object/get (json/parse @payload.stdout NodeAuditJson) "vulnerabilities")))) (fn i (validate/pattern (array/nth (object/keys (object/get (json/parse @payload.stdout NodeAuditJson) "vulnerabilities")) @i) "^(0|[1-9][0-9]*)$"))) (fn i { i: @i, n: (str/to-number (array/nth (object/keys (object/get (json/parse @payload.stdout NodeAuditJson) "vulnerabilities")) @i)) })) "n") (fn x @x.i)) (array/filter (array/range 0 (array/len (object/keys (object/get (json/parse @payload.stdout NodeAuditJson) "vulnerabilities")))) (fn i (not (validate/pattern (array/nth (object/keys (object/get (json/parse @payload.stdout NodeAuditJson) "vulnerabilities")) @i) "^(0|[1-9][0-9]*)$"))))) (fn i (let ((e (array/nth (object/values (object/get (json/parse @payload.stdout NodeAuditJson) "vulnerabilities")) @i)))
-                  (array/map (array/filter @e.via (fn x (str/startsWith (json/stringify @x) "{"))) (fn x (let ((a (json/parse (json/stringify @x) NpmAdvisory)) (base (object/get { critical: 9, high: 7.5, moderate: 5, low: 2, info: 0 } @e.severity)))
+                  (array/map (array/filter (or @e.via []) (fn x (str/startsWith (json/stringify @x) "{"))) (fn x (let ((a (json/parse (json/stringify @x) NpmAdvisory)) (base (object/get { critical: 9, high: 7.5, moderate: 5, low: 2, info: 0 } @e.severity)))
                     (let ((ghsa (if (str/startsWith (or (array/last (str/split (or @a.url "") "/")) "") "GHSA-") (array/last (str/split @a.url "/")) null)))
                       { id: (or @ghsa (str/concat "NPM-" @a.source)), title: @a.title, description: "", severity: @a.severity, score: (if (> (or @a.cvss.score 0) 0) @a.cvss.score (if (or (== @base null) (== @base 0)) 5 @base)), package: @a.name, affectedVersions: @a.range, patchedVersion: null, cve: null, ghsa: @ghsa, cwe: (if (== @a.cwe null) null (array/first @a.cwe)), references: (if (and (!= @a.url null) (!= @a.url "")) [@a.url] (array/take [(str/concat "" "")] 0)), exploitAvailable: (or (= @a.severity "critical") (= @a.severity "high")), fixAvailable: (!= @e.fixAvailable false), dependencyPath: [@a.name], ecosystem: "node" })))))))))
         (emit AUD_NODE_OUTDATED { })
@@ -541,7 +541,7 @@ orbital DependencyAuditOrbital {
     }
 
     listens {
-      AUDIT -> external {
+      AUDIT -> input {
         projects : [string]!
         failOn : string
         includeDev : boolean
@@ -578,5 +578,5 @@ orbital DependencyAuditOrbital {
     }
   }
 
-  page "/dependency-audit" as DependencyAuditPage -> DependencyAuditor, PnpmCli, NpmCli, NodeCli, SafetyCli, PipCli, PythonCli
+  page boot as DependencyAuditOrbitalStart -> DependencyAuditor, PnpmCli, NpmCli, NodeCli, SafetyCli, PipCli, PythonCli
 }

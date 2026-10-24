@@ -1,0 +1,262 @@
+app std-orb-evaluate [
+  version: "1.0.0",
+  inbound: ["cli-evaluate"],
+  env: ["ALMADAR_PERSONA"],
+  stdio: [in],
+  description: "std-orb-evaluate — the `orb evaluate [EXPR] [--entity JSON] [--payload JSON] [--output value|json|pretty]` command (spec/cli/orb-evaluate.lolo; port of orbital-cli utils/evaluate.rs evaluate_sexpr). The expression is the JSON argument or, when absent, standard input; it is evaluated by std-orb-eval (the kernel's evaluator, the mechanism `orb mcp`'s evaluate tool uses) with @entity and @payload bound from the JSON flags and @user from ALMADAR_PERSONA (unset: null; a JSON user object with an id or uid: that user; a bare id or role: refused, as the Rust probe holds no roster). --output value (the default, and any other word) prints a string bare and anything else as JSON, json prints compact JSON and pretty prints indented JSON. Refusals answer status 500 on stderr `Error: <reason>` (exit 1): no expression, a bad --entity, --payload or expression JSON, a bad persona, an evaluation failure. Divergences recorded in the std ledger: JSON parse reasons name the failing flag but not serde's position, an evaluation failure carries the host's program/step reason, @entity also holds an `id`, and numbers print as the kernel renders them."
+]
+uses Spec from "almadar-std/orb-evaluate"
+uses Args from "std/behaviors/std-args"
+uses Eval from "std/behaviors/std-orb-eval"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
+type EvaluateJson = string | number | boolean | [EvaluateJson?] | Map string EvaluateJson?
+type EvaluateObject = Map string EvaluateJson?
+
+orbital OrbEvaluateOrbital {
+  entity EvaluateRun [runtime] {
+    id : string!
+    text : string = ""
+    source : bytes = ""
+    entityText : string = ""
+    hasEntity : boolean = false
+    payloadText : string = ""
+    hasPayload : boolean = false
+    output : string = "value"
+  }
+
+  trait ArgsCli = Args.traits.ArgsParser {
+    listens {
+      OrbEvaluate.EVALUATE_ARGS_PARSE -> ARGS_PARSE
+    }
+  }
+
+  trait ExprEngine = Eval.traits.ExprEvaluator {
+    listens {
+      EvaluateEngine.EVALUATE_EVAL -> EXPR_EVAL_START
+    }
+  }
+
+  trait OrbEvaluate -> EvaluateRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      EVALUATE_CALLED -> parsing
+        (emit EVALUATE_ARGS_PARSE { stage: "evaluate" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "entity" aliases: [] takesValue: true repeatable: false }, { name: "payload" aliases: [] takesValue: true repeatable: false }, { name: "output" aliases: [] takesValue: true repeatable: false }] })
+    }
+
+    state parsing {
+      INIT -> parsing
+      EVALUATE_ARGS_DONE -> ready when (> (array/len @payload.errors) 0)
+        (emit EVALUATE_ANSWERED { status: 400, body: "", stderr: (str/concat "error: " (array/first @payload.errors) "\n\nUsage: orb evaluate [OPTIONS] [EXPR]\n\nFor more information, try '--help'.") })
+      EVALUATE_ARGS_DONE -> ready when (and (= (array/len @payload.errors) 0) (> (array/len @payload.positionals) 1))
+        (emit EVALUATE_ANSWERED { status: 400, body: "", stderr: (str/concat "error: unexpected argument '" (array/nth @payload.positionals 1) "' found\n\nUsage: orb evaluate [OPTIONS] [EXPR]\n\nFor more information, try '--help'.") })
+      EVALUATE_ARGS_DONE -> working when (and (= (array/len @payload.errors) 0) (<= (array/len @payload.positionals) 1))
+        (emit EVALUATE_START { expr: (str/default (array/first @payload.positionals) ""), hasExpr: (= (array/len @payload.positionals) 1), entity: (str/default (array/first (or (object/get @payload.flags "entity") [""])) ""), hasEntity: (!= (object/get @payload.flags "entity") null), payload: (str/default (array/first (or (object/get @payload.flags "payload") [""])) ""), hasPayload: (!= (object/get @payload.flags "payload") null), output: (str/default (array/first (or (object/get @payload.flags "output") ["value"])) "value") })
+    }
+
+    state working {
+      INIT -> working
+      EVALUATE_DONE -> ready
+        (emit EVALUATE_ANSWERED { status: @payload.status, body: @payload.body, stderr: @payload.stderr })
+    }
+
+    emits {
+      EVALUATE_ANSWERED -> internal {
+        status : number!
+        body : string!
+        stderr : string
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      EVALUATE_ARGS_PARSE {
+        stage : string!
+        argv : [string]!
+        flags : [ArgFlag]!
+      }
+        @description "Internal: parse the call's words."
+        @tier "internal"
+      EVALUATE_START {
+        expr : string!
+        hasExpr : boolean!
+        entity : string!
+        hasEntity : boolean!
+        payload : string!
+        hasPayload : boolean!
+        output : string!
+      }
+        @description "Internal: evaluate the expression with the bindings."
+        @tier "internal"
+    }
+
+    listens {
+      EVALUATE_CALLED -> inbound "cli-evaluate" answers EVALUATE_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb evaluate`."
+        @synonyms "orb evaluate, evaluate an s-expression, probe an expression with entity and payload"
+      EVALUATE_ARGS_DONE {
+        stage : string!
+        flags : Map string [string]!
+        positionals : [string]!
+        errors : [string]!
+        words : [string]!
+      }
+        @description "std-args's ARGS_PARSED."
+      ArgsCli.ARGS_PARSED -> EVALUATE_ARGS_DONE
+      EvaluateEngine.EVALUATE_ANSWERED -> EVALUATE_DONE
+      EVALUATE_DONE { status : number!  body : string!  stderr : string }
+        @description "Internal: the engine's answer, relayed to the hook by its handler."
+        @tier "internal"
+    }
+  }
+
+  trait EvaluateEngine -> EvaluateRun [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      EVALUATE_START -> checking when @payload.hasExpr
+        (set @entity.text @payload.expr)
+        (set @entity.entityText @payload.entity)
+        (set @entity.hasEntity @payload.hasEntity)
+        (set @entity.payloadText @payload.payload)
+        (set @entity.hasPayload @payload.hasPayload)
+        (set @entity.output @payload.output)
+        (emit EVALUATE_CHECK { })
+      EVALUATE_START -> reading when (not @payload.hasExpr)
+        (set @entity.source (bytes/from-string ""))
+        (set @entity.entityText @payload.entity)
+        (set @entity.hasEntity @payload.hasEntity)
+        (set @entity.payloadText @payload.payload)
+        (set @entity.hasPayload @payload.hasPayload)
+        (set @entity.output @payload.output)
+        (os/stdin-read 65536 { key: "stdin" emit: { success: EVALUATE_CHUNK, failure: EVALUATE_FAILED } })
+    }
+
+    state reading {
+      INIT -> reading
+      EVALUATE_FAILED -> idle
+        (emit EVALUATE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " @payload.error) })
+      EVALUATE_CHUNK -> reading when (not @payload.eof)
+        (set @entity.source (bytes/concat [@entity.source @payload.data]))
+        (os/stdin-read 65536 { key: "stdin" emit: { success: EVALUATE_CHUNK, failure: EVALUATE_FAILED } })
+      EVALUATE_CHUNK -> checking when @payload.eof
+        (set @entity.text (bytes/to-string (bytes/concat [@entity.source @payload.data])))
+        (emit EVALUATE_CHECK { })
+    }
+
+    state checking {
+      INIT -> checking
+      EVALUATE_CHECK -> idle when (= (str/trim @entity.text) "")
+        (emit EVALUATE_ANSWERED { status: 500, body: "", stderr: "Error: No S-expression provided. Pass it as an argument or via stdin." })
+      EVALUATE_CHECK -> idle when (and (!= (str/trim @entity.text) "") @entity.hasEntity (not (json/valid @entity.entityText)))
+        (emit EVALUATE_ANSWERED { status: 500, body: "", stderr: "Error: --entity JSON parse error: invalid JSON" })
+      EVALUATE_CHECK -> idle when (and (!= (str/trim @entity.text) "") (or (not @entity.hasEntity) (json/valid @entity.entityText)) @entity.hasPayload (not (json/valid @entity.payloadText)))
+        (emit EVALUATE_ANSWERED { status: 500, body: "", stderr: "Error: --payload JSON parse error: invalid JSON" })
+      EVALUATE_CHECK -> idle when (and (!= (str/trim @entity.text) "") (or (not @entity.hasEntity) (json/valid @entity.entityText)) (or (not @entity.hasPayload) (json/valid @entity.payloadText)) (not (json/valid (str/trim @entity.text))))
+        (emit EVALUATE_ANSWERED { status: 500, body: "", stderr: "Error: JSON parse error: invalid JSON" })
+      EVALUATE_CHECK -> persona when (and (!= (str/trim @entity.text) "") (or (not @entity.hasEntity) (json/valid @entity.entityText)) (or (not @entity.hasPayload) (json/valid @entity.payloadText)) (json/valid (str/trim @entity.text)))
+        (os/getenv "ALMADAR_PERSONA" { emit: { success: EVALUATE_ENV, failure: EVALUATE_FAILED } })
+      EVALUATE_FAILED -> idle
+        (emit EVALUATE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " @payload.error) })
+    }
+
+    state persona {
+      INIT -> persona
+      EVALUATE_FAILED -> idle
+        (emit EVALUATE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " @payload.error) })
+      EVALUATE_ENV -> evaluating when (= (str/trim (str/default @payload.value "")) "")
+        (emit EVALUATE_EVAL { expr: (json/parse (str/trim @entity.text) EvaluateJson), entity: (if @entity.hasEntity (json/parse @entity.entityText EvaluateObject) (json/parse "{}" EvaluateObject)), payload: (if @entity.hasPayload (json/parse @entity.payloadText EvaluateObject) (json/parse "{}" EvaluateObject)), hasViewer: true })
+      EVALUATE_ENV -> idle when (and (str/startsWith (str/trim (str/default @payload.value "")) "{") (not (json/valid (str/trim (str/default @payload.value "")))))
+        (emit EVALUATE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: Persona is not valid JSON: " (str/trim (str/default @payload.value ""))) })
+      EVALUATE_ENV -> idle when (and (str/startsWith (str/trim (str/default @payload.value "")) "{") (json/valid (str/trim (str/default @payload.value ""))) (not (let ((u (json/parse (str/trim (str/default @payload.value "")) EvaluateObject))) (let ((idv (if (!= (object/get @u "id") null) (object/get @u "id") (object/get @u "uid")))) (and (validate/string @idv) (!= @idv ""))))))
+        (emit EVALUATE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: Persona needs an \"id\" (or \"uid\"): " (str/trim (str/default @payload.value ""))) })
+      EVALUATE_ENV -> evaluating when (and (str/startsWith (str/trim (str/default @payload.value "")) "{") (json/valid (str/trim (str/default @payload.value ""))) (let ((u (json/parse (str/trim (str/default @payload.value "")) EvaluateObject))) (let ((idv (if (!= (object/get @u "id") null) (object/get @u "id") (object/get @u "uid")))) (and (validate/string @idv) (!= @idv "")))))
+        (emit EVALUATE_EVAL { expr: (json/parse (str/trim @entity.text) EvaluateJson), entity: (if @entity.hasEntity (json/parse @entity.entityText EvaluateObject) (json/parse "{}" EvaluateObject)), payload: (if @entity.hasPayload (json/parse @entity.payloadText EvaluateObject) (json/parse "{}" EvaluateObject)), hasViewer: true, viewer: (json/parse (str/trim (str/default @payload.value "")) EvaluateObject) })
+      EVALUATE_ENV -> idle when (and (!= (str/trim (str/default @payload.value "")) "") (not (str/startsWith (str/trim (str/default @payload.value "")) "{")))
+        (emit EVALUATE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: Persona \"" (str/trim (str/default @payload.value "")) "\" is a bare id/role, which resolves against an app's declared [identity] roster — this schema-less probe accepts only the JSON persona form (e.g. {\"id\":\"member-1\",\"role\":\"member\"}).") })
+    }
+
+    state evaluating {
+      INIT -> evaluating
+      EVALUATE_VALUE -> idle when (= @entity.output "json")
+        (emit EVALUATE_ANSWERED { status: 200, body: (json/stringify @payload.value) })
+      EVALUATE_VALUE -> idle when (= @entity.output "pretty")
+        (emit EVALUATE_ANSWERED { status: 200, body: (json/stringify @payload.value { pretty: true }) })
+      EVALUATE_VALUE -> idle when (and (!= @entity.output "json") (!= @entity.output "pretty") (str/startsWith (json/stringify @payload.value) "\""))
+        (emit EVALUATE_ANSWERED { status: 200, body: (str/concat @payload.value) })
+      EVALUATE_VALUE -> idle when (and (!= @entity.output "json") (!= @entity.output "pretty") (not (str/startsWith (json/stringify @payload.value) "\"")))
+        (emit EVALUATE_ANSWERED { status: 200, body: (json/stringify @payload.value) })
+      EVALUATE_REFUSED -> idle
+        (emit EVALUATE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: Evaluation error: " @payload.error) })
+    }
+
+    emits {
+      EVALUATE_ANSWERED -> external {
+        status : number!
+        body : string!
+        stderr : string
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      EVALUATE_CHECK {
+      }
+        @description "Internal: check the expression and the JSON flags."
+        @tier "internal"
+      EVALUATE_CHUNK {
+        data : bytes!
+        eof : boolean!
+      }
+        @description "os/stdin-read: one chunk of standard input."
+        @tier "internal"
+      EVALUATE_ENV {
+        value : string
+      }
+        @description "os/getenv: ALMADAR_PERSONA."
+        @tier "internal"
+      EVALUATE_FAILED {
+        error : string
+      }
+        @description "Standard input or the environment could not be read."
+        @tier "internal"
+      EVALUATE_EVAL {
+        expr : EvaluateJson
+        entity : Map string EvaluateJson?
+        payload : Map string EvaluateJson?
+        hasViewer : boolean!
+        viewer : Map string EvaluateJson?
+      }
+        @description "Internal: hand the expression and bindings to std-orb-eval."
+        @tier "internal"
+    }
+
+    listens {
+      EVALUATE_START {
+        expr : string!
+        hasExpr : boolean!
+        entity : string!
+        hasEntity : boolean!
+        payload : string!
+        hasPayload : boolean!
+        output : string!
+      }
+        @description "Evaluate the expression with the bindings."
+      OrbEvaluate.EVALUATE_START -> EVALUATE_START
+      EVALUATE_VALUE {
+        value : EvaluateJson
+      }
+        @description "std-orb-eval's EXPR_EVAL_DONE."
+      EVALUATE_REFUSED {
+        error : string
+      }
+        @description "std-orb-eval's EXPR_EVAL_FAILED."
+      ExprEngine.EXPR_EVAL_DONE -> EVALUATE_VALUE
+      ExprEngine.EXPR_EVAL_FAILED -> EVALUATE_REFUSED
+    }
+  }
+
+  page "/orb-evaluate" as OrbEvaluatePage -> OrbEvaluate, ArgsCli, ExprEngine, EvaluateEngine
+}

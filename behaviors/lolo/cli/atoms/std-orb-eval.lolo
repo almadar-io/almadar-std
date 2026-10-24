@@ -1,0 +1,70 @@
+app std-orb-eval [
+  version: "1.0.0",
+  description: "std-orb-eval — evaluate one S-expression with the language's evaluator. EXPR_EVAL_START { expr, entity?, payload?, hasViewer, viewer? } builds a one-transition program with quasiquote, plays it through program/step with the given @entity and @payload (and @user when hasViewer), and answers EXPR_EVAL_DONE { value } or EXPR_EVAL_FAILED { error }. The evaluator is the kernel's, so the answer is what any host computes. Composed by std-orb-evaluate (`orb evaluate`) and std-orb-mcp (the evaluate tool)."
+]
+
+type EvalJson = string | number | boolean | [EvalJson?] | Map string EvalJson?
+type EvalEmitted = { payload : Map string EvalJson? }
+type EvalPlayedResult = { emitted : [EvalEmitted]? }
+type EvalPlayed = { result : EvalPlayedResult? }
+
+orbital OrbEvalOrbital {
+  entity EvalRun [runtime] {
+    id : string!
+  }
+
+  trait ExprEvaluator -> EvalRun [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      EXPR_EVAL_START -> evaluating
+        (program/step (quasiquote { name: "evalprog" version: "1.0.0" orbitals: [{ name: "EvalOrbital" entity: { name: "EvalRow" persistence: "runtime" fields: [{ name: "id" type: "string" required: true }] } traits: [{ name: "Eval" category: "integration" linkedEntity: "EvalRow" emits: [{ event: "EVALUATED", payloadSchema: [{ name: "value", type: "string" }] }] stateMachine: { states: [{ name: "idle" isInitial: true }] events: [{ key: "INIT" name: "Initialize" }, { key: "EVAL" name: "Eval" }] transitions: [{ from: "idle" to: "idle" event: "INIT" }, { from: "idle" to: "idle" event: "EVAL" effects: [["emit", "EVALUATED", { value: (unquote @payload.expr) }]] }] } scope: "instance" }] pages: [{ name: "Eval" path: "/eval" traits: [{ ref: "Eval" }] }] }] schemaVersion: 1 }) [(object/merge { orbital: "EvalOrbital" trait: "Eval" from: "idle" event: "EVAL" payload: (or @payload.payload (json/parse "{}" EvalJson)) entity: (object/merge { id: "e" } (or @payload.entity (json/parse "{}" EvalJson))) } (if @payload.hasViewer { viewer: @payload.viewer } (json/parse "{}" EvalJson)))] { emit: { success: EXPR_EVAL_STEPPED, failure: EXPR_EVAL_REFUSED } })
+    }
+
+    state evaluating {
+      INIT -> evaluating
+      EXPR_EVAL_STEPPED -> idle
+        (emit EXPR_EVAL_DONE { value: (object/get (object/get (array/first (object/get (object/get (array/first @payload.result) "result") "emitted")) "payload") "value") })
+      EXPR_EVAL_REFUSED -> idle
+        (emit EXPR_EVAL_FAILED { error: @payload.error })
+    }
+
+    emits {
+      EXPR_EVAL_DONE -> external {
+        value : EvalJson
+      }
+        @description "The expression's value."
+        @tier "primary"
+      EXPR_EVAL_FAILED -> external {
+        error : string
+      }
+        @description "The expression could not be evaluated."
+        @tier "primary"
+      EXPR_EVAL_STEPPED {
+        result : [EvalPlayed]
+      }
+        @description "program/step: the played request."
+        @tier "internal"
+      EXPR_EVAL_REFUSED {
+        error : string
+      }
+        @description "program/step refused the request."
+        @tier "internal"
+    }
+
+    listens {
+      EXPR_EVAL_START {
+        expr : EvalJson
+        entity : Map string EvalJson
+        payload : Map string EvalJson
+        hasViewer : boolean!
+        viewer : Map string EvalJson
+      }
+        @description "Evaluate the expression with the bindings."
+        @synonyms "evaluate an s-expression, run an expression, expression value"
+    }
+  }
+
+  page boot as OrbEvalStart -> ExprEvaluator
+}

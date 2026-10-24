@@ -30,7 +30,7 @@ orbital RiggerOrbital {
     id : string!
   }
 
-  trait RiggerClient -> RiggerCall [integration, instance] {
+  trait RiggerClient -> RiggerCall [client] {
     initial: idle
 
     state idle {
@@ -532,16 +532,16 @@ orbital RiggerOrbital {
     }
 
     listens {
-      RIGGER_HEALTH -> external { }
+      RIGGER_HEALTH -> input { }
         @description "Probe the local rigger service's liveness."
         @synonyms "health check, is the rigger up, ping rigger"
-      RIGGER_BUILD_MESH -> external {
+      RIGGER_BUILD_MESH -> input {
         imagePath : string!
         rig : RiggerRig!
       }
         @description "Build a rigged mesh bundle from a source image and a rig."
         @synonyms "build mesh, rig mesh, skin mesh"
-      RIGGER_RENDER -> external {
+      RIGGER_RENDER -> input {
         imagePath : string!
         rig : RiggerRig!
         preset : string!
@@ -551,35 +551,35 @@ orbital RiggerOrbital {
       }
         @description "Render a preset's frames for a rig over a source image; mode is mesh (default) or cutout, supersample applies to cutout."
         @synonyms "render frames, render preset, render animation"
-      RIGGER_LIST_PRESETS -> external { }
+      RIGGER_LIST_PRESETS -> input { }
         @description "List the animation presets the rigger service offers."
         @synonyms "list presets, animation presets, preset clips"
-      RIGGER_LOAD_RIG -> external {
+      RIGGER_LOAD_RIG -> input {
         rigPath : string!
       }
         @description "Load a rig file and resolve its cloneOf parts to concrete box and pivot geometry."
         @synonyms "load rig, open rig, read rig file"
-      RIGGER_SAVE_RIG -> external {
+      RIGGER_SAVE_RIG -> input {
         rigPath : string!
         rig : RiggerRig!
       }
         @description "Save a rig file; the rigger validates it and rejects a malformed part."
         @synonyms "save rig, write rig file"
-      RIGGER_OWNERSHIP -> external {
+      RIGGER_OWNERSHIP -> input {
         imagePath : string!
         rig : RiggerRig!
         outPath : string!
       }
         @description "Render the per-part pixel ownership map of a rig over a source image."
         @synonyms "ownership map, pixel ownership, part coverage"
-      RIGGER_BUILD_LAYERS -> external {
+      RIGGER_BUILD_LAYERS -> input {
         imagePath : string!
         rig : RiggerRig!
         outDir : string!
       }
         @description "Cut the per-part cutout layer images from a source image and a rig."
         @synonyms "build layers, cut layers, cutout layers"
-      RIGGER_POSE -> external {
+      RIGGER_POSE -> input {
         imagePath : string!
         rig : RiggerRig!
         roles : Map string string!
@@ -588,7 +588,7 @@ orbital RiggerOrbital {
       }
         @description "Sample a preset into per-frame, per-part transforms for a rig; roles maps each part to its bone role, overrides adjusts parts over the preset."
         @synonyms "pose rig, sample pose, animation pose"
-      RIGGER_GENERATE -> external {
+      RIGGER_GENERATE -> input {
         model : string!
         prompt : string!
         seed : number

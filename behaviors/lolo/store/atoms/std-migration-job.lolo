@@ -57,7 +57,7 @@ orbital MigrationJobOrbital {
     targetRelations : [TargetRelation] @description "Snapshot of the declared relationships between target entities, for hierarchy edges." = []
   }
 
-  trait MigrationJobLifecycle -> @rebindable MigrationJob [lifecycle, instance] {
+  trait MigrationJobLifecycle -> @rebindable MigrationJob {
     initial: idle
 
     state idle {
@@ -149,26 +149,26 @@ orbital MigrationJobOrbital {
         })
         (emit MIGRATION_FAILED { error: @entity.error })
         (notify error "Couldn't list the source documents: no migration profile is stored for this source.")
-      MIGRATION_SOURCE_NEXT -> fetching when (and (< ?index (array/len @entity.profile.endpoints)) (= (object/get (array/nth (object/get @entity.profile "endpoints") ?index) "method") "GET"))
+      MIGRATION_SOURCE_NEXT -> fetching when (and (< ?index (array/len @entity.profile.endpoints)) (= (object/get (array/nth (object/get @entity.profile "endpoints" []) ?index) "method") "GET"))
         (http
           GET
           @config.sourceOrigin
-          (object/get (array/nth (object/get @entity.profile "endpoints") ?index) "path")
+          (object/get (array/nth (object/get @entity.profile "endpoints" []) ?index) "path")
           {
-            query: (object/get (array/nth (object/get @entity.profile "endpoints") ?index) "params"),
-            headers: (object/get (array/nth (object/get @entity.profile "endpoints") ?index) "headers"),
+            query: (object/get (array/nth (object/get @entity.profile "endpoints" []) ?index) "params"),
+            headers: (object/get (array/nth (object/get @entity.profile "endpoints" []) ?index) "headers" {}),
             auth: { scheme: bearer, credential: @config.connectionRef },
             timeoutMs: @config.timeoutMs
           }
           { emit: { success: MIGRATION_SOURCE_REPLIED, failure: MIGRATION_SOURCE_UNREACHABLE } })
-      MIGRATION_SOURCE_NEXT -> fetching when (and (< ?index (array/len @entity.profile.endpoints)) (= (object/get (array/nth (object/get @entity.profile "endpoints") ?index) "method") "POST"))
+      MIGRATION_SOURCE_NEXT -> fetching when (and (< ?index (array/len @entity.profile.endpoints)) (= (object/get (array/nth (object/get @entity.profile "endpoints" []) ?index) "method") "POST"))
         (http
           POST
           @config.sourceOrigin
-          (object/get (array/nth (object/get @entity.profile "endpoints") ?index) "path")
+          (object/get (array/nth (object/get @entity.profile "endpoints" []) ?index) "path")
           {
-            query: (object/get (array/nth (object/get @entity.profile "endpoints") ?index) "params"),
-            headers: (object/get (array/nth (object/get @entity.profile "endpoints") ?index) "headers"),
+            query: (object/get (array/nth (object/get @entity.profile "endpoints" []) ?index) "params"),
+            headers: (object/get (array/nth (object/get @entity.profile "endpoints" []) ?index) "headers" {}),
             auth: { scheme: bearer, credential: @config.connectionRef },
             timeoutMs: @config.timeoutMs
           }
@@ -178,14 +178,14 @@ orbital MigrationJobOrbital {
           (let ((records (if
                           (=
                             (object/get
-                              (array/nth (object/get @entity.profile "endpoints") @entity.endpointIndex)
+                              (array/nth (object/get @entity.profile "endpoints" []) @entity.endpointIndex)
                               "recordsPath")
                             "")
                           (json/parse ?body SourceRecords)
                           (object/get
                             (json/parse ?body SourceEnvelope)
                             (object/get
-                              (array/nth (object/get @entity.profile "endpoints") @entity.endpointIndex)
+                              (array/nth (object/get @entity.profile "endpoints" []) @entity.endpointIndex)
                               "recordsPath"))))
                 (titleKey (object/get (object/get @entity.profile "shaping") "title"))
                 (contentKey (object/get (object/get @entity.profile "shaping") "content")))
@@ -206,7 +206,7 @@ orbital MigrationJobOrbital {
                   {
                     id: (str/concat
                           (object/get
-                            (array/nth (object/get @entity.profile "endpoints") @entity.endpointIndex)
+                            (array/nth (object/get @entity.profile "endpoints" []) @entity.endpointIndex)
                             "name")
                           ":"
                           @i),
@@ -250,7 +250,7 @@ orbital MigrationJobOrbital {
             adapter: (object/get @entity.profile "adapter"),
             documents: (array/map
                          @entity.documents
-                         (fn d { ref: (object/get @d "id"), raw: (object/get @d "content") }))
+                         (fn d { ref: (object/get @d "id" ""), raw: (object/get @d "content" "") }))
           })
       MIGRATION_SOURCE_UNREACHABLE -> failed
         (set @entity.error ?error)
@@ -387,7 +387,7 @@ orbital MigrationJobOrbital {
                       (=
                         (array/len
                           (array/filter
-                            (object/get @entity.profile "targetRelations")
+                            (object/get @entity.profile "targetRelations" [])
                             (fn r
                               (and
                                 (= (object/get @r "from") (object/get @parent "targetEntity"))
@@ -411,7 +411,7 @@ orbital MigrationJobOrbital {
               @entity.units
               (fn u
                 (let ((ent (array/find
-                            (object/get @entity.profile "targetEntities")
+                            (object/get @entity.profile "targetEntities" [])
                             (fn e (= (object/get @e "name") (object/get @u "targetEntity"))))))
                   (if
                     (= @ent null)
@@ -419,7 +419,6 @@ orbital MigrationJobOrbital {
                      {
                        ref: (object/get @u "ref"),
                        code: "unknown_entity",
-                       field: null,
                        message: (str/concat "unknown target entity '" (object/get @u "targetEntity") "'")
                      }
                     ]
@@ -429,7 +428,7 @@ orbital MigrationJobOrbital {
                           (object/keys (object/get @u "fields"))
                           (fn name
                             (let ((fd (array/find
-                                       (object/get @ent "fields")
+                                       (object/get @ent "fields" [])
                                        (fn f (= (object/get @f "name") @name))))
                                   (val (object/get
                                         (object/get @u "fields")
@@ -556,11 +555,11 @@ orbital MigrationJobOrbital {
                                                          (if
                                                            (and
                                                              (validate/string @val)
-                                                             (array/includes (object/get @fd "values") @val))
+                                                             (array/includes (object/get @fd "values" []) @val))
                                                            ""
                                                            (str/concat
                                                              "expected one of ["
-                                                             (str/join (object/get @fd "values") ", ")
+                                                             (str/join (object/get @fd "values" []) ", ")
                                                              "]"))
                                                          (if
                                                            (= (object/get @fd "type") "bytes")
@@ -669,7 +668,7 @@ orbital MigrationJobOrbital {
                                     ])))))))
                       (array/map
                         (array/filter
-                          (object/get @ent "fields")
+                          (object/get @ent "fields" [])
                           (fn f
                             (and
                               (object/get @f "required")
@@ -706,7 +705,6 @@ orbital MigrationJobOrbital {
                          {
                            ref: (object/get @u "ref"),
                            code: "dangling_parent_ref",
-                           field: null,
                            message: (str/concat
                                       "parentRef '"
                                       (object/get @u "parentRef")

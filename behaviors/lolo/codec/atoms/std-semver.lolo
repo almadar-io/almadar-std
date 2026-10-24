@@ -29,7 +29,7 @@ orbital SemverOrbital {
     version : string = ""
   }
 
-  trait Semver -> SemverRun [integration, instance] {
+  trait Semver -> SemverRun [client] {
     initial: idle
 
     state idle {
@@ -195,20 +195,20 @@ orbital SemverOrbital {
     }
 
     listens {
-      SEMVER_PARSE -> external {
+      SEMVER_PARSE -> input {
         requestId : string
         version : string!
       }
         @description "Parse this version text."
         @synonyms "parse semver, read version"
-      SEMVER_COMPARE -> external {
+      SEMVER_COMPARE -> input {
         requestId : string
         a : string!
         b : string!
       }
         @description "Compare two versions by semver precedence."
         @synonyms "compare versions, version order"
-      SEMVER_BUMP -> external {
+      SEMVER_BUMP -> input {
         requestId : string
         version : string!
         kind : string!
@@ -216,14 +216,14 @@ orbital SemverOrbital {
       }
         @description "Increment a version: kind major, minor, patch or prerelease, with an optional prerelease identifier."
         @synonyms "next version, increment version"
-      SEMVER_SATISFIES -> external {
+      SEMVER_SATISFIES -> input {
         requestId : string
         version : string!
         range : string!
       }
         @description "Whether the version falls in the range (exact, ^, ~, >=, >, <=, <, *)."
         @synonyms "version in range, range check"
-      SEMVER_MIN -> external {
+      SEMVER_MIN -> input {
         requestId : string
         range : string!
       }
@@ -232,5 +232,5 @@ orbital SemverOrbital {
     }
   }
 
-  page "/semver" -> Semver
+  page boot as SemverOrbitalStart -> Semver
 }

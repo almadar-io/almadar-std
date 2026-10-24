@@ -59,7 +59,7 @@ orbital LearnArrangementOrbital {
     slotShapes : [LearnArrangementShape]
   }
 
-  trait LearnArrangementSim -> @rebindable LearnArrangementScene [interaction, instance] {
+  trait LearnArrangementSim -> @rebindable LearnArrangementScene [client] {
     initial: idle
 
     state idle {
@@ -74,22 +74,21 @@ orbital LearnArrangementOrbital {
         (set @entity.verdict "")
         (let (
             (placedCount (array/len @entity.placedIds))
-            (slotShapes (array/flatten (array/map (array/range @entity.totalItems) (fn i (let (
-                    (placedId (if (< @i @placedCount) (array/nth @entity.placedIds @i) ""))
-                    (filled (!= @placedId ""))
-                    (item (if @filled (array/find @entity.items (fn it (== (object/get @it id) @placedId))) null))
-                    (label (if @filled (object/get @item label) ""))
-                    (correctForSlot (if @filled (== (object/get @item correctPosition) @i) false))
-                    (fillColor (if (not @filled) @config.emptySlotColor (if @entity.checked (if @correctForSlot @config.correctColor @config.incorrectColor) @config.pendingColor)))
-                    (bx (+ @config.slotLeft (* @i @config.slotSpacing)))
-                  )
-                  [
-                    { type: "rect", id: (str/concat "slot-" @i), x: @bx, y: @config.slotY, width: @config.slotWidth, height: @config.slotHeight, tone: @config.slotBorderColor, fillTone: @fillColor, fillStyle: "tint" },
-                    { type: "text", id: (str/concat "slot-label-" @i), x: (+ @bx (/ @config.slotWidth 2)), y: (+ @config.slotY (/ @config.slotHeight 2) 5), text: (if @filled @label (str/concat "" (+ @i 1))), textSize: @config.slotFontSize, align: "center", tone: @config.slotTextColor }
-                  ]
-                )))))
           )
-          (set @entity.slotShapes @slotShapes)
+          (do
+          (set @entity.slotShapes [])
+          (set @entity.slotShapes (array/reduce (array/range @entity.totalItems) @entity.slotShapes (fn acc i (let (
+                (placedId (if (< @i @placedCount) (array/nth @entity.placedIds @i) ""))
+                (filled (!= @placedId ""))
+                (item (if @filled (array/find @entity.items (fn it (== (object/get @it id) @placedId))) null))
+                (label (if @filled (object/get @item label) ""))
+                (correctForSlot (if @filled (== (object/get @item correctPosition) @i) false))
+                (fillColor (if (not @filled) @config.emptySlotColor (if @entity.checked (if @correctForSlot @config.correctColor @config.incorrectColor) @config.pendingColor)))
+                (bx (+ @config.slotLeft (* @i @config.slotSpacing)))
+              )
+              (array/append (array/append @acc { type: "rect", id: (str/concat "slot-" @i), x: @bx, y: @config.slotY, width: @config.slotWidth, height: @config.slotHeight, tone: @config.slotBorderColor, fillTone: @fillColor, fillStyle: "tint" }) { type: "text", id: (str/concat "slot-label-" @i), x: (+ @bx (/ @config.slotWidth 2)), y: (+ @config.slotY (/ @config.slotHeight 2) 5), text: (if @filled @label (str/concat "" (+ @i 1))), textSize: @config.slotFontSize, align: "center", tone: @config.slotTextColor })
+            ))))
+          )
         )
         (render-ui main {
           type: box
@@ -131,22 +130,21 @@ orbital LearnArrangementOrbital {
         (set @entity.verdict "")
         (let (
             (placedCount (array/len @entity.placedIds))
-            (slotShapes (array/flatten (array/map (array/range @entity.totalItems) (fn i (let (
-                    (placedId (if (< @i @placedCount) (array/nth @entity.placedIds @i) ""))
-                    (filled (!= @placedId ""))
-                    (item (if @filled (array/find @entity.items (fn it (== (object/get @it id) @placedId))) null))
-                    (label (if @filled (object/get @item label) ""))
-                    (correctForSlot (if @filled (== (object/get @item correctPosition) @i) false))
-                    (fillColor (if (not @filled) @config.emptySlotColor (if @entity.checked (if @correctForSlot @config.correctColor @config.incorrectColor) @config.pendingColor)))
-                    (bx (+ @config.slotLeft (* @i @config.slotSpacing)))
-                  )
-                  [
-                    { type: "rect", id: (str/concat "slot-" @i), x: @bx, y: @config.slotY, width: @config.slotWidth, height: @config.slotHeight, tone: @config.slotBorderColor, fillTone: @fillColor, fillStyle: "tint" },
-                    { type: "text", id: (str/concat "slot-label-" @i), x: (+ @bx (/ @config.slotWidth 2)), y: (+ @config.slotY (/ @config.slotHeight 2) 5), text: (if @filled @label (str/concat "" (+ @i 1))), textSize: @config.slotFontSize, align: "center", tone: @config.slotTextColor }
-                  ]
-                )))))
           )
-          (set @entity.slotShapes @slotShapes)
+          (do
+          (set @entity.slotShapes [])
+          (set @entity.slotShapes (array/reduce (array/range @entity.totalItems) @entity.slotShapes (fn acc i (let (
+                (placedId (if (< @i @placedCount) (array/nth @entity.placedIds @i) ""))
+                (filled (!= @placedId ""))
+                (item (if @filled (array/find @entity.items (fn it (== (object/get @it id) @placedId))) null))
+                (label (if @filled (object/get @item label) ""))
+                (correctForSlot (if @filled (== (object/get @item correctPosition) @i) false))
+                (fillColor (if (not @filled) @config.emptySlotColor (if @entity.checked (if @correctForSlot @config.correctColor @config.incorrectColor) @config.pendingColor)))
+                (bx (+ @config.slotLeft (* @i @config.slotSpacing)))
+              )
+              (array/append (array/append @acc { type: "rect", id: (str/concat "slot-" @i), x: @bx, y: @config.slotY, width: @config.slotWidth, height: @config.slotHeight, tone: @config.slotBorderColor, fillTone: @fillColor, fillStyle: "tint" }) { type: "text", id: (str/concat "slot-label-" @i), x: (+ @bx (/ @config.slotWidth 2)), y: (+ @config.slotY (/ @config.slotHeight 2) 5), text: (if @filled @label (str/concat "" (+ @i 1))), textSize: @config.slotFontSize, align: "center", tone: @config.slotTextColor })
+            ))))
+          )
         )
         (render-ui main {
           type: box
@@ -184,22 +182,21 @@ orbital LearnArrangementOrbital {
         (set @entity.verdict "")
         (let (
             (placedCount (array/len @entity.placedIds))
-            (slotShapes (array/flatten (array/map (array/range @entity.totalItems) (fn i (let (
-                    (placedId (if (< @i @placedCount) (array/nth @entity.placedIds @i) ""))
-                    (filled (!= @placedId ""))
-                    (item (if @filled (array/find @entity.items (fn it (== (object/get @it id) @placedId))) null))
-                    (label (if @filled (object/get @item label) ""))
-                    (correctForSlot (if @filled (== (object/get @item correctPosition) @i) false))
-                    (fillColor (if (not @filled) @config.emptySlotColor (if @entity.checked (if @correctForSlot @config.correctColor @config.incorrectColor) @config.pendingColor)))
-                    (bx (+ @config.slotLeft (* @i @config.slotSpacing)))
-                  )
-                  [
-                    { type: "rect", id: (str/concat "slot-" @i), x: @bx, y: @config.slotY, width: @config.slotWidth, height: @config.slotHeight, tone: @config.slotBorderColor, fillTone: @fillColor, fillStyle: "tint" },
-                    { type: "text", id: (str/concat "slot-label-" @i), x: (+ @bx (/ @config.slotWidth 2)), y: (+ @config.slotY (/ @config.slotHeight 2) 5), text: (if @filled @label (str/concat "" (+ @i 1))), textSize: @config.slotFontSize, align: "center", tone: @config.slotTextColor }
-                  ]
-                )))))
           )
-          (set @entity.slotShapes @slotShapes)
+          (do
+          (set @entity.slotShapes [])
+          (set @entity.slotShapes (array/reduce (array/range @entity.totalItems) @entity.slotShapes (fn acc i (let (
+                (placedId (if (< @i @placedCount) (array/nth @entity.placedIds @i) ""))
+                (filled (!= @placedId ""))
+                (item (if @filled (array/find @entity.items (fn it (== (object/get @it id) @placedId))) null))
+                (label (if @filled (object/get @item label) ""))
+                (correctForSlot (if @filled (== (object/get @item correctPosition) @i) false))
+                (fillColor (if (not @filled) @config.emptySlotColor (if @entity.checked (if @correctForSlot @config.correctColor @config.incorrectColor) @config.pendingColor)))
+                (bx (+ @config.slotLeft (* @i @config.slotSpacing)))
+              )
+              (array/append (array/append @acc { type: "rect", id: (str/concat "slot-" @i), x: @bx, y: @config.slotY, width: @config.slotWidth, height: @config.slotHeight, tone: @config.slotBorderColor, fillTone: @fillColor, fillStyle: "tint" }) { type: "text", id: (str/concat "slot-label-" @i), x: (+ @bx (/ @config.slotWidth 2)), y: (+ @config.slotY (/ @config.slotHeight 2) 5), text: (if @filled @label (str/concat "" (+ @i 1))), textSize: @config.slotFontSize, align: "center", tone: @config.slotTextColor })
+            ))))
+          )
         )
         (render-ui main {
           type: box
@@ -237,22 +234,21 @@ orbital LearnArrangementOrbital {
         (set @entity.verdict "")
         (let (
             (placedCount (array/len @entity.placedIds))
-            (slotShapes (array/flatten (array/map (array/range @entity.totalItems) (fn i (let (
-                    (placedId (if (< @i @placedCount) (array/nth @entity.placedIds @i) ""))
-                    (filled (!= @placedId ""))
-                    (item (if @filled (array/find @entity.items (fn it (== (object/get @it id) @placedId))) null))
-                    (label (if @filled (object/get @item label) ""))
-                    (correctForSlot (if @filled (== (object/get @item correctPosition) @i) false))
-                    (fillColor (if (not @filled) @config.emptySlotColor (if @entity.checked (if @correctForSlot @config.correctColor @config.incorrectColor) @config.pendingColor)))
-                    (bx (+ @config.slotLeft (* @i @config.slotSpacing)))
-                  )
-                  [
-                    { type: "rect", id: (str/concat "slot-" @i), x: @bx, y: @config.slotY, width: @config.slotWidth, height: @config.slotHeight, tone: @config.slotBorderColor, fillTone: @fillColor, fillStyle: "tint" },
-                    { type: "text", id: (str/concat "slot-label-" @i), x: (+ @bx (/ @config.slotWidth 2)), y: (+ @config.slotY (/ @config.slotHeight 2) 5), text: (if @filled @label (str/concat "" (+ @i 1))), textSize: @config.slotFontSize, align: "center", tone: @config.slotTextColor }
-                  ]
-                )))))
           )
-          (set @entity.slotShapes @slotShapes)
+          (do
+          (set @entity.slotShapes [])
+          (set @entity.slotShapes (array/reduce (array/range @entity.totalItems) @entity.slotShapes (fn acc i (let (
+                (placedId (if (< @i @placedCount) (array/nth @entity.placedIds @i) ""))
+                (filled (!= @placedId ""))
+                (item (if @filled (array/find @entity.items (fn it (== (object/get @it id) @placedId))) null))
+                (label (if @filled (object/get @item label) ""))
+                (correctForSlot (if @filled (== (object/get @item correctPosition) @i) false))
+                (fillColor (if (not @filled) @config.emptySlotColor (if @entity.checked (if @correctForSlot @config.correctColor @config.incorrectColor) @config.pendingColor)))
+                (bx (+ @config.slotLeft (* @i @config.slotSpacing)))
+              )
+              (array/append (array/append @acc { type: "rect", id: (str/concat "slot-" @i), x: @bx, y: @config.slotY, width: @config.slotWidth, height: @config.slotHeight, tone: @config.slotBorderColor, fillTone: @fillColor, fillStyle: "tint" }) { type: "text", id: (str/concat "slot-label-" @i), x: (+ @bx (/ @config.slotWidth 2)), y: (+ @config.slotY (/ @config.slotHeight 2) 5), text: (if @filled @label (str/concat "" (+ @i 1))), textSize: @config.slotFontSize, align: "center", tone: @config.slotTextColor })
+            ))))
+          )
         )
         (render-ui main {
           type: box
@@ -286,22 +282,21 @@ orbital LearnArrangementOrbital {
         (set @entity.verdict "")
         (let (
             (placedCount (array/len @entity.placedIds))
-            (slotShapes (array/flatten (array/map (array/range @entity.totalItems) (fn i (let (
-                    (placedId (if (< @i @placedCount) (array/nth @entity.placedIds @i) ""))
-                    (filled (!= @placedId ""))
-                    (item (if @filled (array/find @entity.items (fn it (== (object/get @it id) @placedId))) null))
-                    (label (if @filled (object/get @item label) ""))
-                    (correctForSlot (if @filled (== (object/get @item correctPosition) @i) false))
-                    (fillColor (if (not @filled) @config.emptySlotColor (if @entity.checked (if @correctForSlot @config.correctColor @config.incorrectColor) @config.pendingColor)))
-                    (bx (+ @config.slotLeft (* @i @config.slotSpacing)))
-                  )
-                  [
-                    { type: "rect", id: (str/concat "slot-" @i), x: @bx, y: @config.slotY, width: @config.slotWidth, height: @config.slotHeight, tone: @config.slotBorderColor, fillTone: @fillColor, fillStyle: "tint" },
-                    { type: "text", id: (str/concat "slot-label-" @i), x: (+ @bx (/ @config.slotWidth 2)), y: (+ @config.slotY (/ @config.slotHeight 2) 5), text: (if @filled @label (str/concat "" (+ @i 1))), textSize: @config.slotFontSize, align: "center", tone: @config.slotTextColor }
-                  ]
-                )))))
           )
-          (set @entity.slotShapes @slotShapes)
+          (do
+          (set @entity.slotShapes [])
+          (set @entity.slotShapes (array/reduce (array/range @entity.totalItems) @entity.slotShapes (fn acc i (let (
+                (placedId (if (< @i @placedCount) (array/nth @entity.placedIds @i) ""))
+                (filled (!= @placedId ""))
+                (item (if @filled (array/find @entity.items (fn it (== (object/get @it id) @placedId))) null))
+                (label (if @filled (object/get @item label) ""))
+                (correctForSlot (if @filled (== (object/get @item correctPosition) @i) false))
+                (fillColor (if (not @filled) @config.emptySlotColor (if @entity.checked (if @correctForSlot @config.correctColor @config.incorrectColor) @config.pendingColor)))
+                (bx (+ @config.slotLeft (* @i @config.slotSpacing)))
+              )
+              (array/append (array/append @acc { type: "rect", id: (str/concat "slot-" @i), x: @bx, y: @config.slotY, width: @config.slotWidth, height: @config.slotHeight, tone: @config.slotBorderColor, fillTone: @fillColor, fillStyle: "tint" }) { type: "text", id: (str/concat "slot-label-" @i), x: (+ @bx (/ @config.slotWidth 2)), y: (+ @config.slotY (/ @config.slotHeight 2) 5), text: (if @filled @label (str/concat "" (+ @i 1))), textSize: @config.slotFontSize, align: "center", tone: @config.slotTextColor })
+            ))))
+          )
         )
         (render-ui main {
           type: box
@@ -345,22 +340,21 @@ orbital LearnArrangementOrbital {
         )
         (let (
             (placedCount (array/len @entity.placedIds))
-            (slotShapes (array/flatten (array/map (array/range @entity.totalItems) (fn i (let (
-                    (placedId (if (< @i @placedCount) (array/nth @entity.placedIds @i) ""))
-                    (filled (!= @placedId ""))
-                    (item (if @filled (array/find @entity.items (fn it (== (object/get @it id) @placedId))) null))
-                    (label (if @filled (object/get @item label) ""))
-                    (correctForSlot (if @filled (== (object/get @item correctPosition) @i) false))
-                    (fillColor (if (not @filled) @config.emptySlotColor (if @entity.checked (if @correctForSlot @config.correctColor @config.incorrectColor) @config.pendingColor)))
-                    (bx (+ @config.slotLeft (* @i @config.slotSpacing)))
-                  )
-                  [
-                    { type: "rect", id: (str/concat "slot-" @i), x: @bx, y: @config.slotY, width: @config.slotWidth, height: @config.slotHeight, tone: @config.slotBorderColor, fillTone: @fillColor, fillStyle: "tint" },
-                    { type: "text", id: (str/concat "slot-label-" @i), x: (+ @bx (/ @config.slotWidth 2)), y: (+ @config.slotY (/ @config.slotHeight 2) 5), text: (if @filled @label (str/concat "" (+ @i 1))), textSize: @config.slotFontSize, align: "center", tone: @config.slotTextColor }
-                  ]
-                )))))
           )
-          (set @entity.slotShapes @slotShapes)
+          (do
+          (set @entity.slotShapes [])
+          (set @entity.slotShapes (array/reduce (array/range @entity.totalItems) @entity.slotShapes (fn acc i (let (
+                (placedId (if (< @i @placedCount) (array/nth @entity.placedIds @i) ""))
+                (filled (!= @placedId ""))
+                (item (if @filled (array/find @entity.items (fn it (== (object/get @it id) @placedId))) null))
+                (label (if @filled (object/get @item label) ""))
+                (correctForSlot (if @filled (== (object/get @item correctPosition) @i) false))
+                (fillColor (if (not @filled) @config.emptySlotColor (if @entity.checked (if @correctForSlot @config.correctColor @config.incorrectColor) @config.pendingColor)))
+                (bx (+ @config.slotLeft (* @i @config.slotSpacing)))
+              )
+              (array/append (array/append @acc { type: "rect", id: (str/concat "slot-" @i), x: @bx, y: @config.slotY, width: @config.slotWidth, height: @config.slotHeight, tone: @config.slotBorderColor, fillTone: @fillColor, fillStyle: "tint" }) { type: "text", id: (str/concat "slot-label-" @i), x: (+ @bx (/ @config.slotWidth 2)), y: (+ @config.slotY (/ @config.slotHeight 2) 5), text: (if @filled @label (str/concat "" (+ @i 1))), textSize: @config.slotFontSize, align: "center", tone: @config.slotTextColor })
+            ))))
+          )
         )
         (render-ui main {
           type: box
@@ -396,22 +390,21 @@ orbital LearnArrangementOrbital {
         (set @entity.verdict "")
         (let (
             (placedCount (array/len @entity.placedIds))
-            (slotShapes (array/flatten (array/map (array/range @entity.totalItems) (fn i (let (
-                    (placedId (if (< @i @placedCount) (array/nth @entity.placedIds @i) ""))
-                    (filled (!= @placedId ""))
-                    (item (if @filled (array/find @entity.items (fn it (== (object/get @it id) @placedId))) null))
-                    (label (if @filled (object/get @item label) ""))
-                    (correctForSlot (if @filled (== (object/get @item correctPosition) @i) false))
-                    (fillColor (if (not @filled) @config.emptySlotColor (if @entity.checked (if @correctForSlot @config.correctColor @config.incorrectColor) @config.pendingColor)))
-                    (bx (+ @config.slotLeft (* @i @config.slotSpacing)))
-                  )
-                  [
-                    { type: "rect", id: (str/concat "slot-" @i), x: @bx, y: @config.slotY, width: @config.slotWidth, height: @config.slotHeight, tone: @config.slotBorderColor, fillTone: @fillColor, fillStyle: "tint" },
-                    { type: "text", id: (str/concat "slot-label-" @i), x: (+ @bx (/ @config.slotWidth 2)), y: (+ @config.slotY (/ @config.slotHeight 2) 5), text: (if @filled @label (str/concat "" (+ @i 1))), textSize: @config.slotFontSize, align: "center", tone: @config.slotTextColor }
-                  ]
-                )))))
           )
-          (set @entity.slotShapes @slotShapes)
+          (do
+          (set @entity.slotShapes [])
+          (set @entity.slotShapes (array/reduce (array/range @entity.totalItems) @entity.slotShapes (fn acc i (let (
+                (placedId (if (< @i @placedCount) (array/nth @entity.placedIds @i) ""))
+                (filled (!= @placedId ""))
+                (item (if @filled (array/find @entity.items (fn it (== (object/get @it id) @placedId))) null))
+                (label (if @filled (object/get @item label) ""))
+                (correctForSlot (if @filled (== (object/get @item correctPosition) @i) false))
+                (fillColor (if (not @filled) @config.emptySlotColor (if @entity.checked (if @correctForSlot @config.correctColor @config.incorrectColor) @config.pendingColor)))
+                (bx (+ @config.slotLeft (* @i @config.slotSpacing)))
+              )
+              (array/append (array/append @acc { type: "rect", id: (str/concat "slot-" @i), x: @bx, y: @config.slotY, width: @config.slotWidth, height: @config.slotHeight, tone: @config.slotBorderColor, fillTone: @fillColor, fillStyle: "tint" }) { type: "text", id: (str/concat "slot-label-" @i), x: (+ @bx (/ @config.slotWidth 2)), y: (+ @config.slotY (/ @config.slotHeight 2) 5), text: (if @filled @label (str/concat "" (+ @i 1))), textSize: @config.slotFontSize, align: "center", tone: @config.slotTextColor })
+            ))))
+          )
         )
         (render-ui main {
           type: box

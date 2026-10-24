@@ -10,7 +10,7 @@ orbital BrotliOrbital {
     size : number = 0
     packed : number = 0
   }
-  trait Brotli -> BrotliRun [integration, instance] {
+  trait Brotli -> BrotliRun [client] {
     initial: idle
     config {
       quality : number = 11
@@ -35,10 +35,10 @@ orbital BrotliOrbital {
         @tier "primary"
     }
     listens {
-      BROTLI -> external { data : bytes! }
+      BROTLI -> input { data : bytes! }
         @description "Pack these bytes as a brotli stream."
         @synonyms "brotli, compress brotli, br encode"
     }
   }
-  page "/brotli" -> Brotli
+  page boot as BrotliOrbitalStart -> Brotli
 }

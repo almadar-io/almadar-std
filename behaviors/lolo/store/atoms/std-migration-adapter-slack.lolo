@@ -17,7 +17,7 @@ orbital MigrationAdapterSlackOrbital {
     documents : [SlackDocument] = []
   }
 
-  trait MigrationAdapterSlack -> MigrationAdapterSlackRun [integration, instance] {
+  trait MigrationAdapterSlack -> MigrationAdapterSlackRun [client] {
     initial: idle
 
     state idle {
@@ -326,7 +326,7 @@ orbital MigrationAdapterSlackOrbital {
     }
 
     listens {
-      MIGRATION_EXTRACT -> external {
+      MIGRATION_EXTRACT -> input {
         adapter : string!
         documents : [ImportRawDocument]!
       }
@@ -336,5 +336,5 @@ orbital MigrationAdapterSlackOrbital {
     }
   }
 
-  page "/migration-adapter-slack" as MigrationAdapterSlackPage -> MigrationAdapterSlack
+  page boot as MigrationAdapterSlackOrbitalStart -> MigrationAdapterSlack
 }

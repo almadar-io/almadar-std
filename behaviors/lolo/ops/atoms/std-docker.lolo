@@ -7,11 +7,11 @@ type DockerLogLine = { at : string!, line : string! }
 type DockerPort = { host : number!, container : number!, protocol : string }
 type DockerVolume = { host : string!, container : string! }
 type DockerPortView = { host : number!, container : number!, protocol : string! }
-type DockerInspectState = { Status : string, StartedAt : string, FinishedAt : string }
+type DockerInspectState = { Status : string!, StartedAt : string!, FinishedAt : string! }
 type DockerInspectConfig = { Image : string }
-type DockerPortBinding = { HostIp : string, HostPort : string }
+type DockerPortBinding = { HostIp : string!, HostPort : string! }
 type DockerInspectNetwork = { Ports : Map string [DockerPortBinding] }
-type DockerInspect = { Id : string!, Name : string, Created : string, State : DockerInspectState, Config : DockerInspectConfig, NetworkSettings : DockerInspectNetwork }
+type DockerInspect = { Id : string!, Name : string!, Created : string!, State : DockerInspectState!, Config : DockerInspectConfig!, NetworkSettings : DockerInspectNetwork! }
 type DockerImageInspect = { Id : string!, Size : number }
 type DockerContainerView = { id : string!, name : string!, image : string!, status : string!, ports : [DockerPortView]!, createdAt : number! }
 orbital DockerOrbital {
@@ -35,7 +35,7 @@ orbital DockerOrbital {
     }
   }
 
-  trait DockerDriver -> @rebindable DockerCall [integration, instance] {
+  trait DockerDriver -> @rebindable DockerCall [optimistic] {
     initial: idle
 
     state idle {
@@ -327,5 +327,5 @@ orbital DockerOrbital {
     }
   }
 
-  page "/docker" as DockerPage -> DockerDriver, DockerCli
+  page boot as DockerOrbitalStart -> DockerDriver, DockerCli
 }

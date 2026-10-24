@@ -19,13 +19,13 @@ probe = '''app authored-id-predicate [version: "1.0.0"]
 type MockValue = string | number | boolean | [MockValue?] | Map string MockValue?
 orbital Predicate {
   entity Probe [runtime] { id : string! }
-  trait Check -> Probe [integration] {
+  trait Check -> Probe {
     initial: ready
     state ready { CHECK -> ready (emit CHECKED { blank: PREDICATE }) }
-    listens { CHECK -> external { row : Map string MockValue?! } }
+    listens { CHECK -> input { row : Map string MockValue?! } }
     emits { CHECKED -> external { blank : boolean! } }
   }
-  page "/probe" -> Check
+  page boot as PredicateStart -> Check
 }
 '''.replace('PREDICATE', predicate)
 rows = [{}, {'id': ''}, {'id': '007'}, {'id': 12}, {'id': True},

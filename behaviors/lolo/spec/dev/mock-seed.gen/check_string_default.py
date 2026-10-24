@@ -19,7 +19,7 @@ orbital SeedStringProbe {
     id : string!
     out : string = ""
   }
-  trait Run -> SeedStringCell [integration] {
+  trait Run -> SeedStringCell {
     initial: ready
     state ready {
       INIT -> ready
@@ -37,7 +37,7 @@ orbital SeedStringProbe {
         @description "The sampled text."
     }
   }
-  page "/seed-string-probe" as SeedStringProbePage -> Run
+  page boot as SeedStringProbeStart -> Run
 }
 '''.replace('EXPRESSION', expression)
 with tempfile.NamedTemporaryFile(mode='w', suffix='.lolo', prefix='.seed-string-probe-', dir=spec_dir, delete=False) as output:

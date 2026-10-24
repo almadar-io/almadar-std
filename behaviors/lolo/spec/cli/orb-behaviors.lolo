@@ -1,7 +1,7 @@
 app orb-behaviors-spec [
   version: "1.0.0",
-  inbound: ["cli-behaviors-catalog", "cli-behaviors-describe", "cli-behaviors-source"],
-  description: "Design contract for `orb behaviors <subcommand>`: the reflection commands over the installed behavior packages. `catalog <scope…> [--exposure <e>]… [--json] [--no-vectors]` lists the behaviors under the scopes (a table row per behavior, or the entries as JSON); `describe <behavior>.traits.<Trait>|<behavior>|<behavior>.orbitals.<Orbital>|- [--json] [--knob-vectors]` prints the description as JSON (`-` reads a trait or orbital value as JSON from stdin; `--knob-vectors` answers status 501, exit 1, until the host's behavior/describe carries knob vectors); `source <behavior> [--json]` prints the behavior's program as JSON. With --no-vectors the catalog JSON entries carry empty vectors and model. Each answers status 200 (exit 0) with its output; a missing operand answers the usage (status 400, exit 2); a behavior that cannot be read answers its error (status 500, exit 1)."
+  inbound: ["cli-behaviors-catalog", "cli-behaviors-describe", "cli-behaviors-source", "cli-behaviors-which", "cli-behaviors-texts", "cli-behaviors-expects"],
+  description: "Design contract for `orb behaviors <subcommand>`: the reflection commands over the installed behavior packages. `catalog <scope…> [--exposure <e>]… [--json] [--no-vectors]` lists the behaviors under the scopes (a table row per behavior, or the entries as JSON); `describe <behavior>.traits.<Trait>|<behavior>|<behavior>.orbitals.<Orbital>|- [--json] [--knob-vectors]` prints the description as JSON (`-` reads a trait or orbital value as JSON from stdin; `--knob-vectors` answers status 501, exit 1, until the host's behavior/describe carries knob vectors); `source <behavior> [--json]` prints the behavior's program as JSON; `which <spec>` prints `<path> (<owner>)`, the file the specifier resolves to and the package that owns it; `texts <scope…> [--kind organism|capability|knob] [--json]` prints the embedding texts under the scopes as a compact JSON array of { key, text, hash }. `expects <file.orb|spec> [--json]` prints each orbital's derived expectations as one compact JSON line, `{ <orbital>: { expectations, diagnostics } }`. With --no-vectors the catalog JSON entries carry empty vectors and model. Each answers status 200 (exit 0) with its output; a missing operand (for texts, a missing scope) answers the usage (status 400, exit 2); a behavior that cannot be read answers its error (status 500, exit 1)."
 ]
 
 orbital OrbBehaviorsSpec {
@@ -10,6 +10,9 @@ orbital OrbBehaviorsSpec {
       CATALOG_CALLED -> parsing
       DESCRIBE_CALLED -> parsing
       SOURCE_CALLED -> parsing
+      WHICH_CALLED -> parsing
+      TEXTS_CALLED -> parsing
+      EXPECTS_CALLED -> parsing
     }
     state parsing
     state working
@@ -17,5 +20,5 @@ orbital OrbBehaviorsSpec {
       BEHAVIORS_ANSWERED { status : number!  body : string! }
     }
   }
-  expects page "/orb-behaviors" -> OrbBehaviors
+  expects page boot -> OrbBehaviors
 }

@@ -179,7 +179,7 @@ orbital AgentPoolOrbital {
     }
   }
 
-  trait AgentPoolWriter -> AgentPoolHost [lifecycle, instance] {
+  trait AgentPoolWriter -> AgentPoolHost [optimistic] {
     initial: ready
 
     state ready {
@@ -301,7 +301,7 @@ orbital AgentPoolOrbital {
     }
 
     listens {
-      WRITE -> external {
+      WRITE -> input {
         value : behavior!
         name : string!
         kind : string!
@@ -332,7 +332,7 @@ orbital AgentPoolOrbital {
     }
   }
 
-  trait AgentPoolSearch -> AgentPoolHost [lifecycle, instance] {
+  trait AgentPoolSearch -> AgentPoolHost [optimistic] {
     initial: ready
 
     state ready {
@@ -351,7 +351,7 @@ orbital AgentPoolOrbital {
     state searching {
       INIT -> ready
       ENTRIES_LOADED -> ready
-        (emit POOL_FOUND { hits: (array/take (array/sort (array/map (array/filter ?data (fn e (and (or (= (array/len @entity.queryKinds) 0) (array/includes @entity.queryKinds (object/get @e kind ""))) (not (array/includes @entity.queryExclude (object/get @e behavior "")))))) (fn e { id: (object/get @e id), behavior: (object/get @e behavior ""), value: (object/get @e value), name: (object/get @e name ""), kind: (object/get @e kind ""), topic: (object/get @e topic ""), fields: (object/get @e fields {}), description: (object/get @e description ""), score: (+ (array/cosine (object/get @e vector []) @entity.queryVector) (* @config.weight (/ (- (+ (object/get @e likes 0) (object/get @e right 0)) (+ (object/get @e hides 0) (object/get @e wrong 0))) (+ 1 (object/get @e plays 0))))) })) score desc) @entity.queryTake) })
+        (let ((found : [PoolHit] (array/take (array/sort (array/map (array/filter ?data (fn e (and (or (= (array/len @entity.queryKinds) 0) (array/includes @entity.queryKinds (object/get @e kind ""))) (not (array/includes @entity.queryExclude (object/get @e behavior "")))))) (fn e { id: (object/get @e id), behavior: (object/get @e behavior ""), value: (object/get @e value), name: (object/get @e name ""), kind: (object/get @e kind ""), topic: (object/get @e topic ""), fields: (object/get @e fields {}), description: (object/get @e description ""), score: (+ (array/cosine (object/get @e vector []) @entity.queryVector) (* @config.weight (/ (- (+ (object/get @e likes 0) (object/get @e right 0)) (+ (object/get @e hides 0) (object/get @e wrong 0))) (+ 1 (object/get @e plays 0))))) })) score desc) @entity.queryTake))) (emit POOL_FOUND { hits: @found }))
       SEARCH_FAILED -> ready
         (emit POOL_FOUND { hits: [] })
         (render-ui toast { message: ?error, type: alert, variant: warning })
@@ -383,7 +383,7 @@ orbital AgentPoolOrbital {
     }
 
     listens {
-      SEARCH -> external {
+      SEARCH -> input {
         vector : [number]!
         kinds : [string]
         exclude : [string]
@@ -394,7 +394,7 @@ orbital AgentPoolOrbital {
     }
   }
 
-  trait AgentPoolSignal -> AgentPoolHost [lifecycle, instance] {
+  trait AgentPoolSignal -> AgentPoolHost [optimistic] {
     initial: ready
 
     state ready {
@@ -456,7 +456,7 @@ orbital AgentPoolOrbital {
     }
 
     listens {
-      SIGNAL -> external {
+      SIGNAL -> input {
         id : string!
         signal : string!
       }

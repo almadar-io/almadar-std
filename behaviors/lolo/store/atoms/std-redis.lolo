@@ -9,7 +9,7 @@ orbital RedisOrbital {
     id : string!
   }
 
-  trait RedisClient -> RedisCall [integration, instance] {
+  trait RedisClient -> RedisCall [optimistic] {
     initial: idle
 
     state idle {
@@ -227,48 +227,48 @@ orbital RedisOrbital {
     }
 
     listens {
-      REDIS_GET -> external {
+      REDIS_GET -> input {
         key : string!
       }
         @description "Read the text value stored at a key."
         @synonyms "cache get, read key, fetch cached value"
-      REDIS_SET -> external {
+      REDIS_SET -> input {
         key : string!
         value : string!
         ttl : number
       }
         @description "Store a text value at a key; ttl is seconds, none keeps it until removed."
         @synonyms "cache set, write key, store value"
-      REDIS_DELETE -> external {
+      REDIS_DELETE -> input {
         key : string!
       }
         @description "Remove a key."
         @synonyms "cache delete, evict key, remove value"
-      REDIS_INCREMENT -> external {
+      REDIS_INCREMENT -> input {
         key : string!
         by : number
       }
         @description "Add to a counter (INCRBY); by defaults to 1 and a missing key starts at 0."
         @synonyms "counter increment, count up, add to counter"
-      REDIS_EXPIRE -> external {
+      REDIS_EXPIRE -> input {
         key : string!
         ttl : number!
       }
         @description "Make a key expire after ttl seconds."
         @synonyms "set expiry, time to live, expire key"
-      REDIS_PUBLISH -> external {
+      REDIS_PUBLISH -> input {
         channel : string!
         message : string!
       }
         @description "Publish a text message on a channel."
         @synonyms "publish message, broadcast, send to channel"
-      REDIS_LOCK -> external {
+      REDIS_LOCK -> input {
         key : string!
         ttl : number
       }
         @description "Take a lock on a key for ttl milliseconds (default 30000); the answer carries the id that releases it."
         @synonyms "acquire lock, mutex, take lock"
-      REDIS_UNLOCK -> external {
+      REDIS_UNLOCK -> input {
         key : string!
         lockId : string!
       }

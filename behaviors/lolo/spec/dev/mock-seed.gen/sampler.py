@@ -25,11 +25,11 @@ def string_default(value):
 
 def field_projection(spec):
     def candidate(value, otherwise):
-        return (f'(let ((pr (object/get {value} "projectedFrom" null))) '
+        return (f'(let ((pr : MockProjection? (object/get {value} "projectedFrom" null))) '
                 f'(if (validate/object @pr) '
-                f'(let ((pf (object/get @pr "field" null))) '
+                f'(let ((pf : string? (object/get @pr "field" null))) '
                 f'(if (and (validate/string @pf) (!= @pf "")) @pr {otherwise})) {otherwise}))')
-    item = candidate(f'(object/get {spec} "items" {{}})', 'null')
+    item = f'(if (object/has {spec} "items") ' + candidate(f'(object/get {spec} "items")', 'null') + ' null)'
     return candidate(spec, f'(if (= (object/get {spec} "type" "") "array") {item} null)')
 
 def sampler_step(P):

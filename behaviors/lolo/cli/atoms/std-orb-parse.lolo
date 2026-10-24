@@ -1,0 +1,158 @@
+app std-orb-parse [
+  version: "1.0.0",
+  inbound: ["cli-parse"],
+  fs: { cwd: "**": [read], "/**": [read] },
+  description: "std-orb-parse — the `orb parse <FILE>` command (spec/cli/orb-parse.lolo; port of orbital-cli commands/parse.rs parse_schema). The file is read (a relative path from the directory the command runs in) and lowered by program/read on the host; the summary is printed as the Rust command printed it: `Parsing schema: <path>` (printed before the file is read, so an unreadable file still prints it on stdout), a blank line, `Schema: <name>`, `Version:` and `Description:` when the program has them, a blank line, `Orbitals (N):` and per orbital `  - <name> (entity: <entity>)`, `    Fields: <n>`, `    Traits: <n>` and `    Pages: <n>` when the orbital declares pages (an entity that is a bare reference counts 0 fields). An unreadable or unlowerable file answers status 500 on stderr `Error: <reason>` (exit 1); no file, a second file or an unknown flag answers the usage (status 400, exit 2). Divergence recorded in the std ledger: the reason is the host's program/read reason, not the parser's own."
+]
+uses Spec from "almadar-std/orb-parse"
+uses Args from "std/behaviors/std-args"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
+type ParseJson = string | number | boolean | [ParseJson?] | Map string ParseJson?
+type ParseEntity = { name : string!, fields : [ParseJson]? }
+type ParseOrbital = { name : string!, entity : string | ParseEntity, traits : [ParseJson]?, pages : [ParseJson]? }
+type ParseProgram = { name : string!, version : string?, description : string?, orbitals : [ParseOrbital]? }
+
+orbital OrbParseOrbital {
+  entity ParseRun [runtime] {
+    id : string!
+    path : string = ""
+  }
+
+  trait ArgsCli = Args.traits.ArgsParser {
+    listens {
+      OrbParse.PARSE_ARGS_PARSE -> ARGS_PARSE
+    }
+  }
+
+  trait OrbParse -> ParseRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      PARSE_CALLED -> parsing
+        (emit PARSE_ARGS_PARSE { stage: "parse" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [] })
+    }
+
+    state parsing {
+      INIT -> parsing
+      PARSE_ARGS_DONE -> ready when (> (array/len @payload.errors) 0)
+        (emit PARSE_ANSWERED { status: 400, body: "", stderr: (str/concat "error: " (array/first @payload.errors) "\n\nUsage: orb parse <FILE>\n\nFor more information, try '--help'.") })
+      PARSE_ARGS_DONE -> ready when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0))
+        (emit PARSE_ANSWERED { status: 400, body: "", stderr: "error: the following required arguments were not provided:\n  <FILE>\n\nUsage: orb parse <FILE>\n\nFor more information, try '--help'." })
+      PARSE_ARGS_DONE -> ready when (and (= (array/len @payload.errors) 0) (> (array/len @payload.positionals) 1))
+        (emit PARSE_ANSWERED { status: 400, body: "", stderr: (str/concat "error: unexpected argument '" (array/nth @payload.positionals 1) "' found\n\nUsage: orb parse <FILE>\n\nFor more information, try '--help'.") })
+      PARSE_ARGS_DONE -> working when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1))
+        (emit PARSE_START { path: (array/first @payload.positionals) })
+    }
+
+    state working {
+      INIT -> working
+      PARSE_DONE -> ready
+        (emit PARSE_ANSWERED { status: @payload.status, body: @payload.body, stderr: @payload.stderr })
+    }
+
+    emits {
+      PARSE_ANSWERED -> internal {
+        status : number!
+        body : string!
+        stderr : string
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      PARSE_ARGS_PARSE {
+        stage : string!
+        argv : [string]!
+        flags : [ArgFlag]!
+      }
+        @description "Internal: parse the call's words."
+        @tier "internal"
+      PARSE_START {
+        path : string!
+      }
+        @description "Internal: summarize the program at the path."
+        @tier "internal"
+    }
+
+    listens {
+      PARSE_CALLED -> inbound "cli-parse" answers PARSE_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb parse`."
+        @synonyms "orb parse, summarize a lolo program, orbital and trait counts"
+      PARSE_ARGS_DONE {
+        stage : string!
+        flags : Map string [string]!
+        positionals : [string]!
+        errors : [string]!
+        words : [string]!
+      }
+        @description "std-args's ARGS_PARSED."
+      ArgsCli.ARGS_PARSED -> PARSE_ARGS_DONE
+      ParseEngine.PARSE_ANSWERED -> PARSE_DONE
+      PARSE_DONE { status : number!  body : string!  stderr : string }
+        @description "Internal: the engine's answer, relayed to the hook by its handler."
+        @tier "internal"
+    }
+  }
+
+  trait ParseEngine -> ParseRun [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      PARSE_START -> reading when (not (os/path-is-absolute @payload.path))
+        (set @entity.path @payload.path)
+        (os/read-file { anchor: "cwd" path: @payload.path } { key: "parse-file", emit: { success: PARSE_FILE, failure: PARSE_UNREAD } })
+      PARSE_START -> reading when (os/path-is-absolute @payload.path)
+        (set @entity.path @payload.path)
+        (os/read-file (str/concat "/" (str/slice @payload.path 1 (str/len @payload.path))) { key: "parse-file", emit: { success: PARSE_FILE, failure: PARSE_UNREAD } })
+    }
+
+    state reading {
+      INIT -> reading
+      PARSE_UNREAD -> idle
+        (emit PARSE_ANSWERED { status: 500, body: (str/concat "Parsing schema: " @entity.path), stderr: (str/concat "Error: " @payload.error) })
+      PARSE_FILE -> reading
+        (program/read (bytes/to-string @payload.data) { key: "parse-program", emit: { success: PARSE_READ, failure: PARSE_UNREAD } })
+      PARSE_READ -> idle
+        (emit PARSE_ANSWERED { status: 200, body: (str/join (array/concat [(str/concat "Parsing schema: " @entity.path), (str/concat ""), (str/concat "Schema: " (object/get @payload.result "name"))] (if (!= (object/get @payload.result "version") null) [(str/concat "Version: " (object/get @payload.result "version"))] []) (if (!= (object/get @payload.result "description") null) [(str/concat "Description: " (object/get @payload.result "description"))] []) [(str/concat ""), (str/concat "Orbitals (" (array/len (or (object/get @payload.result "orbitals") [])) "):")] (array/flatten (array/map (or (object/get @payload.result "orbitals") []) (fn o (array/concat [(str/concat "  - " (object/get @o "name") " (entity: " (if (validate/string (object/get @o "entity")) (object/get @o "entity") (object/get (object/get @o "entity") "name")) ")"), (str/concat "    Fields: " (if (validate/string (object/get @o "entity")) 0 (array/len (or (object/get (object/get @o "entity") "fields") [])))), (str/concat "    Traits: " (array/len (or (object/get @o "traits") [])))] (if (object/has @o "pages") [(str/concat "    Pages: " (array/len (object/get @o "pages")))] []))))))  "\n") })
+    }
+
+    emits {
+      PARSE_ANSWERED -> external {
+        status : number!
+        body : string!
+        stderr : string
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      PARSE_FILE {
+        data : bytes!
+      }
+        @description "os/read-file: the source file."
+        @tier "internal"
+      PARSE_READ {
+        result : ParseProgram!
+      }
+        @description "program/read: the lowered program."
+        @tier "internal"
+      PARSE_UNREAD {
+        error : string
+      }
+        @description "The file could not be read or lowered."
+        @tier "internal"
+    }
+
+    listens {
+      PARSE_START {
+        path : string!
+      }
+        @description "Summarize the program at the path."
+      OrbParse.PARSE_START -> PARSE_START
+    }
+  }
+
+  page "/orb-parse" as OrbParsePage -> OrbParse, ArgsCli, ParseEngine
+}

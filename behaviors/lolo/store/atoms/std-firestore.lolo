@@ -117,7 +117,7 @@ orbital FirestoreOrbital {
     errKind : string @description "decline, abort or fail" = ""
   }
 
-  trait RowStoreDriver -> FirestoreFlight [integration, instance] {
+  trait RowStoreDriver -> FirestoreFlight [client] {
     initial: ready
 
     config {
@@ -481,20 +481,20 @@ orbital FirestoreOrbital {
     }
 
     listens {
-      ROW_READ -> external {
+      ROW_READ -> input {
         key : string!
         entityType : string!
         id : string!
       }
         @description "Read one row of an entity type by id."
         @tier "internal"
-      ROW_LIST -> external {
+      ROW_LIST -> input {
         key : string!
         entityType : string!
       }
         @description "List every row of an entity type."
         @tier "internal"
-      ROWS_QUERY -> external {
+      ROWS_QUERY -> input {
         key : string!
         entityType : string!
         query : RowQuery!
@@ -502,7 +502,7 @@ orbital FirestoreOrbital {
       }
         @description "A query ask; answered as a structured Firestore query when Firestore can run it, else STORE_UNSUPPORTED."
         @tier "internal"
-      ROWS_WRITE -> external {
+      ROWS_WRITE -> input {
         key : string!
         batch : RowWriteBatch!
       }

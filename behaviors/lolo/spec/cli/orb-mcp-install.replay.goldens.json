@@ -1,0 +1,1552 @@
+{
+ "atom": "cli/atoms/std-orb-mcp-install.lolo",
+ "trait": "OrbMcpInstall",
+ "note": "Host operators (os/exists, os/read-file, os/mkdir, os/write-file) are fed as their success and failure events; a step reports effects unevaluated, so the merged config's content is pinned by the live run, not here.",
+ "cases": [
+  {
+   "id": "usage: no --client",
+   "steps": [
+    {
+     "trait": "OrbMcpInstall",
+     "from": "ready",
+     "event": "MCP_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "MCP_ARGS_PARSE",
+        "payload": {
+         "stage": "mcp",
+         "argv": [],
+         "flags": [
+          {
+           "name": "client",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ],
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbMcpInstall",
+     "from": "parsing",
+     "event": "MCP_ARGS_DONE",
+     "payload": {
+      "stage": "mcp",
+      "flags": {},
+      "positionals": [],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "MCP_INSTALL_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "usage: orb mcp install --client <claude|cursor|vscode>"
+        }
+       }
+      ],
+      "fired": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "usage: --client with no value",
+   "steps": [
+    {
+     "trait": "OrbMcpInstall",
+     "from": "ready",
+     "event": "MCP_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[\"--client\"],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "MCP_ARGS_PARSE",
+        "payload": {
+         "stage": "mcp",
+         "argv": [
+          "--client"
+         ],
+         "flags": [
+          {
+           "name": "client",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ],
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbMcpInstall",
+     "from": "parsing",
+     "event": "MCP_ARGS_DONE",
+     "payload": {
+      "stage": "mcp",
+      "flags": {},
+      "positionals": [],
+      "errors": [
+       "--client needs a value"
+      ],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "MCP_INSTALL_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "usage: orb mcp install --client <claude|cursor|vscode>"
+        }
+       }
+      ],
+      "fired": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "usage: an unknown client",
+   "steps": [
+    {
+     "trait": "OrbMcpInstall",
+     "from": "ready",
+     "event": "MCP_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[\"--client\",\"emacs\"],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "MCP_ARGS_PARSE",
+        "payload": {
+         "stage": "mcp",
+         "argv": [
+          "--client",
+          "emacs"
+         ],
+         "flags": [
+          {
+           "name": "client",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ],
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbMcpInstall",
+     "from": "parsing",
+     "event": "MCP_ARGS_DONE",
+     "payload": {
+      "stage": "mcp",
+      "flags": {
+       "client": [
+        "emacs"
+       ]
+      },
+      "positionals": [],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "MCP_INSTALL_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "usage: orb mcp install --client <claude|cursor|vscode>"
+        }
+       }
+      ],
+      "fired": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "usage: a client of the wrong case",
+   "steps": [
+    {
+     "trait": "OrbMcpInstall",
+     "from": "ready",
+     "event": "MCP_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[\"--client\",\"Claude\"],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "MCP_ARGS_PARSE",
+        "payload": {
+         "stage": "mcp",
+         "argv": [
+          "--client",
+          "Claude"
+         ],
+         "flags": [
+          {
+           "name": "client",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ],
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbMcpInstall",
+     "from": "parsing",
+     "event": "MCP_ARGS_DONE",
+     "payload": {
+      "stage": "mcp",
+      "flags": {
+       "client": [
+        "Claude"
+       ]
+      },
+      "positionals": [],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "MCP_INSTALL_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "usage: orb mcp install --client <claude|cursor|vscode>"
+        }
+       }
+      ],
+      "fired": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "usage: a further word",
+   "steps": [
+    {
+     "trait": "OrbMcpInstall",
+     "from": "ready",
+     "event": "MCP_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[\"--client\",\"claude\",\"extra\"],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "MCP_ARGS_PARSE",
+        "payload": {
+         "stage": "mcp",
+         "argv": [
+          "--client",
+          "claude",
+          "extra"
+         ],
+         "flags": [
+          {
+           "name": "client",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ],
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbMcpInstall",
+     "from": "parsing",
+     "event": "MCP_ARGS_DONE",
+     "payload": {
+      "stage": "mcp",
+      "flags": {
+       "client": [
+        "claude"
+       ]
+      },
+      "positionals": [
+       "extra"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "MCP_INSTALL_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "usage: orb mcp install --client <claude|cursor|vscode>"
+        }
+       }
+      ],
+      "fired": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "usage: an unknown flag",
+   "steps": [
+    {
+     "trait": "OrbMcpInstall",
+     "from": "ready",
+     "event": "MCP_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[\"--client\",\"claude\",\"--bogus\"],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "MCP_ARGS_PARSE",
+        "payload": {
+         "stage": "mcp",
+         "argv": [
+          "--client",
+          "claude",
+          "--bogus"
+         ],
+         "flags": [
+          {
+           "name": "client",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ],
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbMcpInstall",
+     "from": "parsing",
+     "event": "MCP_ARGS_DONE",
+     "payload": {
+      "stage": "mcp",
+      "flags": {
+       "client": [
+        "claude"
+       ]
+      },
+      "positionals": [],
+      "errors": [
+       "unknown flag: --bogus"
+      ],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "MCP_INSTALL_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "usage: orb mcp install --client <claude|cursor|vscode>"
+        }
+       }
+      ],
+      "fired": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "usage: --client twice",
+   "steps": [
+    {
+     "trait": "OrbMcpInstall",
+     "from": "ready",
+     "event": "MCP_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[\"--client\",\"claude\",\"--client\",\"cursor\"],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "MCP_ARGS_PARSE",
+        "payload": {
+         "stage": "mcp",
+         "argv": [
+          "--client",
+          "claude",
+          "--client",
+          "cursor"
+         ],
+         "flags": [
+          {
+           "name": "client",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ],
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbMcpInstall",
+     "from": "parsing",
+     "event": "MCP_ARGS_DONE",
+     "payload": {
+      "stage": "mcp",
+      "flags": {
+       "client": [
+        "claude"
+       ]
+      },
+      "positionals": [],
+      "errors": [
+       "--client given twice"
+      ],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "MCP_INSTALL_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "usage: orb mcp install --client <claude|cursor|vscode>"
+        }
+       }
+      ],
+      "fired": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: --client claude looks for the config",
+   "steps": [
+    {
+     "trait": "OrbMcpInstall",
+     "from": "ready",
+     "event": "MCP_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[\"--client\",\"claude\"],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "MCP_ARGS_PARSE",
+        "payload": {
+         "stage": "mcp",
+         "argv": [
+          "--client",
+          "claude"
+         ],
+         "flags": [
+          {
+           "name": "client",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ],
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbMcpInstall",
+     "from": "parsing",
+     "event": "MCP_ARGS_DONE",
+     "payload": {
+      "stage": "mcp",
+      "flags": {
+       "client": [
+        "claude"
+       ]
+      },
+      "positionals": [],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "probing",
+      "effects": [
+       {
+        "type": "os/exists",
+        "key": "config",
+        "optionsAt": 1
+       }
+      ],
+      "fired": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: --client cursor looks for the config",
+   "steps": [
+    {
+     "trait": "OrbMcpInstall",
+     "from": "ready",
+     "event": "MCP_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[\"--client\",\"cursor\"],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "MCP_ARGS_PARSE",
+        "payload": {
+         "stage": "mcp",
+         "argv": [
+          "--client",
+          "cursor"
+         ],
+         "flags": [
+          {
+           "name": "client",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ],
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbMcpInstall",
+     "from": "parsing",
+     "event": "MCP_ARGS_DONE",
+     "payload": {
+      "stage": "mcp",
+      "flags": {
+       "client": [
+        "cursor"
+       ]
+      },
+      "positionals": [],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "probing",
+      "effects": [
+       {
+        "type": "os/exists",
+        "key": "config",
+        "optionsAt": 1
+       }
+      ],
+      "fired": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: --client vscode looks for the config",
+   "steps": [
+    {
+     "trait": "OrbMcpInstall",
+     "from": "ready",
+     "event": "MCP_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[\"--client\",\"vscode\"],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "MCP_ARGS_PARSE",
+        "payload": {
+         "stage": "mcp",
+         "argv": [
+          "--client",
+          "vscode"
+         ],
+         "flags": [
+          {
+           "name": "client",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ],
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbMcpInstall",
+     "from": "parsing",
+     "event": "MCP_ARGS_DONE",
+     "payload": {
+      "stage": "mcp",
+      "flags": {
+       "client": [
+        "vscode"
+       ]
+      },
+      "positionals": [],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "probing",
+      "effects": [
+       {
+        "type": "os/exists",
+        "key": "config",
+        "optionsAt": 1
+       }
+      ],
+      "fired": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "probing: no config file starts from an empty one",
+   "entity": {
+    "cwd": "/work",
+    "client": "claude",
+    "dir": "",
+    "path": ".mcp.json",
+    "serversKey": "mcpServers",
+    "config": {}
+   },
+   "steps": [
+    {
+     "trait": "OrbMcpInstall",
+     "from": "probing",
+     "event": "MCP_EXISTS",
+     "payload": {
+      "ok": false
+     },
+     "expect": {
+      "state": "writing",
+      "emits": [
+       {
+        "event": "MCP_MERGE",
+        "payload": {}
+       }
+      ],
+      "fired": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "probing: control, an existing config is read",
+   "entity": {
+    "cwd": "/work",
+    "client": "claude",
+    "dir": "",
+    "path": ".mcp.json",
+    "serversKey": "mcpServers",
+    "config": {}
+   },
+   "steps": [
+    {
+     "trait": "OrbMcpInstall",
+     "from": "probing",
+     "event": "MCP_EXISTS",
+     "payload": {
+      "ok": true
+     },
+     "expect": {
+      "state": "reading",
+      "neverEmits": [
+       "MCP_MERGE"
+      ],
+      "effects": [
+       {
+        "type": "os/read-file",
+        "key": "config",
+        "optionsAt": 1
+       }
+      ],
+      "fired": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "probing: a host failure answers the path and the error (500)",
+   "entity": {
+    "cwd": "/work",
+    "client": "claude",
+    "dir": "",
+    "path": ".mcp.json",
+    "serversKey": "mcpServers",
+    "config": {}
+   },
+   "steps": [
+    {
+     "trait": "OrbMcpInstall",
+     "from": "probing",
+     "event": "MCP_HOST_FAILED",
+     "payload": {
+      "error": "permission denied"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "MCP_INSTALL_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "/work/.mcp.json: permission denied"
+        }
+       }
+      ],
+      "fired": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "reading: an existing JSON object is merged",
+   "entity": {
+    "cwd": "/work",
+    "client": "claude",
+    "dir": "",
+    "path": ".mcp.json",
+    "serversKey": "mcpServers",
+    "config": {}
+   },
+   "steps": [
+    {
+     "trait": "OrbMcpInstall",
+     "from": "reading",
+     "event": "MCP_READ",
+     "payload": {
+      "data": "eyJhIjoxfQ=="
+     },
+     "expect": {
+      "state": "writing",
+      "emits": [
+       {
+        "event": "MCP_MERGE",
+        "payload": {}
+       }
+      ],
+      "fired": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "reading: object with leading whitespace is merged",
+   "entity": {
+    "cwd": "/work",
+    "client": "claude",
+    "dir": "",
+    "path": ".mcp.json",
+    "serversKey": "mcpServers",
+    "config": {}
+   },
+   "steps": [
+    {
+     "trait": "OrbMcpInstall",
+     "from": "reading",
+     "event": "MCP_READ",
+     "payload": {
+      "data": "IHsiYSI6MX0="
+     },
+     "expect": {
+      "state": "writing",
+      "emits": [
+       {
+        "event": "MCP_MERGE",
+        "payload": {}
+       }
+      ],
+      "fired": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "reading: a JSON array is left unchanged and answers its path (500)",
+   "entity": {
+    "cwd": "/work",
+    "client": "claude",
+    "dir": "",
+    "path": ".mcp.json",
+    "serversKey": "mcpServers",
+    "config": {}
+   },
+   "steps": [
+    {
+     "trait": "OrbMcpInstall",
+     "from": "reading",
+     "event": "MCP_READ",
+     "payload": {
+      "data": "WzFd"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "MCP_INSTALL_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "/work/.mcp.json"
+        }
+       }
+      ],
+      "fired": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "reading: text that is not JSON is left unchanged (500)",
+   "entity": {
+    "cwd": "/work",
+    "client": "claude",
+    "dir": "",
+    "path": ".mcp.json",
+    "serversKey": "mcpServers",
+    "config": {}
+   },
+   "steps": [
+    {
+     "trait": "OrbMcpInstall",
+     "from": "reading",
+     "event": "MCP_READ",
+     "payload": {
+      "data": "bm90IGpzb24="
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "MCP_INSTALL_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "/work/.mcp.json"
+        }
+       }
+      ],
+      "fired": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "reading: an empty file is left unchanged (500; Rust: not a JSON object)",
+   "entity": {
+    "cwd": "/work",
+    "client": "claude",
+    "dir": "",
+    "path": ".mcp.json",
+    "serversKey": "mcpServers",
+    "config": {}
+   },
+   "steps": [
+    {
+     "trait": "OrbMcpInstall",
+     "from": "reading",
+     "event": "MCP_READ",
+     "payload": {
+      "data": ""
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "MCP_INSTALL_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "/work/.mcp.json"
+        }
+       }
+      ],
+      "fired": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "reading: a JSON string is left unchanged (500)",
+   "entity": {
+    "cwd": "/work",
+    "client": "claude",
+    "dir": "",
+    "path": ".mcp.json",
+    "serversKey": "mcpServers",
+    "config": {}
+   },
+   "steps": [
+    {
+     "trait": "OrbMcpInstall",
+     "from": "reading",
+     "event": "MCP_READ",
+     "payload": {
+      "data": "ImEi"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "MCP_INSTALL_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "/work/.mcp.json"
+        }
+       }
+      ],
+      "fired": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "reading: a host failure answers the path and the error (500)",
+   "entity": {
+    "cwd": "/work",
+    "client": "claude",
+    "dir": "",
+    "path": ".mcp.json",
+    "serversKey": "mcpServers",
+    "config": {}
+   },
+   "steps": [
+    {
+     "trait": "OrbMcpInstall",
+     "from": "reading",
+     "event": "MCP_HOST_FAILED",
+     "payload": {
+      "error": "is a directory"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "MCP_INSTALL_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "/work/.mcp.json: is a directory"
+        }
+       }
+      ],
+      "fired": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "writing: claude merges and writes at once (no directory step)",
+   "entity": {
+    "cwd": "/work",
+    "client": "claude",
+    "dir": "",
+    "path": ".mcp.json",
+    "serversKey": "mcpServers",
+    "config": {}
+   },
+   "steps": [
+    {
+     "trait": "OrbMcpInstall",
+     "from": "writing",
+     "event": "MCP_MERGE",
+     "payload": {},
+     "expect": {
+      "state": "writing",
+      "emits": [
+       {
+        "event": "MCP_DIR_READY",
+        "payload": {}
+       }
+      ],
+      "fired": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "writing: control, cursor makes its directory first",
+   "entity": {
+    "cwd": "/work",
+    "client": "cursor",
+    "dir": ".cursor",
+    "path": ".cursor/mcp.json",
+    "serversKey": "mcpServers",
+    "config": {}
+   },
+   "steps": [
+    {
+     "trait": "OrbMcpInstall",
+     "from": "writing",
+     "event": "MCP_MERGE",
+     "payload": {},
+     "expect": {
+      "state": "writing",
+      "neverEmits": [
+       "MCP_DIR_READY"
+      ],
+      "effects": [
+       {
+        "type": "set"
+       },
+       {
+        "type": "os/mkdir",
+        "key": "dir",
+        "optionsAt": 2
+       }
+      ],
+      "fired": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "writing: control, vscode makes its directory first",
+   "entity": {
+    "cwd": "/work",
+    "client": "vscode",
+    "dir": ".vscode",
+    "path": ".vscode/mcp.json",
+    "serversKey": "servers",
+    "config": {}
+   },
+   "steps": [
+    {
+     "trait": "OrbMcpInstall",
+     "from": "writing",
+     "event": "MCP_MERGE",
+     "payload": {},
+     "expect": {
+      "state": "writing",
+      "neverEmits": [
+       "MCP_DIR_READY"
+      ],
+      "effects": [
+       {
+        "type": "set"
+       },
+       {
+        "type": "os/mkdir",
+        "key": "dir",
+        "optionsAt": 2
+       }
+      ],
+      "fired": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "writing: a servers key that is not an object is left unchanged (500)",
+   "entity": {
+    "cwd": "/work",
+    "client": "claude",
+    "dir": "",
+    "path": ".mcp.json",
+    "serversKey": "mcpServers",
+    "config": {
+     "mcpServers": "nope"
+    }
+   },
+   "steps": [
+    {
+     "trait": "OrbMcpInstall",
+     "from": "writing",
+     "event": "MCP_MERGE",
+     "payload": {},
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "MCP_INSTALL_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "/work/.mcp.json"
+        }
+       }
+      ],
+      "fired": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "writing: a servers array in vscode is left unchanged (500)",
+   "entity": {
+    "cwd": "/work",
+    "client": "vscode",
+    "dir": ".vscode",
+    "path": ".vscode/mcp.json",
+    "serversKey": "servers",
+    "config": {
+     "servers": [
+      1
+     ]
+    }
+   },
+   "steps": [
+    {
+     "trait": "OrbMcpInstall",
+     "from": "writing",
+     "event": "MCP_MERGE",
+     "payload": {},
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "MCP_INSTALL_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "/work/.vscode/mcp.json"
+        }
+       }
+      ],
+      "fired": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "writing: control, an object servers key with other entries is merged",
+   "entity": {
+    "cwd": "/work",
+    "client": "claude",
+    "dir": "",
+    "path": ".mcp.json",
+    "serversKey": "mcpServers",
+    "config": {
+     "mcpServers": {
+      "other": {
+       "command": "x"
+      }
+     },
+     "theme": "dark"
+    }
+   },
+   "steps": [
+    {
+     "trait": "OrbMcpInstall",
+     "from": "writing",
+     "event": "MCP_MERGE",
+     "payload": {},
+     "expect": {
+      "state": "writing",
+      "emits": [
+       {
+        "event": "MCP_DIR_READY",
+        "payload": {}
+       }
+      ],
+      "fired": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "writing: a null servers key is replaced by an object",
+   "entity": {
+    "cwd": "/work",
+    "client": "claude",
+    "dir": "",
+    "path": ".mcp.json",
+    "serversKey": "mcpServers",
+    "config": {
+     "mcpServers": null
+    }
+   },
+   "steps": [
+    {
+     "trait": "OrbMcpInstall",
+     "from": "writing",
+     "event": "MCP_MERGE",
+     "payload": {},
+     "expect": {
+      "state": "writing",
+      "emits": [
+       {
+        "event": "MCP_DIR_READY",
+        "payload": {}
+       }
+      ],
+      "fired": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "writing: the directory is ready, the config is written",
+   "entity": {
+    "cwd": "/work",
+    "client": "claude",
+    "dir": "",
+    "path": ".mcp.json",
+    "serversKey": "mcpServers",
+    "config": {}
+   },
+   "steps": [
+    {
+     "trait": "OrbMcpInstall",
+     "from": "writing",
+     "event": "MCP_DIR_READY",
+     "payload": {},
+     "expect": {
+      "state": "writing",
+      "effects": [
+       {
+        "type": "os/write-file",
+        "key": "config",
+        "optionsAt": 2
+       }
+      ],
+      "fired": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "writing: the config is saved, the language check runs",
+   "entity": {
+    "cwd": "/work",
+    "client": "claude",
+    "dir": "",
+    "path": ".mcp.json",
+    "serversKey": "mcpServers",
+    "config": {}
+   },
+   "steps": [
+    {
+     "trait": "OrbMcpInstall",
+     "from": "writing",
+     "event": "MCP_WRITTEN",
+     "payload": {},
+     "expect": {
+      "state": "setup",
+      "emits": [
+       {
+        "event": "MCP_SETUP_RUN",
+        "payload": {
+         "stage": "setup",
+         "argv": [
+          "list",
+          "--global"
+         ]
+        }
+       }
+      ],
+      "fired": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "writing: a write failure answers the path and the error (500)",
+   "entity": {
+    "cwd": "/work",
+    "client": "claude",
+    "dir": "",
+    "path": ".mcp.json",
+    "serversKey": "mcpServers",
+    "config": {}
+   },
+   "steps": [
+    {
+     "trait": "OrbMcpInstall",
+     "from": "writing",
+     "event": "MCP_HOST_FAILED",
+     "payload": {
+      "error": "read-only file system"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "MCP_INSTALL_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "/work/.mcp.json: read-only file system"
+        }
+       }
+      ],
+      "fired": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "writing: a mkdir failure names the client path (500)",
+   "entity": {
+    "cwd": "/work",
+    "client": "cursor",
+    "dir": ".cursor",
+    "path": ".cursor/mcp.json",
+    "serversKey": "mcpServers",
+    "config": {}
+   },
+   "steps": [
+    {
+     "trait": "OrbMcpInstall",
+     "from": "writing",
+     "event": "MCP_HOST_FAILED",
+     "payload": {
+      "error": "not a directory"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "MCP_INSTALL_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "/work/.cursor/mcp.json: not a directory"
+        }
+       }
+      ],
+      "fired": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "setup: the language check passing answers the path (200)",
+   "entity": {
+    "cwd": "/work",
+    "client": "claude",
+    "dir": "",
+    "path": ".mcp.json",
+    "serversKey": "mcpServers",
+    "config": {}
+   },
+   "steps": [
+    {
+     "trait": "OrbMcpInstall",
+     "from": "setup",
+     "event": "MCP_SETUP_DONE",
+     "payload": {
+      "stage": "setup",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "",
+      "stderr": ""
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "MCP_INSTALL_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "Registered `orb mcp` in /work/.mcp.json"
+        }
+       }
+      ],
+      "fired": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "setup: a cursor registration names its nested path (200)",
+   "entity": {
+    "cwd": "/work",
+    "client": "cursor",
+    "dir": ".cursor",
+    "path": ".cursor/mcp.json",
+    "serversKey": "mcpServers",
+    "config": {}
+   },
+   "steps": [
+    {
+     "trait": "OrbMcpInstall",
+     "from": "setup",
+     "event": "MCP_SETUP_DONE",
+     "payload": {
+      "stage": "setup",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "",
+      "stderr": ""
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "MCP_INSTALL_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "Registered `orb mcp` in /work/.cursor/mcp.json"
+        }
+       }
+      ],
+      "fired": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "setup: a failing language check still registers and warns (200; Rust warns on stderr)",
+   "entity": {
+    "cwd": "/work",
+    "client": "claude",
+    "dir": "",
+    "path": ".mcp.json",
+    "serversKey": "mcpServers",
+    "config": {}
+   },
+   "steps": [
+    {
+     "trait": "OrbMcpInstall",
+     "from": "setup",
+     "event": "MCP_SETUP_DONE",
+     "payload": {
+      "stage": "setup",
+      "exitCode": 1,
+      "signal": 0,
+      "stdout": "",
+      "stderr": "offline\n"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "MCP_INSTALL_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "Registered `orb mcp` in /work/.mcp.json\norb: the language is not set up yet (offline); run `npx -y @almadar/orb update --global`, or orb retries on the first tool call"
+        }
+       }
+      ],
+      "fired": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "setup: orb that cannot be run still registers and warns (200)",
+   "entity": {
+    "cwd": "/work",
+    "client": "claude",
+    "dir": "",
+    "path": ".mcp.json",
+    "serversKey": "mcpServers",
+    "config": {}
+   },
+   "steps": [
+    {
+     "trait": "OrbMcpInstall",
+     "from": "setup",
+     "event": "MCP_SETUP_FAILED",
+     "payload": {
+      "stage": "setup",
+      "error": "orb not found",
+      "code": "ENOENT"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "MCP_INSTALL_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "Registered `orb mcp` in /work/.mcp.json\norb: the language is not set up yet (orb not found); run `npx -y @almadar/orb update --global`, or orb retries on the first tool call"
+        }
+       }
+      ],
+      "fired": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "setup: a vscode registration names its nested path (200)",
+   "entity": {
+    "cwd": "/work",
+    "client": "vscode",
+    "dir": ".vscode",
+    "path": ".vscode/mcp.json",
+    "serversKey": "servers",
+    "config": {}
+   },
+   "steps": [
+    {
+     "trait": "OrbMcpInstall",
+     "from": "setup",
+     "event": "MCP_SETUP_DONE",
+     "payload": {
+      "stage": "setup",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "",
+      "stderr": ""
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "MCP_INSTALL_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "Registered `orb mcp` in /work/.vscode/mcp.json"
+        }
+       }
+      ],
+      "fired": true
+     }
+    }
+   ]
+  }
+ ]
+}

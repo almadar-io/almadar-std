@@ -1,0 +1,288 @@
+{
+ "atom": "connect/atoms/std-stdio-lines.lolo",
+ "trait": "StdioLines",
+ "cases": [
+  {
+   "id": "a read appends its bytes and its pump delivers the first line",
+   "steps": [
+    {
+     "trait": "StdioLines",
+     "from": "active",
+     "event": "STDIO_READ",
+     "payload": {
+      "data": "YQpiCmM=",
+      "eof": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STDIO_PUMP",
+        "payload": {}
+       },
+       {
+        "event": "INPUT_LINE",
+        "payload": {
+         "line": "a"
+        }
+       }
+      ],
+      "state": "active"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a pump delivers the first complete line without its LF",
+   "steps": [
+    {
+     "trait": "StdioLines",
+     "from": "active",
+     "event": "STDIO_PUMP",
+     "payload": {},
+     "entity": {
+      "inputBuffer": "YWJjCnJlc3Q=",
+      "awaitingAck": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "INPUT_LINE",
+        "payload": {
+         "line": "abc"
+        }
+       }
+      ],
+      "state": "active"
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a pump while a line awaits its ack delivers nothing",
+   "steps": [
+    {
+     "trait": "StdioLines",
+     "from": "active",
+     "event": "STDIO_PUMP",
+     "payload": {},
+     "entity": {
+      "inputBuffer": "YWJjCg==",
+      "awaitingAck": true
+     },
+     "expect": {
+      "fired": false
+     }
+    }
+   ]
+  },
+  {
+   "id": "a line split across reads is joined",
+   "steps": [
+    {
+     "trait": "StdioLines",
+     "from": "active",
+     "event": "STDIO_READ",
+     "payload": {
+      "data": "YWI=",
+      "eof": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STDIO_PUMP",
+        "payload": {}
+       }
+      ],
+      "emitCounts": {
+       "INPUT_LINE": 0
+      }
+     }
+    },
+    {
+     "trait": "StdioLines",
+     "from": "active",
+     "event": "STDIO_READ",
+     "payload": {
+      "data": "Ywpk",
+      "eof": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STDIO_PUMP",
+        "payload": {}
+       },
+       {
+        "event": "INPUT_LINE",
+        "payload": {
+         "line": "abc"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a UTF-8 character split across reads decodes whole",
+   "steps": [
+    {
+     "trait": "StdioLines",
+     "from": "active",
+     "event": "STDIO_READ",
+     "payload": {
+      "data": "ww==",
+      "eof": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STDIO_PUMP",
+        "payload": {}
+       }
+      ],
+      "emitCounts": {
+       "INPUT_LINE": 0
+      }
+     }
+    },
+    {
+     "trait": "StdioLines",
+     "from": "active",
+     "event": "STDIO_READ",
+     "payload": {
+      "data": "qQo=",
+      "eof": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STDIO_PUMP",
+        "payload": {}
+       },
+       {
+        "event": "INPUT_LINE",
+        "payload": {
+         "line": "\u00e9"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "at EOF the unterminated final line is delivered",
+   "steps": [
+    {
+     "trait": "StdioLines",
+     "from": "active",
+     "event": "STDIO_PUMP",
+     "payload": {},
+     "entity": {
+      "inputBuffer": "dGFpbA==",
+      "inputEof": true,
+      "awaitingAck": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "INPUT_LINE",
+        "payload": {
+         "line": "tail"
+        }
+       }
+      ],
+      "state": "active"
+     }
+    }
+   ]
+  },
+  {
+   "id": "at EOF with nothing buffered the session closes",
+   "steps": [
+    {
+     "trait": "StdioLines",
+     "from": "active",
+     "event": "STDIO_PUMP",
+     "payload": {},
+     "entity": {
+      "inputBuffer": "",
+      "inputEof": true,
+      "awaitingAck": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STDIO_CLOSED",
+        "payload": {}
+       }
+      ],
+      "state": "closed"
+     }
+    }
+   ]
+  },
+  {
+   "id": "an ack pumps the next line",
+   "steps": [
+    {
+     "trait": "StdioLines",
+     "from": "active",
+     "event": "INPUT_NEXT",
+     "payload": {},
+     "entity": {
+      "awaitingAck": true
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STDIO_PUMP",
+        "payload": {}
+       }
+      ],
+      "state": "active"
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: an ack with no line outstanding does nothing",
+   "steps": [
+    {
+     "trait": "StdioLines",
+     "from": "active",
+     "event": "INPUT_NEXT",
+     "payload": {},
+     "entity": {
+      "awaitingAck": false
+     },
+     "expect": {
+      "fired": false
+     }
+    }
+   ]
+  },
+  {
+   "id": "no complete line before EOF asks for another read",
+   "steps": [
+    {
+     "trait": "StdioLines",
+     "from": "active",
+     "event": "STDIO_PUMP",
+     "payload": {},
+     "entity": {
+      "inputBuffer": "cGFydGlhbA==",
+      "inputEof": false,
+      "awaitingAck": false
+     },
+     "expect": {
+      "fired": true,
+      "emits": [],
+      "state": "active"
+     }
+    }
+   ]
+  }
+ ]
+}

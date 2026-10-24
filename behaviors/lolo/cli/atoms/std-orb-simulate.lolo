@@ -8,7 +8,7 @@ uses Spec from "almadar-std/orb-simulate"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type Expr = string | number | boolean | [Expr] | Map string Expr
 type SimFrom = string | [string]
-type SimTransition = { from : SimFrom, to : string, event : string, guard : Expr, effects : [Expr] }
+type SimTransition = { from : SimFrom, to : string, event : string, guard : Expr, effects : [[Expr?]] }
 type SimState = { name : string, isInitial : boolean }
 type SimMachine = { states : [SimState], transitions : [SimTransition] }
 type SimTrait = { name : string, stateMachine : SimMachine }
@@ -23,7 +23,7 @@ orbital OrbSimulateOrbital {
     report : [string] = []
   }
 
-  trait OrbSimulate -> OrbSimulateRun [integration] {
+  trait OrbSimulate -> OrbSimulateRun [optimistic] {
     initial: ready
 
     state ready {
@@ -119,5 +119,5 @@ orbital OrbSimulateOrbital {
     }
   }
 
-  page "/orb-simulate" as OrbSimulatePage -> OrbSimulate
+  page boot as OrbSimulateOrbitalStart -> OrbSimulate
 }

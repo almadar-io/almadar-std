@@ -86,7 +86,7 @@ orbital VectorWriteOrbital {
     }
   }
 
-  trait VectorWrite -> VectorWriteRun [integration, instance] {
+  trait VectorWrite -> VectorWriteRun [optimistic] {
     initial: idle
 
     state idle {
@@ -380,7 +380,7 @@ orbital VectorWriteOrbital {
       ELAPSED {
         waitedMs : number!
       }
-      VECTOR_WRITE -> external {
+      VECTOR_WRITE -> input {
         path : string!
         model : string!
         records : [VecRecord]!
@@ -390,5 +390,5 @@ orbital VectorWriteOrbital {
     }
   }
 
-  page "/vector-write" as VectorWritePage -> VectorWrite, WriteQuantize, WriteF32, WriteSig6, WriteBigCmp, WriteDelay, WriteStore
+  page boot as VectorWriteOrbitalStart -> VectorWrite, WriteQuantize, WriteF32, WriteSig6, WriteBigCmp, WriteDelay, WriteStore
 }

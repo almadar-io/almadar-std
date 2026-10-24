@@ -100,14 +100,15 @@ export const BEHAVIOR_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'behavior/resolve': {
     module: 'behavior', category: 'std-behavior',
-    minArity: 1, maxArity: 2,
-    description: 'The behavior a trait value, an orbital value or `{ behavior }` names, resolved: every import and composed trait inlined, as a quoted program.',
+    minArity: 1, maxArity: 3,
+    description: 'The behavior a trait value, an orbital value or `{ behavior }` names, resolved: every import and composed trait inlined, as a quoted program. With `{ path: true }`, where it resolves instead: `{ path, owner }`, the file and the package that owns it, as `orb behaviors which` prints them; with `{ expects: true }`, each orbital\'s derived expectations.',
     hasSideEffects: true,
     runsOn: 'server',
     host: 'program',
-    returnType: 'sexpr',
+    returnType: union('sexpr', shape({ path: STRING, owner: STRING })),
     params: [
       { name: 'value', type: union('trait', 'orbital', 'behavior'), description: 'A trait value, an orbital value, or { behavior }' },
+      { name: 'request', type: openShape({ path: BOOLEAN, expects: BOOLEAN }), description: '`path: true` answers `{ path, owner }`; `expects: true` answers each orbital\'s derived expectations (`{ <orbital>: … }`, as `orb behaviors expects` prints them; `behavior` may also name a `.orb` file)', optional: true },
       { name: 'options', type: EMIT_ENVELOPE, description: 'Emit configuration ({ emit: { success, failure } })', optional: true },
     ],
     example: '["behavior/resolve", "@entity.app", { "emit": { "success": "RESOLVED", "failure": "RESOLVE_FAILED" } }]',

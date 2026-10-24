@@ -22,14 +22,14 @@ orbital MachineOrbital {
     rows : [MachineRow]! = []
   }
 
-  trait Machine -> MachineRun [integration] {
+  trait Machine -> MachineRun [client] {
     initial: ready
 
     state ready {
       INIT -> ready
       MACHINE_READ -> ready
         (set @entity.rows (array/flatten (array/map (object/get (json/parse (json/stringify @payload.program) MachineProgram) "orbitals") (fn o
-          (array/flatten (array/map (array/filter (object/get @o "traits") (fn t (object/has @t "stateMachine"))) (fn t
+          (array/flatten (array/map (array/filter (object/get @o "traits" []) (fn t (object/has @t "stateMachine"))) (fn t
             (let ((arms (array/flatten (array/map (object/get (object/get @t "stateMachine") "transitions") (fn a
                           (array/map (let ((raw (object/get @a "from"))) (if (validate/array @raw) (json/parse (json/stringify @raw) MachineSources) (json/parse (str/concat "[" (json/stringify @raw) "]") MachineSources))) (fn f
                             { from: @f, event: (object/get @a "event"), to: (object/get @a "to"), guarded: (object/has @a "guard") }))))))
@@ -56,11 +56,11 @@ orbital MachineOrbital {
     }
 
     listens {
-      MACHINE_READ -> external { program : SExpr! }
+      MACHINE_READ -> input { program : SExpr! }
         @description "Read a resolved program's state machine as rows."
         @synonyms "program machine, transitions of a program, state machine rows"
     }
   }
 
-  page "/machine" as MachinePage -> Machine
+  page boot as MachineOrbitalStart -> Machine
 }

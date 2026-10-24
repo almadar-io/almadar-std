@@ -11,7 +11,7 @@ orbital BoardOrbital {
 
     type BoardColumn = { key : string!, label : string!, icon : string, variant : "default" | "primary" | "success" | "warning" | "error" | "info", count : number, items : [BoardItem] }
 
-    type BoardItemsLoaded = Event { data : [ObjectSpec]! } "Fired when board items finish loading (from an upstream fetcher / persistor)"
+    type BoardItemsLoaded = Event { data : [BoardItem]! } "Fired when board items finish loading (from an upstream fetcher / persistor)"
 
     type BoardItemsLoadFailed = Event { error : string, code : string } "Fired when the upstream fetch fails"
 
@@ -34,11 +34,11 @@ orbital BoardOrbital {
     currentDescription : string @intrinsic = ""
     currentStage : string @intrinsic = ""
     currentNotes : string @intrinsic = ""
-    currentRow : BoardView @intrinsic
+    currentRow : BoardItem @intrinsic
     errorMessage : string @intrinsic = ""
   }
 
-  trait BoardItemBoard -> @rebindable BoardView [interaction, instance] {
+  trait BoardItemBoard -> @rebindable BoardView {
     initial: loading
 
     state loading {
@@ -327,7 +327,7 @@ orbital BoardOrbital {
     emits {
       OPEN_CARD {
         id : string!
-        row : @entity!
+        row : BoardItem!
       }
         @description "Indicates a card within the board has been selected."
         @synonyms "select, choose, activate, display"
@@ -381,7 +381,7 @@ orbital BoardOrbital {
         @synonyms "edit, modify, update, change"
         @tier "domain"
       BoardItemsLoaded {
-        data : [ObjectSpec]!
+        data : [BoardItem]!
       }
         @description "Signals that board items have been successfully loaded."
         @synonyms "loaded, fetched, retrieved, populated"
@@ -416,7 +416,7 @@ orbital BoardOrbital {
     listens {
       OPEN_CARD {
         id : string!
-        row : @entity!
+        row : BoardItem!
         title : string
         description : string
         stage : string
@@ -495,7 +495,7 @@ orbital BoardOrbital {
         @synonyms "reload, refresh, update, paginate"
         @tier "domain"
       BoardItemsLoaded {
-        data : [ObjectSpec]!
+        data : [BoardItem]!
       }
         @description "Data for the board columns has been successfully retrieved."
         @synonyms "loaded, fetched, retrieved, populated"

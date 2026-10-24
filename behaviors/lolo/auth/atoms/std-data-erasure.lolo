@@ -19,7 +19,7 @@ orbital DataErasureOrbital {
 
     type ErasureSaveFailed = Event { error : string, code : string } "Fired when an ErasureRequest persist fails."
 
-    type ExecScanLoaded = Event { data : [ErasureRequest] } "Internal: grace requests whose execution time has passed."
+    type ExecScanLoaded = Event { data : [ErasureRequest]! } "Internal: grace requests whose execution time has passed."
 
     type ExecScanFailed = Event { error : string, code : string } "Internal: execution scan fetch / persist failed."
 
@@ -70,7 +70,7 @@ orbital DataErasureOrbital {
     }
   }
 
-  trait CloseButton = Button.traits.ButtonRender -> ErasureRequest {
+  trait CloseButton = Button.traits.ButtonRender -> ErasureRequest [server] {
     config {
       action: CLOSE
       icon: x
@@ -90,7 +90,7 @@ orbital DataErasureOrbital {
     }
   }
 
-  trait ErasureWorkflow -> ErasureRequest [interaction, collection, erasure, compliance] {
+  trait ErasureWorkflow -> ErasureRequest {
     initial: idle
 
     state idle {
@@ -293,7 +293,7 @@ orbital DataErasureOrbital {
         @synonyms "execute, perform erasure, delete now, scrub, finalize erasure"
         @tier "domain"
       ExecScanLoaded {
-        data : [ErasureRequest]
+        data : [ErasureRequest]!
       }
         @description "Internal: grace requests due for execution."
         @synonyms "scan loaded, due requests"
@@ -315,7 +315,7 @@ orbital DataErasureOrbital {
 
     listens {
       ExecScanLoaded {
-        data : [ErasureRequest]
+        data : [ErasureRequest]!
       }
         @description "Internal: grace requests due for execution."
         @synonyms "scan loaded, due requests"

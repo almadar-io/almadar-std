@@ -13,7 +13,7 @@ orbital BigCmpOrbital {
     tag : string = ""
   }
 
-  trait BigCmp -> BigCmpRun [integration, instance] {
+  trait BigCmp -> BigCmpRun [client] {
     initial: idle
 
     state idle {
@@ -37,7 +37,7 @@ orbital BigCmpOrbital {
     }
 
     listens {
-      BIGCMP_BATCH -> external {
+      BIGCMP_BATCH -> input {
         items : [BigCmpItem]!
         tag : string
       }
@@ -46,5 +46,5 @@ orbital BigCmpOrbital {
     }
   }
 
-  page "/bigcmp" -> BigCmp
+  page boot as BigCmpOrbitalStart -> BigCmp
 }

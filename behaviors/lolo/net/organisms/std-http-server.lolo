@@ -50,6 +50,16 @@ orbital HttpServerOrbital {
   }
 
   config {
+    host : string = "127.0.0.1"
+      @label "Host"
+      @description "The address the HTTP endpoint binds."
+      @synonyms "bind address, listen host"
+      @tier "policy"
+    port : number = 3000
+      @label "Port"
+      @description "The port the HTTP endpoint binds; the PORT environment variable replaces it at LISTEN while portFromEnv is on."
+      @synonyms "listen port"
+      @tier "policy"
     rateLimit : boolean = true
       @label "Rate limit"
       @description "Whether /api requests are counted against the per-client window and throttled; off takes the limiter out of the request path (replaces ORB_DISABLE_RATE_LIMIT)."
@@ -66,6 +76,10 @@ orbital HttpServerOrbital {
   }
 
   trait Http1 = H1.traits.Http1 {
+    config {
+      host: @config.host
+      port: @config.port
+    }
     listens {
       BootGuard.BOOT_CLEARED -> LISTEN
       ServerCompress.RESPOND -> SEND_RESPONSE
@@ -89,7 +103,7 @@ orbital HttpServerOrbital {
     }
   }
 
-  trait CompressPolicy = Policy.traits.HttpPolicy {
+  trait CompressPolicy = Policy.traits.HttpPolicy [client] {
     config {
       originsFromEnv: false
     }
@@ -300,5 +314,5 @@ orbital HttpServerOrbital {
     }
   }
 
-  page "/server" as HttpServerPage -> BootGuard, BootCreds, BootCheck, Http1, ServerPolicy, ServerRateLimiter, ServerRouter, ServerDispatch, ServerStatic, ServerCompress, CompressPolicy, CompressGzip, CompressBrotli, StreamTicketer, ServerSse, ServerLiveFeed, ServerBearer, ApiKeys, BearerJws, BearerX509, BearerRsa, BearerBig, BearerEc, BearerEcBig
+  page http { host: @config.host, port: @config.port, path: "/" } as Api -> BootGuard, BootCreds, BootCheck, Http1, ServerPolicy, ServerRateLimiter, ServerRouter, ServerDispatch, ServerStatic, ServerCompress, CompressPolicy, CompressGzip, CompressBrotli, StreamTicketer, ServerSse, ServerLiveFeed, ServerBearer, ApiKeys, BearerJws, BearerX509, BearerRsa, BearerBig, BearerEc, BearerEcBig
 }

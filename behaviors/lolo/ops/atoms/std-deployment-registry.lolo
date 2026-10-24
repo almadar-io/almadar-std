@@ -38,7 +38,7 @@ orbital DeploymentRegistryOrbital {
     retries : number @description "Retries of the deploy in flight after a lost race." = 0
   }
 
-  trait DeploymentRegistrar -> DeploymentRun [integration, instance] {
+  trait DeploymentRegistrar -> DeploymentRun [optimistic] {
     initial: idle
 
     config {
@@ -316,30 +316,30 @@ orbital DeploymentRegistryOrbital {
     }
 
     listens {
-      DEPLOY -> external {
+      DEPLOY -> input {
         artifact : string!
         activates : boolean!
         details : Map string (string | number)
       }
         @description "Record the artifact's next deployment; activates says whether it may serve (and so becomes active)."
         @synonyms "publish, deploy, release"
-      ROLLBACK -> external {
+      ROLLBACK -> input {
         artifact : string!
         version : number!
       }
         @description "Make this earlier version the active one again."
         @synonyms "roll back, revert deployment"
-      WITHDRAW -> external {
+      WITHDRAW -> input {
         artifact : string!
       }
         @description "Leave the artifact with nothing active; its history stays."
         @synonyms "unpublish, take down"
-      RESOLVE -> external {
+      RESOLVE -> input {
         artifact : string!
       }
         @description "The artifact's active deployment."
         @synonyms "what is live, current deployment"
-      HISTORY -> external {
+      HISTORY -> input {
         artifact : string!
       }
         @description "Every recorded deployment of the artifact, oldest first."

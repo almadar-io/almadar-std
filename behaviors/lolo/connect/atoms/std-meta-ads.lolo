@@ -16,7 +16,7 @@ orbital MetaAdsOrbital {
     id : string!
   }
 
-  trait MetaAdsClient -> MetaAdsLookup [integration, instance] {
+  trait MetaAdsClient -> MetaAdsLookup [optimistic] {
     initial: idle
 
     state idle {
@@ -159,14 +159,14 @@ orbital MetaAdsOrbital {
     }
 
     listens {
-      META_ADS_GET_SPEND -> external {
+      META_ADS_GET_SPEND -> input {
         accountId : string
         since : string!
         until : string!
       }
         @description "Fetch total spend, impressions and clicks of an ad account (id with or without the act_ prefix; defaults to the defaultAccountId knob) for a date range (YYYY-MM-DD)."
         @synonyms "get ad spend, meta spend report, insights for range"
-      META_ADS_LIST_CAMPAIGNS -> external {
+      META_ADS_LIST_CAMPAIGNS -> input {
         accountId : string
         status : string
       }

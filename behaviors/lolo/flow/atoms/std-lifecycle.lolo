@@ -5,7 +5,7 @@ app std-lifecycle [
 uses Spec from "almadar-std/lifecycle"
 
 orbital LifecycleOrbital {
-    type ScanRecordsLoaded = Event { data : [@entity @config.targetEntity] } "Internal: target records matching the lifecycle filter."
+    type ScanRecordsLoaded = Event { data : [@entity @config.targetEntity]! } "Internal: target records matching the lifecycle filter."
 
     type ScanFailed = Event { error : string, code : string } "Internal: scan fetch / persist failed."
 
@@ -24,7 +24,7 @@ orbital LifecycleOrbital {
     headStatus : string @description "Scratch: the status applied to the current record." @synonyms "new status, to status" = ""
   }
 
-  trait LifecycleScheduler -> @rebindable LifecycleRunLog [lifecycle, instance] {
+  trait LifecycleScheduler -> @rebindable LifecycleRunLog {
     initial: idle
 
     state idle {
@@ -69,7 +69,7 @@ orbital LifecycleOrbital {
         status : string
       }
       ScanRecordsLoaded {
-        data : [@entity @config.targetEntity]
+        data : [@entity @config.targetEntity]!
       }
       ScanFailed {
         error : string
@@ -82,7 +82,7 @@ orbital LifecycleOrbital {
 
     listens {
       ScanRecordsLoaded {
-        data : [@entity @config.targetEntity]
+        data : [@entity @config.targetEntity]!
       }
       ScanFailed {
         error : string

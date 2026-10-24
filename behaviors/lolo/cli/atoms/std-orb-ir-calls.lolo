@@ -20,7 +20,7 @@ orbital IrCallsOrbital {
     calls : [IrCall] = []
   }
 
-  trait IrCalls -> IrCallsRun [lifecycle, instance] {
+  trait IrCalls -> IrCallsRun [client] {
     initial: ready
 
     state ready {
@@ -81,11 +81,11 @@ orbital IrCallsOrbital {
     }
 
     listens {
-      IR_CALLS_FIND -> external { requestId : string!  program : IrProgram!  heads : [string]! }
+      IR_CALLS_FIND -> input { requestId : string!  program : IrProgram!  heads : [string]! }
         @description "Find every call whose head is in heads in the guards, effects and ticks of a program."
         @synonyms "find calls, find operator, find effects, tree walk"
     }
   }
 
-  page "/orb-ir-calls" as IrCallsPage -> IrCalls
+  page boot as IrCallsOrbitalStart -> IrCalls
 }

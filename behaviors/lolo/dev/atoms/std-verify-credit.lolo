@@ -19,7 +19,7 @@ orbital VerifyCreditOrbital {
     credits : [Credit]! = []
   }
 
-  trait Credit -> CreditRun [integration] {
+  trait Credit -> CreditRun [client] {
     initial: ready
 
     state ready {
@@ -42,11 +42,11 @@ orbital VerifyCreditOrbital {
     }
 
     listens {
-      CREDIT_REQUEST -> external { steps : [CreditStep]! }
+      CREDIT_REQUEST -> input { steps : [CreditStep]! }
         @description "Credit the failure-route steps of a plan from the hops the other steps fired."
         @synonyms "verify credit, failure route credit, credit pass, fired hops"
     }
   }
 
-  page "/verify-credit" as VerifyCreditPage -> Credit
+  page boot as VerifyCreditOrbitalStart -> Credit
 }

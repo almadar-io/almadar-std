@@ -1,0 +1,170 @@
+app std-orb-lower [
+  version: "1.0.0",
+  inbound: ["cli-lower"],
+  fs: { cwd: "**": [read], "/**": [read] },
+  description: "std-orb-lower — the `orb lower <FILE>...` command (spec/cli/orb-lower.lolo; port of orbital-cli lib.rs Commands::Lower). Each file is read (a relative path from the directory the command runs in) and lowered by program/read on the host, one file at a time in input order, and one compact JSON line is printed per file: { path, orb } when it lowers, { path, error } when it is unreadable or does not lower. The path is printed as given. The command itself always succeeds (status 200); no file, or an unknown flag, answers the usage (status 400, exit 2). program/read answers a stamped program (the Rust command stamps each schema). Divergence recorded in the std ledger: the host lowers the text beside a scratch path, so a relative import in a file does not resolve, and an unlowerable file's error is the host's program/read reason, not the parser's own."
+]
+uses Spec from "almadar-std/orb-lower"
+uses Args from "std/behaviors/std-args"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
+type LowerJson = string | number | boolean | [LowerJson?] | Map string LowerJson?
+
+orbital OrbLowerOrbital {
+  entity LowerRun [runtime] {
+    id : string!
+    cwd : string = ""
+    files : [string] = []
+    cursor : number = 0
+    lines : [string] = []
+  }
+
+  trait ArgsCli = Args.traits.ArgsParser {
+    listens {
+      OrbLower.LOWER_ARGS_PARSE -> ARGS_PARSE
+    }
+  }
+
+  trait OrbLower -> LowerRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LOWER_CALLED -> parsing
+        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
+        (emit LOWER_ARGS_PARSE { stage: "lower" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [] })
+    }
+
+    state parsing {
+      INIT -> parsing
+      LOWER_ARGS_DONE -> ready when (> (array/len @payload.errors) 0)
+        (emit LOWER_ANSWERED { status: 400, body: "", stderr: (str/concat "error: " (array/first @payload.errors) "\n\nUsage: orb lower <FILE>...\n\nFor more information, try '--help'.") })
+      LOWER_ARGS_DONE -> ready when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0))
+        (emit LOWER_ANSWERED { status: 400, body: "", stderr: "error: the following required arguments were not provided:\n  <FILE>...\n\nUsage: orb lower <FILE>...\n\nFor more information, try '--help'." })
+      LOWER_ARGS_DONE -> working when (and (= (array/len @payload.errors) 0) (> (array/len @payload.positionals) 0))
+        (emit LOWER_START { files: @payload.positionals })
+    }
+
+    state working {
+      INIT -> working
+      LOWER_DONE -> ready
+        (emit LOWER_ANSWERED { status: @payload.status, body: @payload.body, stderr: @payload.stderr })
+    }
+
+    emits {
+      LOWER_ANSWERED -> internal {
+        status : number!
+        body : string!
+        stderr : string
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LOWER_ARGS_PARSE {
+        stage : string!
+        argv : [string]!
+        flags : [ArgFlag]!
+      }
+        @description "Internal: parse the call's words."
+        @tier "internal"
+      LOWER_START {
+        files : [string]!
+      }
+        @description "Internal: lower each file, in order."
+        @tier "internal"
+    }
+
+    listens {
+      LOWER_CALLED -> inbound "cli-lower" answers LOWER_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lower`."
+        @synonyms "orb lower, lower lolo files to orb programs, one json line per file"
+      LOWER_ARGS_DONE {
+        stage : string!
+        flags : Map string [string]!
+        positionals : [string]!
+        errors : [string]!
+        words : [string]!
+      }
+        @description "std-args's ARGS_PARSED."
+      ArgsCli.ARGS_PARSED -> LOWER_ARGS_DONE
+      LowerEngine.LOWER_ANSWERED -> LOWER_DONE
+      LOWER_DONE { status : number!  body : string!  stderr : string }
+        @description "Internal: the engine's answer, relayed to the hook by its handler."
+        @tier "internal"
+    }
+  }
+
+  trait LowerEngine -> LowerRun [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      LOWER_START -> reading
+        (set @entity.files @payload.files)
+        (set @entity.cursor 0)
+        (set @entity.lines [])
+        (emit LOWER_NEXT { })
+    }
+
+    state reading {
+      INIT -> reading
+      LOWER_NEXT -> idle when (>= @entity.cursor (array/len @entity.files))
+        (emit LOWER_ANSWERED { status: 200, body: (str/join @entity.lines "\n") })
+      LOWER_NEXT -> reading when (and (< @entity.cursor (array/len @entity.files)) (not (os/path-is-absolute (array/nth @entity.files @entity.cursor))))
+        (os/read-file { anchor: "cwd" path: (array/nth @entity.files @entity.cursor) } { key: (str/concat "lower-" @entity.cursor), emit: { success: LOWER_FILE, failure: LOWER_UNREAD } })
+      LOWER_NEXT -> reading when (and (< @entity.cursor (array/len @entity.files)) (os/path-is-absolute (array/nth @entity.files @entity.cursor)))
+        (os/read-file (str/concat "/" (str/slice (array/nth @entity.files @entity.cursor) 1 (str/len (array/nth @entity.files @entity.cursor)))) { key: (str/concat "lower-" @entity.cursor), emit: { success: LOWER_FILE, failure: LOWER_UNREAD } })
+      LOWER_FILE -> reading
+        (program/read (bytes/to-string @payload.data) { key: (str/concat "lower-" @entity.cursor), emit: { success: LOWER_LOWERED, failure: LOWER_UNREAD } })
+      LOWER_LOWERED -> reading
+        (set @entity.lines (array/append @entity.lines (json/stringify { path: (array/nth @entity.files @entity.cursor), orb: @payload.result })))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit LOWER_NEXT { })
+      LOWER_UNREAD -> reading
+        (set @entity.lines (array/append @entity.lines (json/stringify { path: (array/nth @entity.files @entity.cursor), error: @payload.error })))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit LOWER_NEXT { })
+    }
+
+    emits {
+      LOWER_ANSWERED -> external {
+        status : number!
+        body : string!
+        stderr : string
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LOWER_NEXT {
+      }
+        @description "Internal: lower the file at the cursor."
+        @tier "internal"
+      LOWER_FILE {
+        data : bytes!
+      }
+        @description "os/read-file: the source file."
+        @tier "internal"
+      LOWER_LOWERED {
+        result : LowerJson!
+      }
+        @description "program/read: the lowered, stamped program."
+        @tier "internal"
+      LOWER_UNREAD {
+        error : string
+      }
+        @description "The file could not be read or lowered."
+        @tier "internal"
+    }
+
+    listens {
+      LOWER_START {
+        files : [string]!
+      }
+        @description "Lower each file, in order."
+      OrbLower.LOWER_START -> LOWER_START
+    }
+  }
+
+  page "/orb-lower" as OrbLowerPage -> OrbLower, ArgsCli, LowerEngine
+}

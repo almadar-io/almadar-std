@@ -19,7 +19,7 @@ orbital VerifyTransientProbeOrbital {
     answer : TransientOutcome
   }
 
-  trait TransientProbe -> TransientRun [integration] {
+  trait TransientProbe -> TransientRun [client] {
     initial: ready
 
     state ready {
@@ -49,11 +49,11 @@ orbital VerifyTransientProbeOrbital {
     }
 
     listens {
-      TRANSIENT_REQUEST -> external { query : TransientQuery!, transitions : [TransientTransition]! }
+      TRANSIENT_REQUEST -> input { query : TransientQuery!, transitions : [TransientTransition]! }
         @description "Decide whether a failure arm owes a forced-failure probe, and which transition enters it."
         @synonyms "verify transient probe, transient failure, entering persist, forced failure"
     }
   }
 
-  page "/verify-transient-probe" as VerifyTransientProbePage -> TransientProbe
+  page boot as VerifyTransientProbeOrbitalStart -> TransientProbe
 }

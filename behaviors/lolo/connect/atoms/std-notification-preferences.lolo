@@ -36,7 +36,7 @@ orbital NotificationPreferencesOrbital {
   ;; persist side-effects triggered by the modals' payload-carrying SAVE
   ;; (renamed PREFERENCE_CREATED/PREFERENCE_UPDATED so create and edit stay
   ;; distinguishable without source-scoped listens — the std-list idiom).
-  trait PreferencesManage -> NotificationPreference [interaction, collection] {
+  trait PreferencesManage -> NotificationPreference {
     initial: loading
 
     state loading {
@@ -242,7 +242,7 @@ orbital NotificationPreferencesOrbital {
         @synonyms "remove, discard, clear"
         @tier "domain"
       PreferencesLoaded {
-        data : [NotificationPreference]
+        data : [NotificationPreference]!
       }
         @description "The preference collection finished loading."
         @synonyms "loaded, fetched, retrieved"
@@ -302,7 +302,7 @@ orbital NotificationPreferencesOrbital {
         @synonyms "try again, reload"
         @tier "presentation"
       PreferencesLoaded {
-        data : [NotificationPreference]
+        data : [NotificationPreference]!
       }
         @description "The preference collection finished loading."
         @synonyms "loaded, fetched, retrieved"
@@ -453,7 +453,7 @@ orbital NotificationPreferencesOrbital {
     }
   }
 
-  trait PreferenceGate -> GateView [lifecycle, instance] {
+  trait PreferenceGate -> GateView [optimistic] {
     initial: idle
 
     state idle {
@@ -506,7 +506,7 @@ orbital NotificationPreferencesOrbital {
         @synonyms "verdict, preference answer, gate result, resolved preference"
         @tier "domain"
       PREFERENCE_ROWS_LOADED {
-        data : [NotificationPreference]
+        data : [NotificationPreference]!
       }
         @description "NotificationPreference rows loaded; the arm filters to the (personId, eventKey) match and resolves the verdict"
         @tier "internal"
@@ -526,7 +526,7 @@ orbital NotificationPreferencesOrbital {
         @synonyms "check preference, resolve preference, should notify, gate notification"
         @tier "domain"
       PREFERENCE_ROWS_LOADED {
-        data : [NotificationPreference]
+        data : [NotificationPreference]!
       }
         @description "NotificationPreference rows loaded; the arm resolves the verdict"
         @tier "internal"

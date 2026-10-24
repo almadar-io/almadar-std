@@ -1,0 +1,16 @@
+app lint-input-spec [
+  version: "1.0.0",
+  description: "Design contract for the lint input: for a LINT_REQUEST { file } it reads the file once, decides whether the program is in the English vocabulary, lowers it with program/read and answers LINT_INPUT { file, raw, latin, program }, or LINT_INPUT_UNREAD { file } when the file cannot be read or lowered or the pack scan fails."
+]
+type LintValue = string | number | boolean | [LintValue?] | Map string LintValue?
+
+orbital LintInputSpec {
+  expects trait OrbLintInput {
+    state ready
+    emits {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : LintValue! }
+      LINT_INPUT_UNREAD { file : string! }
+    }
+  }
+  expects page boot -> OrbLintInput
+}

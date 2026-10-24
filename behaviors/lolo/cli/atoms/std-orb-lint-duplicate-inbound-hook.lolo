@@ -10,6 +10,12 @@ type OrbFinding = { code : string!, path : string!, message : string!, suggestio
 type LintHook = { name : string!, file : string! }
 type LintEntry = { name : string!, kind : string! }
 type LintFile = { root : number!, rel : string! }
+type DupHookInbound = { name : string }
+type DupHookEvent = { inbound : DupHookInbound }
+type DupHookMachine = { events : [DupHookEvent] }
+type DupHookTrait = { stateMachine : DupHookMachine }
+type DupHookOrbital = { traits : [DupHookTrait] }
+type DupHookProgram = { orbitals : [DupHookOrbital] }
 
 orbital OrbLintDuplicateInboundHookOrbital {
   entity OrbLintDuplicateInboundHookRun [runtime] {
@@ -22,7 +28,7 @@ orbital OrbLintDuplicateInboundHookOrbital {
     dups : [string] = []
   }
 
-  trait OrbLintDuplicateInboundHook -> OrbLintDuplicateInboundHookRun [integration] {
+  trait OrbLintDuplicateInboundHook -> OrbLintDuplicateInboundHookRun [optimistic] {
     initial: ready
 
     state ready {
@@ -70,7 +76,7 @@ orbital OrbLintDuplicateInboundHookOrbital {
       LINT_READ -> reading when (and (< @entity.cursor (array/len @entity.paths)) (= (object/get (array/nth @entity.paths @entity.cursor) "root") 1))
         (os/open (str/concat "./packages/almadar-behaviors/behaviors/lolo/" (object/get (array/nth @entity.paths @entity.cursor) "rel")) "r" { key: "open" emit: { success: LINT_OPENED, failure: LINT_FILE_UNREAD } })
       LINT_READ -> ready when (>= @entity.cursor (array/len @entity.paths))
-        (set @entity.dups (array/sort (array/filter (array/unique (array/map @entity.hooks (fn h (object/get @h "name")))) (fn n (> (array/len (array/filter @entity.hooks (fn h (= (object/get @h "name") @n)))) 1))) "" "asc"))
+        (set @entity.dups (array/sort (array/filter (array/unique (array/map @entity.hooks (fn h (object/get @h "name")))) (fn n (> (array/len (array/filter @entity.hooks (fn h (= (object/get @h "name") @n)))) 1)))))
         (emit LINT_FINISH { })
       LINT_OPENED -> reading
         (os/read @payload.fd 4194304 { key: "chunk" emit: { success: LINT_FILE_READ, failure: LINT_FILE_UNREAD } })
@@ -80,7 +86,7 @@ orbital OrbLintDuplicateInboundHookOrbital {
         (set @entity.cursor (+ @entity.cursor 1))
         (emit LINT_READ { })
       LINT_PROGRAM_READ -> reading
-        (set @entity.hooks (array/concat @entity.hooks (array/map (array/unique (array/flatten (array/map (object/get @payload.result "orbitals") (fn o (array/flatten (array/map (object/get @o "traits" []) (fn t (array/map (array/filter (object/get (object/get @t "stateMachine" {}) "events" []) (fn e (validate/object (object/get @e "inbound" null)))) (fn e (object/get (object/get @e "inbound") "name")))))))))) (fn n { name: @n, file: (object/get (array/nth @entity.paths @entity.cursor) "rel") }))))
+        (set @entity.hooks (array/concat @entity.hooks (array/map (array/unique (array/flatten (array/map (object/get @payload.result "orbitals" []) (fn o (array/flatten (array/map (object/get @o "traits" []) (fn t (array/map (array/filter (object/get (object/get @t "stateMachine" {}) "events" []) (fn e (validate/object (object/get @e "inbound" null)))) (fn e (object/get (object/get @e "inbound") "name")))))))))) (fn n { name: @n, file: (object/get (array/nth @entity.paths @entity.cursor) "rel") }))))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit LINT_READ { })
       LINT_FILE_UNREAD -> reading
@@ -111,7 +117,7 @@ orbital OrbLintDuplicateInboundHookOrbital {
       LINT_FILE_UNREAD { error : string }
         @description "A file that could not be read or lowered."
         @tier "internal"
-      LINT_PROGRAM_READ { result : string }
+      LINT_PROGRAM_READ { result : DupHookProgram }
         @description "A file lowered by program/read."
         @tier "internal"
       LINT_WALK { }
@@ -135,5 +141,5 @@ orbital OrbLintDuplicateInboundHookOrbital {
     }
   }
 
-  page "/orb-lint-duplicate-inbound-hook" as OrbLintDuplicateInboundHookPage -> OrbLintDuplicateInboundHook
+  page boot as OrbLintDuplicateInboundHookOrbitalStart -> OrbLintDuplicateInboundHook
 }

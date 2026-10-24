@@ -1,0 +1,760 @@
+{
+  "atom": "cli/atoms/std-orb-lint-input.lolo",
+  "trait": "OrbLintInput",
+  "note": "The input reads, scans the language packs and lowers once per lint run; every rule trait and the umbrella receive the result as LINT_INPUT. The language-decision cases moved here from lint-page-path.",
+  "cases": [
+    {
+      "id": "lolo-arabic-first-token-is-not-english",
+      "entity": {
+        "raw": "تطبيق x [\n]\n",
+        "packs": [
+          {
+            "name": "@almadar/lolo-ar",
+            "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"تطبيق\", \"uses\": \"يستخدم\", \"expects\": \"يتوقع\", \"type\": \"نوع\", \"theme\": \"مظهر\", \"orbital\": \"مدار\"}, \"orb\": {\"orbitals\": \"مدارات\"}}"
+          },
+          {
+            "name": "@almadar/lolo-sl",
+            "text": "{\"meta\": {\"code\": \"sl\"}, \"keywords\": {\"app\": \"aplikacija\", \"uses\": \"uporablja\", \"expects\": \"pricakuje\", \"type\": \"tip\", \"theme\": \"tema\", \"orbital\": \"orbitala\"}, \"orb\": {\"orbitals\": \"orbitale\"}}"
+          }
+        ],
+        "file": "a.lolo"
+      },
+      "steps": [
+        {
+          "trait": "OrbLintInput",
+          "from": "reading",
+          "event": "LANGUAGE_PACKS_DONE_HEARD",
+          "payload": {
+            "problem": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_LANGUAGE",
+                "payload": {
+                  "latin": false
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-lolo-english-first-token-is-english",
+      "entity": {
+        "raw": "app x [\n]\n",
+        "packs": [
+          {
+            "name": "@almadar/lolo-ar",
+            "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"تطبيق\", \"uses\": \"يستخدم\", \"expects\": \"يتوقع\", \"type\": \"نوع\", \"theme\": \"مظهر\", \"orbital\": \"مدار\"}, \"orb\": {\"orbitals\": \"مدارات\"}}"
+          },
+          {
+            "name": "@almadar/lolo-sl",
+            "text": "{\"meta\": {\"code\": \"sl\"}, \"keywords\": {\"app\": \"aplikacija\", \"uses\": \"uporablja\", \"expects\": \"pricakuje\", \"type\": \"tip\", \"theme\": \"tema\", \"orbital\": \"orbitala\"}, \"orb\": {\"orbitals\": \"orbitale\"}}"
+          }
+        ],
+        "file": "a.lolo"
+      },
+      "steps": [
+        {
+          "trait": "OrbLintInput",
+          "from": "reading",
+          "event": "LANGUAGE_PACKS_DONE_HEARD",
+          "payload": {
+            "problem": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_LANGUAGE",
+                "payload": {
+                  "latin": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "lolo-slovenian-first-token-is-not-english",
+      "entity": {
+        "raw": "aplikacija x [\n]\n",
+        "packs": [
+          {
+            "name": "@almadar/lolo-ar",
+            "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"تطبيق\", \"uses\": \"يستخدم\", \"expects\": \"يتوقع\", \"type\": \"نوع\", \"theme\": \"مظهر\", \"orbital\": \"مدار\"}, \"orb\": {\"orbitals\": \"مدارات\"}}"
+          },
+          {
+            "name": "@almadar/lolo-sl",
+            "text": "{\"meta\": {\"code\": \"sl\"}, \"keywords\": {\"app\": \"aplikacija\", \"uses\": \"uporablja\", \"expects\": \"pricakuje\", \"type\": \"tip\", \"theme\": \"tema\", \"orbital\": \"orbitala\"}, \"orb\": {\"orbitals\": \"orbitale\"}}"
+          }
+        ],
+        "file": "a.lolo"
+      },
+      "steps": [
+        {
+          "trait": "OrbLintInput",
+          "from": "reading",
+          "event": "LANGUAGE_PACKS_DONE_HEARD",
+          "payload": {
+            "problem": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_LANGUAGE",
+                "payload": {
+                  "latin": false
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-lolo-slovenian-word-with-no-slovenian-pack-is-english",
+      "entity": {
+        "raw": "aplikacija x [\n]\n",
+        "packs": [
+          {
+            "name": "@almadar/lolo-ar",
+            "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"تطبيق\", \"uses\": \"يستخدم\", \"expects\": \"يتوقع\", \"type\": \"نوع\", \"theme\": \"مظهر\", \"orbital\": \"مدار\"}, \"orb\": {\"orbitals\": \"مدارات\"}}"
+          }
+        ],
+        "file": "a.lolo"
+      },
+      "steps": [
+        {
+          "trait": "OrbLintInput",
+          "from": "reading",
+          "event": "LANGUAGE_PACKS_DONE_HEARD",
+          "payload": {
+            "problem": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_LANGUAGE",
+                "payload": {
+                  "latin": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "lolo-first-token-skips-comment-lines",
+      "entity": {
+        "raw": ";; note\n\nيستخدم A from \"b\"\n",
+        "packs": [
+          {
+            "name": "@almadar/lolo-ar",
+            "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"تطبيق\", \"uses\": \"يستخدم\", \"expects\": \"يتوقع\", \"type\": \"نوع\", \"theme\": \"مظهر\", \"orbital\": \"مدار\"}, \"orb\": {\"orbitals\": \"مدارات\"}}"
+          },
+          {
+            "name": "@almadar/lolo-sl",
+            "text": "{\"meta\": {\"code\": \"sl\"}, \"keywords\": {\"app\": \"aplikacija\", \"uses\": \"uporablja\", \"expects\": \"pricakuje\", \"type\": \"tip\", \"theme\": \"tema\", \"orbital\": \"orbitala\"}, \"orb\": {\"orbitals\": \"orbitale\"}}"
+          }
+        ],
+        "file": "a.lolo"
+      },
+      "steps": [
+        {
+          "trait": "OrbLintInput",
+          "from": "reading",
+          "event": "LANGUAGE_PACKS_DONE_HEARD",
+          "payload": {
+            "problem": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_LANGUAGE",
+                "payload": {
+                  "latin": false
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-lolo-unknown-first-token-is-english",
+      "entity": {
+        "raw": "foo x [\n]\n",
+        "packs": [
+          {
+            "name": "@almadar/lolo-ar",
+            "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"تطبيق\", \"uses\": \"يستخدم\", \"expects\": \"يتوقع\", \"type\": \"نوع\", \"theme\": \"مظهر\", \"orbital\": \"مدار\"}, \"orb\": {\"orbitals\": \"مدارات\"}}"
+          },
+          {
+            "name": "@almadar/lolo-sl",
+            "text": "{\"meta\": {\"code\": \"sl\"}, \"keywords\": {\"app\": \"aplikacija\", \"uses\": \"uporablja\", \"expects\": \"pricakuje\", \"type\": \"tip\", \"theme\": \"tema\", \"orbital\": \"orbitala\"}, \"orb\": {\"orbitals\": \"orbitale\"}}"
+          }
+        ],
+        "file": "a.lolo"
+      },
+      "steps": [
+        {
+          "trait": "OrbLintInput",
+          "from": "reading",
+          "event": "LANGUAGE_PACKS_DONE_HEARD",
+          "payload": {
+            "problem": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_LANGUAGE",
+                "payload": {
+                  "latin": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-lolo-english-keyword-wins-even-when-other-text-is-arabic",
+      "entity": {
+        "raw": "app تطبيق [\n]\n",
+        "packs": [
+          {
+            "name": "@almadar/lolo-ar",
+            "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"تطبيق\", \"uses\": \"يستخدم\", \"expects\": \"يتوقع\", \"type\": \"نوع\", \"theme\": \"مظهر\", \"orbital\": \"مدار\"}, \"orb\": {\"orbitals\": \"مدارات\"}}"
+          },
+          {
+            "name": "@almadar/lolo-sl",
+            "text": "{\"meta\": {\"code\": \"sl\"}, \"keywords\": {\"app\": \"aplikacija\", \"uses\": \"uporablja\", \"expects\": \"pricakuje\", \"type\": \"tip\", \"theme\": \"tema\", \"orbital\": \"orbitala\"}, \"orb\": {\"orbitals\": \"orbitale\"}}"
+          }
+        ],
+        "file": "a.lolo"
+      },
+      "steps": [
+        {
+          "trait": "OrbLintInput",
+          "from": "reading",
+          "event": "LANGUAGE_PACKS_DONE_HEARD",
+          "payload": {
+            "problem": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_LANGUAGE",
+                "payload": {
+                  "latin": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "orb-json-arabic-orbitals-key-is-not-english",
+      "entity": {
+        "raw": "{\"مدارات\": []}",
+        "packs": [
+          {
+            "name": "@almadar/lolo-ar",
+            "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"تطبيق\", \"uses\": \"يستخدم\", \"expects\": \"يتوقع\", \"type\": \"نوع\", \"theme\": \"مظهر\", \"orbital\": \"مدار\"}, \"orb\": {\"orbitals\": \"مدارات\"}}"
+          },
+          {
+            "name": "@almadar/lolo-sl",
+            "text": "{\"meta\": {\"code\": \"sl\"}, \"keywords\": {\"app\": \"aplikacija\", \"uses\": \"uporablja\", \"expects\": \"pricakuje\", \"type\": \"tip\", \"theme\": \"tema\", \"orbital\": \"orbitala\"}, \"orb\": {\"orbitals\": \"orbitale\"}}"
+          }
+        ],
+        "file": "a.lolo"
+      },
+      "steps": [
+        {
+          "trait": "OrbLintInput",
+          "from": "reading",
+          "event": "LANGUAGE_PACKS_DONE_HEARD",
+          "payload": {
+            "problem": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_LANGUAGE",
+                "payload": {
+                  "latin": false
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-orb-json-english-orbitals-key-is-english",
+      "entity": {
+        "raw": "{\"name\": \"p\", \"orbitals\": []}",
+        "packs": [
+          {
+            "name": "@almadar/lolo-ar",
+            "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"تطبيق\", \"uses\": \"يستخدم\", \"expects\": \"يتوقع\", \"type\": \"نوع\", \"theme\": \"مظهر\", \"orbital\": \"مدار\"}, \"orb\": {\"orbitals\": \"مدارات\"}}"
+          },
+          {
+            "name": "@almadar/lolo-sl",
+            "text": "{\"meta\": {\"code\": \"sl\"}, \"keywords\": {\"app\": \"aplikacija\", \"uses\": \"uporablja\", \"expects\": \"pricakuje\", \"type\": \"tip\", \"theme\": \"tema\", \"orbital\": \"orbitala\"}, \"orb\": {\"orbitals\": \"orbitale\"}}"
+          }
+        ],
+        "file": "a.lolo"
+      },
+      "steps": [
+        {
+          "trait": "OrbLintInput",
+          "from": "reading",
+          "event": "LANGUAGE_PACKS_DONE_HEARD",
+          "payload": {
+            "problem": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_LANGUAGE",
+                "payload": {
+                  "latin": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "orb-json-slovenian-orbitals-key-is-not-english",
+      "entity": {
+        "raw": "{\"orbitale\": []}",
+        "packs": [
+          {
+            "name": "@almadar/lolo-ar",
+            "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"تطبيق\", \"uses\": \"يستخدم\", \"expects\": \"يتوقع\", \"type\": \"نوع\", \"theme\": \"مظهر\", \"orbital\": \"مدار\"}, \"orb\": {\"orbitals\": \"مدارات\"}}"
+          },
+          {
+            "name": "@almadar/lolo-sl",
+            "text": "{\"meta\": {\"code\": \"sl\"}, \"keywords\": {\"app\": \"aplikacija\", \"uses\": \"uporablja\", \"expects\": \"pricakuje\", \"type\": \"tip\", \"theme\": \"tema\", \"orbital\": \"orbitala\"}, \"orb\": {\"orbitals\": \"orbitale\"}}"
+          }
+        ],
+        "file": "a.lolo"
+      },
+      "steps": [
+        {
+          "trait": "OrbLintInput",
+          "from": "reading",
+          "event": "LANGUAGE_PACKS_DONE_HEARD",
+          "payload": {
+            "problem": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_LANGUAGE",
+                "payload": {
+                  "latin": false
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-orb-json-nested-arabic-word-is-not-a-top-level-key",
+      "entity": {
+        "raw": "{\"name\": \"p\", \"x\": {\"مدارات\": 1}}",
+        "packs": [
+          {
+            "name": "@almadar/lolo-ar",
+            "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"تطبيق\", \"uses\": \"يستخدم\", \"expects\": \"يتوقع\", \"type\": \"نوع\", \"theme\": \"مظهر\", \"orbital\": \"مدار\"}, \"orb\": {\"orbitals\": \"مدارات\"}}"
+          },
+          {
+            "name": "@almadar/lolo-sl",
+            "text": "{\"meta\": {\"code\": \"sl\"}, \"keywords\": {\"app\": \"aplikacija\", \"uses\": \"uporablja\", \"expects\": \"pricakuje\", \"type\": \"tip\", \"theme\": \"tema\", \"orbital\": \"orbitala\"}, \"orb\": {\"orbitals\": \"orbitale\"}}"
+          }
+        ],
+        "file": "a.lolo"
+      },
+      "steps": [
+        {
+          "trait": "OrbLintInput",
+          "from": "reading",
+          "event": "LANGUAGE_PACKS_DONE_HEARD",
+          "payload": {
+            "problem": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_LANGUAGE",
+                "payload": {
+                  "latin": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-orb-json-with-no-matching-pack-is-english",
+      "entity": {
+        "raw": "{\"مدارات\": []}",
+        "packs": [],
+        "file": "a.lolo"
+      },
+      "steps": [
+        {
+          "trait": "OrbLintInput",
+          "from": "reading",
+          "event": "LANGUAGE_PACKS_DONE_HEARD",
+          "payload": {
+            "problem": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_LANGUAGE",
+                "payload": {
+                  "latin": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-pack-scan-problem-leaves-the-language-undecided",
+      "entity": {
+        "raw": "app x [\n]\n",
+        "packs": [],
+        "file": "a.lolo"
+      },
+      "steps": [
+        {
+          "trait": "OrbLintInput",
+          "from": "reading",
+          "event": "LANGUAGE_PACKS_DONE_HEARD",
+          "payload": {
+            "problem": "two packs claim ar"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_INPUT_UNREAD",
+                "payload": {
+                  "file": "a.lolo"
+                }
+              }
+            ],
+            "neverEmits": [
+              "LINT_LANGUAGE"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-clean-scan-decides-the-language",
+      "entity": {
+        "raw": "app x [\n]\n",
+        "packs": [],
+        "file": "a.lolo"
+      },
+      "steps": [
+        {
+          "trait": "OrbLintInput",
+          "from": "reading",
+          "event": "LANGUAGE_PACKS_DONE_HEARD",
+          "payload": {
+            "problem": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_LANGUAGE",
+                "payload": {
+                  "latin": true
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "note": "program/read is not hosted in a step, so the run then ends unread; only the decision is asserted"
+    },
+    {
+      "id": "vocab-answers-are-collected-per-pack",
+      "entity": {
+        "packs": [],
+        "file": "a.lolo"
+      },
+      "steps": [
+        {
+          "trait": "OrbLintInput",
+          "from": "reading",
+          "event": "LANGUAGE_PACK_VOCAB_HEARD",
+          "payload": {
+            "name": "@almadar/lolo-ar",
+            "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"تطبيق\", \"uses\": \"يستخدم\", \"expects\": \"يتوقع\", \"type\": \"نوع\", \"theme\": \"مظهر\", \"orbital\": \"مدار\"}, \"orb\": {\"orbitals\": \"مدارات\"}}"
+          },
+          "expect": {
+            "fired": true,
+            "state": "reading"
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-failed-language-scan-leaves-the-file-unread",
+      "entity": {
+        "file": "a.lolo"
+      },
+      "steps": [
+        {
+          "trait": "OrbLintInput",
+          "from": "reading",
+          "event": "LANG_SCAN_ANSWERED",
+          "payload": {
+            "status": 500,
+            "body": "",
+            "stderr": "x"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_INPUT_UNREAD",
+                "payload": {
+                  "file": "a.lolo"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-successful-scan-answer-changes-nothing",
+      "entity": {
+        "file": "a.lolo"
+      },
+      "steps": [
+        {
+          "trait": "OrbLintInput",
+          "from": "reading",
+          "event": "LANG_SCAN_ANSWERED",
+          "payload": {
+            "status": 200,
+            "body": "",
+            "stderr": ""
+          },
+          "expect": {
+            "neverEmits": [
+              "LINT_INPUT_UNREAD"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-request-reads-the-file",
+      "steps": [
+        {
+          "trait": "OrbLintInput",
+          "from": "ready",
+          "event": "LINT_REQUEST",
+          "payload": {
+            "file": "a.lolo"
+          },
+          "expect": {
+            "fired": true,
+            "state": "reading"
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-request-while-reading-is-not-taken",
+      "steps": [
+        {
+          "trait": "OrbLintInput",
+          "from": "reading",
+          "event": "LINT_REQUEST",
+          "payload": {
+            "file": "b.lolo"
+          },
+          "expect": {
+            "fired": false
+          }
+        }
+      ],
+      "entity": {
+        "file": "a.lolo"
+      }
+    },
+    {
+      "id": "the-working-directory-starts-the-pack-scan",
+      "steps": [
+        {
+          "trait": "OrbLintInput",
+          "from": "reading",
+          "event": "LINT_CWD",
+          "payload": {
+            "path": "/w"
+          },
+          "expect": {
+            "fired": true,
+            "state": "reading",
+            "emits": [
+              {
+                "event": "LINT_PACKS_RUN",
+                "payload": {
+                  "cwd": "/w"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "entity": {
+        "file": "a.lolo"
+      }
+    },
+    {
+      "id": "an-unreadable-file-fails-the-input",
+      "steps": [
+        {
+          "trait": "OrbLintInput",
+          "from": "reading",
+          "event": "LINT_FILE_UNREAD",
+          "payload": {
+            "error": "x"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_INPUT_UNREAD",
+                "payload": {
+                  "file": "a.lolo"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "entity": {
+        "file": "a.lolo"
+      }
+    },
+    {
+      "id": "control-an-unreadable-file-emits-no-input",
+      "steps": [
+        {
+          "trait": "OrbLintInput",
+          "from": "reading",
+          "event": "LINT_FILE_UNREAD",
+          "payload": {
+            "error": "x"
+          },
+          "expect": {
+            "neverEmits": [
+              "LINT_INPUT"
+            ]
+          }
+        }
+      ],
+      "entity": {
+        "file": "a.lolo"
+      }
+    },
+    {
+      "id": "the-lowered-program-is-offered-with-its-raw-text-and-language",
+      "steps": [
+        {
+          "trait": "OrbLintInput",
+          "from": "reading",
+          "event": "LINT_PROGRAM_READ",
+          "payload": {
+            "result": {
+              "name": "app",
+              "orbitals": []
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_INPUT",
+                "payload": {
+                  "file": "a.lolo",
+                  "raw": "app x [\n]\n",
+                  "latin": false,
+                  "program": {
+                    "name": "app",
+                    "orbitals": []
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "entity": {
+        "file": "a.lolo",
+        "raw": "app x [\n]\n",
+        "latin": false
+      }
+    },
+    {
+      "id": "control-the-lowered-program-of-an-english-file-is-latin",
+      "steps": [
+        {
+          "trait": "OrbLintInput",
+          "from": "reading",
+          "event": "LINT_PROGRAM_READ",
+          "payload": {
+            "result": {
+              "name": "app",
+              "orbitals": []
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_INPUT",
+                "payload": {
+                  "file": "a.lolo",
+                  "raw": "app x [\n]\n",
+                  "latin": true,
+                  "program": {
+                    "name": "app",
+                    "orbitals": []
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "entity": {
+        "file": "a.lolo",
+        "raw": "app x [\n]\n",
+        "latin": true
+      }
+    }
+  ]
+}

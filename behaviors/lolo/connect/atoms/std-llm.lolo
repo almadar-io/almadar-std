@@ -39,8 +39,8 @@ type JevReply = { model : string, id : string, provider : string, answers : Map 
 type JsonValue = string | number | boolean | [JsonValue] | Map string JsonValue
 type ToolArguments = Map string JsonValue
 type ToolCall = { id : string!, name : string!, arguments : ToolArguments }
-type ToolFunctionCall = { name : string, arguments : string }
-type ToolCallRef = { id : string, type : string, function : ToolFunctionCall }
+type ToolFunctionCall = { name : string!, arguments : string }
+type ToolCallRef = { id : string!, type : string, function : ToolFunctionCall! }
 type ToolMessage = { role : string, content : string, tool_calls : [ToolCallRef], tool_call_id : string, reasoning_content : string, reasoning : string }
 type LlmSchema = { type : string, additionalProperties : boolean, properties : Map string LlmSchema, required : [string], enum : [string], items : LlmSchema }
 type LlmToolDef = { name : string!, description : string!, parameters : LlmSchema! }
@@ -64,7 +64,7 @@ orbital LlmOrbital {
     embedKeyed : boolean = false
   }
 
-  trait LlmClient -> @rebindable LlmCall [integration, instance] {
+  trait LlmClient -> @rebindable LlmCall [optimistic] {
     initial: idle
 
     state idle {
@@ -1168,7 +1168,7 @@ orbital LlmOrbital {
       LLM_EMBED_KEY_PROBED {
         connected : boolean!
       }
-      LLM_GENERATE -> external {
+      LLM_GENERATE -> input {
         systemPrompt : string
         userPrompt : string!
         model : string
@@ -1180,7 +1180,7 @@ orbital LlmOrbital {
       }
         @description "Generate text from a prompt. An optional key names the call for LLM_CANCEL. With stream true the reply is read as it arrives and each chunk is announced as LLM_GENERATE_DELTA before the final LLM_GENERATE_RESULT; without it nothing changes."
         @synonyms "complete, chat, ask the model"
-      LLM_CLASSIFY -> external {
+      LLM_CLASSIFY -> input {
         text : string!
         categories : [string]!
         model : string
@@ -1188,7 +1188,7 @@ orbital LlmOrbital {
       }
         @description "Classify a text into one of the given categories. An optional key names the call for LLM_CANCEL."
         @synonyms "label text, categorize"
-      LLM_CLASSIFY_MANY -> external {
+      LLM_CLASSIFY_MANY -> input {
         items : [{ id : string!, text : string! }]!
         categories : [string]!
         model : string
@@ -1196,7 +1196,7 @@ orbital LlmOrbital {
       }
         @description "Classify many texts in one model call; every item's id comes back once with a declared category. An optional key names the call for LLM_CANCEL."
         @synonyms "batch classify, label many"
-      LLM_SUMMARIZE -> external {
+      LLM_SUMMARIZE -> input {
         text : string!
         maxLength : number
         style : string
@@ -1205,26 +1205,26 @@ orbital LlmOrbital {
       }
         @description "Summarize a text; style is bullet, detailed or concise (default), maxLength is a word limit."
         @synonyms "summarise, digest, condense"
-      LLM_EMBED -> external {
+      LLM_EMBED -> input {
         texts : [string]!
         model : string
         key : string
       }
         @description "Embed texts into vectors. An optional key names the call for LLM_CANCEL and is echoed on LLM_EMBED_RESULT and on the LLM_FAILED that ends it."
         @synonyms "vectorize, text embedding"
-      LLM_CANCEL -> external {
+      LLM_CANCEL -> input {
         key : string!
       }
         @description "Abort the generate, classify, classifyMany, summarize, extract, embed or call-tools run that carries this key and is still waiting for its provider; it ends in LLM_CANCELLED. A key with nothing in flight is a no-op."
         @synonyms "abort, stop request, cancel call"
-      LLM_CHOOSE -> external {
+      LLM_CHOOSE -> input {
         state : string!
         instructions : string!
         options : [{ value : string!, description : string! }]!
       }
         @description "Choose one of at least two options with distinct values, by Jev's reading of the state."
         @synonyms "decide, pick an option, choose"
-      LLM_EXTRACT -> external {
+      LLM_EXTRACT -> input {
         text : string!
         schema : string!
         systemPrompt : string
@@ -1236,7 +1236,7 @@ orbital LlmOrbital {
       }
         @description "Extract structured data from a text. An optional key names the call for LLM_CANCEL. `schema` is the JSON Schema text the reply must follow, sent to the model as written inside the built-in extractor prompt; an optional systemPrompt replaces that whole prompt (the schema is then not sent) and an optional temperature replaces the default 0.2. The answer is the JSON text, read by the caller with json/parse under its own shape."
         @synonyms "parse, structure, pull fields"
-      LLM_CALL_TOOLS -> external {
+      LLM_CALL_TOOLS -> input {
         messages : [{ role : "user" | "assistant", content : string! }]!
         tools : [LlmToolDef]!
         instructions : string
@@ -1246,7 +1246,7 @@ orbital LlmOrbital {
       }
         @description "Answer a conversation with tools (an optional key names the run for LLM_CANCEL, which aborts the model call at its provider): the model may ask for tool calls, which come back in LLM_TOOLS_REQUESTED for the caller to run and answer with LLM_TOOLS_ANSWERED, until the model replies or maxSteps (default 8) model calls are used."
         @synonyms "agent, tool use, function calling"
-      LLM_TOOLS_ANSWERED -> external {
+      LLM_TOOLS_ANSWERED -> input {
         session : string!
         results : [LlmToolOutcome]!
       }

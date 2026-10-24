@@ -18,7 +18,7 @@ orbital ImageOrbital {
     id : string!
   }
 
-  trait ImageClient -> @rebindable ImageCall [integration, instance] {
+  trait ImageClient -> @rebindable ImageCall   [optimistic]{
     initial: idle
 
     state idle {
@@ -40,20 +40,20 @@ orbital ImageOrbital {
           })
         })
 
-      IMAGE_PREPARE -> idle when (and (!= (object/get (object/get (json/parse @payload.job ImageJob) request {}) size null) null)
-          (or (!= (object/get (object/get (json/parse @payload.job ImageJob) request {}) resolution null) null) (!= (object/get (object/get (json/parse @payload.job ImageJob) request {}) aspectRatio null) null)))
+      IMAGE_PREPARE -> idle when (and (!= (object/get (object/get (json/parse @payload.job ImageJob) request) size null) null)
+          (or (!= (object/get (object/get (json/parse @payload.job ImageJob) request) resolution null) null) (!= (object/get (object/get (json/parse @payload.job ImageJob) request) aspectRatio null) null)))
         (emit IMAGE_FAILED { code: "VALIDATION_ERROR", message: "ImageClient.generate: `size` cannot be combined with `resolution`/`aspectRatio` — pass one or the other" })
-      IMAGE_PREPARE -> idle when (and (= @config.provider "openrouter") (= (object/get (object/get (json/parse @payload.job ImageJob) request {}) checked false) true)
-          (not (and (!= (object/get (object/get (json/parse @payload.job ImageJob) request {}) size null) null)
-            (or (!= (object/get (object/get (json/parse @payload.job ImageJob) request {}) resolution null) null) (!= (object/get (object/get (json/parse @payload.job ImageJob) request {}) aspectRatio null) null)))))
-        (http GET @config.origin (str/concat @config.basePath "/images/models/" (object/get (object/get (json/parse @payload.job ImageJob) request {}) model "") "/endpoints") {
+      IMAGE_PREPARE -> idle when (and (= @config.provider "openrouter") (= (object/get (object/get (json/parse @payload.job ImageJob) request) checked false) true)
+          (not (and (!= (object/get (object/get (json/parse @payload.job ImageJob) request) size null) null)
+            (or (!= (object/get (object/get (json/parse @payload.job ImageJob) request) resolution null) null) (!= (object/get (object/get (json/parse @payload.job ImageJob) request) aspectRatio null) null)))))
+        (http GET @config.origin (str/concat @config.basePath "/images/models/" (object/get (object/get (json/parse @payload.job ImageJob) request) model "") "/endpoints") {
           headers: { Accept: "application/json" },
           auth: { scheme: bearer, credential: @config.apiKey },
           timeoutMs: @config.timeoutMs
         } { key: @payload.job, emit: { success: IMAGE_CAPS_HTTP_OK, failure: IMAGE_CAPS_HTTP_FAILED } })
-      IMAGE_PREPARE -> idle when (and (not (and (= @config.provider "openrouter") (= (object/get (object/get (json/parse @payload.job ImageJob) request {}) checked false) true)))
-          (not (and (!= (object/get (object/get (json/parse @payload.job ImageJob) request {}) size null) null)
-            (or (!= (object/get (object/get (json/parse @payload.job ImageJob) request {}) resolution null) null) (!= (object/get (object/get (json/parse @payload.job ImageJob) request {}) aspectRatio null) null)))))
+      IMAGE_PREPARE -> idle when (and (not (and (= @config.provider "openrouter") (= (object/get (object/get (json/parse @payload.job ImageJob) request) checked false) true)))
+          (not (and (!= (object/get (object/get (json/parse @payload.job ImageJob) request) size null) null)
+            (or (!= (object/get (object/get (json/parse @payload.job ImageJob) request) resolution null) null) (!= (object/get (object/get (json/parse @payload.job ImageJob) request) aspectRatio null) null)))))
         (emit IMAGE_SEND {
           job: (let ((j (json/parse @payload.job ImageJob)))
             (json/stringify {
@@ -189,15 +189,15 @@ orbital ImageOrbital {
       IMAGE_HTTP_OK -> idle when (and (>= @payload.status 200) (< @payload.status 300) (!= (json/parse @payload.body ImageReply) null)
           (= (object/get (object/get (json/parse @payload.body ImageReply) error {}) message "") "")
           (!= (object/get (json/parse @payload.body ImageReply) data null) null)
-          (> (array/count (object/get (json/parse @payload.body ImageReply) data []) (fn (d) (= (object/get @d b64_json "") ""))) 0))
+          (> (array/count (object/get (json/parse @payload.body ImageReply) data []) (fn (d) (= @d.b64_json ""))) 0))
         (emit IMAGE_FAILED { code: "SERVICE_ERROR", message: (str/concat "ImageClient: " @config.provider " response data is missing `b64_json`: " @payload.body) })
       IMAGE_HTTP_OK -> idle when (and (>= @payload.status 200) (< @payload.status 300) (!= (json/parse @payload.body ImageReply) null)
           (= (object/get (object/get (json/parse @payload.body ImageReply) error {}) message "") "")
           (!= (object/get (json/parse @payload.body ImageReply) data null) null)
-          (= (array/count (object/get (json/parse @payload.body ImageReply) data []) (fn (d) (= (object/get @d b64_json "") ""))) 0))
+          (= (array/count (object/get (json/parse @payload.body ImageReply) data []) (fn (d) (= @d.b64_json ""))) 0))
         (emit IMAGE_GENERATED {
           images: (array/map (object/get (json/parse @payload.body ImageReply) data []) (fn (d) { data: @d.b64_json, mediaType: (str/default (object/get @d media_type "") "image/png") })),
-          model: (object/get (object/get (json/parse @payload.key ImageJob) request {}) model ""),
+          model: (object/get (object/get (json/parse @payload.key ImageJob) request) model ""),
           cost: (object/get (object/get (json/parse @payload.body ImageReply) usage {}) cost 0),
           totalTokens: (object/get (object/get (json/parse @payload.body ImageReply) usage {}) total_tokens 0),
           dropped: (object/get (json/parse @payload.key ImageJob) dropped [])
@@ -275,7 +275,7 @@ orbital ImageOrbital {
     }
 
     listens {
-      IMAGE_GENERATE -> external {
+      IMAGE_GENERATE -> input {
         prompt : string!
         model : string
         n : number

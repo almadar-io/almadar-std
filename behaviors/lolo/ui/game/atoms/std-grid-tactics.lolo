@@ -10,7 +10,7 @@ orbital GridTacticsOrbital {
     y : number
     z : number
     team : string
-    health : number
+    health : number!
     maxHealth : number
     unitType : string
     yaw : number
@@ -33,11 +33,11 @@ orbital GridTacticsOrbital {
 
   entity TacticsState [runtime, shared] {
     id : string!
-    units : [Unit]
-    tiles : [Tile]
+    units : [Unit] = []
+    tiles : [Tile] = []
   }
 
-  trait GridTactics -> @rebindable TacticsState [lifecycle] {
+  trait GridTactics -> @rebindable TacticsState [client] {
     initial: active
 
     state active {
@@ -82,10 +82,10 @@ orbital GridTacticsOrbital {
     }
 
     listens {
-      MOVE { unitId : string, x : number, y : number }
+      MOVE { unitId : string, x : number!, y : number! }
       ATTACK { targetId : string }
       AI_TURN { turn : number }
-      SPAWN { id : string, x : number, y : number, team : string, health : number, maxHealth : number, unitType : string }
+      SPAWN { id : string, x : number, y : number, team : string, health : number!, maxHealth : number, unitType : string }
       HEAL { team : string, amount : number }
     }
 
@@ -117,5 +117,5 @@ orbital GridTacticsOrbital {
     }
   }
 
-  page "/grid-tactics" as GridTacticsPage -> GridTactics
+  page boot as GridTacticsOrbitalStart -> GridTactics
 }

@@ -111,7 +111,7 @@ orbital WorkspaceOrbital {
     }
   }
 
-  trait WorkspaceClient -> WorkspaceJob [integration, instance] {
+  trait WorkspaceClient -> WorkspaceJob [optimistic] {
     initial: idle
 
     state idle {
@@ -310,7 +310,7 @@ orbital WorkspaceOrbital {
         (set @entity.entries (if (== (array/nth @entity.codes 0) 0) (array/map (array/filter (str/split (array/nth @entity.outputs 0) "\u{1e}") (fn r (!= (str/trim @r) ""))) (fn r (let ((f (str/split (str/trimStart @r) "\u{1f}"))) { id: (array/nth @f 0), timestamp: (* (str/to-number (array/nth @f 1)) 1000), reason: (if (str/startsWith (array/nth @f 2) "snapshot: ") (str/slice (array/nth @f 2) 10) (array/nth @f 2)), kind: (let ((k (str/replace (str/default (array/first (array/filter (str/split (array/nth @f 3) "\n") (fn l (str/startsWith @l "Almadar-Kind: ")))) "") "Almadar-Kind: " ""))) (if (array/includes ["user", "agent", "restore", "undo", "redo", "snapshot", "merge"] @k) @k "")), restores: (str/replace (str/default (array/first (array/filter (str/split (array/nth @f 3) "\n") (fn l (str/startsWith @l "Restores: ")))) "") "Restores: " ""), undoes: (str/replace (str/default (array/first (array/filter (str/split (array/nth @f 3) "\n") (fn l (str/startsWith @l "Undoes: ")))) "") "Undoes: " ""), redoes: (str/replace (str/default (array/first (array/filter (str/split (array/nth @f 3) "\n") (fn l (str/startsWith @l "Redoes: ")))) "") "Redoes: " "") }))) []))
         (set @entity.ref (let ((reversed (array/map @entity.entries (fn e (object/get @e redoes))))) (let ((undone (array/map (array/filter @entity.entries (fn e (and (!= (object/get @e undoes) "") (not (array/includes @reversed (object/get @e id)))))) (fn e (object/get @e undoes))))) (object/get (array/find @entity.entries (fn e (and (!= (object/get @e kind) "undo") (!= (object/get @e kind) "redo") (not (array/includes @undone (object/get @e id)))))) id ""))))
         (set @entity.tree (let ((reversed (array/map @entity.entries (fn e (object/get @e redoes))))) (let ((hd (array/find @entity.entries (fn e (and (!= (object/get @e kind) "redo") (not (and (== (object/get @e kind) "undo") (array/includes @reversed (object/get @e id))))))))) (if (== (object/get @hd kind "") "undo") (object/get @hd id "") ""))))
-        (emit WORKSPACE_HISTORY_LOADED { workspace: @entity.workspace, snapshots: (if (>= @entity.limit 0) (array/take (array/map @entity.entries (fn e { id: (object/get @e id), timestamp: (object/get @e timestamp), reason: (object/get @e reason), kind: (object/get @e kind), target: (if (!= (object/get @e restores) "") (object/get @e restores) (if (!= (object/get @e undoes) "") (object/get @e undoes) (object/get @e redoes))) })) @entity.limit) (array/map @entity.entries (fn e { id: (object/get @e id), timestamp: (object/get @e timestamp), reason: (object/get @e reason), kind: (object/get @e kind), target: (if (!= (object/get @e restores) "") (object/get @e restores) (if (!= (object/get @e undoes) "") (object/get @e undoes) (object/get @e redoes))) }))), canUndo: (!= @entity.ref ""), canRedo: (!= @entity.tree "") })
+        (emit WORKSPACE_HISTORY_LOADED { workspace: @entity.workspace, snapshots: (if (>= @entity.limit 0) (array/take (array/map @entity.entries (fn e { id: (object/get @e id), timestamp: (object/get @e timestamp), reason: (object/get @e reason), kind: (object/get @e kind), target: (if (!= (object/get @e restores "") "") (object/get @e restores "") (if (!= (object/get @e undoes "") "") (object/get @e undoes "") (object/get @e redoes ""))) })) @entity.limit) (array/map @entity.entries (fn e { id: (object/get @e id), timestamp: (object/get @e timestamp), reason: (object/get @e reason), kind: (object/get @e kind), target: (if (!= (object/get @e restores "") "") (object/get @e restores "") (if (!= (object/get @e undoes "") "") (object/get @e undoes "") (object/get @e redoes ""))) }))), canUndo: (!= @entity.ref ""), canRedo: (!= @entity.tree "") })
         (emit WS_NEXT { })
       WS_SCRIPT_DONE -> working when (and (== @entity.stage "chg1") (!= (array/nth @entity.codes 0) 0))
         (emit WORKSPACE_CHANGES_LOADED { workspace: @entity.workspace, changes: [] })
@@ -329,7 +329,7 @@ orbital WorkspaceOrbital {
         (set @entity.steps (array/flatten (array/map @entity.paths (fn f (array/concat [{ scope: "repo", args: ["show", (str/concat @entity.oid ":" @f)], stdin: "", feed: false, tolerate: true, raw: false }] (if (== @entity.ref "") [] [{ scope: "repo", args: ["show", (str/concat @entity.ref ":" @f)], stdin: "", feed: false, tolerate: true, raw: false }]))))))
         (emit WS_START { })
       WS_SCRIPT_DONE -> working when (== @entity.stage "chg3")
-        (emit WORKSPACE_CHANGES_LOADED { workspace: @entity.workspace, changes: (array/map @entity.paths (fn f i (let ((a (if (== (array/nth @entity.codes (* @i (if (== @entity.ref "") 1 2))) 0) (array/nth @entity.outputs (* @i (if (== @entity.ref "") 1 2))) null)) (b (if (== @entity.ref "") null (if (== (array/nth @entity.codes (+ (* @i 2) 1)) 0) (array/nth @entity.outputs (+ (* @i 2) 1)) null)))) { id: @f, path: @f, before: (str/default @b ""), after: (str/default @a ""), change: (if (== @b null) "added" (if (== @a null) "removed" "modified")) }))) })
+        (emit WORKSPACE_CHANGES_LOADED { workspace: @entity.workspace, changes: (array/map @entity.paths (fn f i (let ((a : string? (if (== (array/nth @entity.codes (* @i (if (== @entity.ref "") 1 2))) 0) (array/nth @entity.outputs (* @i (if (== @entity.ref "") 1 2))) null)) (b : string? (if (== @entity.ref "") null (if (== (array/nth @entity.codes (+ (* @i 2) 1)) 0) (array/nth @entity.outputs (+ (* @i 2) 1)) null)))) { id: @f, path: @f, before: (str/default @b ""), after: (str/default @a ""), change: (if (== @b null) "added" (if (== @a null) "removed" "modified")) }))) })
         (emit WS_NEXT { })
       WS_SCRIPT_DONE -> working when (and (== @entity.stage "res1") (!= (array/nth @entity.codes 0) 0))
         (set @entity.resCommitted false)
@@ -872,9 +872,7 @@ orbital WorkspaceOrbital {
         @tier "internal"
       WS_SCRIPT_DONE -> internal { }
         @tier "internal"
-      WS_ROOT_READY -> internal {
-        key : string
-      }
+      WS_ROOT_READY -> internal { }
         @tier "internal"
       WS_STEP_ERROR -> internal {
         error : string!

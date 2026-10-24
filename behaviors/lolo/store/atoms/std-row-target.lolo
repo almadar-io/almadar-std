@@ -17,7 +17,7 @@ orbital RowTargetOrbital {
     domainId : string = ""
   }
 
-  trait RowTargetResolver -> TargetRun [integration] {
+  trait RowTargetResolver -> TargetRun [client] {
     initial: ready
 
     state ready {
@@ -50,11 +50,11 @@ orbital RowTargetOrbital {
     }
 
     listens {
-      ROW_TARGET_RESOLVE -> external { op : "read" | "write", entityType : string!, singleton : boolean!, target : RowTarget!, domainId : string! }
+      ROW_TARGET_RESOLVE -> input { op : "read" | "write", entityType : string!, singleton : boolean!, target : RowTarget!, domainId : string! }
         @description "Resolve a row target to its storage key for a read or a write."
         @synonyms "row target, singleton row, storage key"
     }
   }
 
-  page "/row-target" as RowTargetPage -> RowTargetResolver
+  page boot as RowTargetOrbitalStart -> RowTargetResolver
 }

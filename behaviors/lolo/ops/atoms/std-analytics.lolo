@@ -12,7 +12,7 @@ orbital AnalyticsOrbital {
     errorMessage : string @description "Why the last report failed; blank = none" @synonyms "error, failure reason" = ""
   }
 
-  trait Analytics -> AnalyticsRecord [lifecycle, instance] {
+  trait Analytics -> AnalyticsRecord [client] {
     initial: active
 
     config {
@@ -141,7 +141,7 @@ orbital AnalyticsOrbital {
     }
 
     listens {
-      TRACK -> external { name : string!, props : Map string (string | number | boolean) }
+      TRACK -> input { name : string!, props : Map string (string | number | boolean) }
         @description "Report a named event on this page, with its properties"
         @synonyms "track event, log event, record click, analytics event"
       ANALYTICS_PAGEVIEW { path : string!, domain : string }

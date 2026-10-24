@@ -162,7 +162,7 @@ orbital AgentToolLoopOrbital {
     }
   }
 
-  trait AgentToolLoop -> AgentTurn [interaction] {
+  trait AgentToolLoop -> AgentTurn [optimistic] {
     config {
       tools : [AgentTool] = []
         @label "What may the assistant do?"
@@ -217,7 +217,7 @@ orbital AgentToolLoopOrbital {
       INPUTS_KNOWN -> thinking
         (let ((table (array/flatten (array/map (array/range 0 (array/len @entity.turnTools) 1) (fn i
             (let ((t (array/nth @entity.turnTools @i)))
-              (if (object/has @t scope)
+              (let ((r : [AgentToolBinding] (if (object/has @t scope)
                 (array/concat
                   (array/map (array/range 0 (array/len @payload.result.inputs) 1) (fn k
                     (let ((x (array/nth @payload.result.inputs @k)))
@@ -228,7 +228,7 @@ orbital AgentToolLoopOrbital {
                 (if (object/has @t read)
                   [{ name: (str/concat "read__" @t.read), description: (str/concat "Read the " @t.read " rows you may see"), parameters: { type: "object", properties: {} }, label: @t.read, kind: read, entity: @t.read }]
                   (let ((s (array/nth @payload.result.selected (array/count (array/take @entity.turnTools @i) (fn y (object/has @y event))))))
-                    [{ name: (str/replaceAll @t.event "." "__"), description: (str/default @s.description @t.event), parameters: @s.parameters, label: @t.event, kind: input, address: @s.address, contract: (object/get @t payload []), contracted: (object/has @t payload), fireAndForget: (object/get @t fireAndForget false) }])))))))))
+                    [{ name: (str/replaceAll @t.event "." "__"), description: (str/default @s.description @t.event), parameters: @s.parameters, label: @t.event, kind: input, address: @s.address, contract: (object/get @t payload []), contracted: (object/has @t payload), fireAndForget: (object/get @t fireAndForget false) }]))))) @r)))))))
           (do
             (set @entity.table @table)
             (emit LLM_CALL_TOOLS {

@@ -1,0 +1,31 @@
+app orb-signatures-spec [
+  version: "1.0.0",
+  inbound: ["cli-signatures"],
+  description: "Design contract for `orb signatures [--out FILE]` (port of orbital-cli lib.rs print_lolo_signatures and reference.rs everything()). The whole language catalog from the installed tables: constructs, vocabulary and validation codes from the files @almadar/core's orbLanguage block names, patterns from its patterns registry (the value under `patterns`), operators from the file @almadar/std's orbLanguage names (the value under `operators`). SIGNATURES_START { out } answers SIGNATURES_ANSWERED { status, body, stderr }. No --out: status 200 and body one pretty JSON object { codes, constructs, operators, patterns, vocabulary } (owner ruling 2026-10-24: canonical sorted-key JSON; json/stringify { pretty, sorted }). With --out FILE: the same text is written to FILE (no trailing newline), status 200, empty body and stderr `Wrote <byte length> bytes to FILE`. Any word, an unknown or repeated flag or a --out without a value answers status 400 with stderr `usage: orb signatures [--out FILE]` (exit 2). A table that is not installed or a write that fails answers status 500 on stderr `Error: orb signatures: <reason>` (exit 1). Replay goldens: orb-signatures.replay.goldens.json."
+]
+
+orbital OrbSignaturesSpec {
+  expects trait OrbSignatures {
+    state ready
+    state parsing
+    state working
+    emits {
+      SIGNATURES_ANSWERED { status : number!  body : string!  stderr : string }
+    }
+  }
+  expects trait SignaturesEngine {
+    state idle
+    state core
+    state std
+    state constructs
+    state vocabulary
+    state codes
+    state operators
+    state patterns
+    state writing
+    emits {
+      SIGNATURES_ANSWERED { status : number!  body : string!  stderr : string }
+    }
+  }
+  expects page "/orb-signatures" -> OrbSignatures
+}

@@ -1,0 +1,24 @@
+app orb-resolve-spec [
+  version: "1.0.0",
+  inbound: ["cli-resolve"],
+  description: "Design contract for `orb resolve <file> [-o|--output FILE]` (port of orbital-cli commands/parse.rs resolve_schema_cli and resolved_text). RESOLVE_START { path, output, hasOutput } asks program/read { resolve: true, path (absolute: a relative file is joined to the directory the command runs in), output? } and answers RESOLVE_ANSWERED { status, body, stderr }. Without --output: status 200 and body the host's `text`, the resolved program as pretty JSON with sorted keys, exactly what Rust printed. With --output: the host writes the resolved file, its locale catalogs and its lazy behaviors; status 200 and an empty body. A program with lazy behaviors or locales is refused by the host when no --output is given, with the Rust message. A file that cannot be read, a program that does not lower or resolve, or a write that fails answers 500 with stderr `Error: <reason>`. No file, more than one file, an unknown flag, or a repeated or valueless --output answers 400 with stderr `usage: orb resolve <FILE> [-o|--output FILE]` (exit 2). Replay goldens: orb-resolve.replay.goldens.json."
+]
+
+orbital OrbResolveSpec {
+  expects trait OrbResolve {
+    state ready
+    state parsing
+    state working
+    emits {
+      RESOLVE_ANSWERED { status : number!  body : string!  stderr : string }
+    }
+  }
+  expects trait ResolveEngine {
+    state idle
+    state resolving
+    emits {
+      RESOLVE_ANSWERED { status : number!  body : string!  stderr : string }
+    }
+  }
+  expects page "/orb-resolve" -> OrbResolve
+}

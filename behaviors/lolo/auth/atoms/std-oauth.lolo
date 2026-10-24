@@ -11,7 +11,7 @@ orbital OAuthOrbital {
     id : string!
   }
 
-  trait OAuthClient -> OAuthFlow [integration, instance] {
+  trait OAuthClient -> OAuthFlow [optimistic] {
     initial: idle
 
     state idle {
@@ -503,45 +503,45 @@ orbital OAuthOrbital {
     }
 
     listens {
-      OAUTH_AUTHORIZE -> external {
+      OAUTH_AUTHORIZE -> input {
         scopes : [string]!
         redirectUri : string!
         subject : string
       }
         @description "Start an authorization for the configured provider; an empty redirectUri uses the configured default. subject binds the grant to the user who must complete it."
         @synonyms "authorize, sign in with provider, start oauth"
-      OAUTH_TOKEN -> external {
+      OAUTH_TOKEN -> input {
         code : string!
         state : string!
         subject : string
       }
         @description "Complete an authorization: exchange the callback code once. subject must equal the one given at authorize. The pending grant selects the provider."
         @synonyms "exchange code, complete sign-in"
-      OAUTH_REFRESH -> external {
+      OAUTH_REFRESH -> input {
         refreshToken : string!
       }
         @description "Exchange a refresh token for a fresh access token."
         @synonyms "refresh token, renew access"
-      OAUTH_REVOKE -> external {
+      OAUTH_REVOKE -> input {
         token : string!
       }
         @description "Revoke an access or refresh token."
         @synonyms "revoke token, sign out"
-      OAUTH_USERINFO -> external {
+      OAUTH_USERINFO -> input {
         accessToken : string!
       }
         @description "Read the account behind an access token."
         @synonyms "user info, who am i"
-      OAUTH_CONNECT -> external {
+      OAUTH_CONNECT -> input {
         code : string!
         state : string!
       }
         @description "Complete an authorization for the signed-in caller and keep the tokens with the host; only the connection row is answered."
         @synonyms "connect account, link provider"
-      OAUTH_CONNECTION -> external { }
+      OAUTH_CONNECTION -> input { }
         @description "Read the signed-in caller's connection to a provider."
         @synonyms "connection status, is connected"
-      OAUTH_DISCONNECT -> external { }
+      OAUTH_DISCONNECT -> input { }
         @description "Drop the signed-in caller's connection to a provider."
         @synonyms "disconnect account, unlink provider"
       OAUTH_AUTHORIZE_MOCK {

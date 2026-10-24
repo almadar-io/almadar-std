@@ -30,7 +30,7 @@ orbital CliOrbital {
     envCursor : number @description "Index of the next passEnv variable to read." = 0
   }
 
-  trait CliRunner -> @rebindable CliCall [integration, instance] {
+  trait CliRunner -> @rebindable CliCall [optimistic] {
     initial: idle
 
     state idle {
@@ -276,7 +276,7 @@ orbital CliOrbital {
     }
 
     listens {
-      CLI_RUN -> external {
+      CLI_RUN -> input {
         stage : string!
         argv : [string]!
         env : Map string string
@@ -284,7 +284,7 @@ orbital CliOrbital {
       }
         @description "Run the command once with these arguments; stage names the run in its answer, env, when given, replaces the env knob for this run, and stdin, when given, is written to the child and then closed."
         @synonyms "run command, execute, spawn"
-      CLI_CANCEL -> external {
+      CLI_CANCEL -> input {
       }
         @description "Stop the running child with TERM; its exit is still answered with CLI_DONE."
         @synonyms "cancel, kill, stop"
@@ -338,5 +338,5 @@ orbital CliOrbital {
     }
   }
 
-  page "/cli" as CliPage -> CliRunner
+  page boot as CliOrbitalStart -> CliRunner
 }

@@ -59,7 +59,7 @@ orbital InfraProjectionOrbital {
     serviceCredentials : [InfraServiceCredentials] = []
   }
 
-  trait InfraProjector -> InfraProjection [integration, instance] {
+  trait InfraProjector -> InfraProjection [client] {
     initial: idle
 
     config {
@@ -86,7 +86,7 @@ orbital InfraProjectionOrbital {
         (set @entity.database (or @payload.database ""))
         (set @entity.maxInstances (if (== @payload.maxInstances null) 0 @payload.maxInstances))
         (let ((p (json/parse @payload.program InfraProgram)))
-          (let ((orbitals (or @p.orbitals [])))
+          (let ((orbitals (object/get @p "orbitals" [])))
             (let ((infos (array/map @orbitals (fn o (let ((ts (array/map (array/filter (or @o.traits []) (fn t (str/startsWith (json/stringify @t) "{"))) (fn t (json/parse (json/stringify @t) InfraTrait)))))
                     (let ((forms (array/map (array/flatten (array/map @ts (fn t (array/concat (array/flatten (array/map (or @t.stateMachine.transitions []) (fn x (or @x.effects [])))) (array/flatten (array/map (or @t.ticks []) (fn x (or @x.effects [])))))))) (fn e (if (str/startsWith (json/stringify @e) "[") (json/parse (json/stringify @e) InfraForm) (json/parse "[]" InfraForm))))))
                       {
@@ -254,7 +254,7 @@ orbital InfraProjectionOrbital {
     }
 
     listens {
-      INFRA_PROJECT -> external {
+      INFRA_PROJECT -> input {
         program : string!
         appName : string!
         provider : string

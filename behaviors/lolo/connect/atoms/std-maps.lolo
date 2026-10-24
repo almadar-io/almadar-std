@@ -11,7 +11,7 @@ orbital MapsOrbital {
     id : string!
   }
 
-  trait MapsClient -> MapsLookup [integration, instance] {
+  trait MapsClient -> MapsLookup [client] {
     initial: idle
 
     state idle {
@@ -108,18 +108,18 @@ orbital MapsOrbital {
     }
 
     listens {
-      GEOCODE -> external {
+      GEOCODE -> input {
         address : string!
       }
         @description "Resolve a free-text address to coordinates."
         @synonyms "geocode address, find coordinates, locate address"
-      REVERSE_GEOCODE -> external {
+      REVERSE_GEOCODE -> input {
         lat : number!
         lng : number!
       }
         @description "Resolve coordinates to an address."
         @synonyms "reverse geocode, address from coordinates"
-      DISTANCE -> external {
+      DISTANCE -> input {
         fromLat : number!
         fromLng : number!
         toLat : number!

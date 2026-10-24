@@ -8,7 +8,7 @@ orbital KnowledgeLoopOrbital {
   uses Button from "std/behaviors/ui-button"
   uses Divider from "std/behaviors/ui-divider"
 
-  type ScoreCommit = { score : number }
+  type ScoreCommit = { score : number! }
 
   type ConditionCommit = { title : string, candidateStructure : string }
 
@@ -21,14 +21,14 @@ orbital KnowledgeLoopOrbital {
     nextTarget             : string  @description "the next question that removes the most uncertainty" = ""
   }
 
-  trait LoopTitle = Typography.traits.TypographyRender -> KnowledgeClaim {
+  trait LoopTitle = Typography.traits.TypographyRender -> KnowledgeClaim [client] {
     config {
       content: "Knowledge loop"
       variant: h3
     }
   }
 
-  trait AwaitingFalsificationText = Typography.traits.TypographyRender -> KnowledgeClaim {
+  trait AwaitingFalsificationText = Typography.traits.TypographyRender -> KnowledgeClaim [client] {
     config {
       color: muted
       content: "Falsification requested — awaiting the automated check's verdict."
@@ -36,7 +36,7 @@ orbital KnowledgeLoopOrbital {
     }
   }
 
-  trait AwaitingVerificationText = Typography.traits.TypographyRender -> KnowledgeClaim {
+  trait AwaitingVerificationText = Typography.traits.TypographyRender -> KnowledgeClaim [client] {
     config {
       color: muted
       content: "Independent verification requested — awaiting the automated check's verdict."
@@ -44,7 +44,7 @@ orbital KnowledgeLoopOrbital {
     }
   }
 
-  trait LoopDivider = Divider.traits.DividerRender -> KnowledgeClaim {
+  trait LoopDivider = Divider.traits.DividerRender -> KnowledgeClaim [client] {
     config {}
   }
 
@@ -93,7 +93,7 @@ orbital KnowledgeLoopOrbital {
     }
   }
 
-  trait KnowledgeLoop -> @rebindable KnowledgeClaim [interaction, collection] {
+  trait KnowledgeLoop -> @rebindable KnowledgeClaim [optimistic] {
     initial: varying
 
     state varying {
@@ -412,7 +412,7 @@ orbital KnowledgeLoopOrbital {
 
     listens {
       CONFIRM_SCORE {
-        data: ScoreCommit
+        data: ScoreCommit!
       }
         @description "The reliability-score form committed."
         @synonyms "submit score, report reliability"

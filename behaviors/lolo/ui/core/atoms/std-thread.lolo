@@ -36,6 +36,8 @@ orbital ThreadPostOrbital {
 
     type SetThreadRoot = Event { rootId : string! } "Fired to scope every ThreadPost fetch, and new-reply threadRootId stamping, to the descendants of one document root"
 
+    type ThreadPostRow = { id : string!, parentId : string, threadRootId : string, authorId : string, authorName : string, content : string, createdAt : string, voteCount : number, replyCount : number }
+
   entity ThreadPost [persistent: threadposts] {
     id : string!
     parentId : string @description "Identifier of the parent ThreadPost in a nested thread." @synonyms "parent, ancestor, source"
@@ -47,14 +49,14 @@ orbital ThreadPostOrbital {
     voteCount : number @description "The number of votes associated with this item." @synonyms "votes, rating, score" = 0
     replyCount : number @description "The number of replies to this post." @synonyms "count, number of replies, child posts" = 0
     replies : [ThreadPost] @description "A list of child ThreadPost entities." @synonyms "children, descendants, sub-posts"
-    focusedRow : ThreadPost @intrinsic @description "The currently selected or active row within the thread." @synonyms "selection, active, current"
+    focusedRow : ThreadPostRow @intrinsic @description "The currently selected or active row within the thread." @synonyms "selection, active, current"
     replyDraft : string @intrinsic @description "Reply text being composed." = ""
     replyParentId : string @intrinsic @description "Post the reply being composed answers." = ""
     replyRootId : string @intrinsic @description "Thread root the reply being composed belongs to." = ""
     lastReplyId : string @intrinsic @description "Reply just created, added to its parent post's replies." = ""
   }
 
-  trait ThreadPostBrowse -> @rebindable ThreadPost [interaction, collection] {
+  trait ThreadPostBrowse -> @rebindable ThreadPost {
     initial: loading
 
     state loading {
@@ -320,7 +322,7 @@ orbital ThreadPostOrbital {
     emits {
       SELECT -> external {
         id : string
-        row : @entity!
+        row : ThreadPostRow!
       }
         @description "Indicates a post or reply has been chosen for interaction."
         @synonyms "choose, highlight, focus, activate"
@@ -386,7 +388,7 @@ orbital ThreadPostOrbital {
     listens {
       SELECT {
         id : string
-        row : @entity!
+        row : ThreadPostRow!
       }
         @description "A post or reply has been chosen for interaction."
         @synonyms "choose, highlight, focus, activate"
@@ -544,7 +546,7 @@ orbital ThreadPostOrbital {
     }
   }
 
-  trait ThreadReplyGate = RoleGate.traits.RoleGate {
+  trait ThreadReplyGate = RoleGate.traits.RoleGate [optimistic] {
     config {
       roles: @config.replyRoles
       viewerRole: @config.viewerRole

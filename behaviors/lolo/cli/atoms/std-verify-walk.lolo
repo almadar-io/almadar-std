@@ -24,7 +24,7 @@ type WalkEffect = { type : string!, args : [WalkJson]!, status : string!, error 
 type WalkRun = { trait : string!, event : string!, transitionFired : boolean!, guard : string!, firedArm : number, effects : [WalkEffect]!, emitted : [SExpr]!, guards : [SExpr]!, state : Map string WalkJson }
 type WalkSlot = { name : string!, type : string!, required : boolean!, values : [string], entity : string }
 type WalkPlayed = { trait : string!, from : string!, event : string!, to : string!, guarded : boolean!, targets : [string]!, result : WalkResult! }
-type WalkResult = { transitionFired : boolean!, firedArm : number, state : WalkAfter! }
+type WalkResult = { trait : string!, event : string!, transitionFired : boolean!, guard : string!, firedArm : number, effects : [WalkEffect]!, emitted : [SExpr]!, guards : [SExpr]!, state : Map string string }
 type WalkHop = { trait : string!, from : string!, event : string!, to : string!, arm : number }
 type WalkCreditStep = { trait : string!, from : string!, event : string!, arm : number, reply : string, fired : [WalkHop] }
 type WalkCredit = { index : number!, stateBefore : string!, stateAfter : string! }
@@ -97,7 +97,7 @@ orbital VerifyWalkOrbital {
     }
   }
 
-  trait VerifyWalkCli -> VerifyReport [integration] {
+  trait VerifyWalkCli -> VerifyReport [client] {
     initial: ready
 
     state ready {
@@ -133,7 +133,7 @@ orbital VerifyWalkOrbital {
     }
   }
 
-  trait VerifyWalk -> VerifyReport [integration] {
+  trait VerifyWalk -> VerifyReport [optimistic] {
     initial: ready
 
     state ready {
@@ -222,7 +222,8 @@ orbital VerifyWalkOrbital {
         (set @entity.judged (array/concat @entity.judged [{ verdicts: @payload.verdicts }]))
         (emit WALK_JUDGE_NEXT {})
       WALK_JUDGE_NEXT -> crediting when (= (array/len @entity.judged) (array/len @entity.played))
-        (emit WALK_CREDIT_REQUEST { steps: (array/map @entity.creditSteps (fn s { trait: (object/get @s "trait"), from: (object/get @s "from"), event: (object/get @s "event"), reply: (object/get @s "reply"), fired: @entity.hops })) })
+        (let ((credit : [WalkCreditStep] (array/map @entity.creditSteps (fn s { trait: (object/get @s "trait"), from: (object/get @s "from"), event: (object/get @s "event"), reply: (object/get @s "reply" ""), fired: @entity.hops }))))
+          (emit WALK_CREDIT_REQUEST { steps: @credit }))
       WALK_FAILED -> ready
         (emit VERIFY_WALK_ANSWERED { status: 500, body: (str/concat "verify-walk: " @payload.error) })
     }
@@ -268,7 +269,7 @@ orbital VerifyWalkOrbital {
       WALK_PLAN_REQUEST -> external { program : SExpr!, rows : [WalkMachineRow]!, viewer : Map string WalkValue, owners : Map string [string] }
         @description "Ask std-verify-plan for one planned step per row."
         @tier "internal"
-      WALK_JUDGE_REQUEST -> external { step : WalkPlanStep!, played : WalkRun!, program : SExpr! }
+      WALK_JUDGE_REQUEST -> external { step : WalkPlanStep!, played : WalkResult!, program : SExpr! }
         @description "Ask std-verify-judge for the verdicts of one played step."
         @tier "internal"
       WALK_CREDIT_REQUEST -> external { steps : [WalkCreditStep]! }

@@ -1,0 +1,40 @@
+app cascade [
+  version: "1.0.0",
+  description: "execute fixture: Sender emits PING, Receiver listens"
+]
+orbital Pair {
+  entity Item [runtime] {
+    id : string!
+    n : number = 0
+  }
+  trait Sender -> Item [client] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      GO -> sent
+        (emit PING { n: 1 })
+    }
+    state sent {
+      INIT -> sent
+      BACK -> idle
+    }
+    emits {
+      PING { n : number! }
+        @description "ping"
+    }
+  }
+  trait Receiver -> Item [client] {
+    initial: waiting
+    state waiting {
+      INIT -> waiting
+      PING -> heard
+    }
+    state heard {
+      INIT -> heard
+    }
+    listens {
+      Sender.PING -> PING
+    }
+  }
+  page "/pair" as PairPage -> Sender, Receiver
+}

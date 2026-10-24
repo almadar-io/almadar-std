@@ -19,7 +19,7 @@ orbital PageWatchOrbital {
     status : "starting" | "watching" | "failed" @description "Whether the watch is attached" @synonyms "state, watching, connected" = starting
   }
 
-  trait PageWatch -> PageWatchRecord [lifecycle, instance] {
+  trait PageWatch -> PageWatchRecord [client] {
     initial: active
 
     config {
@@ -81,7 +81,7 @@ orbital PageWatchOrbital {
     }
 
     listens {
-      ITEM_FOUND -> external { tab : number!, elementId : string!, url : string!, fields : Map string string }
+      ITEM_FOUND -> input { tab : number!, elementId : string!, url : string!, fields : Map string string }
         @description "One matching element, delivered by the browser"
     }
   }

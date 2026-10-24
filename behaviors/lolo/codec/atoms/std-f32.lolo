@@ -14,7 +14,7 @@ orbital F32Orbital {
     acc : F32Acc = { bits: [], rounded: [], bad: -1, i: 0 }
   }
 
-  trait F32Encode -> F32Run [integration, instance] {
+  trait F32Encode -> F32Run [client] {
     initial: idle
 
     state idle {
@@ -49,7 +49,7 @@ orbital F32Orbital {
     }
 
     listens {
-      F32_ENCODE -> external {
+      F32_ENCODE -> input {
         values : [number]!
         tag : string
       }
@@ -58,5 +58,5 @@ orbital F32Orbital {
     }
   }
 
-  page "/f32" -> F32Encode
+  page boot as F32OrbitalStart -> F32Encode
 }

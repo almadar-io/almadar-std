@@ -103,7 +103,7 @@ orbital OrbShellRenderersOrbital {
     }
   }
 
-  trait OrbShellRenderers -> OrbShellRenderersRun [integration] {
+  trait OrbShellRenderers -> OrbShellRenderersRun [optimistic] {
     initial: ready
 
     state ready {
@@ -229,14 +229,14 @@ orbital OrbShellRenderersOrbital {
         (os/read-file { anchor: "cwd" path: (str/concat @entity.pack "/verification-ids.tpl") } { key: "vidtpl", emit: { success: NS_VID_READ, failure: NS_READ_FAIL } })
       NS_VID_READ -> planning
         (set @entity.vidTpl (bytes/to-string @payload.data))
-        (set @entity.pats (array/map
+        (set @entity.pats (let ((reg (json/parse @entity.regText PatReg)) (nl (json/parse @entity.listsText NativeLists))) (array/map
           (array/filter
-            (array/map (array/map (array/sort (array/map (object/keys (object/get (json/parse @entity.regText PatReg) "patterns")) (fn nm { sort: (str/collate-key @nm), name: @nm })) "sort") (fn k (object/get @k "name")))
-              (fn nm { name: @nm, tier: (object/get (object/get (object/get (json/parse @entity.regText PatReg) "patterns") @nm) "tier") }))
+            (array/map (array/map (array/sort (array/map (object/keys (object/get @reg "patterns")) (fn nm { sort: (str/collate-key @nm), name: @nm })) "sort") (fn k (object/get @k "name")))
+              (fn nm { name: @nm, tier: (object/get (object/get (object/get @reg "patterns") @nm) "tier") }))
             (fn pr (and (array/includes (str/split "atoms|molecules|organisms|templates" "|") (object/get @pr "tier"))
-                        (not (array/includes (object/get (json/parse @entity.listsText NativeLists) "deferred") (object/get @pr "name")))
-                        (not (array/includes (object/get (json/parse @entity.listsText NativeLists) "canvas") (object/get @pr "name"))))))
-          (fn pr { name: (object/get @pr "name"), tier: (object/get @pr "tier") })))
+                        (not (array/includes (object/get @nl "deferred") (object/get @pr "name")))
+                        (not (array/includes (object/get @nl "canvas") (object/get @pr "name"))))))
+          (fn pr { name: (object/get @pr "name"), tier: (object/get @pr "tier") }))))
         (set @entity.keys (array/map @entity.pats (fn pr (str/concat (object/get @pr "tier") "/" (str/replaceAll (object/get @pr "name") "-" "_") "." @entity.ext))))
         (set @entity.tcur 0)
         (emit NS_LIST { })
@@ -370,9 +370,9 @@ orbital OrbShellRenderersOrbital {
         (emit NS_BUILD { })
       NS_BUILD -> pruning
         (set @entity.summary (str/concat @entity.platform ": " (array/len @entity.natives) " native, " (array/len @entity.missing) " stub(s) written, " (array/len @entity.orphans) " orphan(s) " (if (= @entity.outDir "") "pruned" "found") (if (> (array/len @entity.bad) 0) (str/concat "\nerror: placeholder renderer(s), add a body: " (str/join @entity.bad ", ")) "") (if (> (array/len @entity.violations) 0) (str/concat "\nerror: " (array/len @entity.violations) " gate violation(s):\n" (str/join (array/map @entity.violations (fn vl (str/concat "  - " @vl))) "\n")) "")))
-        (set @entity.outFiles (array/concat
+        (set @entity.outFiles (let ((nl (json/parse @entity.listsText NativeLists))) (array/concat
           (array/map @entity.missing (fn pr { path: (str/concat (if (= @entity.outDir "") (str/concat @entity.pack "/renderers") (str/concat @entity.outDir "/renderers")) "/" (object/get @pr "tier") "/" (str/replaceAll (object/get @pr "name") "-" "_") "." @entity.ext),
-            text: (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll @entity.stubTpl "{{family}}" (object/get (object/get (json/parse @entity.listsText NativeLists) "families") (str/concat @entity.platform "/" (object/get @pr "tier")))) "{{Pascal}}" (str/join (array/map (array/filter (str/split (str/replaceAll (object/get @pr "name") "_" "-") "-") (fn sg (> (str/len @sg) 0))) (fn sg (str/concat (str/upper (str/slice @sg 0 1)) (str/slice @sg 1)))) "")) "{{name}}" (object/get @pr "name")) "{{tier}}" (object/get @pr "tier")) }))
+            text: (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll @entity.stubTpl "{{family}}" (object/get (object/get @nl "families") (str/concat @entity.platform "/" (object/get @pr "tier")))) "{{Pascal}}" (str/join (array/map (array/filter (str/split (str/replaceAll (object/get @pr "name") "_" "-") "-") (fn sg (> (str/len @sg) 0))) (fn sg (str/concat (str/upper (str/slice @sg 0 1)) (str/slice @sg 1)))) "")) "{{name}}" (object/get @pr "name")) "{{tier}}" (object/get @pr "tier")) }))
           [{ path: (str/concat (if (= @entity.outDir "") (str/concat @entity.pack "/renderers") (str/concat @entity.outDir "/renderers")) "/CorePatternRegistry." @entity.ext),
              text: (str/replaceAll @entity.regTpl "{{entries}}" (str/join (array/concat
                (array/map @entity.pats (fn pr (let ((q (json/stringify (object/get @pr "name"))) (fnm (str/join (array/map (array/filter (str/split (str/replaceAll (object/get @pr "name") "_" "-") "-") (fn sg (> (str/len @sg) 0))) (fn sg (str/concat (str/upper (str/slice @sg 0 1)) (str/slice @sg 1)))) "")))
@@ -382,12 +382,12 @@ orbital OrbShellRenderersOrbital {
                (array/map (str/split "canvas|game-canvas|canvas-2d|game-canvas-2d" "|") (fn al (if (= @entity.platform "ios")
                  (str/concat "        " (json/stringify @al) ": { props, modifier, onEvent in GameCanvas2dRenderer(props: props, modifier: modifier, onEvent: onEvent) }")
                  (str/concat "        " (json/stringify @al) " to { props, modifier, onEvent -> GameCanvas2dRenderer(props, modifier, onEvent) }"))))
-               (array/map (array/sort (object/get (json/parse @entity.listsText NativeLists) "canvas")) (fn cn (let ((fixed (array/includes (object/get (json/parse @entity.listsText NativeLists) "fixedSize") @cn)))
+               (array/map (array/sort (object/get @nl "canvas")) (fn cn (let ((fixed (array/includes (object/get @nl "fixedSize") @cn)))
                  (if (= @entity.platform "ios")
                    (str/concat "        " (json/stringify @cn) ": { props, modifier, onEvent in LearningCanvasRenderer(pattern: " (json/stringify @cn) ", props: props, modifier: modifier, onEvent: onEvent" (if @fixed ", fixedSize: true" "") ") }")
                    (str/concat "        " (json/stringify @cn) " to { props, modifier, onEvent -> LearningCanvasRenderer(" (json/stringify @cn) ", props, modifier, onEvent" (if @fixed ", fixedSize = true" "") ") }")))))) ",\n")) }
            { path: (str/concat (if (= @entity.outDir "") @entity.pack @entity.outDir) "/package.json"),
-             text: (str/concat "{\n  \"name\": " (json/stringify (object/get (json/parse @entity.manText PackManifest) "name")) ",\n  \"version\": " (json/stringify (object/get (json/parse @entity.manText PackManifest) "version")) ",\n  \"private\": true,\n  \"description\": " (json/stringify (object/get (json/parse @entity.manText PackManifest) "description")) ",\n  \"orbRenderer\": {\n    \"target\": " (json/stringify @entity.platform) ",\n    \"rendererInterface\": 2,\n    \"patternsRegistry\": " (json/stringify @entity.coreVer) ",\n    \"coverage\": [\n" (str/join (array/map (let ((all (array/sort (array/concat @entity.natives (object/get (json/parse @entity.listsText NativeLists) "canvas"))))) (array/filter @all (fn cv (= (array/indexOf @all @cv) @index)))) (fn cv (str/concat "      " (json/stringify @cv)))) ",\n") "\n    ],\n    \"sources\": \"renderers\",\n    \"fixtures\": \"fixtures\"\n  }\n}\n") }]))
+             text: (str/concat "{\n  \"name\": " (json/stringify (object/get (json/parse @entity.manText PackManifest) "name")) ",\n  \"version\": " (json/stringify (object/get (json/parse @entity.manText PackManifest) "version")) ",\n  \"private\": true,\n  \"description\": " (json/stringify (object/get (json/parse @entity.manText PackManifest) "description")) ",\n  \"orbRenderer\": {\n    \"target\": " (json/stringify @entity.platform) ",\n    \"rendererInterface\": 2,\n    \"patternsRegistry\": " (json/stringify @entity.coreVer) ",\n    \"coverage\": [\n" (str/join (array/map (let ((all (array/sort (array/concat @entity.natives (object/get @nl "canvas"))))) (array/filter @all (fn cv (= (array/indexOf @all @cv) @index)))) (fn cv (str/concat "      " (json/stringify @cv)))) ",\n") "\n    ],\n    \"sources\": \"renderers\",\n    \"fixtures\": \"fixtures\"\n  }\n}\n") }])))
         (set @entity.outFiles (let ((tk (json/parse @entity.tokText NativeTokens))) (array/concat @entity.outFiles
           [{ path: (str/concat (if (= @entity.outDir "") (str/concat @entity.pack "/renderers") (str/concat @entity.outDir "/renderers")) "/AlmadarBreakpoints." @entity.ext), text: (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll @entity.bpTpl "{{sm}}" (str/concat (object/get (object/get @tk "breakpoints") "sm"))) "{{md}}" (str/concat (object/get (object/get @tk "breakpoints") "md"))) "{{lg}}" (str/concat (object/get (object/get @tk "breakpoints") "lg"))) "{{xl}}" (str/concat (object/get (object/get @tk "breakpoints") "xl"))) "{{xxl}}" (str/concat (object/get (object/get @tk "breakpoints") "xxl"))) }
            { path: (str/concat (if (= @entity.outDir "") (str/concat @entity.pack "/renderers") (str/concat @entity.outDir "/renderers")) "/AlmadarSizes." @entity.ext), text: (str/replaceAll @entity.szTpl "{{members}}" (str/join (array/concat (array/map (object/get (object/get @tk "sizes") "maxWidth") (fn en (str/replaceAll (str/replaceAll (object/get (object/get @tk "sizeLine") @entity.ext) "{{name}}" (str/concat "maxW" (str/replaceAll (str/join (array/map (str/split (object/get @en "key") "-") (fn pt (str/concat (str/upper (str/slice @pt 0 1)) (str/slice @pt 1)))) "") "." "_"))) "{{value}}" (str/concat (object/get @en "value"))))) (array/map (object/get (object/get @tk "sizes") "width") (fn en (str/replaceAll (str/replaceAll (object/get (object/get @tk "sizeLine") @entity.ext) "{{name}}" (str/concat "w" (str/replaceAll (str/join (array/map (str/split (object/get @en "key") "-") (fn pt (str/concat (str/upper (str/slice @pt 0 1)) (str/slice @pt 1)))) "") "." "_"))) "{{value}}" (str/concat (object/get @en "value"))))) (array/map (object/get (object/get @tk "sizes") "minWidth") (fn en (str/replaceAll (str/replaceAll (object/get (object/get @tk "sizeLine") @entity.ext) "{{name}}" (str/concat "minW" (str/replaceAll (str/join (array/map (str/split (object/get @en "key") "-") (fn pt (str/concat (str/upper (str/slice @pt 0 1)) (str/slice @pt 1)))) "") "." "_"))) "{{value}}" (str/concat (object/get @en "value")))))) "\n")) }
@@ -491,16 +491,16 @@ orbital OrbShellRenderersOrbital {
         (emit RS_BUILD3 { })
       RS_BUILD3 -> rscan
         (do
-          (set @entity.outFiles (array/concat @entity.outFiles
+          (set @entity.outFiles (let ((gl (json/parse @entity.listsText GateLists))) (array/concat @entity.outFiles
             (array/map (str/split "atoms|molecules|organisms|templates" "|") (fn tr { path: (str/concat (str/concat (if (= @entity.outDir "") @entity.pack @entity.outDir) "/src/components/" @entity.curDomain "/") @tr "/mod.rs"),
-              text: (str/concat "//! " @entity.curDomain " " @tr " renderers.\n\n" (str/join (array/map (array/filter @entity.rall (fn e (= (object/get @e "tier") @tr))) (fn e (str/concat "pub mod " (if (array/includes (object/get (json/parse @entity.listsText GateLists) "rustKeywords") (object/get @e "module")) (str/concat "r#" (object/get @e "module")) (object/get @e "module")) ";"))) "\n") "\n") }))
+              text: (str/concat "//! " @entity.curDomain " " @tr " renderers.\n\n" (str/join (array/map (array/filter @entity.rall (fn e (= (object/get @e "tier") @tr))) (fn e (str/concat "pub mod " (if (array/includes (object/get @gl "rustKeywords") (object/get @e "module")) (str/concat "r#" (object/get @e "module")) (object/get @e "module")) ";"))) "\n") "\n") }))
             (array/map @entity.rstubs (fn st { path: (str/concat (str/concat (if (= @entity.outDir "") @entity.pack @entity.outDir) "/src/components/" @entity.curDomain "/") (object/get @st "tier") "/" (object/get @st "module") ".rs"),
               text: (str/replaceAll (str/replaceAll @entity.rsStub "{{name}}" (object/get @st "name")) "{{Struct}}" (object/get @st "structName")) }))
             [{ path: (str/concat (str/concat (if (= @entity.outDir "") @entity.pack @entity.outDir) "/src/components/" @entity.curDomain "/") "mod.rs"), text: (str/concat "//! " @entity.curDomain " pattern renderers, mirroring almadar-ui/components/" @entity.curDomain ".\n\npub mod register;\n\npub mod atoms;\npub mod molecules;\npub mod organisms;\npub mod templates;\n") }
              { path: (str/concat (str/concat (if (= @entity.outDir "") @entity.pack @entity.outDir) "/src/components/" @entity.curDomain "/") "register.rs"),
                text: (str/replaceAll (str/replaceAll (str/replaceAll @entity.rsReg "{{domain}}" @entity.curDomain)
-                 "{{imports}}" (str/join (array/map @entity.rall (fn e (str/concat "use crate::components::" @entity.curDomain "::" (object/get @e "tier") "::" (if (array/includes (object/get (json/parse @entity.listsText GateLists) "rustKeywords") (object/get @e "module")) (str/concat "r#" (object/get @e "module")) (object/get @e "module")) "::" (object/get @e "structName") " as " (object/get @e "alias") ";"))) "\n"))
-                 "{{registrations}}" (str/join (array/map @entity.rall (fn e (str/concat "    registry.register(Box::new(" (object/get @e "alias") "));"))) "\n")) }]))
+                 "{{imports}}" (str/join (array/map @entity.rall (fn e (str/concat "use crate::components::" @entity.curDomain "::" (object/get @e "tier") "::" (if (array/includes (object/get @gl "rustKeywords") (object/get @e "module")) (str/concat "r#" (object/get @e "module")) (object/get @e "module")) "::" (object/get @e "structName") " as " (object/get @e "alias") ";"))) "\n"))
+                 "{{registrations}}" (str/join (array/map @entity.rall (fn e (str/concat "    registry.register(Box::new(" (object/get @e "alias") "));"))) "\n")) }])))
           (set @entity.offenders (array/concat @entity.offenders
             (array/map (array/filter @entity.rlive (fn rc (object/get @rc "fallback"))) (fn rc (str/concat @entity.curDomain "/" (object/get @rc "tier") "/" (object/get @rc "module") ".rs")))
             (array/map @entity.rstubs (fn st (str/concat @entity.curDomain "/" (object/get @st "tier") "/" (object/get @st "module") ".rs")))))
@@ -774,5 +774,5 @@ orbital OrbShellRenderersOrbital {
     }
   }
 
-  page "/orb-shell-renderers" as OrbShellRenderersPage -> OrbShellRenderers, ArgsCli
+  page boot as OrbShellRenderersOrbitalStart -> OrbShellRenderers, ArgsCli
 }

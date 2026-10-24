@@ -1,0 +1,24 @@
+app orb-lower-spec [
+  version: "1.0.0",
+  inbound: ["cli-lower"],
+  description: "Design contract for `orb lower <FILE>...` (port of orbital-cli lib.rs Commands::Lower). LOWER_START { files } reads each file (a relative path from the directory the command runs in), lowers it with program/read one file at a time in input order, and answers LOWER_ANSWERED { status: 200, body } where body is one compact JSON line per file: { path, orb } for a program that lowers, { path, error } for a file that is unreadable or does not lower; the path is printed as given. No file, or an unknown flag, answers the usage (status 400, stderr, exit 2)."
+]
+
+orbital OrbLowerSpec {
+  expects trait OrbLower {
+    state ready
+    state parsing
+    state working
+    emits {
+      LOWER_ANSWERED { status : number!  body : string!  stderr : string }
+    }
+  }
+  expects trait LowerEngine {
+    state idle
+    state reading
+    emits {
+      LOWER_ANSWERED { status : number!  body : string!  stderr : string }
+    }
+  }
+  expects page "/orb-lower" -> OrbLower
+}

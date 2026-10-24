@@ -62,7 +62,7 @@ orbital AwsBoardOrbital {
     }
   }
 
-  trait AwsStatus -> AwsBoard [integration, instance] {
+  trait AwsStatus -> AwsBoard [client] {
     initial: idle
 
     state idle {
@@ -119,12 +119,12 @@ orbital AwsBoardOrbital {
       AWS_CLI_FAILED -> reading when (= @payload.stage "instances")
         (emit AWS_RUN { stage: "volumes", argv: ["ec2", "describe-volumes", "--query", "Volumes[*].[VolumeId,Size,State,VolumeType,AvailabilityZone,Tags[?Key==`Name`].Value|[0],Attachments[0].InstanceId,Iops]", "--output", "json", "--region", @config.region, "--output", "json"] })
       AWS_RAN -> reading when (= @payload.stage "volumes")
-        (set @entity.volumes (if (and (= @payload.exitCode 0) (json/valid @payload.stdout)) (array/map (json/parse @payload.stdout AwsCells) (fn v (let ((size (or (array/nth @v 1) 0))) { volumeId: (str/concat (or (array/nth @v 0) "")), size: @size, state: (str/concat (or (array/nth @v 2) "")), volumeType: (str/concat (or (array/nth @v 3) "")), az: (str/concat (or (array/nth @v 4) "")), name: (str/concat (or (array/nth @v 5) "")), attachedTo: (if (== (array/nth @v 6) null) (array/nth @v 6) (str/concat (array/nth @v 6))), iops: (or (array/nth @v 7) 0), monthlyCost: (math/round (* @size @config.ebsPerGbMonth) 2) }))) []))
+        (set @entity.volumes (if (and (= @payload.exitCode 0) (json/valid @payload.stdout)) (array/map (json/parse @payload.stdout AwsCells) (fn v (let ((size (str/to-number (str/concat (or (array/nth @v 1) 0))))) { volumeId: (str/concat (or (array/nth @v 0) "")), size: @size, state: (str/concat (or (array/nth @v 2) "")), volumeType: (str/concat (or (array/nth @v 3) "")), az: (str/concat (or (array/nth @v 4) "")), name: (str/concat (or (array/nth @v 5) "")), attachedTo: (if (== (array/nth @v 6) null) (array/nth @v 6) (str/concat (array/nth @v 6))), iops: (or (array/nth @v 7) 0), monthlyCost: (math/round (* @size @config.ebsPerGbMonth) 2) }))) []))
         (emit AWS_RUN { stage: "images", argv: ["ec2", "describe-images", "--owners", "self", "--query", "Images[*].[ImageId,Name,State,CreationDate,BlockDeviceMappings[0].Ebs.VolumeSize]", "--output", "json", "--region", @config.region, "--output", "json"] })
       AWS_CLI_FAILED -> reading when (= @payload.stage "volumes")
         (emit AWS_RUN { stage: "images", argv: ["ec2", "describe-images", "--owners", "self", "--query", "Images[*].[ImageId,Name,State,CreationDate,BlockDeviceMappings[0].Ebs.VolumeSize]", "--output", "json", "--region", @config.region, "--output", "json"] })
       AWS_RAN -> reading when (= @payload.stage "images")
-        (set @entity.amis (if (and (= @payload.exitCode 0) (json/valid @payload.stdout)) (array/map (json/parse @payload.stdout AwsCells) (fn a (let ((size (or (array/nth @a 4) 0))) { imageId: (str/concat (or (array/nth @a 0) "")), name: (str/concat (or (array/nth @a 1) "")), state: (str/concat (or (array/nth @a 2) "")), created: (str/concat (or (array/nth @a 3) "")), sizeGb: @size, monthlyCost: (math/round (* @size @config.snapshotPerGbMonth) 2) }))) []))
+        (set @entity.amis (if (and (= @payload.exitCode 0) (json/valid @payload.stdout)) (array/map (json/parse @payload.stdout AwsCells) (fn a (let ((size (str/to-number (str/concat (or (array/nth @a 4) 0))))) { imageId: (str/concat (or (array/nth @a 0) "")), name: (str/concat (or (array/nth @a 1) "")), state: (str/concat (or (array/nth @a 2) "")), created: (str/concat (or (array/nth @a 3) "")), sizeGb: @size, monthlyCost: (math/round (* @size @config.snapshotPerGbMonth) 2) }))) []))
         (emit AWS_RUN { stage: "s3", argv: ["s3", "ls", "--region", @config.region, "--output", "json"] })
       AWS_CLI_FAILED -> reading when (= @payload.stage "images")
         (emit AWS_RUN { stage: "s3", argv: ["s3", "ls", "--region", @config.region, "--output", "json"] })
@@ -182,13 +182,13 @@ orbital AwsBoardOrbital {
         (set @entity.cursor (+ @entity.cursor 1))
         (emit AWS_QUOTA_NEXT { })
       AWS_RAN -> reading when (= @payload.stage "cost")
-        (set @entity.costExplorer (if (and (= @payload.exitCode 0) (json/valid @payload.stdout)) (array/sort (array/map (object/get (json/parse @payload.stdout AwsCostReply) "ResultsByTime.0.Groups" []) (fn g { service: (or (array/nth (or @g.Keys []) 0) "Unknown"), cost: (math/round (str/to-number (object/get @g "Metrics.UnblendedCost.Amount" "0")) 2), unit: (object/get @g "Metrics.UnblendedCost.Unit" "USD") })) "cost" "desc") []))
+        (set @entity.costExplorer (if (and (= @payload.exitCode 0) (json/valid @payload.stdout)) (array/sort (array/map (object/get (array/nth (object/get (json/parse @payload.stdout AwsCostReply) "ResultsByTime" []) 0) "Groups" []) (fn g { service: (or (array/nth (or @g.Keys []) 0) "Unknown"), cost: (math/round (str/to-number (object/get @g "Metrics.UnblendedCost.Amount" "0")) 2), unit: (object/get @g "Metrics.UnblendedCost.Unit" "USD") })) "cost" "desc") []))
         (emit AWS_RUN { stage: "history", argv: ["ce", "get-cost-and-usage", "--time-period", (str/concat "Start=" (time/format (- @entity.startedAt (* @config.historyDays 86400000)) "YYYY-MM-DD") ",End=" (time/format @entity.startedAt "YYYY-MM-DD")), "--granularity", "MONTHLY", "--metrics", "UnblendedCost", "UsageQuantity", "--filter", (json/stringify { Dimensions: { Key: "SERVICE", Values: ["Amazon Elastic Compute Cloud - Compute"] } }), "--group-by", "Type=DIMENSION,Key=INSTANCE_TYPE", "--region", @config.region, "--output", "json"] })
       AWS_CLI_FAILED -> reading when (= @payload.stage "cost")
         (emit AWS_RUN { stage: "history", argv: ["ce", "get-cost-and-usage", "--time-period", (str/concat "Start=" (time/format (- @entity.startedAt (* @config.historyDays 86400000)) "YYYY-MM-DD") ",End=" (time/format @entity.startedAt "YYYY-MM-DD")), "--granularity", "MONTHLY", "--metrics", "UnblendedCost", "UsageQuantity", "--filter", (json/stringify { Dimensions: { Key: "SERVICE", Values: ["Amazon Elastic Compute Cloud - Compute"] } }), "--group-by", "Type=DIMENSION,Key=INSTANCE_TYPE", "--region", @config.region, "--output", "json"] })
       AWS_RAN -> idle when (= @payload.stage "history")
-        (set @entity.history (if (and (= @payload.exitCode 0) (json/valid @payload.stdout)) (let ((groups (array/filter (array/flatten (array/map (object/get (json/parse @payload.stdout AwsCostReply) "ResultsByTime" []) (fn b (or @b.Groups [])))) (fn g (and (!= (or (array/nth (or @g.Keys []) 0) "") "") (!= (array/nth @g.Keys 0) "NoInstanceType"))))))
-          (array/sort (array/filter (array/map (array/unique (array/map @groups (fn g (array/nth @g.Keys 0)))) (fn t (let ((gs (array/filter @groups (fn g (= (array/nth @g.Keys 0) @t)))) (spec (array/nth (object/values (object/pick @config.catalog [@t])) 0)))
+        (set @entity.history (if (and (= @payload.exitCode 0) (json/valid @payload.stdout)) (let ((groups (array/filter (array/flatten (array/map (object/get (json/parse @payload.stdout AwsCostReply) "ResultsByTime" []) (fn b (or @b.Groups [])))) (fn g (and (!= (or (array/nth (or @g.Keys []) 0) "") "") (!= (array/nth (or @g.Keys []) 0) "NoInstanceType"))))))
+          (array/sort (array/filter (array/map (array/unique (array/map @groups (fn g (array/nth (or @g.Keys []) 0)))) (fn t (let ((gs (array/filter @groups (fn g (= (array/nth (or @g.Keys []) 0) @t)))) (spec (array/nth (object/values (object/pick @config.catalog [@t])) 0)))
             { instanceType: @t, hours: (math/round (array/reduce @gs 0 (fn acc g (+ @acc (str/to-number (object/get @g "Metrics.UsageQuantity.Amount" "0"))))) 1), rawCost: (array/reduce @gs 0 (fn acc g (+ @acc (str/to-number (object/get @g "Metrics.UnblendedCost.Amount" "0"))))), cost: (math/round (array/reduce @gs 0 (fn acc g (+ @acc (str/to-number (object/get @g "Metrics.UnblendedCost.Amount" "0"))))) 2), vcpus: (object/get @spec "vcpus" null), memoryGb: (object/get @spec "memoryGb" null), gpu: (object/get @spec "gpu" null), gpuCount: (object/get @spec "gpuCount" 0) }))) (fn h (>= @h.rawCost @config.minHistoryCost))) "cost" "desc")) []))
         (let ((running (math/round (array/reduce (array/filter @entity.instances (fn i (= @i.state "running"))) 0 (fn acc i (+ @acc (or @i.hourlyUsd 0)))) 2)))
           (set @entity.board {
@@ -269,10 +269,10 @@ orbital AwsBoardOrbital {
     }
 
     listens {
-      AWS_LOAD -> external { }
+      AWS_LOAD -> input { }
         @description "Answer the AWS board, from the cache while it is fresh."
         @synonyms "show aws, aws cost"
-      AWS_REFRESH -> external { }
+      AWS_REFRESH -> input { }
         @description "Read the AWS board afresh."
         @synonyms "refresh aws"
       AWS_RAN {

@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-10-23T04:31:52.535Z",
+  "generated": "2026-10-24T08:20:11.559Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -345,6 +345,7 @@
       "returnType": "number",
       "description": "Modulo (remainder)",
       "module": "core",
+      "returnSemantics": "integer-closed",
       "title": "Modulo",
       "params": [
         {
@@ -371,6 +372,7 @@
       "returnType": "number",
       "description": "Multiply numbers",
       "module": "core",
+      "returnSemantics": "integer-closed",
       "title": "Multiply",
       "params": [
         {
@@ -391,6 +393,7 @@
       "returnType": "number",
       "description": "Add numbers",
       "module": "core",
+      "returnSemantics": "integer-closed",
       "title": "Add",
       "params": [
         {
@@ -411,6 +414,7 @@
       "returnType": "number",
       "description": "Subtract or negate",
       "module": "core",
+      "returnSemantics": "integer-closed",
       "title": "Subtract Or Negate",
       "params": [
         {
@@ -1871,6 +1875,7 @@
       },
       "description": "Get element at index (element type of input array, may be undefined out-of-bounds). A pair or tuple of unlike types (an entry of object/entries) is indexed too; its element type is then not determined",
       "module": "array",
+      "returnSemantics": "tuple-element",
       "title": "Nth",
       "params": [
         {
@@ -3190,9 +3195,21 @@
     "behavior/resolve": {
       "category": "std-behavior",
       "minArity": 1,
-      "maxArity": 2,
-      "returnType": "sexpr",
-      "description": "The behavior a trait value, an orbital value or `{ behavior }` names, resolved: every import and composed trait inlined, as a quoted program.",
+      "maxArity": 3,
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "sexpr",
+          {
+            "kind": "object",
+            "fields": {
+              "path": "string",
+              "owner": "string"
+            }
+          }
+        ]
+      },
+      "description": "The behavior a trait value, an orbital value or `{ behavior }` names, resolved: every import and composed trait inlined, as a quoted program. With `{ path: true }`, where it resolves instead: `{ path, owner }`, the file and the package that owns it, as `orb behaviors which` prints them; with `{ expects: true }`, each orbital's derived expectations.",
       "module": "behavior",
       "hasSideEffects": true,
       "runsOn": "server",
@@ -3209,6 +3226,19 @@
             ]
           },
           "description": "A trait value, an orbital value, or { behavior }"
+        },
+        {
+          "name": "request",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "path": "boolean",
+              "expects": "boolean"
+            },
+            "open": true
+          },
+          "description": "`path: true` answers `{ path, owner }`; `expects: true` answers each orbital's derived expectations (`{ <orbital>: … }`, as `orb behaviors expects` prints them; `behavior` may also name a `.orb` file)",
+          "optional": true
         },
         {
           "name": "options",
@@ -10330,9 +10360,9 @@
     "json/stringify": {
       "category": "std-json",
       "minArity": 1,
-      "maxArity": 1,
+      "maxArity": 2,
       "returnType": "string",
-      "description": "Serialize any value to a JSON string",
+      "description": "Serialize any value to a JSON string, compact and in insertion order. `sorted: true` sorts every object's keys (canonical JSON); `pretty: true` indents two spaces, as `JSON.stringify(v, null, 2)`.",
       "module": "json",
       "params": [
         {
@@ -10342,6 +10372,19 @@
             "name": "T"
           },
           "description": "The value to serialize"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "pretty": "boolean",
+              "sorted": "boolean"
+            },
+            "open": true
+          },
+          "description": "Optional `pretty` and `sorted` flags",
+          "optional": true
         }
       ],
       "examples": [
@@ -10946,9 +10989,9 @@
     "log": {
       "category": "effect",
       "minArity": 1,
-      "maxArity": 1,
+      "maxArity": 2,
       "returnType": "void",
-      "description": "Emit a structured info log line (compiled + runtime)",
+      "description": "Emit a structured log line at a level, info by default (compiled + runtime); `orb -v` shows info, `-vv` debug",
       "module": "core",
       "hasSideEffects": true,
       "effect": {
@@ -10961,6 +11004,33 @@
           "name": "message",
           "type": "string",
           "description": "Log message"
+        },
+        {
+          "name": "level",
+          "type": {
+            "kind": "union",
+            "of": [
+              {
+                "kind": "literal",
+                "value": "debug"
+              },
+              {
+                "kind": "literal",
+                "value": "info"
+              },
+              {
+                "kind": "literal",
+                "value": "warn"
+              },
+              {
+                "kind": "literal",
+                "value": "error"
+              }
+            ]
+          },
+          "description": "Level: \"debug\", \"info\" (default), \"warn\" or \"error\"",
+          "optional": true,
+          "defaultValue": "info"
         }
       ],
       "examples": [
@@ -10975,6 +11045,7 @@
       "returnType": "number",
       "description": "Absolute value",
       "module": "math",
+      "returnSemantics": "integer-closed",
       "title": "Absolute Value",
       "params": [
         {
@@ -11110,6 +11181,7 @@
       "returnType": "number",
       "description": "Round up to integer",
       "module": "math",
+      "returnSemantics": "integer-result",
       "title": "Ceil",
       "params": [
         {
@@ -11130,6 +11202,7 @@
       "returnType": "number",
       "description": "Constrain value to range [min, max]",
       "module": "math",
+      "returnSemantics": "integer-closed",
       "title": "Clamp",
       "params": [
         {
@@ -11234,6 +11307,7 @@
       "returnType": "number",
       "description": "Round down to integer",
       "module": "math",
+      "returnSemantics": "integer-result",
       "title": "Floor",
       "params": [
         {
@@ -11389,6 +11463,7 @@
       "returnType": "number",
       "description": "Maximum of values",
       "module": "math",
+      "returnSemantics": "integer-closed",
       "title": "Max",
       "params": [
         {
@@ -11409,6 +11484,7 @@
       "returnType": "number",
       "description": "Minimum of values",
       "module": "math",
+      "returnSemantics": "integer-closed",
       "title": "Min",
       "params": [
         {
@@ -11429,6 +11505,7 @@
       "returnType": "number",
       "description": "Modulo (remainder)",
       "module": "math",
+      "returnSemantics": "integer-closed",
       "title": "Mod",
       "params": [
         {
@@ -11539,6 +11616,7 @@
       "returnType": "number",
       "description": "Round to nearest integer or specified decimals",
       "module": "math",
+      "returnSemantics": "integer-result",
       "title": "Round",
       "params": [
         {
@@ -21350,9 +21428,18 @@
     "program/print": {
       "category": "std-program",
       "minArity": 1,
-      "maxArity": 2,
-      "returnType": "string",
-      "description": "Format a quoted program as `.lolo` source text.",
+      "maxArity": 3,
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "string",
+          {
+            "kind": "array",
+            "of": "string"
+          }
+        ]
+      },
+      "description": "Format a quoted program as `.lolo` source text. With `source`, format that authored `.lolo` text instead (comments kept, the bytes `orb format` prints; `.orb` JSON prints with sorted keys) and the program is not read: `node` prints the one construct at a path (`orbitals[0].traits[2]`, `orbitals[0].entity.fields[1]`), `nodes` every construct a path with `[*]` matches, as a list.",
       "module": "program",
       "hasSideEffects": true,
       "runsOn": "server",
@@ -21363,7 +21450,21 @@
           "type": {
             "kind": "sexpr"
           },
-          "description": "A quoted program"
+          "description": "A quoted program (not read when `source` is given)"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "source": "string",
+              "node": "string",
+              "nodes": "string"
+            },
+            "open": true
+          },
+          "description": "Authored `source` to format, at one `node` path or every `nodes` match",
+          "optional": true
         },
         {
           "name": "options",
@@ -21403,7 +21504,7 @@
       "minArity": 1,
       "maxArity": 3,
       "returnType": "sexpr",
-      "description": "Parse `.lolo` source text into a quoted program. With inspect:true and an absolute path, return the resolved program, original-source anchors and imported source provenance; version identifies the editor document.",
+      "description": "Parse `.lolo` source text into a quoted program. With inspect:true and an absolute path, return the resolved program, original-source anchors and imported source provenance; version identifies the editor document. With embeds:true, the text's inline behavior embeds `[{ orbital, trait, behavior, line, column }]` (what `orb embeds` prints). With resolve:true and the absolute path, the file resolved as `orb resolve` prints it, `{ program, text }`; with output, also written there with its catalogs and lazy behaviors (without it, a program with lazy behaviors or locales is refused).",
       "module": "program",
       "hasSideEffects": true,
       "runsOn": "server",
@@ -21420,12 +21521,15 @@
             "kind": "object",
             "fields": {
               "inspect": "boolean",
+              "embeds": "boolean",
+              "resolve": "boolean",
               "path": "string",
+              "output": "string",
               "version": "number"
             },
             "open": true
           },
-          "description": "Optional inspection request with original absolute source path and document version",
+          "description": "Optional inspection (inspect, path, version), embed listing (embeds) or resolution (resolve, path, output) request",
           "optional": true
         },
         {
@@ -21637,6 +21741,10 @@
               "key": "string",
               "render": "boolean",
               "live": "boolean",
+              "report": {
+                "kind": "literal",
+                "value": "raw"
+              },
               "emit": {
                 "kind": "object",
                 "fields": {
@@ -21655,7 +21763,7 @@
             },
             "open": true
           },
-          "description": "Emit configuration ({ emit: { success, failure } }); `render: true` adds each result's `rendered` slot facts; `live: true` runs the requests on the native host",
+          "description": "Emit configuration ({ emit: { success, failure } }); `render: true` adds each result's `rendered` slot facts; `live: true` runs the requests on the native host; `report: \"raw\"` answers the kernel's cascade report unshaped, exactly what `orb execute --steps` prints, and each request needs only `trait` and `event` (it dispatches from the held state)",
           "optional": true
         }
       ],
@@ -21727,32 +21835,105 @@
       "minArity": 1,
       "maxArity": 3,
       "returnType": {
-        "kind": "object",
-        "fields": {
-          "valid": "boolean",
-          "errors": {
-            "kind": "array",
-            "of": {
-              "kind": "object",
-              "fields": {
-                "code": "string",
-                "message": "string"
+        "kind": "union",
+        "of": [
+          {
+            "kind": "object",
+            "fields": {
+              "success": "boolean",
+              "valid": "boolean",
+              "errors": {
+                "kind": "union",
+                "of": [
+                  {
+                    "kind": "array",
+                    "of": {
+                      "kind": "object",
+                      "fields": {
+                        "code": "string",
+                        "path": "string",
+                        "message": "string"
+                      },
+                      "open": true
+                    }
+                  },
+                  {
+                    "kind": "literal",
+                    "value": null
+                  }
+                ]
               },
-              "open": true
+              "warnings": {
+                "kind": "union",
+                "of": [
+                  {
+                    "kind": "array",
+                    "of": {
+                      "kind": "object",
+                      "fields": {
+                        "code": "string",
+                        "path": "string",
+                        "message": "string"
+                      },
+                      "open": true
+                    }
+                  },
+                  {
+                    "kind": "literal",
+                    "value": null
+                  }
+                ]
+              },
+              "stats": {
+                "kind": "union",
+                "of": [
+                  {
+                    "kind": "object",
+                    "fields": {
+                      "orbitals": "number",
+                      "entities": "number",
+                      "traits": "number",
+                      "pages": "number"
+                    },
+                    "open": true
+                  },
+                  {
+                    "kind": "literal",
+                    "value": null
+                  }
+                ]
+              }
             }
           },
-          "warnings": {
-            "kind": "array",
-            "of": {
-              "kind": "object",
-              "fields": {
-                "code": "string",
-                "message": "string"
+          {
+            "kind": "object",
+            "fields": {
+              "valid": "boolean",
+              "errors": {
+                "kind": "array",
+                "of": {
+                  "kind": "object",
+                  "fields": {
+                    "code": "string",
+                    "message": "string"
+                  },
+                  "open": true
+                }
               },
-              "open": true
+              "warnings": {
+                "kind": "array",
+                "of": {
+                  "kind": "object",
+                  "fields": {
+                    "code": "string",
+                    "message": "string"
+                  },
+                  "open": true
+                }
+              }
             }
           }
-        }
+        ]
       },
       "description": "Validate a program (`.orb` IR) at the same 0-error / 0-warning bar as `program/eval`, without writing anything. Success always carries `{ valid, errors, warnings }`: `valid` is true only when both lists are empty, each finding is `{ code, message, path?, line?, column? }`. A `prior` program keeps ids stable, and `final` checks it as a finished app.",
       "module": "program",
@@ -21772,26 +21953,19 @@
           "type": {
             "kind": "object",
             "fields": {
-              "key": "string",
-              "emit": {
-                "kind": "object",
-                "fields": {
-                  "success": {
-                    "kind": "eventKey"
-                  },
-                  "failure": {
-                    "kind": "eventKey"
-                  },
-                  "cancelled": {
-                    "kind": "eventKey"
-                  }
-                },
-                "open": true
-              }
+              "prior": {
+                "kind": "sexpr"
+              },
+              "final": "boolean",
+              "report": "boolean",
+              "path": "string",
+              "denyWarnings": "boolean",
+              "patterns": "string",
+              "services": "string"
             },
             "open": true
           },
-          "description": "An optional prior program (`prior`) and `final` flag",
+          "description": "An optional prior program (`prior`) and `final` flag; or `{ report: true, path, final?, denyWarnings?, patterns?, services? }`: the report `orb validate --json` prints for the file at the absolute `path` (the program argument is not read)",
           "optional": true
         },
         {

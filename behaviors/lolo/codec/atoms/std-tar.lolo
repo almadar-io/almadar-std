@@ -14,7 +14,7 @@ orbital TarOrbital {
     acc : TarAcc = { off: 0, files: [], pax: "", psize: -1, err: "", entry: "", done: false }
   }
 
-  trait Untar -> TarRun [integration, instance] {
+  trait Untar -> TarRun [client] {
     initial: idle
 
     state idle {
@@ -45,7 +45,7 @@ orbital TarOrbital {
     }
 
     listens {
-      TAR_UNPACK -> external {
+      TAR_UNPACK -> input {
         data : bytes!
       }
         @description "Unpack this base64 tar archive (already decompressed)."
@@ -53,5 +53,5 @@ orbital TarOrbital {
     }
   }
 
-  page "/tar" -> Untar
+  page boot as TarOrbitalStart -> Untar
 }

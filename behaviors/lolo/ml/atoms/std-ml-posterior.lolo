@@ -10,11 +10,11 @@ orbital MlPosteriorOrbital {
     mean : float @description "Posterior mean: alpha / (alpha + beta)." = 0
     intervalLow : float @description "Lower bound of the last computed credible interval." = 0
     intervalHigh : float @description "Upper bound of the last computed credible interval." = 0
-    observations : int @description "Number of observations folded into the posterior so far." = 0
+    observations : number @description "Number of observations folded into the posterior so far." = 0
     status : "idle" | "insufficient" | "mastered" | "remediate" = idle
   }
 
-  trait PosteriorBelief -> @rebindable Posterior [lifecycle, instance] {
+  trait PosteriorBelief -> @rebindable Posterior [client] {
     initial: idle
 
     state idle {
@@ -102,5 +102,5 @@ orbital MlPosteriorOrbital {
     }
   }
 
-  page "/ml-posterior" as MlPosteriorPage -> PosteriorBelief
+  page boot as MlPosteriorOrbitalStart -> PosteriorBelief
 }

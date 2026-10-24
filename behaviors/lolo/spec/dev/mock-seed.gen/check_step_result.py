@@ -22,7 +22,7 @@ orbital SeedStepProbe {
     id : string!
     result : ProbeResult = { cells: [], push: [], s: 0 }
   }
-  trait Run -> SeedStepCell [integration] {
+  trait Run -> SeedStepCell {
     initial: ready
     state ready {
       INIT -> ready
@@ -40,7 +40,7 @@ orbital SeedStepProbe {
         @description "The step's emitted cells, continuation and unchanged random state."
     }
   }
-  page "/seed-step-probe" as SeedStepProbePage -> Run
+  page boot as SeedStepProbeStart -> Run
 }
 '''.replace('EXPRESSION', f'(if ?skip {skip} {keep})')
 with tempfile.NamedTemporaryFile(mode='w', suffix='.lolo', prefix='.seed-step-probe-', dir=spec_dir, delete=False) as output:

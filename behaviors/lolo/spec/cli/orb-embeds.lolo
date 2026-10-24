@@ -1,0 +1,25 @@
+app orb-embeds-spec [
+  version: "1.0.0",
+  inbound: ["cli-embeds"],
+  description: "Design contract for `orb embeds <file.lolo> | --stdin` (port of orbital-cli lib.rs print_embeds; the listing is orbital_lolo::embeds::inline_embeds, reached through program/read { embeds: true }). EMBEDS_START { file, stdin } reads the source (standard input to its end when stdin, else the file; --stdin wins when a file is also named) and answers EMBEDS_ANSWERED { status, body, stderr }: status 200 and body one compact JSON line, an array of { orbital, trait, behavior, line, col } in source order, `[]` when the program embeds nothing. A source that does not lower answers 500 with stderr `Error: orb embeds: <reason>`; an unreadable file 500 with `Error: <reason>`; neither a file nor --stdin answers 500 with `Error: orb embeds: pass a .lolo file or --stdin`; an unknown flag or a second file answers 400 with stderr `usage: orb embeds <file.lolo> | --stdin` (exit 2). Replay goldens: orb-embeds.replay.goldens.json."
+]
+
+orbital OrbEmbedsSpec {
+  expects trait OrbEmbeds {
+    state ready
+    state parsing
+    state working
+    emits {
+      EMBEDS_ANSWERED { status : number!  body : string!  stderr : string }
+    }
+  }
+  expects trait EmbedsEngine {
+    state idle
+    state reading
+    state listing
+    emits {
+      EMBEDS_ANSWERED { status : number!  body : string!  stderr : string }
+    }
+  }
+  expects page "/orb-embeds" -> OrbEmbeds
+}

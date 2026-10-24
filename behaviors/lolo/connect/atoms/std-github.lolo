@@ -34,7 +34,7 @@ orbital GithubOrbital {
     id : string!
   }
 
-  trait GithubClient -> GithubCall [integration, instance] {
+  trait GithubClient -> GithubCall [optimistic] {
     initial: idle
 
     state idle {
@@ -657,7 +657,7 @@ orbital GithubOrbital {
     }
 
     listens {
-      GITHUB_BILLING_USAGE -> external {
+      GITHUB_BILLING_USAGE -> input {
         account : string!
         kind : "org" | "user"
         year : number!
@@ -676,7 +676,7 @@ orbital GithubOrbital {
         kind : string!
         key : string!
       }
-      GITHUB_GRAPHQL -> external {
+      GITHUB_GRAPHQL -> input {
         query : string!
         variables : string
       }
@@ -691,7 +691,7 @@ orbital GithubOrbital {
         error : string!
         kind : string!
       }
-      GITHUB_LIST_RUNNERS -> external {
+      GITHUB_LIST_RUNNERS -> input {
         scope : string!
       }
         @description "List the self-hosted runners of a scope (orgs/<org> or repos/<owner>/<repo>)."
@@ -707,7 +707,7 @@ orbital GithubOrbital {
         kind : string!
         key : string!
       }
-      GITHUB_LIST_RUNS -> external {
+      GITHUB_LIST_RUNS -> input {
         owner : string!
         repo : string!
         per_page : number
@@ -725,7 +725,7 @@ orbital GithubOrbital {
         kind : string!
         key : string!
       }
-      GITHUB_LIST_RUN_JOBS -> external {
+      GITHUB_LIST_RUN_JOBS -> input {
         owner : string!
         repo : string!
         runId : number!
@@ -743,7 +743,7 @@ orbital GithubOrbital {
         kind : string!
         key : string!
       }
-      GITHUB_CREATE_PR -> external {
+      GITHUB_CREATE_PR -> input {
         title : string!
         body : string!
         baseBranch : string!
@@ -761,7 +761,7 @@ orbital GithubOrbital {
         error : string!
         kind : string!
       }
-      GITHUB_GET_PR_COMMENTS -> external {
+      GITHUB_GET_PR_COMMENTS -> input {
         prNumber : number!
       }
         @description "List the review comments of a pull request on the default repository."
@@ -775,7 +775,7 @@ orbital GithubOrbital {
         error : string!
         kind : string!
       }
-      GITHUB_LIST_ISSUES -> external {
+      GITHUB_LIST_ISSUES -> input {
         state : string
         labels : [string]
         per_page : number
@@ -791,7 +791,7 @@ orbital GithubOrbital {
         error : string!
         kind : string!
       }
-      GITHUB_GET_ISSUE -> external {
+      GITHUB_GET_ISSUE -> input {
         issueNumber : number!
       }
         @description "Fetch one issue of the default repository together with its comments."
@@ -818,7 +818,7 @@ orbital GithubOrbital {
         kind : string!
         key : string!
       }
-      GITHUB_GET_FILE -> external {
+      GITHUB_GET_FILE -> input {
         owner : string!
         repo : string!
         path : string!
@@ -835,7 +835,7 @@ orbital GithubOrbital {
         error : string!
         kind : string!
       }
-      GITHUB_LIST_COMMITS -> external {
+      GITHUB_LIST_COMMITS -> input {
         owner : string!
         repo : string!
         path : string
@@ -853,7 +853,7 @@ orbital GithubOrbital {
         error : string!
         kind : string!
       }
-      GITHUB_CREATE_ISSUE -> external {
+      GITHUB_CREATE_ISSUE -> input {
         owner : string!
         repo : string!
         title : string!

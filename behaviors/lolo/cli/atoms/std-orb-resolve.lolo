@@ -1,0 +1,151 @@
+app std-orb-resolve [
+  version: "1.0.0",
+  inbound: ["cli-resolve"],
+  description: "std-orb-resolve — the `orb resolve <file> [-o|--output FILE]` command (spec/cli/orb-resolve.lolo; port of orbital-cli commands/parse.rs resolve_schema_cli). The file is joined to the directory the command runs in when it is relative, then resolved by program/read { resolve: true, path, output? } on the host, which answers { program, text }: text is exactly what the Rust command printed (the resolved program as sorted-key pretty JSON), printed on stdout. With --output the host also writes the file, its locale catalogs and its lazy behaviors, and nothing is printed. A program with lazy behaviors or locales is refused without --output, by the host, with the Rust message. A missing file, a program that does not lower or resolve, or a failed write answers status 500 on stderr `Error: <reason>` (exit 1), the reason carrying the host's `program/read:` prefix; no file, a second file, an unknown flag or a repeated or valueless --output answers the usage (status 400, exit 2)."
+]
+uses Spec from "almadar-std/orb-resolve"
+uses Args from "std/behaviors/std-args"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
+type ResolvedAnswer = { text : string! }
+
+orbital OrbResolveOrbital {
+  entity ResolveRun [runtime] {
+    id : string!
+    cwd : string = ""
+    written : boolean = false
+  }
+
+  trait ArgsCli = Args.traits.ArgsParser {
+    listens {
+      OrbResolve.RESOLVE_ARGS_PARSE -> ARGS_PARSE
+    }
+  }
+
+  trait OrbResolve -> ResolveRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      RESOLVE_CALLED -> parsing
+        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
+        (emit RESOLVE_ARGS_PARSE { stage: "resolve" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "output" aliases: ["-o"] takesValue: true repeatable: false }] })
+    }
+
+    state parsing {
+      INIT -> parsing
+      RESOLVE_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (!= (array/len @payload.positionals) 1))
+        (emit RESOLVE_ANSWERED { status: 400, body: "", stderr: "usage: orb resolve <FILE> [-o|--output FILE]" })
+      RESOLVE_ARGS_DONE -> working when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1))
+        (emit RESOLVE_START { path: (if (os/path-is-absolute (array/first @payload.positionals)) (array/first @payload.positionals) (os/path-join @entity.cwd (array/first @payload.positionals))), output: (str/default (array/first (or (object/get @payload.flags "output") [""])) ""), hasOutput: (!= (object/get @payload.flags "output") null) })
+    }
+
+    state working {
+      INIT -> working
+      RESOLVE_DONE -> ready
+        (emit RESOLVE_ANSWERED { status: @payload.status, body: @payload.body, stderr: @payload.stderr })
+    }
+
+    emits {
+      RESOLVE_ANSWERED -> internal {
+        status : number!
+        body : string!
+        stderr : string
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      RESOLVE_ARGS_PARSE {
+        stage : string!
+        argv : [string]!
+        flags : [ArgFlag]!
+      }
+        @description "Internal: parse the call's words."
+        @tier "internal"
+      RESOLVE_START {
+        path : string!
+        output : string!
+        hasOutput : boolean!
+      }
+        @description "Internal: resolve the program at the absolute path."
+        @tier "internal"
+    }
+
+    listens {
+      RESOLVE_CALLED -> inbound "cli-resolve" answers RESOLVE_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb resolve`."
+        @synonyms "orb resolve, the resolved program, fully resolved orb json of a lolo file"
+      RESOLVE_ARGS_DONE {
+        stage : string!
+        flags : Map string [string]!
+        positionals : [string]!
+        errors : [string]!
+        words : [string]!
+      }
+        @description "std-args's ARGS_PARSED."
+      ArgsCli.ARGS_PARSED -> RESOLVE_ARGS_DONE
+      ResolveEngine.RESOLVE_ANSWERED -> RESOLVE_DONE
+      RESOLVE_DONE { status : number!  body : string!  stderr : string }
+        @description "Internal: the engine's answer, relayed to the hook by its handler."
+        @tier "internal"
+    }
+  }
+
+  trait ResolveEngine -> ResolveRun [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      RESOLVE_START -> resolving when @payload.hasOutput
+        (set @entity.written true)
+        (program/read "" { resolve: true path: @payload.path output: @payload.output } { key: "resolve" emit: { success: RESOLVE_RESOLVED, failure: RESOLVE_REFUSED } })
+      RESOLVE_START -> resolving when (not @payload.hasOutput)
+        (set @entity.written false)
+        (program/read "" { resolve: true path: @payload.path } { key: "resolve" emit: { success: RESOLVE_RESOLVED, failure: RESOLVE_REFUSED } })
+    }
+
+    state resolving {
+      INIT -> resolving
+      RESOLVE_RESOLVED -> idle when @entity.written
+        (emit RESOLVE_ANSWERED { status: 200, body: "" })
+      RESOLVE_RESOLVED -> idle when (not @entity.written)
+        (emit RESOLVE_ANSWERED { status: 200, body: (object/get @payload.result "text") })
+      RESOLVE_REFUSED -> idle
+        (emit RESOLVE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " @payload.error) })
+    }
+
+    emits {
+      RESOLVE_ANSWERED -> external {
+        status : number!
+        body : string!
+        stderr : string
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      RESOLVE_REFUSED {
+        error : string
+      }
+        @description "The program could not be read, resolved or written."
+        @tier "internal"
+      RESOLVE_RESOLVED {
+        result : ResolvedAnswer!
+      }
+        @description "program/read: the resolved program's text."
+        @tier "internal"
+    }
+
+    listens {
+      RESOLVE_START {
+        path : string!
+        output : string!
+        hasOutput : boolean!
+      }
+        @description "Resolve the program at the absolute path."
+      OrbResolve.RESOLVE_START -> RESOLVE_START
+    }
+  }
+
+  page "/orb-resolve" as OrbResolvePage -> OrbResolve, ArgsCli, ResolveEngine
+}

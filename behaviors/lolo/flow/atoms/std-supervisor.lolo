@@ -21,7 +21,7 @@ orbital SupervisorOrbital {
     exitCode : number @description "Exit code of the judged child; -1 when it ended by signal or unknown." = -1
   }
 
-  trait Supervisor -> @rebindable Supervisor [lifecycle, instance] {
+  trait Supervisor -> @rebindable Supervisor [optimistic] {
     initial: idle
 
     state idle {
@@ -162,7 +162,7 @@ orbital SupervisorOrbital {
         @tier "secondary"
       CHILD_EXITED -> internal {
         code : number
-        signal : string
+        signal : number
       }
         @description "Internal: the os/wait answer, a watched child ended."
         @tier "secondary"
@@ -257,7 +257,7 @@ orbital SupervisorOrbital {
         @description "The os/spawn failure."
       CHILD_EXITED {
         code : number
-        signal : string
+        signal : number
         key : string!
       }
         @description "The os/wait completion for the pid in key."
@@ -304,5 +304,5 @@ orbital SupervisorOrbital {
     }
   }
 
-  page "/supervisor" as SupervisorPage -> Supervisor
+  page boot as SupervisorOrbitalStart -> Supervisor
 }

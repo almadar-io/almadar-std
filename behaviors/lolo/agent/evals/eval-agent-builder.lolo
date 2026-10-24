@@ -62,7 +62,7 @@ orbital EvalRunOrbital {
     error : string = ""
   }
 
-  trait EvalDriver -> EvalRunView [lifecycle, instance] {
+  trait EvalDriver -> EvalRunView [optimistic] {
     initial: idle
 
     state idle {
@@ -137,11 +137,11 @@ orbital EvalRunOrbital {
     }
 
     listens {
-      RUN_CASE -> external {
+      RUN_CASE -> input {
         index : number!
       }
         @description "Run one case of the eval."
-      READ_CASES -> external {
+      READ_CASES -> input {
       }
         @description "Read back every case recorded so far."
       EvalBuilderOrbital.BuilderPipeline.BUILD_COMPLETE -> BUILD_DONE

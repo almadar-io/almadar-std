@@ -11,6 +11,9 @@ type LintTypeDrift = { name : string!, variants : number!, files : [string]! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 type LintEntry = { name : string!, kind : string! }
 type LintFile = { root : number!, rel : string! }
+type SharedTypesMember = { name : string }
+type SharedTypesOrbital = { types : Map string [SharedTypesMember] }
+type SharedTypesProgram = { orbitals : [SharedTypesOrbital] }
 
 orbital OrbLintSharedTypesOrbital {
   entity OrbLintSharedTypesRun [runtime] {
@@ -23,7 +26,7 @@ orbital OrbLintSharedTypesOrbital {
     drift : [string] = []
   }
 
-  trait OrbLintSharedTypes -> OrbLintSharedTypesRun [integration] {
+  trait OrbLintSharedTypes -> OrbLintSharedTypesRun [optimistic] {
     initial: ready
 
     state ready {
@@ -90,7 +93,7 @@ orbital OrbLintSharedTypesOrbital {
         (set @entity.cursor (+ @entity.cursor 1))
         (emit LINT_READ { })
       LINT_PROGRAM_READ -> reading
-        (set @entity.copies (array/concat @entity.copies (array/flatten (array/map (object/get @payload.result "orbitals") (fn o (array/map (object/keys (object/get @o "types")) (fn n { name: @n, file: (object/get (array/nth @entity.paths @entity.cursor) "rel"), definition: (json/stringify (object/get (object/get @o "types") @n)), fields: (array/map (object/get (object/get @o "types") @n) (fn f (json/stringify @f))) })))))))
+        (set @entity.copies (array/concat @entity.copies (array/flatten (array/map (object/get @payload.result "orbitals" []) (fn o (array/map (object/keys (object/get @o "types")) (fn n { name: @n, file: (object/get (array/nth @entity.paths @entity.cursor) "rel"), definition: (json/stringify (object/get (object/get @o "types") @n)), fields: (array/map (object/get (object/get @o "types") @n) (fn f (json/stringify @f))) })))))))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit LINT_READ { })
       LINT_FILE_UNREAD -> reading
@@ -121,7 +124,7 @@ orbital OrbLintSharedTypesOrbital {
       LINT_FILE_UNREAD { error : string }
         @description "A file that could not be read or lowered."
         @tier "internal"
-      LINT_PROGRAM_READ { result : string }
+      LINT_PROGRAM_READ { result : SharedTypesProgram }
         @description "A file lowered by program/read."
         @tier "internal"
       LINT_WALK { }
@@ -145,5 +148,5 @@ orbital OrbLintSharedTypesOrbital {
     }
   }
 
-  page "/orb-lint-shared-types" as OrbLintSharedTypesPage -> OrbLintSharedTypes
+  page boot as OrbLintSharedTypesOrbitalStart -> OrbLintSharedTypes
 }

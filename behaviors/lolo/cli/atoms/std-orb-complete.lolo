@@ -2,7 +2,7 @@ app std-orb-complete [
   version: "1.0.0",
   inbound: ["cli-complete"],
   fs: { cwd: "**": [read] },
-  description: "std-orb-complete — the `orb complete <file.lolo> --offset <n>` command (spec/cli/orb-complete.lolo; port of orbital-lolo complete.rs). It answers one compact JSON line { candidates, context, prefix } (keys in alphabetical order). Offsets count characters, which equals the Rust byte offset for ASCII sources. Served from the source and the installed @almadar/core language tables, found through its package.json orbLanguage block (vocabulary: effects and types; patterns: tags and props): modifier-key and modifier-value (app and page brackets), trait-ref, orbital-ref, config-key, entity-field, trait-embed, pattern-tag, pattern-prop, effect, field-type and keyword. trait-ref, orbital-ref and config-key read the behavior a `uses` line names through behavior/describe. Import-path completion and `pages` remap-entry brackets are pending (G-STD-096): import-path answers status 500, a remap bracket is read as no modifier bracket. --stdin answers status 400 (G-STD-094). The statement-keyword and modifier-key tables are literals here because they are Rust constants of the parser, not installed data (G-STD-096)."
+  description: "std-orb-complete — the `orb complete <file.lolo> --offset <n>` command (spec/cli/orb-complete.lolo; port of orbital-lolo complete.rs). It answers one compact JSON line { candidates, context, prefix } (keys in alphabetical order). Offsets count characters, which equals the Rust byte offset for ASCII sources. Served from the source and the installed @almadar/core language tables, found through its package.json orbLanguage block (vocabulary: effects and types; patterns: tags and props): modifier-key and modifier-value (app and page brackets), trait-ref, orbital-ref, config-key, entity-field, trait-embed, pattern-tag, pattern-prop, effect, field-type and keyword. trait-ref, orbital-ref and config-key read the behavior a `uses` line names through behavior/describe. Import-path completion walks every installed package's `orb.source` tree (behavior/packages, each package.json, os/list-dir) and offers the `.lolo` file stems as Rust does; it needs each tree inside the working directory (G-STD-096 item 4). A `pages {}` remap-entry bracket offers the remap keys. --stdin answers status 400 (G-STD-094). The statement-keyword and modifier-key tables are literals here because they are Rust constants of the parser, not installed data (G-STD-096)."
 ]
 uses Spec from "almadar-std/orb-complete"
 uses Args from "std/behaviors/std-args"
@@ -23,6 +23,12 @@ type DescValue = { orbital : string? }
 type DescOrbital = { value : DescValue?, config : Map string DescKnob?, traits : [DescTrait]? }
 type DescConfig = Map string DescKnob
 type Described = { orbitals : [DescOrbital]? }
+type CompletePackage = { root : string!, prefix : string!, vectors : string? }
+type CompletePackageManifest = { orb : CompletePackageOrb? }
+type CompletePackageOrb = { source : string? }
+type CompleteEntry = { name : string!, kind : string! }
+type CompleteTree = { dir : string!, pre : string! }
+type BraceScan = { s : boolean!, i : number!, st : [number]! }
 type Scan = { i : number!, s : boolean!, st : [number]!, k : [number]! }
 
 orbital OrbCompleteOrbital {
@@ -61,6 +67,11 @@ orbital OrbCompleteOrbital {
     target : string = ""
     ctx : string = ""
     cands : [Cand] = []
+    packages : [CompletePackage] = []
+    pcursor : number = 0
+    trees : [CompleteTree] = []
+    dcursor : number = 0
+    imports : [Cand] = []
   }
 
   trait ArgsCli = Args.traits.ArgsParser {
@@ -69,7 +80,7 @@ orbital OrbCompleteOrbital {
     }
   }
 
-  trait OrbComplete -> CompleteRun [integration] {
+  trait OrbComplete -> CompleteRun [client] {
     initial: ready
 
     state ready {
@@ -86,7 +97,7 @@ orbital OrbCompleteOrbital {
       COMPLETE_ARGS_DONE -> ready when (and (= (array/len @payload.errors) 0) (!= (object/get @payload.flags "stdin") null))
         (emit COMPLETE_ANSWERED { status: 400, body: "orb complete --stdin is pending (G-STD-094)" })
       COMPLETE_ARGS_DONE -> working when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1) (= (object/get @payload.flags "stdin") null) (!= (object/get @payload.flags "offset") null))
-        (emit COMPLETE_START { file: (array/nth @payload.positionals 0), offset: (str/to-int (array/first (object/get @payload.flags "offset"))) })
+        (emit COMPLETE_START { file: (array/nth @payload.positionals 0), offset: (str/to-int (array/first (object/get @payload.flags "offset"))), cwd: @entity.cwd })
     }
 
     state working {
@@ -112,6 +123,7 @@ orbital OrbCompleteOrbital {
       COMPLETE_START {
         file : string!
         offset : number!
+        cwd : string!
       }
         @description "Internal: complete at the offset of the file."
         @tier "internal"
@@ -140,7 +152,7 @@ orbital OrbCompleteOrbital {
     }
   }
 
-  trait CompleteEngine -> CompleteRun [integration] {
+  trait CompleteEngine -> CompleteRun [optimistic] {
     initial: idle
 
     state idle {
@@ -148,6 +160,7 @@ orbital OrbCompleteOrbital {
       COMPLETE_START -> loading
         (set @entity.file @payload.file)
         (set @entity.offset @payload.offset)
+        (set @entity.cwd @payload.cwd)
         (os/read-file { anchor: "cwd" path: @payload.file } { key: "source" emit: { success: COMPLETE_SOURCE, failure: COMPLETE_FAILED } })
     }
 
@@ -169,7 +182,7 @@ orbital OrbCompleteOrbital {
         (set @entity.types (object/get (json/parse (bytes/to-string @payload.data) Vocabulary) "types"))
         (os/read-file { anchor: "cwd" path: (str/concat "node_modules/@almadar/core/" @entity.patternsPath) } { key: "patterns" emit: { success: COMPLETE_PATTERNS, failure: COMPLETE_FAILED } })
       COMPLETE_PATTERNS -> loading
-        (emit COMPLETE_RUN { source: @entity.source, offset: @entity.offset, effects: @entity.effects, types: @entity.types, rows: (array/map (object/keys (object/get (json/parse (bytes/to-string @payload.data) PatternsRegistry) "patterns")) (fn p { pattern: @p, tag: (str/join (array/map (str/split @p "-") (fn s (str/concat (str/upper (str/slice @s 0 1)) (str/slice @s 1 (str/len @s))))) ""), props: (object/keys (or (object/get (object/get (object/get (json/parse (bytes/to-string @payload.data) PatternsRegistry) "patterns") @p) "propsSchema") (json/parse "{}" PatternProps))) })) })
+        (emit COMPLETE_RUN { source: @entity.source, offset: @entity.offset, effects: @entity.effects, types: @entity.types, rows: (let ((pats (object/get (json/parse (bytes/to-string @payload.data) PatternsRegistry) "patterns"))) (array/map (object/keys @pats) (fn p { pattern: @p, tag: (str/join (array/map (str/split @p "-") (fn s (str/concat (str/upper (str/slice @s 0 1)) (str/slice @s 1 (str/len @s))))) ""), props: (object/keys (or (object/get (object/get @pats @p) "propsSchema") (json/parse "{}" PatternProps))) }))) })
       COMPLETE_RUN -> loading
         (set @entity.source @payload.source)
         (set @entity.offset @payload.offset)
@@ -180,12 +193,12 @@ orbital OrbCompleteOrbital {
         (set @entity.line (array/last (str/split @entity.before "\n")))
         (set @entity.word (object/get (array/reduce (array/reverse (str/split @entity.before "")) { done: false, acc: "" } (fn a c (if (or (object/get @a "done") (not (str/includes "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-" @c))) { done: true, acc: (object/get @a "acc") } { done: false, acc: (str/concat @c (object/get @a "acc")) }))) "acc"))
         (set @entity.lead (str/slice @entity.before 0 (- (str/len @entity.before) (str/len @entity.word))))
-        (set @entity.scan (array/reduce (str/split @entity.before "") { i: 0, s: false, st: [], k: [] } (fn a c (if (= @c "\"") { i: (+ (object/get @a "i") 1), s: (not (object/get @a "s")), st: (object/get @a "st"), k: (object/get @a "k") } (if (and (not (object/get @a "s")) (= @c "[")) { i: (+ (object/get @a "i") 1), s: false, st: (object/get @a "st"), k: (array/append (object/get @a "k") (object/get @a "i")) } (if (and (not (object/get @a "s")) (= @c "]")) { i: (+ (object/get @a "i") 1), s: false, st: (object/get @a "st"), k: (array/dropLast (object/get @a "k") 1) } (if (and (not (object/get @a "s")) (= @c "{")) { i: (+ (object/get @a "i") 1), s: false, st: (array/append (object/get @a "st") (object/get @a "i")), k: (object/get @a "k") } (if (and (not (object/get @a "s")) (= @c "}")) { i: (+ (object/get @a "i") 1), s: false, st: (array/dropLast (object/get @a "st") 1), k: (object/get @a "k") } { i: (+ (object/get @a "i") 1), s: (object/get @a "s"), st: (object/get @a "st"), k: (object/get @a "k") }))))))))
+        (set @entity.scan (let ((init : Scan { i: 0, s: false, st: [], k: [] })) (array/reduce (str/split @entity.before "") @init (fn a c (if (= @c "\"") { i: (+ (object/get @a "i") 1), s: (not (object/get @a "s")), st: (object/get @a "st"), k: (object/get @a "k") } (if (and (not (object/get @a "s")) (= @c "[")) { i: (+ (object/get @a "i") 1), s: false, st: (object/get @a "st"), k: (array/append (object/get @a "k") (object/get @a "i")) } (if (and (not (object/get @a "s")) (= @c "]")) { i: (+ (object/get @a "i") 1), s: false, st: (object/get @a "st"), k: (array/dropLast (object/get @a "k") 1) } (if (and (not (object/get @a "s")) (= @c "{")) { i: (+ (object/get @a "i") 1), s: false, st: (array/append (object/get @a "st") (object/get @a "i")), k: (object/get @a "k") } (if (and (not (object/get @a "s")) (= @c "}")) { i: (+ (object/get @a "i") 1), s: false, st: (array/dropLast (object/get @a "st") 1), k: (object/get @a "k") } { i: (+ (object/get @a "i") 1), s: (object/get @a "s"), st: (object/get @a "st"), k: (object/get @a "k") })))))))))
         (set @entity.inside (array/last (str/split @entity.before "<")))
         (set @entity.header (if (= (array/len (object/get @entity.scan "st")) 0) "" (str/trim (array/last (str/split (str/slice @entity.before 0 (array/last (object/get @entity.scan "st"))) "\n")))))
         (set @entity.entry (if (= (array/len (object/get @entity.scan "k")) 0) "" (str/trim (array/last (str/split (str/replaceAll (str/slice @entity.lead (+ (array/first (object/get @entity.scan "k")) 1) (str/len @entity.lead)) "," "\n") "\n")))))
         (set @entity.fImport (and (> (array/len (str/split @entity.line "\"")) 1) (let ((w (str/split (str/trim (str/join (array/dropLast (str/split @entity.line "\"") 1) "\"")) " "))) (and (= (array/len @w) 3) (= (array/nth @w 0) "uses") (= (array/nth @w 2) "from")))))
-        (set @entity.fMod (if (= (array/len (object/get @entity.scan "k")) 0) "" (let ((hw (array/first (str/split (str/trim (array/last (str/split (str/slice @entity.before 0 (array/first (object/get @entity.scan "k"))) "\n"))) " ")))) (if (or (= @hw "app") (= @hw "page")) @hw ""))))
+        (set @entity.fMod (if (= (array/len (object/get @entity.scan "k")) 0) "" (let ((bracket (array/first (object/get @entity.scan "k")))) (let ((head (str/slice @entity.before 0 @bracket)) (hw (array/first (str/split (str/trim (array/last (str/split (str/slice @entity.before 0 @bracket) "\n"))) " ")))) (if (or (= @hw "app") (= @hw "page")) @hw (let ((braces (object/get (let ((init : BraceScan { s: false, i: 0, st: [] })) (array/reduce (str/split @head "") @init (fn a c (if (= @c "\"") { s: (not (object/get @a "s")), i: (+ (object/get @a "i") 1), st: (object/get @a "st") } (if (and (not (object/get @a "s")) (= @c "{")) { s: false, i: (+ (object/get @a "i") 1), st: (array/append (object/get @a "st") (object/get @a "i")) } (if (and (not (object/get @a "s")) (= @c "}")) { s: false, i: (+ (object/get @a "i") 1), st: (array/dropLast (object/get @a "st") 1) } { s: (object/get @a "s"), i: (+ (object/get @a "i") 1), st: (object/get @a "st") })))))) "st"))) (if (and (> (array/len @braces) 0) (= (str/trim (array/last (str/split (str/slice @head 0 (array/last @braces)) "\n"))) "pages") (str/startsWith (str/trimStart (str/slice @head (max (+ (array/last @braces) 1) (- (str/len @head) (str/len (array/last (str/split @head "\n"))))) (str/len @head))) "\"")) "remap" "")))))))
         (set @entity.fSuffix (or (str/endsWith @entity.lead ".traits.") (str/endsWith @entity.lead ".orbitals.")))
         (set @entity.fTag (and (> (array/len (str/split @entity.before "<")) 1) (not (str/includes @entity.inside ">")) (not (str/startsWith @entity.inside "/")) (not (str/startsWith @entity.inside "trait.")) (not (or (str/includes @entity.inside " ") (str/includes @entity.inside "\n") (str/includes @entity.inside "\t")))))
         (set @entity.fProp (and (> (array/len (str/split @entity.before "<")) 1) (not (str/includes @entity.inside ">")) (not (str/startsWith @entity.inside "/")) (not (str/startsWith @entity.inside "trait.")) (or (str/includes @entity.inside " ") (str/includes @entity.inside "\n") (str/includes @entity.inside "\t")) (array/some @entity.rows (fn r (= (object/get @r "tag") (array/first (str/split (str/trim @entity.inside) " "))))) (not (or (str/endsWith (str/trimEnd @entity.lead) "=") (> (- (array/len (str/split @entity.inside "{")) 1) (- (array/len (str/split @entity.inside "}")) 1))))))
@@ -198,22 +211,52 @@ orbital OrbCompleteOrbital {
         (set @entity.alias (if @entity.fSuffix (object/get (array/reduce (array/reverse (str/split (str/slice @entity.lead 0 (- (str/len @entity.lead) (if (= @entity.member "traits") 8 10))) "")) { done: false, acc: "" } (fn a c (if (or (object/get @a "done") (not (str/includes "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-" @c))) { done: true, acc: (object/get @a "acc") } { done: false, acc: (str/concat @c (object/get @a "acc")) }))) "acc") (if (>= (array/len (str/split @entity.target ".")) 3) (str/trim (array/first (str/split @entity.target "."))) "")))
         (set @entity.name (if (>= (array/len (str/split @entity.target ".")) 3) (array/first (str/split (str/trim (array/nth (str/split @entity.target ".") 2)) " ")) ""))
         (set @entity.behavior (let ((w (array/find (array/map (str/split @entity.source "\n") (fn l (str/split (str/trim @l) " "))) (fn w (and (>= (array/len @w) 4) (= (array/nth @w 0) "uses") (= (array/nth @w 1) @entity.alias)))))) (if (or (= @w null) (= @entity.alias "")) "" (str/replaceAll (str/replaceAll (array/nth @w 3) "\"" "") "{" ""))))
-        (set @entity.ctx (if @entity.fImport "pending" (if (!= @entity.fMod "") "modifier" (if @entity.fSuffix (if (str/endsWith @entity.lead ".traits.") "trait-ref" "orbital-ref") (if (str/endsWith @entity.lead (quote "@entity.")) "entity-field" (if (str/endsWith @entity.lead "<trait.") "trait-embed" (if @entity.fTag "pattern-tag" (if @entity.fProp "pattern-prop" (if @entity.fConfig "config-key" (if @entity.fEffect "effect" (if @entity.fType "field-type" (if @entity.fStart "keyword" "none"))))))))))) )
-        (set @entity.cands (if (= @entity.ctx "modifier") (if (= @entity.entry "") (array/map (array/filter (if (= @entity.fMod "app") ["version", "description", "theme", "themes", "locales", "egress", "inbound", "store", "fs", "exec", "net", "env", "stdio", "sys", "desktop", "kv", "deployment", "public", "origin", "icon", "siteName", "signIn"] ["view", "entity", "initial", "access", "indexing", "title", "description", "translationOf"]) (fn k (not (str/includes (str/slice @entity.before (+ (array/first (object/get @entity.scan "k")) 1) (str/len @entity.before)) (str/concat @k ":"))))) (fn k { label: @k kind: "keyword" })) (let ((e (str/trim (if (str/endsWith @entity.entry ":") (str/slice @entity.entry 0 (- (str/len @entity.entry) 1)) @entity.entry)))) (array/map (if (= @e "access") ["public", "authenticated"] (if (= @e "indexing") ["index", "noindex"] [])) (fn k { label: @k kind: "keyword" })))) (if (= @entity.ctx "entity-field") (if (and (str/includes @entity.before "orbital ") (str/includes (str/concat "orbital " (array/last (str/split @entity.before "orbital ")) (str/slice @entity.source @entity.offset (str/len @entity.source))) "entity ") (str/includes (array/nth (str/split (str/concat "orbital " (array/last (str/split @entity.before "orbital ")) (str/slice @entity.source @entity.offset (str/len @entity.source))) (if (str/includes (str/concat "orbital " (array/last (str/split @entity.before "orbital ")) (str/slice @entity.source @entity.offset (str/len @entity.source))) "\n  entity ") "\n  entity " "entity ")) 1) "{")) (array/map (array/filter (array/map (str/split (array/first (str/split (str/join (array/drop (str/split (array/nth (str/split (str/concat "orbital " (array/last (str/split @entity.before "orbital ")) (str/slice @entity.source @entity.offset (str/len @entity.source))) (if (str/includes (str/concat "orbital " (array/last (str/split @entity.before "orbital ")) (str/slice @entity.source @entity.offset (str/len @entity.source))) "\n  entity ") "\n  entity " "entity ")) 1) "{") 1) "{") "}")) "\n") (fn l { n: (str/trim (array/first (str/split @l ":"))), t: (str/trim (str/join (array/drop (str/split @l ":") 1) ":")), has: (str/includes @l ":") })) (fn x (and (object/get @x "has") (!= (object/get @x "n") "") (array/every (str/split (object/get @x "n") "") (fn c (str/includes "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_" @c)))))) (fn x { label: (object/get @x "n") kind: "entity-field" detail: (object/get @x "t") })) []) (if (= @entity.ctx "trait-embed") (array/map (array/filter (array/map (str/split @entity.source "\n") (fn l (str/split (str/trim @l) " "))) (fn w (and (> (array/len @w) 1) (= (array/first @w) "trait")))) (fn w { label: (object/get (array/reduce (str/split (array/nth @w 1) "") { done: false, acc: "" } (fn a c (if (or (object/get @a "done") (not (str/includes "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-" @c))) { done: true, acc: (object/get @a "acc") } { done: false, acc: (str/concat (object/get @a "acc") @c) }))) "acc") kind: "trait" })) (if (= @entity.ctx "pattern-tag") (array/map @entity.rows (fn r { label: (object/get @r "tag") kind: "pattern" detail: (object/get @r "pattern") })) (if (= @entity.ctx "pattern-prop") (let ((r (array/find @entity.rows (fn r (= (object/get @r "tag") (array/first (str/split (str/trim @entity.inside) " "))))))) (array/map (array/filter (object/get @r "props") (fn p (not (array/includes (array/map (array/filter (str/split @entity.inside " ") (fn t (str/includes @t "="))) (fn t (array/first (str/split @t "=")))) @p)))) (fn p { label: @p kind: "prop" detail: (object/get @r "pattern") }))) (if (= @entity.ctx "effect") (array/map @entity.effects (fn e { label: @e kind: "operator" })) (if (= @entity.ctx "field-type") (array/map @entity.types (fn e { label: @e kind: "keyword" detail: "type" })) (if (= @entity.ctx "keyword") (array/map (if (or (= @entity.header "") false) ["app", "type", "uses", "orbital", "theme", "config"] (let ((w (str/split @entity.header " "))) (if (= (array/first @w) "orbital") (if (= (array/nth @w 2) "=") ["entity", "entities", "fields", "roles", "events", "pages", "omit", "only", "config", "extend", "retype", "mock", "traits", "listens", "trait"] ["uses", "expects", "type", "entity", "trait", "page", "theme", "config"]) (if (= (array/first @w) "trait") (if (= (array/nth @w 2) "=") ["events", "fields", "config", "on", "name", "listens", "emitsScope"] ["initial", "state", "emits", "listens", "ticks", "config"]) (if (= (array/first @w) "entity") ["derived"] []))))) (fn k { label: @k kind: "keyword" })) [])))))))))
+        (set @entity.ctx (if @entity.fImport "import-path" (if (!= @entity.fMod "") "modifier" (if @entity.fSuffix (if (str/endsWith @entity.lead ".traits.") "trait-ref" "orbital-ref") (if (str/endsWith @entity.lead (quote "@entity.")) "entity-field" (if (str/endsWith @entity.lead "<trait.") "trait-embed" (if @entity.fTag "pattern-tag" (if @entity.fProp "pattern-prop" (if @entity.fConfig "config-key" (if @entity.fEffect "effect" (if @entity.fType "field-type" (if @entity.fStart "keyword" "none"))))))))))) )
+        (set @entity.cands (if (= @entity.ctx "modifier") (if (= @entity.entry "") (array/map (array/filter (if (= @entity.fMod "app") ["version", "description", "theme", "themes", "locales", "egress", "inbound", "store", "fs", "exec", "net", "env", "stdio", "sys", "desktop", "kv", "deployment", "public", "origin", "icon", "siteName", "signIn"] (if (= @entity.fMod "remap") ["access", "indexing", "title", "description", "translationOf", "label", "icon", "roles"] ["view", "entity", "initial", "access", "indexing", "title", "description", "translationOf"])) (fn k (not (str/includes (str/slice @entity.before (+ (array/first (object/get @entity.scan "k")) 1) (str/len @entity.before)) (str/concat @k ":"))))) (fn k { label: @k kind: "keyword" })) (let ((e (str/trim (if (str/endsWith @entity.entry ":") (str/slice @entity.entry 0 (- (str/len @entity.entry) 1)) @entity.entry)))) (array/map (if (= @e "access") ["public", "authenticated"] (if (= @e "indexing") ["index", "noindex"] [])) (fn k { label: @k kind: "keyword" })))) (if (= @entity.ctx "entity-field") (if (and (str/includes @entity.before "orbital ") (str/includes (str/concat "orbital " (array/last (str/split @entity.before "orbital ")) (str/slice @entity.source @entity.offset (str/len @entity.source))) "entity ") (str/includes (array/nth (str/split (str/concat "orbital " (array/last (str/split @entity.before "orbital ")) (str/slice @entity.source @entity.offset (str/len @entity.source))) (if (str/includes (str/concat "orbital " (array/last (str/split @entity.before "orbital ")) (str/slice @entity.source @entity.offset (str/len @entity.source))) "\n  entity ") "\n  entity " "entity ")) 1) "{")) (array/map (array/filter (array/map (str/split (array/first (str/split (str/join (array/drop (str/split (array/nth (str/split (str/concat "orbital " (array/last (str/split @entity.before "orbital ")) (str/slice @entity.source @entity.offset (str/len @entity.source))) (if (str/includes (str/concat "orbital " (array/last (str/split @entity.before "orbital ")) (str/slice @entity.source @entity.offset (str/len @entity.source))) "\n  entity ") "\n  entity " "entity ")) 1) "{") 1) "{") "}")) "\n") (fn l { n: (str/trim (array/first (str/split @l ":"))), t: (str/trim (str/join (array/drop (str/split @l ":") 1) ":")), has: (str/includes @l ":") })) (fn x (and (object/get @x "has") (!= (object/get @x "n") "") (array/every (str/split (object/get @x "n") "") (fn c (str/includes "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_" @c)))))) (fn x { label: (object/get @x "n") kind: "entity-field" detail: (object/get @x "t") })) []) (if (= @entity.ctx "trait-embed") (array/map (array/filter (array/map (str/split @entity.source "\n") (fn l (str/split (str/trim @l) " "))) (fn w (and (> (array/len @w) 1) (= (array/first @w) "trait")))) (fn w { label: (object/get (array/reduce (str/split (array/nth @w 1) "") { done: false, acc: "" } (fn a c (if (or (object/get @a "done") (not (str/includes "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-" @c))) { done: true, acc: (object/get @a "acc") } { done: false, acc: (str/concat (object/get @a "acc") @c) }))) "acc") kind: "trait" })) (if (= @entity.ctx "pattern-tag") (array/map @entity.rows (fn r { label: (object/get @r "tag") kind: "pattern" detail: (object/get @r "pattern") })) (if (= @entity.ctx "pattern-prop") (let ((r (array/find @entity.rows (fn r (= (object/get @r "tag") (array/first (str/split (str/trim @entity.inside) " "))))))) (array/map (array/filter (object/get @r "props") (fn p (not (array/includes (array/map (array/filter (str/split @entity.inside " ") (fn t (str/includes @t "="))) (fn t (array/first (str/split @t "=")))) @p)))) (fn p { label: @p kind: "prop" detail: (object/get @r "pattern") }))) (if (= @entity.ctx "effect") (array/map @entity.effects (fn e { label: @e kind: "operator" })) (if (= @entity.ctx "field-type") (array/map @entity.types (fn e { label: @e kind: "keyword" detail: "type" })) (if (= @entity.ctx "keyword") (array/map (if (or (= @entity.header "") false) ["app", "type", "uses", "orbital", "theme", "config"] (let ((w (str/split @entity.header " "))) (if (= (array/first @w) "orbital") (if (= (array/nth @w 2) "=") ["entity", "entities", "fields", "roles", "events", "pages", "omit", "only", "config", "extend", "retype", "mock", "traits", "listens", "trait"] ["uses", "expects", "type", "entity", "trait", "page", "theme", "config"]) (if (= (array/first @w) "trait") (if (= (array/nth @w 2) "=") ["events", "fields", "config", "on", "name", "listens", "emitsScope"] ["initial", "state", "emits", "listens", "ticks", "config"]) (if (= (array/first @w) "entity") ["derived"] []))))) (fn k { label: @k kind: "keyword" })) [])))))))))
+        (set @entity.word (if @entity.fImport (array/last (str/split @entity.line "\"")) @entity.word))
         (emit COMPLETE_STAGE { behavior: @entity.behavior member: @entity.member name: @entity.name context: (if (= @entity.ctx "modifier") (if (= @entity.entry "") "modifier-key" "modifier-value") @entity.ctx) prefix: @entity.word candidates: (array/sort (array/reduce (array/filter @entity.cands (fn c (str/startsWith (str/lower (object/get @c "label")) (str/lower @entity.word)))) [] (fn a c (if (array/some @a (fn x (= (object/get @x "label") (object/get @c "label")))) @a (array/append @a @c)))) "label" "asc") })
       COMPLETE_STAGE -> loading when (and (array/includes ["trait-ref", "orbital-ref", "config-key"] @payload.context) (!= @payload.behavior ""))
         (behavior/describe { behavior: @payload.behavior } { key: "describe" emit: { success: COMPLETE_DESCRIBED, failure: COMPLETE_DESCRIBE_FAILED } })
       COMPLETE_STAGE -> loading when (and (array/includes ["trait-ref", "orbital-ref", "config-key"] @payload.context) (= @payload.behavior ""))
         (emit COMPLETE_CTX { context: "none", prefix: @payload.prefix, candidates: [] })
-      COMPLETE_STAGE -> loading when (not (array/includes ["trait-ref", "orbital-ref", "config-key"] @payload.context))
+      COMPLETE_STAGE -> loading when (= @payload.context "import-path")
+        (set @entity.packages [])
+        (set @entity.pcursor 0)
+        (set @entity.trees [])
+        (set @entity.dcursor 0)
+        (set @entity.imports [])
+        (behavior/packages { key: "packages" emit: { success: COMPLETE_PACKAGES, failure: COMPLETE_FAILED } })
+      COMPLETE_STAGE -> loading when (not (array/includes ["trait-ref", "orbital-ref", "config-key", "import-path"] @payload.context))
         (emit COMPLETE_CTX { context: @payload.context, prefix: @payload.prefix, candidates: @payload.candidates })
       COMPLETE_DESCRIBE_FAILED -> loading
         (emit COMPLETE_CTX { context: "none", prefix: @entity.word, candidates: [] })
       COMPLETE_DESCRIBED -> loading
         (emit COMPLETE_CTX { context: @entity.ctx, prefix: @entity.word, candidates: (array/sort (array/reduce (array/filter (if (= @entity.ctx "trait-ref") (array/map (array/flatten (array/map (or (object/get @payload.result "orbitals") []) (fn o (array/map (or (object/get @o "traits") []) (fn t @t))))) (fn t { label: (object/get @t "trait"), kind: "trait", detail: @entity.alias })) (if (= @entity.ctx "orbital-ref") (array/map (or (object/get @payload.result "orbitals") []) (fn o { label: (object/get (object/get @o "value") "orbital"), kind: "orbital", detail: @entity.alias })) (if (= @entity.member "traits") (array/map (object/keys (or (object/get (array/find (array/flatten (array/map (or (object/get @payload.result "orbitals") []) (fn o (array/map (or (object/get @o "traits") []) (fn t @t))))) (fn t (= (object/get @t "trait") @entity.name))) "config") (json/parse "{}" DescConfig))) (fn k { label: @k, kind: "config-key", detail: (object/get (object/get (or (object/get (array/find (array/flatten (array/map (or (object/get @payload.result "orbitals") []) (fn o (array/map (or (object/get @o "traits") []) (fn t @t))))) (fn t (= (object/get @t "trait") @entity.name))) "config") (json/parse "{}" DescConfig)) @k) "type") })) (if (= @entity.member "orbitals") (array/map (object/keys (or (object/get (array/find (or (object/get @payload.result "orbitals") []) (fn o (= (object/get (object/get @o "value") "orbital") @entity.name))) "config") (json/parse "{}" DescConfig))) (fn k { label: @k, kind: "config-key", detail: (object/get (object/get (or (object/get (array/find (or (object/get @payload.result "orbitals") []) (fn o (= (object/get (object/get @o "value") "orbital") @entity.name))) "config") (json/parse "{}" DescConfig)) @k) "type") })) [])))) (fn c (str/startsWith (str/lower (object/get @c "label")) (str/lower @entity.word)))) [] (fn a c (if (array/some @a (fn x (= (object/get @x "label") (object/get @c "label")))) @a (array/append @a @c)))) "label" "asc") })
-      COMPLETE_CTX -> idle when (= @payload.context "pending")
-        (emit COMPLETE_ANSWERED { status: 500, body: "orb complete: this context needs installed behavior contracts and is pending (G-STD-096)" })
-      COMPLETE_CTX -> idle when (!= @payload.context "pending")
+      COMPLETE_PACKAGES -> loading
+        (set @entity.packages @payload.result)
+        (emit COMPLETE_PKG_NEXT { })
+      COMPLETE_PKG_NEXT -> loading when (< @entity.pcursor (array/len @entity.packages))
+        (os/read-file { anchor: "cwd" path: (os/path-join (os/path-relative @entity.cwd (object/get (array/nth @entity.packages @entity.pcursor) "root")) "package.json") } { key: "pkgmanifest" emit: { success: COMPLETE_PKG_MANIFEST, failure: COMPLETE_FAILED } })
+      COMPLETE_PKG_NEXT -> loading when (and (>= @entity.pcursor (array/len @entity.packages)) (array/some @entity.packages (fn p (= (object/get @p "prefix") "almadar-std"))))
+        (emit COMPLETE_DIR_NEXT { })
+      COMPLETE_PKG_NEXT -> loading when (and (>= @entity.pcursor (array/len @entity.packages)) (not (array/some @entity.packages (fn p (= (object/get @p "prefix") "almadar-std")))))
+        (emit COMPLETE_CTX { context: "none", prefix: @entity.word, candidates: [] })
+      COMPLETE_PKG_MANIFEST -> loading when (= (object/get (object/get (json/parse (bytes/to-string @payload.data) CompletePackageManifest) "orb") "source") null)
+        (emit COMPLETE_CTX { context: "none", prefix: @entity.word, candidates: [] })
+      COMPLETE_PKG_MANIFEST -> loading when (!= (object/get (object/get (json/parse (bytes/to-string @payload.data) CompletePackageManifest) "orb") "source") null)
+        (set @entity.trees (array/append @entity.trees { dir: (os/path-join (os/path-relative @entity.cwd (object/get (array/nth @entity.packages @entity.pcursor) "root")) (object/get (object/get (json/parse (bytes/to-string @payload.data) CompletePackageManifest) "orb") "source")), pre: (if (= (object/get (array/nth @entity.packages @entity.pcursor) "prefix") "almadar-std") "std/behaviors/" (str/concat (object/get (array/nth @entity.packages @entity.pcursor) "prefix") "/")) }))
+        (set @entity.pcursor (+ @entity.pcursor 1))
+        (emit COMPLETE_PKG_NEXT { })
+      COMPLETE_DIR_NEXT -> loading when (< @entity.dcursor (array/len @entity.trees))
+        (os/list-dir { anchor: "cwd" path: (object/get (array/nth @entity.trees @entity.dcursor) "dir") } { key: "dir" emit: { success: COMPLETE_DIR_LISTED, failure: COMPLETE_FAILED } })
+      COMPLETE_DIR_NEXT -> loading when (>= @entity.dcursor (array/len @entity.trees))
+        (emit COMPLETE_CTX { context: "import-path", prefix: @entity.word, candidates: (let ((none : [Cand] [])) (array/reduce (array/sort @entity.imports "label" "asc") @none (fn a c (if (and (> (array/len @a) 0) (= (object/get (array/last @a) "label") (object/get @c "label"))) @a (array/append @a @c))))) })
+      COMPLETE_DIR_LISTED -> loading
+        (set @entity.imports (array/concat @entity.imports (array/filter (array/map (array/filter @payload.entries (fn e (and (= (object/get @e "kind") "file") (str/endsWith (object/get @e "name") ".lolo") (> (str/len (object/get @e "name")) 5)))) (fn e { label: (str/concat (object/get (array/nth @entity.trees @entity.dcursor) "pre") (str/slice (object/get @e "name") 0 (- (str/len (object/get @e "name")) 5))), kind: "import-path", detail: (str/slice (object/get @e "name") 0 (- (str/len (object/get @e "name")) 5)) })) (fn c (str/startsWith (str/lower (object/get @c "label")) (str/lower @entity.word))))))
+        (set @entity.trees (array/concat @entity.trees (array/map (array/filter @payload.entries (fn e (= (object/get @e "kind") "dir"))) (fn e { dir: (os/path-join (object/get (array/nth @entity.trees @entity.dcursor) "dir") (object/get @e "name")), pre: (object/get (array/nth @entity.trees @entity.dcursor) "pre") }))))
+        (set @entity.dcursor (+ @entity.dcursor 1))
+        (emit COMPLETE_DIR_NEXT { })
+      COMPLETE_CTX -> idle
         (emit COMPLETE_ANSWERED { status: 200, body: (json/stringify @payload) })
     }
 
@@ -260,6 +303,29 @@ orbital OrbCompleteOrbital {
       }
         @description "The completion: its context, the partial word and the candidates."
         @tier "internal"
+      COMPLETE_PACKAGES {
+        result : [CompletePackage]!
+      }
+        @description "behavior/packages: the installed behavior packages."
+        @tier "internal"
+      COMPLETE_PKG_MANIFEST {
+        data : bytes!
+      }
+        @description "os/read-file: an installed package.json."
+        @tier "internal"
+      COMPLETE_DIR_LISTED {
+        entries : [CompleteEntry]!
+      }
+        @description "os/list-dir: one directory of a package .lolo tree."
+        @tier "internal"
+      COMPLETE_PKG_NEXT {
+      }
+        @description "Internal: read the next package manifest."
+        @tier "internal"
+      COMPLETE_DIR_NEXT {
+      }
+        @description "Internal: list the next directory of the package trees."
+        @tier "internal"
       COMPLETE_FAILED {
         error : string
       }
@@ -291,11 +357,12 @@ orbital OrbCompleteOrbital {
       COMPLETE_START {
         file : string!
         offset : number!
+        cwd : string!
       }
         @description "Complete at an offset of a file."
       OrbComplete.COMPLETE_START -> COMPLETE_START
     }
   }
 
-  page "/orb-complete" as OrbCompletePage -> OrbComplete, ArgsCli, CompleteEngine
+  page boot as OrbCompleteOrbitalStart -> OrbComplete, ArgsCli, CompleteEngine
 }

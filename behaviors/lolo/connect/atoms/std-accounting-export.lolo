@@ -27,7 +27,7 @@ orbital AccountingOrbital {
     id : string!
   }
 
-  trait AccountingExporter -> AccountingExport [integration, instance] {
+  trait AccountingExporter -> AccountingExport [client] {
     initial: idle
 
     state idle {
@@ -93,13 +93,13 @@ orbital AccountingOrbital {
     }
 
     listens {
-      ACCOUNTING_EXPORT_INVOICES -> external {
+      ACCOUNTING_EXPORT_INVOICES -> input {
         invoices : [AccountingInvoice]!
         format : string
       }
         @description "Shape invoice rows into an import-ready CSV export."
         @synonyms "export invoices, invoice csv, accounting export"
-      ACCOUNTING_EXPORT_JOURNAL -> external {
+      ACCOUNTING_EXPORT_JOURNAL -> input {
         entries : [AccountingEntry]!
         format : string
       }
@@ -108,5 +108,5 @@ orbital AccountingOrbital {
     }
   }
 
-  page "/accounting" as AccountingPage -> AccountingExporter
+  page boot as AccountingOrbitalStart -> AccountingExporter
 }
