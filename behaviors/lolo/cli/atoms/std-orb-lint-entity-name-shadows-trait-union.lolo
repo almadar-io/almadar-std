@@ -1,0 +1,153 @@
+app std-orb-lint-entity-name-shadows-trait-union [
+  version: "1.0.0",
+  inbound: ["cli-lint-entity-name-shadows-trait-union"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-entity-name-shadows-trait-union — the `orb lint entity-name-shadows-trait-union <file>` command, the port of ORB_T_ENTITY_NAME_SHADOWS_TRAIT_UNION (entities/entity.rs validate_all_entities). It lowers the file with program/read and, for every non-spec orbital's inline primary and auxiliary entity, reports an entity named `<Trait>State` or `<Trait>Event` for any trait of the orbital (an inline trait by its name, a reference trait by its ref, else its name), the state shadow before the event shadow, at `orbitals[i].entity` or `orbitals[i].auxiliaryEntities[j]` with the Rust message and suggestion (status 500, exit 1). Orbitals marked `spec` are skipped. Clean answers `lint entity-name-shadows-trait-union: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-entity-name-shadows-trait-union"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type ShadowEntity = { name : string }
+type ShadowTrait = { name : string, ref : string, stateMachine : ShadowShape }
+type ShadowShape = { states : [ShadowShapeState] }
+type ShadowShapeState = { name : string }
+type ShadowOrbital = { spec : boolean, entity : ShadowEntity, auxiliaryEntities : [ShadowEntity], traits : [ShadowTrait] }
+type EntityNameShadowsTraitUnionProgram = { orbitals : [ShadowOrbital] }
+
+orbital OrbLintEntityNameShadowsTraitUnionOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintEntityNameShadowsTraitUnionRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintEntityNameShadowsTraitUnion -> OrbLintEntityNameShadowsTraitUnionRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
+          (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+            (let ((orb (array/nth @orbitals @oi)))
+              (if (= (object/get @orb "spec" false) true)
+                []
+                (let ((slots (array/concat
+                        (if (validate/object (object/get @orb "entity" null)) [{ e: (object/get @orb "entity"), p: (str/concat "orbitals[" @oi "].entity") }] [])
+                        (array/flatten (array/map (array/range 0 (array/len (object/get @orb "auxiliaryEntities" []))) (fn j
+                          (let ((ae (array/nth (object/get @orb "auxiliaryEntities" []) @j)))
+                            (if (validate/object @ae) [{ e: @ae, p: (str/concat "orbitals[" @oi "].auxiliaryEntities[" @j "]") }] []))))))))
+                  (array/flatten (array/map @slots (fn sl
+                    (let ((en (object/get (object/get @sl "e") "name" "")) (pth (object/get @sl "p")))
+                      (array/flatten (array/map (object/get @orb "traits" []) (fn t
+                        (let ((tref (if (validate/object @t) (object/get @t "ref" null) null)) (tnm (if (validate/object @t) (object/get @t "name" null) null)))
+                          (let ((tn (if (and (validate/object @t) (or (!= @tref null) (= (object/get @t "stateMachine" null) null))) (if (!= @tref null) @tref @tnm) @tnm)))
+                            (if (= @tn null)
+                              []
+                              (array/concat
+                                (if (= @en (str/concat @tn "State"))
+                                  [{ code: "ORB_T_ENTITY_NAME_SHADOWS_TRAIT_UNION", path: @pth, message: (str/concat "Entity '" @en "' name collides with trait '" @tn "'s generated state union — TS codegen would emit both `import type { " @en " }` and `type " @en " = '...'` in every handler/hook/view file (TS2440). Rename the entity (e.g. '" @tn "Data')."), suggestion: (str/concat "Rename entity '" @en "' to '" @tn "Data' (or any name that doesn't match a trait's <Name>State / <Name>Event union)"), severity: "error" }]
+                                  [])
+                                (if (= @en (str/concat @tn "Event"))
+                                  [{ code: "ORB_T_ENTITY_NAME_SHADOWS_TRAIT_UNION", path: @pth, message: (str/concat "Entity '" @en "' name collides with trait '" @tn "'s generated event union — TS codegen would emit both `import type { " @en " }` and `type " @en " = '...'` in every handler/hook/view file (TS2440). Rename the entity (e.g. '" @tn "Data')."), suggestion: (str/concat "Rename entity '" @en "' to '" @tn "Data' (or any name that doesn't match a trait's <Name>State / <Name>Event union)"), severity: "error" }]
+                                  []))))))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "entity-name-shadows-trait-union", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : EntityNameShadowsTraitUnionProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+    }
+  }
+
+  trait OrbLintEntityNameShadowsTraitUnionCli -> OrbLintEntityNameShadowsTraitUnionRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint entity-name-shadows-trait-union <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "entity-name-shadows-trait-union") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint entity-name-shadows-trait-union: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "entity-name-shadows-trait-union") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint entity-name-shadows-trait-union: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-entity-name-shadows-trait-union" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint entity-name-shadows-trait-union` with its arguments and working directory."
+        @synonyms "orb lint entity-name-shadows-trait-union"
+      OrbLintEntityNameShadowsTraitUnion.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintEntityNameShadowsTraitUnionCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintEntityNameShadowsTraitUnionOrbitalStart -> OrbLintEntityNameShadowsTraitUnion, OrbLintEntityNameShadowsTraitUnionCli, OrbLintInput, Packs, Versions
+}

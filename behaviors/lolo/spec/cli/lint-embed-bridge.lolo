@@ -1,0 +1,21 @@
+app lint-embed-bridge-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint embed-bridge <file>`, the port of the compiler rules ORB_EMBED_BRIDGE_LISTENS_UNSENT and ORB_EMBED_BRIDGE_EMITS_UNHEARD. The file is resolved with program/read; every `(behavior/apply v { bridge: { listens, emits } })` in a transition effect declares a bridge. A listens event nothing in the program sends (no control or emit effect fires it) is ORB_EMBED_BRIDGE_LISTENS_UNSENT and an emits event nothing handles (no transition, no event-listen prop bound to it) is ORB_EMBED_BRIDGE_EMITS_UNHEARD, at orbitals[i].traits[j].stateMachine.transitions[k] (status 500, exit 1). A clean program answers `lint embed-bridge: clean` (status 200, exit 0). Anything but exactly one file argument is the usage (status 400, exit 2). A file that cannot be read or lowered fails the run (status 500)."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintEmbedBridgeSpec {
+  expects trait OrbLintEmbedBridge {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintEmbedBridgeCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintEmbedBridge, OrbLintEmbedBridgeCli
+}

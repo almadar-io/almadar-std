@@ -1,0 +1,245 @@
+app std-orb-lint-trait-ref-config [
+  version: "1.0.0",
+  inbound: ["cli-lint-trait-ref-config"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-trait-ref-config — the `orb lint trait-ref-config <file>` command, the port of validate_trait_ref_config_diagnostics and its collection in phases/inline/trait.rs. For each trait entry that references an imported trait (`Alias.traits.Name`) it pairs the unresolved call site with the upstream trait (std-orb-lint-call-site-input: found by the entry's refId when it carries one and the import holds that id, else by name; read as the compiler's deferred import load sees it when the upstream file declares the trait inline, else from the resolved import) and reports ORB_T_CONFIG_UNKNOWN_CALL_SITE_KEY (a call-site config key that is neither a declared knob of the upstream trait nor a declaration-form knob of the alias), ORB_T_CONFIG_MISSING_REQUIRED_KEY (a `!`-required declared knob the call site omits) and ORB_T_EVENT_RENAME_UNKNOWN_KEY (an `events` rename source naming no event the upstream trait declares, emits, transitions on, or produces: the events std-orb-fired-events finds fired by its effects and controls), at `orbitals[name=<orbital>].traits[<index>]` with the compiler's paths, messages and valid values (status 500, exit 1). The pattern registry and the operator table are read once, by std-orb-lint-input, and only when a rename names an event the declaration alone does not. Clean answers `lint trait-ref-config: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500. A call site whose import does not resolve is skipped: the compiler reports that failure itself."
+]
+uses Spec from "almadar-std/lint-trait-ref-config"
+type FiredNode = string | number | boolean | [FiredNode?] | Map string FiredNode?
+type FiredField = { default : FiredNode? }
+type FiredTransition = { event : string, guard : FiredNode?, effects : [FiredNode?] }
+type FiredTick = { guard : FiredNode?, effects : [FiredNode?] }
+type FiredMachine = { transitions : [FiredTransition] }
+type FiredTrait = { name : string, stateMachine : FiredMachine, ticks : [FiredTick], config : Map string FiredField? }
+type FiredOrbital = { traits : [FiredTrait] }
+type FiredProgram = { orbitals : [FiredOrbital] }
+type PatternEventProp = { pattern : string!, prop : string!, field : string! }
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error", validValues : [string] }
+type TrcVal = string | number | boolean | [TrcVal?] | Map string TrcVal?
+type TrcField = { type : string, label : string, description : string, synonyms : string, tier : string, required : boolean, default : TrcVal? }
+type TrcStrings = [string]
+type TrcEmit = { event : string!, definerKnob : string }
+type TrcKey = { key : string!, name : string }
+type TrcTransition = { event : string!, effects : [TrcVal] }
+type TrcTick = { effects : [TrcVal] }
+type TrcMachine = { events : [TrcKey], transitions : [TrcTransition] }
+type TrcTrait = { ref : string, name : string, config : Map string TrcField?, events : Map string string?, emits : [TrcEmit], ticks : [TrcTick], stateMachine : TrcMachine?, refId : string, id : string }
+type TrcUse = { from : string!, as : string! }
+type TrcOrbital = { name : string, uses : [TrcUse], traits : [TrcTrait] }
+type TrcProgram = { orbitals : [TrcOrbital] }
+type TrcImport = { from : string!, program : TrcProgram!, raw : TrcProgram! }
+type TrcUnresolved = { from : string!, error : string! }
+type TrcKept = { orbital : number!, traits : [string]! }
+type TrcSite = { path : string!, reference : string!, up : TrcTrait!, config : Map string TrcField?, events : Map string string? }
+type TrcCallSite = { config : Map string TrcField?, events : Map string string? }
+type TrcRef = { kind : string!, alias : string!, name : string!, path : string!, callSite : TrcCallSite!, declaration : TrcTrait! }
+type TrcProduced = { si : number!, names : [string]! }
+type TrcFiredProgram = { orbitals : [TrcFiredOrbital]! }
+type TrcFiredOrbital = { traits : [TrcTrait]! }
+
+orbital OrbLintTraitRefConfigOrbital {
+  uses CsInput from "std/behaviors/std-orb-lint-call-site-input"
+  uses Input from "std/behaviors/std-orb-lint-input"
+  uses Produced from "std/behaviors/std-orb-produced-events"
+
+  entity OrbLintTraitRefConfigRun [runtime] {
+    id : string!
+    findings : [OrbFinding] = []
+    sites : [TrcSite] = []
+    knowns : [TrcStrings] = []
+    pending : [number] = []
+    cursor : number = 0
+    file : string = ""
+    propsReady : boolean = false
+    waiting : boolean = false
+  }
+
+  trait OrbLintTraitRefConfig -> OrbLintTraitRefConfigRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALL_SITES -> ready
+        (set @entity.file @payload.file)
+        (set @entity.sites (array/map (array/filter @payload.references (fn r (= (object/get @r "kind") "trait"))) (fn r { path: (object/get @r "path"), reference: (object/get @r "name"), up: (object/get @r "declaration"), config: (object/get (object/get @r "callSite") "config" {}), events: (object/get (object/get @r "callSite") "events" {}) })))
+        (set @entity.knowns (array/map @entity.sites (fn s (array/sort (array/unique (array/concat (array/map (object/get (object/get (object/get @s "up") "stateMachine" {}) "events" []) (fn ev (object/get @ev "key"))) (array/concat (array/map (object/get (object/get @s "up") "emits" []) (fn em (let ((ev (object/get @em "event"))) (if (str/startsWith @ev (str/concat (quote "@") "config.")) (let ((knob (str/slice @ev 8 (str/len @ev)))) (let ((f (object/get (object/get (object/get @s "up") "config" {}) @knob null))) (let ((e (if (and (object/has (object/get @s "config" {}) @knob) (!= (object/get (object/get (object/get @s "config" {}) @knob) "default" null) null)) (object/get (object/get (object/get @s "config" {}) @knob) "default") (object/get (object/get (object/get (object/get @s "up") "config" {}) @knob {}) "default" null)))) (if (and (!= @f null) (or (= (object/get @f "type" "") "string") (= (object/get @f "type" "") "event")) (!= (object/get @f "default" null) null) (validate/string @e)) (str/concat @e "") @ev)))) @ev)))) (array/map (object/get (object/get (object/get @s "up") "stateMachine" {}) "transitions" []) (fn tr (object/get @tr "event"))))))))))
+        (set @entity.pending (array/filter (array/range 0 (array/len @entity.sites)) (fn si (let ((s (array/nth @entity.sites @si)) (known (array/nth @entity.knowns @si))) (array/some (object/keys (object/get @s "events" {})) (fn f (and (!= @f "") (not (array/includes @known @f)))))))))
+        (set @entity.cursor 0)
+        (emit LINT_PENDING { })
+      LINT_PENDING -> ready when (= (array/len @entity.pending) 0)
+        (emit LINT_FINISH { })
+      LINT_PENDING -> ready when (and (> (array/len @entity.pending) 0) @entity.propsReady)
+        (emit FIRED_NEXT { })
+      LINT_PENDING -> ready when (and (> (array/len @entity.pending) 0) (not @entity.propsReady))
+        (set @entity.waiting true)
+        (emit LINT_PROPS_REQUEST { file: @entity.file })
+      LINT_PROPS_DONE -> ready when @entity.waiting
+        (set @entity.waiting false)
+        (set @entity.propsReady true)
+        (emit FIRED_NEXT { })
+      LINT_PROPS_DONE -> ready when (not @entity.waiting)
+        (set @entity.propsReady true)
+      FIRED_NEXT -> ready when (>= @entity.cursor (array/len @entity.pending))
+        (emit LINT_FINISH { })
+      FIRED_NEXT -> ready when (< @entity.cursor (array/len @entity.pending))
+        (emit FIRED_SITE { file: @entity.file, raw: "", latin: true, program: { orbitals: [{ traits: [(object/get (array/nth @entity.sites (array/nth @entity.pending @entity.cursor)) "up")] }] }, scope: (str/concat "" @entity.cursor) })
+      FIRED_HEARD -> ready
+        (set @entity.knowns (array/map (array/range 0 (array/len @entity.knowns)) (fn i (if (= @i (array/nth @entity.pending @entity.cursor)) (array/sort (array/unique (array/concat (array/nth @entity.knowns @i) (array/filter (let ((nm (object/get (object/get (array/nth @entity.sites (array/nth @entity.pending @entity.cursor)) "up") "name"))) (array/concat (object/get @payload.byControl @nm []) (object/get @payload.byEffect @nm []))) (fn x (and (!= @x "") (not (str/startsWith @x (quote "@"))))))))) (array/nth @entity.knowns @i)))))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit FIRED_NEXT { })
+      LINT_FINISH -> ready
+        (set @entity.findings (array/flatten (array/map (array/range 0 (array/len @entity.sites)) (fn si
+          (let ((s (array/nth @entity.sites @si)) (known (array/nth @entity.knowns @si)))
+            (let ((up (object/get @s "up")) (cfg (object/get @s "config" {})) (evs (object/get @s "events" {})) (path (object/get @s "path")) (nm (object/get @s "reference")))
+              (let ((declared (object/get @up "config" {})))
+                (let ((declKeys (array/sort (array/unique (array/concat (object/keys @declared) (array/filter (object/keys @cfg) (fn k (let ((f (object/get @cfg @k))) (not (and (= (object/get @f "type" "unknown") "unknown") (= (object/get @f "label" null) null) (= (object/get @f "description" null) null) (= (object/get @f "synonyms" null) null) (= (object/get @f "tier" null) null)))))))))))
+                  (let ((declStr (if (= (array/len @declKeys) 0) "(none)" (str/join @declKeys ", "))))
+                    (array/concat
+                      (array/map (array/sort (array/filter (object/keys @evs) (fn f (and (!= @f "") (not (array/includes @known @f)))))) (fn key
+                        { code: "ORB_T_EVENT_RENAME_UNKNOWN_KEY", path: (str/concat @path ".events(" @key ")"), message: (str/concat "events rename source key '" @key "' does not name any event declared or produced by referenced trait '" @nm "'. The rename silently no-ops. Known events: " (if (= (array/len @known) 0) "(none)" (str/join @known ", ")) "."), suggestion: "", severity: "error", validValues: @known }))
+                      (array/concat
+                        (array/map (array/sort (array/filter (object/keys @cfg) (fn k (not (array/includes @declKeys @k))))) (fn key
+                          { code: "ORB_T_CONFIG_UNKNOWN_CALL_SITE_KEY", path: (str/concat @path ".config(" @key ")"), message: (str/concat "Call-site config key '" @key "' does not match any declared config knob on referenced trait '" @nm "'. It silently no-ops. Declared knobs: " @declStr "."), suggestion: "", severity: "error", validValues: @declKeys }))
+                        (array/map (array/sort (array/filter (object/keys @declared) (fn k (and (= (object/get (object/get @declared @k) "required" false) true) (not (array/includes (object/keys @cfg) @k)))))) (fn key
+                          { code: "ORB_T_CONFIG_MISSING_REQUIRED_KEY", path: @path, message: (str/concat "Referenced trait '" @nm "' declares config knob '" @key "' as required (`!`), but this call site's config block does not supply it. Declared knobs: " @declStr "."), suggestion: (str/concat "Supply `" @key "` in this trait reference's config block (a literal, an `" (quote "@") "config." @key "` forward, or another binding)."), severity: "error" })))))))))))))
+        (set @entity.propsReady false)
+        (emit LINT_FOUND { rule: "trait-ref-config", scope: "", findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+      LINT_PENDING { }
+        @description "Internal: decide whether a rename needs the fired events."
+        @tier "internal"
+      FIRED_NEXT { }
+        @description "Internal: ask the fired events of the next upstream trait whose rename names an undeclared event."
+        @tier "internal"
+      LINT_PROPS_REQUEST -> external { file : string! }
+        @description "Ask std-orb-lint-input for the pattern registry and operator table."
+        @tier "internal"
+      FIRED_SITE -> external { file : string!  raw : string!  latin : boolean!  program : TrcFiredProgram!  scope : string! }
+        @description "One upstream trait offered to std-orb-fired-events."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALL_SITES { file : string!  program : TrcProgram!  kept : [TrcKept]!  references : [TrcRef]!  stamped : TrcVal? }
+        @description "The call sites input: the file lowered unresolved and each aliased import resolved and lowered."
+      CallSiteInput.LINT_CALL_SITES -> LINT_CALL_SITES
+      LINT_PROPS_DONE { file : string! }
+        @description "std-orb-lint-input answered: its event props and operator semantics were sent before it."
+      FIRED_HEARD { scope : string!  byControl : Map string [string]!  byEffect : Map string [string]! }
+        @description "std-orb-fired-events' FIRED_EVENTS: the events the offered trait fires by a control or by an effect."
+      OrbLintInput.LINT_INPUT -> LINT_PROPS_DONE
+      OrbProducedEvents.PRODUCED_EVENTS -> FIRED_HEARD
+    }
+  }
+
+  trait OrbLintTraitRefConfigCli -> OrbLintTraitRefConfigRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint trait-ref-config <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_CALL_SITES_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")), stamp: false, references: true })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "trait-ref-config") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint trait-ref-config: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "trait-ref-config") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_CALL_SITES_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint trait-ref-config: the file could not be read or lowered" })
+      LINT_PROPS_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint trait-ref-config: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_CALL_SITES_REQUEST -> external { file : string!  stamp : boolean!  references : boolean! }
+        @description "Ask the call sites input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_CALL_SITES_UNREAD -> external { file : string!  error : string! }
+        @description "The call sites input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-trait-ref-config" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint trait-ref-config` with its arguments and working directory."
+        @synonyms "orb lint trait-ref-config"
+      OrbLintTraitRefConfig.LINT_FOUND -> LINT_FOUND
+      LINT_CALL_SITES_UNREAD { file : string!  error : string! }
+        @description "The call sites input could not read or lower the file."
+      CallSiteInput.LINT_CALL_SITES_UNREAD -> LINT_CALL_SITES_UNREAD
+      LINT_PROPS_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_PROPS_UNREAD
+    }
+  }
+
+  trait CallSiteInput = CsInput.traits.CallSiteInput {
+    listens {
+      OrbLintTraitRefConfigCli.LINT_CALL_SITES_REQUEST -> LINT_CALL_SITES_REQUEST
+    }
+  }
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintTraitRefConfig.LINT_PROPS_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string!  coreRoot : string!  stdRoot : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+  trait OrbProducedEvents = Produced.traits.OrbProducedEvents {
+    listens {
+      PRODUCED_SEMANTICS_HEARD { semantics : Map string string!  functions : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: each operator's declared returnSemantics and the function-returning operators."
+      PRODUCED_PATTERNS_HEARD { byPattern : [PatternEventProp]! }
+        @description "std-orb-lint-input's LINT_EVENT_PROPS: each pattern's event props and event-list fields."
+      PRODUCED_SLOTS_HEARD { emitSlots : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: the emit option slots the operator table declares."
+      PRODUCED_INPUT_HEARD { file : string!  raw : string!  latin : boolean!  program : FiredProgram  scope : string! }
+        @description "A program whose produced events are asked: the rule trait offers one upstream trait at a time."
+      OrbLintInput.LINT_EVENT_PROPS -> PRODUCED_PATTERNS_HEARD
+      OrbLintInput.LINT_OPERATOR_SEMANTICS -> PRODUCED_SEMANTICS_HEARD
+      OrbLintInput.LINT_OPERATOR_SEMANTICS -> PRODUCED_SLOTS_HEARD
+      OrbLintTraitRefConfig.FIRED_SITE -> PRODUCED_INPUT_HEARD
+    }
+  }
+
+  page boot as OrbLintTraitRefConfigOrbitalStart -> OrbLintTraitRefConfig, OrbLintTraitRefConfigCli, CallSiteInput, OrbLintInput, OrbProducedEvents, Packs, Versions
+}

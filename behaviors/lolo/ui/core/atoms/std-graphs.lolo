@@ -40,10 +40,10 @@ orbital GraphItemOrbital {
           (set @entity.chartData (if (= @config.chartType histogram) (array/map @rows (fn p {
           label: (object/get @p label)
           value: (object/get @p value)
-        })) (array/map (object/entries (if @config.timeAxis (array/groupBy (array/reduce (array/filter @rows (fn row (validate/required (object/get @row @config.timeField)))) [] (fn acc row (let ((ts (time/parse (object/get @row @config.timeField)))) (if (= @ts null) @acc (array/append @acc (object/set @row "periodStart" (time/startOf @ts @config.period))))))) "periodStart") (array/groupBy (array/filter @rows (fn row (validate/required (object/get @row @config.categoryField)))) @config.categoryField))) (fn entry {
+        })) (array/flatten (array/map (object/entries (if @config.timeAxis (array/groupBy (array/reduce (array/filter @rows (fn row (validate/required (object/get @row @config.timeField)))) [] (fn acc row (let ((ts (time/parse (object/get @row @config.timeField)))) (if (= @ts null) @acc (array/append @acc (object/set @row "periodStart" (time/startOf @ts @config.period))))))) "periodStart") (array/groupBy (array/filter @rows (fn row (validate/required (object/get @row @config.categoryField)))) @config.categoryField))) (fn entry (let ((v (if (= @config.aggregation sum) (array/sum (object/get @entry "1") @config.valueField) (if (= @config.aggregation avg) (array/avg (object/get @entry "1") @config.valueField) (if (= @config.aggregation min) (array/min (object/get @entry "1") @config.valueField) (if (= @config.aggregation max) (array/max (object/get @entry "1") @config.valueField) (array/len (object/get @entry "1")))))))) (if (= @v null) [] [{
           label: (object/get @entry "0")
-          value: (if (= @config.aggregation sum) (array/sum (object/get @entry "1") @config.valueField) (if (= @config.aggregation avg) (array/avg (object/get @entry "1") @config.valueField) (if (= @config.aggregation min) (array/min (object/get @entry "1") @config.valueField) (if (= @config.aggregation max) (array/max (object/get @entry "1") @config.valueField) (array/len (object/get @entry "1"))))))
-        })))))
+          value: @v
+        }]))))))))
         (set @entity.chartData (if @config.timeAxis (array/sort @entity.chartData label asc) @entity.chartData))
         (set @entity.chartData (if (!= @config.sortField none) (array/sort @entity.chartData @config.sortField @config.sortDir) @entity.chartData))
         (set @entity.chartData (if (> @config.limit 0) (array/take @entity.chartData @config.limit) @entity.chartData))

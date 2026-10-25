@@ -1,0 +1,573 @@
+{
+  "atom": "cli/atoms/std-orb-lint-entity-name-shadows-trait-union.lolo",
+  "trait": "OrbLintEntityNameShadowsTraitUnion",
+  "note": "Expected findings are the code, path, message and suggestion validate_all_entities (entities/entity.rs) reports. The Rust file carries no unit tests of its own; each case pins a branch of the function: the state shadow, the event shadow, the pairing control, an auxiliary entity at its own index, two orbitals, a reference trait named by its ref, and a spec orbital skipped. The message's closing example names the TRAIT (`<Trait>Data`), as the Rust format arguments do.",
+  "cases": [
+    {
+      "id": "entity-named-trait-state",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "PlayState",
+                    "persistence": "runtime"
+                  },
+                  "traits": [
+                    {
+                      "name": "Play",
+                      "linkedEntity": "X",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityNameShadowsTraitUnion"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-name-shadows-trait-union",
+                  "findings": [
+                    {
+                      "code": "ORB_T_ENTITY_NAME_SHADOWS_TRAIT_UNION",
+                      "path": "orbitals[0].entity",
+                      "message": "Entity 'PlayState' name collides with trait 'Play's generated state union — TS codegen would emit both `import type { PlayState }` and `type PlayState = '...'` in every handler/hook/view file (TS2440). Rename the entity (e.g. 'PlayData').",
+                      "suggestion": "Rename entity 'PlayState' to 'PlayData' (or any name that doesn't match a trait's <Name>State / <Name>Event union)",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityNameShadowsTraitUnion"
+        }
+      ]
+    },
+    {
+      "id": "entity-named-trait-event",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "PlayEvent",
+                    "persistence": "runtime"
+                  },
+                  "traits": [
+                    {
+                      "name": "Play",
+                      "linkedEntity": "X",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityNameShadowsTraitUnion"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-name-shadows-trait-union",
+                  "findings": [
+                    {
+                      "code": "ORB_T_ENTITY_NAME_SHADOWS_TRAIT_UNION",
+                      "path": "orbitals[0].entity",
+                      "message": "Entity 'PlayEvent' name collides with trait 'Play's generated event union — TS codegen would emit both `import type { PlayEvent }` and `type PlayEvent = '...'` in every handler/hook/view file (TS2440). Rename the entity (e.g. 'PlayData').",
+                      "suggestion": "Rename entity 'PlayEvent' to 'PlayData' (or any name that doesn't match a trait's <Name>State / <Name>Event union)",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityNameShadowsTraitUnion"
+        }
+      ]
+    },
+    {
+      "id": "control-entity-named-trait-data",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "PlayData",
+                    "persistence": "runtime"
+                  },
+                  "traits": [
+                    {
+                      "name": "Play",
+                      "linkedEntity": "X",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityNameShadowsTraitUnion"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-name-shadows-trait-union",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityNameShadowsTraitUnion"
+        }
+      ]
+    },
+    {
+      "id": "auxiliary-entity-shadow-is-reported-at-its-index",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Main",
+                    "persistence": "runtime"
+                  },
+                  "traits": [
+                    {
+                      "name": "Play",
+                      "linkedEntity": "X",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Other",
+                      "persistence": "runtime"
+                    },
+                    {
+                      "name": "PlayState",
+                      "persistence": "runtime"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityNameShadowsTraitUnion"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-name-shadows-trait-union",
+                  "findings": [
+                    {
+                      "code": "ORB_T_ENTITY_NAME_SHADOWS_TRAIT_UNION",
+                      "path": "orbitals[0].auxiliaryEntities[1]",
+                      "message": "Entity 'PlayState' name collides with trait 'Play's generated state union — TS codegen would emit both `import type { PlayState }` and `type PlayState = '...'` in every handler/hook/view file (TS2440). Rename the entity (e.g. 'PlayData').",
+                      "suggestion": "Rename entity 'PlayState' to 'PlayData' (or any name that doesn't match a trait's <Name>State / <Name>Event union)",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityNameShadowsTraitUnion"
+        }
+      ]
+    },
+    {
+      "id": "one-entity-shadows-two-traits-in-trait-order",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "AState",
+                    "persistence": "runtime"
+                  },
+                  "traits": [
+                    {
+                      "name": "A",
+                      "linkedEntity": "X",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "B",
+                      "linkedEntity": "X",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "BEvent",
+                    "persistence": "runtime"
+                  },
+                  "traits": [
+                    {
+                      "name": "B",
+                      "linkedEntity": "X",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityNameShadowsTraitUnion"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-name-shadows-trait-union",
+                  "findings": [
+                    {
+                      "code": "ORB_T_ENTITY_NAME_SHADOWS_TRAIT_UNION",
+                      "path": "orbitals[0].entity",
+                      "message": "Entity 'AState' name collides with trait 'A's generated state union — TS codegen would emit both `import type { AState }` and `type AState = '...'` in every handler/hook/view file (TS2440). Rename the entity (e.g. 'AData').",
+                      "suggestion": "Rename entity 'AState' to 'AData' (or any name that doesn't match a trait's <Name>State / <Name>Event union)",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_T_ENTITY_NAME_SHADOWS_TRAIT_UNION",
+                      "path": "orbitals[1].entity",
+                      "message": "Entity 'BEvent' name collides with trait 'B's generated event union — TS codegen would emit both `import type { BEvent }` and `type BEvent = '...'` in every handler/hook/view file (TS2440). Rename the entity (e.g. 'BData').",
+                      "suggestion": "Rename entity 'BEvent' to 'BData' (or any name that doesn't match a trait's <Name>State / <Name>Event union)",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityNameShadowsTraitUnion"
+        }
+      ]
+    },
+    {
+      "id": "reference-trait-shadows-by-its-ref",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "UpState",
+                    "persistence": "runtime"
+                  },
+                  "traits": [
+                    {
+                      "ref": "Up",
+                      "linkedEntity": "X"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityNameShadowsTraitUnion"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-name-shadows-trait-union",
+                  "findings": [
+                    {
+                      "code": "ORB_T_ENTITY_NAME_SHADOWS_TRAIT_UNION",
+                      "path": "orbitals[0].entity",
+                      "message": "Entity 'UpState' name collides with trait 'Up's generated state union — TS codegen would emit both `import type { UpState }` and `type UpState = '...'` in every handler/hook/view file (TS2440). Rename the entity (e.g. 'UpData').",
+                      "suggestion": "Rename entity 'UpState' to 'UpData' (or any name that doesn't match a trait's <Name>State / <Name>Event union)",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityNameShadowsTraitUnion"
+        }
+      ]
+    },
+    {
+      "id": "control-spec-orbital-is-skipped",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "PlayState",
+                    "persistence": "runtime"
+                  },
+                  "traits": [
+                    {
+                      "name": "Play",
+                      "linkedEntity": "X",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "spec": true
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityNameShadowsTraitUnion"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-name-shadows-trait-union",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityNameShadowsTraitUnion"
+        }
+      ]
+    }
+  ]
+}

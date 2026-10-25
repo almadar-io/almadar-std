@@ -137,13 +137,13 @@ orbital LlmSpendBoardOrbital {
           timeoutMs: @config.timeoutMs
         } { emit: { success: LS_DS_REPLIED, failure: LS_DS_FAILED } })
 
-      LS_DS_REPLIED -> reading when (and (>= @payload.status 200) (< @payload.status 300) (json/valid @payload.body) (> (array/len (object/get (json/parse @payload.body LsDsReply) "balance_infos" [])) 0))
-        (let ((info (array/nth (object/get (json/parse @payload.body LsDsReply) "balance_infos" []) 0)))
+      LS_DS_REPLIED -> reading when (and (>= @payload.status 200) (< @payload.status 300) (json/valid @payload.body) (!= (json/parse @payload.body LsDsReply) null) (> (array/len (object/get (json/parse @payload.body LsDsReply) "balance_infos" [])) 0))
+        (let ((info (array/nth (object/get (json/parse @payload.body LsDsReply) "balance_infos") 0)))
           (do
             (set @entity.deepseek { available: true, balance: (str/to-number @info.total_balance), usage: (array/nth (object/values (object/pick @entity.noNumbers [(str/concat "x")])) 0), limit: (array/nth (object/values (object/pick @entity.noNumbers [(str/concat "x")])) 0), actualSpend: (array/nth (object/values (object/pick @entity.noNumbers [(str/concat "x")])) 0), currency: (or @info.currency "CNY"), error: (array/nth (object/values (object/pick @entity.noStrings [(str/concat "x")])) 0) })
             (set @entity.pendingSpendFor "deepseek")
             (persist create LlmBalanceSnapshot { id: (str/concat "deepseek#" @now), provider: "deepseek", timestamp: @now, balance: (str/to-number @info.total_balance), currency: (or @info.currency "CNY") } { emit: { success: LS_SNAPSHOT_SAVED, failure: LS_SNAPSHOT_NOT_SAVED } })))
-      LS_DS_REPLIED -> reading when (not (and (>= @payload.status 200) (< @payload.status 300) (json/valid @payload.body) (> (array/len (object/get (json/parse @payload.body LsDsReply) "balance_infos" [])) 0)))
+      LS_DS_REPLIED -> reading when (not (and (>= @payload.status 200) (< @payload.status 300) (json/valid @payload.body) (!= (json/parse @payload.body LsDsReply) null) (> (array/len (object/get (json/parse @payload.body LsDsReply) "balance_infos" [])) 0)))
         (set @entity.deepseek (if (and (>= @payload.status 200) (< @payload.status 300)) { available: true, balance: (array/nth (object/values (object/pick @entity.noNumbers [(str/concat "x")])) 0), usage: (array/nth (object/values (object/pick @entity.noNumbers [(str/concat "x")])) 0), limit: (array/nth (object/values (object/pick @entity.noNumbers [(str/concat "x")])) 0), actualSpend: (array/nth (object/values (object/pick @entity.noNumbers [(str/concat "x")])) 0), currency: "CNY", error: (array/nth (object/values (object/pick @entity.noStrings [(str/concat "x")])) 0) } { available: false, balance: (array/nth (object/values (object/pick @entity.noNumbers [(str/concat "x")])) 0), usage: (array/nth (object/values (object/pick @entity.noNumbers [(str/concat "x")])) 0), limit: (array/nth (object/values (object/pick @entity.noNumbers [(str/concat "x")])) 0), actualSpend: (array/nth (object/values (object/pick @entity.noNumbers [(str/concat "x")])) 0), currency: "CNY", error: (str/concat "HTTP " @payload.status) }))
         (http GET @config.kimiOrigin "/v1/users/me/balance" {
           headers: { Accept: "application/json" },

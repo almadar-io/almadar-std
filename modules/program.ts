@@ -44,18 +44,20 @@ const GENERATE_OPTIONS = openShape({
   listenHost: STRING,
   port: NUMBER,
   emitOrb: STRING,
+  webClient: BOOLEAN,
+  source: STRING,
 });
 
 export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
   'program/read': {
     module: 'program', category: 'std-program',
     minArity: 1, maxArity: 3,
-    description: 'Parse `.lolo` source text into a quoted program. With inspect:true and an absolute path, return the resolved program, original-source anchors and imported source provenance; version identifies the editor document. With embeds:true, the text\'s inline behavior embeds `[{ orbital, trait, behavior, line, column }]` (what `orb embeds` prints). With resolve:true and the absolute path, the file resolved as `orb resolve` prints it, `{ program, text }`; with output, also written there with its catalogs and lazy behaviors (without it, a program with lazy behaviors or locales is refused). With stamp:true and the absolute path of a `.orb`, the program stamped with V4 identity as `orb stamp` prints it, `{ program, text }`; `prior` (a `.orb` path) keeps ids stable, `imports` (a directory) resolves cross-file `uses` id edges, `output` also writes the text to that file.',
+    description: 'Parse `.lolo` source text into a quoted program. With inspect:true and an absolute path, return the resolved program, original-source anchors and imported source provenance; version identifies the editor document. With embeds:true, the text\'s inline behavior embeds `[{ orbital, trait, behavior, line, column }]` (what `orb embeds` prints). With resolve:true and the absolute path, the file resolved as `orb resolve` prints it, `{ program, text }`; with output, also written there with its catalogs and lazy behaviors (without it, a program with lazy behaviors or locales is refused). With stamp:true and the absolute path of a `.orb`, the program stamped with V4 identity as `orb stamp` prints it, `{ program, text }`; `prior` (a `.orb` path) keeps ids stable, `imports` (a directory) resolves cross-file `uses` id edges, `output` also writes the text to that file. With references:true and the absolute path, `{ program, references }`: the program as it reads before resolution, and every trait or orbital reference its resolution resolves (those inside the imports included, in resolution order) as `{ kind: "trait" | "orbital", alias, name, path, callSite, declaration }` — the reference as written, and the upstream declaration it resolved to, loaded as an import with `@config.X` still deferred; `path` is the call-site path in the file that holds the reference.',
     hasSideEffects: true,
     runsOn: 'server',
     host: 'program',
     returnType: 'sexpr',
-    params: [{ name: 'text', type: 'string', description: '`.lolo` source' }, { name: 'inspection', type: openShape({ inspect: BOOLEAN, embeds: BOOLEAN, resolve: BOOLEAN, stamp: BOOLEAN, path: STRING, output: STRING, version: NUMBER, prior: STRING, imports: STRING }), description: 'Optional inspection (inspect, path, version), embed listing (embeds), resolution (resolve, path, output) or stamping (stamp, path, prior, imports, output) request', optional: true }, EMIT_OPTIONS],
+    params: [{ name: 'text', type: 'string', description: '`.lolo` source' }, { name: 'inspection', type: openShape({ inspect: BOOLEAN, embeds: BOOLEAN, resolve: BOOLEAN, stamp: BOOLEAN, references: BOOLEAN, path: STRING, output: STRING, version: NUMBER, prior: STRING, imports: STRING }), description: 'Optional inspection (inspect, path, version), embed listing (embeds), resolution (resolve, path, output), stamping (stamp, path, prior, imports, output) or reference pairing (references, path) request', optional: true }, EMIT_OPTIONS],
     example: '["program/read", "@entity.draft", { "emit": { "success": "READ", "failure": "READ_FAILED" } }]',
   },
   'program/print': {
@@ -174,6 +176,7 @@ export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
       EMIT_OPTIONS,
     ],
     example: '["program/dispatch", "@payload.address", "@payload.arguments", { "emit": { "success": "DISPATCHED", "failure": "DISPATCH_FAILED" } }]',
+    targetOptions: ['orbital', 'targetTrait', 'event'],
   },
   'program/tick': {
     module: 'program', category: 'std-program',

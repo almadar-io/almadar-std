@@ -1,0 +1,1636 @@
+{
+ "atom": "cli/atoms/std-orb-lint-embed-bridge.lolo",
+ "trait": "OrbLintEmbedBridge",
+ "note": "One case per Rust test of embed_bridge.rs (a_bridged_event_the_host_sends_and_one_it_handles_are_fine, a_listens_event_nothing_sends_is_an_error, an_emits_event_nothing_handles_is_an_error, a_pattern_listening_for_an_emitted_event_consumes_it, control_a_program_with_no_bridged_embed_reports_nothing), each with the FIRED_HEARD the std-orb-fired-events trait answers for the same program, plus controls for the literal-list rule and the paths.",
+ "cases": [
+  {
+   "id": "a-bridged-event-the-host-sends-and-one-it-handles-are-fine",
+   "steps": [
+    {
+     "trait": "OrbLintEmbedBridge",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Host",
+       "orbitals": [
+        {
+         "name": "Host",
+         "entity": {
+          "name": "HostView",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Workspace",
+           "linkedEntity": "HostView",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": [
+                  {
+                   "type": "box",
+                   "children": [
+                    [
+                     "behavior/apply",
+                     "@entity.plugin",
+                     {
+                      "bridge": {
+                       "listens": [
+                        "GO"
+                       ],
+                       "emits": [
+                        "DONE"
+                       ]
+                      }
+                     }
+                    ]
+                   ]
+                  },
+                  {
+                   "type": "button",
+                   "label": "Go",
+                   "action": "GO"
+                  }
+                 ]
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "DONE"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO"
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEmbedBridge",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Workspace": [
+        "GO"
+       ]
+      },
+      "byEffect": {
+       "Workspace": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEmbedBridge",
+     "event": "LINT_FINISH",
+     "from": "ready",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "embed-bridge",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-listens-event-nothing-sends-is-an-error",
+   "steps": [
+    {
+     "trait": "OrbLintEmbedBridge",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Host",
+       "orbitals": [
+        {
+         "name": "Host",
+         "entity": {
+          "name": "HostView",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Workspace",
+           "linkedEntity": "HostView",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "box",
+                 "children": [
+                  [
+                   "behavior/apply",
+                   "@entity.plugin",
+                   {
+                    "bridge": {
+                     "listens": [
+                      "GO"
+                     ],
+                     "emits": [
+                      "DONE"
+                     ]
+                    }
+                   }
+                  ]
+                 ]
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "DONE"
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEmbedBridge",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Workspace": []
+      },
+      "byEffect": {
+       "Workspace": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEmbedBridge",
+     "event": "LINT_FINISH",
+     "from": "ready",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "embed-bridge",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_EMBED_BRIDGE_LISTENS_UNSENT",
+           "path": "orbitals[0].traits[0].stateMachine.transitions[0]",
+           "message": "the embed's bridge delivers 'GO' into it, but nothing in this program sends 'GO'",
+           "suggestion": "Send 'GO' from the host (an emit effect or a control), or remove it from the bridge's `listens`",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-emits-event-nothing-handles-is-an-error",
+   "steps": [
+    {
+     "trait": "OrbLintEmbedBridge",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Host",
+       "orbitals": [
+        {
+         "name": "Host",
+         "entity": {
+          "name": "HostView",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Workspace",
+           "linkedEntity": "HostView",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": [
+                  {
+                   "type": "box",
+                   "children": [
+                    [
+                     "behavior/apply",
+                     "@entity.plugin",
+                     {
+                      "bridge": {
+                       "listens": [],
+                       "emits": [
+                        "DONE"
+                       ]
+                      }
+                     }
+                    ]
+                   ]
+                  }
+                 ]
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEmbedBridge",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Workspace": []
+      },
+      "byEffect": {
+       "Workspace": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEmbedBridge",
+     "event": "LINT_FINISH",
+     "from": "ready",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "embed-bridge",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_EMBED_BRIDGE_EMITS_UNHEARD",
+           "path": "orbitals[0].traits[0].stateMachine.transitions[0]",
+           "message": "the embed's bridge re-emits 'DONE' on the host, but nothing in this program handles 'DONE'",
+           "suggestion": "Handle 'DONE' on the host (a transition or a pattern that listens for it), or remove it from the bridge's `emits`",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-pattern-listening-for-an-emitted-event-consumes-it",
+   "steps": [
+    {
+     "trait": "OrbLintEmbedBridge",
+     "event": "LINT_EVENT_PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [],
+      "maps": [],
+      "listens": {
+       "code-block": [
+        "onSetMode"
+       ]
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEmbedBridge",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Host",
+       "orbitals": [
+        {
+         "name": "Host",
+         "entity": {
+          "name": "HostView",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Workspace",
+           "linkedEntity": "HostView",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": [
+                  {
+                   "type": "box",
+                   "children": [
+                    [
+                     "behavior/apply",
+                     "@entity.plugin",
+                     {
+                      "bridge": {
+                       "listens": [],
+                       "emits": [
+                        "SET_MODE"
+                       ]
+                      }
+                     }
+                    ]
+                   ]
+                  },
+                  {
+                   "type": "code-block",
+                   "code": "",
+                   "editable": true,
+                   "onSetMode": "SET_MODE"
+                  }
+                 ]
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEmbedBridge",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Workspace": []
+      },
+      "byEffect": {
+       "Workspace": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEmbedBridge",
+     "event": "LINT_FINISH",
+     "from": "ready",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "embed-bridge",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-program-with-no-bridged-embed-reports-nothing",
+   "steps": [
+    {
+     "trait": "OrbLintEmbedBridge",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Host",
+       "orbitals": [
+        {
+         "name": "Host",
+         "entity": {
+          "name": "HostView",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Workspace",
+           "linkedEntity": "HostView",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "box",
+                 "children": [
+                  [
+                   "behavior/apply",
+                   "@entity.widget",
+                   {
+                    "config": {
+                     "x": 1
+                    }
+                   }
+                  ]
+                 ]
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEmbedBridge",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Workspace": []
+      },
+      "byEffect": {
+       "Workspace": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEmbedBridge",
+     "event": "LINT_FINISH",
+     "from": "ready",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "embed-bridge",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-pattern-prop-not-declared-event-listen-does-not-consume",
+   "steps": [
+    {
+     "trait": "OrbLintEmbedBridge",
+     "event": "LINT_EVENT_PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [],
+      "maps": [],
+      "listens": {
+       "code-block": [
+        "onInsertText"
+       ]
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEmbedBridge",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Host",
+       "orbitals": [
+        {
+         "name": "Host",
+         "entity": {
+          "name": "HostView",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Workspace",
+           "linkedEntity": "HostView",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": [
+                  {
+                   "type": "box",
+                   "children": [
+                    [
+                     "behavior/apply",
+                     "@entity.plugin",
+                     {
+                      "bridge": {
+                       "listens": [],
+                       "emits": [
+                        "SET_MODE"
+                       ]
+                      }
+                     }
+                    ]
+                   ]
+                  },
+                  {
+                   "type": "code-block",
+                   "code": "",
+                   "onSetMode": "SET_MODE"
+                  }
+                 ]
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEmbedBridge",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Workspace": []
+      },
+      "byEffect": {
+       "Workspace": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEmbedBridge",
+     "event": "LINT_FINISH",
+     "from": "ready",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "embed-bridge",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_EMBED_BRIDGE_EMITS_UNHEARD",
+           "path": "orbitals[0].traits[0].stateMachine.transitions[0]",
+           "message": "the embed's bridge re-emits 'SET_MODE' on the host, but nothing in this program handles 'SET_MODE'",
+           "suggestion": "Handle 'SET_MODE' on the host (a transition or a pattern that listens for it), or remove it from the bridge's `emits`",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-emit-effect-sends-the-listens-event",
+   "steps": [
+    {
+     "trait": "OrbLintEmbedBridge",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Host",
+       "orbitals": [
+        {
+         "name": "Host",
+         "entity": {
+          "name": "HostView",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Workspace",
+           "linkedEntity": "HostView",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "box",
+                 "children": [
+                  [
+                   "behavior/apply",
+                   "@entity.plugin",
+                   {
+                    "bridge": {
+                     "listens": [
+                      "GO"
+                     ],
+                     "emits": []
+                    }
+                   }
+                  ]
+                 ]
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEmbedBridge",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Workspace": []
+      },
+      "byEffect": {
+       "Workspace": [
+        "GO"
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEmbedBridge",
+     "event": "LINT_FINISH",
+     "from": "ready",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "embed-bridge",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "both-lists-report-in-order-listens-then-emits",
+   "steps": [
+    {
+     "trait": "OrbLintEmbedBridge",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Host",
+       "orbitals": [
+        {
+         "name": "Host",
+         "entity": {
+          "name": "HostView",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Workspace",
+           "linkedEntity": "HostView",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "box",
+                 "children": [
+                  [
+                   "behavior/apply",
+                   "@entity.plugin",
+                   {
+                    "bridge": {
+                     "listens": [
+                      "A",
+                      "B"
+                     ],
+                     "emits": [
+                      "C"
+                     ]
+                    }
+                   }
+                  ]
+                 ]
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEmbedBridge",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Workspace": []
+      },
+      "byEffect": {
+       "Workspace": [
+        "B"
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEmbedBridge",
+     "event": "LINT_FINISH",
+     "from": "ready",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "embed-bridge",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_EMBED_BRIDGE_LISTENS_UNSENT",
+           "path": "orbitals[0].traits[0].stateMachine.transitions[0]",
+           "message": "the embed's bridge delivers 'A' into it, but nothing in this program sends 'A'",
+           "suggestion": "Send 'A' from the host (an emit effect or a control), or remove it from the bridge's `listens`",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_EMBED_BRIDGE_EMITS_UNHEARD",
+           "path": "orbitals[0].traits[0].stateMachine.transitions[0]",
+           "message": "the embed's bridge re-emits 'C' on the host, but nothing in this program handles 'C'",
+           "suggestion": "Handle 'C' on the host (a transition or a pattern that listens for it), or remove it from the bridge's `emits`",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-bridge-with-a-non-literal-list-is-skipped",
+   "steps": [
+    {
+     "trait": "OrbLintEmbedBridge",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Host",
+       "orbitals": [
+        {
+         "name": "Host",
+         "entity": {
+          "name": "HostView",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Workspace",
+           "linkedEntity": "HostView",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "box",
+                 "children": [
+                  [
+                   "behavior/apply",
+                   "@entity.plugin",
+                   {
+                    "bridge": {
+                     "listens": "@config.l",
+                     "emits": [
+                      "DONE"
+                     ]
+                    }
+                   }
+                  ]
+                 ]
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEmbedBridge",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Workspace": []
+      },
+      "byEffect": {
+       "Workspace": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEmbedBridge",
+     "event": "LINT_FINISH",
+     "from": "ready",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "embed-bridge",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-bridge-with-a-non-string-event-is-skipped",
+   "steps": [
+    {
+     "trait": "OrbLintEmbedBridge",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Host",
+       "orbitals": [
+        {
+         "name": "Host",
+         "entity": {
+          "name": "HostView",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Workspace",
+           "linkedEntity": "HostView",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "box",
+                 "children": [
+                  [
+                   "behavior/apply",
+                   "@entity.plugin",
+                   {
+                    "bridge": {
+                     "listens": [
+                      1
+                     ],
+                     "emits": [
+                      "DONE"
+                     ]
+                    }
+                   }
+                  ]
+                 ]
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEmbedBridge",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Workspace": []
+      },
+      "byEffect": {
+       "Workspace": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEmbedBridge",
+     "event": "LINT_FINISH",
+     "from": "ready",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "embed-bridge",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-apply-with-another-arity-is-not-a-bridge",
+   "steps": [
+    {
+     "trait": "OrbLintEmbedBridge",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Host",
+       "orbitals": [
+        {
+         "name": "Host",
+         "entity": {
+          "name": "HostView",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Workspace",
+           "linkedEntity": "HostView",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "box",
+                 "children": [
+                  [
+                   "behavior/apply",
+                   "@entity.plugin",
+                   {
+                    "bridge": {
+                     "listens": [
+                      "GO"
+                     ],
+                     "emits": [
+                      "DONE"
+                     ]
+                    }
+                   },
+                   "extra"
+                  ]
+                 ]
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEmbedBridge",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Workspace": []
+      },
+      "byEffect": {
+       "Workspace": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEmbedBridge",
+     "event": "LINT_FINISH",
+     "from": "ready",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "embed-bridge",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-second-transition-reports-at-its-own-path",
+   "steps": [
+    {
+     "trait": "OrbLintEmbedBridge",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Host",
+       "orbitals": [
+        {
+         "name": "Host",
+         "entity": {
+          "name": "HostView",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Workspace",
+           "linkedEntity": "HostView",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "OPEN",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "box",
+                 "children": [
+                  [
+                   "behavior/apply",
+                   "@entity.plugin",
+                   {
+                    "bridge": {
+                     "listens": [
+                      "GO"
+                     ],
+                     "emits": []
+                    }
+                   }
+                  ]
+                 ]
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEmbedBridge",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Workspace": []
+      },
+      "byEffect": {
+       "Workspace": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEmbedBridge",
+     "event": "LINT_FINISH",
+     "from": "ready",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "embed-bridge",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_EMBED_BRIDGE_LISTENS_UNSENT",
+           "path": "orbitals[0].traits[0].stateMachine.transitions[1]",
+           "message": "the embed's bridge delivers 'GO' into it, but nothing in this program sends 'GO'",
+           "suggestion": "Send 'GO' from the host (an emit effect or a control), or remove it from the bridge's `listens`",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

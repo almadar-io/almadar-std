@@ -1,0 +1,21 @@
+app lint-async-result-deaf-target-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint async-result-deaf-target <file>`: reports ORB_CIRCUIT_ASYNC_RESULT_DEAF_TARGET for a state-changing transition whose fetch/persist result events the target state has no arm for. Clean answers `lint async-result-deaf-target: clean` (status 200, exit 0); findings are status 500, exit 1; anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintAsyncResultDeafTargetSpec {
+  expects trait OrbLintAsyncResultDeafTarget {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintAsyncResultDeafTargetCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintAsyncResultDeafTarget, OrbLintAsyncResultDeafTargetCli
+}

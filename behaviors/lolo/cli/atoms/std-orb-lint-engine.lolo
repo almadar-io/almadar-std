@@ -8,6 +8,15 @@ app std-orb-lint-engine [
 uses Spec from "almadar-std/lint-engine"
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error", validValues : [string] }
 type RuleFound = { rule : string!, findings : [OrbFinding]! }
+type FiredNode = string | number | boolean | [FiredNode?] | Map string FiredNode?
+type FiredField = { default : FiredNode? }
+type FiredTransition = { event : string, guard : FiredNode?, effects : [FiredNode?] }
+type FiredTick = { guard : FiredNode?, effects : [FiredNode?] }
+type FiredMachine = { transitions : [FiredTransition] }
+type FiredTrait = { name : string, stateMachine : FiredMachine, ticks : [FiredTick], config : Map string FiredField? }
+type FiredOrbital = { traits : [FiredTrait] }
+type FiredProgram = { orbitals : [FiredOrbital] }
+type PatternEventProp = { pattern : string!, prop : string!, field : string! }
 
 orbital OrbLintEngineOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
@@ -37,6 +46,15 @@ orbital OrbLintEngineOrbital {
   uses IdRefs from "std/behaviors/std-orb-lint-id-refs"
   uses PagePath from "std/behaviors/std-orb-lint-page-path"
   uses PagePathUniqueness from "std/behaviors/std-orb-lint-page-path-uniqueness"
+  uses ClientTickLocality from "std/behaviors/std-orb-lint-client-tick-locality"
+  uses EntityNameShadowsTraitUnion from "std/behaviors/std-orb-lint-entity-name-shadows-trait-union"
+  uses ListenWildcardUnkeyed from "std/behaviors/std-orb-lint-listen-wildcard-unkeyed"
+  uses FetchByIdPayload from "std/behaviors/std-orb-lint-fetch-by-id-payload"
+  uses AsyncResultDeafTarget from "std/behaviors/std-orb-lint-async-result-deaf-target"
+  uses OrbitalConfigDeadKnob from "std/behaviors/std-orb-lint-orbital-config-dead-knob"
+  uses Fired from "std/behaviors/std-orb-fired-events"
+  uses ListenRedundantEmbedRoute from "std/behaviors/std-orb-lint-listen-redundant-embed-route"
+  uses EmbedBridge from "std/behaviors/std-orb-lint-embed-bridge"
   uses PayloadFieldName from "std/behaviors/std-orb-lint-payload-field-name"
   uses RelationTargets from "std/behaviors/std-orb-lint-relation-targets"
   uses SignInRoute from "std/behaviors/std-orb-lint-sign-in-route"
@@ -57,6 +75,11 @@ orbital OrbLintEngineOrbital {
   uses TickRequiresRuntime from "std/behaviors/std-orb-lint-tick-requires-runtime"
   uses LoopInvariantParse from "std/behaviors/std-orb-lint-loop-invariant-parse"
   uses ReservedComponentName from "std/behaviors/std-orb-lint-reserved-component-name"
+  uses TraitRefConfig from "std/behaviors/std-orb-lint-trait-ref-config"
+  uses OrbitalRefExtend from "std/behaviors/std-orb-lint-orbital-ref-extend"
+  uses IdLedger from "std/behaviors/std-orb-lint-id-ledger"
+  uses Produced from "std/behaviors/std-orb-produced-events"
+  uses CsInput from "std/behaviors/std-orb-lint-call-site-input"
 
   entity OrbLintEngineRun [runtime] {
     id : string!
@@ -77,6 +100,7 @@ orbital OrbLintEngineOrbital {
         (set @entity.orbitals [])
         (set @entity.child 0)
         (emit LINT_REQUEST { file: @payload.file })
+        (emit LINT_CALL_SITES_REQUEST { file: @payload.file, stamp: true, references: true })
     }
 
     state collecting {
@@ -87,19 +111,22 @@ orbital OrbLintEngineOrbital {
         (set @entity.found (array/concat @entity.found [{ rule: @payload.rule, findings: (if (= @payload.scope "") @payload.findings (let ((prefix (str/concat "lazy[" @payload.scope "]."))) (array/map @payload.findings (fn f (object/merge @f { path: (str/concat @prefix (object/get @f "path")) }))))) }]))
         (emit LINT_SETTLE { })
       LINT_INPUT_UNREAD -> ready
-      LINT_SETTLE -> collecting when (< (array/len @entity.found) @config.ruleCount)
-      LINT_SETTLE -> collecting when (and (>= (array/len @entity.found) @config.ruleCount) (< @entity.child (array/len @entity.orbitals)))
+      LINT_SETTLE -> collecting when (< (array/len @entity.found) (if (= @entity.child 0) @config.ruleCount (- @config.ruleCount @config.programOnlyCount)))
+      LINT_SETTLE -> collecting when (and (>= (array/len @entity.found) (if (= @entity.child 0) @config.ruleCount (- @config.ruleCount @config.programOnlyCount))) (< @entity.child (array/len @entity.orbitals)))
         (set @entity.done (array/concat @entity.done @entity.found))
         (set @entity.found [])
         (set @entity.child (+ @entity.child 1))
         (emit LINT_CHILD_REQUEST { index: (- @entity.child 1) })
-      LINT_SETTLE -> ready when (and (>= (array/len @entity.found) @config.ruleCount) (>= @entity.child (array/len @entity.orbitals)))
+      LINT_SETTLE -> ready when (and (>= (array/len @entity.found) (if (= @entity.child 0) @config.ruleCount (- @config.ruleCount @config.programOnlyCount))) (>= @entity.child (array/len @entity.orbitals)))
         (emit LINT_COLLECTED { findings: (array/flatten (array/map (array/concat @entity.done @entity.found) (fn r (object/get @r "findings")))), found: (array/concat @entity.done @entity.found) })
     }
 
     emits {
       LINT_REQUEST -> external { file : string! }
         @description "Ask the lint input to read and lower this file once for every rule."
+        @tier "internal"
+      LINT_CALL_SITES_REQUEST -> external { file : string!  stamp : boolean!  references : boolean! }
+        @description "Ask the call sites input to read the file once for the composition rules: the stamped program of a ledger-less .orb and the references with their declarations."
         @tier "internal"
       LINT_CHILD_REQUEST -> external { index : number! }
         @description "Ask the lint input to offer every rule the lazy child at this index."
@@ -113,9 +140,12 @@ orbital OrbLintEngineOrbital {
     }
 
     config {
-      ruleCount : number = 46
+      ruleCount : number = 57
         @label "Rule count"
         @description "How many composed rule traits answer LINT_FOUND before the run settles."
+      programOnlyCount : number = 3
+        @label "Program-pass-only rules"
+        @description "How many of those rules read the call sites input and answer once, for the program pass only: a lazy child's pass waits for the others."
     }
 
     listens {
@@ -128,6 +158,7 @@ orbital OrbLintEngineOrbital {
       LINT_LAZY_HEARD { orbitals : [string]! }
         @description "std-orb-lint-input's LINT_LAZY: the lazy children to lint after the program."
       OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+      CallSiteInput.LINT_CALL_SITES_UNREAD -> LINT_INPUT_UNREAD
       OrbLintInput.LINT_LAZY -> LINT_LAZY_HEARD
       OrbLintCollectionPolicy.LINT_FOUND -> LINT_FOUND
       OrbLintCrossDuplicateEntity.LINT_FOUND -> LINT_FOUND
@@ -155,6 +186,14 @@ orbital OrbLintEngineOrbital {
       OrbLintIdRefs.LINT_FOUND -> LINT_FOUND
       OrbLintPagePath.LINT_FOUND -> LINT_FOUND
       OrbLintPagePathUniqueness.LINT_FOUND -> LINT_FOUND
+      OrbLintClientTickLocality.LINT_FOUND -> LINT_FOUND
+      OrbLintEntityNameShadowsTraitUnion.LINT_FOUND -> LINT_FOUND
+      OrbLintListenWildcardUnkeyed.LINT_FOUND -> LINT_FOUND
+      OrbLintFetchByIdPayload.LINT_FOUND -> LINT_FOUND
+      OrbLintAsyncResultDeafTarget.LINT_FOUND -> LINT_FOUND
+      OrbLintOrbitalConfigDeadKnob.LINT_FOUND -> LINT_FOUND
+      OrbLintListenRedundantEmbedRoute.LINT_FOUND -> LINT_FOUND
+      OrbLintEmbedBridge.LINT_FOUND -> LINT_FOUND
       OrbLintPayloadFieldName.LINT_FOUND -> LINT_FOUND
       OrbLintRelationTargets.LINT_FOUND -> LINT_FOUND
       OrbLintSignInRoute.LINT_FOUND -> LINT_FOUND
@@ -175,6 +214,9 @@ orbital OrbLintEngineOrbital {
       OrbLintTickRequiresRuntime.LINT_FOUND -> LINT_FOUND
       OrbLintLoopInvariantParse.LINT_FOUND -> LINT_FOUND
       OrbLintReservedComponentName.LINT_FOUND -> LINT_FOUND
+      OrbLintTraitRefConfig.LINT_FOUND -> LINT_FOUND
+      OrbLintOrbitalRefExtend.LINT_FOUND -> LINT_FOUND
+      OrbLintIdLedger.LINT_FOUND -> LINT_FOUND
     }
   }
 
@@ -250,6 +292,35 @@ orbital OrbLintEngineOrbital {
   }
   trait OrbLintPagePathUniqueness = PagePathUniqueness.traits.OrbLintPagePathUniqueness {
   }
+  trait OrbLintClientTickLocality = ClientTickLocality.traits.OrbLintClientTickLocality {
+  }
+  trait OrbLintEntityNameShadowsTraitUnion = EntityNameShadowsTraitUnion.traits.OrbLintEntityNameShadowsTraitUnion {
+  }
+  trait OrbLintListenWildcardUnkeyed = ListenWildcardUnkeyed.traits.OrbLintListenWildcardUnkeyed {
+  }
+  trait OrbLintFetchByIdPayload = FetchByIdPayload.traits.OrbLintFetchByIdPayload {
+  }
+  trait OrbLintAsyncResultDeafTarget = AsyncResultDeafTarget.traits.OrbLintAsyncResultDeafTarget {
+  }
+  trait OrbLintOrbitalConfigDeadKnob = OrbitalConfigDeadKnob.traits.OrbLintOrbitalConfigDeadKnob {
+  }
+  trait OrbLintListenRedundantEmbedRoute = ListenRedundantEmbedRoute.traits.OrbLintListenRedundantEmbedRoute {
+  }
+  trait OrbLintEmbedBridge = EmbedBridge.traits.OrbLintEmbedBridge {
+  }
+  trait OrbFiredEvents = Fired.traits.OrbFiredEvents {
+    listens {
+      FIRED_PROPS_HEARD { names : [string]!  maps : [string]!  listens : Map string [string]! }
+        @description "std-orb-lint-input's LINT_EVENT_PROPS: the event-bearing prop names of the installed pattern registry."
+      FIRED_SEMANTICS_HEARD { semantics : Map string string!  functions : [string]!  busExcluded : [string]!  targetOptions : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: operator return semantics, function-returning operators, bus-excluded events and dispatch target options."
+      FIRED_INPUT_HEARD { file : string!  raw : string!  latin : boolean!  program : FiredProgram  scope : string! }
+        @description "std-orb-lint-input's LINT_INPUT: the lowered program."
+      OrbLintInput.LINT_EVENT_PROPS -> FIRED_PROPS_HEARD
+      OrbLintInput.LINT_OPERATOR_SEMANTICS -> FIRED_SEMANTICS_HEARD
+      OrbLintInput.LINT_INPUT -> FIRED_INPUT_HEARD
+    }
+  }
   trait OrbLintPayloadFieldName = PayloadFieldName.traits.OrbLintPayloadFieldName {
   }
   trait OrbLintRelationTargets = RelationTargets.traits.OrbLintRelationTargets {
@@ -291,5 +362,33 @@ orbital OrbLintEngineOrbital {
   trait OrbLintReservedComponentName = ReservedComponentName.traits.OrbLintReservedComponentName {
   }
 
-  page boot as OrbLintEngineOrbitalStart -> OrbLintEngine, OrbLintInput, Packs, Versions, OrbLintCollectionPolicy, OrbLintCrossDuplicateEntity, OrbLintEmitConfigRef, OrbLintEntityBrowserStorage, OrbLintEntityDuplicateField, OrbLintEntityEmptyEnum, OrbLintEntityFieldType, OrbLintEntityLocaleInstances, OrbLintEntityMockMember, OrbLintEntityPersistence, OrbLintEntitySemanticDefault, OrbLintEntityShape, OrbLintHttpEgressEntry, OrbLintGenericTypes, OrbLintIdentityUnique, OrbLintInbound, OrbLintInitCoverage, OrbLintEventIdUniqueness, OrbLintListenTrigger, OrbLintLiteralDefault, OrbLintOrbitalDuplicateName, OrbLintPageEmptyTraits, OrbLintPageModifiers, OrbLintIdRefs, OrbLintPagePath, OrbLintPagePathUniqueness, OrbLintPayloadFieldName, OrbLintRelationTargets, OrbLintSignInRoute, OrbLintStoreBinding, OrbLintTraitIdUniqueness, OrbLintUntypedArray, OrbLintSchemaHeader, OrbLintDuplicateTransition, OrbLintStateShape, OrbLintEmptyEventName, OrbLintSlot, OrbLintTransitionRefs, OrbLintStateUnreachable, OrbLintMissingOrbitalName, OrbLintDuplicateUseAlias, OrbLintThemePinContradictsApp, OrbLintTickRequiresRuntime, OrbLintLoopInvariantParse, OrbLintReservedComponentName, OrbLintAssetInlineUrl, Versions, Packs
+  trait OrbLintTraitRefConfig = TraitRefConfig.traits.OrbLintTraitRefConfig {
+  }
+  trait OrbLintOrbitalRefExtend = OrbitalRefExtend.traits.OrbLintOrbitalRefExtend {
+  }
+  trait OrbLintIdLedger = IdLedger.traits.OrbLintIdLedger {
+  }
+  trait CallSiteInput = CsInput.traits.CallSiteInput {
+    listens {
+      OrbLintEngine.LINT_CALL_SITES_REQUEST -> LINT_CALL_SITES_REQUEST
+    }
+  }
+  trait OrbProducedEvents = Produced.traits.OrbProducedEvents {
+    listens {
+      PRODUCED_SEMANTICS_HEARD { semantics : Map string string!  functions : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: each operator's declared returnSemantics and the function-returning operators."
+      PRODUCED_PATTERNS_HEARD { byPattern : [PatternEventProp]! }
+        @description "std-orb-lint-input's LINT_EVENT_PROPS: each pattern's event props and event-list fields."
+      PRODUCED_SLOTS_HEARD { emitSlots : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: the emit option slots the operator table declares."
+      PRODUCED_INPUT_HEARD { file : string!  raw : string!  latin : boolean!  program : FiredProgram  scope : string! }
+        @description "A program whose produced events are asked: trait-ref-config offers one upstream trait at a time."
+      OrbLintInput.LINT_EVENT_PROPS -> PRODUCED_PATTERNS_HEARD
+      OrbLintInput.LINT_OPERATOR_SEMANTICS -> PRODUCED_SEMANTICS_HEARD
+      OrbLintInput.LINT_OPERATOR_SEMANTICS -> PRODUCED_SLOTS_HEARD
+      OrbLintTraitRefConfig.FIRED_SITE -> PRODUCED_INPUT_HEARD
+    }
+  }
+
+  page boot as OrbLintEngineOrbitalStart -> OrbLintEngine, OrbLintInput, Packs, Versions, CallSiteInput, OrbProducedEvents, OrbLintTraitRefConfig, OrbLintOrbitalRefExtend, OrbLintIdLedger, OrbLintCollectionPolicy, OrbLintCrossDuplicateEntity, OrbLintEmitConfigRef, OrbLintEntityBrowserStorage, OrbLintEntityDuplicateField, OrbLintEntityEmptyEnum, OrbLintEntityFieldType, OrbLintEntityLocaleInstances, OrbLintEntityMockMember, OrbLintEntityPersistence, OrbLintEntitySemanticDefault, OrbLintEntityShape, OrbLintHttpEgressEntry, OrbLintGenericTypes, OrbLintIdentityUnique, OrbLintInbound, OrbLintInitCoverage, OrbLintEventIdUniqueness, OrbLintListenTrigger, OrbLintLiteralDefault, OrbLintOrbitalDuplicateName, OrbLintPageEmptyTraits, OrbLintPageModifiers, OrbLintIdRefs, OrbLintPagePath, OrbLintPagePathUniqueness, OrbLintPayloadFieldName, OrbLintRelationTargets, OrbLintSignInRoute, OrbLintStoreBinding, OrbLintTraitIdUniqueness, OrbLintUntypedArray, OrbLintSchemaHeader, OrbLintDuplicateTransition, OrbLintStateShape, OrbLintEmptyEventName, OrbLintSlot, OrbLintTransitionRefs, OrbLintStateUnreachable, OrbLintMissingOrbitalName, OrbLintDuplicateUseAlias, OrbLintThemePinContradictsApp, OrbLintTickRequiresRuntime, OrbLintLoopInvariantParse, OrbLintReservedComponentName, OrbLintAssetInlineUrl, Versions, Packs, OrbLintClientTickLocality, OrbLintEntityNameShadowsTraitUnion, OrbLintListenWildcardUnkeyed, OrbLintFetchByIdPayload, OrbLintAsyncResultDeafTarget, OrbLintOrbitalConfigDeadKnob, OrbLintListenRedundantEmbedRoute, OrbLintEmbedBridge, OrbFiredEvents
 }

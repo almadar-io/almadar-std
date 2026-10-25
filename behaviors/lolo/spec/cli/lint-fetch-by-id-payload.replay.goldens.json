@@ -1,0 +1,1162 @@
+{
+  "atom": "cli/atoms/std-orb-lint-fetch-by-id-payload.lolo",
+  "trait": "OrbLintFetchByIdPayload",
+  "note": "Cases copy the four fetch_by_id_payload.rs unit tests (by-id list declaration flagged; row declaration, list-fetch list declaration and shared list+by-id event controls) plus the state-machine events declaration, a fetch nested in an if (transition index), a repeated by-id event reported once, a second trait's index and a trait with no data field. Expected findings are the code, path, message and suggestion the Rust validator reports; severity is error.",
+  "cases": [
+    {
+      "id": "a-by-id-only-success-declared-as-a-list-is-an-error",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "ProductEdit",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "EDIT",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Product",
+                                {
+                                  "emit": {
+                                    "success": "ProductLoaded"
+                                  },
+                                  "id": "@payload.id"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "emits": [
+                        {
+                          "event": "ProductLoaded",
+                          "payloadSchema": [
+                            {
+                              "name": "data",
+                              "type": "[Product]"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintFetchByIdPayload"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "fetch-by-id-payload",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_FETCH_BY_ID_PAYLOAD_LIST",
+                      "path": "orbitals[0 (O)].traits[0 (ProductEdit)].stateMachine.transitions[0].effects",
+                      "message": "`(fetch … { id: … })` delivers one row as `payload.data`, but `ProductLoaded` declares `data : [Product]`",
+                      "suggestion": "Declare `ProductLoaded { data : <Row> }` (a struct type of the fields read) and read it with `(object/get ?data <field> <default>)`",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintFetchByIdPayload"
+        }
+      ]
+    },
+    {
+      "id": "control-a-row-declaration-passes",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "ProductEdit",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "EDIT",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Product",
+                                {
+                                  "emit": {
+                                    "success": "ProductLoaded"
+                                  },
+                                  "id": "@payload.id"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "emits": [
+                        {
+                          "event": "ProductLoaded",
+                          "payloadSchema": [
+                            {
+                              "name": "data",
+                              "type": "object"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintFetchByIdPayload"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "fetch-by-id-payload",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintFetchByIdPayload"
+        }
+      ]
+    },
+    {
+      "id": "control-a-list-fetch-declared-as-a-list-passes",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "ProductEdit",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "EDIT",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Product",
+                                {
+                                  "emit": {
+                                    "success": "ProductLoaded"
+                                  }
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "emits": [
+                        {
+                          "event": "ProductLoaded",
+                          "payloadSchema": [
+                            {
+                              "name": "data",
+                              "type": "[Product]"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintFetchByIdPayload"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "fetch-by-id-payload",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintFetchByIdPayload"
+        }
+      ]
+    },
+    {
+      "id": "control-an-event-shared-by-list-and-by-id-fetches-is-not-reported-here",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "ProductEdit",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "EDIT",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Product",
+                                {
+                                  "emit": {
+                                    "success": "ProductLoaded"
+                                  }
+                                }
+                              ],
+                              [
+                                "fetch",
+                                "Product",
+                                {
+                                  "emit": {
+                                    "success": "ProductLoaded"
+                                  },
+                                  "id": "@payload.id"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "emits": [
+                        {
+                          "event": "ProductLoaded",
+                          "payloadSchema": [
+                            {
+                              "name": "data",
+                              "type": "[Product]"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintFetchByIdPayload"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "fetch-by-id-payload",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintFetchByIdPayload"
+        }
+      ]
+    },
+    {
+      "id": "data-field-declared-on-a-state-machine-event-is-read",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "ProductEdit",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "EDIT",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Product",
+                                {
+                                  "emit": {
+                                    "success": "ProductLoaded"
+                                  },
+                                  "id": "@payload.id"
+                                }
+                              ]
+                            ]
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "ProductLoaded",
+                            "payloadSchema": [
+                              {
+                                "name": "data",
+                                "type": "[Product]"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintFetchByIdPayload"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "fetch-by-id-payload",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_FETCH_BY_ID_PAYLOAD_LIST",
+                      "path": "orbitals[0 (O)].traits[0 (ProductEdit)].stateMachine.transitions[0].effects",
+                      "message": "`(fetch … { id: … })` delivers one row as `payload.data`, but `ProductLoaded` declares `data : [Product]`",
+                      "suggestion": "Declare `ProductLoaded { data : <Row> }` (a struct type of the fields read) and read it with `(object/get ?data <field> <default>)`",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintFetchByIdPayload"
+        }
+      ]
+    },
+    {
+      "id": "fetch-nested-in-an-if-is-found-and-reported-at-its-transition-index",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "ProductEdit",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "OTHER"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "EDIT",
+                            "effects": [
+                              [
+                                "if",
+                                "@payload.go",
+                                [
+                                  "fetch",
+                                  "Product",
+                                  {
+                                    "emit": {
+                                      "success": "ProductLoaded"
+                                    },
+                                    "id": "@payload.id"
+                                  }
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "emits": [
+                        {
+                          "event": "ProductLoaded",
+                          "payloadSchema": [
+                            {
+                              "name": "data",
+                              "type": "[Product]"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintFetchByIdPayload"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "fetch-by-id-payload",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_FETCH_BY_ID_PAYLOAD_LIST",
+                      "path": "orbitals[0 (O)].traits[0 (ProductEdit)].stateMachine.transitions[1].effects",
+                      "message": "`(fetch … { id: … })` delivers one row as `payload.data`, but `ProductLoaded` declares `data : [Product]`",
+                      "suggestion": "Declare `ProductLoaded { data : <Row> }` (a struct type of the fields read) and read it with `(object/get ?data <field> <default>)`",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintFetchByIdPayload"
+        }
+      ]
+    },
+    {
+      "id": "the-same-by-id-event-fetched-twice-is-reported-once-at-the-first-transition",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "ProductEdit",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "EDIT",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Product",
+                                {
+                                  "emit": {
+                                    "success": "ProductLoaded"
+                                  },
+                                  "id": "@payload.id"
+                                }
+                              ],
+                              [
+                                "fetch",
+                                "Product",
+                                {
+                                  "emit": {
+                                    "success": "ProductLoaded"
+                                  },
+                                  "id": "@payload.id"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "emits": [
+                        {
+                          "event": "ProductLoaded",
+                          "payloadSchema": [
+                            {
+                              "name": "data",
+                              "type": "[Product]"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintFetchByIdPayload"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "fetch-by-id-payload",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_FETCH_BY_ID_PAYLOAD_LIST",
+                      "path": "orbitals[0 (O)].traits[0 (ProductEdit)].stateMachine.transitions[0].effects",
+                      "message": "`(fetch … { id: … })` delivers one row as `payload.data`, but `ProductLoaded` declares `data : [Product]`",
+                      "suggestion": "Declare `ProductLoaded { data : <Row> }` (a struct type of the fields read) and read it with `(object/get ?data <field> <default>)`",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintFetchByIdPayload"
+        }
+      ]
+    },
+    {
+      "id": "a-second-trait-is-reported-with-its-own-index",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Plain",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "EDIT",
+                            "effects": []
+                          }
+                        ]
+                      },
+                      "emits": [
+                        {
+                          "event": "ProductLoaded",
+                          "payloadSchema": [
+                            {
+                              "name": "data",
+                              "type": "[Product]"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Second",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "EDIT",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Product",
+                                {
+                                  "emit": {
+                                    "success": "ProductLoaded"
+                                  },
+                                  "id": "@payload.id"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "emits": [
+                        {
+                          "event": "ProductLoaded",
+                          "payloadSchema": [
+                            {
+                              "name": "data",
+                              "type": "[Product]"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintFetchByIdPayload"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "fetch-by-id-payload",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_FETCH_BY_ID_PAYLOAD_LIST",
+                      "path": "orbitals[0 (O)].traits[1 (Second)].stateMachine.transitions[0].effects",
+                      "message": "`(fetch … { id: … })` delivers one row as `payload.data`, but `ProductLoaded` declares `data : [Product]`",
+                      "suggestion": "Declare `ProductLoaded { data : <Row> }` (a struct type of the fields read) and read it with `(object/get ?data <field> <default>)`",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintFetchByIdPayload"
+        }
+      ]
+    },
+    {
+      "id": "control-a-by-id-fetch-with-no-declared-data-field-passes",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Bare",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "EDIT",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Product",
+                                {
+                                  "emit": {
+                                    "success": "ProductLoaded"
+                                  },
+                                  "id": "@payload.id"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintFetchByIdPayload"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "fetch-by-id-payload",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintFetchByIdPayload"
+        }
+      ]
+    },
+    {
+      "id": "a-by-id-only-success-declared-as-a-list-is-an-error-beside-a-null-literal",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "ProductEdit",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "EDIT",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Product",
+                                {
+                                  "emit": {
+                                    "success": "ProductLoaded"
+                                  },
+                                  "id": "@payload.id"
+                                }
+                              ],
+                              [
+                                "set",
+                                "@entity.id",
+                                [
+                                  "object/get",
+                                  "@payload",
+                                  "id",
+                                  null
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "emits": [
+                        {
+                          "event": "ProductLoaded",
+                          "payloadSchema": [
+                            {
+                              "name": "data",
+                              "type": "[Product]"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintFetchByIdPayload"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "fetch-by-id-payload",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_FETCH_BY_ID_PAYLOAD_LIST",
+                      "path": "orbitals[0 (O)].traits[0 (ProductEdit)].stateMachine.transitions[0].effects",
+                      "message": "`(fetch … { id: … })` delivers one row as `payload.data`, but `ProductLoaded` declares `data : [Product]`",
+                      "suggestion": "Declare `ProductLoaded { data : <Row> }` (a struct type of the fields read) and read it with `(object/get ?data <field> <default>)`",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintFetchByIdPayload"
+        }
+      ]
+    }
+  ]
+}

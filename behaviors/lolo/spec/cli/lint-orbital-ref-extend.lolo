@@ -1,0 +1,21 @@
+app lint-orbital-ref-extend-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint orbital-ref-extend <file>`: the port of the `extend {}` call-site rules for orbital references (ORB_O_EXTEND_FIELD_COLLISION, ORB_O_EXTEND_FIELD_UNREAD). It pairs each `Alias.orbitals.Name` reference orbital of the unresolved file with the resolved upstream orbital and reports the findings at `orbitals[<index>].extend(<field>)`; clean answers `lint orbital-ref-extend: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2)."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error", validValues : [string] }
+
+orbital LintOrbitalRefExtendSpec {
+  expects trait OrbLintOrbitalRefExtend {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintOrbitalRefExtendCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintOrbitalRefExtend, OrbLintOrbitalRefExtendCli
+}

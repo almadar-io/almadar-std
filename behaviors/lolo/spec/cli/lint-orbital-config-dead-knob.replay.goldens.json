@@ -1,0 +1,1236 @@
+{
+  "atom": "cli/atoms/std-orb-lint-orbital-config-dead-knob.lolo",
+  "trait": "OrbLintOrbitalConfigDeadKnob",
+  "note": "Cases mirror the ORB_O_CONFIG_DEAD_KNOB tests in orbital_import_validation.rs (app/orbital unforwarded and forwarded, chain through an orbital knob, dotted tail, forwardedFrom provenance) and nested_config_forward.rs (nestedForwardedFrom folded, unfolded token, other-knob provenance). Expected findings carry the Rust message and suggestion; path is the Rust path; severity error.",
+  "cases": [
+    {
+      "id": "app-level-unforwarded-knob-is-flagged",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "test-dead-knob",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "WidgetOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "WidgetView",
+                      "linkedEntity": "Widget",
+                      "category": "interaction",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "OPEN",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ],
+              "config": {
+                "appName": {
+                  "type": "string",
+                  "default": "App"
+                }
+              }
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintOrbitalConfigDeadKnob"
+        },
+        {
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-config-dead-knob",
+                  "findings": [
+                    {
+                      "code": "ORB_O_CONFIG_DEAD_KNOB",
+                      "path": "config(appName)",
+                      "message": "Declared app-level config knob 'appName' is not forwarded by any trait's config default (`@config.appName`) — nothing publishes it, so no call site can ever reach it.",
+                      "suggestion": "Forward it from a trait (`config { appName: @config.appName }`) or delete the declaration.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintOrbitalConfigDeadKnob"
+        }
+      ]
+    },
+    {
+      "id": "control-app-level-forwarded-knob-is-clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "test-dead-knob",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "WidgetOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "WidgetView",
+                      "linkedEntity": "Widget",
+                      "category": "interaction",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "OPEN",
+                            "effects": []
+                          }
+                        ]
+                      },
+                      "config": {
+                        "title": {
+                          "type": "string",
+                          "default": "@config.appName"
+                        }
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ],
+              "config": {
+                "appName": {
+                  "type": "string",
+                  "default": "App"
+                }
+              }
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintOrbitalConfigDeadKnob"
+        },
+        {
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-config-dead-knob",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintOrbitalConfigDeadKnob"
+        }
+      ]
+    },
+    {
+      "id": "control-nested-provenance-publishes-the-knob",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "test-dead-knob",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "WidgetOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "WidgetView",
+                      "linkedEntity": "Widget",
+                      "category": "interaction",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "OPEN",
+                            "effects": []
+                          }
+                        ]
+                      },
+                      "config": {
+                        "metrics": {
+                          "type": "array",
+                          "default": [
+                            {
+                              "label": "Wins",
+                              "target": 2
+                            }
+                          ],
+                          "nestedForwardedFrom": [
+                            "@config.weeklyWinTarget"
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ],
+              "config": {
+                "weeklyWinTarget": {
+                  "type": "number",
+                  "default": 2
+                }
+              }
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintOrbitalConfigDeadKnob"
+        },
+        {
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-config-dead-knob",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintOrbitalConfigDeadKnob"
+        }
+      ]
+    },
+    {
+      "id": "control-unfolded-nested-token-publishes-the-knob",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "test-dead-knob",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "WidgetOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "WidgetView",
+                      "linkedEntity": "Widget",
+                      "category": "interaction",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "OPEN",
+                            "effects": []
+                          }
+                        ]
+                      },
+                      "config": {
+                        "metrics": {
+                          "type": "array",
+                          "default": [
+                            {
+                              "label": "Wins",
+                              "target": "@config.weeklyWinTarget"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ],
+              "config": {
+                "weeklyWinTarget": {
+                  "type": "number",
+                  "default": 2
+                }
+              }
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintOrbitalConfigDeadKnob"
+        },
+        {
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-config-dead-knob",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintOrbitalConfigDeadKnob"
+        }
+      ]
+    },
+    {
+      "id": "nested-provenance-for-another-knob-still-flags",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "test-dead-knob",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "WidgetOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "WidgetView",
+                      "linkedEntity": "Widget",
+                      "category": "interaction",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "OPEN",
+                            "effects": []
+                          }
+                        ]
+                      },
+                      "config": {
+                        "metrics": {
+                          "type": "array",
+                          "default": [
+                            {
+                              "target": 5
+                            }
+                          ],
+                          "nestedForwardedFrom": [
+                            "@config.weeklyLeadTarget"
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ],
+              "config": {
+                "weeklyWinTarget": {
+                  "type": "number",
+                  "default": 2
+                }
+              }
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintOrbitalConfigDeadKnob"
+        },
+        {
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-config-dead-knob",
+                  "findings": [
+                    {
+                      "code": "ORB_O_CONFIG_DEAD_KNOB",
+                      "path": "config(weeklyWinTarget)",
+                      "message": "Declared app-level config knob 'weeklyWinTarget' is not forwarded by any trait's config default (`@config.weeklyWinTarget`) — nothing publishes it, so no call site can ever reach it.",
+                      "suggestion": "Forward it from a trait (`config { weeklyWinTarget: @config.weeklyWinTarget }`) or delete the declaration.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintOrbitalConfigDeadKnob"
+        }
+      ]
+    },
+    {
+      "id": "control-app-knob-published-through-an-orbital-knob-chain",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "test-dead-knob",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "WidgetOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "WidgetView",
+                      "linkedEntity": "Widget",
+                      "category": "interaction",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "OPEN",
+                            "effects": []
+                          }
+                        ]
+                      },
+                      "config": {
+                        "calendarId": {
+                          "type": "string",
+                          "default": "",
+                          "forwardedFrom": "@config.calendarId"
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [],
+                  "config": {
+                    "calendarId": {
+                      "type": "string",
+                      "default": "",
+                      "forwardedFrom": "@config.googleCalendarId"
+                    }
+                  }
+                }
+              ],
+              "config": {
+                "googleCalendarId": {
+                  "type": "string",
+                  "default": ""
+                }
+              }
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintOrbitalConfigDeadKnob"
+        },
+        {
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-config-dead-knob",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintOrbitalConfigDeadKnob"
+        }
+      ]
+    },
+    {
+      "id": "chain-nobody-forwards-flags-both-knobs",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "test-dead-knob",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "WidgetOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "WidgetView",
+                      "linkedEntity": "Widget",
+                      "category": "interaction",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "OPEN",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [],
+                  "config": {
+                    "calendarId": {
+                      "type": "string",
+                      "default": "",
+                      "forwardedFrom": "@config.googleCalendarId"
+                    }
+                  }
+                }
+              ],
+              "config": {
+                "googleCalendarId": {
+                  "type": "string",
+                  "default": ""
+                }
+              }
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintOrbitalConfigDeadKnob"
+        },
+        {
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-config-dead-knob",
+                  "findings": [
+                    {
+                      "code": "ORB_O_CONFIG_DEAD_KNOB",
+                      "path": "config(googleCalendarId)",
+                      "message": "Declared app-level config knob 'googleCalendarId' is not forwarded by any trait's config default (`@config.googleCalendarId`) — nothing publishes it, so no call site can ever reach it.",
+                      "suggestion": "Forward it from a trait (`config { googleCalendarId: @config.googleCalendarId }`) or delete the declaration.",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_O_CONFIG_DEAD_KNOB",
+                      "path": "orbitals[0 (WidgetOrbital)].config(calendarId)",
+                      "message": "Declared orbital config knob 'calendarId' is not forwarded by any trait's config default (`@config.calendarId`) — nothing publishes it, so no call site can ever reach it.",
+                      "suggestion": "Forward it from a trait (`config { calendarId: @config.calendarId }`) or delete the declaration.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintOrbitalConfigDeadKnob"
+        }
+      ]
+    },
+    {
+      "id": "orbital-level-unforwarded-knob-is-flagged",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "test-dead-knob",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "WidgetOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "WidgetView",
+                      "linkedEntity": "Widget",
+                      "category": "interaction",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "OPEN",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [],
+                  "config": {
+                    "pageSize": {
+                      "type": "number",
+                      "default": 10
+                    }
+                  }
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintOrbitalConfigDeadKnob"
+        },
+        {
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-config-dead-knob",
+                  "findings": [
+                    {
+                      "code": "ORB_O_CONFIG_DEAD_KNOB",
+                      "path": "orbitals[0 (WidgetOrbital)].config(pageSize)",
+                      "message": "Declared orbital config knob 'pageSize' is not forwarded by any trait's config default (`@config.pageSize`) — nothing publishes it, so no call site can ever reach it.",
+                      "suggestion": "Forward it from a trait (`config { pageSize: @config.pageSize }`) or delete the declaration.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintOrbitalConfigDeadKnob"
+        }
+      ]
+    },
+    {
+      "id": "control-orbital-level-forwarded-knob-is-clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "test-dead-knob",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "WidgetOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "WidgetView",
+                      "linkedEntity": "Widget",
+                      "category": "interaction",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "OPEN",
+                            "effects": []
+                          }
+                        ]
+                      },
+                      "config": {
+                        "limit": {
+                          "type": "number",
+                          "default": "@config.pageSize"
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [],
+                  "config": {
+                    "pageSize": {
+                      "type": "number",
+                      "default": 10
+                    }
+                  }
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintOrbitalConfigDeadKnob"
+        },
+        {
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-config-dead-knob",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintOrbitalConfigDeadKnob"
+        }
+      ]
+    },
+    {
+      "id": "dotted-tail-forward-does-not-publish-the-knob",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "test-dead-knob",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "WidgetOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "WidgetView",
+                      "linkedEntity": "Widget",
+                      "category": "interaction",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "OPEN",
+                            "effects": []
+                          }
+                        ]
+                      },
+                      "config": {
+                        "title": {
+                          "type": "string",
+                          "default": "@config.appName.sub"
+                        }
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ],
+              "config": {
+                "appName": {
+                  "type": "string",
+                  "default": "App"
+                }
+              }
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintOrbitalConfigDeadKnob"
+        },
+        {
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-config-dead-knob",
+                  "findings": [
+                    {
+                      "code": "ORB_O_CONFIG_DEAD_KNOB",
+                      "path": "config(appName)",
+                      "message": "Declared app-level config knob 'appName' is not forwarded by any trait's config default (`@config.appName`) — nothing publishes it, so no call site can ever reach it.",
+                      "suggestion": "Forward it from a trait (`config { appName: @config.appName }`) or delete the declaration.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintOrbitalConfigDeadKnob"
+        }
+      ]
+    },
+    {
+      "id": "control-trait-field-forwardedfrom-publishes-the-knob",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "test-dead-knob",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "WidgetOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "WidgetView",
+                      "linkedEntity": "Widget",
+                      "category": "interaction",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "OPEN",
+                            "effects": []
+                          }
+                        ]
+                      },
+                      "config": {
+                        "title": {
+                          "type": "string",
+                          "default": "T",
+                          "forwardedFrom": "@config.title"
+                        }
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ],
+              "config": {
+                "title": {
+                  "type": "string",
+                  "default": "T"
+                }
+              }
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintOrbitalConfigDeadKnob"
+        },
+        {
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-config-dead-knob",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintOrbitalConfigDeadKnob"
+        }
+      ]
+    },
+    {
+      "id": "control-no-config-anywhere-is-clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "test-dead-knob",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "WidgetOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "WidgetView",
+                      "linkedEntity": "Widget",
+                      "category": "interaction",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "OPEN",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintOrbitalConfigDeadKnob"
+        },
+        {
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-config-dead-knob",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintOrbitalConfigDeadKnob"
+        }
+      ]
+    }
+  ]
+}

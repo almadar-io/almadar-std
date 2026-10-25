@@ -99,6 +99,8 @@ interface CanonicalOperatorEntry {
     lambdaArgPosition?: number;
     failable?: FailableMeta;
     sign?: ResultSign;
+    busExcluded?: string[];
+    targetOptions?: string[];
     runsOn?: RunsOn;
     host?: EffectHost;
     /** 0-indexed argument naming a data effect's target entity; the effect runs where that entity lives. */
@@ -163,6 +165,8 @@ function toCanonicalEntry(
     if (meta.returnSemantics) entry.returnSemantics = meta.returnSemantics;
     if (meta.failable) entry.failable = meta.failable;
     if (meta.sign) entry.sign = meta.sign;
+    if (meta.busExcluded) entry.busExcluded = meta.busExcluded;
+    if (meta.targetOptions) entry.targetOptions = meta.targetOptions;
     if (meta.runsOn) entry.runsOn = meta.runsOn;
     if (meta.host) entry.host = meta.host;
     if (meta.entityArgPosition != null) entry.entityArgPosition = meta.entityArgPosition;

@@ -571,7 +571,13 @@
    }
   },
   {
-   "id": "control: an app with routes only resolves std-http-server to compose beside it",
+   "id": "control: an app with routes only and a --client-dir writes the server program with no client to prepare",
+   "entity": {
+    "cwd": "/work",
+    "path": "/work/app.lolo",
+    "hasClient": true,
+    "rel": "dist/client"
+   },
    "steps": [
     {
      "trait": "ServeEngine",
@@ -597,17 +603,19 @@
       }
      },
      "expect": {
-      "state": "resolving",
-      "emitCounts": {
-       "SERVE_DECLARED_READY": 0,
-       "SERVE_COMPOSE_READY": 0
-      }
+      "state": "writing",
+      "emits": [
+       {
+        "event": "SERVE_WRITE_SERVER",
+        "payload": {}
+       }
+      ]
      }
     }
    ]
   },
   {
-   "id": "the written server program is resolved, then composed beside the app",
+   "id": "the written server program is resolved and composed beside the app inside std-http-server, keeping its header",
    "entity": {
     "appName": "app",
     "app": {
@@ -643,7 +651,7 @@
      }
     },
     {
-     "event": "SERVE_SERVER_RESOLVED",
+     "event": "SERVE_SERVER_READ",
      "from": "resolving",
      "payload": {
       "result": {
@@ -662,6 +670,28 @@
         ]
        },
        "text": ""
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "resolving",
+      "emitCounts": {
+       "SERVE_COMPOSE_READY": 0
+      }
+     }
+    },
+    {
+     "event": "SERVE_SERVER_RESOLVED",
+     "from": "resolving",
+     "payload": {
+      "result": {
+       "name": "std-http-server",
+       "orbitals": [
+        {
+         "name": "HttpServerOrbital",
+         "pages": []
+        }
+       ]
       }
      },
      "expect": {
@@ -686,7 +716,7 @@
            ]
           },
           {
-           "name": "orb-served-server",
+           "name": "std-http-server",
            "orbitals": [
             {
              "name": "HttpServerOrbital",
@@ -730,6 +760,274 @@
          "status": 400,
          "body": "",
          "stderr": "usage: orb serve <FILE> [--port N] [--host H] [--no-mock] [--client-dir DIR] [--open] [--no-emulators]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an app with routes only and no --client-dir marks the client for preparation and serves it from .orbital/serve/<app>/web-client",
+   "entity": {
+    "cwd": "/work",
+    "path": "/work/app.lolo",
+    "hasClient": false
+   },
+   "steps": [
+    {
+     "trait": "ServeEngine",
+     "from": "reading",
+     "event": "SERVE_APP_READ",
+     "payload": {
+      "result": {
+       "program": {
+        "name": "app",
+        "orbitals": [
+         {
+          "name": "O",
+          "pages": [
+           {
+            "name": "Home",
+            "path": "/"
+           }
+          ]
+         }
+        ]
+       },
+       "text": ""
+      }
+     },
+     "expect": {
+      "state": "writing",
+      "emits": [
+       {
+        "event": "SERVE_WRITE_SERVER",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the composed program, not the bare app, is compiled client-mode so the client learns its server; the app file is the source of its locales",
+   "entity": {
+    "prepare": true,
+    "cwd": "/work",
+    "appName": "app",
+    "rel": ".orbital/serve/app/web-client",
+    "source": "/work/app.lolo",
+    "mock": true,
+    "path": "/home/u/.almadar/serve/x.orb"
+   },
+   "steps": [
+    {
+     "trait": "OrbServe",
+     "from": "composing",
+     "event": "SERVE_COMPOSED",
+     "payload": {
+      "result": {
+       "behavior": "app"
+      }
+     },
+     "expect": {
+      "state": "preparing",
+      "emitCounts": {
+       "SERVE_ANSWERED": 0
+      }
+     }
+    },
+    {
+     "trait": "OrbServe",
+     "from": "preparing",
+     "event": "SERVE_PREP_DIR",
+     "payload": {},
+     "expect": {
+      "state": "preparing",
+      "emitCounts": {
+       "SERVE_ANSWERED": 0
+      }
+     }
+    },
+    {
+     "trait": "OrbServe",
+     "from": "preparing",
+     "event": "SERVE_PROGRAM_WRITTEN",
+     "payload": {
+      "bytes": 10
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbServe",
+     "from": "preparing",
+     "event": "SERVE_CLIENT_BUILT",
+     "payload": {
+      "result": {
+       "webClient": "/work/.orbital/serve/app/web-client"
+      }
+     },
+     "expect": {
+      "state": "preparing",
+      "emitCounts": {
+       "SERVE_ANSWERED": 0
+      }
+     }
+    },
+    {
+     "trait": "OrbServe",
+     "from": "preparing",
+     "event": "SERVE_EMU_HOST",
+     "payload": {
+      "value": "127.0.0.1:9099"
+     },
+     "expect": {
+      "state": "preparing"
+     }
+    },
+    {
+     "trait": "OrbServe",
+     "from": "preparing",
+     "event": "SERVE_EMU_PROJECT",
+     "payload": {
+      "value": "demo-x"
+     },
+     "expect": {
+      "state": "preparing"
+     }
+    },
+    {
+     "trait": "OrbServe",
+     "from": "preparing",
+     "event": "SERVE_HOSTING_DIR",
+     "payload": {},
+     "expect": {
+      "state": "preparing"
+     }
+    },
+    {
+     "trait": "OrbServe",
+     "from": "preparing",
+     "event": "SERVE_HOSTING_WRITTEN",
+     "payload": {
+      "bytes": 80
+     },
+     "expect": {
+      "state": "preparing",
+      "emits": [
+       {
+        "event": "SERVE_CLIENT_READY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbServe",
+     "from": "preparing",
+     "event": "SERVE_CLIENT_READY",
+     "payload": {},
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SERVE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "headers": {
+          "orb-run": "server",
+          "orb-mock": "on",
+          "orb-app": "/home/u/.almadar/serve/x.orb"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: without the Auth emulator the client is ready with no init.json",
+   "entity": {
+    "prepare": true
+   },
+   "steps": [
+    {
+     "trait": "OrbServe",
+     "from": "preparing",
+     "event": "SERVE_EMU_HOST",
+     "payload": {
+      "value": ""
+     },
+     "expect": {
+      "state": "preparing",
+      "emits": [
+       {
+        "event": "SERVE_CLIENT_READY",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a served app with its own --client-dir answers at once, preparing nothing",
+   "entity": {
+    "prepare": false,
+    "mock": false,
+    "path": "/p.orb"
+   },
+   "steps": [
+    {
+     "trait": "OrbServe",
+     "from": "composing",
+     "event": "SERVE_COMPOSED",
+     "payload": {
+      "result": {
+       "behavior": "app"
+      }
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SERVE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "headers": {
+          "orb-run": "server",
+          "orb-mock": "off",
+          "orb-app": "/p.orb"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a client-mode compile that fails answers 500 with the reason",
+   "steps": [
+    {
+     "trait": "OrbServe",
+     "from": "preparing",
+     "event": "SERVE_GENERATE_FAILED",
+     "payload": {
+      "error": "program/eval: the typescript shell ships no prebuilt web client"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SERVE_ANSWERED",
+        "payload": {
+         "status": 500,
+         "stderr": "Error: the web client could not be prepared: program/eval: the typescript shell ships no prebuilt web client"
         }
        }
       ]

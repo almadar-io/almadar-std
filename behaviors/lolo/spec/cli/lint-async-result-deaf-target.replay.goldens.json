@@ -1,0 +1,1072 @@
+{
+  "atom": "cli/atoms/std-orb-lint-async-result-deaf-target.lolo",
+  "trait": "OrbLintAsyncResultDeafTarget",
+  "note": "Cases copy the four async_results.rs unit tests (deaf target flagged; every-result-handled, self-transition and call-service controls) plus two deaf results sorted with 'them', a wildcard arm control, a multi-from self-transition control, a multi-from display, and a persist nested in an if at its transition index. Expected findings are the code, path, message and suggestion the Rust validator reports; severity is error.",
+  "cases": [
+    {
+      "id": "async-result-deaf-target-when-destination-state-has-no-arm-for-success",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "browsing",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "loading",
+                            "isInitial": false
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "browsing",
+                            "to": "loading",
+                            "event": "REFRESH",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Item",
+                                {
+                                  "emit": {
+                                    "success": "ItemLoaded",
+                                    "failure": "ItemFailed"
+                                  }
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "loading",
+                            "to": "browsing",
+                            "event": "ItemFailed"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintAsyncResultDeafTarget"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "async-result-deaf-target",
+                  "findings": [
+                    {
+                      "code": "ORB_CIRCUIT_ASYNC_RESULT_DEAF_TARGET",
+                      "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects",
+                      "message": "transition browsing--[REFRESH]-->loading declares async result event(s) [\"ItemLoaded\"] but state 'loading' has no arm handling it — the requester departs before it can hear its own operation's result",
+                      "suggestion": "Add a transition `from: 'loading'` handling each of [\"ItemLoaded\"] in state 'loading' (or route the result to a state that already does).",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintAsyncResultDeafTarget"
+        }
+      ]
+    },
+    {
+      "id": "async-result-deaf-target-silent-when-destination-handles-every-result-event",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "browsing",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "loading",
+                            "isInitial": false
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "browsing",
+                            "to": "loading",
+                            "event": "REFRESH",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Item",
+                                {
+                                  "emit": {
+                                    "success": "ItemLoaded",
+                                    "failure": "ItemFailed"
+                                  }
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "loading",
+                            "to": "browsing",
+                            "event": "ItemLoaded"
+                          },
+                          {
+                            "from": "loading",
+                            "to": "browsing",
+                            "event": "ItemFailed"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintAsyncResultDeafTarget"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "async-result-deaf-target",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintAsyncResultDeafTarget"
+        }
+      ]
+    },
+    {
+      "id": "async-result-deaf-target-silent-on-self-transition",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "browsing",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "browsing",
+                            "to": "browsing",
+                            "event": "REFRESH",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Item",
+                                {
+                                  "emit": {
+                                    "success": "ItemLoaded"
+                                  }
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintAsyncResultDeafTarget"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "async-result-deaf-target",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintAsyncResultDeafTarget"
+        }
+      ]
+    },
+    {
+      "id": "async-result-deaf-target-silent-for-call-service-result",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "browsing",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "loading",
+                            "isInitial": false
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "browsing",
+                            "to": "loading",
+                            "event": "REFRESH",
+                            "effects": [
+                              [
+                                "call-service",
+                                "svc",
+                                {
+                                  "emit": {
+                                    "success": "SvcDone"
+                                  }
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintAsyncResultDeafTarget"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "async-result-deaf-target",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintAsyncResultDeafTarget"
+        }
+      ]
+    },
+    {
+      "id": "both-result-events-deaf-are-listed-sorted-and-say-them",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "browsing",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "loading",
+                            "isInitial": false
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "browsing",
+                            "to": "loading",
+                            "event": "REFRESH",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Item",
+                                {
+                                  "emit": {
+                                    "success": "ItemLoaded",
+                                    "failure": "ItemFailed"
+                                  }
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintAsyncResultDeafTarget"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "async-result-deaf-target",
+                  "findings": [
+                    {
+                      "code": "ORB_CIRCUIT_ASYNC_RESULT_DEAF_TARGET",
+                      "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects",
+                      "message": "transition browsing--[REFRESH]-->loading declares async result event(s) [\"ItemFailed\", \"ItemLoaded\"] but state 'loading' has no arm handling them — the requester departs before it can hear its own operation's result",
+                      "suggestion": "Add a transition `from: 'loading'` handling each of [\"ItemFailed\", \"ItemLoaded\"] in state 'loading' (or route the result to a state that already does).",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintAsyncResultDeafTarget"
+        }
+      ]
+    },
+    {
+      "id": "wildcard-arm-handles-the-result-event",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "browsing",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "loading",
+                            "isInitial": false
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "browsing",
+                            "to": "loading",
+                            "event": "REFRESH",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Item",
+                                {
+                                  "emit": {
+                                    "success": "ItemLoaded"
+                                  }
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "*",
+                            "to": "browsing",
+                            "event": "ItemLoaded"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintAsyncResultDeafTarget"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "async-result-deaf-target",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintAsyncResultDeafTarget"
+        }
+      ]
+    },
+    {
+      "id": "multi-from-transition-that-includes-its-target-is-a-self-transition",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "a",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "b",
+                            "isInitial": false
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": [
+                              "a",
+                              "b"
+                            ],
+                            "to": "b",
+                            "event": "REFRESH",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Item",
+                                {
+                                  "emit": {
+                                    "success": "ItemLoaded"
+                                  }
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintAsyncResultDeafTarget"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "async-result-deaf-target",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintAsyncResultDeafTarget"
+        }
+      ]
+    },
+    {
+      "id": "multi-from-transition-is-displayed-bracketed",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "a",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "b",
+                            "isInitial": false
+                          },
+                          {
+                            "name": "c",
+                            "isInitial": false
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": [
+                              "a",
+                              "b"
+                            ],
+                            "to": "c",
+                            "event": "REFRESH",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Item",
+                                {
+                                  "emit": {
+                                    "success": "ItemLoaded"
+                                  }
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintAsyncResultDeafTarget"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "async-result-deaf-target",
+                  "findings": [
+                    {
+                      "code": "ORB_CIRCUIT_ASYNC_RESULT_DEAF_TARGET",
+                      "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects",
+                      "message": "transition [a, b]--[REFRESH]-->c declares async result event(s) [\"ItemLoaded\"] but state 'c' has no arm handling it — the requester departs before it can hear its own operation's result",
+                      "suggestion": "Add a transition `from: 'c'` handling each of [\"ItemLoaded\"] in state 'c' (or route the result to a state that already does).",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintAsyncResultDeafTarget"
+        }
+      ]
+    },
+    {
+      "id": "persist-result-nested-in-an-if-is-collected-at-its-transition-index",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "a",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "b",
+                            "isInitial": false
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "a",
+                            "to": "a",
+                            "event": "NOOP"
+                          },
+                          {
+                            "from": "a",
+                            "to": "b",
+                            "event": "SAVE",
+                            "effects": [
+                              [
+                                "if",
+                                "@payload.go",
+                                [
+                                  "persist",
+                                  "save",
+                                  "Item",
+                                  {
+                                    "emit": {
+                                      "success": "Saved"
+                                    }
+                                  }
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintAsyncResultDeafTarget"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "async-result-deaf-target",
+                  "findings": [
+                    {
+                      "code": "ORB_CIRCUIT_ASYNC_RESULT_DEAF_TARGET",
+                      "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects",
+                      "message": "transition a--[SAVE]-->b declares async result event(s) [\"Saved\"] but state 'b' has no arm handling it — the requester departs before it can hear its own operation's result",
+                      "suggestion": "Add a transition `from: 'b'` handling each of [\"Saved\"] in state 'b' (or route the result to a state that already does).",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintAsyncResultDeafTarget"
+        }
+      ]
+    },
+    {
+      "id": "async-result-deaf-target-when-destination-state-has-no-arm-for-success-beside-a-null-literal",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "browsing",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "loading",
+                            "isInitial": false
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "browsing",
+                            "to": "loading",
+                            "event": "REFRESH",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Item",
+                                {
+                                  "emit": {
+                                    "success": "ItemLoaded",
+                                    "failure": "ItemFailed"
+                                  }
+                                }
+                              ],
+                              [
+                                "set",
+                                "@entity.id",
+                                [
+                                  "object/get",
+                                  "@payload",
+                                  "id",
+                                  null
+                                ]
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "loading",
+                            "to": "browsing",
+                            "event": "ItemFailed"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintAsyncResultDeafTarget"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "async-result-deaf-target",
+                  "findings": [
+                    {
+                      "code": "ORB_CIRCUIT_ASYNC_RESULT_DEAF_TARGET",
+                      "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects",
+                      "message": "transition browsing--[REFRESH]-->loading declares async result event(s) [\"ItemLoaded\"] but state 'loading' has no arm handling it — the requester departs before it can hear its own operation's result",
+                      "suggestion": "Add a transition `from: 'loading'` handling each of [\"ItemLoaded\"] in state 'loading' (or route the result to a state that already does).",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintAsyncResultDeafTarget"
+        }
+      ]
+    }
+  ]
+}

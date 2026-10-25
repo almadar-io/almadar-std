@@ -1,0 +1,129 @@
+app std-orb-lint-call-site-input [
+  version: "1.0.0",
+  fs: { cwd: "**": [read], "/**": [read] },
+  description: "std-orb-lint-call-site-input — the one place a composition lint reads a call site next to what it calls. For a LINT_CALL_SITES_REQUEST { file, stamp, references } it reads the file and lowers it WITHOUT resolving (so `ref` trait entries, call-site config, events renames, orbital `reference` blocks, extend and fields survive). With `references` it reads the file with program/read { references: true }: each reference of the file, in order, comes with the declaration the compiler loads for it (a trait as the compiler's deferred import load sees it, an orbital already inlined), and for each orbital written as a reference it computes the upstream traits that survive its `omit`/`only` (the embed closure of `only` and the removal of a trait whose every embedder was removed). With `stamp`, for a `.orb` document without a `ledger`, it keeps the program stamped by program/read { stamp: true }; the file is always lowered with the plain read first, so a `stamp` and a `references` request can share one run. It answers LINT_CALL_SITES { file, program, kept, references, stamped } to every rule trait that listens. An unreadable or unlowerable file answers LINT_CALL_SITES_UNREAD { file, error }. It resolves no import and reads no pattern registry or operator table: a rule that needs those composes std-orb-lint-input and std-orb-fired-events."
+]
+uses Spec from "almadar-std/lint-call-site-input"
+type LintValue = string | number | boolean | [LintValue?] | Map string LintValue?
+type CallSiteRef = { kind : string!, alias : string!, name : string!, path : string!, callSite : LintValue!, declaration : LintValue! }
+type RefsRead = { program : LintValue!, references : [CallSiteRef]! }
+type CsUse = { from : string!, as : string! }
+type CsRef = { ref : string, only : [string], omit : [string] }
+type CsNodes = [LintValue?]
+type CsStrings = [string]
+type CsMachine = { transitions : [CsTransition] }
+type CsTransition = { guard : LintValue?, effects : [LintValue?] }
+type CsTick = { guard : LintValue?, effects : [LintValue?] }
+type CsKnob = { default : LintValue? }
+type CsUpTrait = { name : string, stateMachine : CsMachine, ticks : [CsTick], config : Map string CsKnob? }
+type CsUpOrbital = { name : string, traits : [CsUpTrait] }
+type CsOrbRef = { path : string, declaration : CsUpOrbital }
+type CallSiteKept = { orbital : number!, traits : [string]! }
+type CsTraitEntry = { ref : string }
+type CsOrbital = { uses : [CsUse], traits : [CsTraitEntry], reference : CsRef? }
+type CsProgram = { orbitals : [CsOrbital], ledger : LintValue? }
+type CsStamped = { program : LintValue! }
+
+orbital OrbLintCallSiteInputOrbital {
+  entity OrbLintCallSiteInputRun [runtime] {
+    id : string!
+    file : string = ""
+    cwd : string = ""
+    raw : string = ""
+    program : LintValue?
+    kept : [CallSiteKept] = []
+    refs : [CallSiteRef] = []
+    stamped : LintValue?
+    withStamp : boolean = true
+    withRefs : boolean = false
+  }
+
+  trait CallSiteInput -> OrbLintCallSiteInputRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALL_SITES_REQUEST -> reading
+        (set @entity.file @payload.file)
+        (set @entity.withStamp @payload.stamp)
+        (set @entity.withRefs @payload.references)
+        (set @entity.kept [])
+        (set @entity.refs [])
+        (set @entity.stamped null)
+        (os/realpath { anchor: "cwd" path: "." } { key: "call-site-cwd" emit: { success: LINT_CWD, failure: LINT_FAILED } })
+    }
+
+    state reading {
+      INIT -> reading
+      LINT_CWD -> reading
+        (set @entity.cwd @payload.path)
+        (os/read-file (str/concat "/" (os/path-relative "/" (if (os/path-is-absolute @entity.file) @entity.file (os/path-join @payload.path @entity.file)))) { key: "call-site-file" emit: { success: LINT_FILE_READ, failure: LINT_FAILED } })
+      LINT_FILE_READ -> ready when (= (bytes/to-string @payload.data) null)
+        (emit LINT_CALL_SITES_UNREAD { file: @entity.file, error: "the file is not valid text" })
+      LINT_FILE_READ -> reading when (!= (bytes/to-string @payload.data) null)
+        (set @entity.raw (bytes/to-string @payload.data))
+        (program/read (bytes/to-string @payload.data) { key: "call-site-lower" emit: { success: LINT_LOWERED, failure: LINT_FAILED } })
+      LINT_LOWERED -> reading when (and @entity.withStamp (str/startsWith (str/trim @entity.raw) "{") (= (object/get (json/parse (json/stringify @payload.result) CsProgram) "ledger" null) null))
+        (set @entity.program @payload.result)
+        (program/read "" { stamp: true path: (if (os/path-is-absolute @entity.file) @entity.file (os/path-join @entity.cwd @entity.file)) } { key: "call-site-stamp" emit: { success: LINT_STAMPED, failure: LINT_FAILED } })
+      LINT_STAMPED -> reading
+        (set @entity.stamped (object/get @payload.result "program"))
+        (emit LINT_PRELUDE { })
+      LINT_LOWERED -> reading when (not (and @entity.withStamp (str/startsWith (str/trim @entity.raw) "{") (= (object/get (json/parse (json/stringify @payload.result) CsProgram) "ledger" null) null)))
+        (set @entity.program @payload.result)
+        (emit LINT_PRELUDE { })
+      LINT_PRELUDE -> reading when @entity.withRefs
+        (program/read "" { references: true path: (if (os/path-is-absolute @entity.file) @entity.file (os/path-join @entity.cwd @entity.file)) } { key: "call-site-refs", emit: { success: LINT_REFS_READ, failure: LINT_FAILED } })
+      LINT_PRELUDE -> reading when (not @entity.withRefs)
+        (emit LINT_COMPOSE { })
+      LINT_REFS_READ -> reading
+        (set @entity.refs (object/get @payload.result "references"))
+        (emit LINT_COMPOSE { })
+      LINT_COMPOSE -> ready
+        (set @entity.kept (let ((orbitals (object/get (json/parse (json/stringify @entity.program) CsProgram) "orbitals" [])) (orefs (array/map (array/filter @entity.refs (fn r (= (object/get @r "kind") "orbital"))) (fn r (json/parse (json/stringify @r) CsOrbRef))))) (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi (let ((o (array/nth @orbitals @oi))) (let ((r (object/get @o "reference" null))) (if (or (= @r null) (not (str/includes (object/get @r "ref" "") ".orbitals."))) [] (let ((rr (array/find @orefs (fn x (= (object/get @x "path") (str/concat "orbitals[" @oi "]")))))) (if (= @rr null) [] (let ((up (object/get @rr "declaration")) (ts (object/get (object/get @rr "declaration") "traits" []))) (let ((names (array/map @ts (fn t (object/get @t "name" ""))))) (let ((emb (array/map @ts (fn t (array/unique (array/concat (array/reduce (object/get (object/get @t "stateMachine" {}) "transitions" []) [] (fn a tr (array/concat (array/concat @a (or (tree/fold (object/get @tr "guard" null) (fn (n k) (let ((none : [string] [])) (if (validate/array @n) (array/concat (array/flatten (array/map @k (fn r (if (= @r null) @none @r)))) @none) (if (validate/object @n) (array/concat (array/flatten (array/map (object/keys @k) (fn key (let ((r (object/get @k @key null))) (if (= @r null) @none @r))))) @none) (if (validate/string @n) (if (and (str/startsWith @n (str/concat (quote "@") "trait.")) (> (str/len @n) 7) (not (str/includes (str/slice @n 7 (str/len @n)) "."))) [(str/slice @n 7 (str/len @n))] @none) @none))))) "LintValue") [])) (or (tree/fold (object/get @tr "effects" []) (fn (n k) (let ((none : [string] [])) (if (validate/array @n) (array/concat (array/flatten (array/map @k (fn r (if (= @r null) @none @r)))) @none) (if (validate/object @n) (array/concat (array/flatten (array/map (object/keys @k) (fn key (let ((r (object/get @k @key null))) (if (= @r null) @none @r))))) @none) (if (validate/string @n) (if (and (str/startsWith @n (str/concat (quote "@") "trait.")) (> (str/len @n) 7) (not (str/includes (str/slice @n 7 (str/len @n)) "."))) [(str/slice @n 7 (str/len @n))] @none) @none))))) "LintValue") [])))) (array/concat (array/reduce (object/get @t "ticks" []) [] (fn a tr (array/concat (array/concat @a (or (tree/fold (object/get @tr "guard" null) (fn (n k) (let ((none : [string] [])) (if (validate/array @n) (array/concat (array/flatten (array/map @k (fn r (if (= @r null) @none @r)))) @none) (if (validate/object @n) (array/concat (array/flatten (array/map (object/keys @k) (fn key (let ((r (object/get @k @key null))) (if (= @r null) @none @r))))) @none) (if (validate/string @n) (if (and (str/startsWith @n (str/concat (quote "@") "trait.")) (> (str/len @n) 7) (not (str/includes (str/slice @n 7 (str/len @n)) "."))) [(str/slice @n 7 (str/len @n))] @none) @none))))) "LintValue") [])) (or (tree/fold (object/get @tr "effects" []) (fn (n k) (let ((none : [string] [])) (if (validate/array @n) (array/concat (array/flatten (array/map @k (fn r (if (= @r null) @none @r)))) @none) (if (validate/object @n) (array/concat (array/flatten (array/map (object/keys @k) (fn key (let ((r (object/get @k @key null))) (if (= @r null) @none @r))))) @none) (if (validate/string @n) (if (and (str/startsWith @n (str/concat (quote "@") "trait.")) (> (str/len @n) 7) (not (str/includes (str/slice @n 7 (str/len @n)) "."))) [(str/slice @n 7 (str/len @n))] @none) @none))))) "LintValue") [])))) (array/reduce (object/keys (object/get @t "config" {})) [] (fn a ck (array/concat @a (or (tree/fold (object/get (object/get (object/get @t "config" {}) @ck) "default" null) (fn (n k) (let ((none : [string] [])) (if (validate/array @n) (array/concat (array/flatten (array/map @k (fn r (if (= @r null) @none @r)))) @none) (if (validate/object @n) (array/concat (array/flatten (array/map (object/keys @k) (fn key (let ((r (object/get @k @key null))) (if (= @r null) @none @r))))) @none) (if (validate/string @n) (if (and (str/startsWith @n (str/concat (quote "@") "trait.")) (> (str/len @n) 7) (not (str/includes (str/slice @n 7 (str/len @n)) "."))) [(str/slice @n 7 (str/len @n))] @none) @none))))) "LintValue") []))))))))))) (let ((only (object/get @r "only" null)) (omit (object/get @r "omit" []))) (let ((keep0 (if (= @only null) (array/filter @names (fn nm (not (array/includes @omit @nm)))) (array/reduce (array/range 0 (array/len @names)) @only (fn acc i (array/unique (array/concat @acc (array/reduce (array/filter (array/range 0 (array/len @names)) (fn j (array/includes @acc (array/nth @names @j)))) [] (fn a j (array/concat @a (array/nth @emb @j))))))))))) (let ((keptNames (array/filter @names (fn nm (array/includes @keep0 @nm))))) (let ((final (array/reduce (array/range 0 (array/len @names)) { kept: @keptNames, removed: (array/filter @names (fn nm (not (array/includes @keptNames @nm)))) } (fn st i (if (= (array/len (object/get @st "removed")) 0) @st (let ((orphaned (array/filter (object/get @st "kept") (fn nm (let ((es (array/filter (array/range 0 (array/len @names)) (fn j (array/includes (array/nth @emb @j) @nm))))) (and (> (array/len @es) 0) (array/every @es (fn j (array/includes (object/get @st "removed") (array/nth @names @j)))))))))) { kept: (array/filter (object/get @st "kept") (fn nm (not (array/includes @orphaned @nm)))), removed: (array/concat (object/get @st "removed") @orphaned) })))))) [{ orbital: @oi, traits: (object/get @final "kept") }])))))))))))))))))
+        (emit LINT_CALL_SITES { file: @entity.file, program: @entity.program, kept: @entity.kept, references: @entity.refs, stamped: @entity.stamped })
+      LINT_FAILED -> ready
+        (emit LINT_CALL_SITES_UNREAD { file: @entity.file, error: (or @payload.error "") })
+    }
+
+    emits {
+      LINT_CALL_SITES -> external { file : string!  program : LintValue!  kept : [CallSiteKept]!  references : [CallSiteRef]!  stamped : LintValue? }
+        @description "The file lowered unresolved, each of its references paired with the declaration the compiler loads for it, and the upstream traits each orbital reference keeps, offered to every composition rule trait."
+        @tier "internal"
+      LINT_CALL_SITES_UNREAD -> external { file : string!  error : string! }
+        @description "The file could not be read or lowered."
+        @tier "internal"
+      LINT_CWD { path : string! }
+        @description "The working directory read."
+        @tier "internal"
+      LINT_FILE_READ { data : bytes! }
+        @description "The file read."
+        @tier "internal"
+      LINT_STAMPED { result : CsStamped! }
+        @description "The ledger-less .orb stamped by program/read."
+        @tier "internal"
+      LINT_LOWERED { result : LintValue! }
+        @description "The file lowered."
+        @tier "internal"
+      LINT_REFS_READ { result : RefsRead! }
+        @description "The file lowered unresolved with each reference paired with the declaration the compiler loads for it."
+        @tier "internal"
+      LINT_PRELUDE { }
+        @description "Internal: the program is lowered (and stamped when asked); read the references when asked."
+        @tier "internal"
+      LINT_COMPOSE { }
+        @description "Internal: work out the surviving upstream traits and answer."
+        @tier "internal"
+      LINT_FAILED { error : string }
+        @description "The file could not be read or lowered."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALL_SITES_REQUEST { file : string!  stamp : boolean!  references : boolean! }
+        @description "The lint request this trait answers: the cli trait of a rule routes its LINT_CALL_SITES_REQUEST here; `stamp` asks for the stamped program of a ledger-less .orb, `references` for the references read."
+    }
+  }
+
+  page boot as OrbLintCallSiteInputOrbitalStart -> CallSiteInput
+}

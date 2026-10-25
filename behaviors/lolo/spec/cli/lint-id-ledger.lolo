@@ -1,0 +1,21 @@
+app lint-id-ledger-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint id-ledger <file>`: the port of ORB_ID_AUTHORED_WITHOUT_LEDGER. A hand-authored `.orb` with no ledger is re-minted on load; every authored declaration id the stamp replaced (it differs from the stamped id at the same node) is a warning at the node's `.id` path (status 500, exit 1); an unchanged id, a `.lolo` file and a `.orb` with a ledger are clean (`lint id-ledger: clean`, status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2)."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error", validValues : [string] }
+
+orbital LintIdLedgerSpec {
+  expects trait OrbLintIdLedger {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintIdLedgerCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintIdLedger, OrbLintIdLedgerCli
+}

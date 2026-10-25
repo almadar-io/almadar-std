@@ -1,0 +1,526 @@
+app std-behavior-playground [
+  version: "1.0.0",
+  description: "std-behavior-playground — browse every installed behavior by package and topic, open one and play with it: it runs live in place (the behavior value embedded, as a page would mount it), its state machines open drillable in std-avl-cosmic-zoom (system map, then each trait's machine, then one transition as circuits, with Step running transitions on the kernel), its .lolo source reads in a code view, and an inspector lists its package, topic, level and knobs. The topic tree, the cards, search and Details are std-behavior-catalog's (scope, starting topic and labels are knobs); the frame is std-workspace-layout with a runtime panel showing the live trait states and event log. Serve it with `orb serve`.",
+  egress: ["https://api.openai.com", "https://openrouter.ai"]
+]
+;; @capabilities "browse installed behaviors by topic, run a behavior live, explore a behavior's state machines, read a behavior's source, inspect a behavior's knobs"
+
+uses Layout from "std/behaviors/std-workspace-layout"
+uses Catalog from "std/behaviors/std-behavior-catalog"
+uses Cosmic from "std/behaviors/std-avl-cosmic-zoom"
+
+type PlaygroundTopic = { package : string!, topic : string!, count : number! }
+type PlaygroundPackageLabel = { package : string!, label : string! }
+type PlaygroundKnob = { name : string!, type : string!, label : string, description : string }
+type PlaygroundDescription = { behavior : string!, knobs : [PlaygroundKnob]! }
+type PlaygroundProgram = { name : string }
+type CosmicNodeContext = { level : "overview" | "trait-expanded" | "system" | "code" | "transition"!, orbital : string!, trait : string, transition : string, transitionIndex : number }
+
+orbital BehaviorPlayground {
+  entity PlaygroundView [runtime] {
+    id : string!
+    topics : [PlaygroundTopic] = []
+    topicPackage : string = ""
+    topic : string = ""
+    behavior : string = ""
+    description : string = ""
+    value : behavior?
+    tab : "live" | "machines" | "source" = live
+    programJson : string = ""
+    sourceJson : string = ""
+    sourceText : string = ""
+    knobs : [PlaygroundKnob] = []
+    error : string = ""
+    status : "browsing" | "opening" | "open" | "failed" = browsing
+  }
+
+  config {
+    scope : [string] = ["almadar-std", "almadar-behaviors"]
+      @label "Where to look"
+      @description "Registry folders the playground lists (`<prefix>[/<topic>[/<tier>]]`); every installed behavior by default."
+    startPackage : string = (quote "@almadar/std")
+      @label "Starting package"
+      @description "The package of the topic the playground opens on."
+    startTopic : string = "ui/core"
+      @label "Starting topic"
+      @description "The topic the playground opens on."
+    packageLabels : [PlaygroundPackageLabel] = [{ package: (quote "@almadar/std"), label: "Standard library" }, { package: (quote "@almadar-io/behaviors"), label: "Behaviors" }]
+      @label "Package names"
+      @description "How each package is named in the topic tree; a package not listed shows its npm name."
+    title : string = "Behavior playground"
+      @label "Title"
+  }
+
+  trait PlaygroundFrame = Layout.traits.WorkspaceLayout -> PlaygroundView {
+    config {
+      mainTrait: @trait.PlaygroundStage
+      showSidebar: true
+      sidebarTrait: @trait.PlaygroundTopics
+      sidebarMinSize: 220
+      showSecondarySidebar: true
+      secondarySidebarTrait: @trait.PlaygroundInspector
+      secondarySidebarLabel: "Inspector"
+      secondarySidebarWidth: 320
+      showBottomPanel: true
+      bottomPanelTrait: @trait.PlaygroundRuntime
+      bottomPanelLabel: "Runtime"
+      bottomPanelIcon: "activity"
+      showStatusBar: true
+      statusBarTrait: @trait.PlaygroundStatus
+      showTopBar: true
+      topBarTrait: @trait.PlaygroundTopBar
+    }
+  }
+
+  trait BehaviorCatalog = Catalog.traits.BehaviorCatalog {
+    config {
+      scope: @config.scope
+      startPackage: @config.startPackage
+      startTopic: @config.startTopic
+      look: list
+      pickLabel: "Open"
+      describeLabel: "Knobs"
+      searchPlaceholder: "Search this topic by meaning"
+      emptyLabel: "Nothing in this topic matches."
+    }
+    listens {
+      BehaviorCatalogLlm.LLM_EMBED_RESULT -> EMBEDDED
+      BehaviorCatalogLlm.LLM_FAILED -> SEARCH_FAILED
+      PlaygroundTopics.TOPIC_PICKED -> TOPIC
+      EMBEDDED {
+        embeddings : [[number]]!
+      }
+      SEARCH_FAILED {
+        code : string
+        message : string!
+      }
+      SEARCH {
+        searchTerm : string!
+      }
+      PICK {
+        behavior : string!
+      }
+      DESCRIBE {
+        behavior : string!
+      }
+      TOGGLE {
+        behavior : string!
+        checked : boolean!
+      }
+      SELECTION {
+        behaviors : [string]!
+      }
+      TOPIC {
+        package : string!
+        topic : string!
+      }
+      RETRY
+    }
+  }
+  trait BehaviorCatalogLlm = Catalog.traits.BehaviorCatalogLlm {}
+
+  trait PlaygroundCosmic = Cosmic.traits.CosmicZoom {
+    config {
+      emptyTitle: "No machines yet"
+      emptyDescription: "Open a behavior to see its orbitals, traits and transitions."
+    }
+    listens {
+      PlaygroundStage.COSMIC_LOAD -> LOAD
+      LOAD {
+        program : string!
+        source : string!
+        highlighted : string!
+      }
+      OPEN_TRAITS {
+        orbital : string!
+      }
+      OPEN_CODE {
+        orbital : string!
+      }
+      NODE_CLICK {
+        context : CosmicNodeContext!
+      }
+      ZOOM_OUT
+      CRUMB {
+        label : string!
+        href : string
+        index : number!
+      }
+      CURSOR {
+        value : number!
+      }
+      STOP
+      STEP {
+        orbital : string!
+        trait : string!
+        from : string!
+        event : event!
+        payload : @payload event!
+      }
+    }
+  }
+
+  trait PlaygroundTopics -> PlaygroundView [client] {
+    config {
+      openPackage : string = @config.startPackage
+        @label "Starting package"
+        @tier "domain"
+      openTopic : string = @config.startTopic
+        @label "Starting topic"
+        @tier "domain"
+      labels : [PlaygroundPackageLabel] = @config.packageLabels
+        @label "Package names"
+        @tier "presentation"
+    }
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main { type: stack, direction: vertical, gap: sm, className: "p-3", children: [{ type: skeleton, variant: list, rows: 8 }] })
+      TOPICS_LOADED -> idle
+        (set @entity.topics ?topics)
+        (set @entity.topicPackage (if (= @entity.topic "") @config.openPackage @entity.topicPackage))
+        (set @entity.topic (if (= @entity.topic "") @config.openTopic @entity.topic))
+        (emit TOPICS_SHOWN {})
+      TOPICS_SHOWN -> idle
+        (render-ui main { type: stack, direction: vertical, gap: xs, className: "h-full overflow-y-auto p-2", children: [
+          { type: typography, content: "Topics", variant: overline, color: muted, className: "px-2 pt-1" },
+          { type: file-tree, selectedId: (str/concat @entity.topicPackage " " @entity.topic), onNodeSelect: NODE_SELECTED, items: (array/concat
+            (array/map (array/unique (array/map @entity.topics (fn t @t.package))) (fn pkg { id: @pkg, label: (object/get (array/find @config.labels (fn l (= @l.package @pkg))) "label" @pkg), icon: package }))
+            (array/map (array/sort @entity.topics "topic" "asc") (fn t { id: (str/concat @t.package " " @t.topic), label: (str/concat @t.topic "  ·  " @t.count), parentId: @t.package, icon: folder }))) }
+        ] })
+      NODE_SELECTED -> idle when (array/some @entity.topics (fn t (= (str/concat @t.package " " @t.topic) ?id)))
+        (let ((picked (array/find @entity.topics (fn t (= (str/concat @t.package " " @t.topic) ?id)))))
+          (do
+            (set @entity.topicPackage @picked.package)
+            (set @entity.topic @picked.topic)
+            (emit TOPIC_PICKED { package: @picked.package, topic: @picked.topic, count: @picked.count })
+            (emit TOPICS_SHOWN {})))
+      NODE_SELECTED -> idle when (not (array/some @entity.topics (fn t (= (str/concat @t.package " " @t.topic) ?id))))
+    }
+
+    emits {
+      TOPIC_PICKED -> external {
+        package : string!
+        topic : string!
+        count : number!
+      }
+        @description "A topic was chosen in the tree."
+      TOPICS_SHOWN
+    }
+
+    listens {
+      BehaviorCatalog.CATALOG_TOPICS -> TOPICS_LOADED
+      TOPICS_LOADED {
+        topics : [PlaygroundTopic]!
+      }
+      NODE_SELECTED {
+        id : string!
+      }
+    }
+  }
+
+  trait PlaygroundStage -> PlaygroundView [optimistic] {
+    config {
+      openPackage : string = @config.startPackage
+        @label "Starting package"
+        @tier "domain"
+      openTopic : string = @config.startTopic
+        @label "Starting topic"
+        @tier "domain"
+      labels : [PlaygroundPackageLabel] = @config.packageLabels
+        @label "Package names"
+        @tier "presentation"
+    }
+    initial: browsing
+
+    state browsing {
+      INIT -> browsing
+        (set @entity.topicPackage @config.openPackage)
+        (set @entity.topic @config.openTopic)
+        (emit STAGE_SHOWN {})
+      STAGE_SHOWN -> browsing
+        (render-ui main { type: stack, direction: vertical, gap: md, className: "h-full overflow-y-auto p-4", children: [
+          { type: stack, direction: vertical, gap: xs, children: [
+            { type: typography, content: (object/get (array/find @config.labels (fn l (= @l.package @entity.topicPackage))) "label" @entity.topicPackage), variant: overline, color: muted },
+            { type: typography, content: @entity.topic, variant: h2, weight: bold },
+            { type: typography, content: "Open a behavior to run it live, explore its state machines and read its source.", variant: body, color: muted }
+          ] },
+          { type: box, children: [@trait.BehaviorCatalog] }
+        ] })
+        (emit INSPECTED { behavior: "", description: "", knobs: [] })
+        (emit STATUS { behavior: "", topic: @entity.topic })
+      TOPIC_PICKED -> browsing
+        (set @entity.topicPackage ?package)
+        (set @entity.topic ?topic)
+        (emit STAGE_SHOWN {})
+      OPEN -> opening
+        (set @entity.behavior ?behavior)
+        (set @entity.description (or ?description ""))
+        (set @entity.value ?value)
+        (set @entity.tab live)
+        (set @entity.status opening)
+        (render-ui main { type: container, size: full, padding: md, children: [{ type: skeleton, variant: detail, rows: 4 }] })
+        (behavior/source ?value { emit: { success: SOURCED, failure: OPEN_FAILED } })
+        (behavior/resolve ?value { emit: { success: RESOLVED, failure: OPEN_FAILED } })
+        (behavior/describe { behavior: ?behavior } { emit: { success: DESCRIBED, failure: DESCRIBE_FAILED } })
+    }
+
+    state opening {
+      INIT -> browsing
+        (emit STAGE_SHOWN {})
+      SOURCED -> opening
+        (set @entity.sourceJson (json/stringify ?result))
+        (program/print ?result { emit: { success: PRINTED, failure: OPEN_FAILED } })
+      RESOLVED -> opening
+        (set @entity.programJson (json/stringify ?result))
+      DESCRIBED -> opening
+        (set @entity.knobs (object/get ?result knobs []))
+      DESCRIBE_FAILED -> opening
+        (set @entity.knobs [])
+      PRINTED -> open
+        (set @entity.sourceText ?result)
+        (set @entity.status open)
+        (emit STAGE_SHOWN {})
+      OPEN_FAILED -> failed
+        (set @entity.error ?error)
+        (set @entity.status failed)
+        (render-ui main { type: container, size: md, padding: lg, children: [{ type: stack, direction: vertical, gap: md, children: [
+          { type: alert, variant: error, title: (str/concat @entity.behavior " could not be opened"), message: @entity.error },
+          { type: button, label: "Back to the topic", icon: arrow-left, variant: secondary, action: BACK }
+        ] }] })
+      TOPIC_PICKED -> browsing
+        (set @entity.topicPackage ?package)
+        (set @entity.topic ?topic)
+        (emit STAGE_SHOWN {})
+    }
+
+    state open {
+      INIT -> browsing
+        (emit STAGE_SHOWN {})
+      STAGE_SHOWN -> open
+        (when (validate/required @entity.value)
+        (render-ui main { type: stack, direction: vertical, gap: none, className: "h-full min-h-0", children: [
+          { type: stack, direction: horizontal, justify: between, align: center, gap: md, className: "px-4 py-3 border-b", children: [
+            { type: stack, direction: horizontal, align: center, gap: sm, children: [
+              { type: button, label: @entity.topic, icon: arrow-left, variant: ghost, size: sm, action: BACK },
+              { type: typography, content: @entity.behavior, variant: h3, weight: semibold }
+            ] },
+            { type: tabs, activeTab: @entity.tab, tabChangeEvent: TAB_SELECTED, items: [{ id: "live", label: "Live" }, { id: "machines", label: "State machines" }, { id: "source", label: "Source" }] }
+          ] },
+          { type: box, className: "flex-1 min-h-0 overflow-auto", children: [
+            (if (= @entity.tab live)
+              { type: box, className: "h-full", children: [@entity.value] }
+              (if (= @entity.tab machines)
+                { type: box, className: "h-full min-h-0", children: [@trait.PlaygroundCosmic] }
+                { type: code-block, code: @entity.sourceText, language: "lolo", showLineNumbers: true, maxHeight: "100%" }))
+          ] }
+        ] }))
+        (emit INSPECTED { behavior: @entity.behavior, description: @entity.description, knobs: @entity.knobs })
+        (emit STATUS { behavior: @entity.behavior, topic: @entity.topic })
+      TAB_SELECTED -> open when (= ?tabId machines)
+        (set @entity.tab machines)
+        (emit STAGE_SHOWN {})
+        (emit COSMIC_LOAD { program: @entity.programJson, source: @entity.sourceJson, highlighted: "" })
+      TAB_SELECTED -> open when (and (!= ?tabId machines) (array/includes ["live", "source"] ?tabId))
+        (set @entity.tab ?tabId)
+        (emit STAGE_SHOWN {})
+      TAB_SELECTED -> open when (not (array/includes ["live", "machines", "source"] ?tabId))
+      CODE_REQUESTED -> open
+        (set @entity.tab source)
+        (emit STAGE_SHOWN {})
+      BACK -> browsing
+        (set @entity.behavior "")
+        (set @entity.value null)
+        (set @entity.status browsing)
+        (emit STAGE_SHOWN {})
+      TOPIC_PICKED -> browsing
+        (set @entity.topicPackage ?package)
+        (set @entity.topic ?topic)
+        (set @entity.behavior "")
+        (set @entity.value null)
+        (set @entity.status browsing)
+        (emit STAGE_SHOWN {})
+      OPEN -> opening
+        (set @entity.behavior ?behavior)
+        (set @entity.description (or ?description ""))
+        (set @entity.value ?value)
+        (set @entity.tab live)
+        (set @entity.status opening)
+        (render-ui main { type: container, size: full, padding: md, children: [{ type: skeleton, variant: detail, rows: 4 }] })
+        (behavior/source ?value { emit: { success: SOURCED, failure: OPEN_FAILED } })
+        (behavior/resolve ?value { emit: { success: RESOLVED, failure: OPEN_FAILED } })
+        (behavior/describe { behavior: ?behavior } { emit: { success: DESCRIBED, failure: DESCRIBE_FAILED } })
+    }
+
+    state failed {
+      INIT -> browsing
+        (emit STAGE_SHOWN {})
+      BACK -> browsing
+        (set @entity.behavior "")
+        (set @entity.value null)
+        (set @entity.status browsing)
+        (emit STAGE_SHOWN {})
+      TOPIC_PICKED -> browsing
+        (set @entity.topicPackage ?package)
+        (set @entity.topic ?topic)
+        (set @entity.status browsing)
+        (emit STAGE_SHOWN {})
+    }
+
+    emits {
+      STAGE_SHOWN
+      COSMIC_LOAD -> external {
+        program : string!
+        source : string!
+        highlighted : string!
+      }
+        @description "Hand the opened behavior, resolved and as written, to the state machine explorer."
+      INSPECTED -> external {
+        behavior : string!
+        description : string!
+        knobs : [PlaygroundKnob]!
+      }
+        @description "The opened behavior's facts for the inspector; an empty behavior clears it."
+      STATUS -> external {
+        behavior : string!
+        topic : string!
+      }
+        @description "What the status strip shows."
+      SOURCED {
+        result : PlaygroundProgram!
+      }
+      RESOLVED {
+        result : PlaygroundProgram!
+      }
+      DESCRIBED {
+        result : PlaygroundDescription!
+      }
+      DESCRIBE_FAILED {
+        error : string!
+      }
+      PRINTED {
+        result : string!
+      }
+      OPEN_FAILED {
+        error : string!
+      }
+    }
+
+    listens {
+      BehaviorCatalog.PICKED -> OPEN
+      PlaygroundTopics.TOPIC_PICKED -> TOPIC_PICKED
+      PlaygroundCosmic.CODE_REQUESTED -> CODE_REQUESTED
+      OPEN {
+        behavior : string!
+        description : string
+        trait : trait
+        value : behavior
+      }
+      TOPIC_PICKED {
+        package : string!
+        topic : string!
+        count : number!
+      }
+      CODE_REQUESTED {
+        orbital : string!
+      }
+      TAB_SELECTED {
+        tabId : string!
+      }
+      BACK
+    }
+  }
+
+  trait PlaygroundInspector -> PlaygroundView [client] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main { type: empty-state, icon: info, title: "Nothing open", description: "Open a behavior to see its knobs here.", className: "p-4" })
+      INSPECTED -> idle when (= ?behavior "")
+        (render-ui main { type: empty-state, icon: info, title: "Nothing open", description: "Open a behavior to see its knobs here.", className: "p-4" })
+      INSPECTED -> idle when (!= ?behavior "")
+        (render-ui main { type: stack, direction: vertical, gap: md, className: "h-full overflow-y-auto p-4", children: [
+          { type: typography, content: ?behavior, variant: h4, weight: semibold },
+          { type: typography, content: ?description, variant: body, color: muted },
+          { type: divider },
+          { type: typography, content: (str/concat "Knobs · " (array/len ?knobs)), variant: overline, color: muted },
+          { type: typography, content: "This behavior has no knobs.", variant: caption, color: muted, className: (if (= (array/len ?knobs) 0) "" hidden) },
+          { type: stack, direction: vertical, gap: sm, children: (array/map ?knobs (fn k { type: stack, direction: vertical, gap: none, children: [
+            { type: stack, direction: horizontal, gap: xs, align: center, children: [
+              { type: typography, content: (object/get @k label @k.name), variant: body, weight: medium },
+              { type: badge, label: @k.type, variant: default }
+            ] },
+            { type: typography, content: @k.name, variant: caption, color: muted },
+            { type: typography, content: (object/get @k description ""), variant: caption, className: (if (= (object/get @k description "") "") hidden "") }
+          ] })) }
+        ] })
+    }
+
+    listens {
+      PlaygroundStage.INSPECTED -> INSPECTED
+      INSPECTED {
+        behavior : string!
+        description : string!
+        knobs : [PlaygroundKnob]!
+      }
+    }
+  }
+
+  trait PlaygroundStatus -> PlaygroundView [client] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main { type: typography, content: "Loading the catalog", variant: caption, color: muted, className: "px-3" })
+      TOPICS_COUNTED -> idle
+        (set @entity.topics ?topics)
+      STATUS -> idle
+        (render-ui main { type: stack, direction: horizontal, gap: md, align: center, className: "px-3", children: [
+          { type: typography, content: (str/concat (array/sum (array/map @entity.topics (fn t @t.count))) " behaviors · " (array/len @entity.topics) " topics"), variant: caption, color: muted },
+          { type: typography, content: (if (= ?behavior "") ?topic (str/concat ?topic " / " ?behavior)), variant: caption }
+        ] })
+    }
+
+    listens {
+      BehaviorCatalog.CATALOG_TOPICS -> TOPICS_COUNTED
+      PlaygroundStage.STATUS -> STATUS
+      TOPICS_COUNTED {
+        topics : [PlaygroundTopic]!
+      }
+      STATUS {
+        behavior : string!
+        topic : string!
+      }
+    }
+  }
+
+  trait PlaygroundTopBar -> PlaygroundView [client] {
+    config {
+      heading : string = @config.title
+        @label "Title"
+        @tier "presentation"
+    }
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main { type: stack, direction: horizontal, align: center, gap: sm, className: "px-4 py-2", children: [
+          { type: icon, name: blocks, size: md },
+          { type: typography, content: @config.heading, variant: h4, weight: semibold }
+        ] })
+    }
+  }
+
+  trait PlaygroundRuntime -> PlaygroundView [client] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main { type: runtime-debugger, mode: inline, defaultCollapsed: false, className: "h-full" })
+    }
+  }
+
+  page "/" as PlaygroundPage -> PlaygroundFrame, PlaygroundTopBar, PlaygroundTopics, PlaygroundStage, BehaviorCatalog, BehaviorCatalogLlm, PlaygroundCosmic, PlaygroundInspector, PlaygroundStatus, PlaygroundRuntime
+}

@@ -1,0 +1,4262 @@
+{
+  "atom": "cli/atoms/std-orb-lint-orbital-ref-extend.lolo",
+  "trait": "OrbLintOrbitalRefExtend",
+  "note": "Expected findings are the code, path, message and suggestion `orb validate --json` (the Rust validator) reports for the same materialized upstream/consumer pair. Each case feeds the unresolved consumer, the resolved upstream (pruned to the fields the rule reads) and the kept trait names the call sites input computes for the reference orbital. Cases mirror orbital_ref_extend.rs and the extend tests of inline/orbital.rs and orbital_import_overrides.rs (collision with an upstream field, collision with a `fields {}` rename target, unread, read through a kept trait, a reference-body sibling or a config knob value), each with its paired control.",
+  "cases": [
+    {
+      "id": "collision-with-an-upstream-field",
+      "steps": [
+        {
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "c.orb",
+            "program": {
+              "ledger": {
+                "entries": {
+                  "orb_1F8TGDBMC9T64X0PZ1EE4KXASE": {
+                    "bakedName": "Account",
+                    "curName": "Account",
+                    "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                    "kind": "orbital",
+                    "owner": "workspace",
+                    "renames": []
+                  }
+                },
+                "schemaVersion": 1
+              },
+              "name": "c",
+              "orbitals": [
+                {
+                  "entity": "Up.orbitals.NoteOrbital.entity",
+                  "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                  "name": "Account",
+                  "reference": {
+                    "extend": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ],
+                    "ref": "Up.orbitals.NoteOrbital"
+                  },
+                  "traits": [],
+                  "uses": [
+                    {
+                      "as": "Up",
+                      "from": "./upstream.orb"
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1,
+              "version": "1.0.0"
+            },
+            "kept": [
+              {
+                "orbital": 0,
+                "traits": [
+                  "NoteList"
+                ]
+              }
+            ],
+            "references": [
+              {
+                "kind": "orbital",
+                "alias": "Up",
+                "name": "NoteOrbital",
+                "path": "orbitals[0]",
+                "callSite": {
+                  "ref": "Up.orbitals.NoteOrbital",
+                  "extend": [
+                    {
+                      "name": "id",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "declaration": {
+                  "name": "NoteOrbital",
+                  "traits": [
+                    {
+                      "name": "NoteList",
+                      "id": "trt_T60ZVNVVZGXZR31EYB50NC1A5P",
+                      "stateMachine": {
+                        "events": [
+                          {
+                            "key": "OPEN"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "event": "OPEN",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.title"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "entity": {
+                    "name": "Note",
+                    "id": "ent_HXRASC0DT86X40PEGX52DSE07B",
+                    "collection": "upstream_notes",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "count",
+                        "type": "number",
+                        "default": 1
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_SITES_READY",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_SITES_READY",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-ref-extend",
+                  "findings": [
+                    {
+                      "code": "ORB_O_EXTEND_FIELD_COLLISION",
+                      "path": "orbitals[0].extend(id)",
+                      "message": "`extend {}` field 'id' collides with an existing field on 'Up.orbitals.NoteOrbital': already declared on the upstream primary entity (after `fields {}` renames)",
+                      "suggestion": "Rename 'id' in `extend {}` to a name not already on the upstream primary entity and not a `fields {}` rename target.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-fresh-field-nothing-reads-is-unread-only",
+      "steps": [
+        {
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "c.orb",
+            "program": {
+              "ledger": {
+                "entries": {
+                  "orb_1F8TGDBMC9T64X0PZ1EE4KXASE": {
+                    "bakedName": "Account",
+                    "curName": "Account",
+                    "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                    "kind": "orbital",
+                    "owner": "workspace",
+                    "renames": []
+                  }
+                },
+                "schemaVersion": 1
+              },
+              "name": "c",
+              "orbitals": [
+                {
+                  "entity": "Up.orbitals.NoteOrbital.entity",
+                  "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                  "name": "Account",
+                  "reference": {
+                    "extend": [
+                      {
+                        "name": "overtimeHours",
+                        "type": "string"
+                      }
+                    ],
+                    "ref": "Up.orbitals.NoteOrbital"
+                  },
+                  "traits": [],
+                  "uses": [
+                    {
+                      "as": "Up",
+                      "from": "./upstream.orb"
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1,
+              "version": "1.0.0"
+            },
+            "kept": [
+              {
+                "orbital": 0,
+                "traits": [
+                  "NoteList"
+                ]
+              }
+            ],
+            "references": [
+              {
+                "kind": "orbital",
+                "alias": "Up",
+                "name": "NoteOrbital",
+                "path": "orbitals[0]",
+                "callSite": {
+                  "ref": "Up.orbitals.NoteOrbital",
+                  "extend": [
+                    {
+                      "name": "overtimeHours",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "declaration": {
+                  "name": "NoteOrbital",
+                  "traits": [
+                    {
+                      "name": "NoteList",
+                      "id": "trt_T60ZVNVVZGXZR31EYB50NC1A5P",
+                      "stateMachine": {
+                        "events": [
+                          {
+                            "key": "OPEN"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "event": "OPEN",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.title"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "entity": {
+                    "name": "Note",
+                    "id": "ent_HXRASC0DT86X40PEGX52DSE07B",
+                    "collection": "upstream_notes",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "count",
+                        "type": "number",
+                        "default": 1
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_SITES_READY",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_SITES_READY",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-ref-extend",
+                  "findings": [
+                    {
+                      "code": "ORB_O_EXTEND_FIELD_UNREAD",
+                      "path": "orbitals[0].extend(overtimeHours)",
+                      "message": "`extend {}` field 'overtimeHours' on 'Up.orbitals.NoteOrbital' is never read, set, rendered, or forwarded by a config knob value \u2014 a live wire terminating in nothing.",
+                      "suggestion": "Wire 'overtimeHours' into a trait (guard/effect/render) or an orbital-level config knob (e.g. a `browseColumns`/`formFields` list entry), or remove it from `extend {}`.",
+                      "severity": "warning"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "collision-with-a-fields-rename-target",
+      "steps": [
+        {
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "c.orb",
+            "program": {
+              "ledger": {
+                "entries": {
+                  "orb_1F8TGDBMC9T64X0PZ1EE4KXASE": {
+                    "bakedName": "Account",
+                    "curName": "Account",
+                    "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                    "kind": "orbital",
+                    "owner": "workspace",
+                    "renames": []
+                  }
+                },
+                "schemaVersion": 1
+              },
+              "name": "c",
+              "orbitals": [
+                {
+                  "entity": "Up.orbitals.NoteOrbital.entity",
+                  "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                  "name": "Account",
+                  "reference": {
+                    "extend": [
+                      {
+                        "name": "headline",
+                        "type": "string"
+                      }
+                    ],
+                    "fields": {
+                      "title": "headline"
+                    },
+                    "ref": "Up.orbitals.NoteOrbital"
+                  },
+                  "traits": [],
+                  "uses": [
+                    {
+                      "as": "Up",
+                      "from": "./upstream.orb"
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1,
+              "version": "1.0.0"
+            },
+            "kept": [
+              {
+                "orbital": 0,
+                "traits": [
+                  "NoteList"
+                ]
+              }
+            ],
+            "references": [
+              {
+                "kind": "orbital",
+                "alias": "Up",
+                "name": "NoteOrbital",
+                "path": "orbitals[0]",
+                "callSite": {
+                  "ref": "Up.orbitals.NoteOrbital",
+                  "fields": {
+                    "title": "headline"
+                  },
+                  "extend": [
+                    {
+                      "name": "headline",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "declaration": {
+                  "name": "NoteOrbital",
+                  "traits": [
+                    {
+                      "name": "NoteList",
+                      "id": "trt_T60ZVNVVZGXZR31EYB50NC1A5P",
+                      "stateMachine": {
+                        "events": [
+                          {
+                            "key": "OPEN"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "event": "OPEN",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.title"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "entity": {
+                    "name": "Note",
+                    "id": "ent_HXRASC0DT86X40PEGX52DSE07B",
+                    "collection": "upstream_notes",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "count",
+                        "type": "number",
+                        "default": 1
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_SITES_READY",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_SITES_READY",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-ref-extend",
+                  "findings": [
+                    {
+                      "code": "ORB_O_EXTEND_FIELD_COLLISION",
+                      "path": "orbitals[0].extend(headline)",
+                      "message": "`extend {}` field 'headline' collides with an existing field on 'Up.orbitals.NoteOrbital': already declared on the upstream primary entity (after `fields {}` renames)",
+                      "suggestion": "Rename 'headline' in `extend {}` to a name not already on the upstream primary entity and not a `fields {}` rename target.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-the-pre-rename-name-is-free-after-a-rename",
+      "steps": [
+        {
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "c.orb",
+            "program": {
+              "ledger": {
+                "entries": {
+                  "orb_1F8TGDBMC9T64X0PZ1EE4KXASE": {
+                    "bakedName": "Account",
+                    "curName": "Account",
+                    "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                    "kind": "orbital",
+                    "owner": "workspace",
+                    "renames": []
+                  }
+                },
+                "schemaVersion": 1
+              },
+              "name": "c",
+              "orbitals": [
+                {
+                  "entity": "Up.orbitals.NoteOrbital.entity",
+                  "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                  "name": "Account",
+                  "reference": {
+                    "extend": [
+                      {
+                        "name": "title",
+                        "type": "string"
+                      }
+                    ],
+                    "fields": {
+                      "title": "headline"
+                    },
+                    "ref": "Up.orbitals.NoteOrbital"
+                  },
+                  "traits": [],
+                  "uses": [
+                    {
+                      "as": "Up",
+                      "from": "./upstream.orb"
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1,
+              "version": "1.0.0"
+            },
+            "kept": [
+              {
+                "orbital": 0,
+                "traits": [
+                  "NoteList"
+                ]
+              }
+            ],
+            "references": [
+              {
+                "kind": "orbital",
+                "alias": "Up",
+                "name": "NoteOrbital",
+                "path": "orbitals[0]",
+                "callSite": {
+                  "ref": "Up.orbitals.NoteOrbital",
+                  "fields": {
+                    "title": "headline"
+                  },
+                  "extend": [
+                    {
+                      "name": "title",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "declaration": {
+                  "name": "NoteOrbital",
+                  "traits": [
+                    {
+                      "name": "NoteList",
+                      "id": "trt_T60ZVNVVZGXZR31EYB50NC1A5P",
+                      "stateMachine": {
+                        "events": [
+                          {
+                            "key": "OPEN"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "event": "OPEN",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.title"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "entity": {
+                    "name": "Note",
+                    "id": "ent_HXRASC0DT86X40PEGX52DSE07B",
+                    "collection": "upstream_notes",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "count",
+                        "type": "number",
+                        "default": 1
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_SITES_READY",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_SITES_READY",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-ref-extend",
+                  "findings": [
+                    {
+                      "code": "ORB_O_EXTEND_FIELD_UNREAD",
+                      "path": "orbitals[0].extend(title)",
+                      "message": "`extend {}` field 'title' on 'Up.orbitals.NoteOrbital' is never read, set, rendered, or forwarded by a config knob value \u2014 a live wire terminating in nothing.",
+                      "suggestion": "Wire 'title' into a trait (guard/effect/render) or an orbital-level config knob (e.g. a `browseColumns`/`formFields` list entry), or remove it from `extend {}`.",
+                      "severity": "warning"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-kept-trait-render-reads-the-field",
+      "steps": [
+        {
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "c.orb",
+            "program": {
+              "ledger": {
+                "entries": {
+                  "orb_1F8TGDBMC9T64X0PZ1EE4KXASE": {
+                    "bakedName": "Account",
+                    "curName": "Account",
+                    "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                    "kind": "orbital",
+                    "owner": "workspace",
+                    "renames": []
+                  }
+                },
+                "schemaVersion": 1
+              },
+              "name": "c",
+              "orbitals": [
+                {
+                  "entity": "Up.orbitals.NoteOrbital.entity",
+                  "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                  "name": "Account",
+                  "reference": {
+                    "extend": [
+                      {
+                        "name": "tier",
+                        "type": "string"
+                      }
+                    ],
+                    "ref": "Up.orbitals.NoteOrbital"
+                  },
+                  "traits": [],
+                  "uses": [
+                    {
+                      "as": "Up",
+                      "from": "./upstream.orb"
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1,
+              "version": "1.0.0"
+            },
+            "kept": [
+              {
+                "orbital": 0,
+                "traits": [
+                  "NoteList"
+                ]
+              }
+            ],
+            "references": [
+              {
+                "kind": "orbital",
+                "alias": "Up",
+                "name": "NoteOrbital",
+                "path": "orbitals[0]",
+                "callSite": {
+                  "ref": "Up.orbitals.NoteOrbital",
+                  "extend": [
+                    {
+                      "name": "tier",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "declaration": {
+                  "name": "NoteOrbital",
+                  "traits": [
+                    {
+                      "name": "NoteList",
+                      "id": "trt_T60ZVNVVZGXZR31EYB50NC1A5P",
+                      "stateMachine": {
+                        "events": [
+                          {
+                            "key": "OPEN"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "event": "OPEN",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.tier"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "entity": {
+                    "name": "Note",
+                    "id": "ent_HXRASC0DT86X40PEGX52DSE07B",
+                    "collection": "upstream_notes",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "count",
+                        "type": "number",
+                        "default": 1
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_SITES_READY",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_SITES_READY",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-ref-extend",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-kept-trait-object-get-reads-the-field",
+      "steps": [
+        {
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "c.orb",
+            "program": {
+              "ledger": {
+                "entries": {
+                  "orb_1F8TGDBMC9T64X0PZ1EE4KXASE": {
+                    "bakedName": "Account",
+                    "curName": "Account",
+                    "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                    "kind": "orbital",
+                    "owner": "workspace",
+                    "renames": []
+                  }
+                },
+                "schemaVersion": 1
+              },
+              "name": "c",
+              "orbitals": [
+                {
+                  "entity": "Up.orbitals.NoteOrbital.entity",
+                  "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                  "name": "Account",
+                  "reference": {
+                    "extend": [
+                      {
+                        "name": "tier",
+                        "type": "string"
+                      }
+                    ],
+                    "ref": "Up.orbitals.NoteOrbital"
+                  },
+                  "traits": [],
+                  "uses": [
+                    {
+                      "as": "Up",
+                      "from": "./upstream.orb"
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1,
+              "version": "1.0.0"
+            },
+            "kept": [
+              {
+                "orbital": 0,
+                "traits": [
+                  "NoteList"
+                ]
+              }
+            ],
+            "references": [
+              {
+                "kind": "orbital",
+                "alias": "Up",
+                "name": "NoteOrbital",
+                "path": "orbitals[0]",
+                "callSite": {
+                  "ref": "Up.orbitals.NoteOrbital",
+                  "extend": [
+                    {
+                      "name": "tier",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "declaration": {
+                  "name": "NoteOrbital",
+                  "traits": [
+                    {
+                      "name": "NoteList",
+                      "id": "trt_T60ZVNVVZGXZR31EYB50NC1A5P",
+                      "stateMachine": {
+                        "events": [
+                          {
+                            "key": "OPEN"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "event": "OPEN",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.title",
+                                [
+                                  "object/get",
+                                  "@entity",
+                                  "tier"
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "entity": {
+                    "name": "Note",
+                    "id": "ent_HXRASC0DT86X40PEGX52DSE07B",
+                    "collection": "upstream_notes",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "count",
+                        "type": "number",
+                        "default": 1
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_SITES_READY",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_SITES_READY",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-ref-extend",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-guard-reads-the-field",
+      "steps": [
+        {
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "c.orb",
+            "program": {
+              "ledger": {
+                "entries": {
+                  "orb_1F8TGDBMC9T64X0PZ1EE4KXASE": {
+                    "bakedName": "Account",
+                    "curName": "Account",
+                    "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                    "kind": "orbital",
+                    "owner": "workspace",
+                    "renames": []
+                  }
+                },
+                "schemaVersion": 1
+              },
+              "name": "c",
+              "orbitals": [
+                {
+                  "entity": "Up.orbitals.NoteOrbital.entity",
+                  "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                  "name": "Account",
+                  "reference": {
+                    "extend": [
+                      {
+                        "name": "tier",
+                        "type": "string"
+                      }
+                    ],
+                    "ref": "Up.orbitals.NoteOrbital"
+                  },
+                  "traits": [],
+                  "uses": [
+                    {
+                      "as": "Up",
+                      "from": "./upstream.orb"
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1,
+              "version": "1.0.0"
+            },
+            "kept": [
+              {
+                "orbital": 0,
+                "traits": [
+                  "NoteList"
+                ]
+              }
+            ],
+            "references": [
+              {
+                "kind": "orbital",
+                "alias": "Up",
+                "name": "NoteOrbital",
+                "path": "orbitals[0]",
+                "callSite": {
+                  "ref": "Up.orbitals.NoteOrbital",
+                  "extend": [
+                    {
+                      "name": "tier",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "declaration": {
+                  "name": "NoteOrbital",
+                  "traits": [
+                    {
+                      "name": "NoteList",
+                      "id": "trt_T60ZVNVVZGXZR31EYB50NC1A5P",
+                      "stateMachine": {
+                        "events": [
+                          {
+                            "key": "OPEN"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "event": "OPEN",
+                            "guard": [
+                              "=",
+                              "@entity.tier",
+                              "gold"
+                            ],
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "entity": {
+                    "name": "Note",
+                    "id": "ent_HXRASC0DT86X40PEGX52DSE07B",
+                    "collection": "upstream_notes",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "count",
+                        "type": "number",
+                        "default": 1
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_SITES_READY",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_SITES_READY",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-ref-extend",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-column-entry-key-names-the-field",
+      "steps": [
+        {
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "c.orb",
+            "program": {
+              "ledger": {
+                "entries": {
+                  "orb_1F8TGDBMC9T64X0PZ1EE4KXASE": {
+                    "bakedName": "Account",
+                    "curName": "Account",
+                    "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                    "kind": "orbital",
+                    "owner": "workspace",
+                    "renames": []
+                  }
+                },
+                "schemaVersion": 1
+              },
+              "name": "c",
+              "orbitals": [
+                {
+                  "entity": "Up.orbitals.NoteOrbital.entity",
+                  "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                  "name": "Account",
+                  "reference": {
+                    "extend": [
+                      {
+                        "name": "tier",
+                        "type": "string"
+                      }
+                    ],
+                    "ref": "Up.orbitals.NoteOrbital"
+                  },
+                  "traits": [],
+                  "uses": [
+                    {
+                      "as": "Up",
+                      "from": "./upstream.orb"
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1,
+              "version": "1.0.0"
+            },
+            "kept": [
+              {
+                "orbital": 0,
+                "traits": [
+                  "NoteList"
+                ]
+              }
+            ],
+            "references": [
+              {
+                "kind": "orbital",
+                "alias": "Up",
+                "name": "NoteOrbital",
+                "path": "orbitals[0]",
+                "callSite": {
+                  "ref": "Up.orbitals.NoteOrbital",
+                  "extend": [
+                    {
+                      "name": "tier",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "declaration": {
+                  "name": "NoteOrbital",
+                  "traits": [
+                    {
+                      "name": "NoteList",
+                      "id": "trt_T60ZVNVVZGXZR31EYB50NC1A5P",
+                      "stateMachine": {
+                        "events": [
+                          {
+                            "key": "OPEN"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "event": "OPEN",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "data-grid",
+                                  "columns": [
+                                    {
+                                      "key": "tier",
+                                      "label": "Tier"
+                                    }
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "entity": {
+                    "name": "Note",
+                    "id": "ent_HXRASC0DT86X40PEGX52DSE07B",
+                    "collection": "upstream_notes",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "count",
+                        "type": "number",
+                        "default": 1
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_SITES_READY",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_SITES_READY",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-ref-extend",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-field-read-only-by-an-omitted-trait-is-unread",
+      "steps": [
+        {
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "c.orb",
+            "program": {
+              "ledger": {
+                "entries": {
+                  "orb_1F8TGDBMC9T64X0PZ1EE4KXASE": {
+                    "bakedName": "Account",
+                    "curName": "Account",
+                    "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                    "kind": "orbital",
+                    "owner": "workspace",
+                    "renames": []
+                  }
+                },
+                "schemaVersion": 1
+              },
+              "name": "c",
+              "orbitals": [
+                {
+                  "entity": "Up.orbitals.NoteOrbital.entity",
+                  "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                  "name": "Account",
+                  "reference": {
+                    "extend": [
+                      {
+                        "name": "tier",
+                        "type": "string"
+                      }
+                    ],
+                    "omit": [
+                      "NoteExtra"
+                    ],
+                    "ref": "Up.orbitals.NoteOrbital"
+                  },
+                  "traits": [],
+                  "uses": [
+                    {
+                      "as": "Up",
+                      "from": "./upstream.orb"
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1,
+              "version": "1.0.0"
+            },
+            "kept": [
+              {
+                "orbital": 0,
+                "traits": [
+                  "NoteList"
+                ]
+              }
+            ],
+            "references": [
+              {
+                "kind": "orbital",
+                "alias": "Up",
+                "name": "NoteOrbital",
+                "path": "orbitals[0]",
+                "callSite": {
+                  "ref": "Up.orbitals.NoteOrbital",
+                  "omit": [
+                    "NoteExtra"
+                  ],
+                  "extend": [
+                    {
+                      "name": "tier",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "declaration": {
+                  "name": "NoteOrbital",
+                  "traits": [
+                    {
+                      "name": "NoteList",
+                      "id": "trt_T60ZVNVVZGXZR31EYB50NC1A5P",
+                      "stateMachine": {
+                        "events": [
+                          {
+                            "key": "OPEN"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "event": "OPEN",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "NoteExtra",
+                      "id": "trt_00JN00SN1FTGQT3GKHMV16FZWC",
+                      "stateMachine": {
+                        "events": [
+                          {
+                            "key": "SHOW"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "event": "SHOW",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.tier"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "entity": {
+                    "name": "Note",
+                    "id": "ent_HXRASC0DT86X40PEGX52DSE07B",
+                    "collection": "upstream_notes",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "count",
+                        "type": "number",
+                        "default": 1
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_SITES_READY",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_SITES_READY",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-ref-extend",
+                  "findings": [
+                    {
+                      "code": "ORB_O_EXTEND_FIELD_UNREAD",
+                      "path": "orbitals[0].extend(tier)",
+                      "message": "`extend {}` field 'tier' on 'Up.orbitals.NoteOrbital' is never read, set, rendered, or forwarded by a config knob value \u2014 a live wire terminating in nothing.",
+                      "suggestion": "Wire 'tier' into a trait (guard/effect/render) or an orbital-level config knob (e.g. a `browseColumns`/`formFields` list entry), or remove it from `extend {}`.",
+                      "severity": "warning"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-field-read-by-a-kept-trait-under-only-is-read",
+      "steps": [
+        {
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "c.orb",
+            "program": {
+              "ledger": {
+                "entries": {
+                  "orb_1F8TGDBMC9T64X0PZ1EE4KXASE": {
+                    "bakedName": "Account",
+                    "curName": "Account",
+                    "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                    "kind": "orbital",
+                    "owner": "workspace",
+                    "renames": []
+                  }
+                },
+                "schemaVersion": 1
+              },
+              "name": "c",
+              "orbitals": [
+                {
+                  "entity": "Up.orbitals.NoteOrbital.entity",
+                  "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                  "name": "Account",
+                  "reference": {
+                    "extend": [
+                      {
+                        "name": "tier",
+                        "type": "string"
+                      }
+                    ],
+                    "only": [
+                      "NoteExtra"
+                    ],
+                    "ref": "Up.orbitals.NoteOrbital"
+                  },
+                  "traits": [],
+                  "uses": [
+                    {
+                      "as": "Up",
+                      "from": "./upstream.orb"
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1,
+              "version": "1.0.0"
+            },
+            "kept": [
+              {
+                "orbital": 0,
+                "traits": [
+                  "NoteExtra"
+                ]
+              }
+            ],
+            "references": [
+              {
+                "kind": "orbital",
+                "alias": "Up",
+                "name": "NoteOrbital",
+                "path": "orbitals[0]",
+                "callSite": {
+                  "ref": "Up.orbitals.NoteOrbital",
+                  "only": [
+                    "NoteExtra"
+                  ],
+                  "extend": [
+                    {
+                      "name": "tier",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "declaration": {
+                  "name": "NoteOrbital",
+                  "traits": [
+                    {
+                      "name": "NoteList",
+                      "id": "trt_T60ZVNVVZGXZR31EYB50NC1A5P",
+                      "stateMachine": {
+                        "events": [
+                          {
+                            "key": "OPEN"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "event": "OPEN",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "NoteExtra",
+                      "id": "trt_00JN00SN1FTGQT3GKHMV16FZWC",
+                      "stateMachine": {
+                        "events": [
+                          {
+                            "key": "SHOW"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "event": "SHOW",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.tier"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "entity": {
+                    "name": "Note",
+                    "id": "ent_HXRASC0DT86X40PEGX52DSE07B",
+                    "collection": "upstream_notes",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "count",
+                        "type": "number",
+                        "default": 1
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_SITES_READY",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_SITES_READY",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-ref-extend",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-reference-body-sibling-sets-the-field",
+      "steps": [
+        {
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "c.orb",
+            "program": {
+              "ledger": {
+                "entries": {
+                  "evt_GNZW0RJDN76TKWYVXDT1NK2HF1": {
+                    "bakedName": "OPEN",
+                    "curName": "OPEN",
+                    "id": "evt_GNZW0RJDN76TKWYVXDT1NK2HF1",
+                    "kind": "event",
+                    "owner": "workspace",
+                    "parent": "trt_04BPN3FWVFYDQTAXX2JV2MP38K",
+                    "renames": []
+                  },
+                  "orb_1F8TGDBMC9T64X0PZ1EE4KXASE": {
+                    "bakedName": "Account",
+                    "curName": "Account",
+                    "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                    "kind": "orbital",
+                    "owner": "workspace",
+                    "renames": []
+                  },
+                  "trt_04BPN3FWVFYDQTAXX2JV2MP38K": {
+                    "bakedName": "Stamper",
+                    "curName": "Stamper",
+                    "id": "trt_04BPN3FWVFYDQTAXX2JV2MP38K",
+                    "kind": "trait",
+                    "owner": "workspace",
+                    "renames": []
+                  }
+                },
+                "schemaVersion": 1
+              },
+              "name": "c",
+              "orbitals": [
+                {
+                  "entity": "Up.orbitals.NoteOrbital.entity",
+                  "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                  "name": "Account",
+                  "reference": {
+                    "extend": [
+                      {
+                        "name": "workspaceId",
+                        "type": "string"
+                      },
+                      {
+                        "name": "orphan",
+                        "type": "string"
+                      }
+                    ],
+                    "ref": "Up.orbitals.NoteOrbital"
+                  },
+                  "traits": [
+                    {
+                      "id": "trt_04BPN3FWVFYDQTAXX2JV2MP38K",
+                      "linkedEntity": "Note",
+                      "name": "Stamper",
+                      "stateMachine": {
+                        "events": [
+                          {
+                            "id": "evt_GNZW0RJDN76TKWYVXDT1NK2HF1",
+                            "key": "OPEN"
+                          }
+                        ],
+                        "states": [
+                          {
+                            "isInitial": true,
+                            "name": "idle"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.workspaceId",
+                                "?workspaceId"
+                              ]
+                            ],
+                            "event": "OPEN",
+                            "eventId": "evt_GNZW0RJDN76TKWYVXDT1NK2HF1",
+                            "from": "idle",
+                            "to": "idle"
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "uses": [
+                    {
+                      "as": "Up",
+                      "from": "./upstream.orb"
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1,
+              "version": "1.0.0"
+            },
+            "kept": [
+              {
+                "orbital": 0,
+                "traits": [
+                  "NoteList"
+                ]
+              }
+            ],
+            "references": [
+              {
+                "kind": "orbital",
+                "alias": "Up",
+                "name": "NoteOrbital",
+                "path": "orbitals[0]",
+                "callSite": {
+                  "ref": "Up.orbitals.NoteOrbital",
+                  "extend": [
+                    {
+                      "name": "workspaceId",
+                      "type": "string"
+                    },
+                    {
+                      "name": "orphan",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "declaration": {
+                  "name": "NoteOrbital",
+                  "traits": [
+                    {
+                      "name": "NoteList",
+                      "id": "trt_T60ZVNVVZGXZR31EYB50NC1A5P",
+                      "stateMachine": {
+                        "events": [
+                          {
+                            "key": "OPEN"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "event": "OPEN",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.title"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "entity": {
+                    "name": "Note",
+                    "id": "ent_HXRASC0DT86X40PEGX52DSE07B",
+                    "collection": "upstream_notes",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "count",
+                        "type": "number",
+                        "default": 1
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_SITES_READY",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_SITES_READY",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-ref-extend",
+                  "findings": [
+                    {
+                      "code": "ORB_O_EXTEND_FIELD_UNREAD",
+                      "path": "orbitals[0].extend(orphan)",
+                      "message": "`extend {}` field 'orphan' on 'Up.orbitals.NoteOrbital' is never read, set, rendered, or forwarded by a config knob value \u2014 a live wire terminating in nothing.",
+                      "suggestion": "Wire 'orphan' into a trait (guard/effect/render) or an orbital-level config knob (e.g. a `browseColumns`/`formFields` list entry), or remove it from `extend {}`.",
+                      "severity": "warning"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-config-knob-value-names-the-field",
+      "steps": [
+        {
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "c.orb",
+            "program": {
+              "ledger": {
+                "entries": {
+                  "orb_1F8TGDBMC9T64X0PZ1EE4KXASE": {
+                    "bakedName": "Account",
+                    "curName": "Account",
+                    "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                    "kind": "orbital",
+                    "owner": "workspace",
+                    "renames": []
+                  }
+                },
+                "schemaVersion": 1
+              },
+              "name": "c",
+              "orbitals": [
+                {
+                  "entity": "Up.orbitals.NoteOrbital.entity",
+                  "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                  "name": "Account",
+                  "reference": {
+                    "extend": [
+                      {
+                        "name": "overtimeHours",
+                        "type": "string"
+                      }
+                    ],
+                    "ref": "Up.orbitals.NoteOrbital"
+                  },
+                  "traits": [],
+                  "uses": [
+                    {
+                      "as": "Up",
+                      "from": "./upstream.orb"
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1,
+              "version": "1.0.0"
+            },
+            "kept": [
+              {
+                "orbital": 0,
+                "traits": [
+                  "Grid"
+                ]
+              }
+            ],
+            "references": [
+              {
+                "kind": "orbital",
+                "alias": "Up",
+                "name": "NoteOrbital",
+                "path": "orbitals[0]",
+                "callSite": {
+                  "ref": "Up.orbitals.NoteOrbital",
+                  "extend": [
+                    {
+                      "name": "overtimeHours",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "declaration": {
+                  "name": "NoteOrbital",
+                  "traits": [
+                    {
+                      "name": "Grid",
+                      "id": "trt_S25P6JH9ZAMZN5N8YEQQ40KG98",
+                      "config": {
+                        "browseColumns": {
+                          "type": "unknown",
+                          "default": "@config.browseColumns"
+                        }
+                      },
+                      "stateMachine": {
+                        "events": [
+                          {
+                            "key": "OPEN"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "event": "OPEN",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "entity": {
+                    "name": "Note",
+                    "id": "ent_HXRASC0DT86X40PEGX52DSE07B",
+                    "collection": "upstream_notes",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "count",
+                        "type": "number",
+                        "default": 1
+                      }
+                    ]
+                  },
+                  "config": {
+                    "browseColumns": {
+                      "type": "array",
+                      "default": [
+                        {
+                          "key": "overtimeHours",
+                          "label": "Overtime"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_SITES_READY",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_SITES_READY",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-ref-extend",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-config-knob-no-kept-trait-forwards-does-not-count",
+      "steps": [
+        {
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "c.orb",
+            "program": {
+              "ledger": {
+                "entries": {
+                  "orb_1F8TGDBMC9T64X0PZ1EE4KXASE": {
+                    "bakedName": "Account",
+                    "curName": "Account",
+                    "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                    "kind": "orbital",
+                    "owner": "workspace",
+                    "renames": []
+                  }
+                },
+                "schemaVersion": 1
+              },
+              "name": "c",
+              "orbitals": [
+                {
+                  "entity": "Up.orbitals.NoteOrbital.entity",
+                  "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                  "name": "Account",
+                  "reference": {
+                    "extend": [
+                      {
+                        "name": "overtimeHours",
+                        "type": "string"
+                      }
+                    ],
+                    "ref": "Up.orbitals.NoteOrbital"
+                  },
+                  "traits": [],
+                  "uses": [
+                    {
+                      "as": "Up",
+                      "from": "./upstream.orb"
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1,
+              "version": "1.0.0"
+            },
+            "kept": [
+              {
+                "orbital": 0,
+                "traits": [
+                  "Grid"
+                ]
+              }
+            ],
+            "references": [
+              {
+                "kind": "orbital",
+                "alias": "Up",
+                "name": "NoteOrbital",
+                "path": "orbitals[0]",
+                "callSite": {
+                  "ref": "Up.orbitals.NoteOrbital",
+                  "extend": [
+                    {
+                      "name": "overtimeHours",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "declaration": {
+                  "name": "NoteOrbital",
+                  "traits": [
+                    {
+                      "name": "Grid",
+                      "id": "trt_S25P6JH9ZAMZN5N8YEQQ40KG98",
+                      "stateMachine": {
+                        "events": [
+                          {
+                            "key": "OPEN"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "event": "OPEN",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "entity": {
+                    "name": "Note",
+                    "id": "ent_HXRASC0DT86X40PEGX52DSE07B",
+                    "collection": "upstream_notes",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "count",
+                        "type": "number",
+                        "default": 1
+                      }
+                    ]
+                  },
+                  "config": {
+                    "browseColumns": {
+                      "type": "array",
+                      "default": [
+                        {
+                          "key": "overtimeHours",
+                          "label": "Overtime"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_SITES_READY",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_SITES_READY",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-ref-extend",
+                  "findings": [
+                    {
+                      "code": "ORB_O_EXTEND_FIELD_UNREAD",
+                      "path": "orbitals[0].extend(overtimeHours)",
+                      "message": "`extend {}` field 'overtimeHours' on 'Up.orbitals.NoteOrbital' is never read, set, rendered, or forwarded by a config knob value \u2014 a live wire terminating in nothing.",
+                      "suggestion": "Wire 'overtimeHours' into a trait (guard/effect/render) or an orbital-level config knob (e.g. a `browseColumns`/`formFields` list entry), or remove it from `extend {}`.",
+                      "severity": "warning"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-config-override-names-the-field",
+      "steps": [
+        {
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "c.orb",
+            "program": {
+              "ledger": {
+                "entries": {
+                  "orb_1F8TGDBMC9T64X0PZ1EE4KXASE": {
+                    "bakedName": "Account",
+                    "curName": "Account",
+                    "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                    "kind": "orbital",
+                    "owner": "workspace",
+                    "renames": []
+                  }
+                },
+                "schemaVersion": 1
+              },
+              "name": "c",
+              "orbitals": [
+                {
+                  "entity": "Up.orbitals.NoteOrbital.entity",
+                  "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                  "name": "Account",
+                  "reference": {
+                    "config": {
+                      "browseColumns": {
+                        "default": [
+                          "overtimeHours"
+                        ],
+                        "type": "unknown"
+                      }
+                    },
+                    "extend": [
+                      {
+                        "name": "overtimeHours",
+                        "type": "string"
+                      }
+                    ],
+                    "ref": "Up.orbitals.NoteOrbital"
+                  },
+                  "traits": [],
+                  "uses": [
+                    {
+                      "as": "Up",
+                      "from": "./upstream.orb"
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1,
+              "version": "1.0.0"
+            },
+            "kept": [
+              {
+                "orbital": 0,
+                "traits": [
+                  "Grid"
+                ]
+              }
+            ],
+            "references": [
+              {
+                "kind": "orbital",
+                "alias": "Up",
+                "name": "NoteOrbital",
+                "path": "orbitals[0]",
+                "callSite": {
+                  "ref": "Up.orbitals.NoteOrbital",
+                  "config": {
+                    "browseColumns": {
+                      "type": "unknown",
+                      "default": [
+                        "overtimeHours"
+                      ]
+                    }
+                  },
+                  "extend": [
+                    {
+                      "name": "overtimeHours",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "declaration": {
+                  "name": "NoteOrbital",
+                  "traits": [
+                    {
+                      "name": "Grid",
+                      "id": "trt_S25P6JH9ZAMZN5N8YEQQ40KG98",
+                      "config": {
+                        "browseColumns": {
+                          "type": "unknown",
+                          "default": "@config.browseColumns"
+                        }
+                      },
+                      "stateMachine": {
+                        "events": [
+                          {
+                            "key": "OPEN"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "event": "OPEN",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "entity": {
+                    "name": "Note",
+                    "id": "ent_HXRASC0DT86X40PEGX52DSE07B",
+                    "collection": "upstream_notes",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "count",
+                        "type": "number",
+                        "default": 1
+                      }
+                    ]
+                  },
+                  "config": {
+                    "browseColumns": {
+                      "type": "array",
+                      "default": []
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_SITES_READY",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_SITES_READY",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-ref-extend",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-traits-override-config-default-names-the-field",
+      "steps": [
+        {
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "c.orb",
+            "program": {
+              "ledger": {
+                "entries": {
+                  "orb_1F8TGDBMC9T64X0PZ1EE4KXASE": {
+                    "bakedName": "Account",
+                    "curName": "Account",
+                    "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                    "kind": "orbital",
+                    "owner": "workspace",
+                    "renames": []
+                  }
+                },
+                "schemaVersion": 1
+              },
+              "name": "c",
+              "orbitals": [
+                {
+                  "entity": "Up.orbitals.NoteOrbital.entity",
+                  "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                  "name": "Account",
+                  "reference": {
+                    "extend": [
+                      {
+                        "name": "tier",
+                        "type": "string"
+                      }
+                    ],
+                    "ref": "Up.orbitals.NoteOrbital",
+                    "traits": {
+                      "Grid": {
+                        "config": {
+                          "cols": {
+                            "default": [
+                              {
+                                "key": "tier"
+                              }
+                            ],
+                            "type": "unknown"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "traits": [],
+                  "uses": [
+                    {
+                      "as": "Up",
+                      "from": "./upstream.orb"
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1,
+              "version": "1.0.0"
+            },
+            "kept": [
+              {
+                "orbital": 0,
+                "traits": [
+                  "Grid"
+                ]
+              }
+            ],
+            "references": [
+              {
+                "kind": "orbital",
+                "alias": "Up",
+                "name": "NoteOrbital",
+                "path": "orbitals[0]",
+                "callSite": {
+                  "ref": "Up.orbitals.NoteOrbital",
+                  "extend": [
+                    {
+                      "name": "tier",
+                      "type": "string"
+                    }
+                  ],
+                  "traits": {
+                    "Grid": {
+                      "config": {
+                        "cols": {
+                          "type": "unknown",
+                          "default": [
+                            {
+                              "key": "tier"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                },
+                "declaration": {
+                  "name": "NoteOrbital",
+                  "traits": [
+                    {
+                      "name": "Grid",
+                      "id": "trt_S25P6JH9ZAMZN5N8YEQQ40KG98",
+                      "config": {
+                        "cols": {
+                          "type": "unknown",
+                          "default": [
+                            "title"
+                          ]
+                        }
+                      },
+                      "stateMachine": {
+                        "events": [
+                          {
+                            "key": "OPEN"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "event": "OPEN",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "entity": {
+                    "name": "Note",
+                    "id": "ent_HXRASC0DT86X40PEGX52DSE07B",
+                    "collection": "upstream_notes",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "count",
+                        "type": "number",
+                        "default": 1
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_SITES_READY",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_SITES_READY",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-ref-extend",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-overridden-away-config-default-no-longer-reads-the-field",
+      "steps": [
+        {
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "c.orb",
+            "program": {
+              "ledger": {
+                "entries": {
+                  "orb_1F8TGDBMC9T64X0PZ1EE4KXASE": {
+                    "bakedName": "Account",
+                    "curName": "Account",
+                    "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                    "kind": "orbital",
+                    "owner": "workspace",
+                    "renames": []
+                  }
+                },
+                "schemaVersion": 1
+              },
+              "name": "c",
+              "orbitals": [
+                {
+                  "entity": "Up.orbitals.NoteOrbital.entity",
+                  "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                  "name": "Account",
+                  "reference": {
+                    "extend": [
+                      {
+                        "name": "tier",
+                        "type": "string"
+                      }
+                    ],
+                    "ref": "Up.orbitals.NoteOrbital",
+                    "traits": {
+                      "Grid": {
+                        "config": {
+                          "cols": {
+                            "default": [
+                              "title"
+                            ],
+                            "type": "unknown"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "traits": [],
+                  "uses": [
+                    {
+                      "as": "Up",
+                      "from": "./upstream.orb"
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1,
+              "version": "1.0.0"
+            },
+            "kept": [
+              {
+                "orbital": 0,
+                "traits": [
+                  "Grid"
+                ]
+              }
+            ],
+            "references": [
+              {
+                "kind": "orbital",
+                "alias": "Up",
+                "name": "NoteOrbital",
+                "path": "orbitals[0]",
+                "callSite": {
+                  "ref": "Up.orbitals.NoteOrbital",
+                  "extend": [
+                    {
+                      "name": "tier",
+                      "type": "string"
+                    }
+                  ],
+                  "traits": {
+                    "Grid": {
+                      "config": {
+                        "cols": {
+                          "type": "unknown",
+                          "default": [
+                            "title"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                },
+                "declaration": {
+                  "name": "NoteOrbital",
+                  "traits": [
+                    {
+                      "name": "Grid",
+                      "id": "trt_S25P6JH9ZAMZN5N8YEQQ40KG98",
+                      "config": {
+                        "cols": {
+                          "type": "unknown",
+                          "default": [
+                            {
+                              "key": "tier"
+                            }
+                          ]
+                        }
+                      },
+                      "stateMachine": {
+                        "events": [
+                          {
+                            "key": "OPEN"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "event": "OPEN",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "entity": {
+                    "name": "Note",
+                    "id": "ent_HXRASC0DT86X40PEGX52DSE07B",
+                    "collection": "upstream_notes",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "count",
+                        "type": "number",
+                        "default": 1
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_SITES_READY",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_SITES_READY",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-ref-extend",
+                  "findings": [
+                    {
+                      "code": "ORB_O_EXTEND_FIELD_UNREAD",
+                      "path": "orbitals[0].extend(tier)",
+                      "message": "`extend {}` field 'tier' on 'Up.orbitals.NoteOrbital' is never read, set, rendered, or forwarded by a config knob value \u2014 a live wire terminating in nothing.",
+                      "suggestion": "Wire 'tier' into a trait (guard/effect/render) or an orbital-level config knob (e.g. a `browseColumns`/`formFields` list entry), or remove it from `extend {}`.",
+                      "severity": "warning"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-without-the-override-the-config-default-reads-the-field",
+      "steps": [
+        {
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "c.orb",
+            "program": {
+              "ledger": {
+                "entries": {
+                  "orb_1F8TGDBMC9T64X0PZ1EE4KXASE": {
+                    "bakedName": "Account",
+                    "curName": "Account",
+                    "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                    "kind": "orbital",
+                    "owner": "workspace",
+                    "renames": []
+                  }
+                },
+                "schemaVersion": 1
+              },
+              "name": "c",
+              "orbitals": [
+                {
+                  "entity": "Up.orbitals.NoteOrbital.entity",
+                  "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                  "name": "Account",
+                  "reference": {
+                    "extend": [
+                      {
+                        "name": "tier",
+                        "type": "string"
+                      }
+                    ],
+                    "ref": "Up.orbitals.NoteOrbital"
+                  },
+                  "traits": [],
+                  "uses": [
+                    {
+                      "as": "Up",
+                      "from": "./upstream.orb"
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1,
+              "version": "1.0.0"
+            },
+            "kept": [
+              {
+                "orbital": 0,
+                "traits": [
+                  "Grid"
+                ]
+              }
+            ],
+            "references": [
+              {
+                "kind": "orbital",
+                "alias": "Up",
+                "name": "NoteOrbital",
+                "path": "orbitals[0]",
+                "callSite": {
+                  "ref": "Up.orbitals.NoteOrbital",
+                  "extend": [
+                    {
+                      "name": "tier",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "declaration": {
+                  "name": "NoteOrbital",
+                  "traits": [
+                    {
+                      "name": "Grid",
+                      "id": "trt_S25P6JH9ZAMZN5N8YEQQ40KG98",
+                      "config": {
+                        "cols": {
+                          "type": "unknown",
+                          "default": [
+                            {
+                              "key": "tier"
+                            }
+                          ]
+                        }
+                      },
+                      "stateMachine": {
+                        "events": [
+                          {
+                            "key": "OPEN"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "event": "OPEN",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "entity": {
+                    "name": "Note",
+                    "id": "ent_HXRASC0DT86X40PEGX52DSE07B",
+                    "collection": "upstream_notes",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "count",
+                        "type": "number",
+                        "default": 1
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_SITES_READY",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_SITES_READY",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-ref-extend",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-trait-level-fields-rename-reads-the-new-name",
+      "steps": [
+        {
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "c.orb",
+            "program": {
+              "ledger": {
+                "entries": {
+                  "orb_1F8TGDBMC9T64X0PZ1EE4KXASE": {
+                    "bakedName": "Account",
+                    "curName": "Account",
+                    "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                    "kind": "orbital",
+                    "owner": "workspace",
+                    "renames": []
+                  }
+                },
+                "schemaVersion": 1
+              },
+              "name": "c",
+              "orbitals": [
+                {
+                  "entity": "Up.orbitals.NoteOrbital.entity",
+                  "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                  "name": "Account",
+                  "reference": {
+                    "extend": [
+                      {
+                        "name": "tier",
+                        "type": "string"
+                      }
+                    ],
+                    "ref": "Up.orbitals.NoteOrbital",
+                    "traits": {
+                      "NoteList": {
+                        "fields": {
+                          "title": "tier"
+                        }
+                      }
+                    }
+                  },
+                  "traits": [],
+                  "uses": [
+                    {
+                      "as": "Up",
+                      "from": "./upstream.orb"
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1,
+              "version": "1.0.0"
+            },
+            "kept": [
+              {
+                "orbital": 0,
+                "traits": [
+                  "NoteList"
+                ]
+              }
+            ],
+            "references": [
+              {
+                "kind": "orbital",
+                "alias": "Up",
+                "name": "NoteOrbital",
+                "path": "orbitals[0]",
+                "callSite": {
+                  "ref": "Up.orbitals.NoteOrbital",
+                  "extend": [
+                    {
+                      "name": "tier",
+                      "type": "string"
+                    }
+                  ],
+                  "traits": {
+                    "NoteList": {
+                      "fields": {
+                        "title": "tier"
+                      }
+                    }
+                  }
+                },
+                "declaration": {
+                  "name": "NoteOrbital",
+                  "traits": [
+                    {
+                      "name": "NoteList",
+                      "id": "trt_T60ZVNVVZGXZR31EYB50NC1A5P",
+                      "stateMachine": {
+                        "events": [
+                          {
+                            "key": "OPEN"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "event": "OPEN",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.title"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "entity": {
+                    "name": "Note",
+                    "id": "ent_HXRASC0DT86X40PEGX52DSE07B",
+                    "collection": "upstream_notes",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "count",
+                        "type": "number",
+                        "default": 1
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_SITES_READY",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_SITES_READY",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-ref-extend",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-without-the-trait-level-rename-the-new-name-is-unread",
+      "steps": [
+        {
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "c.orb",
+            "program": {
+              "ledger": {
+                "entries": {
+                  "orb_1F8TGDBMC9T64X0PZ1EE4KXASE": {
+                    "bakedName": "Account",
+                    "curName": "Account",
+                    "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                    "kind": "orbital",
+                    "owner": "workspace",
+                    "renames": []
+                  }
+                },
+                "schemaVersion": 1
+              },
+              "name": "c",
+              "orbitals": [
+                {
+                  "entity": "Up.orbitals.NoteOrbital.entity",
+                  "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                  "name": "Account",
+                  "reference": {
+                    "extend": [
+                      {
+                        "name": "tier",
+                        "type": "string"
+                      }
+                    ],
+                    "ref": "Up.orbitals.NoteOrbital"
+                  },
+                  "traits": [],
+                  "uses": [
+                    {
+                      "as": "Up",
+                      "from": "./upstream.orb"
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1,
+              "version": "1.0.0"
+            },
+            "kept": [
+              {
+                "orbital": 0,
+                "traits": [
+                  "NoteList"
+                ]
+              }
+            ],
+            "references": [
+              {
+                "kind": "orbital",
+                "alias": "Up",
+                "name": "NoteOrbital",
+                "path": "orbitals[0]",
+                "callSite": {
+                  "ref": "Up.orbitals.NoteOrbital",
+                  "extend": [
+                    {
+                      "name": "tier",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "declaration": {
+                  "name": "NoteOrbital",
+                  "traits": [
+                    {
+                      "name": "NoteList",
+                      "id": "trt_T60ZVNVVZGXZR31EYB50NC1A5P",
+                      "stateMachine": {
+                        "events": [
+                          {
+                            "key": "OPEN"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "event": "OPEN",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.title"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "entity": {
+                    "name": "Note",
+                    "id": "ent_HXRASC0DT86X40PEGX52DSE07B",
+                    "collection": "upstream_notes",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "count",
+                        "type": "number",
+                        "default": 1
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_SITES_READY",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_SITES_READY",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-ref-extend",
+                  "findings": [
+                    {
+                      "code": "ORB_O_EXTEND_FIELD_UNREAD",
+                      "path": "orbitals[0].extend(tier)",
+                      "message": "`extend {}` field 'tier' on 'Up.orbitals.NoteOrbital' is never read, set, rendered, or forwarded by a config knob value \u2014 a live wire terminating in nothing.",
+                      "suggestion": "Wire 'tier' into a trait (guard/effect/render) or an orbital-level config knob (e.g. a `browseColumns`/`formFields` list entry), or remove it from `extend {}`.",
+                      "severity": "warning"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-entities-retarget-changes-nothing-here",
+      "steps": [
+        {
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "c.orb",
+            "program": {
+              "ledger": {
+                "entries": {
+                  "orb_1F8TGDBMC9T64X0PZ1EE4KXASE": {
+                    "bakedName": "Account",
+                    "curName": "Account",
+                    "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                    "kind": "orbital",
+                    "owner": "workspace",
+                    "renames": []
+                  }
+                },
+                "schemaVersion": 1
+              },
+              "name": "c",
+              "orbitals": [
+                {
+                  "entity": "Up.orbitals.NoteOrbital.entity",
+                  "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                  "name": "Account",
+                  "reference": {
+                    "entities": {
+                      "Other": "Mine"
+                    },
+                    "extend": [
+                      {
+                        "name": "tier",
+                        "type": "string"
+                      }
+                    ],
+                    "ref": "Up.orbitals.NoteOrbital"
+                  },
+                  "traits": [],
+                  "uses": [
+                    {
+                      "as": "Up",
+                      "from": "./upstream.orb"
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1,
+              "version": "1.0.0"
+            },
+            "kept": [
+              {
+                "orbital": 0,
+                "traits": [
+                  "NoteList"
+                ]
+              }
+            ],
+            "references": [
+              {
+                "kind": "orbital",
+                "alias": "Up",
+                "name": "NoteOrbital",
+                "path": "orbitals[0]",
+                "callSite": {
+                  "ref": "Up.orbitals.NoteOrbital",
+                  "entities": {
+                    "Other": "Mine"
+                  },
+                  "extend": [
+                    {
+                      "name": "tier",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "declaration": {
+                  "name": "NoteOrbital",
+                  "traits": [
+                    {
+                      "name": "NoteList",
+                      "id": "trt_T60ZVNVVZGXZR31EYB50NC1A5P",
+                      "stateMachine": {
+                        "events": [
+                          {
+                            "key": "OPEN"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "event": "OPEN",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.title"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "entity": {
+                    "name": "Note",
+                    "id": "ent_HXRASC0DT86X40PEGX52DSE07B",
+                    "collection": "upstream_notes",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "count",
+                        "type": "number",
+                        "default": 1
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_SITES_READY",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_SITES_READY",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-ref-extend",
+                  "findings": [
+                    {
+                      "code": "ORB_O_EXTEND_FIELD_UNREAD",
+                      "path": "orbitals[0].extend(tier)",
+                      "message": "`extend {}` field 'tier' on 'Up.orbitals.NoteOrbital' is never read, set, rendered, or forwarded by a config knob value \u2014 a live wire terminating in nothing.",
+                      "suggestion": "Wire 'tier' into a trait (guard/effect/render) or an orbital-level config knob (e.g. a `browseColumns`/`formFields` list entry), or remove it from `extend {}`.",
+                      "severity": "warning"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-config-token-in-a-raw-effect-is-not-a-read-of-its-default-field",
+      "steps": [
+        {
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "c.orb",
+            "program": {
+              "ledger": {
+                "entries": {
+                  "orb_1F8TGDBMC9T64X0PZ1EE4KXASE": {
+                    "bakedName": "Account",
+                    "curName": "Account",
+                    "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                    "kind": "orbital",
+                    "owner": "workspace",
+                    "renames": []
+                  }
+                },
+                "schemaVersion": 1
+              },
+              "name": "c",
+              "orbitals": [
+                {
+                  "entity": "Up.orbitals.NoteOrbital.entity",
+                  "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                  "name": "Account",
+                  "reference": {
+                    "extend": [
+                      {
+                        "name": "tier",
+                        "type": "string"
+                      }
+                    ],
+                    "ref": "Up.orbitals.NoteOrbital"
+                  },
+                  "traits": [],
+                  "uses": [
+                    {
+                      "as": "Up",
+                      "from": "./upstream.orb"
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1,
+              "version": "1.0.0"
+            },
+            "kept": [
+              {
+                "orbital": 0,
+                "traits": [
+                  "Grid"
+                ]
+              }
+            ],
+            "references": [
+              {
+                "kind": "orbital",
+                "alias": "Up",
+                "name": "NoteOrbital",
+                "path": "orbitals[0]",
+                "callSite": {
+                  "ref": "Up.orbitals.NoteOrbital",
+                  "extend": [
+                    {
+                      "name": "tier",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "declaration": {
+                  "name": "NoteOrbital",
+                  "traits": [
+                    {
+                      "name": "Grid",
+                      "id": "trt_S25P6JH9ZAMZN5N8YEQQ40KG98",
+                      "config": {
+                        "label": {
+                          "type": "string",
+                          "default": "@entity.tier"
+                        }
+                      },
+                      "stateMachine": {
+                        "events": [
+                          {
+                            "key": "OPEN"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "event": "OPEN",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "@config.label"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "entity": {
+                    "name": "Note",
+                    "id": "ent_HXRASC0DT86X40PEGX52DSE07B",
+                    "collection": "upstream_notes",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "count",
+                        "type": "number",
+                        "default": 1
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_SITES_READY",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_SITES_READY",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-ref-extend",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-render-tree-of-empty-sibling-objects-does-not-break-the-walk",
+      "steps": [
+        {
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "c.orb",
+            "program": {
+              "ledger": {
+                "entries": {
+                  "orb_1F8TGDBMC9T64X0PZ1EE4KXASE": {
+                    "bakedName": "Account",
+                    "curName": "Account",
+                    "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                    "kind": "orbital",
+                    "owner": "workspace",
+                    "renames": []
+                  }
+                },
+                "schemaVersion": 1
+              },
+              "name": "c",
+              "orbitals": [
+                {
+                  "entity": "Up.orbitals.NoteOrbital.entity",
+                  "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                  "name": "Account",
+                  "reference": {
+                    "extend": [
+                      {
+                        "name": "tier",
+                        "type": "string"
+                      }
+                    ],
+                    "ref": "Up.orbitals.NoteOrbital"
+                  },
+                  "traits": [],
+                  "uses": [
+                    {
+                      "as": "Up",
+                      "from": "./upstream.orb"
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1,
+              "version": "1.0.0"
+            },
+            "kept": [
+              {
+                "orbital": 0,
+                "traits": [
+                  "NoteList"
+                ]
+              }
+            ],
+            "references": [
+              {
+                "kind": "orbital",
+                "alias": "Up",
+                "name": "NoteOrbital",
+                "path": "orbitals[0]",
+                "callSite": {
+                  "ref": "Up.orbitals.NoteOrbital",
+                  "extend": [
+                    {
+                      "name": "tier",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "declaration": {
+                  "name": "NoteOrbital",
+                  "traits": [
+                    {
+                      "name": "NoteList",
+                      "id": "trt_T60ZVNVVZGXZR31EYB50NC1A5P",
+                      "stateMachine": {
+                        "events": [
+                          {
+                            "key": "OPEN"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "event": "OPEN",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "modal",
+                                {
+                                  "children": [
+                                    {},
+                                    {},
+                                    {}
+                                  ]
+                                }
+                              ],
+                              [
+                                "set",
+                                "@entity.tier",
+                                "x"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "entity": {
+                    "name": "Note",
+                    "id": "ent_HXRASC0DT86X40PEGX52DSE07B",
+                    "collection": "upstream_notes",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "count",
+                        "type": "number",
+                        "default": 1
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_SITES_READY",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_SITES_READY",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-ref-extend",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-object-get-with-non-string-members-is-not-a-read",
+      "steps": [
+        {
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "c.orb",
+            "program": {
+              "ledger": {
+                "entries": {
+                  "orb_1F8TGDBMC9T64X0PZ1EE4KXASE": {
+                    "bakedName": "Account",
+                    "curName": "Account",
+                    "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                    "kind": "orbital",
+                    "owner": "workspace",
+                    "renames": []
+                  }
+                },
+                "schemaVersion": 1
+              },
+              "name": "c",
+              "orbitals": [
+                {
+                  "entity": "Up.orbitals.NoteOrbital.entity",
+                  "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                  "name": "Account",
+                  "reference": {
+                    "extend": [
+                      {
+                        "name": "tier",
+                        "type": "string"
+                      }
+                    ],
+                    "ref": "Up.orbitals.NoteOrbital"
+                  },
+                  "traits": [],
+                  "uses": [
+                    {
+                      "as": "Up",
+                      "from": "./upstream.orb"
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1,
+              "version": "1.0.0"
+            },
+            "kept": [
+              {
+                "orbital": 0,
+                "traits": [
+                  "NoteList"
+                ]
+              }
+            ],
+            "references": [
+              {
+                "kind": "orbital",
+                "alias": "Up",
+                "name": "NoteOrbital",
+                "path": "orbitals[0]",
+                "callSite": {
+                  "ref": "Up.orbitals.NoteOrbital",
+                  "extend": [
+                    {
+                      "name": "tier",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "declaration": {
+                  "name": "NoteOrbital",
+                  "traits": [
+                    {
+                      "name": "NoteList",
+                      "id": "trt_T60ZVNVVZGXZR31EYB50NC1A5P",
+                      "stateMachine": {
+                        "events": [
+                          {
+                            "key": "OPEN"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "event": "OPEN",
+                            "effects": [
+                              [
+                                "x",
+                                {},
+                                {},
+                                {}
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "entity": {
+                    "name": "Note",
+                    "id": "ent_HXRASC0DT86X40PEGX52DSE07B",
+                    "collection": "upstream_notes",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "count",
+                        "type": "number",
+                        "default": 1
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_SITES_READY",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_SITES_READY",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-ref-extend",
+                  "findings": [
+                    {
+                      "code": "ORB_O_EXTEND_FIELD_UNREAD",
+                      "path": "orbitals[0].extend(tier)",
+                      "message": "`extend {}` field 'tier' on 'Up.orbitals.NoteOrbital' is never read, set, rendered, or forwarded by a config knob value \u2014 a live wire terminating in nothing.",
+                      "suggestion": "Wire 'tier' into a trait (guard/effect/render) or an orbital-level config knob (e.g. a `browseColumns`/`formFields` list entry), or remove it from `extend {}`.",
+                      "severity": "warning"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

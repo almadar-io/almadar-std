@@ -147,6 +147,10 @@ export interface OperatorMeta {
   failable?: FailableMeta;
   /** The sign of the result, which the checker uses to prove a divisor nonzero or a root's argument non-negative. */
   sign?: ResultSign;
+  /** The event names the bus never delivers, so a control or emit naming one fires nothing (on `emit`). */
+  busExcluded?: string[];
+  /** The options that name a dispatch's target; a request naming none of them is addressed at the calling trait (on `program/dispatch`). */
+  targetOptions?: string[];
   /** Execution site of an effect operator; set on every `hasSideEffects` operator, absent on pure ones. */
   runsOn?: RunsOn;
   /** The host that executes this effect: `program` = the shared program host (`@almadar/runtime` `host/program` `runProgramEffect`), on both execution paths. `os` = the `os/` family, executed by the OS host under a declared grant. Absent for effects the runtime executes itself. */

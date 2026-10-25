@@ -1,0 +1,21 @@
+app lint-listen-redundant-embed-route-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint listen-redundant-embed-route <file>`, the port of the compiler rule ORB_LISTEN_REDUNDANT_EMBED_ROUTE. The file is resolved with program/read; a same-name trait route `listens { Child.EV -> EV }` on a host that embeds Child, with a transition on EV, where a control under Child fires EV and Child never emits it by an effect, is reported at orbitals.<orbital>.traits.<host>.listens (status 500, exit 1). A clean program answers `lint listen-redundant-embed-route: clean` (status 200, exit 0). Anything but exactly one file argument is the usage (status 400, exit 2). A file that cannot be read or lowered fails the run (status 500)."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintListenRedundantEmbedRouteSpec {
+  expects trait OrbLintListenRedundantEmbedRoute {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintListenRedundantEmbedRouteCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintListenRedundantEmbedRoute, OrbLintListenRedundantEmbedRouteCli
+}

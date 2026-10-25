@@ -1,0 +1,205 @@
+app std-orb-lint-embed-bridge [
+  version: "1.0.0",
+  inbound: ["cli-lint-embed-bridge"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-embed-bridge — the `orb lint embed-bridge <file>` command, the port of ORB_EMBED_BRIDGE_LISTENS_UNSENT and ORB_EMBED_BRIDGE_EMITS_UNHEARD (composition/embed_bridge.rs). A behavior value embedded with a declared bridge (`(behavior/apply v { bridge: { listens, emits } })`, both literal event lists) delivers the host's `listens` events into the embedded program and re-emits its `emits` events on the host; a bridged event the host never produces, or never consumes, is a dead wire. It resolves the program and collects every bridge from the transition effects. Produced is the std-orb-fired-events answer (a control or an emit effect, on any trait); consumed is any transition's event or a rendered pattern's event-listen prop bound to it (the installed pattern registry's LINT_EVENT_PROPS listens). Each listens event nothing produces is ORB_EMBED_BRIDGE_LISTENS_UNSENT and each emits event nothing consumes is ORB_EMBED_BRIDGE_EMITS_UNHEARD, at orbitals[i].traits[j].stateMachine.transitions[k] (status 500, exit 1). Clean answers `lint embed-bridge: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-embed-bridge"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type FiredNode = string | number | boolean | [FiredNode?] | Map string FiredNode?
+type FiredField = { default : FiredNode? }
+type FiredTransition = { event : string, guard : FiredNode?, effects : [FiredNode?] }
+type FiredTick = { guard : FiredNode?, effects : [FiredNode?] }
+type FiredMachine = { transitions : [FiredTransition] }
+type FiredTrait = { name : string, stateMachine : FiredMachine, ticks : [FiredTick], config : Map string FiredField? }
+type FiredOrbital = { traits : [FiredTrait] }
+type FiredProgram = { orbitals : [FiredOrbital] }
+type BrNodes = [FiredNode?]
+type BrBridge = { listens : [string]!, emits : [string]! }
+type BrOverrides = { bridge : BrBridge! }
+type BrTransition = { event : string, effects : [FiredNode?] }
+type BrMachine = { transitions : [BrTransition] }
+type BrTrait = { name : string, stateMachine : BrMachine }
+type BrOrbital = { traits : [BrTrait] }
+type BrProgram = { orbitals : [BrOrbital] }
+
+orbital OrbLintEmbedBridgeOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+  uses Fired from "std/behaviors/std-orb-fired-events"
+
+  entity OrbLintEmbedBridgeRun [runtime] {
+    id : string!
+    scope : string = ""
+    program : BrProgram = {}
+    listenProps : Map string [string] = {}
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintEmbedBridge -> OrbLintEmbedBridgeRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_EVENT_PROPS_HEARD -> ready
+        (set @entity.listenProps @payload.listens)
+      LINT_INPUT -> ready
+        (set @entity.program @payload.program)
+      FIRED_HEARD -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((orbitals (object/get @entity.program "orbitals" [])) (lp @entity.listenProps) (fired (array/concat (array/flatten (object/values @payload.byControl)) (array/flatten (object/values @payload.byEffect)))))
+          (let ((rows (array/flatten (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+                  (let ((trs (object/get (array/nth @orbitals @oi) "traits" [])))
+                    (array/map (array/range 0 (array/len @trs)) (fn ti
+                      (let ((xs (object/get (object/get (array/nth @trs @ti) "stateMachine" {}) "transitions" [])))
+                        (array/map (array/range 0 (array/len @xs)) (fn xi
+                          (let ((x (array/nth @xs @xi)))
+                            { path: (str/concat "orbitals[" @oi "].traits[" @ti "].stateMachine.transitions[" @xi "]"),
+                              event: (object/get @x "event" ""),
+                              bridges: (array/flatten (array/map (object/get @x "effects" []) (fn e
+                                (array/flatten (array/map (let ((nd (json/parse (json/stringify (json/nodes @e)) BrNodes))) (if (= @nd null) [] @nd)) (fn n
+                                  (if (validate/array @n)
+                                    (if (= (array/len @n) 3)
+                                    (if (= (json/stringify (array/nth @n 0)) (json/stringify "behavior/apply"))
+                                    (let ((o3 (array/nth @n 2)))
+                                      (if (validate/object @o3)
+                                        (if (object/has @o3 "bridge")
+                                          (let ((ov (json/parse (json/stringify @o3) BrOverrides))) (if (= @ov null) [] [(object/get @ov "bridge")]))
+                                          [])
+                                        []))
+                                    [])
+                                    [])
+                                    []))))))),
+                              bound: (array/flatten (array/map (object/get @x "effects" []) (fn e
+                                (array/flatten (array/map (let ((nd (json/parse (json/stringify (json/nodes @e)) BrNodes))) (if (= @nd null) [] @nd)) (fn n
+                                  (if (validate/object @n)
+                                    (let ((ty (object/get @n "type" null)))
+                                      (if (validate/string @ty)
+                                        (array/flatten (array/map (object/get @lp @ty []) (fn pr
+                                          (let ((v (object/get @n @pr null))) (if (validate/string @v) [@v] [])))))
+                                        []))
+                                    []))))))) })))))))))))))
+            (let ((consumed (array/concat (array/map @rows (fn r (object/get @r "event"))) (array/flatten (array/map @rows (fn r (object/get @r "bound")))))))
+              (array/flatten (array/map @rows (fn r
+                (array/flatten (array/map (object/get @r "bridges") (fn br
+                  (array/concat
+                    (array/map (array/filter (object/get @br "listens") (fn ev (not (array/includes @fired @ev))))
+                      (fn ev { code: "ORB_EMBED_BRIDGE_LISTENS_UNSENT", path: (object/get @r "path"), message: (str/concat "the embed's bridge delivers '" @ev "' into it, but nothing in this program sends '" @ev "'"), suggestion: (str/concat "Send '" @ev "' from the host (an emit effect or a control), or remove it from the bridge's `listens`"), severity: "error" }))
+                    (array/map (array/filter (object/get @br "emits") (fn ev (not (array/includes @consumed @ev))))
+                      (fn ev { code: "ORB_EMBED_BRIDGE_EMITS_UNHEARD", path: (object/get @r "path"), message: (str/concat "the embed's bridge re-emits '" @ev "' on the host, but nothing in this program handles '" @ev "'"), suggestion: (str/concat "Handle '" @ev "' on the host (a transition or a pattern that listens for it), or remove it from the bridge's `emits`"), severity: "error" })))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "embed-bridge", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_EVENT_PROPS_HEARD { names : [string]!  maps : [string]!  listens : Map string [string]! }
+        @description "std-orb-lint-input's LINT_EVENT_PROPS: the event-bearing prop names of the installed pattern registry, the event-listen props by pattern."
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : BrProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      FIRED_HEARD { scope : string!  byControl : Map string [string]!  byEffect : Map string [string]! }
+        @description "std-orb-fired-events' FIRED_EVENTS: the events each trait fires by a control or by an effect."
+      OrbLintInput.LINT_EVENT_PROPS -> LINT_EVENT_PROPS_HEARD
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+      OrbFiredEvents.FIRED_EVENTS -> FIRED_HEARD
+    }
+  }
+
+  trait OrbLintEmbedBridgeCli -> OrbLintEmbedBridgeRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint embed-bridge <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "embed-bridge") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint embed-bridge: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "embed-bridge") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint embed-bridge: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-embed-bridge" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint embed-bridge` with its arguments and working directory."
+        @synonyms "orb lint embed-bridge"
+      OrbLintEmbedBridge.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait OrbFiredEvents = Fired.traits.OrbFiredEvents {
+    listens {
+      FIRED_PROPS_HEARD { names : [string]!  maps : [string]!  listens : Map string [string]! }
+        @description "std-orb-lint-input's LINT_EVENT_PROPS: the event-bearing prop names of the installed pattern registry."
+      FIRED_SEMANTICS_HEARD { semantics : Map string string!  functions : [string]!  busExcluded : [string]!  targetOptions : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: each operator's declared returnSemantics and the function-returning operators."
+      FIRED_INPUT_HEARD { file : string!  raw : string!  latin : boolean!  program : FiredProgram  scope : string! }
+        @description "std-orb-lint-input's LINT_INPUT: the lowered program."
+      OrbLintInput.LINT_EVENT_PROPS -> FIRED_PROPS_HEARD
+      OrbLintInput.LINT_OPERATOR_SEMANTICS -> FIRED_SEMANTICS_HEARD
+      OrbLintInput.LINT_INPUT -> FIRED_INPUT_HEARD
+    }
+  }
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintEmbedBridgeCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintEmbedBridgeOrbitalStart -> OrbLintEmbedBridge, OrbLintEmbedBridgeCli, OrbLintInput, OrbFiredEvents, Packs, Versions
+}

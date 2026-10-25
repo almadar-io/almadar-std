@@ -1,0 +1,18 @@
+app lint-call-site-input-spec [
+  version: "1.0.0",
+  description: "Design contract for the composition lint input: for a LINT_REQUEST { file, stamp, references } it reads the file once and lowers it without resolving; with `references` it reads the file's references with program/read { references: true } (each reference with the declaration the compiler loads for it) and works out the upstream traits each orbital reference keeps; with `stamp` it keeps the stamped program of a ledger-less .orb. It answers LINT_CALL_SITES { file, program, kept, references, stamped }, or LINT_CALL_SITES_UNREAD { file, error } when the file cannot be read or lowered."
+]
+type LintValue = string | number | boolean | [LintValue?] | Map string LintValue?
+type CallSiteKept = { orbital : number!, traits : [string]! }
+type CallSiteRef = { kind : string!, alias : string!, name : string!, path : string!, callSite : LintValue!, declaration : LintValue! }
+
+orbital LintCallSiteInputSpec {
+  expects trait CallSiteInput {
+    state ready
+    emits {
+      LINT_CALL_SITES { file : string!  program : LintValue!  kept : [CallSiteKept]!  references : [CallSiteRef]!  stamped : LintValue? }
+      LINT_CALL_SITES_UNREAD { file : string!  error : string! }
+    }
+  }
+  expects page boot -> CallSiteInput
+}

@@ -1,0 +1,1127 @@
+{
+  "atom": "cli/atoms/std-orb-lint-client-tick-locality.lolo",
+  "trait": "OrbLintClientTickLocality",
+  "note": "Expected findings are the code, path, message and suggestion validate_client_tick_locality (traits/client_tick_locality.rs) reports. Each case mirrors a unit test of that file: shared frame without a mode, the declared mode read rather than the effects, the client and optimistic controls, an explicit server mode, the non-shared frame (ticker only, and clean when the ticker is client), a background tick and a persisted entity.",
+  "cases": [
+    {
+      "id": "shared-client-ticked-frame-without-a-mode-flags-both",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Level",
+                  "entity": {
+                    "name": "World",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "x",
+                        "type": "number"
+                      }
+                    ],
+                    "shared": true
+                  },
+                  "traits": [
+                    {
+                      "name": "Body",
+                      "linkedEntity": "World",
+                      "ticks": [
+                        {
+                          "name": "physics",
+                          "interval": 33,
+                          "effects": [
+                            [
+                              "set",
+                              "@entity.x",
+                              1
+                            ]
+                          ]
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      }
+                    },
+                    {
+                      "name": "Play",
+                      "linkedEntity": "World",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Row",
+                                {}
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintClientTickLocality"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "client-tick-locality",
+                  "findings": [
+                    {
+                      "code": "ORB_T_CLIENT_TICK_NOT_LOCAL",
+                      "path": "orbitals.Level.traits.Body",
+                      "message": "Trait 'Body' writes `World`, a frame `Body` ticks on the client, but declares no dispatch mode: a server-run step folds the host's never-ticked copy back over the live frame",
+                      "suggestion": "Declare 'Body' `[client]` or `[optimistic]`, or move its server work to a trait bound to another entity",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_T_CLIENT_TICK_NOT_LOCAL",
+                      "path": "orbitals.Level.traits.Play",
+                      "message": "Trait 'Play' writes `World`, a frame `Body` ticks on the client, but declares no dispatch mode: a server-run step folds the host's never-ticked copy back over the live frame",
+                      "suggestion": "Declare 'Play' `[client]` or `[optimistic]`, or move its server work to a trait bound to another entity",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintClientTickLocality"
+        }
+      ]
+    },
+    {
+      "id": "the-rule-reads-the-declared-mode-not-the-effects",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Level",
+                  "entity": {
+                    "name": "World",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "x",
+                        "type": "number"
+                      }
+                    ],
+                    "shared": true
+                  },
+                  "traits": [
+                    {
+                      "name": "Body",
+                      "linkedEntity": "World",
+                      "ticks": [
+                        {
+                          "name": "physics",
+                          "interval": 33,
+                          "effects": [
+                            [
+                              "set",
+                              "@entity.x",
+                              1
+                            ]
+                          ]
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "dispatch": "client"
+                    },
+                    {
+                      "name": "Play",
+                      "linkedEntity": "World",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintClientTickLocality"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "client-tick-locality",
+                  "findings": [
+                    {
+                      "code": "ORB_T_CLIENT_TICK_NOT_LOCAL",
+                      "path": "orbitals.Level.traits.Play",
+                      "message": "Trait 'Play' writes `World`, a frame `Body` ticks on the client, but declares no dispatch mode: a server-run step folds the host's never-ticked copy back over the live frame",
+                      "suggestion": "Declare 'Play' `[client]` or `[optimistic]`, or move its server work to a trait bound to another entity",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintClientTickLocality"
+        }
+      ]
+    },
+    {
+      "id": "control-client-traits-are-clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Level",
+                  "entity": {
+                    "name": "World",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "x",
+                        "type": "number"
+                      }
+                    ],
+                    "shared": true
+                  },
+                  "traits": [
+                    {
+                      "name": "Body",
+                      "linkedEntity": "World",
+                      "ticks": [
+                        {
+                          "name": "physics",
+                          "interval": 33,
+                          "effects": [
+                            [
+                              "set",
+                              "@entity.x",
+                              1
+                            ]
+                          ]
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "dispatch": "client"
+                    },
+                    {
+                      "name": "Play",
+                      "linkedEntity": "World",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Row",
+                                {}
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "dispatch": "client"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintClientTickLocality"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "client-tick-locality",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintClientTickLocality"
+        }
+      ]
+    },
+    {
+      "id": "control-optimistic-traits-are-clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Level",
+                  "entity": {
+                    "name": "World",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "x",
+                        "type": "number"
+                      }
+                    ],
+                    "shared": true
+                  },
+                  "traits": [
+                    {
+                      "name": "Body",
+                      "linkedEntity": "World",
+                      "ticks": [
+                        {
+                          "name": "physics",
+                          "interval": 33,
+                          "effects": [
+                            [
+                              "set",
+                              "@entity.x",
+                              1
+                            ]
+                          ]
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "dispatch": "optimistic"
+                    },
+                    {
+                      "name": "Play",
+                      "linkedEntity": "World",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Row",
+                                {}
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "dispatch": "optimistic"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintClientTickLocality"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "client-tick-locality",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintClientTickLocality"
+        }
+      ]
+    },
+    {
+      "id": "an-explicit-server-mode-is-still-a-server-run-writer",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Level",
+                  "entity": {
+                    "name": "World",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "x",
+                        "type": "number"
+                      }
+                    ],
+                    "shared": true
+                  },
+                  "traits": [
+                    {
+                      "name": "Body",
+                      "linkedEntity": "World",
+                      "ticks": [
+                        {
+                          "name": "physics",
+                          "interval": 33,
+                          "effects": [
+                            [
+                              "set",
+                              "@entity.x",
+                              1
+                            ]
+                          ]
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "dispatch": "client"
+                    },
+                    {
+                      "name": "Play",
+                      "linkedEntity": "World",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Row",
+                                {}
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "dispatch": "server"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintClientTickLocality"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "client-tick-locality",
+                  "findings": [
+                    {
+                      "code": "ORB_T_CLIENT_TICK_NOT_LOCAL",
+                      "path": "orbitals.Level.traits.Play",
+                      "message": "Trait 'Play' writes `World`, a frame `Body` ticks on the client, but declares no dispatch mode: a server-run step folds the host's never-ticked copy back over the live frame",
+                      "suggestion": "Declare 'Play' `[client]` or `[optimistic]`, or move its server work to a trait bound to another entity",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintClientTickLocality"
+        }
+      ]
+    },
+    {
+      "id": "control-a-non-shared-frame-is-only-the-tickers-own",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Level",
+                  "entity": {
+                    "name": "World",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "x",
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Body",
+                      "linkedEntity": "World",
+                      "ticks": [
+                        {
+                          "name": "physics",
+                          "interval": 33,
+                          "effects": [
+                            [
+                              "set",
+                              "@entity.x",
+                              1
+                            ]
+                          ]
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      }
+                    },
+                    {
+                      "name": "Play",
+                      "linkedEntity": "World",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Row",
+                                {}
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintClientTickLocality"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "client-tick-locality",
+                  "findings": [
+                    {
+                      "code": "ORB_T_CLIENT_TICK_NOT_LOCAL",
+                      "path": "orbitals.Level.traits.Body",
+                      "message": "Trait 'Body' writes `World`, a frame `Body` ticks on the client, but declares no dispatch mode: a server-run step folds the host's never-ticked copy back over the live frame",
+                      "suggestion": "Declare 'Body' `[client]` or `[optimistic]`, or move its server work to a trait bound to another entity",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintClientTickLocality"
+        }
+      ]
+    },
+    {
+      "id": "control-a-non-shared-frame-with-a-client-ticker-is-clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Level",
+                  "entity": {
+                    "name": "World",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "x",
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Body",
+                      "linkedEntity": "World",
+                      "ticks": [
+                        {
+                          "name": "physics",
+                          "interval": 33,
+                          "effects": [
+                            [
+                              "set",
+                              "@entity.x",
+                              1
+                            ]
+                          ]
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "dispatch": "client"
+                    },
+                    {
+                      "name": "Play",
+                      "linkedEntity": "World",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Row",
+                                {}
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintClientTickLocality"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "client-tick-locality",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintClientTickLocality"
+        }
+      ]
+    },
+    {
+      "id": "control-a-background-tick-runs-on-the-host",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Level",
+                  "entity": {
+                    "name": "World",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "x",
+                        "type": "number"
+                      }
+                    ],
+                    "shared": true
+                  },
+                  "traits": [
+                    {
+                      "name": "Body",
+                      "linkedEntity": "World",
+                      "ticks": [
+                        {
+                          "name": "physics",
+                          "interval": 33,
+                          "effects": [
+                            [
+                              "set",
+                              "@entity.x",
+                              1
+                            ]
+                          ],
+                          "runsInBackground": true
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      }
+                    },
+                    {
+                      "name": "Play",
+                      "linkedEntity": "World",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Row",
+                                {}
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintClientTickLocality"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "client-tick-locality",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintClientTickLocality"
+        }
+      ]
+    },
+    {
+      "id": "control-a-persisted-entity-is-held-by-the-host",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Level",
+                  "entity": {
+                    "name": "World",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "x",
+                        "type": "number"
+                      }
+                    ],
+                    "shared": true
+                  },
+                  "traits": [
+                    {
+                      "name": "Body",
+                      "linkedEntity": "World",
+                      "ticks": [
+                        {
+                          "name": "physics",
+                          "interval": 33,
+                          "effects": [
+                            [
+                              "set",
+                              "@entity.x",
+                              1
+                            ]
+                          ]
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      }
+                    },
+                    {
+                      "name": "Play",
+                      "linkedEntity": "World",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Row",
+                                {}
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintClientTickLocality"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "client-tick-locality",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintClientTickLocality"
+        }
+      ]
+    }
+  ]
+}

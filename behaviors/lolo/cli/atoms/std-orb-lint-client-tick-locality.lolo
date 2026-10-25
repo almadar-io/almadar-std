@@ -1,0 +1,148 @@
+app std-orb-lint-client-tick-locality [
+  version: "1.0.0",
+  inbound: ["cli-lint-client-tick-locality"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-client-tick-locality — the `orb lint client-tick-locality <file>` command, the port of ORB_T_CLIENT_TICK_NOT_LOCAL (traits/client_tick_locality.rs). It lowers the file with program/read and, for every orbital's inline primary or auxiliary entity declared `runtime` that an inline trait bound to it ticks on the client (a tick not declared runsInBackground), reports each bound trait that writes the ticked frame (the ticking trait itself, and for a `shared` entity every bound trait) and declares neither the client nor the optimistic dispatch mode, at `orbitals.<Orbital>.traits.<Trait>` with the Rust message and suggestion (status 500, exit 1). A trait is bound to the entity named by its linkedEntity, else to the orbital's inline primary entity. A persisted entity or a background tick is not reported. Clean answers `lint client-tick-locality: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-client-tick-locality"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type ClientTickDecl = { name : string, runsInBackground : boolean }
+type ClientTickEntity = { name : string, persistence : string, shared : boolean }
+type ClientTickTrait = { name : string, ref : string, linkedEntity : string, dispatch : string, ticks : [ClientTickDecl], stateMachine : ClientTickMachine }
+type ClientTickMachine = { states : [ClientTickState] }
+type ClientTickState = { name : string }
+type ClientTickOrbital = { name : string, entity : ClientTickEntity, auxiliaryEntities : [ClientTickEntity], traits : [ClientTickTrait] }
+type ClientTickLocalityProgram = { orbitals : [ClientTickOrbital] }
+
+orbital OrbLintClientTickLocalityOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintClientTickLocalityRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintClientTickLocality -> OrbLintClientTickLocalityRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
+          (array/flatten (array/map @orbitals (fn orb
+            (let ((prim (object/get @orb "entity" null)))
+              (let ((ents (array/filter (array/concat (array/append [] @prim) (object/get @orb "auxiliaryEntities" [])) (fn e (validate/object @e))))
+                    (primary (if (validate/object @prim) (object/get @prim "name" "") null))
+                    (trs (array/filter (object/get @orb "traits" []) (fn t (and (validate/object @t) (= (object/get @t "ref" null) null) (!= (object/get @t "stateMachine" null) null))))))
+                (array/flatten (array/map @ents (fn ent
+                  (if (!= (object/get @ent "persistence" null) "runtime")
+                    []
+                    (let ((bound (array/filter @trs (fn t (= (let ((le (object/get @t "linkedEntity" null))) (if (!= @le null) @le @primary)) (object/get @ent "name" ""))))))
+                      (let ((ticker (array/find @bound (fn t (array/some (object/get @t "ticks" []) (fn k (not (object/get @k "runsInBackground" false))))))))
+                        (if (= @ticker null)
+                          []
+                          (array/flatten (array/map @bound (fn t
+                            (if (and (or (= (object/get @ent "shared" false) true) (array/some (object/get @t "ticks" []) (fn k (not (object/get @k "runsInBackground" false)))))
+                                     (not (array/includes ["client" "optimistic"] (object/get @t "dispatch" ""))))
+                              [{ code: "ORB_T_CLIENT_TICK_NOT_LOCAL", path: (str/concat "orbitals." (object/get @orb "name" "") ".traits." (object/get @t "name" "")), message: (str/concat "Trait '" (object/get @t "name" "") "' writes `" (object/get @ent "name" "") "`, a frame `" (object/get @ticker "name" "") "` ticks on the client, but declares no dispatch mode: a server-run step folds the host's never-ticked copy back over the live frame"), suggestion: (str/concat "Declare '" (object/get @t "name" "") "' `[client]` or `[optimistic]`, or move its server work to a trait bound to another entity"), severity: "error" }]
+                              []))))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "client-tick-locality", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : ClientTickLocalityProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+    }
+  }
+
+  trait OrbLintClientTickLocalityCli -> OrbLintClientTickLocalityRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint client-tick-locality <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "client-tick-locality") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint client-tick-locality: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "client-tick-locality") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint client-tick-locality: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-client-tick-locality" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint client-tick-locality` with its arguments and working directory."
+        @synonyms "orb lint client-tick-locality"
+      OrbLintClientTickLocality.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintClientTickLocalityCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintClientTickLocalityOrbitalStart -> OrbLintClientTickLocality, OrbLintClientTickLocalityCli, OrbLintInput, Packs, Versions
+}

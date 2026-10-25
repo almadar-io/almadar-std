@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-10-25T08:21:00.759Z",
+  "generated": "2026-10-25T14:33:12.568Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -7133,6 +7133,11 @@
           "open": true
         }
       },
+      "busExcluded": [
+        "INIT",
+        "LOAD",
+        "$MOUNT"
+      ],
       "runsOn": "any",
       "title": "Emit",
       "params": [
@@ -20376,6 +20381,11 @@
       "description": "Dispatch one declared external input AS THE CURRENT USER, through the ordinary dispatch: its guards, grants and entity policies apply, never a bypass. The address is `EVENT`, `Trait.EVENT` or `Orbital.Trait.EVENT` (resolved from the calling trait) and must name a declared external input; the arguments are the payload object or its JSON text (absent or empty is `{}`). An optional `{ schema: [field] }` holds the arguments to a stated payload before dispatch. Success carries `{ result, text }`, the outcome the model is answered with: `{ ok: true, emitted: [{ event, payload? }] }`, or `{ ok: false, error }` for a refusal (an undeclared input, arguments that are not a JSON object, `{ error, issues }` when they miss the schema) or a dispatch that did not take effect (a rejection code, a failed guard, a failed effect, no transition). Given one options object `{ inbound: name, body?, headers? }` in place of the address, it instead delivers `body` (text) and `headers` (`{ name: text }`) to the program's inbound handler `name` through the kernel's inbound route, credential check and answer path, as a request to `/api/hooks/<name>` is delivered, and success carries the handler's answer `{ status, body }` (an undeclared name is the kernel's 404 answer, not a failure). The delivery runs inside the asking dispatch, so an answer only a later completion would carry is not waited for: the answer is what the delivering dispatch settled. The options may instead describe an event request, as the HTTP dispatch routes carry it: `orbital` and `event` (required, and the address must be `orbital.targetTrait.event`), `targetTrait` (absent: the orbital's handlers are discovered, or `traits: [{ trait, from, event? }]` run as declared, an empty list being the inert `no-dispatchable-traits` rejection), `entityId` (default `default`), `mount: [{ trait, event }]` (a lifecycle batch), `input: true` (only a declared external input runs, otherwise the `not-an-external-input` rejection), `clientId` (the origin left out of the live broadcast), `locale`, `delivery` and `dispatchLog` (continuing a client-begun dispatch) and `viewer` (the dispatch's `@user`). Such a request is not limited to declared inputs; an empty text, record or mount list counts as absent. `wire: true` answers the whole `EventResponse` instead of the outcome, and `stream: true` (with `wire`) adds `items: [{ type: event|effect|complete, data, timestamp }]`, the dispatch's emitted events and client effects in execution order followed by the response. A failure carries `errors: [{ code, status }]`: `ORBITAL_NOT_FOUND` 404, `LOCALE_NOT_DECLARED` 400, `NO_TRAIT` 400, `INVALID_REQUEST` 400, `EVENT_PROCESSING_ERROR`.",
       "module": "program",
       "hasSideEffects": true,
+      "targetOptions": [
+        "orbital",
+        "targetTrait",
+        "event"
+      ],
       "runsOn": "server",
       "host": "program",
       "params": [
@@ -20630,7 +20640,9 @@
                   "host": "string",
                   "listenHost": "string",
                   "port": "number",
-                  "emitOrb": "string"
+                  "emitOrb": "string",
+                  "webClient": "boolean",
+                  "source": "string"
                 },
                 "open": true
               }
@@ -21025,7 +21037,7 @@
       "minArity": 1,
       "maxArity": 3,
       "returnType": "sexpr",
-      "description": "Parse `.lolo` source text into a quoted program. With inspect:true and an absolute path, return the resolved program, original-source anchors and imported source provenance; version identifies the editor document. With embeds:true, the text's inline behavior embeds `[{ orbital, trait, behavior, line, column }]` (what `orb embeds` prints). With resolve:true and the absolute path, the file resolved as `orb resolve` prints it, `{ program, text }`; with output, also written there with its catalogs and lazy behaviors (without it, a program with lazy behaviors or locales is refused). With stamp:true and the absolute path of a `.orb`, the program stamped with V4 identity as `orb stamp` prints it, `{ program, text }`; `prior` (a `.orb` path) keeps ids stable, `imports` (a directory) resolves cross-file `uses` id edges, `output` also writes the text to that file.",
+      "description": "Parse `.lolo` source text into a quoted program. With inspect:true and an absolute path, return the resolved program, original-source anchors and imported source provenance; version identifies the editor document. With embeds:true, the text's inline behavior embeds `[{ orbital, trait, behavior, line, column }]` (what `orb embeds` prints). With resolve:true and the absolute path, the file resolved as `orb resolve` prints it, `{ program, text }`; with output, also written there with its catalogs and lazy behaviors (without it, a program with lazy behaviors or locales is refused). With stamp:true and the absolute path of a `.orb`, the program stamped with V4 identity as `orb stamp` prints it, `{ program, text }`; `prior` (a `.orb` path) keeps ids stable, `imports` (a directory) resolves cross-file `uses` id edges, `output` also writes the text to that file. With references:true and the absolute path, `{ program, references }`: the program as it reads before resolution, and every trait or orbital reference its resolution resolves (those inside the imports included, in resolution order) as `{ kind: \"trait\" | \"orbital\", alias, name, path, callSite, declaration }` — the reference as written, and the upstream declaration it resolved to, loaded as an import with `@config.X` still deferred; `path` is the call-site path in the file that holds the reference.",
       "module": "program",
       "hasSideEffects": true,
       "runsOn": "server",
@@ -21045,6 +21057,7 @@
               "embeds": "boolean",
               "resolve": "boolean",
               "stamp": "boolean",
+              "references": "boolean",
               "path": "string",
               "output": "string",
               "version": "number",
@@ -21053,7 +21066,7 @@
             },
             "open": true
           },
-          "description": "Optional inspection (inspect, path, version), embed listing (embeds), resolution (resolve, path, output) or stamping (stamp, path, prior, imports, output) request",
+          "description": "Optional inspection (inspect, path, version), embed listing (embeds), resolution (resolve, path, output), stamping (stamp, path, prior, imports, output) or reference pairing (references, path) request",
           "optional": true
         },
         {
@@ -21934,7 +21947,7 @@
               "emit": {
                 "kind": "object",
                 "fields": {
-                  "success": {
+                  "onChange": {
                     "kind": "eventKey"
                   },
                   "failure": {

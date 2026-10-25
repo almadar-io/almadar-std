@@ -644,6 +644,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'payload', type: ENTITY_REF, description: 'Optional payload', optional: true },
     ],
     example: '["emit", "PLAYER_DIED", { "playerId": "p1" }]',
+    busExcluded: ['INIT', 'LOAD', '$MOUNT'],
     effect: {
       kind: 'emit',
       produces: {
@@ -939,7 +940,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
             id: STRING,
             filter: SEXPR,
             include: { kind: 'array', of: STRING },
-            emit: openShape({ success: EVENT_KEY, failure: EVENT_KEY }),
+            emit: openShape({ onChange: EVENT_KEY, failure: EVENT_KEY }),
           },
           open: true,
         },

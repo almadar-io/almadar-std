@@ -1,9 +1,9 @@
 app std-orb-serve [
   version: "1.0.0",
   inbound: ["cli-serve"],
-  env: ["HOME"],
-  fs: { "~/.almadar/serve": [create], "~/.almadar/serve/**": [write, create] },
-  description: "std-orb-serve — the `orb serve <file> [--port N] [--host H] [--no-mock] [--client-dir DIR] [--open] [--no-emulators]` command (spec/cli/orb-serve.lolo; port of orbital-cli program_command.rs serve_program and server_overrides). It resolves the app with program/read { resolve: true, path }, resolves std/behaviors/std-http-server with behavior/resolve and composes the two with program/compose, naming the app, with the overrides the Rust server_overrides built: HttpServerOrbital.host, HttpServerOrbital.port, HttpServerOrbital.portFromEnv false, the listen grant for host:port and, with --client-dir (made absolute against the working directory, then required to lie under it), HttpServerOrbital.clientDir relative to the working directory with its anchored cwd read grant. The command never runs the program: it answers a hand-off the bootloader acts on, status 200 with headers orb-run: server, orb-mock: on (default) or off (--no-mock), orb-app: the absolute app path, and the composed program's JSON as the body. --open and --no-emulators answer status 500 on stderr with the texts the Rust command bailed with; a port that is not an integer in 0..65535 answers status 400 on stderr; a client dir outside the working directory, an app that names no app or a program that does not resolve or compose answers status 500 on stderr `Error: <reason>`; a missing or second file or an unknown flag answers the usage (status 400, exit 2). Defaults: port 3030, host 127.0.0.1. The resolved app is written (with its catalogs and lazy behaviors) to ~/.almadar/serve/<app path with / as _>.orb, the directory read from the HOME env grant and written under the fs grant ~/.almadar/serve/**; orb-app names that file, so the bootloader finds the catalogs."
+  env: ["HOME", "FIREBASE_AUTH_EMULATOR_HOST", "FIREBASE_PROJECT_ID"],
+  fs: { "~/.almadar/serve": [create], "~/.almadar/serve/**": [write, create], cwd: ".orbital/serve/**": [write, create] },
+  description: "std-orb-serve — the `orb serve <file> [--port N] [--host H] [--no-mock] [--client-dir DIR] [--open] [--no-emulators]` command (spec/cli/orb-serve.lolo; port of orbital-cli program_command.rs serve_program and server_overrides). It resolves the app with program/read { resolve: true, path }. An app that declares its own http endpoint is composed alone, and --port, --host or --client-dir is refused (status 400): its server's options are set in the program. Without --client-dir the app gets a browser client prepared first: program/eval generate { mode: client, webClient: true } compiles it client-mode into <cwd>/.orbital/serve/<app> and lays the typescript shell's prebuilt web client, with the app's runtime files over it, out in .orbital/serve/<app>/web-client, which becomes the clientDir; when FIREBASE_AUTH_EMULATOR_HOST and FIREBASE_PROJECT_ID are both set, that folder's __/firebase/init.json names the Auth emulator for the page. Otherwise it writes ~/.almadar/serve/<app path with / as _>.server.lolo, which imports std-http-server's HttpServerOrbital with the serve options as its call-site config (host, port, portFromEnv false and, with --client-dir made absolute against the working directory and required to lie under it, clientDir relative to the working directory), resolves it with program/read so each knob reaches the trait bodies, and composes the app with std-http-server's resolved program (behavior/resolve, for its header grants) carrying that configured orbital, adding the listen grant for host:port and the anchored cwd read grant of the client dir. The command never runs the program: it answers a hand-off the bootloader acts on, status 200 with headers orb-run: server, orb-mock: on (default) or off (--no-mock), orb-app: the absolute app path, and the composed program's JSON as the body. --open and --no-emulators answer status 500 on stderr with the texts the Rust command bailed with; a port that is not an integer in 0..65535 answers status 400 on stderr; a client dir outside the working directory, an app that names no app or a program that does not resolve or compose answers status 500 on stderr `Error: <reason>`; a missing or second file or an unknown flag answers the usage (status 400, exit 2). Defaults: port 3030, host 127.0.0.1. The resolved app is written (with its catalogs and lazy behaviors) to ~/.almadar/serve/<app path with / as _>.orb, the directory read from the HOME env grant and written under the fs grant ~/.almadar/serve/**; orb-app names that file, so the bootloader finds the catalogs."
 ]
 uses Spec from "almadar-std/orb-serve"
 uses Args from "std/behaviors/std-args"
@@ -13,6 +13,7 @@ type ServePage = { protocol : string }
 type ServeOrbital = { name : string!, pages : [ServePage] }
 type ServeProgram = { name : string, orbitals : [ServeOrbital] }
 type ServeApp = { program : ServeProgram!, text : string! }
+type ServeGenerated = { webClient : string? }
 
 orbital OrbServeOrbital {
   entity ServeRun [runtime] {
@@ -27,8 +28,15 @@ orbital OrbServeOrbital {
     flagged : boolean = false
     serverName : string = ""
     serverPath : string = ""
+    serverOrbitals : [ServeOrbital] = []
     appName : string = ""
     app : ServeProgram = { name: "" }
+    cwd : string = ""
+    emulatorHost : string = ""
+    emulatorProject : string = ""
+    prepare : boolean @description "Serve prepares the browser client itself (no --client-dir), from the composed program." = false
+    composed : behavior?
+    source : string @description "The app file itself, whose folder holds its locales/ and public/." = ""
   }
 
   trait ArgsCli = Args.traits.ArgsParser {
@@ -86,6 +94,11 @@ orbital OrbServeOrbital {
       SERVE_COMPOSE_READY -> composing when @payload.hasClient
         (set @entity.mock @payload.mock)
         (set @entity.path @payload.path)
+        (set @entity.prepare @payload.prepare)
+        (set @entity.cwd @payload.cwd)
+        (set @entity.source @payload.source)
+        (set @entity.rel @payload.rel)
+        (set @entity.appName @payload.appName)
         (program/compose @payload.programs { appName: @payload.appName overrides: { grants: { net: [{ target: (str/concat @payload.host ":" @payload.port), kinds: ["listen"] }], anchored: { fs: [{ anchor: "cwd", glob: (str/concat @payload.rel "/**"), modes: ["read"] }] } } } } { key: "compose" emit: { success: SERVE_COMPOSED, failure: SERVE_COMPOSE_REFUSED } })
       SERVE_COMPOSE_READY -> composing when (not @payload.hasClient)
         (set @entity.mock @payload.mock)
@@ -97,10 +110,47 @@ orbital OrbServeOrbital {
       INIT -> composing
       SERVE_COMPOSE_REFUSED -> ready
         (emit SERVE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " @payload.error) })
-      SERVE_COMPOSED -> ready when @entity.mock
+      SERVE_COMPOSED -> ready when (and @entity.mock (not @entity.prepare))
         (emit SERVE_ANSWERED { status: 200, body: (json/stringify @payload.result), headers: { "orb-run": "server", "orb-mock": "on", "orb-app": @entity.path } })
-      SERVE_COMPOSED -> ready when (not @entity.mock)
+      SERVE_COMPOSED -> ready when (and (not @entity.mock) (not @entity.prepare))
         (emit SERVE_ANSWERED { status: 200, body: (json/stringify @payload.result), headers: { "orb-run": "server", "orb-mock": "off", "orb-app": @entity.path } })
+      SERVE_COMPOSED -> preparing when @entity.prepare
+        (set @entity.composed @payload.result)
+        (os/mkdir { anchor: "cwd" path: (str/concat ".orbital/serve/" @entity.appName) } true { key: "prepDir" emit: { success: SERVE_PREP_DIR, failure: SERVE_PREP_FAILED } })
+    }
+
+    state preparing {
+      INIT -> preparing
+      SERVE_PREP_FAILED -> ready
+        (emit SERVE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: the web client could not be prepared: " @payload.error) })
+      SERVE_GENERATE_FAILED -> ready
+        (emit SERVE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: the web client could not be prepared: " @payload.error) })
+      SERVE_PREP_DIR -> preparing
+        (os/write-file { anchor: "cwd" path: (str/concat ".orbital/serve/" @entity.appName "/program.orb") } (bytes/from-string (json/stringify @entity.composed)) { key: "prepProgram" emit: { success: SERVE_PROGRAM_WRITTEN, failure: SERVE_PREP_FAILED } })
+      SERVE_PROGRAM_WRITTEN -> preparing
+        (program/eval null { generate: { path: (os/path-join @entity.cwd ".orbital/serve" @entity.appName "program.orb"), output: (os/path-join @entity.cwd ".orbital/serve" @entity.appName), shell: "typescript", mode: "client", webClient: true, source: @entity.source } } { key: "client" emit: { success: SERVE_CLIENT_BUILT, failure: SERVE_GENERATE_FAILED } })
+      SERVE_CLIENT_BUILT -> preparing
+        (os/getenv "FIREBASE_AUTH_EMULATOR_HOST" { key: "emuHost" emit: { success: SERVE_EMU_HOST, failure: SERVE_EMU_UNSET } })
+      SERVE_EMU_UNSET -> preparing
+        (emit SERVE_CLIENT_READY { })
+      SERVE_EMU_HOST -> preparing when (= (or @payload.value "") "")
+        (emit SERVE_CLIENT_READY { })
+      SERVE_EMU_HOST -> preparing when (!= (or @payload.value "") "")
+        (set @entity.emulatorHost @payload.value)
+        (os/getenv "FIREBASE_PROJECT_ID" { key: "emuProject" emit: { success: SERVE_EMU_PROJECT, failure: SERVE_EMU_UNSET } })
+      SERVE_EMU_PROJECT -> preparing when (= (or @payload.value "") "")
+        (emit SERVE_CLIENT_READY { })
+      SERVE_EMU_PROJECT -> preparing when (!= (or @payload.value "") "")
+        (set @entity.emulatorProject @payload.value)
+        (os/mkdir { anchor: "cwd" path: (str/concat @entity.rel "/__/firebase") } true { key: "hosting" emit: { success: SERVE_HOSTING_DIR, failure: SERVE_PREP_FAILED } })
+      SERVE_HOSTING_DIR -> preparing
+        (os/write-file { anchor: "cwd" path: (str/concat @entity.rel "/__/firebase/init.json") } (bytes/from-string (json/stringify { apiKey: "emulator", projectId: @entity.emulatorProject, authEmulatorHost: @entity.emulatorHost })) { key: "hostingConfig" emit: { success: SERVE_HOSTING_WRITTEN, failure: SERVE_PREP_FAILED } })
+      SERVE_HOSTING_WRITTEN -> preparing
+        (emit SERVE_CLIENT_READY { })
+      SERVE_CLIENT_READY -> ready when @entity.mock
+        (emit SERVE_ANSWERED { status: 200, body: (json/stringify @entity.composed), headers: { "orb-run": "server", "orb-mock": "on", "orb-app": @entity.path } })
+      SERVE_CLIENT_READY -> ready when (not @entity.mock)
+        (emit SERVE_ANSWERED { status: 200, body: (json/stringify @entity.composed), headers: { "orb-run": "server", "orb-mock": "off", "orb-app": @entity.path } })
     }
 
     emits {
@@ -123,6 +173,53 @@ orbital OrbServeOrbital {
         result : behavior
       }
         @description "program/compose: the app composed with the server."
+        @tier "internal"
+      SERVE_CLIENT_BUILT {
+        result : ServeGenerated!
+      }
+        @description "program/eval generate: the app compiled client-mode with the shell's prebuilt web client laid out under .orbital/serve/<app>/web-client."
+        @tier "internal"
+      SERVE_EMU_HOST {
+        value : string
+      }
+        @description "os/getenv: FIREBASE_AUTH_EMULATOR_HOST, which the served page reads from /__/firebase/init.json."
+        @tier "internal"
+      SERVE_EMU_PROJECT {
+        value : string
+      }
+        @description "os/getenv: FIREBASE_PROJECT_ID, the Auth emulator's project."
+        @tier "internal"
+      SERVE_EMU_UNSET {
+        error : string
+        kind : string
+      }
+        @description "os/getenv: an emulator variable is not set, so the page gets no Firebase config."
+        @tier "internal"
+      SERVE_HOSTING_DIR { }
+        @description "os/mkdir: the web client's __/firebase folder exists."
+        @tier "internal"
+      SERVE_HOSTING_WRITTEN { bytes : number }
+        @description "os/write-file: __/firebase/init.json names the Auth emulator for the page."
+        @tier "internal"
+      SERVE_PREP_DIR { }
+        @description "os/mkdir: .orbital/serve/<app> exists."
+        @tier "internal"
+      SERVE_PROGRAM_WRITTEN { bytes : number }
+        @description "os/write-file: the composed program (the app and its server) is written for the client-mode compile, so the client learns its server from the http endpoint."
+        @tier "internal"
+      SERVE_PREP_FAILED {
+        error : string
+        kind : string
+      }
+        @description "The browser client could not be prepared."
+        @tier "internal"
+      SERVE_GENERATE_FAILED {
+        error : string
+      }
+        @description "program/eval generate: the client-mode compile of the composed program failed."
+        @tier "internal"
+      SERVE_CLIENT_READY { }
+        @description "The browser client is laid out; answer the hand-off."
         @tier "internal"
       SERVE_COMPOSE_REFUSED {
         error : string
@@ -185,6 +282,9 @@ orbital OrbServeOrbital {
         hasClient : boolean!
         mock : boolean!
         path : string!
+        prepare : boolean!
+        cwd : string!
+        source : string!
       }
         @description "The resolved server, ready to compose with the app."
       ServeEngine.SERVE_COMPOSE_READY -> SERVE_COMPOSE_READY
@@ -217,6 +317,7 @@ orbital OrbServeOrbital {
         (set @entity.rel (if @payload.hasClient (str/slice @payload.clientDir (+ (str/len @payload.cwd) 1) (str/len @payload.clientDir)) ""))
         (set @entity.mock @payload.mock)
         (set @entity.flagged @payload.flagged)
+        (set @entity.cwd @payload.cwd)
         (os/getenv "HOME" { key: "home" emit: { success: SERVE_HOME, failure: SERVE_REFUSED } })
     }
 
@@ -253,9 +354,22 @@ orbital OrbServeOrbital {
         (set @entity.appName (object/get (object/get @payload.result "program") "name"))
         (set @entity.app (object/get @payload.result "program"))
         (emit SERVE_DECLARED_READY { program: (object/get @payload.result "program"), serverOrbital: (object/get (array/find (object/get @payload.result.program "orbitals" []) (fn o (array/some (object/get @o "pages" []) (fn pg (= (object/get @pg "protocol" "route") "http"))))) "name"), appName: @entity.appName, host: @entity.host, port: @entity.port, rel: @entity.rel, hasClient: @entity.hasClient, mock: @entity.mock, path: @entity.out })
-      SERVE_APP_READ -> resolving when (and (!= (str/default (object/get (object/get @payload.result "program") "name") "") "") (not (array/some (object/get @payload.result.program "orbitals" []) (fn o (array/some (object/get @o "pages" []) (fn pg (= (object/get @pg "protocol" "route") "http")))))))
+      SERVE_APP_READ -> writing when (and (and (!= (str/default (object/get (object/get @payload.result "program") "name") "") "") (not (array/some (object/get @payload.result.program "orbitals" []) (fn o (array/some (object/get @o "pages" []) (fn pg (= (object/get @pg "protocol" "route") "http"))))))) @entity.hasClient)
         (set @entity.appName (object/get (object/get @payload.result "program") "name"))
         (set @entity.app (object/get @payload.result "program"))
+        (emit SERVE_WRITE_SERVER { })
+      SERVE_APP_READ -> writing when (and (and (!= (str/default (object/get (object/get @payload.result "program") "name") "") "") (not (array/some (object/get @payload.result.program "orbitals" []) (fn o (array/some (object/get @o "pages" []) (fn pg (= (object/get @pg "protocol" "route") "http"))))))) (not @entity.hasClient))
+        (set @entity.appName (object/get (object/get @payload.result "program") "name"))
+        (set @entity.app (object/get @payload.result "program"))
+        (set @entity.rel (str/concat ".orbital/serve/" (object/get (object/get @payload.result "program") "name") "/web-client"))
+        (set @entity.hasClient true)
+        (set @entity.prepare true)
+        (emit SERVE_WRITE_SERVER { })
+    }
+
+    state writing {
+      INIT -> writing
+      SERVE_WRITE_SERVER -> resolving
         (os/write-file (str/concat "~/.almadar/serve/" @entity.serverName) (bytes/from-string (str/concat
           "app orb-served-server [version: \"1.0.0\"]\n"
           "uses Server from \"std/behaviors/std-http-server\"\n"
@@ -272,9 +386,12 @@ orbital OrbServeOrbital {
       SERVE_REFUSED -> idle
         (emit SERVE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " @payload.error) })
       SERVE_SERVER_WRITTEN -> resolving
-        (program/read "" { resolve: true path: @entity.serverPath } { key: "server" emit: { success: SERVE_SERVER_RESOLVED, failure: SERVE_REFUSED } })
+        (program/read "" { resolve: true path: @entity.serverPath } { key: "server" emit: { success: SERVE_SERVER_READ, failure: SERVE_REFUSED } })
+      SERVE_SERVER_READ -> resolving
+        (set @entity.serverOrbitals (object/get (object/get @payload.result "program") "orbitals" []))
+        (behavior/resolve { behavior: "std/behaviors/std-http-server" } {} { key: "serverHeader" emit: { success: SERVE_SERVER_RESOLVED, failure: SERVE_REFUSED } })
       SERVE_SERVER_RESOLVED -> idle
-        (emit SERVE_COMPOSE_READY { programs: [@entity.app, (object/get @payload.result "program")], appName: @entity.appName, host: @entity.host, port: @entity.port, rel: @entity.rel, hasClient: @entity.hasClient, mock: @entity.mock, path: @entity.out })
+        (emit SERVE_COMPOSE_READY { programs: [@entity.app, (object/set @payload.result "orbitals" @entity.serverOrbitals)], appName: @entity.appName, host: @entity.host, port: @entity.port, rel: @entity.rel, hasClient: @entity.hasClient, mock: @entity.mock, path: @entity.out, prepare: @entity.prepare, cwd: @entity.cwd, source: @entity.path })
     }
 
     emits {
@@ -310,13 +427,21 @@ orbital OrbServeOrbital {
       }
         @description "program/read: the resolved app."
         @tier "internal"
+      SERVE_WRITE_SERVER { }
+        @description "Write the server program, std-http-server imported with the serve options as its call-site config."
+        @tier "internal"
       SERVE_SERVER_WRITTEN { bytes : number }
         @description "os/write-file: the server program, std-http-server imported with the serve options as its call-site config, is written."
         @tier "internal"
-      SERVE_SERVER_RESOLVED {
+      SERVE_SERVER_READ {
         result : ServeApp!
       }
-        @description "program/read: the resolved server program."
+        @description "program/read: the written server program resolved, its orbital configured with the serve options."
+        @tier "internal"
+      SERVE_SERVER_RESOLVED {
+        result : ServeProgram!
+      }
+        @description "behavior/resolve: std-http-server, whose header (grants, environment, egress) the served server keeps around the configured orbital."
         @tier "internal"
       SERVE_DECLARED_READY {
         program : ServeProgram!
@@ -340,6 +465,9 @@ orbital OrbServeOrbital {
         hasClient : boolean!
         mock : boolean!
         path : string!
+        prepare : boolean!
+        cwd : string!
+        source : string!
       }
         @description "Internal: the resolved server, ready to compose with the app."
         @tier "internal"

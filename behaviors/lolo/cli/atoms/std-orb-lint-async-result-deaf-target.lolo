@@ -1,0 +1,176 @@
+app std-orb-lint-async-result-deaf-target [
+  version: "1.0.0",
+  inbound: ["cli-lint-async-result-deaf-target"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-async-result-deaf-target — the `orb lint async-result-deaf-target <file>` command, the port of ORB_CIRCUIT_ASYNC_RESULT_DEAF_TARGET (circuit/async_results.rs, run per trait from closed_circuit, not client-bound gated). It needs the RESOLVED program (program/read resolve), so a `use`-imported atom's traits are checked too. For every state-changing transition (a self-transition, or one whose multi-`from` includes the target, is skipped) it collects the event names under the `emit` option of its own `fetch`/`persist` effects (through nested arrays, not through objects; call-service is not collected) and, when the target state has no arm (a transition from that state or from `*`) for some of them, reports the sorted missing ones at `orbitals[i (O)].traits[j (T)].stateMachine.transitions[n].effects` with the Rust message and suggestion (status 500, exit 1). Clean answers `lint async-result-deaf-target: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-async-result-deaf-target"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type FbVal = string | number | boolean | [FbVal?] | Map string FbVal?
+type FbField = { name : string, type : string }
+type FbEmit = { event : string, payloadSchema : [FbField] }
+type FbEvent = { key : string, payloadSchema : [FbField] }
+type FbTransition = { effects : [FbVal] }
+type FbMachine = { events : [FbEvent], transitions : [FbTransition] }
+type FbTrait = { name : string, emits : [FbEmit], stateMachine : FbMachine }
+type FbFounds = [FbFound]
+type FbHit = { i : number, e : string, id : boolean }
+type FbOrbital = { name : string, traits : [FbVal] }
+type FbProgram = { orbitals : [FbOrbital] }
+type FbFound = { e : string, id : boolean }
+type AdNames = [string]
+type AdFrom = string | [string]
+type AdTransition = { from : AdFrom, to : string, event : string, effects : [FbVal] }
+type AdMachine = { transitions : [AdTransition] }
+type AdTrait = { name : string, stateMachine : AdMachine }
+
+orbital OrbLintAsyncResultDeafTargetOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintAsyncResultDeafTargetRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintAsyncResultDeafTarget -> OrbLintAsyncResultDeafTargetRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
+          (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+            (let ((o (array/nth @orbitals @oi)))
+              (let ((trs (object/get @o "traits" [])))
+                (array/flatten (array/map (array/range 0 (array/len @trs)) (fn ti
+                  (let ((t (json/parse (json/stringify (array/nth @trs @ti)) AdTrait)))
+                    (if (or (= @t null) (= (object/get @t "stateMachine" null) null))
+                      []
+                      (let ((trans (object/get (object/get @t "stateMachine") "transitions" [])))
+                        (array/flatten (array/map (array/range 0 (array/len @trans)) (fn i
+                          (let ((tr (array/nth @trans @i)))
+                            (let ((froms (or (json/parse (json/stringify (let ((f (object/get @tr "from" ""))) (if (validate/array @f) @f [@f]))) AdNames) [])) (to (object/get @tr "to" "")))
+                              (if (array/includes @froms @to)
+                                []
+                                (let ((results (array/unique (or (json/parse (json/stringify (or (tree/fold (object/get @tr "effects" []) (fn (n k)
+                                          (if (validate/array @n)
+                                            (array/concat
+                                              (if (and (> (array/len @n) 0) (validate/string (array/nth @n 0)) (array/includes ["fetch" "persist"] (array/nth @n 0)))
+                                                (array/flatten (array/map (array/slice @n 1 (array/len @n)) (fn a
+                                                  (if (validate/object @a)
+                                                    (let ((em (object/get @a "emit" null)))
+                                                      (if (validate/object @em)
+                                                        (array/filter (object/values @em) (fn v (if (validate/string @v) (!= @v "") false)))
+                                                        (array/take [""] 0)))
+                                                    (array/take [""] 0)))))
+                                                [])
+                                              (array/flatten (array/filter @k (fn c (!= @c null)))))
+                                            [])) FbVal) [])) AdNames) []))))
+                                  (let ((handled (array/map (array/filter @trans (fn a (or (array/includes (or (json/parse (json/stringify (let ((f (object/get @a "from" ""))) (if (validate/array @f) @f [@f]))) AdNames) []) @to) (array/includes (or (json/parse (json/stringify (let ((f (object/get @a "from" ""))) (if (validate/array @f) @f [@f]))) AdNames) []) "*")))) (fn a (object/get @a "event" "")))))
+                                    (let ((deaf (array/sort (array/filter @results (fn r (not (array/includes @handled @r)))))))
+                                      (if (= (array/len @deaf) 0)
+                                        []
+                                        (let ((dbg (str/concat "[" (str/join (array/map @deaf (fn r (str/concat "\"" @r "\""))) ", ") "]")))
+                                          [{ code: "ORB_CIRCUIT_ASYNC_RESULT_DEAF_TARGET", path: (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")].stateMachine.transitions[" @i "].effects"), message: (str/concat "transition " (if (= (array/len @froms) 1) (array/first @froms) (str/concat "[" (str/join @froms ", ") "]")) "--[" (object/get @tr "event" "") "]-->" @to " declares async result event(s) " @dbg " but state '" @to "' has no arm handling " (if (= (array/len @deaf) 1) "it" "them") " — the requester departs before it can hear its own operation's result"), suggestion: (str/concat "Add a transition `from: '" @to "'` handling each of " @dbg " in state '" @to "' (or route the result to a state that already does)."), severity: "error" }]))))))))))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "async-result-deaf-target", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : FbProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+    }
+  }
+
+  trait OrbLintAsyncResultDeafTargetCli -> OrbLintAsyncResultDeafTargetRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint async-result-deaf-target <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "async-result-deaf-target") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint async-result-deaf-target: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "async-result-deaf-target") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint async-result-deaf-target: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-async-result-deaf-target" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint async-result-deaf-target` with its arguments and working directory."
+        @synonyms "orb lint async-result-deaf-target"
+      OrbLintAsyncResultDeafTarget.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintAsyncResultDeafTargetCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintAsyncResultDeafTargetOrbitalStart -> OrbLintAsyncResultDeafTarget, OrbLintAsyncResultDeafTargetCli, OrbLintInput, Packs, Versions
+}

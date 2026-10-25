@@ -1,0 +1,156 @@
+app std-orb-lint-orbital-config-dead-knob [
+  version: "1.0.0",
+  inbound: ["cli-lint-orbital-config-dead-knob"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-orbital-config-dead-knob — the `orb lint orbital-config-dead-knob <file>` command, the port of ORB_O_CONFIG_DEAD_KNOB (composition/orbital_config.rs). It resolves the file with program/read and reports each declared program-level or orbital-level config knob that no trait publishes: a trait config field whose default (or any value nested in it), forwardedFrom or nestedForwardedFrom is exactly `@config.<knob>`, closed over orbital knobs whose forwardedFrom chains out to an app knob. Findings (status 500, exit 1) carry the Rust message and suggestion. Clean answers `lint orbital-config-dead-knob: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-orbital-config-dead-knob"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type DeadKnobVal = string | number | boolean | [DeadKnobVal?] | Map string DeadKnobVal?
+type DeadKnobField = { default : DeadKnobVal?, forwardedFrom : string?, nestedForwardedFrom : [string]? }
+type DeadKnobTrait = { config : Map string DeadKnobField? }
+type DeadKnobOrbital = { name : string, config : Map string DeadKnobField?, traits : [DeadKnobTrait] }
+type DeadKnobProgram = { config : Map string DeadKnobField?, orbitals : [DeadKnobOrbital] }
+type DeadKnobLink = { name : string, src : string }
+
+orbital OrbLintOrbitalConfigDeadKnobOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintOrbitalConfigDeadKnobRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintOrbitalConfigDeadKnob -> OrbLintOrbitalConfigDeadKnobRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" []))
+              (appCfg (object/get @payload.program "config" {})))
+          (let ((fields (array/flatten (array/map @orbitals (fn orb (array/flatten (array/map (object/get @orb "traits" []) (fn tr (object/values (object/get @tr "config" {})))))))))
+                (orbNames (array/flatten (array/map @orbitals (fn orb (object/keys (object/get @orb "config" {}))))))
+                (links : [DeadKnobLink] (array/flatten (array/map @orbitals (fn orb (array/map (object/keys (object/get @orb "config" {})) (fn k { name: @k, src: (object/get (object/get (object/get @orb "config" {}) @k) "forwardedFrom" "") })))))))
+            (let ((declared (array/unique (array/concat (object/keys @appCfg) @orbNames)))
+                  (orbLinks : [DeadKnobLink] (array/filter @links (fn o (and (str/startsWith (object/get @o "src") (quote "@config.")) (> (str/len (object/get @o "src")) 8) (not (str/includes (str/slice (object/get @o "src") 8) ".")))))))
+              (let ((direct (array/filter @declared (fn k
+                              (let ((tok (str/concat (quote "@config.") @k)))
+                                (array/some @fields (fn f
+                                  (or (= (object/get @f "forwardedFrom" "") @tok)
+                                      (array/includes (object/get @f "nestedForwardedFrom" []) @tok)
+                                      (= (tree/fold (object/get @f "default" null) (fn (n kids)
+                                            (if (validate/string @n)
+                                              (= @n @tok)
+                                              (if (validate/array @n)
+                                                (array/some @kids (fn r (= @r true)))
+                                                (if (validate/object @n) (array/some (object/values @kids) (fn r (= @r true))) false)))) DeadKnobVal) true)))))))))
+                (let ((published (array/reduce (array/range 0 (+ 1 (array/len @orbLinks))) @direct (fn (acc i)
+                                    (array/unique (array/concat @acc (array/map (array/filter @orbLinks (fn o (array/includes @acc (object/get @o "name")))) (fn o (str/slice (object/get @o "src") 8)))))))))
+                  (array/concat
+                    (array/map (array/filter (object/keys @appCfg) (fn k (not (array/includes @published @k))))
+                      (fn k { code: "ORB_O_CONFIG_DEAD_KNOB", path: (str/concat "config(" @k ")"), message: (str/concat "Declared app-level config knob '" @k "' is not forwarded by any trait's config default (`" (quote "@config.") @k "`) — nothing publishes it, so no call site can ever reach it."), suggestion: (str/concat "Forward it from a trait (`config { " @k ": " (quote "@config.") @k " }`) or delete the declaration."), severity: "error" }))
+                    (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn i
+                      (let ((orb (array/nth @orbitals @i)))
+                        (array/map (array/filter (object/keys (object/get @orb "config" {})) (fn k (and (not (object/has @appCfg @k)) (not (array/includes @published @k)))))
+                          (fn k { code: "ORB_O_CONFIG_DEAD_KNOB", path: (str/concat "orbitals[" @i " (" (object/get @orb "name" "") ")].config(" @k ")"), message: (str/concat "Declared orbital config knob '" @k "' is not forwarded by any trait's config default (`" (quote "@config.") @k "`) — nothing publishes it, so no call site can ever reach it."), suggestion: (str/concat "Forward it from a trait (`config { " @k ": " (quote "@config.") @k " }`) or delete the declaration."), severity: "error" })))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "orbital-config-dead-knob", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : DeadKnobProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+    }
+  }
+
+  trait OrbLintOrbitalConfigDeadKnobCli -> OrbLintOrbitalConfigDeadKnobRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint orbital-config-dead-knob <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "orbital-config-dead-knob") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint orbital-config-dead-knob: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "orbital-config-dead-knob") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint orbital-config-dead-knob: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-orbital-config-dead-knob" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint orbital-config-dead-knob` with its arguments and working directory."
+        @synonyms "orb lint orbital-config-dead-knob"
+      OrbLintOrbitalConfigDeadKnob.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintOrbitalConfigDeadKnobCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintOrbitalConfigDeadKnobOrbitalStart -> OrbLintOrbitalConfigDeadKnob, OrbLintOrbitalConfigDeadKnobCli, OrbLintInput, Packs, Versions
+}

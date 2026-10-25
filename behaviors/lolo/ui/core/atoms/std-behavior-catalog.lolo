@@ -1,12 +1,13 @@
 app std-behavior-catalog [
   version: "1.3.0",
-  description: "std-behavior-catalog — browse the installed behaviors under the `scope` registry folders (`behavior/catalog`), search them by meaning (the query is embedded with std-llm (LLM_EMBED) and ranked by cosine similarity to each behavior's description; results under `minScore` drop out), open one's knobs and events (`behavior/describe`), and pick one: PICKED { behavior, trait, value } carries the behavior name, its first trait as a value ready to bind, and the whole behavior as a value ready to embed or store. With `pick: toggle` each card carries an on/off switch instead: TOGGLED { behavior, checked, topic, value } per change, and SELECTION { behaviors } seeds which are on. Pick for block libraries, plugin pickers, plugin on/off settings and any page that lets users choose a building block.",
+  description: "std-behavior-catalog — browse the installed behaviors under the `scope` registry folders (`behavior/catalog`), search them by meaning (the query is embedded with std-llm (LLM_EMBED) and ranked by cosine similarity to each behavior's description; results under `minScore` drop out), open one's knobs and events (`behavior/describe`), and pick one: PICKED { behavior, trait, value } carries the behavior name, its first trait as a value ready to bind, and the whole behavior as a value ready to embed or store. With `pick: toggle` each card carries an on/off switch instead: TOGGLED { behavior, checked, topic, value } per change, and SELECTION { behaviors } seeds which are on. After listing it emits CATALOG_TOPICS { topics } (each package and topic once, with its count), and TOPIC { package, topic } narrows the rows and search results to that topic (an empty topic lists everything). Pick for block libraries, plugin pickers, plugin on/off settings and any page that lets users choose a building block.",
   egress: ["https://api.openai.com", "https://openrouter.ai"]
 ]
 ;; @capabilities "browse installed behaviors, search behaviors by meaning, describe a behavior's knobs and events, pick a behavior to bind"
 
 type BehaviorCatalogHit = {
   behavior : string!
+  package : string!
   description : string!
   topic : string!
   level : string!
@@ -17,10 +18,16 @@ type BehaviorCatalogHit = {
 }
 type BehaviorCatalogRow = {
   behavior : string!
+  package : string!
   description : string!
   topic : string!
   level : string!
   score : number!
+}
+type BehaviorCatalogTopic = {
+  package : string!
+  topic : string!
+  count : number!
 }
 type BehaviorCatalogKnobField = {
   name : string!
@@ -54,6 +61,8 @@ orbital BehaviorCatalogOrbital {
     knobs : [BehaviorCatalogKnobField] = []
     error : string = ""
     selected : [string] = []
+    topicPackage : string @description "The package of the topic the rows are narrowed to; empty with topic for every listed behavior." = ""
+    topic : string @description "The topic the rows are narrowed to (TOPIC); empty for every listed behavior." = ""
     status : "loading" | "ready" | "searching" | "describing" | "failed" = loading
   }
 
@@ -109,11 +118,21 @@ orbital BehaviorCatalogOrbital {
       toggleLabel : string = "Enabled"
         @label "Switch label"
         @tier "presentation"
+      startPackage : string = ""
+        @label "Starting package"
+        @description "With startTopic, the package of the topic the rows start narrowed to; empty lists every behavior."
+        @tier "domain"
+      startTopic : string = ""
+        @label "Starting topic"
+        @description "The topic the rows start narrowed to (as TOPIC would); empty lists every behavior."
+        @tier "domain"
     }
     initial: loading
 
     state loading {
       INIT -> loading
+        (set @entity.topicPackage @config.startPackage)
+        (set @entity.topic @config.startTopic)
         (set @entity.status loading)
         (render-ui main <loading-state message="Loading the catalog" />)
         (behavior/catalog { paths: @config.scope } {
@@ -121,10 +140,14 @@ orbital BehaviorCatalogOrbital {
         })
       SELECTION -> loading
         (set @entity.selected ?behaviors)
+      TOPIC -> loading
+        (set @entity.topicPackage ?package)
+        (set @entity.topic ?topic)
       LISTED -> ready
         (set @entity.entries ?result)
-        (set @entity.rows (array/map ?result (fn e { behavior: @e.behavior, description: @e.description, topic: @e.topic, level: @e.level, score: 0 })))
+        (set @entity.rows (array/map (array/filter ?result (fn e (or (= @entity.topic "") (and (= @e.package @entity.topicPackage) (= @e.topic @entity.topic))))) (fn e { behavior: @e.behavior, package: @e.package, description: @e.description, topic: @e.topic, level: @e.level, score: 0 })))
         (set @entity.status ready)
+        (emit CATALOG_TOPICS { topics: (array/map (array/unique (array/map ?result (fn e { package: @e.package, topic: @e.topic }))) (fn t { package: @t.package, topic: @t.topic, count: (array/count ?result (fn e (and (= @e.package @t.package) (= @e.topic @t.topic)))) })) })
         (emit CATALOG_SHOWN {})
       LIST_FAILED -> failed when (= @config.look chips)
         (set @entity.error ?error)
@@ -226,7 +249,13 @@ orbital BehaviorCatalogOrbital {
         })
       SEARCH -> ready when (= ?searchTerm "")
         (set @entity.query "")
-        (set @entity.rows (array/map @entity.entries (fn e { behavior: @e.behavior, description: @e.description, topic: @e.topic, level: @e.level, score: 0 })))
+        (set @entity.rows (array/map (array/filter @entity.entries (fn e (or (= @entity.topic "") (and (= @e.package @entity.topicPackage) (= @e.topic @entity.topic))))) (fn e { behavior: @e.behavior, package: @e.package, description: @e.description, topic: @e.topic, level: @e.level, score: 0 })))
+        (emit CATALOG_SHOWN {})
+      TOPIC -> ready
+        (set @entity.topicPackage ?package)
+        (set @entity.topic ?topic)
+        (set @entity.query "")
+        (set @entity.rows (array/map (array/filter @entity.entries (fn e (or (= ?topic "") (and (= @e.package ?package) (= @e.topic ?topic))))) (fn e { behavior: @e.behavior, package: @e.package, description: @e.description, topic: @e.topic, level: @e.level, score: 0 })))
         (emit CATALOG_SHOWN {})
       SEARCH -> searching when (!= ?searchTerm "")
         (set @entity.query ?searchTerm)
@@ -261,7 +290,7 @@ orbital BehaviorCatalogOrbital {
           emit: { success: LISTED, failure: LIST_FAILED }
         })
       EMBEDDED -> ready when (> (array/len ?embeddings) 0)
-        (set @entity.rows (array/sort (array/flatten (array/map @entity.entries (fn e (let ((c (if (object/has @e.vectors description) (array/cosine (object/get @e.vectors description) (array/first ?embeddings)) 0))) (if (== @c null) [] (if (>= @c @config.minScore) [{ behavior: @e.behavior, description: @e.description, topic: @e.topic, level: @e.level, score: (or @c 0) }] [])))))) score desc))
+        (set @entity.rows (array/sort (array/flatten (array/map @entity.entries (fn e (let ((c (if (object/has @e.vectors description) (array/cosine (object/get @e.vectors description) (array/first ?embeddings)) 0))) (if (== @c null) [] (if (and (>= @c @config.minScore) (or (= @entity.topic "") (and (= @e.package @entity.topicPackage) (= @e.topic @entity.topic)))) [{ behavior: @e.behavior, package: @e.package, description: @e.description, topic: @e.topic, level: @e.level, score: (or @c 0) }] [])))))) score desc))
         (set @entity.status ready)
         (emit CATALOG_SHOWN {})
       EMBEDDED -> ready when (= (array/len ?embeddings) 0)
@@ -322,6 +351,12 @@ orbital BehaviorCatalogOrbital {
         value : behavior
       }
       CATALOG_SHOWN
+      CATALOG_TOPICS -> external {
+        topics : [BehaviorCatalogTopic]!
+      }
+        @description "Every listed behavior's package and topic once, with how many behaviors each holds, after the catalog is listed: feed a topic picker that answers TOPIC."
+        @synonyms "catalog topics, behavior categories, topic counts"
+        @tier "primary"
       LISTED {
         result : [BehaviorCatalogHit]!
       }
@@ -367,6 +402,12 @@ orbital BehaviorCatalogOrbital {
       SELECTION {
         behaviors : [string]!
       }
+      TOPIC {
+        package : string!
+        topic : string!
+      }
+        @description "Narrow the rows (and search results) to one package's topic; an empty topic lists every behavior again."
+        @synonyms "filter by topic, pick category, browse topic"
       RETRY
     }
   }

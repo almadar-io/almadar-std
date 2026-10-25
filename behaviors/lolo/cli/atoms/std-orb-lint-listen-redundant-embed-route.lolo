@@ -1,0 +1,191 @@
+app std-orb-lint-listen-redundant-embed-route [
+  version: "1.0.0",
+  inbound: ["cli-lint-listen-redundant-embed-route"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-listen-redundant-embed-route — the `orb lint listen-redundant-embed-route <file>` command, the port of ORB_LISTEN_REDUNDANT_EMBED_ROUTE (circuit/cross_orbital/listen_redundant.rs). A control inside an embedded trait emits under every scope on its embed chain, so a host that embeds Child and declares a transition on EV already hears Child's control-fired EV; a same-name route `listens { Child.EV -> EV }` on that host delivers the same event a second time. It resolves the program, builds each orbital's embed graph (a trait's first referrer by @trait.<Name> in its config defaults, guards, effects and tick effects is its host), asks the std-orb-fired-events trait which events each trait fires by a control or by an effect, and reports each same-name trait route from a trait the host embeds, to an event the host has a transition on, that the source does not emit by an effect and some control under the source fires. Findings carry the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint listen-redundant-embed-route: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-listen-redundant-embed-route"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type FiredNode = string | number | boolean | [FiredNode?] | Map string FiredNode?
+type FiredField = { default : FiredNode? }
+type FiredTransition = { event : string, guard : FiredNode?, effects : [FiredNode?] }
+type FiredTick = { guard : FiredNode?, effects : [FiredNode?] }
+type FiredMachine = { transitions : [FiredTransition] }
+type FiredTrait = { name : string, stateMachine : FiredMachine, ticks : [FiredTick], config : Map string FiredField? }
+type FiredOrbital = { traits : [FiredTrait] }
+type FiredProgram = { orbitals : [FiredOrbital] }
+type RedNodes = [FiredNode?]
+type RedSource = { kind : string, trait : string }
+type RedListen = { event : string, triggers : string, source : RedSource }
+type RedTransition = { event : string, guard : FiredNode?, effects : [FiredNode?] }
+type RedMachine = { transitions : [RedTransition] }
+type RedTrait = { name : string, stateMachine : RedMachine, ticks : [FiredTick], config : Map string FiredField?, listens : [RedListen] }
+type RedOrbital = { name : string, traits : [RedTrait] }
+type RedProgram = { orbitals : [RedOrbital] }
+
+orbital OrbLintListenRedundantEmbedRouteOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+  uses Fired from "std/behaviors/std-orb-fired-events"
+
+  entity OrbLintListenRedundantEmbedRouteRun [runtime] {
+    id : string!
+    scope : string = ""
+    program : RedProgram = {}
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintListenRedundantEmbedRoute -> OrbLintListenRedundantEmbedRouteRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.program @payload.program)
+      FIRED_HEARD -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((orbitals (object/get @entity.program "orbitals" [])) (bc @payload.byControl) (be @payload.byEffect))
+          (array/flatten (array/map @orbitals (fn o
+            (let ((inl (array/filter (object/get @o "traits" []) (fn t (object/has @t "stateMachine")))))
+              (let ((names (array/map @inl (fn t (object/get @t "name" ""))))
+                    (pairs (array/flatten (array/map @inl (fn t
+                      (let ((roots (array/concat
+                                     (array/concat
+                                       (array/map (array/filter (array/map (object/values (object/get @t "config" {})) (fn f (object/get (or @f {}) "default" null))) (fn d (not (= @d null)))) (fn d (json/stringify (json/nodes @d))))
+                                       (array/flatten (array/map (object/get (object/get @t "stateMachine") "transitions" []) (fn x (array/concat (array/map (array/filter [@x] (fn y (not (= (object/get @y "guard" null) null)))) (fn y (json/stringify (json/nodes (object/get @y "guard"))))) (array/map (object/get @x "effects" []) (fn e (json/stringify (json/nodes @e)))))))))
+                                     (array/flatten (array/map (object/get @t "ticks" []) (fn x (array/concat (array/map (array/filter [@x] (fn y (not (= (object/get @y "guard" null) null)))) (fn y (json/stringify (json/nodes (object/get @y "guard"))))) (array/map (object/get @x "effects" []) (fn e (json/stringify (json/nodes @e)))))))))))
+                        (array/map (array/unique (array/filter (array/flatten (array/map @roots (fn r (array/map (let ((nd (json/parse @r RedNodes))) (if (= @nd null) [] @nd)) (fn n (if (validate/string @n) (if (str/startsWith @n (quote "@trait.")) (array/first (str/split (array/first (str/split (str/slice @n 7 (str/len @n)) ".")) "[")) "") "")))))) (fn c (and (!= @c "") (!= @c (object/get @t "name" "")))))) (fn c [@c, (object/get @t "name" "")]))))))))
+                (let ((hosts (object/fromEntries (array/reverse @pairs))))
+                  (let ((chains (object/fromEntries (array/map @names (fn nm
+                          [@nm, (object/get (array/reduce (array/range 0 (+ (array/len @names) 1)) { cur: @nm, ch: (array/drop @names (array/len @names)), stop: false }
+                              (fn (acc i) (if (object/get @acc "stop") @acc
+                                (let ((h (object/get (or @hosts {}) (object/get @acc "cur") "")))
+                                  (if (or (= @h "") (= @h @nm) (array/includes (object/get @acc "ch") @h))
+                                    { cur: (object/get @acc "cur"), ch: (object/get @acc "ch"), stop: true }
+                                    { cur: @h, ch: (array/append (object/get @acc "ch") @h), stop: false}))))) "ch")])))))
+                    (array/flatten (array/map @inl (fn host
+                      (let ((hn (object/get @host "name" "")))
+                        (array/map (array/filter (object/get @host "listens" [])
+                          (fn l (let ((src (object/get (object/get @l "source" {}) "trait" "")) (ev (object/get @l "event" "")))
+                            (and (= (object/get (object/get @l "source" {}) "kind" "") "trait")
+                                 (object/has @l "triggers")
+                                 (= (object/get @l "triggers" "") @ev)
+                                 (array/includes (object/get (or @chains {}) @src []) @hn)
+                                 (array/some (object/get (object/get @host "stateMachine") "transitions" []) (fn x (= (object/get @x "event" "") @ev)))
+                                 (not (array/includes (object/get @be @src []) @ev))
+                                 (array/some @inl (fn td (let ((tn (object/get @td "name" ""))) (and (array/includes (object/get @bc @tn []) @ev) (or (= @tn @src) (array/includes (object/get (or @chains {}) @tn []) @src))))))))))
+                          (fn l (let ((src (object/get (object/get @l "source" {}) "trait" "")) (ev (object/get @l "event" "")))
+                            { code: "ORB_LISTEN_REDUNDANT_EMBED_ROUTE", path: (str/concat "orbitals." (object/get @o "name" "") ".traits." @hn ".listens"), message: (str/concat "listens route " @src "." @ev " -> " @ev " on '" @hn "' is redundant: '" @hn "' embeds '" @src "', so the control's " @ev " already reaches '" @hn "' as its own transition, and the route delivers the same event a second time"), suggestion: (str/concat "delete the `" @src "." @ev " -> " @ev "` listen from '" @hn "'"), severity: "error" }))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "listen-redundant-embed-route", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : RedProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      FIRED_HEARD { scope : string!  byControl : Map string [string]!  byEffect : Map string [string]! }
+        @description "std-orb-fired-events' FIRED_EVENTS: the events each trait fires by a control or by an effect."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+      OrbFiredEvents.FIRED_EVENTS -> FIRED_HEARD
+    }
+  }
+
+  trait OrbLintListenRedundantEmbedRouteCli -> OrbLintListenRedundantEmbedRouteRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint listen-redundant-embed-route <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "listen-redundant-embed-route") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint listen-redundant-embed-route: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "listen-redundant-embed-route") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint listen-redundant-embed-route: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-listen-redundant-embed-route" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint listen-redundant-embed-route` with its arguments and working directory."
+        @synonyms "orb lint listen-redundant-embed-route"
+      OrbLintListenRedundantEmbedRoute.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait OrbFiredEvents = Fired.traits.OrbFiredEvents {
+    listens {
+      FIRED_PROPS_HEARD { names : [string]!  maps : [string]!  listens : Map string [string]! }
+        @description "std-orb-lint-input's LINT_EVENT_PROPS: the event-bearing prop names of the installed pattern registry."
+      FIRED_SEMANTICS_HEARD { semantics : Map string string!  functions : [string]!  busExcluded : [string]!  targetOptions : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: each operator's declared returnSemantics and the function-returning operators."
+      FIRED_INPUT_HEARD { file : string!  raw : string!  latin : boolean!  program : FiredProgram  scope : string! }
+        @description "std-orb-lint-input's LINT_INPUT: the lowered program."
+      OrbLintInput.LINT_EVENT_PROPS -> FIRED_PROPS_HEARD
+      OrbLintInput.LINT_OPERATOR_SEMANTICS -> FIRED_SEMANTICS_HEARD
+      OrbLintInput.LINT_INPUT -> FIRED_INPUT_HEARD
+    }
+  }
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintListenRedundantEmbedRouteCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintListenRedundantEmbedRouteOrbitalStart -> OrbLintListenRedundantEmbedRoute, OrbLintListenRedundantEmbedRouteCli, OrbLintInput, OrbFiredEvents, Packs, Versions
+}

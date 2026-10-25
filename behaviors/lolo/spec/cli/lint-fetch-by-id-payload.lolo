@@ -1,0 +1,21 @@
+app lint-fetch-by-id-payload-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint fetch-by-id-payload <file>`: reports ORB_EFF_FETCH_BY_ID_PAYLOAD_LIST for a success event that only by-id fetches produce and whose declared data field is a list type. Clean answers `lint fetch-by-id-payload: clean` (status 200, exit 0); findings are status 500, exit 1; anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintFetchByIdPayloadSpec {
+  expects trait OrbLintFetchByIdPayload {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintFetchByIdPayloadCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintFetchByIdPayload, OrbLintFetchByIdPayloadCli
+}

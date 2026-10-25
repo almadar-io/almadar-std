@@ -1,0 +1,153 @@
+app std-orb-lint-id-ledger [
+  version: "1.0.0",
+  inbound: ["cli-lint-id-ledger"],
+  fs: { cwd: "**": [read], "/**": [read] },
+  description: "std-orb-lint-id-ledger — the `orb lint id-ledger <file>` command, the port of ORB_ID_AUTHORED_WITHOUT_LEDGER (validation/id_integrity.rs authored_ids_replaced_on_load). A hand-authored `.orb` with no ledger is re-minted on load, which replaces every declaration id its author wrote. The call sites input (std-orb-lint-call-site-input) answers the program as authored and, for a `.orb` document without a `ledger`, the program stamped by program/read { stamp: true }; an authored id (orbital, inline entity, auxiliary entity, trait or trait reference, inline trait event, inline page) that differs from the stamped id at the same node is reported as a warning at that node's `.id` path, with the compiler's message and suggestion (status 500, exit 1 when any is found). An authored id equal to the stamped one, a `.lolo` file and a `.orb` that carries a ledger are clean (`lint id-ledger: clean`, status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-id-ledger"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error", validValues : [string] }
+type IdVal = string | number | boolean | [IdVal?] | Map string IdVal?
+type IdEntity = { id : string, extends : string }
+type IdEvent = { id : string }
+type IdMachine = { events : [IdEvent] }
+type IdTrait = { id : string, ref : string, stateMachine : IdMachine? }
+type IdPage = { id : string, ref : string }
+type IdOrbital = { id : string, entity : IdVal?, auxiliaryEntities : [IdVal?], traits : [IdTrait], pages : [IdPage] }
+type IdProgram = { orbitals : [IdOrbital] }
+type IdRef = { kind : string!, path : string!, name : string! }
+type IdKept = { orbital : number!, traits : [string]! }
+type IdNode = { path : string!, before : string, after : string }
+
+orbital OrbLintIdLedgerOrbital {
+  uses CsInput from "std/behaviors/std-orb-lint-call-site-input"
+
+  entity OrbLintIdLedgerRun [runtime] {
+    id : string!
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintIdLedger -> OrbLintIdLedgerRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALL_SITES -> ready
+        (set @entity.findings (if (= @payload.stamped null)
+          []
+          (let ((authored (object/get @payload.program "orbitals" [])) (stamped (object/get @payload.stamped "orbitals" [])))
+            (array/map
+                (array/filter
+                  (array/flatten (array/map (array/range 0 (array/len @authored)) (fn oi
+                    (let ((a (array/nth @authored @oi)) (s (array/nth @stamped @oi)))
+                      (let ((at (str/concat "orbitals[" @oi "]")) (ae (if (validate/object (object/get @a "entity" null)) (json/parse (json/stringify (object/get @a "entity" null)) IdEntity) null)) (se (if (validate/object (object/get @s "entity" null)) (json/parse (json/stringify (object/get @s "entity" null)) IdEntity) null)))
+                        (array/concat
+                          [{ path: (str/concat @at ".id"), before: (object/get @a "id" ""), after: (object/get @s "id" "") }]
+                          (array/concat
+                            (if (and (!= @ae null) (= (object/get @ae "extends" "") ""))
+                              [{ path: (str/concat @at ".entity.id"), before: (object/get @ae "id" ""), after: (object/get @se "id" "") }]
+                              [])
+                            (array/concat
+                              (array/flatten (array/map (array/range 0 (array/len (object/get @a "auxiliaryEntities" []))) (fn ai
+                                (let ((xe (if (validate/object (array/nth (object/get @a "auxiliaryEntities" []) @ai)) (json/parse (json/stringify (array/nth (object/get @a "auxiliaryEntities" []) @ai)) IdEntity) null)) (ye (if (validate/object (array/nth (object/get @s "auxiliaryEntities" []) @ai)) (json/parse (json/stringify (array/nth (object/get @s "auxiliaryEntities" []) @ai)) IdEntity) null)))
+                                  (if (and (!= @xe null) (= (object/get @xe "extends" "") ""))
+                                    [{ path: (str/concat @at ".auxiliaryEntities[" @ai "].id"), before: (object/get @xe "id" ""), after: (object/get @ye "id" "") }]
+                                    [])))))
+                              (array/concat
+                                (array/flatten (array/map (array/range 0 (array/len (object/get @a "traits" []))) (fn ti
+                                  (let ((t (array/nth (object/get @a "traits" []) @ti)) (u (array/nth (object/get @s "traits" []) @ti)))
+                                    (array/concat
+                                      [{ path: (str/concat @at ".traits[" @ti "].id"), before: (object/get @t "id" ""), after: (object/get @u "id" "") }]
+                                      (if (and (= (object/get @t "ref" "") "") (!= (object/get @t "stateMachine" null) null))
+                                        (array/map (array/range 0 (array/len (object/get (object/get @t "stateMachine" {}) "events" []))) (fn ei
+                                          { path: (str/concat @at ".traits[" @ti "].stateMachine.events[" @ei "].id"), before: (object/get (array/nth (object/get (object/get @t "stateMachine" {}) "events" []) @ei) "id" ""), after: (object/get (array/nth (object/get (object/get @u "stateMachine" {}) "events" []) @ei) "id" "") }))
+                                        []))))))
+                                (array/flatten (array/map (array/range 0 (array/len (object/get @a "pages" []))) (fn pi
+                                  (let ((p (array/nth (object/get @a "pages" []) @pi)) (q (array/nth (object/get @s "pages" []) @pi)))
+                                    (if (= (object/get @p "ref" "") "")
+                                      [{ path: (str/concat @at ".pages[" @pi "].id"), before: (object/get @p "id" ""), after: (object/get @q "id" "") }]
+                                      []))))))))))))))
+                  (fn n (and (!= (object/get @n "before") "") (!= (object/get @n "before") (object/get @n "after")))))
+                (fn n { code: "ORB_ID_AUTHORED_WITHOUT_LEDGER", path: (object/get @n "path"), message: (str/concat (object/get @n "path") " \"" (object/get @n "before") "\" is replaced on load: the .orb has no ledger"), suggestion: "add a ledger, or drop the id", severity: "warning" })))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "id-ledger", scope: "", findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALL_SITES { file : string!  program : IdProgram!  kept : [IdKept]!  references : [IdRef]!  stamped : IdProgram? }
+        @description "The call sites input: the file lowered unresolved and each aliased import resolved and lowered."
+      CallSiteInput.LINT_CALL_SITES -> LINT_CALL_SITES
+    }
+  }
+
+  trait OrbLintIdLedgerCli -> OrbLintIdLedgerRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint id-ledger <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_CALL_SITES_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")), stamp: true, references: false })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "id-ledger") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint id-ledger: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "id-ledger") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_CALL_SITES_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint id-ledger: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_CALL_SITES_REQUEST -> external { file : string!  stamp : boolean!  references : boolean! }
+        @description "Ask the call sites input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_CALL_SITES_UNREAD -> external { file : string!  error : string! }
+        @description "The call sites input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-id-ledger" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint id-ledger` with its arguments and working directory."
+        @synonyms "orb lint id-ledger"
+      OrbLintIdLedger.LINT_FOUND -> LINT_FOUND
+      LINT_CALL_SITES_UNREAD { file : string!  error : string! }
+        @description "The call sites input could not read or lower the file."
+      CallSiteInput.LINT_CALL_SITES_UNREAD -> LINT_CALL_SITES_UNREAD
+    }
+  }
+
+  trait CallSiteInput = CsInput.traits.CallSiteInput {
+    listens {
+      OrbLintIdLedgerCli.LINT_CALL_SITES_REQUEST -> LINT_CALL_SITES_REQUEST
+    }
+  }
+
+  page boot as OrbLintIdLedgerOrbitalStart -> OrbLintIdLedger, OrbLintIdLedgerCli, CallSiteInput
+}

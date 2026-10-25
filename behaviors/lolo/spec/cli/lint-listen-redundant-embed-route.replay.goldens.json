@@ -1,0 +1,1494 @@
+{
+ "atom": "cli/atoms/std-orb-lint-listen-redundant-embed-route.lolo",
+ "trait": "OrbLintListenRedundantEmbedRoute",
+ "note": "One case per Rust test of listen_redundant.rs (flags_same_name_route_from_a_control_bearing_embedded_child, flags_through_a_transitive_embed_with_the_control_in_the_grandchild, silent_without_the_route, silent_when_the_source_is_not_embedded_by_the_host, silent_for_a_differently_named_trigger, silent_when_the_event_is_machine_emitted_and_never_bubbles, silent_when_the_host_has_no_transition_on_the_event, silent_when_the_embedded_child_has_no_control_for_the_event, silent_when_the_child_both_renders_and_emits_the_event) with the fired events (FIRED_HEARD) the std-orb-fired-events trait answers for the same program.",
+ "cases": [
+  {
+   "id": "flags-same-name-route-from-a-control-bearing-embedded-child",
+   "steps": [
+    {
+     "trait": "OrbLintListenRedundantEmbedRoute",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "redundant-route",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Row",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Host",
+           "linkedEntity": "Row",
+           "config": {
+            "body": {
+             "type": "string",
+             "default": "@trait.Child"
+            }
+           },
+           "listens": [
+            {
+             "event": "REQUEST",
+             "triggers": "REQUEST",
+             "source": {
+              "kind": "trait",
+              "trait": "Child"
+             }
+            }
+           ],
+           "stateMachine": {
+            "states": [],
+            "events": [],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "REQUEST",
+              "effects": []
+             }
+            ]
+           }
+          },
+          {
+           "name": "Child",
+           "linkedEntity": "Row",
+           "stateMachine": {
+            "states": [],
+            "events": [],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "button",
+                 "action": "REQUEST",
+                 "label": "Go"
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintListenRedundantEmbedRoute",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Child": [
+        "REQUEST"
+       ],
+       "Host": []
+      },
+      "byEffect": {
+       "Child": [],
+       "Host": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenRedundantEmbedRoute",
+     "event": "LINT_FINISH",
+     "from": "ready",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-redundant-embed-route",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_LISTEN_REDUNDANT_EMBED_ROUTE",
+           "path": "orbitals.O.traits.Host.listens",
+           "message": "listens route Child.REQUEST -> REQUEST on 'Host' is redundant: 'Host' embeds 'Child', so the control's REQUEST already reaches 'Host' as its own transition, and the route delivers the same event a second time",
+           "suggestion": "delete the `Child.REQUEST -> REQUEST` listen from 'Host'",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "flags-through-a-transitive-embed-with-the-control-in-the-grandchild",
+   "steps": [
+    {
+     "trait": "OrbLintListenRedundantEmbedRoute",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "redundant-route",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Row",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Host",
+           "linkedEntity": "Row",
+           "config": {
+            "body": {
+             "type": "string",
+             "default": "@trait.Mid"
+            }
+           },
+           "listens": [
+            {
+             "event": "REQUEST",
+             "triggers": "REQUEST",
+             "source": {
+              "kind": "trait",
+              "trait": "Mid"
+             }
+            }
+           ],
+           "stateMachine": {
+            "states": [],
+            "events": [],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "REQUEST",
+              "effects": []
+             }
+            ]
+           }
+          },
+          {
+           "name": "Mid",
+           "linkedEntity": "Row",
+           "stateMachine": {
+            "states": [],
+            "events": [],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             }
+            ]
+           },
+           "config": {
+            "body": {
+             "type": "string",
+             "default": "@trait.Leaf"
+            }
+           }
+          },
+          {
+           "name": "Leaf",
+           "linkedEntity": "Row",
+           "stateMachine": {
+            "states": [],
+            "events": [],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "button",
+                 "action": "REQUEST",
+                 "label": "Go"
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintListenRedundantEmbedRoute",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Leaf": [
+        "REQUEST"
+       ],
+       "Mid": [],
+       "Host": []
+      },
+      "byEffect": {
+       "Leaf": [],
+       "Mid": [],
+       "Host": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenRedundantEmbedRoute",
+     "event": "LINT_FINISH",
+     "from": "ready",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-redundant-embed-route",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_LISTEN_REDUNDANT_EMBED_ROUTE",
+           "path": "orbitals.O.traits.Host.listens",
+           "message": "listens route Mid.REQUEST -> REQUEST on 'Host' is redundant: 'Host' embeds 'Mid', so the control's REQUEST already reaches 'Host' as its own transition, and the route delivers the same event a second time",
+           "suggestion": "delete the `Mid.REQUEST -> REQUEST` listen from 'Host'",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "silent-without-the-route",
+   "steps": [
+    {
+     "trait": "OrbLintListenRedundantEmbedRoute",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "redundant-route",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Row",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Host",
+           "linkedEntity": "Row",
+           "config": {
+            "body": {
+             "type": "string",
+             "default": "@trait.Child"
+            }
+           },
+           "listens": [],
+           "stateMachine": {
+            "states": [],
+            "events": [],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "REQUEST",
+              "effects": []
+             }
+            ]
+           }
+          },
+          {
+           "name": "Child",
+           "linkedEntity": "Row",
+           "stateMachine": {
+            "states": [],
+            "events": [],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "button",
+                 "action": "REQUEST",
+                 "label": "Go"
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintListenRedundantEmbedRoute",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Child": [
+        "REQUEST"
+       ],
+       "Host": []
+      },
+      "byEffect": {
+       "Child": [],
+       "Host": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenRedundantEmbedRoute",
+     "event": "LINT_FINISH",
+     "from": "ready",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-redundant-embed-route",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "silent-when-the-source-is-not-embedded-by-the-host",
+   "steps": [
+    {
+     "trait": "OrbLintListenRedundantEmbedRoute",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "redundant-route",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Row",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Host",
+           "linkedEntity": "Row",
+           "config": {
+            "body": {
+             "type": "string",
+             "default": "@trait.Other"
+            }
+           },
+           "listens": [
+            {
+             "event": "REQUEST",
+             "triggers": "REQUEST",
+             "source": {
+              "kind": "trait",
+              "trait": "Child"
+             }
+            }
+           ],
+           "stateMachine": {
+            "states": [],
+            "events": [],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "REQUEST",
+              "effects": []
+             }
+            ]
+           }
+          },
+          {
+           "name": "Other",
+           "linkedEntity": "Row",
+           "stateMachine": {
+            "states": [],
+            "events": [],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             }
+            ]
+           }
+          },
+          {
+           "name": "Child",
+           "linkedEntity": "Row",
+           "stateMachine": {
+            "states": [],
+            "events": [],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "button",
+                 "action": "REQUEST",
+                 "label": "Go"
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintListenRedundantEmbedRoute",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Child": [
+        "REQUEST"
+       ],
+       "Other": [],
+       "Host": []
+      },
+      "byEffect": {
+       "Child": [],
+       "Other": [],
+       "Host": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenRedundantEmbedRoute",
+     "event": "LINT_FINISH",
+     "from": "ready",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-redundant-embed-route",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "silent-for-a-differently-named-trigger",
+   "steps": [
+    {
+     "trait": "OrbLintListenRedundantEmbedRoute",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "redundant-route",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Row",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Host",
+           "linkedEntity": "Row",
+           "config": {
+            "body": {
+             "type": "string",
+             "default": "@trait.Child"
+            }
+           },
+           "listens": [
+            {
+             "event": "REQUEST",
+             "triggers": "ADMIT",
+             "source": {
+              "kind": "trait",
+              "trait": "Child"
+             }
+            }
+           ],
+           "stateMachine": {
+            "states": [],
+            "events": [],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "ADMIT",
+              "effects": []
+             }
+            ]
+           }
+          },
+          {
+           "name": "Child",
+           "linkedEntity": "Row",
+           "stateMachine": {
+            "states": [],
+            "events": [],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "button",
+                 "action": "REQUEST",
+                 "label": "Go"
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintListenRedundantEmbedRoute",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Child": [
+        "REQUEST"
+       ],
+       "Host": []
+      },
+      "byEffect": {
+       "Child": [],
+       "Host": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenRedundantEmbedRoute",
+     "event": "LINT_FINISH",
+     "from": "ready",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-redundant-embed-route",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "silent-when-the-event-is-machine-emitted-and-never-bubbles",
+   "steps": [
+    {
+     "trait": "OrbLintListenRedundantEmbedRoute",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "redundant-route",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Row",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Host",
+           "linkedEntity": "Row",
+           "config": {
+            "body": {
+             "type": "string",
+             "default": "@trait.Child"
+            }
+           },
+           "listens": [
+            {
+             "event": "REQUEST",
+             "triggers": "REQUEST",
+             "source": {
+              "kind": "trait",
+              "trait": "Child"
+             }
+            }
+           ],
+           "stateMachine": {
+            "states": [],
+            "events": [],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "REQUEST",
+              "effects": []
+             }
+            ]
+           }
+          },
+          {
+           "name": "Child",
+           "linkedEntity": "Row",
+           "stateMachine": {
+            "states": [],
+            "events": [],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "emit",
+                "REQUEST"
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintListenRedundantEmbedRoute",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Child": [],
+       "Host": []
+      },
+      "byEffect": {
+       "Child": [
+        "REQUEST"
+       ],
+       "Host": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenRedundantEmbedRoute",
+     "event": "LINT_FINISH",
+     "from": "ready",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-redundant-embed-route",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "silent-when-the-host-has-no-transition-on-the-event",
+   "steps": [
+    {
+     "trait": "OrbLintListenRedundantEmbedRoute",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "redundant-route",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Row",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Host",
+           "linkedEntity": "Row",
+           "config": {
+            "body": {
+             "type": "string",
+             "default": "@trait.Child"
+            }
+           },
+           "listens": [
+            {
+             "event": "REQUEST",
+             "triggers": "REQUEST",
+             "source": {
+              "kind": "trait",
+              "trait": "Child"
+             }
+            }
+           ],
+           "stateMachine": {
+            "states": [],
+            "events": [],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "OTHER",
+              "effects": []
+             }
+            ]
+           }
+          },
+          {
+           "name": "Child",
+           "linkedEntity": "Row",
+           "stateMachine": {
+            "states": [],
+            "events": [],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "button",
+                 "action": "REQUEST",
+                 "label": "Go"
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintListenRedundantEmbedRoute",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Child": [
+        "REQUEST"
+       ],
+       "Host": []
+      },
+      "byEffect": {
+       "Child": [],
+       "Host": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenRedundantEmbedRoute",
+     "event": "LINT_FINISH",
+     "from": "ready",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-redundant-embed-route",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "silent-when-the-embedded-child-has-no-control-for-the-event",
+   "steps": [
+    {
+     "trait": "OrbLintListenRedundantEmbedRoute",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "redundant-route",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Row",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Host",
+           "linkedEntity": "Row",
+           "config": {
+            "body": {
+             "type": "string",
+             "default": "@trait.Child"
+            }
+           },
+           "listens": [
+            {
+             "event": "REQUEST",
+             "triggers": "REQUEST",
+             "source": {
+              "kind": "trait",
+              "trait": "Child"
+             }
+            }
+           ],
+           "stateMachine": {
+            "states": [],
+            "events": [],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "REQUEST",
+              "effects": []
+             }
+            ]
+           }
+          },
+          {
+           "name": "Child",
+           "linkedEntity": "Row",
+           "stateMachine": {
+            "states": [],
+            "events": [],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintListenRedundantEmbedRoute",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Child": [],
+       "Host": []
+      },
+      "byEffect": {
+       "Child": [],
+       "Host": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenRedundantEmbedRoute",
+     "event": "LINT_FINISH",
+     "from": "ready",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-redundant-embed-route",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "silent-when-the-child-both-renders-and-emits-the-event",
+   "steps": [
+    {
+     "trait": "OrbLintListenRedundantEmbedRoute",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "redundant-route",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Row",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Host",
+           "linkedEntity": "Row",
+           "config": {
+            "body": {
+             "type": "string",
+             "default": "@trait.Child"
+            }
+           },
+           "listens": [
+            {
+             "event": "REQUEST",
+             "triggers": "REQUEST",
+             "source": {
+              "kind": "trait",
+              "trait": "Child"
+             }
+            }
+           ],
+           "stateMachine": {
+            "states": [],
+            "events": [],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "REQUEST",
+              "effects": []
+             }
+            ]
+           }
+          },
+          {
+           "name": "Child",
+           "linkedEntity": "Row",
+           "stateMachine": {
+            "states": [],
+            "events": [],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "button",
+                 "action": "REQUEST",
+                 "label": "Go"
+                }
+               ],
+               [
+                "emit",
+                "REQUEST"
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintListenRedundantEmbedRoute",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Child": [
+        "REQUEST"
+       ],
+       "Host": []
+      },
+      "byEffect": {
+       "Child": [
+        "REQUEST"
+       ],
+       "Host": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenRedundantEmbedRoute",
+     "event": "LINT_FINISH",
+     "from": "ready",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-redundant-embed-route",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-route-without-a-triggers-field-is-skipped",
+   "steps": [
+    {
+     "trait": "OrbLintListenRedundantEmbedRoute",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "redundant-route",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Row",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Host",
+           "linkedEntity": "Row",
+           "config": {
+            "body": {
+             "type": "string",
+             "default": "@trait.Child"
+            }
+           },
+           "listens": [
+            {
+             "event": "REQUEST",
+             "source": {
+              "kind": "trait",
+              "trait": "Child"
+             }
+            }
+           ],
+           "stateMachine": {
+            "states": [],
+            "events": [],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "REQUEST",
+              "effects": []
+             }
+            ]
+           }
+          },
+          {
+           "name": "Child",
+           "linkedEntity": "Row",
+           "stateMachine": {
+            "states": [],
+            "events": [],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "button",
+                 "action": "REQUEST",
+                 "label": "Go"
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintListenRedundantEmbedRoute",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Child": [
+        "REQUEST"
+       ],
+       "Host": []
+      },
+      "byEffect": {
+       "Child": [],
+       "Host": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenRedundantEmbedRoute",
+     "event": "LINT_FINISH",
+     "from": "ready",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-redundant-embed-route",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}
