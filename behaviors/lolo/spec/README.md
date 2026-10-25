@@ -64,7 +64,6 @@ A spec sits under the same folder path as the behavior it specs: the spec for `f
 | `agent/completion.lolo` | `std-agent-completion` (bound; a failed generation ends `done`, never stuck `generating`) |
 | `agent/planner.lolo` | `std-agent-planner` (bound; a failed recall still plans, a failed generation still ends `planned`) |
 | `ml/similarity.lolo` | `std-ml-similarity` (bound; an embed failure resolves as an abstain, never stays `embedding`) |
-| `store/store-selection.lolo` | `std-store-selection` (bound; `reading` keeps `poolMax` absent or >= 0) |
 | `store/sha256.lolo` | `std-sha256` (unbound until the `bit/*` operators land; `SHA256_DIGEST { data, encoding }` answers `SHA256_DIGESTED { digest }` / `SHA256_REFUSED { reason }`, golden vectors in the description) |
 | `store/row-store.lolo` | the store drivers (unbound; declares the `Row*` record types the verbs and replies carry) |
 | `store/row-store-kv.lolo` | `std-row-store-kv` (unbound; the file driver's public contract with `config.store` for `config.dir`, so `store:` swaps drivers; waits on the `kv/*` operators) |

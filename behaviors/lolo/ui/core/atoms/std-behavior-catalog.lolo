@@ -1,6 +1,6 @@
 app std-behavior-catalog [
   version: "1.3.0",
-  description: "std-behavior-catalog — browse the installed behaviors under the `scope` registry folders (`behavior/catalog`), search them by meaning (the query is embedded with std-llm (LLM_EMBED) and ranked by cosine similarity to each behavior's description; results under `minScore` drop out), open one's knobs and events (`behavior/describe`), and pick one: PICKED { behavior, trait, value } carries the behavior name, its first trait as a value ready to bind, and the whole behavior as a value ready to embed or store. With `pick: toggle` each card carries an on/off switch instead: TOGGLED { behavior, checked, topic, value } per change, and SELECTION { behaviors } seeds which are on. After listing it emits CATALOG_TOPICS { topics } (each package and topic once, with its count), and TOPIC { package, topic } narrows the rows and search results to that topic (an empty topic lists everything). Pick for block libraries, plugin pickers, plugin on/off settings and any page that lets users choose a building block.",
+  description: "std-behavior-catalog — browse the installed behaviors under the `scope` registry folders (`behavior/catalog`), search them by meaning (the list carries no vectors; a search lists the current topic's registry folder, or the whole scope, with its vectors, embeds the query with std-llm (LLM_EMBED) and ranks by cosine similarity to each behavior's description; results under `minScore` drop out), open one's knobs and events (`behavior/describe`), and pick one: PICKED { behavior, trait, value } carries the behavior name, its first trait as a value ready to bind, and the whole behavior as a value ready to embed or store. With `pick: toggle` each card carries an on/off switch instead: TOGGLED { behavior, checked, topic, value } per change, and SELECTION { behaviors } seeds which are on. After listing it emits CATALOG_TOPICS { topics } (each package and topic once, with its count), and TOPIC { package, topic } narrows the rows and search results to that topic (an empty topic lists everything). Pick for block libraries, plugin pickers, plugin on/off settings and any page that lets users choose a building block.",
   egress: ["https://api.openai.com", "https://openrouter.ai"]
 ]
 ;; @capabilities "browse installed behaviors, search behaviors by meaning, describe a behavior's knobs and events, pick a behavior to bind"
@@ -56,6 +56,8 @@ orbital BehaviorCatalogOrbital {
     id : string!
     query : string = ""
     entries : [BehaviorCatalogHit] = []
+    topics : [BehaviorCatalogTopic] @description "Every listed package and topic with its count, as CATALOG_TOPICS last announced them." = []
+    searchHits : [BehaviorCatalogHit] @description "The behaviors a search ranks, listed with their vectors: the current topic's registry folder, or the whole scope." = []
     rows : [BehaviorCatalogRow] = []
     detail : string = ""
     knobs : [BehaviorCatalogKnobField] = []
@@ -136,6 +138,7 @@ orbital BehaviorCatalogOrbital {
         (set @entity.status loading)
         (render-ui main <loading-state message="Loading the catalog" />)
         (behavior/catalog { paths: @config.scope } {
+          vectors: false
           emit: { success: LISTED, failure: LIST_FAILED }
         })
       SELECTION -> loading
@@ -147,7 +150,8 @@ orbital BehaviorCatalogOrbital {
         (set @entity.entries ?result)
         (set @entity.rows (array/map (array/filter ?result (fn e (or (= @entity.topic "") (and (= @e.package @entity.topicPackage) (= @e.topic @entity.topic))))) (fn e { behavior: @e.behavior, package: @e.package, description: @e.description, topic: @e.topic, level: @e.level, score: 0 })))
         (set @entity.status ready)
-        (emit CATALOG_TOPICS { topics: (array/map (array/unique (array/map ?result (fn e { package: @e.package, topic: @e.topic }))) (fn t { package: @t.package, topic: @t.topic, count: (array/count ?result (fn e (and (= @e.package @t.package) (= @e.topic @t.topic)))) })) })
+        (set @entity.topics (array/map (array/unique (array/map ?result (fn e { package: @e.package, topic: @e.topic }))) (fn t { package: @t.package, topic: @t.topic, count: (array/count ?result (fn e (and (= @e.package @t.package) (= @e.topic @t.topic)))) })))
+        (emit CATALOG_TOPICS { topics: @entity.topics })
         (emit CATALOG_SHOWN {})
       LIST_FAILED -> failed when (= @config.look chips)
         (set @entity.error ?error)
@@ -161,6 +165,7 @@ orbital BehaviorCatalogOrbital {
 
     state ready {
       INIT -> ready
+        (emit CATALOG_TOPICS { topics: @entity.topics })
         (emit CATALOG_SHOWN {})
       CATALOG_SHOWN -> ready when (= @config.look chips)
         (render-ui main {
@@ -197,31 +202,48 @@ orbital BehaviorCatalogOrbital {
             className: (if (= (array/len @entity.rows) 0) "" hidden)
           }, {
             type: stack
-            direction: vertical
+            direction: horizontal
             gap: sm
+            className: "grid grid-cols-1 xl:grid-cols-2"
             children: (array/map @entity.rows (fn row {
               type: card
               padding: md
+              className: "h-full"
               children: [{
                 type: stack
                 direction: vertical
-                gap: xs
+                gap: sm
+                justify: between
+                className: "h-full"
                 children: [{
                   type: stack
                   direction: horizontal
                   gap: sm
-                  align: center
-                  children: [
-                    { type: typography, content: @row.behavior, variant: h4, weight: semibold },
-                    { type: badge, label: @row.topic, variant: default },
-                    { type: badge, label: @row.level, variant: info },
-                    { type: badge, label: (str/concat (math/round (* @row.score 100)) "%"), variant: success, className: (if (> @row.score 0) "" hidden) }
-                  ]
+                  align: start
+                  justify: between
+                  children: [{
+                    type: stack
+                    direction: vertical
+                    gap: none
+                    children: [
+                      { type: typography, content: (array/last (str/split @row.behavior "/")), variant: h4, weight: semibold },
+                      { type: typography, content: @row.behavior, variant: caption, color: muted }
+                    ]
+                  }, {
+                    type: stack
+                    direction: horizontal
+                    gap: xs
+                    children: [
+                      { type: badge, label: @row.level, variant: info },
+                      { type: badge, label: (str/concat (math/round (* @row.score 100)) "%"), variant: success, className: (if (> @row.score 0) "" hidden) }
+                    ]
+                  }]
                 }, {
                   type: typography
                   content: @row.description
                   variant: body
                   color: muted
+                  className: "line-clamp-2"
                 }, {
                   type: stack
                   direction: horizontal
@@ -260,7 +282,9 @@ orbital BehaviorCatalogOrbital {
       SEARCH -> searching when (!= ?searchTerm "")
         (set @entity.query ?searchTerm)
         (set @entity.status searching)
-        (emit LLM_EMBED { texts: (array/prepend [] ?searchTerm) })
+        (behavior/catalog { paths: (if (= @entity.topic "") @config.scope (let ((inTopic (array/find @entity.entries (fn e (and (= @e.package @entity.topicPackage) (= @e.topic @entity.topic)))))) (if (= @inTopic null) @config.scope [(str/concat (array/first (str/split @inTopic.behavior "/")) "/" @entity.topic)]))) } {
+          emit: { success: SEARCH_LISTED, failure: SEARCH_LIST_FAILED }
+        })
       PICK -> ready
         (emit PICKED { behavior: ?behavior, description: (object/get (array/find @entity.entries (fn e (= @e.behavior ?behavior))) description ""), trait: (array/first (object/get (array/find @entity.entries (fn e (= @e.behavior ?behavior))) traits [])), value: (object/get (array/find @entity.entries (fn e (= @e.behavior ?behavior))) value) })
       TOGGLE -> ready when ?checked
@@ -283,14 +307,23 @@ orbital BehaviorCatalogOrbital {
     }
 
     state searching {
+      SEARCH_LISTED -> searching
+        (set @entity.searchHits ?result)
+        (emit LLM_EMBED { texts: (array/prepend [] @entity.query) })
+      SEARCH_LIST_FAILED -> ready
+        (set @entity.error ?error)
+        (set @entity.status ready)
+        (render-ui toast { type: alert, variant: error, message: (str/concat "Search failed: " ?error) })
+        (emit CATALOG_SHOWN {})
       INIT -> loading
         (set @entity.status loading)
         (render-ui main <loading-state message="Loading the catalog" />)
         (behavior/catalog { paths: @config.scope } {
+          vectors: false
           emit: { success: LISTED, failure: LIST_FAILED }
         })
       EMBEDDED -> ready when (> (array/len ?embeddings) 0)
-        (set @entity.rows (array/sort (array/flatten (array/map @entity.entries (fn e (let ((c (if (object/has @e.vectors description) (array/cosine (object/get @e.vectors description) (array/first ?embeddings)) 0))) (if (== @c null) [] (if (and (>= @c @config.minScore) (or (= @entity.topic "") (and (= @e.package @entity.topicPackage) (= @e.topic @entity.topic)))) [{ behavior: @e.behavior, package: @e.package, description: @e.description, topic: @e.topic, level: @e.level, score: (or @c 0) }] [])))))) score desc))
+        (set @entity.rows (array/sort (array/flatten (array/map @entity.searchHits (fn e (let ((c (if (object/has @e.vectors description) (array/cosine (object/get @e.vectors description) (array/first ?embeddings)) 0))) (if (== @c null) [] (if (and (>= @c @config.minScore) (or (= @entity.topic "") (and (= @e.package @entity.topicPackage) (= @e.topic @entity.topic)))) [{ behavior: @e.behavior, package: @e.package, description: @e.description, topic: @e.topic, level: @e.level, score: (or @c 0) }] [])))))) score desc))
         (set @entity.status ready)
         (emit CATALOG_SHOWN {})
       EMBEDDED -> ready when (= (array/len ?embeddings) 0)
@@ -310,6 +343,7 @@ orbital BehaviorCatalogOrbital {
         (set @entity.status loading)
         (render-ui main <loading-state message="Loading the catalog" />)
         (behavior/catalog { paths: @config.scope } {
+          vectors: false
           emit: { success: LISTED, failure: LIST_FAILED }
         })
       DESCRIBED -> ready
@@ -333,6 +367,7 @@ orbital BehaviorCatalogOrbital {
         (set @entity.status loading)
         (render-ui main <loading-state message="Loading the catalog" />)
         (behavior/catalog { paths: @config.scope } {
+          vectors: false
           emit: { success: LISTED, failure: LIST_FAILED }
         })
     }
@@ -363,6 +398,15 @@ orbital BehaviorCatalogOrbital {
       LIST_FAILED {
         error : string!
       }
+      SEARCH_LISTED {
+        result : [BehaviorCatalogHit]!
+      }
+        @description "behavior/catalog with vectors over the search's folder."
+        @tier "internal"
+      SEARCH_LIST_FAILED {
+        error : string!
+      }
+        @tier "internal"
       LLM_EMBED -> external {
         texts : [string]!
       }

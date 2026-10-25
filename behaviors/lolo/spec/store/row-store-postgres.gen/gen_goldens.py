@@ -98,6 +98,9 @@ def case(id, steps, note=None, skip=None):
     if skip: c["skip"] = skip
     cases.append(c)
 
+def connect():
+    return {"event": "PG_CONNECTED", "payload": {"sock": 3}, "expect": {"state": "negotiating", "emits": [wire("ssl-request", "", [], SSL_REQUEST)]}}
+
 # ================= connection and login =================
 case("good-cold-ask-connects-to-the-configured-origin",
      [{"event": "ROW_READ", "payload": {"key": "k", "entityType": "Ticket", "id": "t1"}, "from": "ready", "entity": {"id": "f"},
@@ -115,26 +118,26 @@ case("good-connected-asks-for-tls-first-under-sslmode-prefer",
      note="SSLRequest is 00 00 00 08 04 d2 16 2f")
 case("good-server-answers-n-and-startup-follows",
      [{"event": "ROW_READ", "payload": {"key": "k", "entityType": "Ticket", "id": "t1"}, "from": "ready", "entity": {"id": "f"}},
-      {"event": "PG_CONNECTED", "payload": {"sock": 3}},
+      connect(),
       recv(b"N", expect={"state": "startup", "emits": [wire("startup", "", [], startup())], "neverEmits": ["STORE_FAILED"]})],
      note="user, database, client_encoding only: no statement_timeout option, unlike the postgres effect")
 case("bad-tls-answer-s-is-refused-because-no-tls-over-os-sockets",
      [{"event": "ROW_READ", "payload": {"key": "k", "entityType": "Ticket", "id": "t1"}, "from": "ready", "entity": {"id": "f"}},
-      {"event": "PG_CONNECTED", "payload": {"sock": 3}},
+      connect(),
       recv(b"S", expect={"state": "ready", "emits": [emit("STORE_FAILED", key="k", message="the server answered S to the TLS request and this driver speaks no TLS over os sockets: set sslmode=disable, or have the server answer N")], "neverEmits": ["ROW_FOUND"], "effects": [{"type": "os/close"}]})],
      note="DROP vs the Rust twin (TlsConn): new text, owner call (G-STD-NEW tls)")
 case("bad-tls-answer-other-byte-is-refused",
      [{"event": "ROW_READ", "payload": {"key": "k", "entityType": "Ticket", "id": "t1"}, "from": "ready", "entity": {"id": "f"}},
-      {"event": "PG_CONNECTED", "payload": {"sock": 3}},
+      connect(),
       recv(b"x", expect={"state": "ready", "emits": [emit("STORE_FAILED", key="k", message="the answer to the TLS request is 0x78, neither S nor N")]})])
 case("bad-tls-request-closed-by-server",
      [{"event": "ROW_READ", "payload": {"key": "k", "entityType": "Ticket", "id": "t1"}, "from": "ready", "entity": {"id": "f"}},
-      {"event": "PG_CONNECTED", "payload": {"sock": 3}},
+      connect(),
       {"event": "PG_RECEIVED", "payload": {"data": "", "eof": True}, "expect": {"state": "ready", "emits": [emit("STORE_FAILED", key="k", message="the server closed the connection answering the TLS request")]}}])
 
 def to_startup():
     return [{"event": "ROW_READ", "payload": {"key": "k", "entityType": "Ticket", "id": "t1"}, "from": "ready", "entity": {"id": "f"}},
-            {"event": "PG_CONNECTED", "payload": {"sock": 3}}, recv(b"N")]
+            connect(), recv(b"N", expect={"state": "startup", "emits": [wire("startup", "", [], startup())]})]
 
 READ_SQL = 'SELECT * FROM "tickets" WHERE "id" = $1'
 ok_session = R(0) + S("server_version", "16.2") + S("client_encoding", "UTF8") + K() + Z()
@@ -509,7 +512,7 @@ case("x-read-decodes-arrays-bytea-bool-and-floats",
 doc = {"atom": "spec/store/row-store-postgres.fixture.lolo", "trait": "RowStoreDriver",
        "spec": "spec/store/row-store-postgres.lolo",
        "source": "orbital-rust/crates/orbital-core/crates/runtime/src/stores/pg_rows.rs over drivers/postgres.rs (behavior and tests)",
-       "note": "Replay goldens feed the os reply events the kernel would route (PG_CONNECTED, PG_RECEIVED with the server bytes as base64, PG_NONCE_DRAWN) and assert state, emits and the effects' types. Effect arguments are compared evaluated; the exact bytes the driver writes are asserted through the spec's PG_WIRE_SENT diagnostic emit (stage, sql, params, frame = base64 of the whole send). Server answers are hand-built Postgres v3 messages (cross-checked against fixtures/postgres/*.json); the SCRAM server-first is the recorded scram-wrong-password-fails one. Cases marked skip need case-level config (unsupported until G-ORB-460). The same case list is the Rust-side run list: each id names the Rust unit/live test it mirrors in `source`.",
+       "note": "Replay goldens feed the os reply events the kernel would route (PG_CONNECTED, PG_RECEIVED with the server bytes as base64, PG_NONCE_DRAWN) and assert state, emits and the effects' types. Effect arguments are compared evaluated; the exact bytes the driver writes are asserted through the spec's PG_WIRE_SENT diagnostic emit (stage, sql, params, frame = base64 of the whole send). Server answers are hand-built Postgres v3 messages (cross-checked against fixtures/postgres/*.json); the SCRAM server-first is the recorded scram-wrong-password-fails one. Cases marked skip need case-level config (unsupported until G-ORB-460). The Rust twin (`pg_rows.rs`) is archived under `archive/orbital-rust/`; each id's `source` names the Rust unit/live test it once mirrored.",
        "cases": cases}
 json.dump(doc, open(OUT, "w"), indent=1)
 open(OUT, "a").write("\n")

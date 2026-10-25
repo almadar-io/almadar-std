@@ -117,7 +117,7 @@ orbital OrbServeCheckOrbital {
         (emit SERVE_CHECK_ANSWERED { status: 500, body: (str/concat "FAIL  no free port: " (str/trim @payload.stderr)) })
       SC_START -> starting
         (set @entity.base (str/concat "http://127.0.0.1:" @entity.port))
-        (emit SC_SH_RUN { stage: "start" argv: ["-c", "W=$(mktemp -d); cd \"$1\" || exit 1; ORB_NO_AUTO_SETUP=1 DATA_BACKEND=mock NODE_ENV=development nohup \"$2\" serve \"$3\" --port \"$4\" --no-mock --no-emulators >\"$W/serve.log\" 2>&1 </dev/null & echo \"$! $W\"", "sh", @entity.workDir, @entity.orbBin, @entity.program, @entity.port] })
+        (emit SC_SH_RUN { stage: "start" argv: ["-c", "W=$(mktemp -d); cd \"$1\" || exit 1; ORB_NO_AUTO_SETUP=1 NODE_ENV=development nohup \"$2\" serve \"$3\" --port \"$4\" --no-mock --no-emulators >\"$W/serve.log\" 2>&1 </dev/null & echo \"$! $W\"", "sh", @entity.workDir, @entity.orbBin, @entity.program, @entity.port] })
       SC_SH_DONE -> polling when (and (= @payload.stage "start") (= @payload.exitCode 0))
         (set @entity.pid (array/first (str/split (str/trim @payload.stdout) " ")))
         (set @entity.tmp (array/nth (str/split (str/trim @payload.stdout) " ") 1))

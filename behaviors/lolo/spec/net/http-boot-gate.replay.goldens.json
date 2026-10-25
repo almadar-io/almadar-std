@@ -2,15 +2,15 @@
  "atom": "net/atoms/std-http-boot-gate.lolo",
  "trait": "BootGate",
  "source": "orbital-rust/crates/orbital-shell-rust/src/host/boot.rs (boot_env_problems and the production refusal) and orbital-server lib.rs boot_env_tests",
- "note": "Twin of the host boot path: production with a problem refuses the boot, elsewhere the problem only warns. The os/getenv effects of INIT and of each READ_<NAME> step are not played (the replay would run them with no grant); READ_USE_MOCK_DATA, the last read, has no effect and is played, and ENV_COLLECTED stands for the ten answers. The replay ignores a case-level entity. The credential-list effect (ENV_COLLECTED with services and no mock) is not played; its answer is stubbed as CRED_LISTED / CRED_UNLISTED, and the services reach the replay in the ENV_COLLECTED payload because the replay ignores case-level config. The Rust twin is boot_env_tests (missing credential and unreadable catalog lines); the line texts come from std-boot-env-check and std-credential-admin, whose own goldens pin them.",
+ "note": "Twin of the host boot path: production with a problem refuses the boot, elsewhere the problem only warns. The os/getenv effects of INIT and of each READ_<NAME> step are not played (the replay would run them with no grant); READ_ALMADAR_INTEGRATIONS_MODE, the last read, has no effect and is played, and ENV_COLLECTED stands for the nine answers. The replay ignores a case-level entity. The credential-list effect (ENV_COLLECTED with services and no mock) is not played; its answer is stubbed as CRED_LISTED / CRED_UNLISTED, and the services reach the replay in the ENV_COLLECTED payload because the replay ignores case-level config. The Rust twin is boot_env_tests (missing credential and unreadable catalog lines); the line texts come from std-boot-env-check and std-credential-admin, whose own goldens pin them.",
  "cases": [
   {
    "id": "last-variable-collects-all-reads",
    "steps": [
     {
-     "event": "READ_USE_MOCK_DATA",
+     "event": "READ_ALMADAR_INTEGRATIONS_MODE",
      "payload": {
-      "value": "true"
+      "value": "mock"
      },
      "expect": {
       "emits": [
@@ -19,8 +19,8 @@
         "payload": {
          "vars": [
           {
-           "name": "USE_MOCK_DATA",
-           "value": "true"
+           "name": "ALMADAR_INTEGRATIONS_MODE",
+           "value": "mock"
           }
          ],
          "services": []
@@ -35,7 +35,7 @@
    "id": "unset-last-variable-reads-blank",
    "steps": [
     {
-     "event": "READ_USE_MOCK_DATA",
+     "event": "READ_ALMADAR_INTEGRATIONS_MODE",
      "payload": {},
      "expect": {
       "emits": [
@@ -44,7 +44,7 @@
         "payload": {
          "vars": [
           {
-           "name": "USE_MOCK_DATA",
+           "name": "ALMADAR_INTEGRATIONS_MODE",
            "value": ""
           }
          ],
@@ -57,7 +57,7 @@
    ]
   },
   {
-   "id": "production-with-mock-data-asks-the-check",
+   "id": "production-with-integrations-mock-asks-the-check",
    "steps": [
     {
      "event": "ENV_COLLECTED",
@@ -97,11 +97,7 @@
        },
        {
         "name": "ALMADAR_INTEGRATIONS_MODE",
-        "value": ""
-       },
-       {
-        "name": "USE_MOCK_DATA",
-        "value": "true"
+        "value": "mock"
        }
       ],
       "services": []
@@ -191,10 +187,6 @@
        {
         "name": "ALMADAR_INTEGRATIONS_MODE",
         "value": "real"
-       },
-       {
-        "name": "USE_MOCK_DATA",
-        "value": "false"
        }
       ],
       "services": []
@@ -284,10 +276,6 @@
        {
         "name": "ALMADAR_INTEGRATIONS_MODE",
         "value": "mock"
-       },
-       {
-        "name": "USE_MOCK_DATA",
-        "value": ""
        }
       ],
       "services": []
@@ -438,11 +426,7 @@
        },
        {
         "name": "ALMADAR_INTEGRATIONS_MODE",
-        "value": ""
-       },
-       {
-        "name": "USE_MOCK_DATA",
-        "value": "true"
+        "value": "mock"
        }
       ],
       "services": []
@@ -569,10 +553,6 @@
        {
         "name": "ALMADAR_INTEGRATIONS_MODE",
         "value": "real"
-       },
-       {
-        "name": "USE_MOCK_DATA",
-        "value": "false"
        }
       ],
       "services": []
@@ -701,10 +681,6 @@
        {
         "name": "ALMADAR_INTEGRATIONS_MODE",
         "value": "real"
-       },
-       {
-        "name": "USE_MOCK_DATA",
-        "value": "false"
        }
       ],
       "services": []
@@ -791,7 +767,7 @@
     {
      "event": "ENV_UNREAD",
      "payload": {
-      "error": "env USE_MOCK_DATA is not granted",
+      "error": "env ALMADAR_INTEGRATIONS_MODE is not granted",
       "kind": "grant"
      },
      "expect": {
@@ -801,7 +777,7 @@
         "event": "BOOT_REFUSED",
         "payload": {
          "problems": [
-          "env USE_MOCK_DATA is not granted"
+          "env ALMADAR_INTEGRATIONS_MODE is not granted"
          ]
         }
        }
@@ -854,11 +830,7 @@
        },
        {
         "name": "ALMADAR_INTEGRATIONS_MODE",
-        "value": ""
-       },
-       {
-        "name": "USE_MOCK_DATA",
-        "value": "true"
+        "value": "mock"
        }
       ],
       "services": [
@@ -924,10 +896,6 @@
        {
         "name": "ALMADAR_INTEGRATIONS_MODE",
         "value": ""
-       },
-       {
-        "name": "USE_MOCK_DATA",
-        "value": "true"
        }
       ],
       "services": [
@@ -1056,10 +1024,6 @@
        {
         "name": "ALMADAR_INTEGRATIONS_MODE",
         "value": ""
-       },
-       {
-        "name": "USE_MOCK_DATA",
-        "value": ""
        }
       ],
       "services": []
@@ -1153,10 +1117,6 @@
        },
        {
         "name": "ALMADAR_INTEGRATIONS_MODE",
-        "value": ""
-       },
-       {
-        "name": "USE_MOCK_DATA",
         "value": ""
        }
       ],

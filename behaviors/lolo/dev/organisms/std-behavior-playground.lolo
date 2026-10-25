@@ -1,5 +1,6 @@
 app std-behavior-playground [
   version: "1.0.0",
+  theme: "linear-clean-light",
   description: "std-behavior-playground — browse every installed behavior by package and topic, open one and play with it: it runs live in place (the behavior value embedded, as a page would mount it), its state machines open drillable in std-avl-cosmic-zoom (system map, then each trait's machine, then one transition as circuits, with Step running transitions on the kernel), its .lolo source reads in a code view, and an inspector lists its package, topic, level and knobs. The topic tree, the cards, search and Details are std-behavior-catalog's (scope, starting topic and labels are knobs); the frame is std-workspace-layout with a runtime panel showing the live trait states and event log. Serve it with `orb serve`.",
   egress: ["https://api.openai.com", "https://openrouter.ai"]
 ]
@@ -14,6 +15,8 @@ type PlaygroundPackageLabel = { package : string!, label : string! }
 type PlaygroundKnob = { name : string!, type : string!, label : string, description : string }
 type PlaygroundDescription = { behavior : string!, knobs : [PlaygroundKnob]! }
 type PlaygroundProgram = { name : string }
+type PlaygroundFinding = { code : string!, message : string! }
+type PlaygroundCheck = { valid : boolean!, errors : [PlaygroundFinding]!, warnings : [PlaygroundFinding]! }
 type CosmicNodeContext = { level : "overview" | "trait-expanded" | "system" | "code" | "transition"!, orbital : string!, trait : string, transition : string, transitionIndex : number }
 
 orbital BehaviorPlayground {
@@ -30,8 +33,22 @@ orbital BehaviorPlayground {
     sourceJson : string = ""
     sourceText : string = ""
     knobs : [PlaygroundKnob] = []
+    check : "pending" | "valid" | "invalid" = pending
+    findings : [PlaygroundFinding] = []
     error : string = ""
     status : "browsing" | "opening" | "open" | "failed" = browsing
+  }
+
+  entity PlaygroundLoad [runtime] {
+    id : string!
+    behavior : string = ""
+    programJson : string = ""
+    sourceJson : string = ""
+    sourceText : string = ""
+    knobs : [PlaygroundKnob] = []
+    valid : boolean = false
+    findings : [PlaygroundFinding] = []
+    waiting : number @description "How many of the five answers (source, resolve, describe, print, check) are still to come." = 0
   }
 
   config {
@@ -186,7 +203,9 @@ orbital BehaviorPlayground {
         (render-ui main { type: stack, direction: vertical, gap: xs, className: "h-full overflow-y-auto p-2", children: [
           { type: typography, content: "Topics", variant: overline, color: muted, className: "px-2 pt-1" },
           { type: file-tree, selectedId: (str/concat @entity.topicPackage " " @entity.topic), onNodeSelect: NODE_SELECTED, items: (array/concat
-            (array/map (array/unique (array/map @entity.topics (fn t @t.package))) (fn pkg { id: @pkg, label: (object/get (array/find @config.labels (fn l (= @l.package @pkg))) "label" @pkg), icon: package }))
+            (array/concat
+              (array/map (array/filter @config.labels (fn l (array/some @entity.topics (fn t (= @t.package @l.package))))) (fn l { id: @l.package, label: @l.label, icon: package }))
+              (array/map (array/filter (array/unique (array/map @entity.topics (fn t @t.package))) (fn pkg (not (array/some @config.labels (fn l (= @l.package @pkg)))))) (fn pkg { id: @pkg, label: @pkg, icon: package })))
             (array/map (array/sort @entity.topics "topic" "asc") (fn t { id: (str/concat @t.package " " @t.topic), label: (str/concat @t.topic "  ·  " @t.count), parentId: @t.package, icon: folder }))) }
         ] })
       NODE_SELECTED -> idle when (array/some @entity.topics (fn t (= (str/concat @t.package " " @t.topic) ?id)))
@@ -220,7 +239,7 @@ orbital BehaviorPlayground {
     }
   }
 
-  trait PlaygroundStage -> PlaygroundView [optimistic] {
+  trait PlaygroundStage -> PlaygroundView [client] {
     config {
       openPackage : string = @config.startPackage
         @label "Starting package"
@@ -240,7 +259,7 @@ orbital BehaviorPlayground {
         (set @entity.topic @config.openTopic)
         (emit STAGE_SHOWN {})
       STAGE_SHOWN -> browsing
-        (render-ui main { type: stack, direction: vertical, gap: md, className: "h-full overflow-y-auto p-4", children: [
+        (render-ui main { type: stack, direction: vertical, gap: md, className: "h-full overflow-y-auto p-6", children: [
           { type: stack, direction: vertical, gap: xs, children: [
             { type: typography, content: (object/get (array/find @config.labels (fn l (= @l.package @entity.topicPackage))) "label" @entity.topicPackage), variant: overline, color: muted },
             { type: typography, content: @entity.topic, variant: h2, weight: bold },
@@ -261,34 +280,30 @@ orbital BehaviorPlayground {
         (set @entity.tab live)
         (set @entity.status opening)
         (render-ui main { type: container, size: full, padding: md, children: [{ type: skeleton, variant: detail, rows: 4 }] })
-        (behavior/source ?value { emit: { success: SOURCED, failure: OPEN_FAILED } })
-        (behavior/resolve ?value { emit: { success: RESOLVED, failure: OPEN_FAILED } })
-        (behavior/describe { behavior: ?behavior } { emit: { success: DESCRIBED, failure: DESCRIBE_FAILED } })
+        (emit LOAD_BEHAVIOR { behavior: ?behavior, value: ?value })
     }
 
     state opening {
       INIT -> browsing
         (emit STAGE_SHOWN {})
-      SOURCED -> opening
-        (set @entity.sourceJson (json/stringify ?result))
-        (program/print ?result { emit: { success: PRINTED, failure: OPEN_FAILED } })
-      RESOLVED -> opening
-        (set @entity.programJson (json/stringify ?result))
-      DESCRIBED -> opening
-        (set @entity.knobs (object/get ?result knobs []))
-      DESCRIBE_FAILED -> opening
-        (set @entity.knobs [])
-      PRINTED -> open
-        (set @entity.sourceText ?result)
+      BEHAVIOR_LOADED -> open when (= ?behavior @entity.behavior)
+        (set @entity.programJson ?programJson)
+        (set @entity.sourceJson ?sourceJson)
+        (set @entity.sourceText ?sourceText)
+        (set @entity.knobs ?knobs)
+        (set @entity.check (if ?valid valid invalid))
+        (set @entity.findings ?findings)
         (set @entity.status open)
         (emit STAGE_SHOWN {})
-      OPEN_FAILED -> failed
+      BEHAVIOR_LOADED -> opening when (!= ?behavior @entity.behavior)
+      BEHAVIOR_FAILED -> failed when (= ?behavior @entity.behavior)
         (set @entity.error ?error)
         (set @entity.status failed)
         (render-ui main { type: container, size: md, padding: lg, children: [{ type: stack, direction: vertical, gap: md, children: [
           { type: alert, variant: error, title: (str/concat @entity.behavior " could not be opened"), message: @entity.error },
           { type: button, label: "Back to the topic", icon: arrow-left, variant: secondary, action: BACK }
         ] }] })
+      BEHAVIOR_FAILED -> opening when (!= ?behavior @entity.behavior)
       TOPIC_PICKED -> browsing
         (set @entity.topicPackage ?package)
         (set @entity.topic ?topic)
@@ -301,18 +316,21 @@ orbital BehaviorPlayground {
       STAGE_SHOWN -> open
         (when (validate/required @entity.value)
         (render-ui main { type: stack, direction: vertical, gap: none, className: "h-full min-h-0", children: [
-          { type: stack, direction: horizontal, justify: between, align: center, gap: md, className: "px-4 py-3 border-b", children: [
-            { type: stack, direction: horizontal, align: center, gap: sm, children: [
-              { type: button, label: @entity.topic, icon: arrow-left, variant: ghost, size: sm, action: BACK },
-              { type: typography, content: @entity.behavior, variant: h3, weight: semibold }
+          { type: stack, direction: vertical, gap: sm, align: start, className: "px-6 pt-4 border-b", children: [
+            { type: button, label: @entity.topic, icon: arrow-left, variant: ghost, size: sm, action: BACK },
+            { type: stack, direction: vertical, gap: none, children: [
+              { type: typography, content: (array/last (str/split @entity.behavior "/")), variant: h3, weight: semibold },
+              { type: typography, content: @entity.behavior, variant: caption, color: muted }
             ] },
             { type: tabs, activeTab: @entity.tab, tabChangeEvent: TAB_SELECTED, items: [{ id: "live", label: "Live" }, { id: "machines", label: "State machines" }, { id: "source", label: "Source" }] }
           ] },
           { type: box, className: "flex-1 min-h-0 overflow-auto", children: [
             (if (= @entity.tab live)
-              { type: box, className: "h-full", children: [@entity.value] }
+              (if (= @entity.check valid)
+                { type: box, className: "h-full", children: [(object/set @entity.value "resolved" @entity.programJson)] }
+                { type: container, size: md, padding: lg, children: [{ type: stack, direction: vertical, gap: sm, children: (array/concat [{ type: alert, variant: warning, title: "This behavior does not run on its own", message: "It does not validate alone (it expects a host that provides what it needs); its state machines and source are in the other tabs." }] (array/map @entity.findings (fn f { type: typography, content: (str/concat @f.code ": " @f.message), variant: caption }))) }] })
               (if (= @entity.tab machines)
-                { type: box, className: "h-full min-h-0", children: [@trait.PlaygroundCosmic] }
+                { type: box, className: "h-[calc(100vh-9rem)] min-h-0", children: [@trait.PlaygroundCosmic] }
                 { type: code-block, code: @entity.sourceText, language: "lolo", showLineNumbers: true, maxHeight: "100%" }))
           ] }
         ] }))
@@ -348,9 +366,7 @@ orbital BehaviorPlayground {
         (set @entity.tab live)
         (set @entity.status opening)
         (render-ui main { type: container, size: full, padding: md, children: [{ type: skeleton, variant: detail, rows: 4 }] })
-        (behavior/source ?value { emit: { success: SOURCED, failure: OPEN_FAILED } })
-        (behavior/resolve ?value { emit: { success: RESOLVED, failure: OPEN_FAILED } })
-        (behavior/describe { behavior: ?behavior } { emit: { success: DESCRIBED, failure: DESCRIBE_FAILED } })
+        (emit LOAD_BEHAVIOR { behavior: ?behavior, value: ?value })
     }
 
     state failed {
@@ -370,6 +386,11 @@ orbital BehaviorPlayground {
 
     emits {
       STAGE_SHOWN
+      LOAD_BEHAVIOR -> external {
+        behavior : string!
+        value : behavior
+      }
+        @description "Ask the loader for the opened behavior's source, resolved program, knobs and validation."
       COSMIC_LOAD -> external {
         program : string!
         source : string!
@@ -387,6 +408,128 @@ orbital BehaviorPlayground {
         topic : string!
       }
         @description "What the status strip shows."
+    }
+
+    listens {
+      BehaviorCatalog.PICKED -> OPEN
+      PlaygroundTopics.TOPIC_PICKED -> TOPIC_PICKED
+      PlaygroundCosmic.CODE_REQUESTED -> CODE_REQUESTED
+      PlaygroundLoader.BEHAVIOR_LOADED -> BEHAVIOR_LOADED
+      PlaygroundLoader.BEHAVIOR_FAILED -> BEHAVIOR_FAILED
+      OPEN {
+        behavior : string!
+        description : string
+        trait : trait
+        value : behavior
+      }
+      TOPIC_PICKED {
+        package : string!
+        topic : string!
+        count : number!
+      }
+      CODE_REQUESTED {
+        orbital : string!
+      }
+      BEHAVIOR_LOADED {
+        behavior : string!
+        programJson : string!
+        sourceJson : string!
+        sourceText : string!
+        knobs : [PlaygroundKnob]!
+        valid : boolean!
+        findings : [PlaygroundFinding]!
+      }
+      BEHAVIOR_FAILED {
+        behavior : string!
+        error : string!
+      }
+      TAB_SELECTED {
+        tabId : string!
+      }
+      BACK
+    }
+  }
+
+  trait PlaygroundLoader -> PlaygroundLoad {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      LOAD_BEHAVIOR -> loading
+        (set @entity.behavior ?behavior)
+        (set @entity.programJson "")
+        (set @entity.sourceJson "")
+        (set @entity.sourceText "")
+        (set @entity.knobs [])
+        (set @entity.valid false)
+        (set @entity.findings [])
+        (set @entity.waiting 5)
+        (behavior/source ?value { emit: { success: SOURCED, failure: LOAD_FAILED } })
+        (behavior/resolve ?value { emit: { success: RESOLVED, failure: LOAD_FAILED } })
+        (behavior/describe { behavior: ?behavior } { emit: { success: DESCRIBED, failure: DESCRIBE_FAILED } })
+    }
+
+    state loading {
+      INIT -> idle
+      LOAD_BEHAVIOR -> loading
+        (set @entity.behavior ?behavior)
+        (set @entity.waiting 5)
+        (behavior/source ?value { emit: { success: SOURCED, failure: LOAD_FAILED } })
+        (behavior/resolve ?value { emit: { success: RESOLVED, failure: LOAD_FAILED } })
+        (behavior/describe { behavior: ?behavior } { emit: { success: DESCRIBED, failure: DESCRIBE_FAILED } })
+      SOURCED -> loading
+        (set @entity.sourceJson (json/stringify ?result))
+        (program/print ?result { emit: { success: PRINTED, failure: PRINT_FAILED } })
+        (program/validate ?result { emit: { success: CHECKED, failure: CHECK_FAILED } })
+        (emit LOAD_STEP {})
+      PRINTED -> loading
+        (set @entity.sourceText ?result)
+        (emit LOAD_STEP {})
+      PRINT_FAILED -> loading
+        (set @entity.sourceText (str/concat ";; the program could not be printed: " ?error))
+        (emit LOAD_STEP {})
+      CHECKED -> loading
+        (set @entity.valid @payload.result.valid)
+        (set @entity.findings (array/concat @payload.result.errors @payload.result.warnings))
+        (emit LOAD_STEP {})
+      CHECK_FAILED -> loading
+        (set @entity.valid false)
+        (set @entity.findings [{ code: "VALIDATE_FAILED", message: ?error }])
+        (emit LOAD_STEP {})
+      RESOLVED -> loading
+        (set @entity.programJson (json/stringify ?result))
+        (emit LOAD_STEP {})
+      DESCRIBED -> loading
+        (set @entity.knobs (object/get ?result knobs []))
+        (emit LOAD_STEP {})
+      DESCRIBE_FAILED -> loading
+        (emit LOAD_STEP {})
+      LOAD_STEP -> loading when (> @entity.waiting 1)
+        (set @entity.waiting (- @entity.waiting 1))
+      LOAD_STEP -> idle when (<= @entity.waiting 1)
+        (set @entity.waiting 0)
+        (emit BEHAVIOR_LOADED { behavior: @entity.behavior, programJson: @entity.programJson, sourceJson: @entity.sourceJson, sourceText: @entity.sourceText, knobs: @entity.knobs, valid: @entity.valid, findings: @entity.findings })
+      LOAD_FAILED -> idle
+        (emit BEHAVIOR_FAILED { behavior: @entity.behavior, error: ?error })
+    }
+
+    emits {
+      BEHAVIOR_LOADED -> external {
+        behavior : string!
+        programJson : string!
+        sourceJson : string!
+        sourceText : string!
+        knobs : [PlaygroundKnob]!
+        valid : boolean!
+        findings : [PlaygroundFinding]!
+      }
+        @description "The opened behavior's source (as written and printed), resolved program, knobs and validation."
+      BEHAVIOR_FAILED -> external {
+        behavior : string!
+        error : string!
+      }
+        @description "The behavior could not be read or resolved."
+      LOAD_STEP
       SOURCED {
         result : PlaygroundProgram!
       }
@@ -402,33 +545,26 @@ orbital BehaviorPlayground {
       PRINTED {
         result : string!
       }
-      OPEN_FAILED {
+      PRINT_FAILED {
+        error : string!
+      }
+      CHECKED {
+        result : PlaygroundCheck!
+      }
+      CHECK_FAILED {
+        error : string!
+      }
+      LOAD_FAILED {
         error : string!
       }
     }
 
     listens {
-      BehaviorCatalog.PICKED -> OPEN
-      PlaygroundTopics.TOPIC_PICKED -> TOPIC_PICKED
-      PlaygroundCosmic.CODE_REQUESTED -> CODE_REQUESTED
-      OPEN {
+      PlaygroundStage.LOAD_BEHAVIOR -> LOAD_BEHAVIOR
+      LOAD_BEHAVIOR {
         behavior : string!
-        description : string
-        trait : trait
         value : behavior
       }
-      TOPIC_PICKED {
-        package : string!
-        topic : string!
-        count : number!
-      }
-      CODE_REQUESTED {
-        orbital : string!
-      }
-      TAB_SELECTED {
-        tabId : string!
-      }
-      BACK
     }
   }
 
@@ -522,5 +658,5 @@ orbital BehaviorPlayground {
     }
   }
 
-  page "/" as PlaygroundPage -> PlaygroundFrame, PlaygroundTopBar, PlaygroundTopics, PlaygroundStage, BehaviorCatalog, BehaviorCatalogLlm, PlaygroundCosmic, PlaygroundInspector, PlaygroundStatus, PlaygroundRuntime
+  page "/" as PlaygroundPage -> PlaygroundFrame, PlaygroundTopBar, PlaygroundTopics, PlaygroundStage, PlaygroundLoader, BehaviorCatalog, BehaviorCatalogLlm, PlaygroundCosmic, PlaygroundInspector, PlaygroundStatus, PlaygroundRuntime
 }

@@ -1,7 +1,7 @@
 app std-http-boot-gate [
   version: "1.0.0",
-  env: ["NODE_ENV", "AUTH_PROVIDER", "OIDC_ISSUER_URL", "OIDC_AUDIENCE", "FIREBASE_PROJECT_ID", "FIREBASE_SERVICE_ACCOUNT_PATH", "FIREBASE_AUTH_EMULATOR_HOST", "FIRESTORE_EMULATOR_HOST", "ALMADAR_INTEGRATIONS_MODE", "USE_MOCK_DATA"],
-  description: "std-http-boot-gate — the boot gate of the HTTP server program: what the orbital-server boot path does with boot_env_problems. At INIT it reads the declared variables one at a time with os/getenv (an unset one reads as blank) and, when the last is read, asks std-boot-env-check ENV_CHECK { env, production, mock }: production is NODE_ENV equal to production, mock is the mock knob or ALMADAR_INTEGRATIONS_MODE equal to mock or USE_MOCK_DATA equal to true. It hears ENV_CHECKED { problems, ok } and CORS_CONFIGURED; when it has heard both and the deployment is cleared it emits BOOT_CLEARED, which tells std-http1 to bind. Under production a non-empty problems list emits BOOT_REFUSED { problems } and the boot never clears; outside production it emits BOOT_WARNED { problems } and clears. A variable the grant does not let the gate read emits BOOT_REFUSED with the reason. The missing-credential lines of boot_env_problems need the credential catalog and store, which no operator hands to a program yet, so no missingCredentials is sent. Bound to spec/net/http-boot-gate.lolo and spec/net/http-boot-gate.replay.goldens.json."
+  env: ["NODE_ENV", "AUTH_PROVIDER", "OIDC_ISSUER_URL", "OIDC_AUDIENCE", "FIREBASE_PROJECT_ID", "FIREBASE_SERVICE_ACCOUNT_PATH", "FIREBASE_AUTH_EMULATOR_HOST", "FIRESTORE_EMULATOR_HOST", "ALMADAR_INTEGRATIONS_MODE"],
+  description: "std-http-boot-gate — the boot gate of the HTTP server program: what the orbital-server boot path does with boot_env_problems. At INIT it reads the declared variables one at a time with os/getenv (an unset one reads as blank) and, when the last is read, asks std-boot-env-check ENV_CHECK { env, production, mock }: production is NODE_ENV equal to production, mock is the mock knob or ALMADAR_INTEGRATIONS_MODE equal to mock. It hears ENV_CHECKED { problems, ok } and CORS_CONFIGURED; when it has heard both and the deployment is cleared it emits BOOT_CLEARED, which tells std-http1 to bind. Under production a non-empty problems list emits BOOT_REFUSED { problems } and the boot never clears; outside production it emits BOOT_WARNED { problems } and clears. A variable the grant does not let the gate read emits BOOT_REFUSED with the reason. The missing-credential lines of boot_env_problems need the credential catalog and store, which no operator hands to a program yet, so no missingCredentials is sent. Bound to spec/net/http-boot-gate.lolo and spec/net/http-boot-gate.replay.goldens.json."
 ]
 uses Spec from "almadar-std/http-boot-gate"
 type GateVar = { name : string!, value : string! }
@@ -73,18 +73,14 @@ orbital HttpBootGateOrbital {
         (os/getenv "ALMADAR_INTEGRATIONS_MODE" { emit: { success: READ_ALMADAR_INTEGRATIONS_MODE failure: ENV_UNREAD } })
 
       READ_ALMADAR_INTEGRATIONS_MODE -> reading
-        (set @entity.read (array/append @entity.read { name: "ALMADAR_INTEGRATIONS_MODE", value: (or @payload.value "") }))
-        (os/getenv "USE_MOCK_DATA" { emit: { success: READ_USE_MOCK_DATA failure: ENV_UNREAD } })
+        (emit ENV_COLLECTED { vars: (array/append @entity.read { name: "ALMADAR_INTEGRATIONS_MODE", value: (or @payload.value "") }), services: @config.calledServices })
 
-      READ_USE_MOCK_DATA -> reading
-        (emit ENV_COLLECTED { vars: (array/append @entity.read { name: "USE_MOCK_DATA", value: (or @payload.value "") }), services: @config.calledServices })
-
-      ENV_COLLECTED -> reading when (or (= (array/len @payload.services) 0) (or @config.mock (= (object/get (array/find @payload.vars (fn v (= @v.name "ALMADAR_INTEGRATIONS_MODE"))) "value") "mock") (= (object/get (array/find @payload.vars (fn v (= @v.name "USE_MOCK_DATA"))) "value") "true")))
+      ENV_COLLECTED -> reading when (or (= (array/len @payload.services) 0) (or @config.mock (= (object/get (array/find @payload.vars (fn v (= @v.name "ALMADAR_INTEGRATIONS_MODE"))) "value") "mock")))
         (set @entity.read @payload.vars)
         (set @entity.services @payload.services)
         (set @entity.production (= (object/get (array/find @payload.vars (fn v (= @v.name "NODE_ENV"))) "value") "production"))
         (emit ENV_ASK { missing: [], error: "" })
-      ENV_COLLECTED -> reading when (and (> (array/len @payload.services) 0) (not (or @config.mock (= (object/get (array/find @payload.vars (fn v (= @v.name "ALMADAR_INTEGRATIONS_MODE"))) "value") "mock") (= (object/get (array/find @payload.vars (fn v (= @v.name "USE_MOCK_DATA"))) "value") "true"))))
+      ENV_COLLECTED -> reading when (and (> (array/len @payload.services) 0) (not (or @config.mock (= (object/get (array/find @payload.vars (fn v (= @v.name "ALMADAR_INTEGRATIONS_MODE"))) "value") "mock"))))
         (set @entity.read @payload.vars)
         (set @entity.services @payload.services)
         (set @entity.production (= (object/get (array/find @payload.vars (fn v (= @v.name "NODE_ENV"))) "value") "production"))
@@ -113,7 +109,7 @@ orbital HttpBootGateOrbital {
             firestoreEmulatorHost: (object/get (array/find @entity.read (fn v (= @v.name "FIRESTORE_EMULATOR_HOST"))) "value")
           },
           production: @entity.production,
-          mock: (or @config.mock (= (object/get (array/find @entity.read (fn v (= @v.name "ALMADAR_INTEGRATIONS_MODE"))) "value") "mock") (= (object/get (array/find @entity.read (fn v (= @v.name "USE_MOCK_DATA"))) "value") "true")),
+          mock: (or @config.mock (= (object/get (array/find @entity.read (fn v (= @v.name "ALMADAR_INTEGRATIONS_MODE"))) "value") "mock")),
           missingCredentials: @payload.missing,
           catalogError: @payload.error
         })
@@ -196,11 +192,6 @@ orbital HttpBootGateOrbital {
         value : string
       }
         @description "Internal: the os/getenv answer for ALMADAR_INTEGRATIONS_MODE."
-        @tier "internal"
-      READ_USE_MOCK_DATA {
-        value : string
-      }
-        @description "Internal: the os/getenv answer for USE_MOCK_DATA."
         @tier "internal"
       ENV_COLLECTED {
         vars : [GateVar]!
@@ -288,9 +279,6 @@ orbital HttpBootGateOrbital {
         value : string
       }
       READ_ALMADAR_INTEGRATIONS_MODE {
-        value : string
-      }
-      READ_USE_MOCK_DATA {
         value : string
       }
       ENV_COLLECTED {
