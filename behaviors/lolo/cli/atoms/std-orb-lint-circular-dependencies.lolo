@@ -1,0 +1,163 @@
+app std-orb-lint-circular-dependencies [
+  version: "1.0.0",
+  inbound: ["cli-lint-circular-dependencies"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-circular-dependencies — the `orb lint circular-dependencies <file>` command, the port of validate_circular_dependencies (circuit/cross_orbital/cycles.rs, ORB_X_CIRCULAR_DEPENDENCY). It builds an event-level graph whose node is (trait, event its arm receives): an arm's emits (an `(emit X)` effect at any array depth, an object carrying `emit: X`, and the `emit` map values of a fetch or persist effect) reach the arms a `listens` route triggers. A route is an edge only when it can propagate (some transition on its trigger has an emit effect or an emit-carrying effect option), is not a lifecycle trigger (INIT, LOAD, RESET), the emitter is another trait, the route's source matches the emitter, neither the emitting arm nor the listen carries a guard (a guard names the loop's exit), and an edge across orbitals needs the emitter's `scope: external` emit, an externally scoped listen or an orbital-sourced listen. The first cycle found by a depth-first walk in sorted node order is reported once at `traits` with its node path (the Rust walk follows hash order, so the path it prints is not stable; this lint's path is). Reports ORB_X_CIRCULAR_DEPENDENCY (status 500, exit 1). Clean answers `lint circular-dependencies: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-circular-dependencies"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type CycNode = string | number | boolean | [CycNode?] | Map string CycNode?
+type CycNodes = [CycNode?]
+type CycMap = Map string CycNode?
+type CycSource = { kind : string, trait : string, orbital : string }
+type CycListen = { event : string, triggers : string, scope : string, source : CycSource, guard : CycNode? }
+type CycEmit = { event : string, scope : string }
+type CycTransition = { event : string, guard : CycNode?, effects : [CycNode?] }
+type CycMachine = { transitions : [CycTransition] }
+type CycTrait = { name : string, emits : [CycEmit], listens : [CycListen], stateMachine : CycMachine }
+type CycOrbital = { name : string, traits : [CycTrait] }
+type CycProgram = { orbitals : [CycOrbital] }
+type CycRow = { tr : string, orb : string, arm : string, emitted : string, guarded : boolean }
+type CycOut = { ev : [string] }
+type CycTypeRef = string | CycTypeNode
+type CycTypeNode = { kind : string, fields : Map string CycTypeRef? }
+type CycParam = { name : string, type : CycTypeRef }
+type CycShape = { params : [CycParam] }
+type CycAdj = { k : string, deps : [string] }
+type CycEdge = { from : string, to : string }
+type CycWalk = { stack : [string], idx : [number], vis : [string], found : [string] }
+
+orbital OrbLintCircularDependenciesOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintCircularDependenciesRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+    emitOps : [string] = []
+    shapesUnread : boolean = false
+  }
+
+  trait OrbLintCircularDependencies -> OrbLintCircularDependenciesRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      SHAPES_HEARD -> ready
+        (set @entity.shapesUnread false)
+        (set @entity.emitOps (array/sort (array/filter (object/keys @payload.operators) (fn k
+          (array/some (object/get (object/get @payload.operators @k) "params" []) (fn pr
+            (let ((ty (object/get @pr "type" null)))
+              (if (validate/object @ty)
+                (let ((nd (json/parse (json/stringify @ty) CycTypeNode)))
+                  (if (= @nd null) false (object/has (object/get @nd "fields" {}) "emit")))
+                false))))))))
+      SHAPES_UNREAD -> ready
+        (set @entity.shapesUnread true)
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (if @entity.shapesUnread [{ code: "ORB_LINT_OPERATOR_SHAPES_UNREAD", path: "operators", message: "the installed @almadar/std operator table does not match the operator shape type, so the operators that can carry an emit option are unknown", suggestion: "Reinstall @almadar/std so its operator table declares the params of every operator", severity: "error" }] (let ((nos : [string] [])) (let ((nonum : [number] [])) (let ((nonodes : CycNodes [])) (let ((notd : [CycTrait] [])) (let ((notr : [CycTransition] [])) (let ((noem : [CycEmit] [])) (let ((nol : [CycListen] [])) (let ((noedges : [CycEdge] [])) (let ((nomap : CycMap {})) (let ((nokids : [CycOut] [])) (let ((nout : CycOut { ev: [] })) (let ((propops @entity.emitOps)) (let ((lifecycle : [string] ["INIT", "LOAD", "RESET"])) (let ((orbitals (object/get @payload.program "orbitals" []))) (let ((rows (array/flatten (array/map @orbitals (fn ro (array/flatten (array/map (array/filter (object/get @ro "traits" @notd) (fn rt (object/has @rt "stateMachine"))) (fn rtd (array/flatten (array/map (object/get (object/get @rtd "stateMachine" {}) "transitions" @notr) (fn rx (array/map (array/unique (array/flatten (array/map (object/get @rx "effects" @nonodes) (fn re (object/get (or (tree/fold @re (fn (tn fk) (let ((nr : CycOut { ev: [] })) (if (validate/array @tn) { ev: (array/concat (if (= (array/len @tn) 0) @nos (array/concat (if (and (>= (array/len @tn) 2) (= (json/stringify (array/nth @tn 0)) (json/stringify "emit"))) (let ((m1 (array/nth @tn 1))) (if (validate/string @m1) [(str/concat @m1 "")] @nos)) @nos) (if (or (= (json/stringify (array/nth @tn 0)) (json/stringify "fetch")) (= (json/stringify (array/nth @tn 0)) (json/stringify "persist"))) (array/flatten (array/map @tn (fn mi (if (not (validate/object @mi)) @nos (let ((mo3 (json/parse (json/stringify @mi) CycMap))) (if (= @mo3 null) @nos (let ((mem (object/get @mo3 "emit" null))) (if (not (validate/object @mem)) @nos (let ((me (json/parse (json/stringify @mem) CycMap))) (if (= @me null) @nos (array/flatten (array/map (object/values @me) (fn mv (if (and (validate/string @mv) (!= (str/concat @mv "") "")) [(str/concat @mv "")] @nos)))))))))))))) @nos))) (array/flatten (array/map (or @fk @nokids) (fn fr (object/get (if (= @fr null) @nr @fr) "ev" @nos))))) } (if (validate/object @tn) { ev: (let ((mo (json/parse (json/stringify @tn) CycMap))) (if (= @mo null) @nos (let ((ev2 (object/get @mo "emit" null))) (if (validate/string @ev2) [(str/concat @ev2 "")] @nos)))) } @nr)))) "CycNode") @nout) "ev" @nos))))) (fn rev { tr: (object/get @rtd "name" ""), orb: (object/get @ro "name" ""), arm: (object/get @rx "event" ""), emitted: @rev, guarded: (and (object/has @rx "guard") (!= (object/get @rx "guard" null) null)) }))))))))))))) (let ((externals (array/flatten (array/map @orbitals (fn xo (array/flatten (array/map (array/filter (object/get @xo "traits" @notd) (fn xt (object/has @xt "stateMachine"))) (fn xtd (array/map (array/filter (object/get @xtd "emits" @noem) (fn xe (= (object/get @xe "scope" "") "external"))) (fn xe2 { tr: (object/get @xtd "name" ""), ev: (object/get @xe2 "event" "") })))))))))) (let ((edges (array/flatten (array/map @orbitals (fn o (array/flatten (array/map (array/filter (object/get @o "traits" @notd) (fn tt (object/has @tt "stateMachine"))) (fn td (array/flatten (array/map (object/get @td "listens" @nol) (fn l (let ((trig (object/get @l "triggers" (object/get @l "event" "")))) (if (and (not (array/includes @lifecycle @trig)) (not (and (object/has @l "guard") (!= (object/get @l "guard" null) null))) (array/some (array/filter (object/get (object/get @td "stateMachine" {}) "transitions" @notr) (fn pt (= (object/get @pt "event" "") @trig))) (fn pt2 (array/some (object/get @pt2 "effects" @nonodes) (fn pe (if (validate/array @pe) (let ((pa (json/parse (json/stringify @pe) CycNodes))) (if (= @pa null) false (if (= (array/len @pa) 0) false (and (>= (array/len @pa) 2) (or (and (= (json/stringify (array/nth @pa 0)) (json/stringify "emit")) (validate/string (array/nth @pa 1))) (let ((p0 (array/nth @pa 0))) (and (validate/string @p0) (array/includes @propops (str/concat @p0 "")) (array/some (array/drop @pa 1) (fn po (and (validate/object @po) (let ((pmo (json/parse (json/stringify @po) CycMap))) (and (!= @pmo null) (object/has @pmo "emit"))))))))))))) (if (validate/object @pe) (let ((pm2 (json/parse (json/stringify @pe) CycMap))) (if (= @pm2 null) false (let ((pe2 (object/get @pm2 "emit" null))) (validate/string @pe2)))) false))))))) (array/map (array/filter @rows (fn r (and (not (object/get @r "guarded")) (= (object/get @r "emitted") (object/get @l "event" "")) (!= (object/get @r "tr") (object/get @td "name" "")) (if (= (object/get (object/get @l "source" {}) "kind" "") "trait") (= (object/get (object/get @l "source" {}) "trait" "") (object/get @r "tr")) (if (= (object/get (object/get @l "source" {}) "kind" "") "orbital") (and (= (object/get (object/get @l "source" {}) "orbital" "") (object/get @r "orb")) (= (object/get (object/get @l "source" {}) "trait" "") (object/get @r "tr"))) true)) (or (= (object/get @r "orb") (object/get @o "name" "")) (or (array/some @externals (fn xx (and (= (object/get @xx "tr") (object/get @r "tr")) (= (object/get @xx "ev") (object/get @l "event" ""))))) (= (object/get @l "scope" "") "external") (= (object/get (object/get @l "source" {}) "kind" "") "orbital")))))) (fn r2 { from: (str/concat (object/get @r2 "tr") "." (object/get @r2 "arm")), to: (str/concat (object/get @td "name" "") "." @trig) })) @noedges))))))))))))) (let ((adj (array/map (array/unique (array/map @edges (fn ek (object/get @ek "from" "")))) (fn af { k: @af, deps: (array/sort (array/unique (array/map (array/filter @edges (fn ed (= (object/get @ed "from" "") @af))) (fn et (object/get @et "to" ""))))) })))) (let ((keys (array/sort (array/map @adj (fn ak (object/get @ak "k" "")))))) (let ((found (object/get (array/reduce (array/range 0 (+ (* 5 (array/len @edges)) 5)) { stack: @nos, idx: @nonum, vis: @nos, found: @nos } (fn (wst wi) (if (> (array/len (object/get @wst "found")) 0) @wst (if (= (array/len (object/get @wst "stack")) 0) (let ((roots (array/filter @keys (fn kk (not (array/includes (object/get @wst "vis") @kk)))))) (if (= (array/len @roots) 0) @wst { stack: [(array/first @roots)], idx: [0], vis: (array/append (object/get @wst "vis") (array/first @roots)), found: @nos })) (if (>= (array/last (object/get @wst "idx")) (array/len (let ((ae (array/find @adj (fn az (= (object/get @az "k" "") (array/last (object/get @wst "stack"))))))) (if (= @ae null) @nos (object/get @ae "deps" @nos))))) { stack: (array/dropLast (object/get @wst "stack") 1), idx: (array/dropLast (object/get @wst "idx") 1), vis: (object/get @wst "vis"), found: @nos } (if (array/includes (object/get @wst "stack") (array/nth (let ((ae (array/find @adj (fn az (= (object/get @az "k" "") (array/last (object/get @wst "stack"))))))) (if (= @ae null) @nos (object/get @ae "deps" @nos))) (array/last (object/get @wst "idx")))) { stack: (object/get @wst "stack"), idx: (array/append (array/dropLast (object/get @wst "idx") 1) (+ (array/last (object/get @wst "idx")) 1)), vis: (object/get @wst "vis"), found: (array/append (object/get @wst "stack") (array/nth (let ((ae (array/find @adj (fn az (= (object/get @az "k" "") (array/last (object/get @wst "stack"))))))) (if (= @ae null) @nos (object/get @ae "deps" @nos))) (array/last (object/get @wst "idx")))) } (if (array/includes (object/get @wst "vis") (array/nth (let ((ae (array/find @adj (fn az (= (object/get @az "k" "") (array/last (object/get @wst "stack"))))))) (if (= @ae null) @nos (object/get @ae "deps" @nos))) (array/last (object/get @wst "idx")))) { stack: (object/get @wst "stack"), idx: (array/append (array/dropLast (object/get @wst "idx") 1) (+ (array/last (object/get @wst "idx")) 1)), vis: (object/get @wst "vis"), found: @nos } { stack: (array/append (object/get @wst "stack") (array/nth (let ((ae (array/find @adj (fn az (= (object/get @az "k" "") (array/last (object/get @wst "stack"))))))) (if (= @ae null) @nos (object/get @ae "deps" @nos))) (array/last (object/get @wst "idx")))), idx: (array/append (array/append (array/dropLast (object/get @wst "idx") 1) (+ (array/last (object/get @wst "idx")) 1)) 0), vis: (array/append (object/get @wst "vis") (array/nth (let ((ae (array/find @adj (fn az (= (object/get @az "k" "") (array/last (object/get @wst "stack"))))))) (if (= @ae null) @nos (object/get @ae "deps" @nos))) (array/last (object/get @wst "idx")))), found: @nos }))))))) "found"))) (if (= (array/len @found) 0) [] [{ code: "ORB_X_CIRCULAR_DEPENDENCY", path: "traits", message: (str/concat "Circular event dependency detected: " (str/join @found " -> ")), suggestion: "Break the cycle by removing one of the listener/emitter relationships", severity: "error" }])))))))))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "circular-dependencies", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : CycProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      SHAPES_HEARD { operators : Map string CycShape! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SHAPES: every installed operators params with their types; an operator whose options param has an `emit` field can carry an async result event."
+      SHAPES_UNREAD { error : string! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SHAPES_UNREAD: the operator table does not match the shape type."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+      OrbLintInput.LINT_OPERATOR_SHAPES -> SHAPES_HEARD
+      OrbLintInput.LINT_OPERATOR_SHAPES_UNREAD -> SHAPES_UNREAD
+    }
+  }
+
+  trait OrbLintCircularDependenciesCli -> OrbLintCircularDependenciesRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint circular-dependencies <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "circular-dependencies") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint circular-dependencies: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "circular-dependencies") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint circular-dependencies: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-circular-dependencies" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint circular-dependencies` with its arguments and working directory."
+        @synonyms "orb lint circular-dependencies"
+      OrbLintCircularDependencies.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintCircularDependenciesCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintCircularDependenciesOrbitalStart -> OrbLintCircularDependencies, OrbLintCircularDependenciesCli, OrbLintInput, Packs, Versions
+}

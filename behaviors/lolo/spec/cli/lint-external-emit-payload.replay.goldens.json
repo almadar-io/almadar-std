@@ -1,0 +1,1494 @@
+{
+ "atom": "cli/atoms/std-orb-lint-external-emit-payload.lolo",
+ "trait": "OrbLintExternalEmitPayload",
+ "note": "Cases copy the eight payload.rs unit tests (test_external_emit_missing_payload_with_consumer_warns, payload_free_intent_event_with_an_expectationless_consumer_is_silent, test_external_emit_missing_payload_no_consumer_silent, test_external_emit_self_listen_silent, test_external_emit_with_payload_passes, test_internal_emit_no_payload_ok, test_targeted_listener_on_another_emitter_is_not_a_consumer, test_targeted_listener_on_this_emitter_still_warns) plus an orbital-kind source, an optional-field consumer and the triggers-event cases. Findings are the code, path, message and suggestion the Rust validator reports; the Rust expected-shape JSON is not carried by a finding.",
+ "cases": [
+  {
+   "id": "test-external-emit-missing-payload-with-consumer-warns",
+   "steps": [
+    {
+     "trait": "OrbLintExternalEmitPayload",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "OrderOrbital",
+         "entity": {
+          "name": "OrderOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "OrderTrait",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "emits": [
+            {
+             "event": "ORDER_PAID",
+             "scope": "external"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "LedgerOrbital",
+         "entity": {
+          "name": "LedgerOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "LedgerTrait",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [],
+            "events": [
+             {
+              "key": "ORDER_PAID",
+              "payloadSchema": [
+               {
+                "name": "orderId",
+                "type": "string",
+                "required": true
+               }
+              ]
+             }
+            ]
+           },
+           "listens": [
+            {
+             "event": "ORDER_PAID",
+             "source": {
+              "kind": "any"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintExternalEmitPayload",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "external-emit-payload",
+         "findings": [
+          {
+           "code": "ORB_T_EVT_EXTERNAL_MISSING_PAYLOAD",
+           "path": "traits.OrderTrait.emits.ORDER_PAID",
+           "message": "External event 'ORDER_PAID' in trait 'OrderTrait' should have a payload definition with typed fields",
+           "suggestion": "Add a payload array with fields: { \"name\": \"fieldName\", \"type\": \"string\", \"required\": true, \"description\": \"...\" }",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "payload-free-intent-event-with-an-expectationless-consumer-is-silent",
+   "steps": [
+    {
+     "trait": "OrbLintExternalEmitPayload",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "ChatOrbital",
+         "entity": {
+          "name": "ChatOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "ChatRoom",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "emits": [
+            {
+             "event": "CREATE_CHANNEL",
+             "scope": "external"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "ChannelOrbital",
+         "entity": {
+          "name": "ChannelOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "ChannelCreate",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "listens": [
+            {
+             "event": "CREATE_CHANNEL",
+             "source": {
+              "kind": "trait",
+              "trait": "ChatRoom"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintExternalEmitPayload",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "external-emit-payload",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "test-external-emit-missing-payload-no-consumer-silent",
+   "steps": [
+    {
+     "trait": "OrbLintExternalEmitPayload",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "QuizOrbital",
+         "entity": {
+          "name": "QuizOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "QuizTrait",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "emits": [
+            {
+             "event": "NEXT",
+             "scope": "external"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintExternalEmitPayload",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "external-emit-payload",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "test-external-emit-self-listen-silent",
+   "steps": [
+    {
+     "trait": "OrbLintExternalEmitPayload",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "QuizOrbital",
+         "entity": {
+          "name": "QuizOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "QuizTrait",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "emits": [
+            {
+             "event": "NEXT",
+             "scope": "external"
+            }
+           ]
+          },
+          {
+           "name": "QuizProgress",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [],
+            "events": [
+             {
+              "key": "NEXT",
+              "payloadSchema": [
+               {
+                "name": "n",
+                "type": "string",
+                "required": true
+               }
+              ]
+             }
+            ]
+           },
+           "listens": [
+            {
+             "event": "NEXT",
+             "source": {
+              "kind": "any"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintExternalEmitPayload",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "external-emit-payload",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "test-external-emit-with-payload-passes",
+   "steps": [
+    {
+     "trait": "OrbLintExternalEmitPayload",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "OrderOrbital",
+         "entity": {
+          "name": "OrderOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "OrderTrait",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "emits": [
+            {
+             "event": "ORDER_PAID",
+             "scope": "external",
+             "payloadSchema": [
+              {
+               "name": "orderId",
+               "type": "string",
+               "required": true
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "LedgerOrbital",
+         "entity": {
+          "name": "LedgerOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "LedgerTrait",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [],
+            "events": [
+             {
+              "key": "ORDER_PAID",
+              "payloadSchema": [
+               {
+                "name": "orderId",
+                "type": "string",
+                "required": true
+               }
+              ]
+             }
+            ]
+           },
+           "listens": [
+            {
+             "event": "ORDER_PAID",
+             "source": {
+              "kind": "any"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintExternalEmitPayload",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "external-emit-payload",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "test-internal-emit-no-payload-ok",
+   "steps": [
+    {
+     "trait": "OrbLintExternalEmitPayload",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "TaskOrbital",
+         "entity": {
+          "name": "TaskOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "OrderTrait",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "emits": [
+            {
+             "event": "STATUS_CHANGED",
+             "scope": "internal"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintExternalEmitPayload",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "external-emit-payload",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "test-targeted-listener-on-another-emitter-is-not-a-consumer",
+   "steps": [
+    {
+     "trait": "OrbLintExternalEmitPayload",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "AlertOrbital",
+         "entity": {
+          "name": "AlertOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "InlineAlertRender7",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "emits": [
+            {
+             "event": "DISMISS",
+             "scope": "external"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "InvoiceOrbital",
+         "entity": {
+          "name": "InvoiceOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "InvoiceConfirmListener",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [],
+            "events": [
+             {
+              "key": "DISMISS",
+              "payloadSchema": [
+               {
+                "name": "id",
+                "type": "string",
+                "required": true
+               }
+              ]
+             }
+            ]
+           },
+           "listens": [
+            {
+             "event": "DISMISS",
+             "source": {
+              "kind": "trait",
+              "trait": "InvoiceActionConfirm"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintExternalEmitPayload",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "external-emit-payload",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "test-targeted-listener-on-this-emitter-still-warns",
+   "steps": [
+    {
+     "trait": "OrbLintExternalEmitPayload",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "AlertOrbital",
+         "entity": {
+          "name": "AlertOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "InlineAlertRender7",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "emits": [
+            {
+             "event": "DISMISS",
+             "scope": "external"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "InvoiceOrbital",
+         "entity": {
+          "name": "InvoiceOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "InvoiceConfirmListener",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [],
+            "events": [
+             {
+              "key": "DISMISS",
+              "payloadSchema": [
+               {
+                "name": "id",
+                "type": "string",
+                "required": true
+               }
+              ]
+             }
+            ]
+           },
+           "listens": [
+            {
+             "event": "DISMISS",
+             "source": {
+              "kind": "trait",
+              "trait": "InlineAlertRender7"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintExternalEmitPayload",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "external-emit-payload",
+         "findings": [
+          {
+           "code": "ORB_T_EVT_EXTERNAL_MISSING_PAYLOAD",
+           "path": "traits.InlineAlertRender7.emits.DISMISS",
+           "message": "External event 'DISMISS' in trait 'InlineAlertRender7' should have a payload definition with typed fields",
+           "suggestion": "Add a payload array with fields: { \"name\": \"fieldName\", \"type\": \"string\", \"required\": true, \"description\": \"...\" }",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-orbital-sourced-listener-naming-this-emitter-warns",
+   "steps": [
+    {
+     "trait": "OrbLintExternalEmitPayload",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "AlertOrbital",
+         "entity": {
+          "name": "AlertOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "A",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "emits": [
+            {
+             "event": "GO",
+             "scope": "external"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "BOrbital",
+         "entity": {
+          "name": "BOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "B",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [],
+            "events": [
+             {
+              "key": "GO",
+              "payloadSchema": [
+               {
+                "name": "id",
+                "type": "string",
+                "required": true
+               }
+              ]
+             }
+            ]
+           },
+           "listens": [
+            {
+             "event": "GO",
+             "source": {
+              "kind": "orbital",
+              "orbital": "AlertOrbital",
+              "trait": "A"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintExternalEmitPayload",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "external-emit-payload",
+         "findings": [
+          {
+           "code": "ORB_T_EVT_EXTERNAL_MISSING_PAYLOAD",
+           "path": "traits.A.emits.GO",
+           "message": "External event 'GO' in trait 'A' should have a payload definition with typed fields",
+           "suggestion": "Add a payload array with fields: { \"name\": \"fieldName\", \"type\": \"string\", \"required\": true, \"description\": \"...\" }",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-consumer-declaring-only-an-optional-field-expects-nothing",
+   "steps": [
+    {
+     "trait": "OrbLintExternalEmitPayload",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "AlertOrbital",
+         "entity": {
+          "name": "AlertOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "A",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "emits": [
+            {
+             "event": "GO",
+             "scope": "external"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "BOrbital",
+         "entity": {
+          "name": "BOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "B",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [],
+            "events": [
+             {
+              "key": "GO",
+              "payloadSchema": [
+               {
+                "name": "id",
+                "type": "string",
+                "required": false
+               }
+              ]
+             }
+            ]
+           },
+           "listens": [
+            {
+             "event": "GO",
+             "source": {
+              "kind": "any"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintExternalEmitPayload",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "external-emit-payload",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-listener-whose-route-triggers-a-different-event-reads-that-events-payload",
+   "steps": [
+    {
+     "trait": "OrbLintExternalEmitPayload",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "AlertOrbital",
+         "entity": {
+          "name": "AlertOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "A",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "emits": [
+            {
+             "event": "GO",
+             "scope": "external"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "BOrbital",
+         "entity": {
+          "name": "BOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "B",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [],
+            "events": [
+             {
+              "key": "GO",
+              "payloadSchema": [
+               {
+                "name": "id",
+                "type": "string",
+                "required": true
+               }
+              ]
+             },
+             {
+              "key": "HEARD",
+              "payloadSchema": []
+             }
+            ]
+           },
+           "listens": [
+            {
+             "event": "GO",
+             "source": {
+              "kind": "any"
+             },
+             "triggers": "HEARD"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintExternalEmitPayload",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "external-emit-payload",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-listener-whose-route-triggers-an-event-with-a-required-field-warns",
+   "steps": [
+    {
+     "trait": "OrbLintExternalEmitPayload",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "AlertOrbital",
+         "entity": {
+          "name": "AlertOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "A",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "emits": [
+            {
+             "event": "GO",
+             "scope": "external"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "BOrbital",
+         "entity": {
+          "name": "BOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "B",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [],
+            "events": [
+             {
+              "key": "HEARD",
+              "payloadSchema": [
+               {
+                "name": "id",
+                "type": "string",
+                "required": true
+               }
+              ]
+             }
+            ]
+           },
+           "listens": [
+            {
+             "event": "GO",
+             "source": {
+              "kind": "any"
+             },
+             "triggers": "HEARD"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintExternalEmitPayload",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "external-emit-payload",
+         "findings": [
+          {
+           "code": "ORB_T_EVT_EXTERNAL_MISSING_PAYLOAD",
+           "path": "traits.A.emits.GO",
+           "message": "External event 'GO' in trait 'A' should have a payload definition with typed fields",
+           "suggestion": "Add a payload array with fields: { \"name\": \"fieldName\", \"type\": \"string\", \"required\": true, \"description\": \"...\" }",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,21 @@
+app lint-user-identity-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint user-identity <file>`, the port of the compiler rules in user_identity.rs. The file is lowered with program/read. A role literal that is not a declared member of the identity field it is compared to is reported as `[ORB_S_ROLE_LITERAL_NOT_MEMBER] <path>: <message>` (in a trait guard or effect, or on a page's nav roles), and the whole `@user` in a required emit or entity slot with no presence guard as `[ORB_USER_INTO_REQUIRED_SLOT] orbitals[i].traits[j].stateMachine.transitions[k]: <message>`, status 500 (exit 1). A clean program answers `lint user-identity: clean` (status 200, exit 0). Anything but exactly one file argument is the usage (status 400, exit 2). A file that cannot be read or lowered fails the run (status 500)."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintUserIdentitySpec {
+  expects trait OrbLintUserIdentity {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintUserIdentityCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintUserIdentity, OrbLintUserIdentityCli
+}

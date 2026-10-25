@@ -1,0 +1,3372 @@
+{
+  "atom": "cli/atoms/std-orb-lint-navigate.lolo",
+  "trait": "OrbLintNavigate",
+  "note": "One case per Rust test of effect/navigate.rs dynamic_prefix_tests (a_slash_terminated_dynamic_prefix_needs_a_page_beneath_it, control_a_declared_detail_page_beneath_the_prefix_satisfies_it, control_a_prefix_without_a_trailing_slash_keeps_prefix_matching, a_dynamic_query_string_resolves_its_route_before_the_question_mark, the_host_sign_in_route_is_reachable_without_a_page, control_an_undeclared_route_is_still_unreachable, control_a_declared_sign_in_page_is_reachable_as_any_page, control_a_static_target_still_matches_its_page), effect/utils.rs (test_navigate_missing_required_payload, test_navigate_with_required_payload; test_path_matches_pattern is covered by the param-segment matching of the pages), and orbital-compiler/tests/expects_page_slice.rs (slice_without_the_declaration_reports_the_navigate_unreachable, expects_page_makes_the_sibling_route_reachable, an_unrelated_expected_route_does_not_satisfy_the_navigate, a_real_declaration_still_wins_over_an_expectation_of_the_same_path), plus the invalid-path, arity, external URL, wholly-dynamic target, lazy page and send-server branches of validate_navigate and validate_send_server. Where several declared pages could match a target the Rust check picks one by hash-map order; the lint picks the first in declaration order (exact path, then param match, then prefix), which agrees whenever one page matches.",
+  "cases": [
+    {
+      "id": "a-slash-terminated-dynamic-prefix-needs-a-page-beneath-it",
+      "steps": [
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "navigate",
+                                [
+                                  "str/concat",
+                                  "/feed/",
+                                  "@payload.id"
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P0",
+                      "path": "/feed",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "navigate",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_NAVIGATE_TARGET_UNREACHABLE",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "Navigate target '/feed/' doesn't resolve to any declared page",
+                      "suggestion": "Declare a matching `pages[].path` (e.g. `page \"/feed/\" -> ...`) or correct the navigate path",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-declared-detail-page-beneath-the-prefix-satisfies-it",
+      "steps": [
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "navigate",
+                                [
+                                  "str/concat",
+                                  "/feed/",
+                                  "@payload.id"
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P0",
+                      "path": "/feed",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "P1",
+                      "path": "/feed/:id",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "navigate",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-prefix-without-a-trailing-slash-keeps-prefix-matching",
+      "steps": [
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "navigate",
+                                [
+                                  "str/concat",
+                                  "/feed",
+                                  "@payload.id"
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P0",
+                      "path": "/feed",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "navigate",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-dynamic-query-string-resolves-its-route-before-the-question-mark",
+      "steps": [
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "navigate",
+                                [
+                                  "str/concat",
+                                  "/inspection/new?companyId=",
+                                  "@payload.id"
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P0",
+                      "path": "/inspection/new",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "navigate",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-dynamic-query-string-whose-route-is-undeclared-is-unreachable",
+      "steps": [
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "navigate",
+                                [
+                                  "str/concat",
+                                  "/inspection/new?companyId=",
+                                  "@payload.id"
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P0",
+                      "path": "/inspection",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "navigate",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_NAVIGATE_TARGET_UNREACHABLE",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "Navigate target '/inspection/new?companyId=' doesn't resolve to any declared page",
+                      "suggestion": "Declare a matching `pages[].path` (e.g. `page \"/inspection/new?companyId=\" -> ...`) or correct the navigate path",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-host-sign-in-route-is-reachable-without-a-page",
+      "steps": [
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "navigate",
+                                "/login"
+                              ],
+                              [
+                                "navigate",
+                                "/login/"
+                              ],
+                              [
+                                "navigate",
+                                "/login?returnTo=/feed"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P0",
+                      "path": "/feed",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "navigate",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-undeclared-route-is-still-unreachable",
+      "steps": [
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "navigate",
+                                "/nowhere"
+                              ],
+                              [
+                                "navigate",
+                                "/login-help"
+                              ],
+                              [
+                                "navigate",
+                                "/account/login"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P0",
+                      "path": "/feed",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "navigate",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_NAVIGATE_TARGET_UNREACHABLE",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "Navigate target '/nowhere' doesn't resolve to any declared page",
+                      "suggestion": "Declare a matching `pages[].path` (e.g. `page \"/nowhere\" -> ...`) or correct the navigate path",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_EFF_NAVIGATE_TARGET_UNREACHABLE",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[1]",
+                      "message": "Navigate target '/login-help' doesn't resolve to any declared page",
+                      "suggestion": "Declare a matching `pages[].path` (e.g. `page \"/login-help\" -> ...`) or correct the navigate path",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_EFF_NAVIGATE_TARGET_UNREACHABLE",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[2]",
+                      "message": "Navigate target '/account/login' doesn't resolve to any declared page",
+                      "suggestion": "Declare a matching `pages[].path` (e.g. `page \"/account/login\" -> ...`) or correct the navigate path",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-declared-sign-in-page-is-reachable-as-any-page",
+      "steps": [
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "navigate",
+                                "/welcome"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P0",
+                      "path": "/welcome",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "navigate",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-static-target-still-matches-its-page",
+      "steps": [
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "navigate",
+                                "/feed"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P0",
+                      "path": "/feed",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "navigate",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "navigate-missing-required-payload",
+      "steps": [
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "navigate",
+                                "/inspection/123"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "Init0",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "payloadSchema": [
+                              {
+                                "name": "id",
+                                "type": "string",
+                                "required": true
+                              }
+                            ]
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P0",
+                      "path": "/inspection/:id",
+                      "traits": [
+                        {
+                          "ref": "Init0"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "navigate",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_NAVIGATE_MISSING_PAYLOAD",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "Navigation to '/inspection/:id' requires payload field 'id' for INIT event",
+                      "suggestion": "Add payload to navigate effect: [\"navigate\", \"/inspection/123\", { \"id\": \"@entity.id\" }]",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-navigate-with-required-payload",
+      "steps": [
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "navigate",
+                                "/inspection/123",
+                                {
+                                  "id": "@entity.id"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "Init0",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "payloadSchema": [
+                              {
+                                "name": "id",
+                                "type": "string",
+                                "required": true
+                              }
+                            ]
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P0",
+                      "path": "/inspection/:id",
+                      "traits": [
+                        {
+                          "ref": "Init0"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "navigate",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-partial-payload-reports-each-missing-field-in-declared-order",
+      "steps": [
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "navigate",
+                                "/x/1",
+                                {
+                                  "b": "1"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "Init0",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "payloadSchema": [
+                              {
+                                "name": "a",
+                                "type": "string",
+                                "required": true
+                              },
+                              {
+                                "name": "b",
+                                "type": "string",
+                                "required": true
+                              },
+                              {
+                                "name": "c",
+                                "type": "string",
+                                "required": true
+                              }
+                            ]
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P0",
+                      "path": "/x/:id",
+                      "traits": [
+                        {
+                          "ref": "Init0"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "navigate",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_NAVIGATE_MISSING_PAYLOAD",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "Navigation to '/x/:id' requires payload field 'a' for INIT event",
+                      "suggestion": "Add payload to navigate effect: [\"navigate\", \"/x/1\", { \"a\": \"@entity.a\" }]",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_EFF_NAVIGATE_MISSING_PAYLOAD",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "Navigation to '/x/:id' requires payload field 'c' for INIT event",
+                      "suggestion": "Add payload to navigate effect: [\"navigate\", \"/x/1\", { \"c\": \"@entity.c\" }]",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-static-query-string-matches-the-route-and-reports-the-full-target",
+      "steps": [
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "navigate",
+                                "/inspection/5?x=1"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "Init0",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "payloadSchema": [
+                              {
+                                "name": "id",
+                                "type": "string",
+                                "required": true
+                              }
+                            ]
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P0",
+                      "path": "/inspection/:id",
+                      "traits": [
+                        {
+                          "ref": "Init0"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "navigate",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_NAVIGATE_MISSING_PAYLOAD",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "Navigation to '/inspection/:id' requires payload field 'id' for INIT event",
+                      "suggestion": "Add payload to navigate effect: [\"navigate\", \"/inspection/5?x=1\", { \"id\": \"@entity.id\" }]",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-dynamic-prefix-requires-the-payload-of-the-page-beneath-it",
+      "steps": [
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "navigate",
+                                [
+                                  "str/concat",
+                                  "/inspection/",
+                                  "@payload.id"
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "Init0",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "payloadSchema": [
+                              {
+                                "name": "id",
+                                "type": "string",
+                                "required": true
+                              }
+                            ]
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P0",
+                      "path": "/inspection/:id",
+                      "traits": [
+                        {
+                          "ref": "Init0"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "navigate",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_NAVIGATE_MISSING_PAYLOAD",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "Navigation to '/inspection/:id' requires payload field 'id' for INIT event",
+                      "suggestion": "Add payload to navigate effect: [\"navigate\", \"/inspection/\", { \"id\": \"@entity.id\" }]",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-slice-without-the-declaration-reports-the-navigate-unreachable",
+      "steps": [
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "navigate",
+                                "/articles/x"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P0",
+                      "path": "/categories",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "navigate",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_NAVIGATE_TARGET_UNREACHABLE",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "Navigate target '/articles/x' doesn't resolve to any declared page",
+                      "suggestion": "Declare a matching `pages[].path` (e.g. `page \"/articles/x\" -> ...`) or correct the navigate path",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "expects-page-makes-the-sibling-route-reachable",
+      "steps": [
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "navigate",
+                                "/articles/x"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P0",
+                      "path": "/categories",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ],
+                  "expects": [
+                    {
+                      "kind": "page",
+                      "path": "/articles/:slug"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "navigate",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-unrelated-expected-route-does-not-satisfy-the-navigate",
+      "steps": [
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "navigate",
+                                "/articles/x"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P0",
+                      "path": "/categories",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ],
+                  "expects": [
+                    {
+                      "kind": "page",
+                      "path": "/authors/:id"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "navigate",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_NAVIGATE_TARGET_UNREACHABLE",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "Navigate target '/articles/x' doesn't resolve to any declared page",
+                      "suggestion": "Declare a matching `pages[].path` (e.g. `page \"/articles/x\" -> ...`) or correct the navigate path",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-real-declaration-still-wins-over-an-expectation-of-the-same-path",
+      "steps": [
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "navigate",
+                                "/inspection/1"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "Init0",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "payloadSchema": [
+                              {
+                                "name": "id",
+                                "type": "string",
+                                "required": true
+                              }
+                            ]
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P0",
+                      "path": "/inspection/:id",
+                      "traits": [
+                        {
+                          "ref": "Init0"
+                        }
+                      ]
+                    }
+                  ],
+                  "expects": [
+                    {
+                      "kind": "page",
+                      "path": "/inspection/:id"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "navigate",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_NAVIGATE_MISSING_PAYLOAD",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "Navigation to '/inspection/:id' requires payload field 'id' for INIT event",
+                      "suggestion": "Add payload to navigate effect: [\"navigate\", \"/inspection/1\", { \"id\": \"@entity.id\" }]",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-expected-endpoint-page-registers-no-route",
+      "steps": [
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "navigate",
+                                "/hook"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P0",
+                      "path": "/feed",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ],
+                  "expects": [
+                    {
+                      "kind": "page",
+                      "path": "/hook",
+                      "protocol": "http"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "navigate",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_NAVIGATE_TARGET_UNREACHABLE",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "Navigate target '/hook' doesn't resolve to any declared page",
+                      "suggestion": "Declare a matching `pages[].path` (e.g. `page \"/hook\" -> ...`) or correct the navigate path",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-uses-lazy-page-is-a-declared-route",
+      "steps": [
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "navigate",
+                                "/lazy"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P0",
+                      "path": "/feed",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "lazyPages": [
+                {
+                  "path": "/lazy",
+                  "orbital": "L",
+                  "orbRef": "l.orb"
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "navigate",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-relative-target-is-an-invalid-path-and-unreachable",
+      "steps": [
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "navigate",
+                                "about"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P0",
+                      "path": "/feed",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "navigate",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_P_INVALID_PATH",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "Navigate path should start with '/': 'about'",
+                      "suggestion": "Use absolute paths starting with /",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_EFF_NAVIGATE_TARGET_UNREACHABLE",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "Navigate target 'about' doesn't resolve to any declared page",
+                      "suggestion": "Declare a matching `pages[].path` (e.g. `page \"about\" -> ...`) or correct the navigate path",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-relative-target-with-no-declared-pages-is-only-an-invalid-path",
+      "steps": [
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "navigate",
+                                "about"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "navigate",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_P_INVALID_PATH",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "Navigate path should start with '/': 'about'",
+                      "suggestion": "Use absolute paths starting with /",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-external-url-needs-no-page",
+      "steps": [
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "navigate",
+                                "https://example.com/x"
+                              ],
+                              [
+                                "navigate",
+                                "http://a.b"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P0",
+                      "path": "/feed",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "navigate",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-target-that-is-wholly-a-binding-is-undecidable",
+      "steps": [
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "navigate",
+                                "@payload.href"
+                              ],
+                              [
+                                "navigate",
+                                "@entity.route",
+                                {
+                                  "a": 1
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P0",
+                      "path": "/feed",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "navigate",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-dynamic-target-with-no-literal-prefix-is-skipped",
+      "steps": [
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "navigate",
+                                [
+                                  "str/concat",
+                                  [
+                                    "str/lower",
+                                    "X"
+                                  ],
+                                  "y"
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P0",
+                      "path": "/feed",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "navigate",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-no-declared-pages-means-nothing-is-unreachable",
+      "steps": [
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "navigate",
+                                "/anywhere"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "navigate",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "navigate-without-a-path",
+      "steps": [
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "navigate"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P0",
+                      "path": "/feed",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "navigate",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_UNKNOWN_TYPE",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "navigate requires a path",
+                      "suggestion": "Use: [\"navigate\", \"/path\"]",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "send-server-without-an-event-name-and-the-control-with-one",
+      "steps": [
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "send-server"
+                              ],
+                              [
+                                "send-server",
+                                "GO"
+                              ],
+                              [
+                                "send-server",
+                                "GO",
+                                {
+                                  "a": 1
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "navigate",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_UNKNOWN_TYPE",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "send-server requires an event name",
+                      "suggestion": "Use: [\"send-server\", \"EVENT_NAME\"] or [\"send-server\", \"EVENT_NAME\", { payload }]",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "navigate-nested-in-if-and-do-and-a-tick",
+      "steps": [
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "if",
+                                "@entity.id",
+                                [
+                                  "do",
+                                  [
+                                    "navigate",
+                                    "/nope"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {
+                          "name": "t",
+                          "interval": 1000,
+                          "effects": [
+                            [
+                              "navigate",
+                              "/gone"
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P0",
+                      "path": "/feed",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "navigate",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_NAVIGATE_TARGET_UNREACHABLE",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0].then.do[0]",
+                      "message": "Navigate target '/nope' doesn't resolve to any declared page",
+                      "suggestion": "Declare a matching `pages[].path` (e.g. `page \"/nope\" -> ...`) or correct the navigate path",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_EFF_NAVIGATE_TARGET_UNREACHABLE",
+                      "path": "orbitals[0 (A)].traits[0 (T)].ticks[0].effects[0]",
+                      "message": "Navigate target '/gone' doesn't resolve to any declared page",
+                      "suggestion": "Declare a matching `pages[].path` (e.g. `page \"/gone\" -> ...`) or correct the navigate path",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an args body that does not parse is the usage error",
+      "steps": [
+        {
+          "trait": "OrbLintNavigateCli",
+          "from": "ready",
+          "event": "LINT_CALLED",
+          "payload": {
+            "rawBody": "not json"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb lint navigate <file>"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

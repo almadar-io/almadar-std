@@ -1,0 +1,1608 @@
+{
+  "atom": "cli/atoms/std-orb-lint-expected-field-not-provided.lolo",
+  "trait": "OrbLintExpectedFieldNotProvided",
+  "note": "Expected findings are the code, path, message and suggestion `orb validate` (the Rust validator) reports for the same program. Cases copy tests/expectations_validation.rs (a_present_but_incompatible_provider_still_errors, an_expected_field_the_provider_lacks_is_reported, a_provider_superset_satisfies_the_expectation, an_event_payload_the_provider_carries_is_satisfied, an_event_payload_field_the_provider_lacks_is_not_provided, control_an_event_expectation_without_a_payload_ignores_the_providers_payload); the rest pin the identity and bare-identity shape arms, shape order and the no-emit and no-schema events. The compatibility arms (requiredness, vocabulary, type) of the same Rust functions are not this rule.",
+  "cases": [
+    {
+      "id": "an-expected-field-the-provider-lacks-is-reported",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "OrderRecord",
+                      "shape": [
+                        {
+                          "name": "totalAmount",
+                          "type": "number"
+                        }
+                      ]
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "identity": false,
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectedFieldNotProvided"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expected-field-not-provided",
+                  "findings": [
+                    {
+                      "code": "ORB_S_EXPECTED_FIELD_NOT_PROVIDED",
+                      "path": "orbitals[0 (ConsumerOrbital)].expects[0].totalAmount",
+                      "message": "`ConsumerOrbital` expects `OrderRecord.totalAmount`; `OrderRecord` declares no such field.",
+                      "suggestion": "Add `totalAmount` to `OrderRecord`, or drop it from `ConsumerOrbital`'s expectation.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectedFieldNotProvided"
+        }
+      ]
+    },
+    {
+      "id": "a-present-but-incompatible-provider-still-errors",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "Product",
+                      "shape": [
+                        {
+                          "name": "totalAmount",
+                          "type": "number"
+                        }
+                      ]
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "ProductOrbital",
+                  "entity": {
+                    "name": "Product",
+                    "persistence": "persistent",
+                    "collection": "products",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectedFieldNotProvided"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expected-field-not-provided",
+                  "findings": [
+                    {
+                      "code": "ORB_S_EXPECTED_FIELD_NOT_PROVIDED",
+                      "path": "orbitals[0 (ConsumerOrbital)].expects[0].totalAmount",
+                      "message": "`ConsumerOrbital` expects `Product.totalAmount`; `Product` declares no such field.",
+                      "suggestion": "Add `totalAmount` to `Product`, or drop it from `ConsumerOrbital`'s expectation.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectedFieldNotProvided"
+        }
+      ]
+    },
+    {
+      "id": "a-provider-superset-satisfies-the-expectation",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "OrderRecord",
+                      "shape": [
+                        {
+                          "name": "status",
+                          "type": "string",
+                          "values": [
+                            "placed",
+                            "shipped"
+                          ]
+                        },
+                        {
+                          "name": "totalAmount",
+                          "type": "number"
+                        }
+                      ]
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "identity": false,
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "status",
+                        "type": "string",
+                        "values": [
+                          "placed",
+                          "shipped",
+                          "delivered"
+                        ]
+                      },
+                      {
+                        "name": "totalAmount",
+                        "type": "number"
+                      },
+                      {
+                        "name": "internalNotes",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectedFieldNotProvided"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expected-field-not-provided",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectedFieldNotProvided"
+        }
+      ]
+    },
+    {
+      "id": "two-missing-fields-are-reported-in-shape-order",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "OrderRecord",
+                      "shape": [
+                        {
+                          "name": "b",
+                          "type": "string"
+                        },
+                        {
+                          "name": "id",
+                          "type": "string"
+                        },
+                        {
+                          "name": "a",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "identity": false,
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectedFieldNotProvided"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expected-field-not-provided",
+                  "findings": [
+                    {
+                      "code": "ORB_S_EXPECTED_FIELD_NOT_PROVIDED",
+                      "path": "orbitals[0 (ConsumerOrbital)].expects[0].b",
+                      "message": "`ConsumerOrbital` expects `OrderRecord.b`; `OrderRecord` declares no such field.",
+                      "suggestion": "Add `b` to `OrderRecord`, or drop it from `ConsumerOrbital`'s expectation.",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_S_EXPECTED_FIELD_NOT_PROVIDED",
+                      "path": "orbitals[0 (ConsumerOrbital)].expects[0].a",
+                      "message": "`ConsumerOrbital` expects `OrderRecord.a`; `OrderRecord` declares no such field.",
+                      "suggestion": "Add `a` to `OrderRecord`, or drop it from `ConsumerOrbital`'s expectation.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectedFieldNotProvided"
+        }
+      ]
+    },
+    {
+      "id": "control-an-entity-expectation-without-a-shape-checks-no-field",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "OrderRecord"
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "identity": false,
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectedFieldNotProvided"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expected-field-not-provided",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectedFieldNotProvided"
+        }
+      ]
+    },
+    {
+      "id": "control-an-absent-provider-is-deferred",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "Nobody",
+                      "shape": [
+                        {
+                          "name": "x",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "identity": false,
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectedFieldNotProvided"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expected-field-not-provided",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectedFieldNotProvided"
+        }
+      ]
+    },
+    {
+      "id": "an-identity-shape-field-the-tagged-provider-lacks-is-reported",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "identity",
+                      "name": "Customer",
+                      "shape": [
+                        {
+                          "name": "id",
+                          "type": "string"
+                        },
+                        {
+                          "name": "role",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "CustomerOrbital",
+                  "entity": {
+                    "name": "Customer",
+                    "identity": true,
+                    "persistence": "persistent",
+                    "collection": "customers",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectedFieldNotProvided"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expected-field-not-provided",
+                  "findings": [
+                    {
+                      "code": "ORB_S_EXPECTED_FIELD_NOT_PROVIDED",
+                      "path": "orbitals[0 (ConsumerOrbital)].expects[0].role",
+                      "message": "`ConsumerOrbital` expects `Customer.role`; `Customer` declares no such field.",
+                      "suggestion": "Add `role` to `Customer`, or drop it from `ConsumerOrbital`'s expectation.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectedFieldNotProvided"
+        }
+      ]
+    },
+    {
+      "id": "control-an-untagged-identity-provider-is-the-kind-mismatch-not-a-missing-field",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "identity",
+                      "name": "Customer",
+                      "shape": [
+                        {
+                          "name": "id",
+                          "type": "string"
+                        },
+                        {
+                          "name": "role",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "CustomerOrbital",
+                  "entity": {
+                    "name": "Customer",
+                    "identity": false,
+                    "persistence": "persistent",
+                    "collection": "customers",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectedFieldNotProvided"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expected-field-not-provided",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectedFieldNotProvided"
+        }
+      ]
+    },
+    {
+      "id": "a-bare-identity-shape-checks-the-first-identity-entity",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "identity",
+                      "shape": [
+                        {
+                          "name": "role",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "CustomerOrbital",
+                  "entity": {
+                    "name": "Customer",
+                    "identity": true,
+                    "persistence": "persistent",
+                    "collection": "customers",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectedFieldNotProvided"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expected-field-not-provided",
+                  "findings": [
+                    {
+                      "code": "ORB_S_EXPECTED_FIELD_NOT_PROVIDED",
+                      "path": "orbitals[0 (ConsumerOrbital)].expects[0].role",
+                      "message": "`ConsumerOrbital` expects `Customer.role`; `Customer` declares no such field.",
+                      "suggestion": "Add `role` to `Customer`, or drop it from `ConsumerOrbital`'s expectation.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectedFieldNotProvided"
+        }
+      ]
+    },
+    {
+      "id": "an-event-payload-the-provider-carries-is-satisfied",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "event",
+                      "traitName": "OrderFeed",
+                      "event": "ORDER_PLACED",
+                      "payload": [
+                        {
+                          "name": "orderId",
+                          "type": "string",
+                          "required": true
+                        }
+                      ]
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFeed",
+                      "linkedEntity": "OrderRecord",
+                      "emits": [
+                        {
+                          "event": "ORDER_PLACED",
+                          "payloadSchema": [
+                            {
+                              "name": "orderId",
+                              "type": "string",
+                              "required": true
+                            },
+                            {
+                              "name": "total",
+                              "type": "number"
+                            }
+                          ]
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectedFieldNotProvided"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expected-field-not-provided",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectedFieldNotProvided"
+        }
+      ]
+    },
+    {
+      "id": "an-event-payload-field-the-provider-lacks-is-not-provided",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "event",
+                      "traitName": "OrderFeed",
+                      "event": "ORDER_PLACED",
+                      "payload": [
+                        {
+                          "name": "orderId",
+                          "type": "string"
+                        },
+                        {
+                          "name": "extra",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFeed",
+                      "linkedEntity": "OrderRecord",
+                      "emits": [
+                        {
+                          "event": "ORDER_PLACED",
+                          "payloadSchema": [
+                            {
+                              "name": "orderId",
+                              "type": "string"
+                            }
+                          ]
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectedFieldNotProvided"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expected-field-not-provided",
+                  "findings": [
+                    {
+                      "code": "ORB_S_EXPECTED_FIELD_NOT_PROVIDED",
+                      "path": "orbitals[0 (ConsumerOrbital)].expects[0].extra",
+                      "message": "`ConsumerOrbital` expects `OrderFeed.ORDER_PLACED` to carry `extra`; the event declares no such payload field.",
+                      "suggestion": "Add `extra` to `ORDER_PLACED`'s payload in `OrderFeed`, or drop it from the expectation.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectedFieldNotProvided"
+        }
+      ]
+    },
+    {
+      "id": "control-an-event-expectation-without-a-payload-ignores-the-providers-payload",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "event",
+                      "traitName": "OrderFeed",
+                      "event": "ORDER_PLACED"
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFeed",
+                      "linkedEntity": "OrderRecord",
+                      "emits": [
+                        {
+                          "event": "ORDER_PLACED",
+                          "payloadSchema": [
+                            {
+                              "name": "orderId",
+                              "type": "string"
+                            }
+                          ]
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectedFieldNotProvided"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expected-field-not-provided",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectedFieldNotProvided"
+        }
+      ]
+    },
+    {
+      "id": "control-an-event-the-trait-does-not-emit-has-no-payload-to-check",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "event",
+                      "traitName": "OrderFeed",
+                      "event": "ORDER_PLACED",
+                      "payload": [
+                        {
+                          "name": "x",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFeed",
+                      "linkedEntity": "OrderRecord",
+                      "emits": [
+                        {
+                          "event": "ORDER_SHIPPED"
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectedFieldNotProvided"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expected-field-not-provided",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectedFieldNotProvided"
+        }
+      ]
+    },
+    {
+      "id": "an-emitted-event-with-no-payload-schema-provides-no-field",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "event",
+                      "traitName": "OrderFeed",
+                      "event": "ORDER_PLACED",
+                      "payload": [
+                        {
+                          "name": "x",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFeed",
+                      "linkedEntity": "OrderRecord",
+                      "emits": [
+                        {
+                          "event": "ORDER_PLACED"
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectedFieldNotProvided"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expected-field-not-provided",
+                  "findings": [
+                    {
+                      "code": "ORB_S_EXPECTED_FIELD_NOT_PROVIDED",
+                      "path": "orbitals[0 (ConsumerOrbital)].expects[0].x",
+                      "message": "`ConsumerOrbital` expects `OrderFeed.ORDER_PLACED` to carry `x`; the event declares no such payload field.",
+                      "suggestion": "Add `x` to `ORDER_PLACED`'s payload in `OrderFeed`, or drop it from the expectation.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectedFieldNotProvided"
+        }
+      ]
+    },
+    {
+      "id": "an args body that does not parse is the usage error",
+      "steps": [
+        {
+          "trait": "OrbLintExpectedFieldNotProvidedCli",
+          "from": "ready",
+          "event": "LINT_CALLED",
+          "payload": {
+            "rawBody": "not json"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb lint expected-field-not-provided <file>"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

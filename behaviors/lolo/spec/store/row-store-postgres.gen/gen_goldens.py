@@ -509,7 +509,7 @@ case("x-read-decodes-arrays-bytea-bool-and-floats",
     recv(result(cols_x,[["t1",'{a,"b c",NULL,"q\\"uote"}','{1,2,NULL}','\\x48656c6c6f','{"2026-03-05 10:00:00+00"}','t','9007199254740993','1.5','{{1,2},{3}}']],"SELECT 1"),
          expect={"state":"ready","emits":[emit("ROW_FOUND", key="k", row={"id":"t1","labels":["a","b c",None,'q"uote'],"scores":[1,2,None],"blob":"SGVsbG8=","seen":["2026-03-05T10:00:00Z"],"flag":True,"big":"9007199254740993","ratio":1.5,"nested":[[1,2],[3]]})]})])
 
-doc = {"atom": "spec/store/row-store-postgres.fixture.lolo", "trait": "RowStoreDriver",
+doc = {"atom": "spec/store/row-store-postgres-fixture.lolo", "trait": "RowStoreDriver",
        "spec": "spec/store/row-store-postgres.lolo",
        "source": "orbital-rust/crates/orbital-core/crates/runtime/src/stores/pg_rows.rs over drivers/postgres.rs (behavior and tests)",
        "note": "Replay goldens feed the os reply events the kernel would route (PG_CONNECTED, PG_RECEIVED with the server bytes as base64, PG_NONCE_DRAWN) and assert state, emits and the effects' types. Effect arguments are compared evaluated; the exact bytes the driver writes are asserted through the spec's PG_WIRE_SENT diagnostic emit (stage, sql, params, frame = base64 of the whole send). Server answers are hand-built Postgres v3 messages (cross-checked against fixtures/postgres/*.json); the SCRAM server-first is the recorded scram-wrong-password-fails one. Cases marked skip need case-level config (unsupported until G-ORB-460). The Rust twin (`pg_rows.rs`) is archived under `archive/orbital-rust/`; each id's `source` names the Rust unit/live test it once mirrored.",

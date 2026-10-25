@@ -1,0 +1,162 @@
+app std-orb-lint-expectation-config-knob [
+  version: "1.0.0",
+  inbound: ["cli-lint-expectation-config-knob"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-expectation-config-knob — the `orb lint expectation-config-knob <file>` command, the port of check_config_knob (composition/expectations.rs), codes ORB_S_EXPECTED_FIELD_TYPE_MISMATCH and ORB_S_EXPECTATION_UNSATISFIED. An `expects config { name : type = default }` of a non-spec orbital is checked against the knobs of that name the program's inline traits declare: none is deferred; when no knob has the expected type (the same type name, the same closed value set in any order, and the same element and record shapes) the type mismatch lists what each trait declares; when the expectation states a default and no knob of the right type has it, the unsatisfied finding lists each trait's default. The program is the resolved program the lint input reads. Findings carry the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint expectation-config-knob: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-expectation-config-knob"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type LNode = string | number | boolean | [LNode?] | Map string LNode?
+type LNodes = [LNode?]
+type LStr = string
+type LObj = Map string LNode?
+type ExKnob = { type : string, values : [string], default : LNode?, items : LNode?, properties : LNode? }
+type ExWaivers = { read : string, create : string, update : string, delete : string }
+type ExField = { name : string, type : string, required : boolean, primaryKey : boolean, unique : boolean, values : [string], default : LNode?, relation : LNode?, items : LNode?, properties : LNode? }
+type ExEntity = { name : string, identity : boolean, shared : boolean, browser : boolean, persistence : string, collection : string, fields : [ExField], read_policy : LNode?, create_policy : LNode?, update_policy : LNode?, delete_policy : LNode?, access_waivers : ExWaivers? }
+type ExExpect = { kind : string, name : string, strict : boolean, traitName : string, state : string, from : string, to : string, event : string, protocol : string, path : string, traits : [string], shape : [ExField], payload : [ExField], persistence : string, shared : boolean, browser : boolean, read_policy : LNode?, create_policy : LNode?, update_policy : LNode?, delete_policy : LNode?, access_waivers : ExWaivers?, knob : ExKnob }
+type ExEmit = { event : string, payloadSchema : [ExField] }
+type ExState = { name : string }
+type ExTransition = { from : LNode, to : string, event : string, guard : LNode?, effects : [LNode?] }
+type ExMachine = { states : [ExState], transitions : [ExTransition] }
+type ExTrait = { name : string, emits : [ExEmit], stateMachine : ExMachine, ticks : [ExTransition], config : Map string ExKnob? }
+type ExPageTrait = { ref : string, name : string }
+type ExPage = { name : string, path : string, protocol : string, traits : [ExPageTrait] }
+type ExOrbital = { name : string, spec : boolean, expects : [ExExpect], entity : ExEntity, auxiliaryEntities : [ExEntity], traits : [ExTrait], pages : [ExPage] }
+type ExProgram = { orbitals : [ExOrbital] }
+
+orbital OrbLintExpectationConfigKnobOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintExpectationConfigKnobRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintExpectationConfigKnob -> OrbLintExpectationConfigKnobRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((orbs (object/get @payload.program "orbitals" [])))
+ (let ((provs (array/filter (array/flatten (array/map (array/filter @orbs (fn o (not (object/get @o "spec" false)))) (fn o (array/map (array/filter (array/concat [(object/get @o "entity" {})] (object/get @o "auxiliaryEntities" [])) (fn e (!= (object/get @e "name" "") ""))) (fn e { n: (object/get @e "name" ""), id: (object/get @e "identity" false), on: (object/get @o "name" ""), e: @e }))))) (fn p (!= (object/get @p "n") ""))))
+       (alltr (array/flatten (array/map @orbs (fn o (array/map (array/filter (object/get @o "traits" []) (fn t (object/has @t "stateMachine"))) (fn t { t: @t, on: (object/get @o "name" "") }))))))
+       (allpg (array/flatten (array/map @orbs (fn o (object/get @o "pages" []))))))
+(array/flatten (array/map (array/range 0 (array/len @orbs)) (fn oi
+  (let ((o (array/nth @orbs @oi)))
+   (if (or (object/get @o "spec" false) (not (object/has @o "expects"))) []
+    (let ((on (object/get @o "name" "")) (xs (object/get @o "expects" [])))
+     (array/flatten (array/map (array/range 0 (array/len @xs)) (fn j
+      (let ((x (array/nth @xs @j)))
+       (let ((base (str/concat "orbitals[" @oi " (" @on ")].expects[" @j "]")) (kind (object/get @x "kind" "")) (strict (object/get @x "strict" false)))
+        (if (= @kind "config") (let ((knobs (array/flatten (array/map @alltr (fn p (if (object/has (object/get (object/get @p "t") "config" {}) (object/get @x "name" "")) [{ t: (object/get (object/get @p "t") "name" ""), k: (object/get (object/get (object/get @p "t") "config" {}) (object/get @x "name" "")) }] []))))))
+  (if (= (array/len @knobs) 0) []
+    (let ((typed (array/filter @knobs (fn kk (let ((k (object/get @kk "k"))) (and (= (object/get @k "type" "") (object/get (object/get @x "knob" {}) "type" ""))
+                                   (= (array/sort (object/get @k "values" [])) (array/sort (object/get (object/get @x "knob" {}) "values" [])))
+                                   (= (object/get @k "items" null) (object/get (object/get @x "knob" {}) "items" null))
+                                   (= (object/get @k "properties" null) (object/get (object/get @x "knob" {}) "properties" null))))))))
+      (if (= (array/len @typed) 0)
+        [{ code: "ORB_S_EXPECTED_FIELD_TYPE_MISMATCH", path: @base, message: (str/concat "`" @on "` expects config knob `" (object/get @x "name" "") " : " (if (> (array/len (object/get (object/get @x "knob" {}) "values" [])) 0) (str/join (array/map (object/get (object/get @x "knob" {}) "values" []) (fn v (str/concat (quote "\"") @v (quote "\"")))) " | ") (object/get (object/get @x "knob" {}) "type" "")) "`, but " (str/join (array/map @knobs (fn kk (str/concat "`" (object/get @kk "t") "` declares `" (if (> (array/len (object/get (object/get @kk "k") "values" [])) 0) (str/join (array/map (object/get (object/get @kk "k") "values" []) (fn v (str/concat (quote "\"") @v (quote "\"")))) " | ") (object/get (object/get @kk "k") "type" "")) "`"))) ", ") "."), suggestion: (str/concat "Declare `" (object/get @x "name" "") "` as `" (if (> (array/len (object/get (object/get @x "knob" {}) "values" [])) 0) (str/join (array/map (object/get (object/get @x "knob" {}) "values" []) (fn v (str/concat (quote "\"") @v (quote "\"")))) " | ") (object/get (object/get @x "knob" {}) "type" "")) "` in the trait's `config`."), severity: "error" }]
+        (if (or (= (object/get (object/get @x "knob" {}) "default" null) null) (array/some @typed (fn kk (= (object/get (object/get @kk "k") "default" null) (object/get (object/get @x "knob" {}) "default" null))))) []
+          [{ code: "ORB_S_EXPECTATION_UNSATISFIED", path: @base, message: (str/concat "`" @on "` expects config knob `" (object/get @x "name" "") "` to default to " (if (= (object/get (object/get @x "knob" {}) "default" null) null) "no default" (json/stringify (object/get (object/get @x "knob" {}) "default" null))) ", but " (str/join (array/map @typed (fn kk (str/concat "`" (object/get @kk "t") "` defaults it to " (if (= (object/get (object/get @kk "k") "default" null) null) "no default" (json/stringify (object/get (object/get @kk "k") "default" null)))))) ", ") "."), suggestion: (str/concat "Default `" (object/get @x "name" "") "` to " (if (= (object/get (object/get @x "knob" {}) "default" null) null) "no default" (json/stringify (object/get (object/get @x "knob" {}) "default" null))) " in the trait's `config`."), severity: "error" }]))))) [])))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "expectation-config-knob", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : ExProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+    }
+  }
+
+  trait OrbLintExpectationConfigKnobCli -> OrbLintExpectationConfigKnobRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint expectation-config-knob <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "expectation-config-knob") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint expectation-config-knob: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "expectation-config-knob") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint expectation-config-knob: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-expectation-config-knob" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint expectation-config-knob` with its arguments and working directory."
+        @synonyms "orb lint expectation-config-knob"
+      OrbLintExpectationConfigKnob.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintExpectationConfigKnobCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintExpectationConfigKnobOrbitalStart -> OrbLintExpectationConfigKnob, OrbLintExpectationConfigKnobCli, OrbLintInput, Packs, Versions
+}

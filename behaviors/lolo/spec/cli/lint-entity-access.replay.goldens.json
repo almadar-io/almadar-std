@@ -1,0 +1,3623 @@
+{
+  "atom": "cli/atoms/std-orb-lint-entity-access.lolo",
+  "trait": "OrbLintEntityAccess",
+  "note": "Expected findings are the code, path, message and suggestion `orb validate` (the Rust validator) reports for the same program, filtered to this rule's codes at entity-directive paths. The first three cases copy entity_access.rs tests intrinsic_field_in_access_policy_errors, persisted_field_in_access_policy_passes and unknown_field_in_access_policy_is_unaffected_by_the_intrinsic_rule, and the next seven copy the owner_columns_scoped_tests (flags_owner_column_with_no_read_policy, silent_once_read_is_declared, silent_for_an_app_declaring_no_identity_entity_at_all, does_not_guess_from_a_field_name_a_bare_string_owner_is_invisible, flags_the_omission_when_nothing_declares_it, goes_quiet_once_read_none_reason_declares_it, a_waiver_on_a_different_operation_does_not_silence_read). The rest pin branches those tests leave open: the binding roots, the object/get call form, owner typing in both operand orders, the role vocabulary through =, !=, array/includes (list, bare, field and dynamic haystacks), the identity requirement and its expects exemption, policy-derived and collection-mirror owner columns, a self-identity id column, an auxiliary entity, intrinsic relations, and path order across directives and orbitals. The @user.<field> existence checks are not ported (no lint input carries the Viewer members), so no case reads an undeclared @user field.",
+  "cases": [
+    {
+      "id": "intrinsic-field-in-access-policy-errors",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "N",
+                  "entity": {
+                    "name": "Note",
+                    "persistence": "persistent",
+                    "collection": "notes",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "ownerId",
+                        "type": "string"
+                      },
+                      {
+                        "name": "isEditing",
+                        "type": "boolean",
+                        "intrinsic": true
+                      }
+                    ],
+                    "update_policy": [
+                      "=",
+                      "@entity.isEditing",
+                      true
+                    ]
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-access",
+                  "findings": [
+                    {
+                      "code": "ORB_GUARD_ON_FRAME_FIELD_AUTHORIZES",
+                      "path": "Note.@update[1]",
+                      "message": "`Note.@update[1]` reads `@entity.isEditing`, an @intrinsic field of entity `Note` — intrinsic fields are trait-owned view-state, never seeded or persisted by the runtime, so using one as an access-policy input is a bypassable gate.",
+                      "suggestion": "Base this access directive on a real persisted field of `Note`, not the @intrinsic field `isEditing`.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        }
+      ]
+    },
+    {
+      "id": "persisted-field-in-access-policy-passes",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "N",
+                  "entity": {
+                    "name": "Note",
+                    "persistence": "persistent",
+                    "collection": "notes",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "ownerId",
+                        "type": "string"
+                      },
+                      {
+                        "name": "isEditing",
+                        "type": "boolean",
+                        "intrinsic": true
+                      }
+                    ],
+                    "update_policy": [
+                      "=",
+                      "@entity.ownerId",
+                      "a"
+                    ]
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-access",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        }
+      ]
+    },
+    {
+      "id": "unknown-field-in-access-policy-is-unknown-not-intrinsic",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "N",
+                  "entity": {
+                    "name": "Note",
+                    "persistence": "persistent",
+                    "collection": "notes",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "ownerId",
+                        "type": "string"
+                      },
+                      {
+                        "name": "isEditing",
+                        "type": "boolean",
+                        "intrinsic": true
+                      }
+                    ],
+                    "update_policy": [
+                      "=",
+                      "@entity.bogus",
+                      "a"
+                    ]
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-access",
+                  "findings": [
+                    {
+                      "code": "ORB_S_ACCESS_POLICY_UNKNOWN_ENTITY_FIELD",
+                      "path": "Note.@update[1]",
+                      "message": "`@entity.bogus` is not a field of entity `Note`. It resolves to null, so this access directive silently denies everyone.",
+                      "suggestion": "Declare `bogus` on entity Note, or read one of: id, isEditing, ownerId",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        }
+      ]
+    },
+    {
+      "id": "flags-owner-column-with-no-read-policy",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "TicketOrbital",
+                  "entity": {
+                    "name": "Ticket",
+                    "persistence": "persistent",
+                    "collection": "tickets",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "assignee",
+                        "type": "relation",
+                        "relation": {
+                          "entity": "Person"
+                        }
+                      }
+                    ]
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "PersonOrbital",
+                  "entity": {
+                    "name": "Person",
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ],
+                    "identity": true
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-access",
+                  "findings": [
+                    {
+                      "code": "ORB_ENTITY_OWNER_COLUMN_UNSCOPED",
+                      "path": "Ticket.@read",
+                      "message": "Ticket declares owner column(s) `assignee` pointing at the [identity] entity, but no @read directive — and an undeclared policy is ALLOW-ALL, not deny-all, so every viewer reads every row",
+                      "suggestion": "declare @read on Ticket scoping rows to the viewer, e.g. @read [\"=\", (object/get @entity assignee), @user.id] — or, when visibility genuinely depends on a DIFFERENT entity (a membership/enrolment join a per-row predicate cannot express), omit @read and state that reason in a comment on the entity, citing R-ENTITY-ACCESS-NO-COLLECTION-AGGREGATE-BINDING",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        }
+      ]
+    },
+    {
+      "id": "silent-once-read-is-declared",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "TicketOrbital",
+                  "entity": {
+                    "name": "Ticket",
+                    "persistence": "persistent",
+                    "collection": "tickets",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "assignee",
+                        "type": "relation",
+                        "relation": {
+                          "entity": "Person"
+                        }
+                      }
+                    ],
+                    "read_policy": [
+                      "=",
+                      "@entity.assignee",
+                      "@user.id"
+                    ]
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "PersonOrbital",
+                  "entity": {
+                    "name": "Person",
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ],
+                    "identity": true
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-access",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        }
+      ]
+    },
+    {
+      "id": "silent-for-an-app-declaring-no-identity-entity-at-all",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "TicketOrbital",
+                  "entity": {
+                    "name": "Ticket",
+                    "persistence": "persistent",
+                    "collection": "tickets",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "assignee",
+                        "type": "relation",
+                        "relation": {
+                          "entity": "Person"
+                        }
+                      }
+                    ]
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-access",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        }
+      ]
+    },
+    {
+      "id": "does-not-guess-from-a-field-name-a-bare-string-owner-is-invisible",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "TicketOrbital",
+                  "entity": {
+                    "name": "Ticket",
+                    "persistence": "persistent",
+                    "collection": "tickets",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "assignee",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "PersonOrbital",
+                  "entity": {
+                    "name": "Person",
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ],
+                    "identity": true
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-access",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        }
+      ]
+    },
+    {
+      "id": "flags-the-omission-when-nothing-declares-it",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "ReplyOrbital",
+                  "entity": {
+                    "name": "TicketReply",
+                    "persistence": "persistent",
+                    "collection": "ticketreplies",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "authorId",
+                        "type": "relation",
+                        "relation": {
+                          "entity": "Person"
+                        }
+                      }
+                    ]
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "PersonOrbital",
+                  "entity": {
+                    "name": "Person",
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ],
+                    "identity": true
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-access",
+                  "findings": [
+                    {
+                      "code": "ORB_ENTITY_OWNER_COLUMN_UNSCOPED",
+                      "path": "TicketReply.@read",
+                      "message": "TicketReply declares owner column(s) `authorId` pointing at the [identity] entity, but no @read directive — and an undeclared policy is ALLOW-ALL, not deny-all, so every viewer reads every row",
+                      "suggestion": "declare @read on TicketReply scoping rows to the viewer, e.g. @read [\"=\", (object/get @entity authorId), @user.id] — or, when visibility genuinely depends on a DIFFERENT entity (a membership/enrolment join a per-row predicate cannot express), omit @read and state that reason in a comment on the entity, citing R-ENTITY-ACCESS-NO-COLLECTION-AGGREGATE-BINDING",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        }
+      ]
+    },
+    {
+      "id": "goes-quiet-once-read-none-reason-declares-it",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "ReplyOrbital",
+                  "entity": {
+                    "name": "TicketReply",
+                    "persistence": "persistent",
+                    "collection": "ticketreplies",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "authorId",
+                        "type": "relation",
+                        "relation": {
+                          "entity": "Person"
+                        }
+                      }
+                    ],
+                    "access_waivers": {
+                      "read": "visibility follows the Ticket"
+                    }
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "PersonOrbital",
+                  "entity": {
+                    "name": "Person",
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ],
+                    "identity": true
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-access",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        }
+      ]
+    },
+    {
+      "id": "a-waiver-on-a-different-operation-does-not-silence-read",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "ReplyOrbital",
+                  "entity": {
+                    "name": "TicketReply",
+                    "persistence": "persistent",
+                    "collection": "ticketreplies",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "authorId",
+                        "type": "relation",
+                        "relation": {
+                          "entity": "Person"
+                        }
+                      }
+                    ],
+                    "access_waivers": {
+                      "delete": "moderation only"
+                    }
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "PersonOrbital",
+                  "entity": {
+                    "name": "Person",
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ],
+                    "identity": true
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-access",
+                  "findings": [
+                    {
+                      "code": "ORB_ENTITY_OWNER_COLUMN_UNSCOPED",
+                      "path": "TicketReply.@read",
+                      "message": "TicketReply declares owner column(s) `authorId` pointing at the [identity] entity, but no @read directive — and an undeclared policy is ALLOW-ALL, not deny-all, so every viewer reads every row",
+                      "suggestion": "declare @read on TicketReply scoping rows to the viewer, e.g. @read [\"=\", (object/get @entity authorId), @user.id] — or, when visibility genuinely depends on a DIFFERENT entity (a membership/enrolment join a per-row predicate cannot express), omit @read and state that reason in a comment on the entity, citing R-ENTITY-ACCESS-NO-COLLECTION-AGGREGATE-BINDING",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        }
+      ]
+    },
+    {
+      "id": "a-payload-binding-in-a-directive-is-invalid",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "N",
+                  "entity": {
+                    "name": "Note",
+                    "persistence": "persistent",
+                    "collection": "notes",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "ownerId",
+                        "type": "string"
+                      },
+                      {
+                        "name": "isEditing",
+                        "type": "boolean",
+                        "intrinsic": true
+                      }
+                    ],
+                    "read_policy": [
+                      "=",
+                      "@payload.x",
+                      "a"
+                    ]
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-access",
+                  "findings": [
+                    {
+                      "code": "ORB_S_ACCESS_POLICY_INVALID_BINDING",
+                      "path": "Note.@read[1]",
+                      "message": "`@payload` is not a legal binding inside an access directive — only `@entity` (the candidate row) and `@user` (the viewer) are. Access directives have no call site, so `@payload`/`@config`/`@state` are not meaningful here.",
+                      "suggestion": "Read only @entity.<field> or @user.<field>.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        }
+      ]
+    },
+    {
+      "id": "object-get-form-reports-an-unknown-entity-field",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "N",
+                  "entity": {
+                    "name": "Note",
+                    "persistence": "persistent",
+                    "collection": "notes",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "ownerId",
+                        "type": "string"
+                      },
+                      {
+                        "name": "isEditing",
+                        "type": "boolean",
+                        "intrinsic": true
+                      }
+                    ],
+                    "read_policy": [
+                      "=",
+                      [
+                        "object/get",
+                        "@entity",
+                        "bogus"
+                      ],
+                      "a"
+                    ]
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-access",
+                  "findings": [
+                    {
+                      "code": "ORB_S_ACCESS_POLICY_UNKNOWN_ENTITY_FIELD",
+                      "path": "Note.@read[1]",
+                      "message": "`@entity` is not a field of entity `Note`. It resolves to null, so this access directive silently denies everyone.",
+                      "suggestion": "Declare `bogus` on entity Note, or read one of: id, isEditing, ownerId",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        }
+      ]
+    },
+    {
+      "id": "object-get-form-reports-an-intrinsic-field",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "N",
+                  "entity": {
+                    "name": "Note",
+                    "persistence": "persistent",
+                    "collection": "notes",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "ownerId",
+                        "type": "string"
+                      },
+                      {
+                        "name": "isEditing",
+                        "type": "boolean",
+                        "intrinsic": true
+                      }
+                    ],
+                    "read_policy": [
+                      "=",
+                      [
+                        "object/get",
+                        "@entity",
+                        "isEditing"
+                      ],
+                      true
+                    ]
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-access",
+                  "findings": [
+                    {
+                      "code": "ORB_GUARD_ON_FRAME_FIELD_AUTHORIZES",
+                      "path": "Note.@read[1]",
+                      "message": "`Note.@read[1]` reads `@entity`, an @intrinsic field of entity `Note` — intrinsic fields are trait-owned view-state, never seeded or persisted by the runtime, so using one as an access-policy input is a bypassable gate.",
+                      "suggestion": "Base this access directive on a real persisted field of `Note`, not the @intrinsic field `isEditing`.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        }
+      ]
+    },
+    {
+      "id": "a-string-column-compared-to-the-viewer-id-is-not-identity-typed",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "TicketOrbital",
+                  "entity": {
+                    "name": "Ticket",
+                    "persistence": "persistent",
+                    "collection": "tickets",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "customerEmail",
+                        "type": "string"
+                      },
+                      {
+                        "name": "assignee",
+                        "type": "relation",
+                        "relation": {
+                          "entity": "Person"
+                        }
+                      }
+                    ],
+                    "read_policy": [
+                      "=",
+                      "@entity.customerEmail",
+                      "@user.id"
+                    ]
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "PersonOrbital",
+                  "entity": {
+                    "name": "Person",
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ],
+                    "identity": true
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-access",
+                  "findings": [
+                    {
+                      "code": "ORB_S_OWNER_FIELD_NOT_IDENTITY_TYPED",
+                      "path": "Ticket.@read",
+                      "message": "`Ticket.customerEmail` is compared to `@user.id` but is not a relation to the [identity] entity `Person` — it is `string`. Viewer ids are only ever stamped onto declared relations, so this predicate matches no row and the directive denies everyone.",
+                      "suggestion": "Type `customerEmail` as a relation to Person (`customerEmail : Person`), or compare against the field the viewer value actually lives in",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        }
+      ]
+    },
+    {
+      "id": "a-relation-to-the-identity-entity-compared-to-the-viewer-id-is-clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "TicketOrbital",
+                  "entity": {
+                    "name": "Ticket",
+                    "persistence": "persistent",
+                    "collection": "tickets",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "customerEmail",
+                        "type": "string"
+                      },
+                      {
+                        "name": "assignee",
+                        "type": "relation",
+                        "relation": {
+                          "entity": "Person"
+                        }
+                      }
+                    ],
+                    "read_policy": [
+                      "=",
+                      "@entity.assignee",
+                      "@user.id"
+                    ]
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "PersonOrbital",
+                  "entity": {
+                    "name": "Person",
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ],
+                    "identity": true
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-access",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        }
+      ]
+    },
+    {
+      "id": "the-object-get-spelling-and-reversed-operands-are-checked",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "TicketOrbital",
+                  "entity": {
+                    "name": "Ticket",
+                    "persistence": "persistent",
+                    "collection": "tickets",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "customerEmail",
+                        "type": "string"
+                      },
+                      {
+                        "name": "assignee",
+                        "type": "relation",
+                        "relation": {
+                          "entity": "Person"
+                        }
+                      }
+                    ],
+                    "read_policy": [
+                      "=",
+                      [
+                        "object/get",
+                        "@user",
+                        "id"
+                      ],
+                      [
+                        "object/get",
+                        "@entity",
+                        "customerEmail"
+                      ]
+                    ]
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "PersonOrbital",
+                  "entity": {
+                    "name": "Person",
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ],
+                    "identity": true
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-access",
+                  "findings": [
+                    {
+                      "code": "ORB_S_OWNER_FIELD_NOT_IDENTITY_TYPED",
+                      "path": "Ticket.@read",
+                      "message": "`Ticket.customerEmail` is compared to `@user.id` but is not a relation to the [identity] entity `Person` — it is `string`. Viewer ids are only ever stamped onto declared relations, so this predicate matches no row and the directive denies everyone.",
+                      "suggestion": "Type `customerEmail` as a relation to Person (`customerEmail : Person`), or compare against the field the viewer value actually lives in",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        }
+      ]
+    },
+    {
+      "id": "an-and-wraps-the-comparison",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "TicketOrbital",
+                  "entity": {
+                    "name": "Ticket",
+                    "persistence": "persistent",
+                    "collection": "tickets",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "customerEmail",
+                        "type": "string"
+                      },
+                      {
+                        "name": "assignee",
+                        "type": "relation",
+                        "relation": {
+                          "entity": "Person"
+                        }
+                      }
+                    ],
+                    "read_policy": [
+                      "and",
+                      [
+                        "=",
+                        "@entity.customerEmail",
+                        "@user.id"
+                      ],
+                      [
+                        "=",
+                        "@entity.assignee",
+                        "@user.id"
+                      ]
+                    ]
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "PersonOrbital",
+                  "entity": {
+                    "name": "Person",
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ],
+                    "identity": true
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-access",
+                  "findings": [
+                    {
+                      "code": "ORB_S_OWNER_FIELD_NOT_IDENTITY_TYPED",
+                      "path": "Ticket.@read[1]",
+                      "message": "`Ticket.customerEmail` is compared to `@user.id` but is not a relation to the [identity] entity `Person` — it is `string`. Viewer ids are only ever stamped onto declared relations, so this predicate matches no row and the directive denies everyone.",
+                      "suggestion": "Type `customerEmail` as a relation to Person (`customerEmail : Person`), or compare against the field the viewer value actually lives in",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        }
+      ]
+    },
+    {
+      "id": "the-identity-entity-comparing-its-own-id-is-the-self-read-shape",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "PersonOrbital",
+                  "entity": {
+                    "name": "Person",
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ],
+                    "identity": true,
+                    "read_policy": [
+                      "=",
+                      "@entity.id",
+                      "@user.id"
+                    ]
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-access",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        }
+      ]
+    },
+    {
+      "id": "a-literal-outside-the-role-vocabulary-is-dead",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "N",
+                  "entity": {
+                    "name": "Note",
+                    "persistence": "persistent",
+                    "collection": "notes",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "ownerId",
+                        "type": "string"
+                      },
+                      {
+                        "name": "isEditing",
+                        "type": "boolean",
+                        "intrinsic": true
+                      }
+                    ],
+                    "read_policy": [
+                      "=",
+                      "@user.role",
+                      "ghost"
+                    ]
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "PersonOrbital",
+                  "entity": {
+                    "name": "Person",
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "role",
+                        "type": "string",
+                        "values": [
+                          "admin",
+                          "member"
+                        ]
+                      },
+                      {
+                        "name": "roles",
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "values": [
+                            "admin",
+                            "member"
+                          ]
+                        }
+                      }
+                    ],
+                    "identity": true
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-access",
+                  "findings": [
+                    {
+                      "code": "ORB_S_ROLE_LITERAL_NOT_MEMBER",
+                      "path": "Note.@read",
+                      "message": "\"ghost\" is not a declared value of `@user.role` on the [identity] entity `Person`. This comparison can never be true — the branch is dead.",
+                      "suggestion": "Use one of: admin, member, or add \"ghost\" to `Person.role`.",
+                      "severity": "error",
+                      "validValues": [
+                        "admin",
+                        "member"
+                      ]
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        }
+      ]
+    },
+    {
+      "id": "a-literal-inside-the-role-vocabulary-is-clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "N",
+                  "entity": {
+                    "name": "Note",
+                    "persistence": "persistent",
+                    "collection": "notes",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "ownerId",
+                        "type": "string"
+                      },
+                      {
+                        "name": "isEditing",
+                        "type": "boolean",
+                        "intrinsic": true
+                      }
+                    ],
+                    "read_policy": [
+                      "=",
+                      "@user.role",
+                      "admin"
+                    ]
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "PersonOrbital",
+                  "entity": {
+                    "name": "Person",
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "role",
+                        "type": "string",
+                        "values": [
+                          "admin",
+                          "member"
+                        ]
+                      },
+                      {
+                        "name": "roles",
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "values": [
+                            "admin",
+                            "member"
+                          ]
+                        }
+                      }
+                    ],
+                    "identity": true
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-access",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        }
+      ]
+    },
+    {
+      "id": "the-literal-may-come-first-and-not-equal-is-an-equality-op",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "N",
+                  "entity": {
+                    "name": "Note",
+                    "persistence": "persistent",
+                    "collection": "notes",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "ownerId",
+                        "type": "string"
+                      },
+                      {
+                        "name": "isEditing",
+                        "type": "boolean",
+                        "intrinsic": true
+                      }
+                    ],
+                    "read_policy": [
+                      "!=",
+                      "ghost",
+                      "@user.role"
+                    ]
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "PersonOrbital",
+                  "entity": {
+                    "name": "Person",
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "role",
+                        "type": "string",
+                        "values": [
+                          "admin",
+                          "member"
+                        ]
+                      },
+                      {
+                        "name": "roles",
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "values": [
+                            "admin",
+                            "member"
+                          ]
+                        }
+                      }
+                    ],
+                    "identity": true
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-access",
+                  "findings": [
+                    {
+                      "code": "ORB_S_ROLE_LITERAL_NOT_MEMBER",
+                      "path": "Note.@read",
+                      "message": "\"ghost\" is not a declared value of `@user.role` on the [identity] entity `Person`. This comparison can never be true — the branch is dead.",
+                      "suggestion": "Use one of: admin, member, or add \"ghost\" to `Person.role`.",
+                      "severity": "error",
+                      "validValues": [
+                        "admin",
+                        "member"
+                      ]
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        }
+      ]
+    },
+    {
+      "id": "array-includes-a-list-haystack-checks-every-member",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "N",
+                  "entity": {
+                    "name": "Note",
+                    "persistence": "persistent",
+                    "collection": "notes",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "ownerId",
+                        "type": "string"
+                      },
+                      {
+                        "name": "isEditing",
+                        "type": "boolean",
+                        "intrinsic": true
+                      }
+                    ],
+                    "read_policy": [
+                      "array/includes",
+                      [
+                        "list",
+                        "admin",
+                        "ghost"
+                      ],
+                      "@user.role"
+                    ]
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "PersonOrbital",
+                  "entity": {
+                    "name": "Person",
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "role",
+                        "type": "string",
+                        "values": [
+                          "admin",
+                          "member"
+                        ]
+                      },
+                      {
+                        "name": "roles",
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "values": [
+                            "admin",
+                            "member"
+                          ]
+                        }
+                      }
+                    ],
+                    "identity": true
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-access",
+                  "findings": [
+                    {
+                      "code": "ORB_S_ROLE_LITERAL_NOT_MEMBER",
+                      "path": "Note.@read",
+                      "message": "\"ghost\" is not a declared value of `@user.role` on the [identity] entity `Person`. This comparison can never be true — the branch is dead.",
+                      "suggestion": "Use one of: admin, member, or add \"ghost\" to `Person.role`.",
+                      "severity": "error",
+                      "validValues": [
+                        "admin",
+                        "member"
+                      ]
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        }
+      ]
+    },
+    {
+      "id": "array-includes-a-bare-array-haystack-checks-every-member",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "N",
+                  "entity": {
+                    "name": "Note",
+                    "persistence": "persistent",
+                    "collection": "notes",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "ownerId",
+                        "type": "string"
+                      },
+                      {
+                        "name": "isEditing",
+                        "type": "boolean",
+                        "intrinsic": true
+                      }
+                    ],
+                    "read_policy": [
+                      "array/includes",
+                      [
+                        "admin",
+                        "ghost",
+                        "spook"
+                      ],
+                      "@user.role"
+                    ]
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "PersonOrbital",
+                  "entity": {
+                    "name": "Person",
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "role",
+                        "type": "string",
+                        "values": [
+                          "admin",
+                          "member"
+                        ]
+                      },
+                      {
+                        "name": "roles",
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "values": [
+                            "admin",
+                            "member"
+                          ]
+                        }
+                      }
+                    ],
+                    "identity": true
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-access",
+                  "findings": [
+                    {
+                      "code": "ORB_S_ROLE_LITERAL_NOT_MEMBER",
+                      "path": "Note.@read",
+                      "message": "\"ghost\" is not a declared value of `@user.role` on the [identity] entity `Person`. This comparison can never be true — the branch is dead.",
+                      "suggestion": "Use one of: admin, member, or add \"ghost\" to `Person.role`.",
+                      "severity": "error",
+                      "validValues": [
+                        "admin",
+                        "member"
+                      ]
+                    },
+                    {
+                      "code": "ORB_S_ROLE_LITERAL_NOT_MEMBER",
+                      "path": "Note.@read",
+                      "message": "\"spook\" is not a declared value of `@user.role` on the [identity] entity `Person`. This comparison can never be true — the branch is dead.",
+                      "suggestion": "Use one of: admin, member, or add \"spook\" to `Person.role`.",
+                      "severity": "error",
+                      "validValues": [
+                        "admin",
+                        "member"
+                      ]
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        }
+      ]
+    },
+    {
+      "id": "array-includes-the-field-as-haystack-checks-the-needle",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "N",
+                  "entity": {
+                    "name": "Note",
+                    "persistence": "persistent",
+                    "collection": "notes",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "ownerId",
+                        "type": "string"
+                      },
+                      {
+                        "name": "isEditing",
+                        "type": "boolean",
+                        "intrinsic": true
+                      }
+                    ],
+                    "read_policy": [
+                      "array/includes",
+                      "@user.roles",
+                      "ghost"
+                    ]
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "PersonOrbital",
+                  "entity": {
+                    "name": "Person",
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "role",
+                        "type": "string",
+                        "values": [
+                          "admin",
+                          "member"
+                        ]
+                      },
+                      {
+                        "name": "roles",
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "values": [
+                            "admin",
+                            "member"
+                          ]
+                        }
+                      }
+                    ],
+                    "identity": true
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-access",
+                  "findings": [
+                    {
+                      "code": "ORB_S_ROLE_LITERAL_NOT_MEMBER",
+                      "path": "Note.@read",
+                      "message": "\"ghost\" is not a declared value of `@user.roles` on the [identity] entity `Person`. This comparison can never be true — the branch is dead.",
+                      "suggestion": "Use one of: admin, member, or add \"ghost\" to `Person.roles`.",
+                      "severity": "error",
+                      "validValues": [
+                        "admin",
+                        "member"
+                      ]
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        }
+      ]
+    },
+    {
+      "id": "array-includes-a-dynamic-haystack-is-skipped",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "N",
+                  "entity": {
+                    "name": "Note",
+                    "persistence": "persistent",
+                    "collection": "notes",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "ownerId",
+                        "type": "string"
+                      },
+                      {
+                        "name": "isEditing",
+                        "type": "boolean",
+                        "intrinsic": true
+                      }
+                    ],
+                    "read_policy": [
+                      "array/includes",
+                      [
+                        "object/get",
+                        "@entity",
+                        "allowed"
+                      ],
+                      "@user.role"
+                    ]
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "PersonOrbital",
+                  "entity": {
+                    "name": "Person",
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "role",
+                        "type": "string",
+                        "values": [
+                          "admin",
+                          "member"
+                        ]
+                      },
+                      {
+                        "name": "roles",
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "values": [
+                            "admin",
+                            "member"
+                          ]
+                        }
+                      }
+                    ],
+                    "identity": true
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-access",
+                  "findings": [
+                    {
+                      "code": "ORB_S_ROLE_LITERAL_NOT_MEMBER",
+                      "path": "Note.@read",
+                      "message": "\"object/get\" is not a declared value of `@user.role` on the [identity] entity `Person`. This comparison can never be true — the branch is dead.",
+                      "suggestion": "Use one of: admin, member, or add \"object/get\" to `Person.role`.",
+                      "severity": "error",
+                      "validValues": [
+                        "admin",
+                        "member"
+                      ]
+                    },
+                    {
+                      "code": "ORB_S_ROLE_LITERAL_NOT_MEMBER",
+                      "path": "Note.@read",
+                      "message": "\"allowed\" is not a declared value of `@user.role` on the [identity] entity `Person`. This comparison can never be true — the branch is dead.",
+                      "suggestion": "Use one of: admin, member, or add \"allowed\" to `Person.role`.",
+                      "severity": "error",
+                      "validValues": [
+                        "admin",
+                        "member"
+                      ]
+                    },
+                    {
+                      "code": "ORB_S_ACCESS_POLICY_UNKNOWN_ENTITY_FIELD",
+                      "path": "Note.@read[1]",
+                      "message": "`@entity` is not a field of entity `Note`. It resolves to null, so this access directive silently denies everyone.",
+                      "suggestion": "Declare `allowed` on entity Note, or read one of: id, isEditing, ownerId",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        }
+      ]
+    },
+    {
+      "id": "a-field-without-a-vocabulary-checks-nothing",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "N",
+                  "entity": {
+                    "name": "Note",
+                    "persistence": "persistent",
+                    "collection": "notes",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "ownerId",
+                        "type": "string"
+                      },
+                      {
+                        "name": "isEditing",
+                        "type": "boolean",
+                        "intrinsic": true
+                      }
+                    ],
+                    "read_policy": [
+                      "=",
+                      "@user.email",
+                      "anyone"
+                    ]
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "PersonOrbital",
+                  "entity": {
+                    "name": "Person",
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "role",
+                        "type": "string",
+                        "values": [
+                          "admin",
+                          "member"
+                        ]
+                      },
+                      {
+                        "name": "roles",
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "values": [
+                            "admin",
+                            "member"
+                          ]
+                        }
+                      }
+                    ],
+                    "identity": true
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-access",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        }
+      ]
+    },
+    {
+      "id": "reading-the-user-without-an-identity-entity-requires-one",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "N",
+                  "entity": {
+                    "name": "Note",
+                    "persistence": "persistent",
+                    "collection": "notes",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "ownerId",
+                        "type": "string"
+                      },
+                      {
+                        "name": "isEditing",
+                        "type": "boolean",
+                        "intrinsic": true
+                      }
+                    ],
+                    "read_policy": [
+                      "=",
+                      "@entity.ownerId",
+                      "@user.id"
+                    ]
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-access",
+                  "findings": [
+                    {
+                      "code": "ORB_S_OWNER_FIELD_NOT_IDENTITY_TYPED",
+                      "path": "Note.@read",
+                      "message": "`Note.ownerId` is compared to `@user.id` but is not a relation to the [identity] entity `@user` — it is `string`. Viewer ids are only ever stamped onto declared relations, so this predicate matches no row and the directive denies everyone.",
+                      "suggestion": "Type `ownerId` as a relation to @user (`ownerId : @user`), or compare against the field the viewer value actually lives in",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_S_ACCESS_POLICY_REQUIRES_IDENTITY",
+                      "path": "Note.@read",
+                      "message": "`@read` on entity `Note` reads `@user`, but this program declares no [identity] entity. An access directive needs a real roster to resolve against — declare `[identity]` on the entity that models your app's viewer.",
+                      "suggestion": "Tag your user-directory entity `[persistent: <collection>, identity]`.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        }
+      ]
+    },
+    {
+      "id": "an-identity-expectation-satisfies-the-roster-requirement",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "N",
+                  "entity": {
+                    "name": "Note",
+                    "persistence": "persistent",
+                    "collection": "notes",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "ownerId",
+                        "type": "string"
+                      },
+                      {
+                        "name": "isEditing",
+                        "type": "boolean",
+                        "intrinsic": true
+                      }
+                    ],
+                    "read_policy": [
+                      "=",
+                      "@entity.ownerId",
+                      "@user.id"
+                    ]
+                  },
+                  "traits": [],
+                  "expects": [
+                    {
+                      "kind": "identity",
+                      "shape": [
+                        {
+                          "name": "role",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-access",
+                  "findings": [
+                    {
+                      "code": "ORB_S_OWNER_FIELD_NOT_IDENTITY_TYPED",
+                      "path": "Note.@read",
+                      "message": "`Note.ownerId` is compared to `@user.id` but is not a relation to the [identity] entity `@user` — it is `string`. Viewer ids are only ever stamped onto declared relations, so this predicate matches no row and the directive denies everyone.",
+                      "suggestion": "Type `ownerId` as a relation to @user (`ownerId : @user`), or compare against the field the viewer value actually lives in",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        }
+      ]
+    },
+    {
+      "id": "a-policy-names-an-owner-column-that-is-not-a-relation",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "DocOrbital",
+                  "entity": {
+                    "name": "Doc",
+                    "persistence": "persistent",
+                    "collection": "docs",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "ownerId",
+                        "type": "string"
+                      }
+                    ],
+                    "update_policy": [
+                      "=",
+                      "@entity.ownerId",
+                      "@user.id"
+                    ]
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "PersonOrbital",
+                  "entity": {
+                    "name": "Person",
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ],
+                    "identity": true
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-access",
+                  "findings": [
+                    {
+                      "code": "ORB_ENTITY_OWNER_COLUMN_UNSCOPED",
+                      "path": "Doc.@read",
+                      "message": "Doc declares owner column(s) `ownerId` pointing at the [identity] entity, but no @read directive — and an undeclared policy is ALLOW-ALL, not deny-all, so every viewer reads every row",
+                      "suggestion": "declare @read on Doc scoping rows to the viewer, e.g. @read [\"=\", (object/get @entity ownerId), @user.id] — or, when visibility genuinely depends on a DIFFERENT entity (a membership/enrolment join a per-row predicate cannot express), omit @read and state that reason in a comment on the entity, citing R-ENTITY-ACCESS-NO-COLLECTION-AGGREGATE-BINDING",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_S_OWNER_FIELD_NOT_IDENTITY_TYPED",
+                      "path": "Doc.@update",
+                      "message": "`Doc.ownerId` is compared to `@user.id` but is not a relation to the [identity] entity `Person` — it is `string`. Viewer ids are only ever stamped onto declared relations, so this predicate matches no row and the directive denies everyone.",
+                      "suggestion": "Type `ownerId` as a relation to Person (`ownerId : Person`), or compare against the field the viewer value actually lives in",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        }
+      ]
+    },
+    {
+      "id": "the-identity-entitys-own-update-policy-makes-id-an-owner-column",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "PersonOrbital",
+                  "entity": {
+                    "name": "Person",
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ],
+                    "identity": true,
+                    "update_policy": [
+                      "=",
+                      "@entity.id",
+                      "@user.id"
+                    ]
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-access",
+                  "findings": [
+                    {
+                      "code": "ORB_ENTITY_OWNER_COLUMN_UNSCOPED",
+                      "path": "Person.@read",
+                      "message": "Person declares owner column(s) `id` pointing at the [identity] entity, but no @read directive — and an undeclared policy is ALLOW-ALL, not deny-all, so every viewer reads every row",
+                      "suggestion": "declare @read on Person scoping rows to the viewer, e.g. @read [\"=\", (object/get @entity id), @user.id] — or, when visibility genuinely depends on a DIFFERENT entity (a membership/enrolment join a per-row predicate cannot express), omit @read and state that reason in a comment on the entity, citing R-ENTITY-ACCESS-NO-COLLECTION-AGGREGATE-BINDING",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        }
+      ]
+    },
+    {
+      "id": "a-sibling-sharing-the-collection-inherits-the-owner-column",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "TicketA",
+                    "persistence": "persistent",
+                    "collection": "tickets",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "assignee",
+                        "type": "relation",
+                        "relation": {
+                          "entity": "Person"
+                        }
+                      }
+                    ],
+                    "read_policy": [
+                      "=",
+                      "@entity.assignee",
+                      "@user.id"
+                    ]
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "B",
+                  "entity": {
+                    "name": "TicketB",
+                    "persistence": "persistent",
+                    "collection": "tickets",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "assignee",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "PersonOrbital",
+                  "entity": {
+                    "name": "Person",
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ],
+                    "identity": true
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-access",
+                  "findings": [
+                    {
+                      "code": "ORB_ENTITY_OWNER_COLUMN_UNSCOPED",
+                      "path": "TicketB.@read",
+                      "message": "TicketB declares owner column(s) `assignee` pointing at the [identity] entity, but no @read directive — and an undeclared policy is ALLOW-ALL, not deny-all, so every viewer reads every row",
+                      "suggestion": "declare @read on TicketB scoping rows to the viewer, e.g. @read [\"=\", (object/get @entity assignee), @user.id] — or, when visibility genuinely depends on a DIFFERENT entity (a membership/enrolment join a per-row predicate cannot express), omit @read and state that reason in a comment on the entity, citing R-ENTITY-ACCESS-NO-COLLECTION-AGGREGATE-BINDING",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        }
+      ]
+    },
+    {
+      "id": "an-auxiliary-entity-is-checked-like-the-primary",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "TicketOrbital",
+                  "entity": {
+                    "name": "Ticket",
+                    "persistence": "persistent",
+                    "collection": "tickets",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "assignee",
+                        "type": "relation",
+                        "relation": {
+                          "entity": "Person"
+                        }
+                      }
+                    ],
+                    "read_policy": [
+                      "=",
+                      "@entity.assignee",
+                      "@user.id"
+                    ]
+                  },
+                  "traits": [],
+                  "auxiliaryEntities": [
+                    {
+                      "name": "TicketNote",
+                      "persistence": "persistent",
+                      "collection": "ticketnotes",
+                      "fields": [
+                        {
+                          "name": "id",
+                          "type": "string"
+                        },
+                        {
+                          "name": "author",
+                          "type": "relation",
+                          "relation": {
+                            "entity": "Person"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "PersonOrbital",
+                  "entity": {
+                    "name": "Person",
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ],
+                    "identity": true
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-access",
+                  "findings": [
+                    {
+                      "code": "ORB_ENTITY_OWNER_COLUMN_UNSCOPED",
+                      "path": "TicketNote.@read",
+                      "message": "TicketNote declares owner column(s) `author` pointing at the [identity] entity, but no @read directive — and an undeclared policy is ALLOW-ALL, not deny-all, so every viewer reads every row",
+                      "suggestion": "declare @read on TicketNote scoping rows to the viewer, e.g. @read [\"=\", (object/get @entity author), @user.id] — or, when visibility genuinely depends on a DIFFERENT entity (a membership/enrolment join a per-row predicate cannot express), omit @read and state that reason in a comment on the entity, citing R-ENTITY-ACCESS-NO-COLLECTION-AGGREGATE-BINDING",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        }
+      ]
+    },
+    {
+      "id": "an-intrinsic-relation-is-not-an-owner-column",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "TicketOrbital",
+                  "entity": {
+                    "name": "Ticket",
+                    "persistence": "persistent",
+                    "collection": "tickets",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "assignee",
+                        "type": "relation",
+                        "relation": {
+                          "entity": "Person"
+                        },
+                        "intrinsic": true
+                      }
+                    ]
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "PersonOrbital",
+                  "entity": {
+                    "name": "Person",
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ],
+                    "identity": true
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-access",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        }
+      ]
+    },
+    {
+      "id": "a-create-directive-reports-under-its-own-sigil",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "N",
+                  "entity": {
+                    "name": "Note",
+                    "persistence": "persistent",
+                    "collection": "notes",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "ownerId",
+                        "type": "string"
+                      },
+                      {
+                        "name": "isEditing",
+                        "type": "boolean",
+                        "intrinsic": true
+                      }
+                    ],
+                    "create_policy": [
+                      "=",
+                      "@payload.x",
+                      1
+                    ]
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-access",
+                  "findings": [
+                    {
+                      "code": "ORB_S_ACCESS_POLICY_INVALID_BINDING",
+                      "path": "Note.@create[1]",
+                      "message": "`@payload` is not a legal binding inside an access directive — only `@entity` (the candidate row) and `@user` (the viewer) are. Access directives have no call site, so `@payload`/`@config`/`@state` are not meaningful here.",
+                      "suggestion": "Read only @entity.<field> or @user.<field>.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        }
+      ]
+    },
+    {
+      "id": "a-second-directive-and-a-second-orbital-report-in-order",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "N",
+                  "entity": {
+                    "name": "Note",
+                    "persistence": "persistent",
+                    "collection": "notes",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "ownerId",
+                        "type": "string"
+                      },
+                      {
+                        "name": "isEditing",
+                        "type": "boolean",
+                        "intrinsic": true
+                      }
+                    ],
+                    "read_policy": [
+                      "=",
+                      "@entity.nope",
+                      "a"
+                    ],
+                    "delete_policy": [
+                      "=",
+                      "@entity.nada",
+                      "a"
+                    ]
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "M",
+                  "entity": {
+                    "name": "Memo",
+                    "persistence": "persistent",
+                    "collection": "memos",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ],
+                    "update_policy": [
+                      "=",
+                      "@entity.zip",
+                      "a"
+                    ]
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-access",
+                  "findings": [
+                    {
+                      "code": "ORB_S_ACCESS_POLICY_UNKNOWN_ENTITY_FIELD",
+                      "path": "Note.@read[1]",
+                      "message": "`@entity.nope` is not a field of entity `Note`. It resolves to null, so this access directive silently denies everyone.",
+                      "suggestion": "Declare `nope` on entity Note, or read one of: id, isEditing, ownerId",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_S_ACCESS_POLICY_UNKNOWN_ENTITY_FIELD",
+                      "path": "Note.@delete[1]",
+                      "message": "`@entity.nada` is not a field of entity `Note`. It resolves to null, so this access directive silently denies everyone.",
+                      "suggestion": "Declare `nada` on entity Note, or read one of: id, isEditing, ownerId",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_S_ACCESS_POLICY_UNKNOWN_ENTITY_FIELD",
+                      "path": "Memo.@update[1]",
+                      "message": "`@entity.zip` is not a field of entity `Memo`. It resolves to null, so this access directive silently denies everyone.",
+                      "suggestion": "Declare `zip` on entity Memo, or read one of: id",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        }
+      ]
+    },
+    {
+      "id": "a-nested-object-expression-reports-under-its-key",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "N",
+                  "entity": {
+                    "name": "Note",
+                    "persistence": "persistent",
+                    "collection": "notes",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "ownerId",
+                        "type": "string"
+                      },
+                      {
+                        "name": "isEditing",
+                        "type": "boolean",
+                        "intrinsic": true
+                      }
+                    ],
+                    "read_policy": {
+                      "all": [
+                        [
+                          "=",
+                          "@entity.bogus",
+                          "a"
+                        ]
+                      ]
+                    }
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-access",
+                  "findings": [
+                    {
+                      "code": "ORB_S_ACCESS_POLICY_UNKNOWN_ENTITY_FIELD",
+                      "path": "Note.@read.all[0][1]",
+                      "message": "`@entity.bogus` is not a field of entity `Note`. It resolves to null, so this access directive silently denies everyone.",
+                      "suggestion": "Declare `bogus` on entity Note, or read one of: id, isEditing, ownerId",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        }
+      ]
+    }
+  ]
+}

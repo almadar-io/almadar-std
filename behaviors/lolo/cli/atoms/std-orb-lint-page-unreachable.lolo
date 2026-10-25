@@ -1,0 +1,195 @@
+app std-orb-lint-page-unreachable [
+  version: "1.0.0",
+  inbound: ["cli-lint-page-unreachable"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-page-unreachable — the `orb lint page-unreachable <file>` command, the port of the inline-page half of validate_page_reachability. It lowers the file with program/read and reports ORB_PAGE_UNREACHABLE for every route page (a page with a protocol is an endpoint and is skipped) that nothing can route a viewer to: not the boot page (the first route page in declaration order), not a parameterized page (any :name segment), not the literal path of an href or navigatesTo value (a str/concat of literals counts) in a trait config default or a render-ui payload, not the target or static str/concat prefix of a navigate effect anywhere in a trait, not the app signIn route, and not a labelled page when the program mentions @pages. Findings carry the page location orbitals[i].pages[j] (status 500, exit 1). Clean answers `lint page-unreachable: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500. The lazyPages half is not ported: a lazy page links are not part of the serialized program."
+]
+uses Spec from "almadar-std/lint-page-unreachable"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type ReachEntry = { loc : string, path : string, labelled : boolean }
+type ReachVal = string | number | boolean | [ReachVal?] | Map string ReachVal?
+type ReachPage = { path : string, protocol : string, label : string }
+type ReachField = { default : ReachVal? }
+type ReachStrings = [string]
+type ReachEffect = [ReachVal]
+type ReachEffects = { effects : [ReachEffect] }
+type ReachMachine = { transitions : [ReachEffects] }
+type ReachTrait = { stateMachine : ReachMachine, ticks : [ReachEffects], config : Map string ReachField }
+type ReachOrbital = { traits : [ReachTrait], config : Map string ReachField, pages : [ReachPage] }
+type ReachSite = { signIn : string }
+type ReachProgram = { site : ReachSite, config : Map string ReachField, orbitals : [ReachOrbital] }
+
+orbital OrbLintPageUnreachableOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintPageUnreachableRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintPageUnreachable -> OrbLintPageUnreachableRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])) (appCfg (object/get @payload.program "config" {})) (signIn (object/get (object/get @payload.program "site" {}) "signIn" "")))
+          (let ((trs (array/flatten (array/map @orbitals (fn orb (object/get @orb "traits" []))))))
+            (let ((effects (array/concat
+                              (array/flatten (array/map @trs (fn tr (array/flatten (array/map (object/get (object/get @tr "stateMachine" {}) "transitions" []) (fn t (object/get @t "effects" [])))))))
+                              (array/flatten (array/map @trs (fn tr (array/flatten (array/map (object/get @tr "ticks" []) (fn k (object/get @k "effects" [])))))))))
+                  (transEffects (array/flatten (array/map @trs (fn tr (array/flatten (array/map (object/get (object/get @tr "stateMachine" {}) "transitions" []) (fn t (object/get @t "effects" [])))))))))
+              (let ((trCfg (array/filter (array/flatten (array/map @trs (fn tr (array/map (object/values (object/get @tr "config" {})) (fn f (object/get @f "default" null)))))) (fn v (!= @v null))))
+                    (orbCfg (array/filter (array/flatten (array/map @orbitals (fn orb (array/map (object/values (object/get @orb "config" {})) (fn f (object/get @f "default" null)))))) (fn v (!= @v null))))
+                    (appCfgDefaults (array/filter (array/map (object/values @appCfg) (fn f (object/get @f "default" null))) (fn v (!= @v null))))
+                    (payloads (array/filter (array/map (array/filter @effects (fn e (and (validate/array @e) (> (array/len @e) 2) (= (array/first @e) "render-ui")))) (fn e (array/nth @e 2))) (fn v (!= @v null)))))
+                (let ((hrefs (or (tree/fold (or (json/parse (json/stringify { cfg: @trCfg, pay: @payloads }) ReachVal) "") (fn (n kids)
+                                  (array/concat
+                                    (if (and (validate/object @n) (not (validate/array @n)))
+                                      (array/flatten (array/map ["href" "navigatesTo"] (fn k
+                                        (let ((hv (object/get @n @k null)))
+                                          (if (and (validate/string @hv) (!= @hv "") (not (str/startsWith @hv (quote "@"))))
+                                            [@hv]
+                                            (let ((parts (if (validate/array @hv) (json/parse (json/stringify @hv) ReachStrings) null)))
+                                              (if (and (!= @parts null) (> (array/len @parts) 1) (= (array/first @parts) "str/concat")
+                                                       (array/every (array/drop @parts 1) (fn p (not (str/startsWith @p (quote "@"))))))
+                                                (if (= (str/join (array/drop @parts 1) "") "") [] [(str/join (array/drop @parts 1) "")])
+                                                [])))))))
+                                      [])
+                                    (if (validate/array @n) (array/flatten @kids) (if (validate/object @n) (array/flatten (object/values @kids)) [])))) ReachVal) []))
+                      (navs (array/concat
+                              (if (= @signIn "") [] [@signIn])
+                              (array/flatten (array/map @effects (fn v
+                                (tree/fold @v (fn (n kids)
+                                  (array/concat
+                                    (if (and (validate/array @n) (> (array/len @n) 1) (= (array/first @n) "navigate"))
+                                      (let ((tg (array/nth @n 1)))
+                                        (if (validate/string @tg)
+                                          [@tg]
+                                          (if (and (validate/array @tg) (> (array/len @tg) 1) (= (array/first @tg) "str/concat") (validate/string (array/nth @tg 1)))
+                                            [(array/nth @tg 1)]
+                                            [])))
+                                      [])
+                                    (if (validate/array @n) (array/flatten @kids) (if (validate/object @n) (array/flatten (object/values @kids)) [])))) ReachVal))))))
+                      (sigil (= (tree/fold (or (json/parse (json/stringify { app: @appCfgDefaults, orb: @orbCfg, tr: @trCfg, eff: @transEffects }) ReachVal) "") (fn (n kids)
+                                      (if (validate/string @n)
+                                        (= @n (quote "@pages"))
+                                        (if (validate/array @n)
+                                          (array/some @kids (fn r (= @r true)))
+                                          (if (validate/object @n) (array/some (object/values @kids) (fn r (= @r true))) false)))) ReachVal) true)))
+                  (let ((entries (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+                                    (let ((pgs (object/get (array/nth @orbitals @oi) "pages" [])))
+                                      (array/flatten (array/map (array/range 0 (array/len @pgs)) (fn pj
+                                        (let ((pg (array/nth @pgs @pj)))
+                                          (if (and (object/has @pg "path") (not (object/has @pg "protocol")))
+                                            [{ loc: (str/concat "orbitals[" @oi "].pages[" @pj "]"), path: (object/get @pg "path" ""), labelled: (object/has @pg "label") }]
+                                            [])))))))))))
+                    (let ((linked (array/concat @hrefs (if @sigil (array/map (array/filter @entries (fn en (object/get @en "labelled"))) (fn en (object/get @en "path"))) []))))
+                      (array/flatten (array/map (array/drop @entries 1) (fn en
+                        (let ((pth (object/get @en "path")))
+                          (if (or (array/some (str/split @pth "/") (fn seg (str/startsWith @seg ":")))
+                                  (array/includes @linked @pth)
+                                  (array/includes @navs @pth)
+                                  (array/some @navs (fn tg (and (> (str/len @tg) 1) (str/startsWith @pth @tg)))))
+                            []
+                            [{ code: "ORB_PAGE_UNREACHABLE", path: (object/get @en "loc"), message: (str/concat "page '" @pth "' is declared but appears in no link, navItems entry or navigate effect"), suggestion: (str/concat "add an href to a nav/footer/link component, or a navigate effect, targeting '" @pth "', or remove the page if nothing should reach it"), severity: "error" }])))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "page-unreachable", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : ReachProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+    }
+  }
+
+  trait OrbLintPageUnreachableCli -> OrbLintPageUnreachableRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint page-unreachable <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "page-unreachable") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint page-unreachable: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "page-unreachable") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint page-unreachable: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-page-unreachable" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint page-unreachable` with its arguments and working directory."
+        @synonyms "orb lint page-unreachable"
+      OrbLintPageUnreachable.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintPageUnreachableCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintPageUnreachableOrbitalStart -> OrbLintPageUnreachable, OrbLintPageUnreachableCli, OrbLintInput, Packs, Versions
+}

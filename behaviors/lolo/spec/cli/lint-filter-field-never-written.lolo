@@ -1,0 +1,21 @@
+app lint-filter-field-never-written-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint filter-field-never-written <file>`, the port of ORB_X_FILTER_FIELD_NEVER_WRITTEN. A fetch in a client-bound trait whose filter reads a literal (object/get @entity <field>) that no persist create/update/upsert of the fetched entity or a persistent-collection mate supplies is reported at the Rust path (status 500, exit 1); an [identity] entity, an @intrinsic field, a declared field of an entity nothing creates and a declared field whose default is reachable stay silent. Clean answers `lint filter-field-never-written: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintFilterFieldNeverWrittenSpec {
+  expects trait OrbLintFilterFieldNeverWritten {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintFilterFieldNeverWrittenCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintFilterFieldNeverWritten, OrbLintFilterFieldNeverWrittenCli
+}

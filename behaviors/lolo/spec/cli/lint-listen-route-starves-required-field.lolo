@@ -1,0 +1,21 @@
+app lint-listen-route-starves-required-field-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint listen-route-starves-required-field <file>`, the port of ORB_LISTEN_ROUTE_STARVES_REQUIRED_FIELD. A trait or orbital sourced listens route whose triggered event declares a required (leaf, dotted) payload field that neither the route's `with` mapping nor the source emit's declared payload (nor a definer-knob companion default) supplies is reported at orbitals.<Orbital>.traits.<Trait>.listens (status 500, exit 1). A clean program answers `lint listen-route-starves-required-field: clean` (status 200, exit 0). Anything but exactly one file argument is the usage (status 400, exit 2). A file that cannot be read or lowered fails the run (status 500)."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintListenRouteStarvesRequiredFieldSpec {
+  expects trait OrbLintListenRouteStarvesRequiredField {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintListenRouteStarvesRequiredFieldCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintListenRouteStarvesRequiredField, OrbLintListenRouteStarvesRequiredFieldCli
+}

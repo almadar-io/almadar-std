@@ -1,0 +1,315 @@
+app std-orb-lint-entity-access [
+  version: "1.0.0",
+  inbound: ["cli-lint-entity-access"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-entity-access — the `orb lint entity-access <file>` command, the port of entity_access.rs (validate_entity_access and validate_owner_columns_scoped). It lowers the file with program/read and reports an entity that declares owner columns pointing at the [identity] entity but no @read (ORB_ENTITY_OWNER_COLUMN_UNSCOPED, silenced by an @read none reason), and in each @read/@create/@update/@delete directive an `@entity.<field>` or `(object/get @entity <field>)` that names no field of the owning entity (ORB_S_ACCESS_POLICY_UNKNOWN_ENTITY_FIELD) or an @intrinsic one (ORB_GUARD_ON_FRAME_FIELD_AUTHORIZES), a binding root other than @entity and @user (ORB_S_ACCESS_POLICY_INVALID_BINDING), a column compared to `@user.id` that is not a relation to an [identity] entity (ORB_S_OWNER_FIELD_NOT_IDENTITY_TYPED), a literal compared against a closed-vocabulary `@user.<field>` that is not a declared member (ORB_S_ROLE_LITERAL_NOT_MEMBER) and an `@user` read in a program declaring no [identity] entity (ORB_S_ACCESS_POLICY_REQUIRES_IDENTITY), with the Rust path, message and suggestion (status 500, exit 1). The `@user.<field>` existence checks (ORB_S_UNKNOWN_IDENTITY_FIELD, ORB_S_EXPECTATION_FIELD_UNDECLARED) are not ported: they need the installed language's Viewer members, which no lint input carries. Clean answers `lint entity-access: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-entity-access"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type AccShape = string | number | boolean | [AccShape?] | Map string AccShape?
+type AccRelation = { entity : string }
+type AccItems = { values : [string] }
+type AccField = { name : string, type : string, intrinsic : boolean, relation : AccRelation, values : [string], items : AccItems }
+type AccWaivers = { read : string }
+type AccEntity = { name : string, identity : boolean, collection : string, fields : [AccField], read_policy : AccShape, create_policy : AccShape, update_policy : AccShape, delete_policy : AccShape, access_waivers : AccWaivers }
+type AccEntityRef = AccEntity | string
+type AccExpect = { kind : string, name : string, shape : [AccField] }
+type AccOrbital = { name : string, expects : [AccExpect], entity : AccEntityRef, auxiliaryEntities : [AccEntity] }
+type AccProgram = { orbitals : [AccOrbital] }
+type OrbFinding ={ code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital OrbLintEntityAccessOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintEntityAccessRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintEntityAccess -> OrbLintEntityAccessRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((nov : [string] [])
+      (orbs (object/get @payload.program "orbitals" [])))
+ (let ((allDefs (array/flatten (array/map @orbs (fn o (array/flatten (array/map (array/concat [(object/get @o "entity" {})] (object/get @o "auxiliaryEntities" [])) (fn xe (if (validate/object @xe) [@xe] []))))))))
+       (primIds (array/flatten (array/map @orbs (fn o (let ((e0 (object/get @o "entity" {}))) (if (and (validate/object @e0) (object/get @e0 "identity" false)) [@e0] []))))))
+       (auxIds (array/flatten (array/map @orbs (fn o (array/filter (array/flatten (array/map (object/get @o "auxiliaryEntities" []) (fn xe (if (validate/object @xe) [@xe] [])))) (fn e (object/get @e "identity" false))))))))
+  (let ((idDefs (array/filter @allDefs (fn d (object/get @d "identity" false))))
+        (hasDecl (or (> (array/len @primIds) 0) (> (array/len @auxIds) 0)))
+        (allIdNames (array/unique (array/map (array/concat @primIds @auxIds) (fn e (object/get @e "name" ""))))))
+   (let ((hasId (> (array/len @idDefs) 0))
+         (declared (if (> (array/len @primIds) 0) (array/first @primIds) (array/first @auxIds))))
+    (array/concat
+     (if (not @hasId) []
+ (let ((idName (object/get (array/first @idDefs) "name" "")))
+  (let ((lowId (str/lower @idName))
+        (sid (let ((d0 (array/first (array/filter @allDefs (fn d (= (object/get @d "name" "") @idName)))))) (array/includes (array/concat (array/concat (if (object/has @d0 "read_policy") (let ((cs (tree/fold (object/get @d0 "read_policy") (fn (n k)
+ (if (validate/array @n)
+  (array/concat
+   (if (and (= (array/len @n) 3) (let ((o0 (if (> (array/len @n) 0) (array/nth @n 0) ""))) (or (= (if (validate/string @o0) @o0 "") "=") (= (if (validate/string @o0) @o0 "") "=="))))
+    (let ((a (array/nth @n 1)) (b (array/nth @n 2)))
+     (let ((f (if (or (and (validate/string @b) (= @b (quote "@user.id"))) (and (validate/array @b) (= (array/len @b) 3) (= (if (validate/string (array/nth @b 0)) (array/nth @b 0) "") "object/get") (= (if (validate/string (array/nth @b 1)) (array/nth @b 1) "") (quote "@user")) (= (if (validate/string (array/nth @b 2)) (array/nth @b 2) "") "id"))) (if (validate/string @a) (if (and (validate/string @a) (str/startsWith @a (quote "@entity.")) (> (str/len @a) 8) (not (str/includes (str/slice @a 8) ".")) (not (str/includes (str/slice @a 8) "["))) (str/slice @a 8) "") (if (and (validate/array @a) (= (array/len @a) 3) (= (if (validate/string (array/nth @a 0)) (array/nth @a 0) "") "object/get") (= (if (validate/string (array/nth @a 1)) (array/nth @a 1) "") (quote "@entity")) (validate/string (array/nth @a 2))) (if (validate/string (array/nth @a 2)) (array/nth @a 2) "") "")) (if (or (and (validate/string @a) (= @a (quote "@user.id"))) (and (validate/array @a) (= (array/len @a) 3) (= (if (validate/string (array/nth @a 0)) (array/nth @a 0) "") "object/get") (= (if (validate/string (array/nth @a 1)) (array/nth @a 1) "") (quote "@user")) (= (if (validate/string (array/nth @a 2)) (array/nth @a 2) "") "id"))) (if (validate/string @b) (if (and (validate/string @b) (str/startsWith @b (quote "@entity.")) (> (str/len @b) 8) (not (str/includes (str/slice @b 8) ".")) (not (str/includes (str/slice @b 8) "["))) (str/slice @b 8) "") (if (and (validate/array @b) (= (array/len @b) 3) (= (if (validate/string (array/nth @b 0)) (array/nth @b 0) "") "object/get") (= (if (validate/string (array/nth @b 1)) (array/nth @b 1) "") (quote "@entity")) (validate/string (array/nth @b 2))) (if (validate/string (array/nth @b 2)) (array/nth @b 2) "") "")) ""))))
+      (if (= @f "") [] [@f])))
+    [])
+   (array/flatten (array/filter @k (fn r (validate/array @r)))))
+  [])) AccShape))) (if (validate/array @cs) @cs [])) []) (if (object/has @d0 "create_policy") (let ((cs (tree/fold (object/get @d0 "create_policy") (fn (n k)
+ (if (validate/array @n)
+  (array/concat
+   (if (and (= (array/len @n) 3) (let ((o0 (if (> (array/len @n) 0) (array/nth @n 0) ""))) (or (= (if (validate/string @o0) @o0 "") "=") (= (if (validate/string @o0) @o0 "") "=="))))
+    (let ((a (array/nth @n 1)) (b (array/nth @n 2)))
+     (let ((f (if (or (and (validate/string @b) (= @b (quote "@user.id"))) (and (validate/array @b) (= (array/len @b) 3) (= (if (validate/string (array/nth @b 0)) (array/nth @b 0) "") "object/get") (= (if (validate/string (array/nth @b 1)) (array/nth @b 1) "") (quote "@user")) (= (if (validate/string (array/nth @b 2)) (array/nth @b 2) "") "id"))) (if (validate/string @a) (if (and (validate/string @a) (str/startsWith @a (quote "@entity.")) (> (str/len @a) 8) (not (str/includes (str/slice @a 8) ".")) (not (str/includes (str/slice @a 8) "["))) (str/slice @a 8) "") (if (and (validate/array @a) (= (array/len @a) 3) (= (if (validate/string (array/nth @a 0)) (array/nth @a 0) "") "object/get") (= (if (validate/string (array/nth @a 1)) (array/nth @a 1) "") (quote "@entity")) (validate/string (array/nth @a 2))) (if (validate/string (array/nth @a 2)) (array/nth @a 2) "") "")) (if (or (and (validate/string @a) (= @a (quote "@user.id"))) (and (validate/array @a) (= (array/len @a) 3) (= (if (validate/string (array/nth @a 0)) (array/nth @a 0) "") "object/get") (= (if (validate/string (array/nth @a 1)) (array/nth @a 1) "") (quote "@user")) (= (if (validate/string (array/nth @a 2)) (array/nth @a 2) "") "id"))) (if (validate/string @b) (if (and (validate/string @b) (str/startsWith @b (quote "@entity.")) (> (str/len @b) 8) (not (str/includes (str/slice @b 8) ".")) (not (str/includes (str/slice @b 8) "["))) (str/slice @b 8) "") (if (and (validate/array @b) (= (array/len @b) 3) (= (if (validate/string (array/nth @b 0)) (array/nth @b 0) "") "object/get") (= (if (validate/string (array/nth @b 1)) (array/nth @b 1) "") (quote "@entity")) (validate/string (array/nth @b 2))) (if (validate/string (array/nth @b 2)) (array/nth @b 2) "") "")) ""))))
+      (if (= @f "") [] [@f])))
+    [])
+   (array/flatten (array/filter @k (fn r (validate/array @r)))))
+  [])) AccShape))) (if (validate/array @cs) @cs [])) [])) (array/concat (if (object/has @d0 "update_policy") (let ((cs (tree/fold (object/get @d0 "update_policy") (fn (n k)
+ (if (validate/array @n)
+  (array/concat
+   (if (and (= (array/len @n) 3) (let ((o0 (if (> (array/len @n) 0) (array/nth @n 0) ""))) (or (= (if (validate/string @o0) @o0 "") "=") (= (if (validate/string @o0) @o0 "") "=="))))
+    (let ((a (array/nth @n 1)) (b (array/nth @n 2)))
+     (let ((f (if (or (and (validate/string @b) (= @b (quote "@user.id"))) (and (validate/array @b) (= (array/len @b) 3) (= (if (validate/string (array/nth @b 0)) (array/nth @b 0) "") "object/get") (= (if (validate/string (array/nth @b 1)) (array/nth @b 1) "") (quote "@user")) (= (if (validate/string (array/nth @b 2)) (array/nth @b 2) "") "id"))) (if (validate/string @a) (if (and (validate/string @a) (str/startsWith @a (quote "@entity.")) (> (str/len @a) 8) (not (str/includes (str/slice @a 8) ".")) (not (str/includes (str/slice @a 8) "["))) (str/slice @a 8) "") (if (and (validate/array @a) (= (array/len @a) 3) (= (if (validate/string (array/nth @a 0)) (array/nth @a 0) "") "object/get") (= (if (validate/string (array/nth @a 1)) (array/nth @a 1) "") (quote "@entity")) (validate/string (array/nth @a 2))) (if (validate/string (array/nth @a 2)) (array/nth @a 2) "") "")) (if (or (and (validate/string @a) (= @a (quote "@user.id"))) (and (validate/array @a) (= (array/len @a) 3) (= (if (validate/string (array/nth @a 0)) (array/nth @a 0) "") "object/get") (= (if (validate/string (array/nth @a 1)) (array/nth @a 1) "") (quote "@user")) (= (if (validate/string (array/nth @a 2)) (array/nth @a 2) "") "id"))) (if (validate/string @b) (if (and (validate/string @b) (str/startsWith @b (quote "@entity.")) (> (str/len @b) 8) (not (str/includes (str/slice @b 8) ".")) (not (str/includes (str/slice @b 8) "["))) (str/slice @b 8) "") (if (and (validate/array @b) (= (array/len @b) 3) (= (if (validate/string (array/nth @b 0)) (array/nth @b 0) "") "object/get") (= (if (validate/string (array/nth @b 1)) (array/nth @b 1) "") (quote "@entity")) (validate/string (array/nth @b 2))) (if (validate/string (array/nth @b 2)) (array/nth @b 2) "") "")) ""))))
+      (if (= @f "") [] [@f])))
+    [])
+   (array/flatten (array/filter @k (fn r (validate/array @r)))))
+  [])) AccShape))) (if (validate/array @cs) @cs [])) []) (if (object/has @d0 "delete_policy") (let ((cs (tree/fold (object/get @d0 "delete_policy") (fn (n k)
+ (if (validate/array @n)
+  (array/concat
+   (if (and (= (array/len @n) 3) (let ((o0 (if (> (array/len @n) 0) (array/nth @n 0) ""))) (or (= (if (validate/string @o0) @o0 "") "=") (= (if (validate/string @o0) @o0 "") "=="))))
+    (let ((a (array/nth @n 1)) (b (array/nth @n 2)))
+     (let ((f (if (or (and (validate/string @b) (= @b (quote "@user.id"))) (and (validate/array @b) (= (array/len @b) 3) (= (if (validate/string (array/nth @b 0)) (array/nth @b 0) "") "object/get") (= (if (validate/string (array/nth @b 1)) (array/nth @b 1) "") (quote "@user")) (= (if (validate/string (array/nth @b 2)) (array/nth @b 2) "") "id"))) (if (validate/string @a) (if (and (validate/string @a) (str/startsWith @a (quote "@entity.")) (> (str/len @a) 8) (not (str/includes (str/slice @a 8) ".")) (not (str/includes (str/slice @a 8) "["))) (str/slice @a 8) "") (if (and (validate/array @a) (= (array/len @a) 3) (= (if (validate/string (array/nth @a 0)) (array/nth @a 0) "") "object/get") (= (if (validate/string (array/nth @a 1)) (array/nth @a 1) "") (quote "@entity")) (validate/string (array/nth @a 2))) (if (validate/string (array/nth @a 2)) (array/nth @a 2) "") "")) (if (or (and (validate/string @a) (= @a (quote "@user.id"))) (and (validate/array @a) (= (array/len @a) 3) (= (if (validate/string (array/nth @a 0)) (array/nth @a 0) "") "object/get") (= (if (validate/string (array/nth @a 1)) (array/nth @a 1) "") (quote "@user")) (= (if (validate/string (array/nth @a 2)) (array/nth @a 2) "") "id"))) (if (validate/string @b) (if (and (validate/string @b) (str/startsWith @b (quote "@entity.")) (> (str/len @b) 8) (not (str/includes (str/slice @b 8) ".")) (not (str/includes (str/slice @b 8) "["))) (str/slice @b 8) "") (if (and (validate/array @b) (= (array/len @b) 3) (= (if (validate/string (array/nth @b 0)) (array/nth @b 0) "") "object/get") (= (if (validate/string (array/nth @b 1)) (array/nth @b 1) "") (quote "@entity")) (validate/string (array/nth @b 2))) (if (validate/string (array/nth @b 2)) (array/nth @b 2) "") "")) ""))))
+      (if (= @f "") [] [@f])))
+    [])
+   (array/flatten (array/filter @k (fn r (validate/array @r)))))
+  [])) AccShape))) (if (validate/array @cs) @cs [])) []))) "id"))))
+   (array/flatten (array/map @allDefs (fn dd
+    (let ((lowD (str/lower (object/get @dd "name" ""))))
+     (let ((same (array/filter @allDefs (fn e (= (str/lower (object/get @e "name" "")) @lowD)))))
+      (let ((l1 (array/flatten (array/map @same (fn e (array/map (array/filter (object/get @e "fields" []) (fn fd (and (object/has @fd "name") (not (object/get @fd "intrinsic" false)) (object/has @fd "relation") (= (object/get (object/get @fd "relation") "entity" "") @idName)))) (fn fd (object/get @fd "name" "")))))))
+            (l2 (if (and (= @lowD @lowId) @sid) ["id"] []))
+            (l3 (array/flatten (array/map @same (fn e (array/concat (array/concat (if (object/has @e "update_policy") (let ((cs (tree/fold (object/get @e "update_policy") (fn (n k)
+ (if (validate/array @n)
+  (array/concat
+   (if (and (= (array/len @n) 3) (let ((o0 (if (> (array/len @n) 0) (array/nth @n 0) ""))) (or (= (if (validate/string @o0) @o0 "") "=") (= (if (validate/string @o0) @o0 "") "=="))))
+    (let ((a (array/nth @n 1)) (b (array/nth @n 2)))
+     (let ((f (if (or (and (validate/string @b) (= @b (quote "@user.id"))) (and (validate/array @b) (= (array/len @b) 3) (= (if (validate/string (array/nth @b 0)) (array/nth @b 0) "") "object/get") (= (if (validate/string (array/nth @b 1)) (array/nth @b 1) "") (quote "@user")) (= (if (validate/string (array/nth @b 2)) (array/nth @b 2) "") "id"))) (if (validate/string @a) (if (and (validate/string @a) (str/startsWith @a (quote "@entity.")) (> (str/len @a) 8) (not (str/includes (str/slice @a 8) ".")) (not (str/includes (str/slice @a 8) "["))) (str/slice @a 8) "") (if (and (validate/array @a) (= (array/len @a) 3) (= (if (validate/string (array/nth @a 0)) (array/nth @a 0) "") "object/get") (= (if (validate/string (array/nth @a 1)) (array/nth @a 1) "") (quote "@entity")) (validate/string (array/nth @a 2))) (if (validate/string (array/nth @a 2)) (array/nth @a 2) "") "")) (if (or (and (validate/string @a) (= @a (quote "@user.id"))) (and (validate/array @a) (= (array/len @a) 3) (= (if (validate/string (array/nth @a 0)) (array/nth @a 0) "") "object/get") (= (if (validate/string (array/nth @a 1)) (array/nth @a 1) "") (quote "@user")) (= (if (validate/string (array/nth @a 2)) (array/nth @a 2) "") "id"))) (if (validate/string @b) (if (and (validate/string @b) (str/startsWith @b (quote "@entity.")) (> (str/len @b) 8) (not (str/includes (str/slice @b 8) ".")) (not (str/includes (str/slice @b 8) "["))) (str/slice @b 8) "") (if (and (validate/array @b) (= (array/len @b) 3) (= (if (validate/string (array/nth @b 0)) (array/nth @b 0) "") "object/get") (= (if (validate/string (array/nth @b 1)) (array/nth @b 1) "") (quote "@entity")) (validate/string (array/nth @b 2))) (if (validate/string (array/nth @b 2)) (array/nth @b 2) "") "")) ""))))
+      (if (= @f "") [] [@f])))
+    [])
+   (array/flatten (array/filter @k (fn r (validate/array @r)))))
+  [])) AccShape))) (if (validate/array @cs) @cs [])) []) (if (object/has @e "delete_policy") (let ((cs (tree/fold (object/get @e "delete_policy") (fn (n k)
+ (if (validate/array @n)
+  (array/concat
+   (if (and (= (array/len @n) 3) (let ((o0 (if (> (array/len @n) 0) (array/nth @n 0) ""))) (or (= (if (validate/string @o0) @o0 "") "=") (= (if (validate/string @o0) @o0 "") "=="))))
+    (let ((a (array/nth @n 1)) (b (array/nth @n 2)))
+     (let ((f (if (or (and (validate/string @b) (= @b (quote "@user.id"))) (and (validate/array @b) (= (array/len @b) 3) (= (if (validate/string (array/nth @b 0)) (array/nth @b 0) "") "object/get") (= (if (validate/string (array/nth @b 1)) (array/nth @b 1) "") (quote "@user")) (= (if (validate/string (array/nth @b 2)) (array/nth @b 2) "") "id"))) (if (validate/string @a) (if (and (validate/string @a) (str/startsWith @a (quote "@entity.")) (> (str/len @a) 8) (not (str/includes (str/slice @a 8) ".")) (not (str/includes (str/slice @a 8) "["))) (str/slice @a 8) "") (if (and (validate/array @a) (= (array/len @a) 3) (= (if (validate/string (array/nth @a 0)) (array/nth @a 0) "") "object/get") (= (if (validate/string (array/nth @a 1)) (array/nth @a 1) "") (quote "@entity")) (validate/string (array/nth @a 2))) (if (validate/string (array/nth @a 2)) (array/nth @a 2) "") "")) (if (or (and (validate/string @a) (= @a (quote "@user.id"))) (and (validate/array @a) (= (array/len @a) 3) (= (if (validate/string (array/nth @a 0)) (array/nth @a 0) "") "object/get") (= (if (validate/string (array/nth @a 1)) (array/nth @a 1) "") (quote "@user")) (= (if (validate/string (array/nth @a 2)) (array/nth @a 2) "") "id"))) (if (validate/string @b) (if (and (validate/string @b) (str/startsWith @b (quote "@entity.")) (> (str/len @b) 8) (not (str/includes (str/slice @b 8) ".")) (not (str/includes (str/slice @b 8) "["))) (str/slice @b 8) "") (if (and (validate/array @b) (= (array/len @b) 3) (= (if (validate/string (array/nth @b 0)) (array/nth @b 0) "") "object/get") (= (if (validate/string (array/nth @b 1)) (array/nth @b 1) "") (quote "@entity")) (validate/string (array/nth @b 2))) (if (validate/string (array/nth @b 2)) (array/nth @b 2) "") "")) ""))))
+      (if (= @f "") [] [@f])))
+    [])
+   (array/flatten (array/filter @k (fn r (validate/array @r)))))
+  [])) AccShape))) (if (validate/array @cs) @cs [])) [])) (if (object/has @e "read_policy") (let ((cs (tree/fold (object/get @e "read_policy") (fn (n k)
+ (if (validate/array @n)
+  (array/concat
+   (if (and (= (array/len @n) 3) (let ((o0 (if (> (array/len @n) 0) (array/nth @n 0) ""))) (or (= (if (validate/string @o0) @o0 "") "=") (= (if (validate/string @o0) @o0 "") "=="))))
+    (let ((a (array/nth @n 1)) (b (array/nth @n 2)))
+     (let ((f (if (or (and (validate/string @b) (= @b (quote "@user.id"))) (and (validate/array @b) (= (array/len @b) 3) (= (if (validate/string (array/nth @b 0)) (array/nth @b 0) "") "object/get") (= (if (validate/string (array/nth @b 1)) (array/nth @b 1) "") (quote "@user")) (= (if (validate/string (array/nth @b 2)) (array/nth @b 2) "") "id"))) (if (validate/string @a) (if (and (validate/string @a) (str/startsWith @a (quote "@entity.")) (> (str/len @a) 8) (not (str/includes (str/slice @a 8) ".")) (not (str/includes (str/slice @a 8) "["))) (str/slice @a 8) "") (if (and (validate/array @a) (= (array/len @a) 3) (= (if (validate/string (array/nth @a 0)) (array/nth @a 0) "") "object/get") (= (if (validate/string (array/nth @a 1)) (array/nth @a 1) "") (quote "@entity")) (validate/string (array/nth @a 2))) (if (validate/string (array/nth @a 2)) (array/nth @a 2) "") "")) (if (or (and (validate/string @a) (= @a (quote "@user.id"))) (and (validate/array @a) (= (array/len @a) 3) (= (if (validate/string (array/nth @a 0)) (array/nth @a 0) "") "object/get") (= (if (validate/string (array/nth @a 1)) (array/nth @a 1) "") (quote "@user")) (= (if (validate/string (array/nth @a 2)) (array/nth @a 2) "") "id"))) (if (validate/string @b) (if (and (validate/string @b) (str/startsWith @b (quote "@entity.")) (> (str/len @b) 8) (not (str/includes (str/slice @b 8) ".")) (not (str/includes (str/slice @b 8) "["))) (str/slice @b 8) "") (if (and (validate/array @b) (= (array/len @b) 3) (= (if (validate/string (array/nth @b 0)) (array/nth @b 0) "") "object/get") (= (if (validate/string (array/nth @b 1)) (array/nth @b 1) "") (quote "@entity")) (validate/string (array/nth @b 2))) (if (validate/string (array/nth @b 2)) (array/nth @b 2) "") "")) ""))))
+      (if (= @f "") [] [@f])))
+    [])
+   (array/flatten (array/filter @k (fn r (validate/array @r)))))
+  [])) AccShape))) (if (validate/array @cs) @cs [])) []))))))
+            (l4 (array/flatten (array/map @same (fn e (if (object/has @e "collection") (let ((c (object/get @e "collection" ""))) (array/filter (array/unique (array/flatten (array/map (array/filter @allDefs (fn f (and (object/has @f "collection") (= (object/get @f "collection" "") @c)))) (fn f (array/map (array/filter (object/get @f "fields" []) (fn fd (and (object/has @fd "name") (not (object/get @fd "intrinsic" false)) (object/has @fd "relation") (= (object/get (object/get @fd "relation") "entity" "") @idName)))) (fn fd (object/get @fd "name" ""))))))) (fn col (> (array/len (array/filter (object/get @e "fields" []) (fn fd (= (object/get @fd "name" "") @col)))) 0)))) []))))))
+       (let ((owners (array/concat @l1 (array/filter (array/unique (array/concat (array/concat @l2 @l3) @l4)) (fn col (not (array/includes @l1 @col)))))))
+        (if (or (= (array/len @owners) 0) (object/has @dd "read_policy") (and (object/has @dd "access_waivers") (object/has (object/get @dd "access_waivers") "read"))) []
+         [{ code: "ORB_ENTITY_OWNER_COLUMN_UNSCOPED", path: (str/concat (object/get @dd "name" "") ".@read"), message: (str/concat (object/get @dd "name" "") " declares owner column(s) " (str/join (array/map @owners (fn col (str/concat "`" @col "`"))) ", ") " pointing at the [identity] entity, but no @read directive — and an undeclared policy is ALLOW-ALL, not deny-all, so every viewer reads every row"), suggestion: (str/concat "declare @read on " (object/get @dd "name" "") " scoping rows to the viewer, e.g. @read [\"=\", (object/get @entity " (array/first @owners) "), @user.id] — or, when visibility genuinely depends on a DIFFERENT entity (a membership/enrolment join a per-row predicate cannot express), omit @read and state that reason in a comment on the entity, citing R-ENTITY-ACCESS-NO-COLLECTION-AGGREGATE-BINDING"), severity: "error" }])))))))))))
+     (array/flatten (array/map (array/range 0 (array/len @orbs)) (fn oi
+      (let ((orb (array/nth @orbs @oi)))
+       (let ((exps (array/filter (object/get @orb "expects" []) (fn e (= (let ((s1 (object/get @e "kind" ""))) (if (validate/string @s1) @s1 "")) "identity")))))
+        (let ((hasExp (> (array/len @exps) 0)))
+         (let ((exp (array/first @exps)))
+          (let ((hasShape (and @hasExp (object/has @exp "shape"))))
+           (let ((idF (if @hasDecl (object/get @declared "fields" []) (if @hasShape (object/get @exp "shape" []) [])))
+                 (idNm (if @hasDecl (object/get @declared "name" "") (if @hasShape (if (object/has @exp "name") (object/get @exp "name" "") (quote "@user")) (quote "@user"))))
+                 (idDecl (or @hasDecl @hasExp)))
+            (let ((idNames (array/unique (array/concat (array/concat [@idNm] @allIdNames) (if (and @hasExp (object/has @exp "name")) [(object/get @exp "name" "")] [])))))
+             (array/flatten (array/map (array/flatten (array/map (array/concat [(object/get @orb "entity" {})] (object/get @orb "auxiliaryEntities" [])) (fn xe (if (validate/object @xe) [@xe] [])))) (fn en
+              (let ((ofields (object/get @en "fields" [])) (enn (object/get @en "name" "")))
+               (array/flatten (array/map (array/filter [{ sig: "read", has: (object/has @en "read_policy"), ex: (object/get @en "read_policy" "") } { sig: "create", has: (object/has @en "create_policy"), ex: (object/get @en "create_policy" "") } { sig: "update", has: (object/has @en "update_policy"), ex: (object/get @en "update_policy" "") } { sig: "delete", has: (object/has @en "delete_policy"), ex: (object/get @en "delete_policy" "") }] (fn d (object/get @d "has"))) (fn d
+ (let ((sig (object/get @d "sig")) (bp (str/concat @enn ".@" (object/get @d "sig"))))
+  (let ((hs (tree/fold (object/get @d "ex") (fn (n k)
+ (if (validate/array @n)
+  (let ((len (array/len @n)) (op (let ((o0 (if (> (array/len @n) 0) (array/nth @n 0) ""))) (if (validate/string @o0) @o0 ""))))
+   (array/concat
+    (array/concat (array/concat (if (and (>= @len 3) (or (= @op "=") (= @op "==") (= @op "!=") (= @op "!==") (= @op "eq") (= @op "neq") (= @op "array/includes")))
+ (let ((args (array/slice @n 1)) (incl (= @op "array/includes")))
+  (let ((a0 (array/nth @args 0)) (a1 (array/nth @args 1)))
+   (let ((first0 (not (= (if (and (validate/string @a0) (str/startsWith @a0 (quote "@user.")) (> (str/len @a0) 6) (not (str/includes (str/slice @a0 6) ".")) (not (str/includes (str/slice @a0 6) "["))) (str/slice @a0 6) "") ""))))
+    (let ((sigilSide (if @incl (if @first0 [@a0] [@a1]) @args))
+          (litSide (if @incl (if @first0 [@a1] [@a0]) @args)))
+     (let ((sns (array/flatten (array/map @sigilSide (fn a (let ((nm (if (and (validate/string @a) (str/startsWith @a (quote "@user.")) (> (str/len @a) 6) (not (str/includes (str/slice @a 6) ".")) (not (str/includes (str/slice @a 6) "["))) (str/slice @a 6) ""))) (if (and (not (= @nm "")) (> (array/len (array/filter @idF (fn fd (= (object/get @fd "name" "") @nm)))) 0)) [@nm] [])))))))
+      (if (= (array/len @sns) 0) []
+       (let ((sn (array/first @sns)))
+        (let ((vocab (let ((vf (array/filter @idF (fn fd (= (object/get @fd "name" "") @sn)))))
+ (if (= (array/len @vf) 0) @nov
+  (let ((fd0 (array/first @vf)))
+   (if (> (array/len (object/get @fd0 "values" @nov)) 0) (object/get @fd0 "values" @nov)
+    (if (object/has @fd0 "items") (object/get (object/get @fd0 "items") "values" @nov) @nov)))))))
+         (if (= (array/len @vocab) 0) []
+          (let ((lits (if @incl
+                       (let ((lit0 (array/first @litSide)))
+                        (if (validate/array @lit0)
+                         (let ((mem (if (= (if (validate/string (array/nth @lit0 0)) (array/nth @lit0 0) "") "list") (array/slice @lit0 1) @lit0)))
+                          (if (array/every @mem (fn m (validate/string @m))) @mem []))
+                         [@lit0]))
+                       @args)))
+           (array/map (array/filter @lits (fn a (and (validate/string @a) (not (str/startsWith @a (quote "@"))) (not (array/includes @vocab @a))))) (fn a { rel: "", kind: "role", a: (if (validate/string @a) @a ""), b: @sn, vv: @vocab }))))))))))))
+ []) (if (and (= @op "object/get") (>= @len 3))
+ (let ((r1 (if (> (array/len @n) 1) (array/nth @n 1) "")) (r2 (if (> (array/len @n) 2) (array/nth @n 2) "")))
+  (if (and (validate/string @r1) (validate/string @r2))
+   (if (= @r1 (quote "@entity")) (let ((fm (array/filter @ofields (fn fd (= (object/get @fd "name" "") @r2)))))
+ (if (> (array/len @fm) 0)
+  (if (= (object/get (array/first @fm) "intrinsic" false) true) [{ rel: "", kind: "intrinsic", a: @r1, b: @r2, vv: @nov }] [])
+  [{ rel: "", kind: "unknown-field", a: @r1, b: @r2, vv: @nov }]))
+    (if (= @r1 (quote "@user")) [{ rel: "", kind: "user", a: "", b: "", vv: @nov }] []))
+   []))
+ [])) (if (and (or (= @op "=") (= @op "==")) (>= @len 3))
+ (let ((args (array/slice @n 1)))
+  (let ((cmp (array/some @args (fn a (or (and (validate/string @a) (= @a (quote "@user.id"))) (and (validate/array @a) (>= (array/len @a) 3) (= (if (validate/string (array/nth @a 0)) (array/nth @a 0) "") "object/get") (= (if (validate/string (array/nth @a 1)) (array/nth @a 1) "") (quote "@user")) (= (if (validate/string (array/nth @a 2)) (array/nth @a 2) "") "id")))))) (cands (array/flatten (array/map @args (fn a (if (validate/string @a) (let ((e0 (if (and (validate/string @a) (str/startsWith @a (quote "@entity.")) (> (str/len @a) 8) (not (str/includes (str/slice @a 8) ".")) (not (str/includes (str/slice @a 8) "["))) (str/slice @a 8) ""))) (if (= @e0 "") [] [@e0])) (if (and (validate/array @a) (>= (array/len @a) 3) (= (if (validate/string (array/nth @a 0)) (array/nth @a 0) "") "object/get") (= (if (validate/string (array/nth @a 1)) (array/nth @a 1) "") (quote "@entity")) (validate/string (array/nth @a 2))) [(if (validate/string (array/nth @a 2)) (array/nth @a 2) "")] [])))))))
+   (if (and @cmp (> (array/len @cands) 0))
+    (let ((fname (array/first @cands)))
+     (if (= @fname "id") []
+      (let ((fm (array/filter @ofields (fn fd (= (object/get @fd "name" "") @fname)))))
+       (if (= (array/len @fm) 0) []
+        (let ((fd (array/first @fm)))
+         (if (and (object/has @fd "relation") (array/includes @idNames (object/get (object/get @fd "relation") "entity" ""))) []
+          [{ rel: "", kind: "owner-typed", a: @fname, b: (if (object/has @fd "relation") (str/concat "a relation to `" (object/get (object/get @fd "relation") "entity" "") "`") (str/concat "`" (object/get @fd "type" "") "`")), vv: @nov }]))))))
+    [])))
+ []))
+    (array/flatten (array/map (array/range 0 (array/len @n)) (fn i (let ((r (array/nth @k @i))) (if (validate/array @r) (array/map @r (fn h { rel: (str/concat "[" @i "]" (let ((s2 (object/get @h "rel" ""))) (if (validate/string @s2) @s2 ""))), kind: (let ((s3 (object/get @h "kind" ""))) (if (validate/string @s3) @s3 "")), a: (let ((s4 (object/get @h "a" ""))) (if (validate/string @s4) @s4 "")), b: (let ((s5 (object/get @h "b" ""))) (if (validate/string @s5) @s5 "")), vv: (let ((v0 (object/get @h "vv" @nov))) (if (validate/array @v0) (array/map @v0 (fn x (if (validate/string @x) @x ""))) @nov)) })) [])))))))
+  (if (validate/string @n) (if (str/startsWith @n (quote "@"))
+ (let ((root (array/first (str/split (array/first (str/split (str/slice @n 1) ".")) "["))))
+  (if (= @root "entity")
+   (let ((ef (if (and (validate/string @n) (str/startsWith @n (quote "@entity.")) (> (str/len @n) 8) (not (str/includes (str/slice @n 8) ".")) (not (str/includes (str/slice @n 8) "["))) (str/slice @n 8) ""))) (if (= @ef "") [] (let ((fm (array/filter @ofields (fn fd (= (object/get @fd "name" "") @ef)))))
+ (if (> (array/len @fm) 0)
+  (if (= (object/get (array/first @fm) "intrinsic" false) true) [{ rel: "", kind: "intrinsic", a: @n, b: @ef, vv: @nov }] [])
+  [{ rel: "", kind: "unknown-field", a: @n, b: @ef, vv: @nov }]))))
+   (if (= @root "user") [{ rel: "", kind: "user", a: "", b: "", vv: @nov }] [{ rel: "", kind: "invalid-binding", a: @root, b: "", vv: @nov }])))
+ [])
+   (if (validate/object @n)
+    (array/flatten (array/map (object/keys @k) (fn key (let ((r (object/get @k @key))) (if (validate/array @r) (array/map @r (fn h { rel: (str/concat "." @key (let ((s6 (object/get @h "rel" ""))) (if (validate/string @s6) @s6 ""))), kind: (let ((s7 (object/get @h "kind" ""))) (if (validate/string @s7) @s7 "")), a: (let ((s8 (object/get @h "a" ""))) (if (validate/string @s8) @s8 "")), b: (let ((s9 (object/get @h "b" ""))) (if (validate/string @s9) @s9 "")), vv: (let ((v0 (object/get @h "vv" @nov))) (if (validate/array @v0) (array/map @v0 (fn x (if (validate/string @x) @x ""))) @nov)) })) [])))))
+    [])))) AccShape)))
+   (if (= @hs null)
+    [{ code: "LINT_NODE_UNCHECKED", path: @bp, message: (str/concat @payload.file ": schema node at " @bp " is not an AccShape; this rule could not check it"), suggestion: "", severity: "error" }]
+    (array/concat
+     (array/flatten (array/map @hs (fn h (let ((kind (let ((s10 (object/get @h "kind" ""))) (if (validate/string @s10) @s10 ""))) (a (let ((s11 (object/get @h "a" ""))) (if (validate/string @s11) @s11 ""))) (b (let ((s12 (object/get @h "b" ""))) (if (validate/string @s12) @s12 ""))) (path (str/concat @bp (let ((s13 (object/get @h "rel" ""))) (if (validate/string @s13) @s13 "")))))
+ (if (= @kind "intrinsic")
+  [{ code: "ORB_GUARD_ON_FRAME_FIELD_AUTHORIZES", path: @path, message: (str/concat "`" @path "` reads `" @a "`, an @intrinsic field of entity `" @enn "` — intrinsic fields are trait-owned view-state, never seeded or persisted by the runtime, so using one as an access-policy input is a bypassable gate."), suggestion: (str/concat "Base this access directive on a real persisted field of `" @enn "`, not the @intrinsic field `" @b "`."), severity: "error" }]
+  (if (= @kind "unknown-field")
+   [{ code: "ORB_S_ACCESS_POLICY_UNKNOWN_ENTITY_FIELD", path: @path, message: (str/concat "`" @a "` is not a field of entity `" @enn "`. It resolves to null, so this access directive silently denies everyone."), suggestion: (str/concat "Declare `" @b "` on entity " @enn ", or read one of: " (str/join (array/sort (array/map (array/filter @ofields (fn fd (object/has @fd "name"))) (fn fd (object/get @fd "name" "")))) ", ")), severity: "error" }]
+   (if (= @kind "invalid-binding")
+    [{ code: "ORB_S_ACCESS_POLICY_INVALID_BINDING", path: @path, message: (str/concat "`@" @a "` is not a legal binding inside an access directive — only `@entity` (the candidate row) and `@user` (the viewer) are. Access directives have no call site, so `@payload`/`@config`/`@state` are not meaningful here."), suggestion: "Read only @entity.<field> or @user.<field>.", severity: "error" }]
+    (if (= @kind "owner-typed")
+     (let ((idn (array/first @idNames)))
+      [{ code: "ORB_S_OWNER_FIELD_NOT_IDENTITY_TYPED", path: @path, message: (str/concat "`" @enn "." @a "` is compared to `@user.id` but is not a relation to the [identity] entity `" @idn "` — it is " @b ". Viewer ids are only ever stamped onto declared relations, so this predicate matches no row and the directive denies everyone."), suggestion: (str/concat "Type `" @a "` as a relation to " @idn " (`" @a " : " @idn "`), or compare against the field the viewer value actually lives in"), severity: "error" }])
+     (if (= @kind "role")
+      (let ((vv (let ((v0 (object/get @h "vv" @nov))) (if (validate/array @v0) (array/map @v0 (fn x (if (validate/string @x) @x ""))) @nov))))
+       [{ code: "ORB_S_ROLE_LITERAL_NOT_MEMBER", path: @path, message: (str/concat "\"" @a "\" is not a declared value of `@user." @b "` on the [identity] entity `" @idNm "`. This comparison can never be true — the branch is dead."), suggestion: (str/concat "Use one of: " (str/join @vv ", ") ", or add \"" @a "\" to `" @idNm "." @b "`."), severity: "error", validValues: @vv }])
+      [])))))))))
+     (if (and (array/some @hs (fn h (= (let ((s14 (object/get @h "kind" ""))) (if (validate/string @s14) @s14 "")) "user"))) (not @idDecl)) [{ code: "ORB_S_ACCESS_POLICY_REQUIRES_IDENTITY", path: @bp, message: (str/concat "`@" @sig "` on entity `" @enn "` reads `@user`, but this program declares no [identity] entity. An access directive needs a real roster to resolve against — declare `[identity]` on the entity that models your app's viewer."), suggestion: "Tag your user-directory entity `[persistent: <collection>, identity]`.", severity: "error" }] [])))))))) ))))))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "entity-access", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : AccProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+    }
+  }
+
+  trait OrbLintEntityAccessCli -> OrbLintEntityAccessRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint entity-access <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "entity-access") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint entity-access: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "entity-access") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint entity-access: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-entity-access" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint entity-access` with its arguments and working directory."
+        @synonyms "orb lint entity-access, orb lint entity-access, entity access"
+      OrbLintEntityAccess.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintEntityAccessCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintEntityAccessOrbitalStart -> OrbLintEntityAccess, OrbLintEntityAccessCli, OrbLintInput, Packs, Versions
+}

@@ -1,0 +1,21 @@
+app lint-program-eval-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint program-eval <file>`, the port of validate_program_eval. It lowers the file with program/read and checks each `program/eval` effect of every inline trait transition and tick, however nested in do, if, when and let: the `emit` option's keys, event names and declarations (ORB_EFF_EMIT_KEY_INVALID, ORB_EFF_EMIT_INVALID_NAME, ORB_EFF_EMIT_UNDECLARED_EVENT) and a missing `emit.failure` (ORB_EFF_PROGRAM_EVAL_FAILURE_MISSING) (status 500, exit 1). Clean answers `lint program-eval: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintProgramEvalSpec {
+  expects trait OrbLintProgramEval {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintProgramEvalCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintProgramEval, OrbLintProgramEvalCli
+}

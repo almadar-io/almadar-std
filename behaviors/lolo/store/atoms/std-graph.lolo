@@ -152,7 +152,6 @@ orbital GraphOrbital {
         (fetch GraphEdge { filter: (= (object/get @entity graphId) @entity.reqGraphId), emit: { success: GraphEdgesLoaded, failure: GraphFailed } })
       GraphFailed -> idle
         (emit GRAPH_FAILED { error: ?error, graphId: @entity.reqGraphId })
-        (notify error (str/concat "The graph change failed: " ?error))
     }
 
     state loadingEdges {
@@ -246,7 +245,6 @@ orbital GraphOrbital {
                 (emit GraphComputed))))))
       GraphFailed -> idle
         (emit GRAPH_FAILED { error: ?error, graphId: @entity.reqGraphId })
-        (notify error (str/concat "The graph change failed: " ?error))
     }
 
     state computed {
@@ -280,7 +278,6 @@ orbital GraphOrbital {
         (emit GRAPH_WRITTEN { op: "recompute", graphId: @entity.reqGraphId })
       GraphFailed -> idle
         (emit GRAPH_FAILED { error: ?error, graphId: @entity.reqGraphId })
-        (notify error (str/concat "The graph change failed: " ?error))
     }
 
     state writing {
@@ -289,7 +286,6 @@ orbital GraphOrbital {
         (emit GRAPH_WRITTEN { op: @entity.reqOp, graphId: @entity.reqGraphId })
       GraphFailed -> idle
         (emit GRAPH_FAILED { error: ?error, graphId: @entity.reqGraphId })
-        (notify error (str/concat "The graph change failed: " ?error))
     }
 
     emits {
@@ -458,5 +454,5 @@ orbital GraphOrbital {
     }
   }
 
-  page "/graph" as GraphPage -> GraphStore
+  page boot as GraphStart -> GraphStore
 }

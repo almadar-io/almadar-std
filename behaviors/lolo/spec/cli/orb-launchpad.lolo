@@ -1,0 +1,35 @@
+app orb-launchpad-spec [
+  version: "1.0.0",
+  inbound: ["cli-launchpad"],
+  description: "Design contract for `orb launchpad [--port N] [--host H]`, bare `orb`'s launchpad: it serves std-launchpad, the browser view of every installed behavior, the way `orb serve` serves any app. It finds the std-launchpad file with behavior/resolve { path: true } and gives std-orb-serve's ServeEngine the serve request `<file> [--port N] [--host H]`, then lets std-orb-serve-handoff's ServeHandoff compose the resolved launchpad with the server it wraps, prepare the browser client under .orbital/serve and answer the hand-off: status 200 with headers orb-run: server, orb-mock: on, orb-app: the resolved app beside its catalogs, and the composed program's JSON as the body. A port that is not an integer in 0..65535, an unknown flag or a positional answers the usage (status 400, exit 2); std-launchpad that does not resolve answers status 500 on stderr `Error: <reason>`. Defaults: port 3030, host 127.0.0.1."
+]
+
+orbital OrbLaunchpadSpec {
+  expects trait OrbLaunchpad {
+    state ready
+    state parsing
+    state locating
+    state working
+    emits {
+      LAUNCHPAD_ANSWERED { status : number!  body : string!  stderr : string  headers : Map string string }
+    }
+  }
+  expects trait ServeHandoff {
+    state idle
+    state composing
+    state preparing
+    emits {
+      SERVE_ANSWERED { status : number!  body : string!  stderr : string  headers : Map string string }
+    }
+  }
+  expects trait LaunchpadEngine {
+    state idle
+    state homing
+    state reading
+    state resolving
+    emits {
+      SERVE_ANSWERED { status : number!  body : string!  stderr : string  headers : Map string string }
+    }
+  }
+  expects page boot -> OrbLaunchpad
+}

@@ -1,0 +1,196 @@
+app std-orb-lint-expectation-event-unfired [
+  version: "1.0.0",
+  inbound: ["cli-lint-expectation-event-unfired"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-expectation-event-unfired — the `orb lint expectation-event-unfired <file>` command, the port of the strict-event arm of validate_expectation_links (composition/expectations.rs), code ORB_S_EXPECTATION_UNSATISFIED. A strict (spec obligation) `expects trait T { emits E }` whose present trait declares E in `emits` but nothing in the program fires it is reported, unless the trait binds an event-bearing render prop to an @-binding in an effect (a dynamic event name, the pattern registry's event props read from std-orb-lint-input). It composes std-orb-fired-events for which events each trait fires by a control or by an effect. A lenient expectation, an absent trait and an event the trait does not emit are not this rule. The program is the resolved program the lint input reads. Findings carry the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint expectation-event-unfired: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-expectation-event-unfired"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type LNode = string | number | boolean | [LNode?] | Map string LNode?
+type LNodes = [LNode?]
+type FiredNode = string | number | boolean | [FiredNode?] | Map string FiredNode?
+type FiredField = { default : FiredNode? }
+type FiredTransition = { event : string, guard : FiredNode?, effects : [FiredNode?] }
+type FiredTick = { guard : FiredNode?, effects : [FiredNode?] }
+type FiredMachine = { transitions : [FiredTransition] }
+type FiredTrait = { name : string, stateMachine : FiredMachine, ticks : [FiredTick], config : Map string FiredField? }
+type FiredOrbital = { traits : [FiredTrait] }
+type FiredProgram = { orbitals : [FiredOrbital] }
+type LStr = string
+type LObj = Map string LNode?
+type ExKnob = { type : string, values : [string], default : LNode?, items : LNode?, properties : LNode? }
+type ExWaivers = { read : string, create : string, update : string, delete : string }
+type ExField = { name : string, type : string, required : boolean, primaryKey : boolean, unique : boolean, values : [string], default : LNode?, relation : LNode?, items : LNode?, properties : LNode? }
+type ExEntity = { name : string, identity : boolean, shared : boolean, browser : boolean, persistence : string, collection : string, fields : [ExField], read_policy : LNode?, create_policy : LNode?, update_policy : LNode?, delete_policy : LNode?, access_waivers : ExWaivers? }
+type ExExpect = { kind : string, name : string, strict : boolean, traitName : string, state : string, from : string, to : string, event : string, protocol : string, path : string, traits : [string], shape : [ExField], payload : [ExField], persistence : string, shared : boolean, browser : boolean, read_policy : LNode?, create_policy : LNode?, update_policy : LNode?, delete_policy : LNode?, access_waivers : ExWaivers?, knob : ExKnob }
+type ExEmit = { event : string, payloadSchema : [ExField] }
+type ExState = { name : string }
+type ExTransition = { from : LNode, to : string, event : string, guard : LNode?, effects : [LNode?] }
+type ExMachine = { states : [ExState], transitions : [ExTransition] }
+type ExTrait = { name : string, emits : [ExEmit], stateMachine : ExMachine, ticks : [ExTransition], config : Map string ExKnob? }
+type ExPageTrait = { ref : string, name : string }
+type ExPage = { name : string, path : string, protocol : string, traits : [ExPageTrait] }
+type ExOrbital = { name : string, spec : boolean, expects : [ExExpect], entity : ExEntity, auxiliaryEntities : [ExEntity], traits : [ExTrait], pages : [ExPage] }
+type ExProgram = { orbitals : [ExOrbital] }
+
+orbital OrbLintExpectationEventUnfiredOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+  uses Fired from "std/behaviors/std-orb-fired-events"
+
+  entity OrbLintExpectationEventUnfiredRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+    program : ExProgram = {}
+    names : [string] = []
+  }
+
+  trait OrbLintExpectationEventUnfired -> OrbLintExpectationEventUnfiredRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.program @payload.program)
+      PROPS_HEARD -> ready
+        (set @entity.names @payload.names)
+      FIRED_HEARD -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((bc @payload.byControl) (be @payload.byEffect) (names @entity.names)) (let ((orbs (object/get @entity.program "orbitals" [])))
+ (let ((provs (array/filter (array/flatten (array/map (array/filter @orbs (fn o (not (object/get @o "spec" false)))) (fn o (array/map (array/filter (array/concat [(object/get @o "entity" {})] (object/get @o "auxiliaryEntities" [])) (fn e (!= (object/get @e "name" "") ""))) (fn e { n: (object/get @e "name" ""), id: (object/get @e "identity" false), on: (object/get @o "name" ""), e: @e }))))) (fn p (!= (object/get @p "n") ""))))
+       (alltr (array/flatten (array/map @orbs (fn o (array/map (array/filter (object/get @o "traits" []) (fn t (object/has @t "stateMachine"))) (fn t { t: @t, on: (object/get @o "name" "") }))))))
+       (allpg (array/flatten (array/map @orbs (fn o (object/get @o "pages" []))))))
+(array/flatten (array/map (array/range 0 (array/len @orbs)) (fn oi
+  (let ((o (array/nth @orbs @oi)))
+   (if (or (object/get @o "spec" false) (not (object/has @o "expects"))) []
+    (let ((on (object/get @o "name" "")) (xs (object/get @o "expects" [])))
+     (array/flatten (array/map (array/range 0 (array/len @xs)) (fn j
+      (let ((x (array/nth @xs @j)))
+       (let ((base (str/concat "orbitals[" @oi " (" @on ")].expects[" @j "]")) (kind (object/get @x "kind" "")) (strict (object/get @x "strict" false)))
+        (if (and (= @kind "event") @strict)
+  (let ((tr (array/find @alltr (fn p (= (object/get (object/get @p "t") "name" "") (object/get @x "traitName" ""))))))
+    (if (= @tr null) []
+      (if (and (array/some (object/get (object/get @tr "t") "emits" []) (fn m (= (object/get @m "event" "") (object/get @x "event" ""))))
+               (not (array/includes (object/get @bc (object/get @x "traitName" "") []) (object/get @x "event" "")))
+               (not (array/includes (object/get @be (object/get @x "traitName" "") []) (object/get @x "event" "")))
+               (not (array/some (let ((nn (json/parse (json/stringify (json/nodes [(array/map (object/get (object/get (object/get @tr "t") "stateMachine") "transitions" []) (fn t (object/get @t "effects" []))), (array/map (object/get (object/get @tr "t") "ticks" []) (fn t (object/get @t "effects" [])))])) LNodes))) (if (= @nn null) [] @nn)) (fn n (let ((o (json/parse (json/stringify @n) LObj))) (and (!= @o null) (array/some (object/keys @o) (fn k (and (array/includes @names @k) (str/startsWith (or (json/parse (json/stringify (object/get @o @k null)) LStr) "") (str/concat (quote "@") "")))))))))))
+        [{ code: "ORB_S_EXPECTATION_UNSATISFIED", path: @base, message: (str/concat "`" @on "` expects trait `" (object/get @x "traitName" "") "` to fire `" (object/get @x "event" "") "`, but nothing in this program provides it — `" (object/get @x "traitName" "") "` declares `" (object/get @x "event" "") "` in `emits` but nothing in it fires it."), suggestion: "Provide it in an orbital of this program (give the providing import that name, or declare it here).", severity: "error" }]
+        [])))
+  []))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "expectation-event-unfired", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : ExProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      PROPS_HEARD { names : [string]!  maps : [string]!  listens : Map string [string]! }
+        @description "std-orb-lint-input's LINT_EVENT_PROPS: the event-bearing prop names of the installed pattern registry."
+      FIRED_HEARD { scope : string!  byControl : Map string [string]!  byEffect : Map string [string]! }
+        @description "std-orb-fired-events' FIRED_EVENTS: the events each trait fires by a control or by an effect."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+      OrbLintInput.LINT_EVENT_PROPS -> PROPS_HEARD
+      OrbFiredEvents.FIRED_EVENTS -> FIRED_HEARD
+    }
+  }
+
+  trait OrbLintExpectationEventUnfiredCli -> OrbLintExpectationEventUnfiredRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint expectation-event-unfired <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "expectation-event-unfired") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint expectation-event-unfired: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "expectation-event-unfired") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint expectation-event-unfired: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-expectation-event-unfired" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint expectation-event-unfired` with its arguments and working directory."
+        @synonyms "orb lint expectation-event-unfired"
+      OrbLintExpectationEventUnfired.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait OrbFiredEvents = Fired.traits.OrbFiredEvents {
+    listens {
+      FIRED_PROPS_HEARD { names : [string]!  maps : [string]!  listens : Map string [string]! }
+        @description "std-orb-lint-input's LINT_EVENT_PROPS: the event-bearing prop names of the installed pattern registry."
+      FIRED_SEMANTICS_HEARD { semantics : Map string string!  functions : [string]!  busExcluded : [string]!  targetOptions : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: each operator's declared returnSemantics and the function-returning operators."
+      FIRED_INPUT_HEARD { file : string!  raw : string!  latin : boolean!  program : FiredProgram  scope : string! }
+        @description "std-orb-lint-input's LINT_INPUT: the lowered program."
+      OrbLintInput.LINT_EVENT_PROPS -> FIRED_PROPS_HEARD
+      OrbLintInput.LINT_OPERATOR_SEMANTICS -> FIRED_SEMANTICS_HEARD
+      OrbLintInput.LINT_INPUT -> FIRED_INPUT_HEARD
+    }
+  }
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintExpectationEventUnfiredCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintExpectationEventUnfiredOrbitalStart -> OrbLintExpectationEventUnfired, OrbLintExpectationEventUnfiredCli, OrbLintInput, OrbFiredEvents, Packs, Versions
+}

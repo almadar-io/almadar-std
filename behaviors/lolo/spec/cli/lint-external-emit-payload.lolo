@@ -1,0 +1,21 @@
+app lint-external-emit-payload-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint external-emit-payload <file>`, the port of ORB_T_EVT_EXTERNAL_MISSING_PAYLOAD. An external emit with no payload fields, wired to by a listener in another orbital whose triggered event declares a required payload field, is reported at traits.<Trait>.emits.<EVENT> (status 500, exit 1). A clean program answers `lint external-emit-payload: clean` (status 200, exit 0). Anything but exactly one file argument is the usage (status 400, exit 2). A file that cannot be read or lowered fails the run (status 500)."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintExternalEmitPayloadSpec {
+  expects trait OrbLintExternalEmitPayload {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintExternalEmitPayloadCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintExternalEmitPayload, OrbLintExternalEmitPayloadCli
+}

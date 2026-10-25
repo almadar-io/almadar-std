@@ -1,0 +1,1876 @@
+{
+  "atom": "cli/atoms/std-orb-lint-emit.lolo",
+  "trait": "OrbLintEmit",
+  "note": "One case per Rust test of effect/emit.rs (emit_with_object_first_arg_is_a_hard_error_naming_the_missing_event, emit_with_number_first_arg_is_a_hard_error, emit_with_valid_identifier_stays_clean) and the orbital-cli test validate_emit_missing_event_name.rs (the object-first emit is ORB_EFF_EMIT_INVALID_NAME with the message and suggestion it pins), plus the arity, identifier, list, boolean and null forms of validate_emit and the effect-sequencing walk of validate_effect_in (paths .do[i], .then, .else, .then[i], .body[i] and [k] for a branch written as a list of effects). Expected findings are the code, path, message and suggestion the Rust validator reports. The emit config blocks of the async operators (validate_emit_config) are checked by those operators' own lints.",
+  "cases": [
+    {
+      "id": "emit-with-object-first-arg-is-a-hard-error-naming-the-missing-event",
+      "steps": [
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "emit",
+                                {
+                                  "data": "?data"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "emit",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_EMIT_INVALID_NAME",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "emit's first argument must be the event name, but an object was passed — this looks like the payload with the event name missing",
+                      "suggestion": "Write `(emit EVENT_NAME { … })` — the event name comes first, then the payload object. The event must be declared in the trait's `emits` block.",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "emit-with-number-first-arg-is-a-hard-error",
+      "steps": [
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "emit",
+                                42
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "emit",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_EMIT_INVALID_NAME",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "emit's first argument must be the event name (a string identifier), got a number",
+                      "suggestion": "Write `(emit EVENT_NAME)` or `(emit EVENT_NAME { … })` with an event declared in the trait's `emits` block",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-emit-with-valid-identifier-stays-clean",
+      "steps": [
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "emit",
+                                "TOPIC_SAVED"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "emit",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-mixed-case-identifier-is-valid",
+      "steps": [
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "emit",
+                                "TopicSaved2"
+                              ],
+                              [
+                                "emit",
+                                "A_b_9"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "emit",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "emit-without-an-event-name",
+      "steps": [
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "emit"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "emit",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "CIRCUIT_ORPHAN_EVENT",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "emit requires event name",
+                      "suggestion": "Use: [\"emit\", \"EVENT_NAME\"]",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "emit-with-a-list-first-arg",
+      "steps": [
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "emit",
+                                [
+                                  "str/concat",
+                                  "A",
+                                  "B"
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "emit",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_EMIT_INVALID_NAME",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "emit's first argument must be the event name (a string identifier), got a list",
+                      "suggestion": "Write `(emit EVENT_NAME)` or `(emit EVENT_NAME { … })` with an event declared in the trait's `emits` block",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "emit-with-a-boolean-first-arg",
+      "steps": [
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "emit",
+                                true
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "emit",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_EMIT_INVALID_NAME",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "emit's first argument must be the event name (a string identifier), got a boolean",
+                      "suggestion": "Write `(emit EVENT_NAME)` or `(emit EVENT_NAME { … })` with an event declared in the trait's `emits` block",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "emit-with-a-null-first-arg",
+      "steps": [
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "emit",
+                                null
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "emit",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_EMIT_INVALID_NAME",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "emit's first argument must be the event name (a string identifier), got null",
+                      "suggestion": "Write `(emit EVENT_NAME)` or `(emit EVENT_NAME { … })` with an event declared in the trait's `emits` block",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-string-that-is-not-an-identifier",
+      "steps": [
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "emit",
+                                "BAD-NAME"
+                              ],
+                              [
+                                "emit",
+                                "1ST"
+                              ],
+                              [
+                                "emit",
+                                ""
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "emit",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_T_EVT_INVALID_NAME",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "Event name 'BAD-NAME' is not a valid identifier",
+                      "suggestion": "Declare the event via `type EventName = Event<Payload>` and reference it by identifier",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_T_EVT_INVALID_NAME",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[1]",
+                      "message": "Event name '1ST' is not a valid identifier",
+                      "suggestion": "Declare the event via `type EventName = Event<Payload>` and reference it by identifier",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_T_EVT_INVALID_NAME",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[2]",
+                      "message": "Event name '' is not a valid identifier",
+                      "suggestion": "Declare the event via `type EventName = Event<Payload>` and reference it by identifier",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-payload-does-not-change-the-verdict",
+      "steps": [
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "emit",
+                                "SAVED",
+                                {
+                                  "status": 200
+                                }
+                              ],
+                              [
+                                "emit",
+                                {
+                                  "data": "x"
+                                },
+                                {
+                                  "status": 200
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "emit",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_EMIT_INVALID_NAME",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[1]",
+                      "message": "emit's first argument must be the event name, but an object was passed — this looks like the payload with the event name missing",
+                      "suggestion": "Write `(emit EVENT_NAME { … })` — the event name comes first, then the payload object. The event must be declared in the trait's `emits` block.",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "emit-nested-in-if-then-and-else",
+      "steps": [
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "if",
+                                "@entity.id",
+                                [
+                                  "emit",
+                                  42
+                                ],
+                                [
+                                  "emit",
+                                  null
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "emit",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_EMIT_INVALID_NAME",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0].then",
+                      "message": "emit's first argument must be the event name (a string identifier), got a number",
+                      "suggestion": "Write `(emit EVENT_NAME)` or `(emit EVENT_NAME { … })` with an event declared in the trait's `emits` block",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_EFF_EMIT_INVALID_NAME",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0].else",
+                      "message": "emit's first argument must be the event name (a string identifier), got null",
+                      "suggestion": "Write `(emit EVENT_NAME)` or `(emit EVENT_NAME { … })` with an event declared in the trait's `emits` block",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "emit-nested-in-do-when-and-let-bodies",
+      "steps": [
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "do",
+                                [
+                                  "emit",
+                                  "OK"
+                                ],
+                                [
+                                  "emit",
+                                  {
+                                    "a": 1
+                                  }
+                                ]
+                              ],
+                              [
+                                "when",
+                                "@entity.id",
+                                [
+                                  "emit",
+                                  5
+                                ]
+                              ],
+                              [
+                                "let",
+                                [
+                                  [
+                                    "x",
+                                    1
+                                  ]
+                                ],
+                                [
+                                  "emit",
+                                  false
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "emit",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_EMIT_INVALID_NAME",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0].do[1]",
+                      "message": "emit's first argument must be the event name, but an object was passed — this looks like the payload with the event name missing",
+                      "suggestion": "Write `(emit EVENT_NAME { … })` — the event name comes first, then the payload object. The event must be declared in the trait's `emits` block.",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_EFF_EMIT_INVALID_NAME",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[1].then[0]",
+                      "message": "emit's first argument must be the event name (a string identifier), got a number",
+                      "suggestion": "Write `(emit EVENT_NAME)` or `(emit EVENT_NAME { … })` with an event declared in the trait's `emits` block",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_EFF_EMIT_INVALID_NAME",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[2].body[0]",
+                      "message": "emit's first argument must be the event name (a string identifier), got a boolean",
+                      "suggestion": "Write `(emit EVENT_NAME)` or `(emit EVENT_NAME { … })` with an event declared in the trait's `emits` block",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-branch-written-as-a-list-of-effects-adds-an-index",
+      "steps": [
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "if",
+                                "@entity.id",
+                                [
+                                  [
+                                    "emit",
+                                    "OK"
+                                  ],
+                                  [
+                                    "emit",
+                                    7
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "emit",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_EMIT_INVALID_NAME",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0].then[1]",
+                      "message": "emit's first argument must be the event name (a string identifier), got a number",
+                      "suggestion": "Write `(emit EVENT_NAME)` or `(emit EVENT_NAME { … })` with an event declared in the trait's `emits` block",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "emit-nested-three-deep",
+      "steps": [
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "if",
+                                "@entity.id",
+                                [
+                                  "do",
+                                  [
+                                    "when",
+                                    "@entity.id",
+                                    [
+                                      "emit",
+                                      {
+                                        "d": 1
+                                      }
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "emit",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_EMIT_INVALID_NAME",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0].then.do[0].then[0]",
+                      "message": "emit's first argument must be the event name, but an object was passed — this looks like the payload with the event name missing",
+                      "suggestion": "Write `(emit EVENT_NAME { … })` — the event name comes first, then the payload object. The event must be declared in the trait's `emits` block.",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-emit-inside-a-value-position-is-not-an-effect",
+      "steps": [
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.id",
+                                [
+                                  "emit",
+                                  42
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "emit",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-tick-effect-is-checked-at-its-tick-path",
+      "steps": [
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": []
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {
+                          "name": "t",
+                          "interval": 1000,
+                          "effects": [
+                            [
+                              "emit",
+                              42
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "emit",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_EMIT_INVALID_NAME",
+                      "path": "orbitals[0 (A)].traits[0 (T)].ticks[0].effects[0]",
+                      "message": "emit's first argument must be the event name (a string identifier), got a number",
+                      "suggestion": "Write `(emit EVENT_NAME)` or `(emit EVENT_NAME { … })` with an event declared in the trait's `emits` block",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "two-traits-and-two-orbitals-report-their-own-paths",
+      "steps": [
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "emit",
+                                1
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "U",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "emit",
+                                2
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                },
+                {
+                  "name": "B",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "V",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "emit",
+                                3
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "emit",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_EMIT_INVALID_NAME",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "emit's first argument must be the event name (a string identifier), got a number",
+                      "suggestion": "Write `(emit EVENT_NAME)` or `(emit EVENT_NAME { … })` with an event declared in the trait's `emits` block",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_EFF_EMIT_INVALID_NAME",
+                      "path": "orbitals[0 (A)].traits[1 (U)].stateMachine.transitions[0].effects[0]",
+                      "message": "emit's first argument must be the event name (a string identifier), got a number",
+                      "suggestion": "Write `(emit EVENT_NAME)` or `(emit EVENT_NAME { … })` with an event declared in the trait's `emits` block",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_EFF_EMIT_INVALID_NAME",
+                      "path": "orbitals[1 (B)].traits[0 (V)].stateMachine.transitions[0].effects[0]",
+                      "message": "emit's first argument must be the event name (a string identifier), got a number",
+                      "suggestion": "Write `(emit EVENT_NAME)` or `(emit EVENT_NAME { … })` with an event declared in the trait's `emits` block",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an args body that does not parse is the usage error",
+      "steps": [
+        {
+          "trait": "OrbLintEmitCli",
+          "from": "ready",
+          "event": "LINT_CALLED",
+          "payload": {
+            "rawBody": "not json"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb lint emit <file>"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,3326 @@
+{
+  "atom": "cli/atoms/std-orb-lint-page-unreachable.lolo",
+  "trait": "OrbLintPageUnreachable",
+  "note": "Expected findings are the code, path, message and suggestion `orb validate` (the Rust validator) reports for ORB_PAGE_UNREACHABLE on the same program. Each case copies a page.rs reachability test named in its id (validate_page_reachability, collect_href_strings, collect_reachability_signals); the cases without a test name pin a branch of those functions the tests leave open (tick effects, the static navigate prefix, the @pages sigil in app config and in an effect, schema-wide reachability, per-orbital indexes). The lazyPages half of validate_page_reachability is not ported: a lazy page's links are not serialized into the program, so the page.rs lazy-page tests have no golden.",
+  "cases": [
+    {
+      "id": "a page no link, navItem or navigate reaches is unreachable (fires_for_a_page_reachable_by_no_link_navitem_or_navigate_target)",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "AppOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "AppLayout",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "config": {
+                        "navItems": {
+                          "type": "array",
+                          "default": [
+                            {
+                              "href": "/dashboard",
+                              "label": "Nav"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "DashboardPage",
+                      "path": "/dashboard",
+                      "traits": [
+                        {
+                          "ref": "AppLayout"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "StaffPage",
+                      "path": "/staff",
+                      "traits": [
+                        {
+                          "ref": "AppLayout"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-unreachable",
+                  "findings": [
+                    {
+                      "code": "ORB_PAGE_UNREACHABLE",
+                      "path": "orbitals[0].pages[1]",
+                      "message": "page '/staff' is declared but appears in no link, navItems entry or navigate effect",
+                      "suggestion": "add an href to a nav/footer/link component, or a navigate effect, targeting '/staff', or remove the page if nothing should reach it",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        }
+      ]
+    },
+    {
+      "id": "a navItems entry reaches the page (silent_once_the_page_has_an_entry_in_a_navitems_array)",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "AppOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "AppLayout",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "config": {
+                        "navItems": {
+                          "type": "array",
+                          "default": [
+                            {
+                              "href": "/dashboard",
+                              "label": "Nav"
+                            },
+                            {
+                              "href": "/staff",
+                              "label": "Nav"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "DashboardPage",
+                      "path": "/dashboard",
+                      "traits": [
+                        {
+                          "ref": "AppLayout"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "StaffPage",
+                      "path": "/staff",
+                      "traits": [
+                        {
+                          "ref": "AppLayout"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-unreachable",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        }
+      ]
+    },
+    {
+      "id": "a parameterized detail page is never flagged (does_not_flag_a_parameterized_detail_page)",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "AppOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "AppLayout",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "config": {
+                        "navItems": {
+                          "type": "array",
+                          "default": [
+                            {
+                              "href": "/staff",
+                              "label": "Nav"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "StaffPage",
+                      "path": "/staff",
+                      "traits": [
+                        {
+                          "ref": "AppLayout"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "StaffDetailPage",
+                      "path": "/staff/:id",
+                      "traits": [
+                        {
+                          "ref": "AppLayout"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-unreachable",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        }
+      ]
+    },
+    {
+      "id": "the app root page is the boot page (does_not_flag_the_app_root_page)",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "AppOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "AppLayout",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "config": {
+                        "navItems": {
+                          "type": "array",
+                          "default": []
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "HomePage",
+                      "path": "/",
+                      "traits": [
+                        {
+                          "ref": "AppLayout"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-unreachable",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        }
+      ]
+    },
+    {
+      "id": "no navItems anywhere still flags the non-boot page (fires_even_when_no_navitems_array_exists_anywhere_no_opt_in_gate)",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "AppOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Directory",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "HomePage",
+                      "path": "/",
+                      "traits": [
+                        {
+                          "ref": "Directory"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "StaffPage",
+                      "path": "/staff",
+                      "traits": [
+                        {
+                          "ref": "Directory"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-unreachable",
+                  "findings": [
+                    {
+                      "code": "ORB_PAGE_UNREACHABLE",
+                      "path": "orbitals[0].pages[1]",
+                      "message": "page '/staff' is declared but appears in no link, navItems entry or navigate effect",
+                      "suggestion": "add an href to a nav/footer/link component, or a navigate effect, targeting '/staff', or remove the page if nothing should reach it",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        }
+      ]
+    },
+    {
+      "id": "a single page is the boot page whatever its path (silent_for_a_schema_with_only_one_page_it_is_the_boot_page)",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "AppOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Directory",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "StaffPage",
+                      "path": "/staff",
+                      "traits": [
+                        {
+                          "ref": "Directory"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-unreachable",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        }
+      ]
+    },
+    {
+      "id": "a scalar href in a rendered payload reaches the page (silent_for_a_scalar_href_not_nested_in_an_array)",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "AppOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "FeatureCard",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "case-study-card",
+                                  "href": "/about",
+                                  "title": "About"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "HomePage",
+                      "path": "/home",
+                      "traits": [
+                        {
+                          "ref": "FeatureCard"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "AboutPage",
+                      "path": "/about",
+                      "traits": [
+                        {
+                          "ref": "FeatureCard"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-unreachable",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        }
+      ]
+    },
+    {
+      "id": "an action navigatesTo reaches the page (silent_for_a_page_reached_only_by_an_action_navigates_to)",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "AppOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "AppLayout",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "config": {
+                        "userMenuItems": {
+                          "type": "array",
+                          "default": [
+                            {
+                              "label": "Account",
+                              "navigatesTo": "/account"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "HomePage",
+                      "path": "/",
+                      "traits": [
+                        {
+                          "ref": "AppLayout"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "AccountPage",
+                      "path": "/account",
+                      "traits": [
+                        {
+                          "ref": "AppLayout"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-unreachable",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        }
+      ]
+    },
+    {
+      "id": "an action without navigatesTo reaches nothing (control_an_action_without_navigates_to_reaches_nothing)",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "AppOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "AppLayout",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "config": {
+                        "userMenuItems": {
+                          "type": "array",
+                          "default": [
+                            {
+                              "label": "Account",
+                              "event": "OPEN_ACCOUNT"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "HomePage",
+                      "path": "/",
+                      "traits": [
+                        {
+                          "ref": "AppLayout"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "AccountPage",
+                      "path": "/account",
+                      "traits": [
+                        {
+                          "ref": "AppLayout"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-unreachable",
+                  "findings": [
+                    {
+                      "code": "ORB_PAGE_UNREACHABLE",
+                      "path": "orbitals[0].pages[1]",
+                      "message": "page '/account' is declared but appears in no link, navItems entry or navigate effect",
+                      "suggestion": "add an href to a nav/footer/link component, or a navigate effect, targeting '/account', or remove the page if nothing should reach it",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        }
+      ]
+    },
+    {
+      "id": "a navigate effect reaches the page (silent_for_a_page_reached_only_by_a_navigate_effect)",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "AppOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "ReportsButton",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "navigate",
+                                "/reports"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "HomePage",
+                      "path": "/home",
+                      "traits": [
+                        {
+                          "ref": "ReportsButton"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "ReportsPage",
+                      "path": "/reports",
+                      "traits": [
+                        {
+                          "ref": "ReportsButton"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-unreachable",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        }
+      ]
+    },
+    {
+      "id": "a navigate in a tick reaches the page (tick effects are scanned like transition effects)",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "AppOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Ticker",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "ticks": [
+                        {
+                          "name": "t",
+                          "interval": 100,
+                          "effects": [
+                            [
+                              "navigate",
+                              "/reports"
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "HomePage",
+                      "path": "/home",
+                      "traits": [
+                        {
+                          "ref": "Ticker"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "ReportsPage",
+                      "path": "/reports",
+                      "traits": [
+                        {
+                          "ref": "Ticker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-unreachable",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        }
+      ]
+    },
+    {
+      "id": "a navigate with a str/concat target reaches the pages under its literal prefix (collect_navigate_targets static prefix)",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "AppOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Opener",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "navigate",
+                                [
+                                  "str/concat",
+                                  "/inspection/",
+                                  "@entity.id"
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "HomePage",
+                      "path": "/home",
+                      "traits": [
+                        {
+                          "ref": "Opener"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "InspectionPage",
+                      "path": "/inspection/list",
+                      "traits": [
+                        {
+                          "ref": "Opener"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "OtherPage",
+                      "path": "/other",
+                      "traits": [
+                        {
+                          "ref": "Opener"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-unreachable",
+                  "findings": [
+                    {
+                      "code": "ORB_PAGE_UNREACHABLE",
+                      "path": "orbitals[0].pages[2]",
+                      "message": "page '/other' is declared but appears in no link, navItems entry or navigate effect",
+                      "suggestion": "add an href to a nav/footer/link component, or a navigate effect, targeting '/other', or remove the page if nothing should reach it",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        }
+      ]
+    },
+    {
+      "id": "a labelled page is reached through the @pages sigil (a_labelled_page_is_reached_through_the_pages_sigil)",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "AppOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "AppLayout",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "config": {
+                        "navItems": {
+                          "type": "array",
+                          "default": "@pages"
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "DashboardPage",
+                      "path": "/dashboard",
+                      "traits": [
+                        {
+                          "ref": "AppLayout"
+                        }
+                      ],
+                      "label": "Dashboard"
+                    },
+                    {
+                      "name": "StaffPage",
+                      "path": "/staff",
+                      "traits": [
+                        {
+                          "ref": "AppLayout"
+                        }
+                      ],
+                      "label": "Staff"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-unreachable",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        }
+      ]
+    },
+    {
+      "id": "an unlabelled page is not reached through the @pages sigil (control_a_page_without_a_label_is_not_reached_through_the_pages_sigil)",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "AppOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "AppLayout",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "config": {
+                        "navItems": {
+                          "type": "array",
+                          "default": "@pages"
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "DashboardPage",
+                      "path": "/dashboard",
+                      "traits": [
+                        {
+                          "ref": "AppLayout"
+                        }
+                      ],
+                      "label": "Dashboard"
+                    },
+                    {
+                      "name": "StaffPage",
+                      "path": "/staff",
+                      "traits": [
+                        {
+                          "ref": "AppLayout"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-unreachable",
+                  "findings": [
+                    {
+                      "code": "ORB_PAGE_UNREACHABLE",
+                      "path": "orbitals[0].pages[1]",
+                      "message": "page '/staff' is declared but appears in no link, navItems entry or navigate effect",
+                      "suggestion": "add an href to a nav/footer/link component, or a navigate effect, targeting '/staff', or remove the page if nothing should reach it",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        }
+      ]
+    },
+    {
+      "id": "a label without any @pages sigil reaches nothing (control_a_label_without_any_pages_sigil_reaches_nothing)",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "AppOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "AppLayout",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "config": {
+                        "navItems": {
+                          "type": "array",
+                          "default": [
+                            {
+                              "href": "/dashboard",
+                              "label": "Nav"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "DashboardPage",
+                      "path": "/dashboard",
+                      "traits": [
+                        {
+                          "ref": "AppLayout"
+                        }
+                      ],
+                      "label": "Dashboard"
+                    },
+                    {
+                      "name": "StaffPage",
+                      "path": "/staff",
+                      "traits": [
+                        {
+                          "ref": "AppLayout"
+                        }
+                      ],
+                      "label": "Staff"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-unreachable",
+                  "findings": [
+                    {
+                      "code": "ORB_PAGE_UNREACHABLE",
+                      "path": "orbitals[0].pages[1]",
+                      "message": "page '/staff' is declared but appears in no link, navItems entry or navigate effect",
+                      "suggestion": "add an href to a nav/footer/link component, or a navigate effect, targeting '/staff', or remove the page if nothing should reach it",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        }
+      ]
+    },
+    {
+      "id": "the @pages sigil in an app config default counts",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "AppOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Directory",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "DashboardPage",
+                      "path": "/dashboard",
+                      "traits": [
+                        {
+                          "ref": "Directory"
+                        }
+                      ],
+                      "label": "Dashboard"
+                    },
+                    {
+                      "name": "StaffPage",
+                      "path": "/staff",
+                      "traits": [
+                        {
+                          "ref": "Directory"
+                        }
+                      ],
+                      "label": "Staff"
+                    }
+                  ]
+                }
+              ],
+              "config": {
+                "navItems": {
+                  "type": "array",
+                  "default": "@pages"
+                }
+              }
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-unreachable",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        }
+      ]
+    },
+    {
+      "id": "the @pages sigil in a transition effect counts",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "AppOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Shell",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "navigation",
+                                  "items": "@pages"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "DashboardPage",
+                      "path": "/dashboard",
+                      "traits": [
+                        {
+                          "ref": "Shell"
+                        }
+                      ],
+                      "label": "Dashboard"
+                    },
+                    {
+                      "name": "StaffPage",
+                      "path": "/staff",
+                      "traits": [
+                        {
+                          "ref": "Shell"
+                        }
+                      ],
+                      "label": "Staff"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-unreachable",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        }
+      ]
+    },
+    {
+      "id": "an undeclared sign-in route is unreachable (the_declared_sign_in_route_is_reachable_through_the_access_host control)",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "AppOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "AppLayout",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "config": {
+                        "navItems": {
+                          "type": "array",
+                          "default": [
+                            {
+                              "href": "/",
+                              "label": "Nav"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "HomePage",
+                      "path": "/",
+                      "traits": [
+                        {
+                          "ref": "AppLayout"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "SignInPage",
+                      "path": "/welcome",
+                      "traits": [
+                        {
+                          "ref": "AppLayout"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-unreachable",
+                  "findings": [
+                    {
+                      "code": "ORB_PAGE_UNREACHABLE",
+                      "path": "orbitals[0].pages[1]",
+                      "message": "page '/welcome' is declared but appears in no link, navItems entry or navigate effect",
+                      "suggestion": "add an href to a nav/footer/link component, or a navigate effect, targeting '/welcome', or remove the page if nothing should reach it",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        }
+      ]
+    },
+    {
+      "id": "the declared sign-in route is reachable through the access host (the_declared_sign_in_route_is_reachable_through_the_access_host)",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "AppOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "AppLayout",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "config": {
+                        "navItems": {
+                          "type": "array",
+                          "default": [
+                            {
+                              "href": "/",
+                              "label": "Nav"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "HomePage",
+                      "path": "/",
+                      "traits": [
+                        {
+                          "ref": "AppLayout"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "SignInPage",
+                      "path": "/welcome",
+                      "traits": [
+                        {
+                          "ref": "AppLayout"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "site": {
+                "signIn": "/welcome"
+              }
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-unreachable",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        }
+      ]
+    },
+    {
+      "id": "only routes can be unreachable and the boot page is the first route (only_routes_can_be_unreachable_and_the_boot_page_is_the_first_route, endpoint first)",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "AppOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "S",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      }
+                    },
+                    {
+                      "name": "V",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "Ehttp",
+                      "path": "",
+                      "protocol": "http",
+                      "address": {
+                        "host": "0.0.0.0",
+                        "port": 8080,
+                        "path": "/"
+                      },
+                      "traits": [
+                        {
+                          "ref": "S"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "P1",
+                      "path": "/t",
+                      "traits": [
+                        {
+                          "ref": "V"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-unreachable",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        }
+      ]
+    },
+    {
+      "id": "a second route nothing reaches is unreachable (only_routes_can_be_unreachable_and_the_boot_page_is_the_first_route, two routes)",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "AppOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "V",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "Pt",
+                      "path": "/t",
+                      "traits": [
+                        {
+                          "ref": "V"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Pu",
+                      "path": "/u",
+                      "traits": [
+                        {
+                          "ref": "V"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-unreachable",
+                  "findings": [
+                    {
+                      "code": "ORB_PAGE_UNREACHABLE",
+                      "path": "orbitals[0].pages[1]",
+                      "message": "page '/u' is declared but appears in no link, navItems entry or navigate effect",
+                      "suggestion": "add an href to a nav/footer/link component, or a navigate effect, targeting '/u', or remove the page if nothing should reach it",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        }
+      ]
+    },
+    {
+      "id": "the boot page is the first route of the first orbital that has one, not the first orbital",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "Server",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "V",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "Ehttp",
+                      "path": "",
+                      "protocol": "http",
+                      "address": {
+                        "host": "0.0.0.0",
+                        "port": 8080,
+                        "path": "/"
+                      },
+                      "traits": [
+                        {
+                          "ref": "S"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "Web",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "V",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "Pt",
+                      "path": "/t",
+                      "traits": [
+                        {
+                          "ref": "V"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Pu",
+                      "path": "/u",
+                      "traits": [
+                        {
+                          "ref": "V"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-unreachable",
+                  "findings": [
+                    {
+                      "code": "ORB_PAGE_UNREACHABLE",
+                      "path": "orbitals[1].pages[1]",
+                      "message": "page '/u' is declared but appears in no link, navItems entry or navigate effect",
+                      "suggestion": "add an href to a nav/footer/link component, or a navigate effect, targeting '/u', or remove the page if nothing should reach it",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        }
+      ]
+    },
+    {
+      "id": "an href built from literal strings counts as that path (href_built_from_literal_strings_counts_as_that_path)",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "AppOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "AppLayout",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "config": {
+                        "navItems": {
+                          "type": "array",
+                          "default": [
+                            {
+                              "href": [
+                                "str/concat",
+                                "/ar",
+                                "/blog/x"
+                              ],
+                              "label": "x"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "HomePage",
+                      "path": "/",
+                      "traits": [
+                        {
+                          "ref": "AppLayout"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "BlogPage",
+                      "path": "/ar/blog/x",
+                      "traits": [
+                        {
+                          "ref": "AppLayout"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-unreachable",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        }
+      ]
+    },
+    {
+      "id": "a plain string href still counts (control_a_plain_string_href_still_counts)",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "AppOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "AppLayout",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "config": {
+                        "navItems": {
+                          "type": "array",
+                          "default": [
+                            {
+                              "href": "/blog",
+                              "label": "Nav"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "HomePage",
+                      "path": "/",
+                      "traits": [
+                        {
+                          "ref": "AppLayout"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "BlogPage",
+                      "path": "/blog",
+                      "traits": [
+                        {
+                          "ref": "AppLayout"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-unreachable",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        }
+      ]
+    },
+    {
+      "id": "a concat with a binding is not a literal path (edge_a_concat_with_a_binding_is_not_a_literal_path)",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "AppOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "AppLayout",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "config": {
+                        "navItems": {
+                          "type": "array",
+                          "default": [
+                            {
+                              "href": [
+                                "str/concat",
+                                "@config.pathPrefix",
+                                "/blog"
+                              ],
+                              "label": "x"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "HomePage",
+                      "path": "/",
+                      "traits": [
+                        {
+                          "ref": "AppLayout"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "BlogPage",
+                      "path": "/blog",
+                      "traits": [
+                        {
+                          "ref": "AppLayout"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-unreachable",
+                  "findings": [
+                    {
+                      "code": "ORB_PAGE_UNREACHABLE",
+                      "path": "orbitals[0].pages[1]",
+                      "message": "page '/blog' is declared but appears in no link, navItems entry or navigate effect",
+                      "suggestion": "add an href to a nav/footer/link component, or a navigate effect, targeting '/blog', or remove the page if nothing should reach it",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        }
+      ]
+    },
+    {
+      "id": "a concat with a nested expression is not a literal path (edge_a_concat_with_a_nested_expression_is_not_a_literal_path)",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "AppOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "AppLayout",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "config": {
+                        "navItems": {
+                          "type": "array",
+                          "default": [
+                            {
+                              "href": [
+                                "str/concat",
+                                "/ar",
+                                [
+                                  "str/upper",
+                                  "/x"
+                                ]
+                              ],
+                              "label": "x"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "HomePage",
+                      "path": "/",
+                      "traits": [
+                        {
+                          "ref": "AppLayout"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "XPage",
+                      "path": "/ar/x",
+                      "traits": [
+                        {
+                          "ref": "AppLayout"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-unreachable",
+                  "findings": [
+                    {
+                      "code": "ORB_PAGE_UNREACHABLE",
+                      "path": "orbitals[0].pages[1]",
+                      "message": "page '/ar/x' is declared but appears in no link, navItems entry or navigate effect",
+                      "suggestion": "add an href to a nav/footer/link component, or a navigate effect, targeting '/ar/x', or remove the page if nothing should reach it",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        }
+      ]
+    },
+    {
+      "id": "an empty concat counts as nothing (edge_an_empty_concat_counts_as_nothing)",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "AppOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "AppLayout",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "config": {
+                        "navItems": {
+                          "type": "array",
+                          "default": [
+                            {
+                              "href": [
+                                "str/concat",
+                                ""
+                              ],
+                              "label": "x"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "HomePage",
+                      "path": "/",
+                      "traits": [
+                        {
+                          "ref": "AppLayout"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "RootPage",
+                      "path": "/more",
+                      "traits": [
+                        {
+                          "ref": "AppLayout"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-unreachable",
+                  "findings": [
+                    {
+                      "code": "ORB_PAGE_UNREACHABLE",
+                      "path": "orbitals[0].pages[1]",
+                      "message": "page '/more' is declared but appears in no link, navItems entry or navigate effect",
+                      "suggestion": "add an href to a nav/footer/link component, or a navigate effect, targeting '/more', or remove the page if nothing should reach it",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        }
+      ]
+    },
+    {
+      "id": "a page in the second orbital is reached by a link in the first (reachability is schema-wide)",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "AppLayout",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "config": {
+                        "navItems": {
+                          "type": "array",
+                          "default": [
+                            {
+                              "href": "/",
+                              "label": "Nav"
+                            },
+                            {
+                              "href": "/b",
+                              "label": "Nav"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "HomePage",
+                      "path": "/",
+                      "traits": [
+                        {
+                          "ref": "AppLayout"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "B",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Directory",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "BPage",
+                      "path": "/b",
+                      "traits": [
+                        {
+                          "ref": "Directory"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-unreachable",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        }
+      ]
+    },
+    {
+      "id": "pages across orbitals report their own orbital and page index",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "AppLayout",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "config": {
+                        "navItems": {
+                          "type": "array",
+                          "default": [
+                            {
+                              "href": "/",
+                              "label": "Nav"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "HomePage",
+                      "path": "/",
+                      "traits": [
+                        {
+                          "ref": "AppLayout"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "AAbout",
+                      "path": "/a-about",
+                      "traits": [
+                        {
+                          "ref": "AppLayout"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "B",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Directory",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "BPage",
+                      "path": "/b",
+                      "traits": [
+                        {
+                          "ref": "Directory"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-unreachable",
+                  "findings": [
+                    {
+                      "code": "ORB_PAGE_UNREACHABLE",
+                      "path": "orbitals[0].pages[1]",
+                      "message": "page '/a-about' is declared but appears in no link, navItems entry or navigate effect",
+                      "suggestion": "add an href to a nav/footer/link component, or a navigate effect, targeting '/a-about', or remove the page if nothing should reach it",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_PAGE_UNREACHABLE",
+                      "path": "orbitals[1].pages[0]",
+                      "message": "page '/b' is declared but appears in no link, navItems entry or navigate effect",
+                      "suggestion": "add an href to a nav/footer/link component, or a navigate effect, targeting '/b', or remove the page if nothing should reach it",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        }
+      ]
+    }
+  ]
+}

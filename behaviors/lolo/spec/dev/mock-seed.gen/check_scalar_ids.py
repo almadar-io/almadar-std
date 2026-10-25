@@ -8,7 +8,7 @@ import tempfile
 
 spec_dir = Path(__file__).resolve().parent.parent
 orb = os.environ.get('ORB_BIN', str(Path.home() / 'bin' / 'orb'))
-source = spec_dir / 'mock-seed-access.fixture.lolo'
+source = spec_dir / 'mock-seed-access-fixture.lolo'
 program = {'orbitals': []}
 empty_journal = {'viewerId': '', 'stamped': [], 'deferred': []}
 

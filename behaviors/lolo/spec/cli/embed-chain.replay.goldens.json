@@ -1,0 +1,1413 @@
+{
+ "atom": "cli/atoms/std-orb-embed-chain.lolo",
+ "trait": "OrbEmbedChain",
+ "note": "Cases for the EmbedGraph host chain the compiler builds (phases/program/embed_graph.rs): direct and transitive hosts, the reference sites (config default, guard, effect, tick), first referrer wins, self and cyclic references, `@trait.Name.field` and `@trait.Name[i]` forms, and per-orbital scoping.",
+ "cases": [
+  {
+   "id": "a-config-default-reference-makes-the-referrer-the-host",
+   "steps": [
+    {
+     "trait": "OrbEmbedChain",
+     "event": "EMBED_INPUT_HEARD",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "OE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Host",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             }
+            ]
+           },
+           "config": {
+            "body": {
+             "type": "string",
+             "default": "@trait.Child"
+            }
+           }
+          },
+          {
+           "name": "Child",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "EMBED_CHAINS",
+        "payload": {
+         "scope": "",
+         "chains": [
+          {
+           "Host": [],
+           "Child": [
+            "Host"
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-transitive-embed-lists-hosts-innermost-first",
+   "steps": [
+    {
+     "trait": "OrbEmbedChain",
+     "event": "EMBED_INPUT_HEARD",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "OE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Host",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             }
+            ]
+           },
+           "config": {
+            "body": {
+             "type": "string",
+             "default": "@trait.Mid"
+            }
+           }
+          },
+          {
+           "name": "Mid",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             }
+            ]
+           },
+           "config": {
+            "body": {
+             "type": "string",
+             "default": "@trait.Leaf"
+            }
+           }
+          },
+          {
+           "name": "Leaf",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "EMBED_CHAINS",
+        "payload": {
+         "scope": "",
+         "chains": [
+          {
+           "Host": [],
+           "Mid": [
+            "Host"
+           ],
+           "Leaf": [
+            "Mid",
+            "Host"
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "standalone-traits-have-no-hosts",
+   "steps": [
+    {
+     "trait": "OrbEmbedChain",
+     "event": "EMBED_INPUT_HEARD",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "OE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "A",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             }
+            ]
+           }
+          },
+          {
+           "name": "B",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "EMBED_CHAINS",
+        "payload": {
+         "scope": "",
+         "chains": [
+          {
+           "A": [],
+           "B": []
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-first-referrer-in-program-order-is-the-host",
+   "steps": [
+    {
+     "trait": "OrbEmbedChain",
+     "event": "EMBED_INPUT_HEARD",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "OE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "A",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             }
+            ]
+           },
+           "config": {
+            "body": {
+             "type": "string",
+             "default": "@trait.C"
+            }
+           }
+          },
+          {
+           "name": "B",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             }
+            ]
+           },
+           "config": {
+            "body": {
+             "type": "string",
+             "default": "@trait.C"
+            }
+           }
+          },
+          {
+           "name": "C",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "EMBED_CHAINS",
+        "payload": {
+         "scope": "",
+         "chains": [
+          {
+           "A": [],
+           "B": [],
+           "C": [
+            "A"
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-reference-in-a-transition-effect-counts",
+   "steps": [
+    {
+     "trait": "OrbEmbedChain",
+     "event": "EMBED_INPUT_HEARD",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "OE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "H",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "box",
+                 "body": "@trait.X"
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          },
+          {
+           "name": "X",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "EMBED_CHAINS",
+        "payload": {
+         "scope": "",
+         "chains": [
+          {
+           "H": [],
+           "X": [
+            "H"
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-reference-in-a-transition-guard-counts",
+   "steps": [
+    {
+     "trait": "OrbEmbedChain",
+     "event": "EMBED_INPUT_HEARD",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "OE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "H",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [],
+              "guard": [
+               "=",
+               "@trait.X",
+               "a"
+              ]
+             }
+            ]
+           }
+          },
+          {
+           "name": "X",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "EMBED_CHAINS",
+        "payload": {
+         "scope": "",
+         "chains": [
+          {
+           "H": [],
+           "X": [
+            "H"
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-reference-in-a-tick-counts",
+   "steps": [
+    {
+     "trait": "OrbEmbedChain",
+     "event": "EMBED_INPUT_HEARD",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "OE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "H",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             }
+            ]
+           },
+           "ticks": [
+            {
+             "guard": [
+              "=",
+              "@trait.X",
+              "a"
+             ],
+             "effects": []
+            }
+           ]
+          },
+          {
+           "name": "X",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "EMBED_CHAINS",
+        "payload": {
+         "scope": "",
+         "chains": [
+          {
+           "H": [],
+           "X": [
+            "H"
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-trait-never-hosts-itself",
+   "steps": [
+    {
+     "trait": "OrbEmbedChain",
+     "event": "EMBED_INPUT_HEARD",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "OE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Self",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             }
+            ]
+           },
+           "config": {
+            "body": {
+             "type": "string",
+             "default": "@trait.Self"
+            }
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "EMBED_CHAINS",
+        "payload": {
+         "scope": "",
+         "chains": [
+          {
+           "Self": []
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-reference-cycle-stops-at-the-first-repeat",
+   "steps": [
+    {
+     "trait": "OrbEmbedChain",
+     "event": "EMBED_INPUT_HEARD",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "OE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "A",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             }
+            ]
+           },
+           "config": {
+            "body": {
+             "type": "string",
+             "default": "@trait.B"
+            }
+           }
+          },
+          {
+           "name": "B",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             }
+            ]
+           },
+           "config": {
+            "body": {
+             "type": "string",
+             "default": "@trait.A"
+            }
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "EMBED_CHAINS",
+        "payload": {
+         "scope": "",
+         "chains": [
+          {
+           "A": [
+            "B"
+           ],
+           "B": [
+            "A"
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-dotted-reference-names-the-trait-before-the-dot",
+   "steps": [
+    {
+     "trait": "OrbEmbedChain",
+     "event": "EMBED_INPUT_HEARD",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "OE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "H",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             }
+            ]
+           },
+           "config": {
+            "body": {
+             "type": "string",
+             "default": "@trait.X.slot"
+            }
+           }
+          },
+          {
+           "name": "X",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "EMBED_CHAINS",
+        "payload": {
+         "scope": "",
+         "chains": [
+          {
+           "H": [],
+           "X": [
+            "H"
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-indexed-reference-names-the-trait-before-the-bracket",
+   "steps": [
+    {
+     "trait": "OrbEmbedChain",
+     "event": "EMBED_INPUT_HEARD",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "OE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "H",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             }
+            ]
+           },
+           "config": {
+            "body": {
+             "type": "string",
+             "default": "@trait.X[0]"
+            }
+           }
+          },
+          {
+           "name": "X",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "EMBED_CHAINS",
+        "payload": {
+         "scope": "",
+         "chains": [
+          {
+           "H": [],
+           "X": [
+            "H"
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "chains-are-per-orbital-in-program-order",
+   "steps": [
+    {
+     "trait": "OrbEmbedChain",
+     "event": "EMBED_INPUT_HEARD",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "O1",
+         "entity": {
+          "name": "O1E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "H",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             }
+            ]
+           },
+           "config": {
+            "body": {
+             "type": "string",
+             "default": "@trait.X"
+            }
+           }
+          },
+          {
+           "name": "X",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "name": "O2",
+         "entity": {
+          "name": "O2E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Y",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "EMBED_CHAINS",
+        "payload": {
+         "scope": "",
+         "chains": [
+          {
+           "H": [],
+           "X": [
+            "H"
+           ]
+          },
+          {
+           "Y": []
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-reference-to-a-trait-of-another-orbital-is-not-a-host",
+   "steps": [
+    {
+     "trait": "OrbEmbedChain",
+     "event": "EMBED_INPUT_HEARD",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "O1",
+         "entity": {
+          "name": "O1E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "H",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             }
+            ]
+           },
+           "config": {
+            "body": {
+             "type": "string",
+             "default": "@trait.Other"
+            }
+           }
+          }
+         ]
+        },
+        {
+         "name": "O2",
+         "entity": {
+          "name": "O2E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Other",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "EMBED_CHAINS",
+        "payload": {
+         "scope": "",
+         "chains": [
+          {
+           "H": []
+          },
+          {
+           "Other": []
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

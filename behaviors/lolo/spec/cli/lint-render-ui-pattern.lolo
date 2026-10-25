@@ -1,0 +1,21 @@
+app lint-render-ui-pattern-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint render-ui-pattern <file>`. It lowers the file with program/read and walks every render-ui pattern of every inline trait transition against the installed pattern registry, reporting the compiler's render-ui pattern findings (ORB_RUI_INVALID_PATTERN, ORB_RUI_MISSING_PATTERN_TYPE, ORB_RUI_INVALID_PROP, ORB_RUI_MISSING_REQUIRED_PROP, ORB_RUI_PROP_TYPE_MISMATCH, ORB_RUI_ELEMENT_SHAPE_MISMATCH, ORB_RUI_FORM_FIELD_INTRINSIC, ORB_RUI_CHILD_NOT_DRAWABLE, ORB_RUI_MISSING_ACTION, ORB_A11Y_UNNAMED) in depth-first order (status 500, exit 1). Clean answers `lint render-ui-pattern: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintRenderUiPatternSpec {
+  expects trait OrbLintRenderUiPattern {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintRenderUiPatternCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintRenderUiPattern, OrbLintRenderUiPatternCli
+}

@@ -1,0 +1,21 @@
+app lint-expectation-final-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint expectation-final <file>`, the port of the `orb validate --final` expectation rule. Every `expects` entry of every orbital that nothing in the program provides is ORB_S_EXPECTATION_UNSATISFIED at the expectation, strict or not (status 500, exit 1). Clean answers `lint expectation-final: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintExpectationFinalSpec {
+  expects trait OrbLintExpectationFinal {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintExpectationFinalCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintExpectationFinal, OrbLintExpectationFinalCli
+}

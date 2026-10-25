@@ -1,0 +1,21 @@
+app lint-expectation-event-unfired-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint expectation-event-unfired <file>`, the port of the strict-event arm of validate_expectation_links. A strict `expects trait T { emits E }` whose present trait declares E in `emits` but fires it nowhere (no control and no emit effect, and no dynamic event-prop binding) is ORB_S_EXPECTATION_UNSATISFIED at the expectation (status 500, exit 1); a lenient expectation is not reported. Clean answers `lint expectation-event-unfired: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintExpectationEventUnfiredSpec {
+  expects trait OrbLintExpectationEventUnfired {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintExpectationEventUnfiredCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintExpectationEventUnfired, OrbLintExpectationEventUnfiredCli
+}

@@ -1,0 +1,17 @@
+app orb-tailwind-content-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb tailwind-content [--out <file>] [--check] [<registry folder>…]`, the generator of the prebuilt web client's Tailwind content list (the successor of `almadar-sync renderer-css`). Every className token of the behaviors under the registry folders (conditional classNames included), plus the extraTokens knob, sorted and unique, one per line with a trailing newline. Without --check the list is written to --out and the answer is status 200 `<N> tokens written to <path>`; with --check nothing is written and a differing file answers status 500 listing the missing and extra tokens. A usage error answers status 400 (exit 2); a failed catalog, read or write answers status 500 (exit 1)."
+]
+
+orbital OrbTailwindContentSpec {
+  expects trait OrbTailwindContent {
+    state ready
+    state parsing
+    state working
+    state writing
+    emits {
+      TAILWIND_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbTailwindContent
+}

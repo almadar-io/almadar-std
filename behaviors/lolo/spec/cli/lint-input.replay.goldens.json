@@ -1,2418 +1,3483 @@
 {
-  "atom": "cli/atoms/std-orb-lint-input.lolo",
-  "trait": "OrbLintInput",
-  "note": "The input reads, scans the language packs and lowers once per lint run; every rule trait and the umbrella receive the result as LINT_INPUT. The language-decision cases moved here from lint-page-path.",
-  "cases": [
+ "atom": "cli/atoms/std-orb-lint-input.lolo",
+ "trait": "OrbLintInput",
+ "note": "The input reads, scans the language packs and lowers once per lint run; every rule trait and the umbrella receive the result as LINT_INPUT. The language-decision cases moved here from lint-page-path.",
+ "cases": [
+  {
+   "id": "lolo-arabic-first-token-is-not-english",
+   "entity": {
+    "raw": "تطبيق x [\n]\n",
+    "packs": [
+     {
+      "name": "@almadar/lolo-ar",
+      "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"تطبيق\", \"uses\": \"يستخدم\", \"expects\": \"يتوقع\", \"type\": \"نوع\", \"theme\": \"مظهر\", \"orbital\": \"مدار\"}, \"orb\": {\"orbitals\": \"مدارات\"}}"
+     },
+     {
+      "name": "@almadar/lolo-sl",
+      "text": "{\"meta\": {\"code\": \"sl\"}, \"keywords\": {\"app\": \"aplikacija\", \"uses\": \"uporablja\", \"expects\": \"pricakuje\", \"type\": \"tip\", \"theme\": \"tema\", \"orbital\": \"orbitala\"}, \"orb\": {\"orbitals\": \"orbitale\"}}"
+     }
+    ],
+    "file": "a.lolo"
+   },
+   "steps": [
     {
-      "id": "lolo-arabic-first-token-is-not-english",
-      "entity": {
-        "raw": "\u062a\u0637\u0628\u064a\u0642 x [\n]\n",
-        "packs": [
-          {
-            "name": "@almadar/lolo-ar",
-            "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"\u062a\u0637\u0628\u064a\u0642\", \"uses\": \"\u064a\u0633\u062a\u062e\u062f\u0645\", \"expects\": \"\u064a\u062a\u0648\u0642\u0639\", \"type\": \"\u0646\u0648\u0639\", \"theme\": \"\u0645\u0638\u0647\u0631\", \"orbital\": \"\u0645\u062f\u0627\u0631\"}, \"orb\": {\"orbitals\": \"\u0645\u062f\u0627\u0631\u0627\u062a\"}}"
-          },
-          {
-            "name": "@almadar/lolo-sl",
-            "text": "{\"meta\": {\"code\": \"sl\"}, \"keywords\": {\"app\": \"aplikacija\", \"uses\": \"uporablja\", \"expects\": \"pricakuje\", \"type\": \"tip\", \"theme\": \"tema\", \"orbital\": \"orbitala\"}, \"orb\": {\"orbitals\": \"orbitale\"}}"
-          }
-        ],
-        "file": "a.lolo"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LANGUAGE_PACKS_DONE_HEARD",
-          "payload": {
-            "problem": "",
-            "coreRoot": "/core",
-            "stdRoot": "/std"
-          },
-          "expect": {
-            "emits": [
-              {
-                "event": "LINT_LANGUAGE",
-                "payload": {
-                  "latin": false
-                }
-              }
-            ]
-          }
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LANGUAGE_PACKS_DONE_HEARD",
+     "payload": {
+      "problem": "",
+      "coreRoot": "/core",
+      "stdRoot": "/std"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_LANGUAGE",
+        "payload": {
+         "latin": false
         }
+       }
       ]
-    },
-    {
-      "id": "control-lolo-english-first-token-is-english",
-      "entity": {
-        "raw": "app x [\n]\n",
-        "packs": [
-          {
-            "name": "@almadar/lolo-ar",
-            "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"\u062a\u0637\u0628\u064a\u0642\", \"uses\": \"\u064a\u0633\u062a\u062e\u062f\u0645\", \"expects\": \"\u064a\u062a\u0648\u0642\u0639\", \"type\": \"\u0646\u0648\u0639\", \"theme\": \"\u0645\u0638\u0647\u0631\", \"orbital\": \"\u0645\u062f\u0627\u0631\"}, \"orb\": {\"orbitals\": \"\u0645\u062f\u0627\u0631\u0627\u062a\"}}"
-          },
-          {
-            "name": "@almadar/lolo-sl",
-            "text": "{\"meta\": {\"code\": \"sl\"}, \"keywords\": {\"app\": \"aplikacija\", \"uses\": \"uporablja\", \"expects\": \"pricakuje\", \"type\": \"tip\", \"theme\": \"tema\", \"orbital\": \"orbitala\"}, \"orb\": {\"orbitals\": \"orbitale\"}}"
-          }
-        ],
-        "file": "a.lolo"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LANGUAGE_PACKS_DONE_HEARD",
-          "payload": {
-            "problem": "",
-            "coreRoot": "/core",
-            "stdRoot": "/std"
-          },
-          "expect": {
-            "emits": [
-              {
-                "event": "LINT_LANGUAGE",
-                "payload": {
-                  "latin": true
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "lolo-slovenian-first-token-is-not-english",
-      "entity": {
-        "raw": "aplikacija x [\n]\n",
-        "packs": [
-          {
-            "name": "@almadar/lolo-ar",
-            "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"\u062a\u0637\u0628\u064a\u0642\", \"uses\": \"\u064a\u0633\u062a\u062e\u062f\u0645\", \"expects\": \"\u064a\u062a\u0648\u0642\u0639\", \"type\": \"\u0646\u0648\u0639\", \"theme\": \"\u0645\u0638\u0647\u0631\", \"orbital\": \"\u0645\u062f\u0627\u0631\"}, \"orb\": {\"orbitals\": \"\u0645\u062f\u0627\u0631\u0627\u062a\"}}"
-          },
-          {
-            "name": "@almadar/lolo-sl",
-            "text": "{\"meta\": {\"code\": \"sl\"}, \"keywords\": {\"app\": \"aplikacija\", \"uses\": \"uporablja\", \"expects\": \"pricakuje\", \"type\": \"tip\", \"theme\": \"tema\", \"orbital\": \"orbitala\"}, \"orb\": {\"orbitals\": \"orbitale\"}}"
-          }
-        ],
-        "file": "a.lolo"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LANGUAGE_PACKS_DONE_HEARD",
-          "payload": {
-            "problem": "",
-            "coreRoot": "/core",
-            "stdRoot": "/std"
-          },
-          "expect": {
-            "emits": [
-              {
-                "event": "LINT_LANGUAGE",
-                "payload": {
-                  "latin": false
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "control-lolo-slovenian-word-with-no-slovenian-pack-is-english",
-      "entity": {
-        "raw": "aplikacija x [\n]\n",
-        "packs": [
-          {
-            "name": "@almadar/lolo-ar",
-            "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"\u062a\u0637\u0628\u064a\u0642\", \"uses\": \"\u064a\u0633\u062a\u062e\u062f\u0645\", \"expects\": \"\u064a\u062a\u0648\u0642\u0639\", \"type\": \"\u0646\u0648\u0639\", \"theme\": \"\u0645\u0638\u0647\u0631\", \"orbital\": \"\u0645\u062f\u0627\u0631\"}, \"orb\": {\"orbitals\": \"\u0645\u062f\u0627\u0631\u0627\u062a\"}}"
-          }
-        ],
-        "file": "a.lolo"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LANGUAGE_PACKS_DONE_HEARD",
-          "payload": {
-            "problem": "",
-            "coreRoot": "/core",
-            "stdRoot": "/std"
-          },
-          "expect": {
-            "emits": [
-              {
-                "event": "LINT_LANGUAGE",
-                "payload": {
-                  "latin": true
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "lolo-first-token-skips-comment-lines",
-      "entity": {
-        "raw": ";; note\n\n\u064a\u0633\u062a\u062e\u062f\u0645 A from \"b\"\n",
-        "packs": [
-          {
-            "name": "@almadar/lolo-ar",
-            "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"\u062a\u0637\u0628\u064a\u0642\", \"uses\": \"\u064a\u0633\u062a\u062e\u062f\u0645\", \"expects\": \"\u064a\u062a\u0648\u0642\u0639\", \"type\": \"\u0646\u0648\u0639\", \"theme\": \"\u0645\u0638\u0647\u0631\", \"orbital\": \"\u0645\u062f\u0627\u0631\"}, \"orb\": {\"orbitals\": \"\u0645\u062f\u0627\u0631\u0627\u062a\"}}"
-          },
-          {
-            "name": "@almadar/lolo-sl",
-            "text": "{\"meta\": {\"code\": \"sl\"}, \"keywords\": {\"app\": \"aplikacija\", \"uses\": \"uporablja\", \"expects\": \"pricakuje\", \"type\": \"tip\", \"theme\": \"tema\", \"orbital\": \"orbitala\"}, \"orb\": {\"orbitals\": \"orbitale\"}}"
-          }
-        ],
-        "file": "a.lolo"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LANGUAGE_PACKS_DONE_HEARD",
-          "payload": {
-            "problem": "",
-            "coreRoot": "/core",
-            "stdRoot": "/std"
-          },
-          "expect": {
-            "emits": [
-              {
-                "event": "LINT_LANGUAGE",
-                "payload": {
-                  "latin": false
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "control-lolo-unknown-first-token-is-english",
-      "entity": {
-        "raw": "foo x [\n]\n",
-        "packs": [
-          {
-            "name": "@almadar/lolo-ar",
-            "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"\u062a\u0637\u0628\u064a\u0642\", \"uses\": \"\u064a\u0633\u062a\u062e\u062f\u0645\", \"expects\": \"\u064a\u062a\u0648\u0642\u0639\", \"type\": \"\u0646\u0648\u0639\", \"theme\": \"\u0645\u0638\u0647\u0631\", \"orbital\": \"\u0645\u062f\u0627\u0631\"}, \"orb\": {\"orbitals\": \"\u0645\u062f\u0627\u0631\u0627\u062a\"}}"
-          },
-          {
-            "name": "@almadar/lolo-sl",
-            "text": "{\"meta\": {\"code\": \"sl\"}, \"keywords\": {\"app\": \"aplikacija\", \"uses\": \"uporablja\", \"expects\": \"pricakuje\", \"type\": \"tip\", \"theme\": \"tema\", \"orbital\": \"orbitala\"}, \"orb\": {\"orbitals\": \"orbitale\"}}"
-          }
-        ],
-        "file": "a.lolo"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LANGUAGE_PACKS_DONE_HEARD",
-          "payload": {
-            "problem": "",
-            "coreRoot": "/core",
-            "stdRoot": "/std"
-          },
-          "expect": {
-            "emits": [
-              {
-                "event": "LINT_LANGUAGE",
-                "payload": {
-                  "latin": true
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "control-lolo-english-keyword-wins-even-when-other-text-is-arabic",
-      "entity": {
-        "raw": "app \u062a\u0637\u0628\u064a\u0642 [\n]\n",
-        "packs": [
-          {
-            "name": "@almadar/lolo-ar",
-            "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"\u062a\u0637\u0628\u064a\u0642\", \"uses\": \"\u064a\u0633\u062a\u062e\u062f\u0645\", \"expects\": \"\u064a\u062a\u0648\u0642\u0639\", \"type\": \"\u0646\u0648\u0639\", \"theme\": \"\u0645\u0638\u0647\u0631\", \"orbital\": \"\u0645\u062f\u0627\u0631\"}, \"orb\": {\"orbitals\": \"\u0645\u062f\u0627\u0631\u0627\u062a\"}}"
-          },
-          {
-            "name": "@almadar/lolo-sl",
-            "text": "{\"meta\": {\"code\": \"sl\"}, \"keywords\": {\"app\": \"aplikacija\", \"uses\": \"uporablja\", \"expects\": \"pricakuje\", \"type\": \"tip\", \"theme\": \"tema\", \"orbital\": \"orbitala\"}, \"orb\": {\"orbitals\": \"orbitale\"}}"
-          }
-        ],
-        "file": "a.lolo"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LANGUAGE_PACKS_DONE_HEARD",
-          "payload": {
-            "problem": "",
-            "coreRoot": "/core",
-            "stdRoot": "/std"
-          },
-          "expect": {
-            "emits": [
-              {
-                "event": "LINT_LANGUAGE",
-                "payload": {
-                  "latin": true
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "orb-json-arabic-orbitals-key-is-not-english",
-      "entity": {
-        "raw": "{\"\u0645\u062f\u0627\u0631\u0627\u062a\": []}",
-        "packs": [
-          {
-            "name": "@almadar/lolo-ar",
-            "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"\u062a\u0637\u0628\u064a\u0642\", \"uses\": \"\u064a\u0633\u062a\u062e\u062f\u0645\", \"expects\": \"\u064a\u062a\u0648\u0642\u0639\", \"type\": \"\u0646\u0648\u0639\", \"theme\": \"\u0645\u0638\u0647\u0631\", \"orbital\": \"\u0645\u062f\u0627\u0631\"}, \"orb\": {\"orbitals\": \"\u0645\u062f\u0627\u0631\u0627\u062a\"}}"
-          },
-          {
-            "name": "@almadar/lolo-sl",
-            "text": "{\"meta\": {\"code\": \"sl\"}, \"keywords\": {\"app\": \"aplikacija\", \"uses\": \"uporablja\", \"expects\": \"pricakuje\", \"type\": \"tip\", \"theme\": \"tema\", \"orbital\": \"orbitala\"}, \"orb\": {\"orbitals\": \"orbitale\"}}"
-          }
-        ],
-        "file": "a.lolo"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LANGUAGE_PACKS_DONE_HEARD",
-          "payload": {
-            "problem": "",
-            "coreRoot": "/core",
-            "stdRoot": "/std"
-          },
-          "expect": {
-            "emits": [
-              {
-                "event": "LINT_LANGUAGE",
-                "payload": {
-                  "latin": false
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "control-orb-json-english-orbitals-key-is-english",
-      "entity": {
-        "raw": "{\"name\": \"p\", \"orbitals\": []}",
-        "packs": [
-          {
-            "name": "@almadar/lolo-ar",
-            "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"\u062a\u0637\u0628\u064a\u0642\", \"uses\": \"\u064a\u0633\u062a\u062e\u062f\u0645\", \"expects\": \"\u064a\u062a\u0648\u0642\u0639\", \"type\": \"\u0646\u0648\u0639\", \"theme\": \"\u0645\u0638\u0647\u0631\", \"orbital\": \"\u0645\u062f\u0627\u0631\"}, \"orb\": {\"orbitals\": \"\u0645\u062f\u0627\u0631\u0627\u062a\"}}"
-          },
-          {
-            "name": "@almadar/lolo-sl",
-            "text": "{\"meta\": {\"code\": \"sl\"}, \"keywords\": {\"app\": \"aplikacija\", \"uses\": \"uporablja\", \"expects\": \"pricakuje\", \"type\": \"tip\", \"theme\": \"tema\", \"orbital\": \"orbitala\"}, \"orb\": {\"orbitals\": \"orbitale\"}}"
-          }
-        ],
-        "file": "a.lolo"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LANGUAGE_PACKS_DONE_HEARD",
-          "payload": {
-            "problem": "",
-            "coreRoot": "/core",
-            "stdRoot": "/std"
-          },
-          "expect": {
-            "emits": [
-              {
-                "event": "LINT_LANGUAGE",
-                "payload": {
-                  "latin": true
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "orb-json-slovenian-orbitals-key-is-not-english",
-      "entity": {
-        "raw": "{\"orbitale\": []}",
-        "packs": [
-          {
-            "name": "@almadar/lolo-ar",
-            "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"\u062a\u0637\u0628\u064a\u0642\", \"uses\": \"\u064a\u0633\u062a\u062e\u062f\u0645\", \"expects\": \"\u064a\u062a\u0648\u0642\u0639\", \"type\": \"\u0646\u0648\u0639\", \"theme\": \"\u0645\u0638\u0647\u0631\", \"orbital\": \"\u0645\u062f\u0627\u0631\"}, \"orb\": {\"orbitals\": \"\u0645\u062f\u0627\u0631\u0627\u062a\"}}"
-          },
-          {
-            "name": "@almadar/lolo-sl",
-            "text": "{\"meta\": {\"code\": \"sl\"}, \"keywords\": {\"app\": \"aplikacija\", \"uses\": \"uporablja\", \"expects\": \"pricakuje\", \"type\": \"tip\", \"theme\": \"tema\", \"orbital\": \"orbitala\"}, \"orb\": {\"orbitals\": \"orbitale\"}}"
-          }
-        ],
-        "file": "a.lolo"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LANGUAGE_PACKS_DONE_HEARD",
-          "payload": {
-            "problem": "",
-            "coreRoot": "/core",
-            "stdRoot": "/std"
-          },
-          "expect": {
-            "emits": [
-              {
-                "event": "LINT_LANGUAGE",
-                "payload": {
-                  "latin": false
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "control-orb-json-nested-arabic-word-is-not-a-top-level-key",
-      "entity": {
-        "raw": "{\"name\": \"p\", \"x\": {\"\u0645\u062f\u0627\u0631\u0627\u062a\": 1}}",
-        "packs": [
-          {
-            "name": "@almadar/lolo-ar",
-            "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"\u062a\u0637\u0628\u064a\u0642\", \"uses\": \"\u064a\u0633\u062a\u062e\u062f\u0645\", \"expects\": \"\u064a\u062a\u0648\u0642\u0639\", \"type\": \"\u0646\u0648\u0639\", \"theme\": \"\u0645\u0638\u0647\u0631\", \"orbital\": \"\u0645\u062f\u0627\u0631\"}, \"orb\": {\"orbitals\": \"\u0645\u062f\u0627\u0631\u0627\u062a\"}}"
-          },
-          {
-            "name": "@almadar/lolo-sl",
-            "text": "{\"meta\": {\"code\": \"sl\"}, \"keywords\": {\"app\": \"aplikacija\", \"uses\": \"uporablja\", \"expects\": \"pricakuje\", \"type\": \"tip\", \"theme\": \"tema\", \"orbital\": \"orbitala\"}, \"orb\": {\"orbitals\": \"orbitale\"}}"
-          }
-        ],
-        "file": "a.lolo"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LANGUAGE_PACKS_DONE_HEARD",
-          "payload": {
-            "problem": "",
-            "coreRoot": "/core",
-            "stdRoot": "/std"
-          },
-          "expect": {
-            "emits": [
-              {
-                "event": "LINT_LANGUAGE",
-                "payload": {
-                  "latin": true
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "control-orb-json-with-no-matching-pack-is-english",
-      "entity": {
-        "raw": "{\"\u0645\u062f\u0627\u0631\u0627\u062a\": []}",
-        "packs": [],
-        "file": "a.lolo"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LANGUAGE_PACKS_DONE_HEARD",
-          "payload": {
-            "problem": "",
-            "coreRoot": "/core",
-            "stdRoot": "/std"
-          },
-          "expect": {
-            "emits": [
-              {
-                "event": "LINT_LANGUAGE",
-                "payload": {
-                  "latin": true
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "a-pack-scan-problem-leaves-the-language-undecided",
-      "entity": {
-        "raw": "app x [\n]\n",
-        "packs": [],
-        "file": "a.lolo"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LANGUAGE_PACKS_DONE_HEARD",
-          "payload": {
-            "problem": "two packs claim ar",
-            "coreRoot": "/core",
-            "stdRoot": "/std"
-          },
-          "expect": {
-            "emits": [
-              {
-                "event": "LINT_INPUT_UNREAD",
-                "payload": {
-                  "file": "a.lolo"
-                }
-              }
-            ],
-            "neverEmits": [
-              "LINT_LANGUAGE"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "control-a-clean-scan-decides-the-language",
-      "entity": {
-        "raw": "app x [\n]\n",
-        "packs": [],
-        "file": "a.lolo"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LANGUAGE_PACKS_DONE_HEARD",
-          "payload": {
-            "problem": "",
-            "coreRoot": "/core",
-            "stdRoot": "/std"
-          },
-          "expect": {
-            "emits": [
-              {
-                "event": "LINT_LANGUAGE",
-                "payload": {
-                  "latin": true
-                }
-              }
-            ]
-          }
-        }
-      ],
-      "note": "program/read is not hosted in a step, so the run then ends unread; only the decision is asserted"
-    },
-    {
-      "id": "vocab-answers-are-collected-per-pack",
-      "entity": {
-        "packs": [],
-        "file": "a.lolo"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LANGUAGE_PACK_VOCAB_HEARD",
-          "payload": {
-            "name": "@almadar/lolo-ar",
-            "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"\u062a\u0637\u0628\u064a\u0642\", \"uses\": \"\u064a\u0633\u062a\u062e\u062f\u0645\", \"expects\": \"\u064a\u062a\u0648\u0642\u0639\", \"type\": \"\u0646\u0648\u0639\", \"theme\": \"\u0645\u0638\u0647\u0631\", \"orbital\": \"\u0645\u062f\u0627\u0631\"}, \"orb\": {\"orbitals\": \"\u0645\u062f\u0627\u0631\u0627\u062a\"}}"
-          },
-          "expect": {
-            "fired": true,
-            "state": "reading"
-          }
-        }
-      ]
-    },
-    {
-      "id": "a-failed-language-scan-leaves-the-file-unread",
-      "entity": {
-        "file": "a.lolo"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LANG_SCAN_ANSWERED",
-          "payload": {
-            "status": 500,
-            "body": "",
-            "stderr": "x"
-          },
-          "expect": {
-            "emits": [
-              {
-                "event": "LINT_INPUT_UNREAD",
-                "payload": {
-                  "file": "a.lolo"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "control-a-successful-scan-answer-changes-nothing",
-      "entity": {
-        "file": "a.lolo"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LANG_SCAN_ANSWERED",
-          "payload": {
-            "status": 200,
-            "body": "",
-            "stderr": ""
-          },
-          "expect": {
-            "neverEmits": [
-              "LINT_INPUT_UNREAD"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "a-request-reads-the-file",
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "ready",
-          "event": "LINT_REQUEST",
-          "payload": {
-            "file": "a.lolo"
-          },
-          "expect": {
-            "fired": true,
-            "state": "reading"
-          }
-        }
-      ]
-    },
-    {
-      "id": "control-a-request-while-reading-is-not-taken",
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LINT_REQUEST",
-          "payload": {
-            "file": "b.lolo"
-          },
-          "expect": {
-            "fired": false
-          }
-        }
-      ],
-      "entity": {
-        "file": "a.lolo"
-      }
-    },
-    {
-      "id": "the-file-read-starts-the-pack-scan",
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LINT_FILE_READ",
-          "payload": {
-            "data": "YXBwIHg="
-          },
-          "expect": {
-            "fired": true,
-            "state": "reading",
-            "emits": [
-              {
-                "event": "LINT_PACKS_RUN",
-                "payload": {
-                  "cwd": "/w"
-                }
-              }
-            ]
-          }
-        }
-      ],
-      "entity": {
-        "file": "a.lolo",
-        "cwd": "/w"
-      }
-    },
-    {
-      "id": "an-unreadable-file-fails-the-input",
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LINT_FILE_UNREAD",
-          "payload": {
-            "error": "x"
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "LINT_INPUT_UNREAD",
-                "payload": {
-                  "file": "a.lolo"
-                }
-              }
-            ]
-          }
-        }
-      ],
-      "entity": {
-        "file": "a.lolo"
-      }
-    },
-    {
-      "id": "control-an-unreadable-file-emits-no-input",
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LINT_FILE_UNREAD",
-          "payload": {
-            "error": "x"
-          },
-          "expect": {
-            "neverEmits": [
-              "LINT_INPUT"
-            ]
-          }
-        }
-      ],
-      "entity": {
-        "file": "a.lolo"
-      }
-    },
-    {
-      "id": "the-lowered-program-is-offered-with-its-raw-text-and-language",
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LINT_PROGRAM_READ",
-          "payload": {
-            "result": {
-              "program": {
-                "name": "app",
-                "orbitals": []
-              },
-              "lazy": []
-            }
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "LINT_LAZY",
-                "payload": {
-                  "orbitals": []
-                }
-              },
-              {
-                "event": "LINT_INPUT",
-                "payload": {
-                  "file": "a.lolo",
-                  "raw": "app x [\n]\n",
-                  "latin": false,
-                  "program": {
-                    "name": "app",
-                    "orbitals": []
-                  },
-                  "scope": ""
-                }
-              }
-            ]
-          }
-        }
-      ],
-      "entity": {
-        "file": "a.lolo",
-        "raw": "app x [\n]\n",
-        "latin": false
-      }
-    },
-    {
-      "id": "control-the-lowered-program-of-an-english-file-is-latin",
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LINT_PROGRAM_READ",
-          "payload": {
-            "result": {
-              "program": {
-                "name": "app",
-                "orbitals": []
-              },
-              "lazy": []
-            }
-          },
-          "expect": {
-            "emits": [
-              {
-                "event": "LINT_LAZY",
-                "payload": {
-                  "orbitals": []
-                }
-              },
-              {
-                "event": "LINT_INPUT",
-                "payload": {
-                  "file": "a.lolo",
-                  "raw": "app x [\n]\n",
-                  "latin": true,
-                  "program": {
-                    "name": "app",
-                    "orbitals": []
-                  },
-                  "scope": ""
-                }
-              }
-            ]
-          }
-        }
-      ],
-      "entity": {
-        "file": "a.lolo",
-        "raw": "app x [\n]\n",
-        "latin": true
-      }
-    },
-    {
-      "id": "the-working-directory-reads-the-file-at-its-absolute-path",
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LINT_CWD",
-          "payload": {
-            "path": "/w"
-          },
-          "expect": {
-            "fired": true,
-            "state": "reading",
-            "neverEmits": [
-              "LINT_PACKS_RUN"
-            ]
-          }
-        }
-      ],
-      "entity": {
-        "file": "a.lolo"
-      }
-    },
-    {
-      "id": "a-lazy-child-is-named-before-the-root-program-is-offered",
-      "entity": {
-        "file": "a.lolo",
-        "raw": "app x [\n]\n",
-        "latin": false
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LINT_PROGRAM_READ",
-          "payload": {
-            "result": {
-              "program": {
-                "name": "app",
-                "orbitals": []
-              },
-              "lazy": [
-                {
-                  "orbital": "Child",
-                  "program": {
-                    "name": "child",
-                    "orbitals": [
-                      {
-                        "name": "Child"
-                      }
-                    ]
-                  }
-                }
-              ]
-            }
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "LINT_LAZY",
-                "payload": {
-                  "orbitals": [
-                    "Child"
-                  ]
-                }
-              },
-              {
-                "event": "LINT_INPUT",
-                "payload": {
-                  "file": "a.lolo",
-                  "raw": "app x [\n]\n",
-                  "latin": false,
-                  "program": {
-                    "name": "app",
-                    "orbitals": []
-                  },
-                  "scope": ""
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "a-child-request-offers-that-lazy-childs-program",
-      "entity": {
-        "file": "a.lolo",
-        "raw": "app x [\n]\n",
-        "latin": false,
-        "lazy": [
-          {
-            "orbital": "Child",
-            "program": {
-              "name": "child",
-              "orbitals": [
-                {
-                  "name": "Child"
-                }
-              ]
-            }
-          },
-          {
-            "orbital": "Second",
-            "program": {
-              "name": "second",
-              "orbitals": [
-                {
-                  "name": "Second"
-                }
-              ]
-            }
-          }
-        ]
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "ready",
-          "event": "LINT_CHILD_REQUEST",
-          "payload": {
-            "index": 1
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "LINT_INPUT",
-                "payload": {
-                  "file": "a.lolo",
-                  "raw": "app x [\n]\n",
-                  "latin": false,
-                  "program": {
-                    "name": "second",
-                    "orbitals": [
-                      {
-                        "name": "Second"
-                      }
-                    ]
-                  },
-                  "scope": "Second"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "control-a-child-request-for-index-0-offers-the-first-child-not-the-second",
-      "entity": {
-        "file": "a.lolo",
-        "raw": "app x [\n]\n",
-        "latin": false,
-        "lazy": [
-          {
-            "orbital": "Child",
-            "program": {
-              "name": "child",
-              "orbitals": [
-                {
-                  "name": "Child"
-                }
-              ]
-            }
-          },
-          {
-            "orbital": "Second",
-            "program": {
-              "name": "second",
-              "orbitals": [
-                {
-                  "name": "Second"
-                }
-              ]
-            }
-          }
-        ]
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "ready",
-          "event": "LINT_CHILD_REQUEST",
-          "payload": {
-            "index": 0
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "LINT_INPUT",
-                "payload": {
-                  "file": "a.lolo",
-                  "raw": "app x [\n]\n",
-                  "latin": false,
-                  "program": {
-                    "name": "child",
-                    "orbitals": [
-                      {
-                        "name": "Child"
-                      }
-                    ]
-                  },
-                  "scope": "Child"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "no-core-root-is-an-unread-error",
-      "entity": {
-        "file": "a.lolo",
-        "cwd": "/w",
-        "raw": "app x [\n]\n",
-        "latin": true,
-        "coreRoot": ""
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LINT_CORE_READ",
-          "payload": {},
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "LINT_INPUT_UNREAD",
-                "payload": {
-                  "file": "a.lolo",
-                  "error": "the language scan found no compatible @almadar/core"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "a-manifest-without-a-component-mapping-is-an-unread-error",
-      "entity": {
-        "file": "a.lolo",
-        "cwd": "/w",
-        "raw": "app x [\n]\n",
-        "latin": true,
-        "coreRoot": "/core"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LINT_CORE_MANIFEST",
-          "payload": {
-            "data": "eyJuYW1lIjogIkBhbG1hZGFyL2NvcmUiLCAib3JiTGFuZ3VhZ2UiOiB7ImNvbXBpbGVyIjogIj49MTcifX0="
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "LINT_INPUT_UNREAD",
-                "payload": {
-                  "file": "a.lolo",
-                  "error": "the installed @almadar/core declares no orbLanguage.componentMapping"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "control-a-manifest-with-a-component-mapping-reads-on",
-      "entity": {
-        "file": "a.lolo",
-        "cwd": "/w",
-        "raw": "app x [\n]\n",
-        "latin": true,
-        "coreRoot": "/core"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LINT_CORE_MANIFEST",
-          "payload": {
-            "data": "eyJuYW1lIjogIkBhbG1hZGFyL2NvcmUiLCAib3JiTGFuZ3VhZ2UiOiB7ImNvbXBpbGVyIjogIj49MTciLCAiY29tcG9uZW50TWFwcGluZyI6ICJkaXN0L3BhdHRlcm5zL2NvbXBvbmVudC1tYXBwaW5nLmpzb24ifX0="
-          },
-          "expect": {
-            "fired": true,
-            "neverEmits": [
-              "LINT_INPUT_UNREAD",
-              "LINT_COMPONENTS"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "the-mapping-answers-its-component-names-sorted-once",
-      "entity": {
-        "file": "a.lolo",
-        "cwd": "/w",
-        "raw": "app x [\n]\n",
-        "latin": true,
-        "coreRoot": "/core"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LINT_MAPPING_READ",
-          "payload": {
-            "data": "eyJ2ZXJzaW9uIjogIjEuMC4wIiwgIm1hcHBpbmdzIjogeyJzdGF0LWNhcmQiOiB7ImNvbXBvbmVudCI6ICJTdGF0Q2FyZCIsICJpbXBvcnRQYXRoIjogIngifSwgInRhYmxlLXZpZXciOiB7ImNvbXBvbmVudCI6ICJUYWJsZVZpZXcifSwgInN0YXQtY2FyZC1hbHQiOiB7ImNvbXBvbmVudCI6ICJTdGF0Q2FyZCJ9fX0="
-          },
-          "expect": {
-            "fired": true,
-            "emits": [
-              {
-                "event": "LINT_COMPONENTS",
-                "payload": {
-                  "names": [
-                    "StatCard",
-                    "TableView"
-                  ]
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "control-a-file-that-is-not-a-mapping-is-an-unread-error",
-      "entity": {
-        "file": "a.lolo",
-        "cwd": "/w",
-        "raw": "app x [\n]\n",
-        "latin": true,
-        "coreRoot": "/core"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LINT_MAPPING_READ",
-          "payload": {
-            "data": "WyJTdGF0Q2FyZCJd"
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "LINT_INPUT_UNREAD",
-                "payload": {
-                  "file": "a.lolo",
-                  "error": "the installed @almadar/core component mapping is not a component mapping"
-                }
-              }
-            ],
-            "neverEmits": [
-              "LINT_COMPONENTS"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "entity": {
-        "file": "a.lolo",
-        "cwd": "/w",
-        "raw": "app x [\n]\n",
-        "latin": true,
-        "coreRoot": "/core",
-        "stdRoot": "/std"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LINT_MAPPING_READ",
-          "payload": {
-            "data": "eyJtYXBwaW5ncyI6IHsic3RhdC1jYXJkIjogeyJjb21wb25lbnQiOiAiU3RhdENhcmQifX19"
-          },
-          "expect": {
-            "fired": true,
-            "emits": [
-              {
-                "event": "LINT_COMPONENTS",
-                "payload": {
-                  "names": [
-                    "StatCard"
-                  ]
-                }
-              }
-            ],
-            "neverEmits": [
-              "LINT_OPERATORS"
-            ]
-          }
-        }
-      ],
-      "id": "control-the-mapping-read-goes-on-to-the-std-table"
-    },
-    {
-      "entity": {
-        "file": "a.lolo",
-        "cwd": "/w",
-        "raw": "app x [\n]\n",
-        "latin": true,
-        "coreRoot": "/core",
-        "stdRoot": ""
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LINT_STD_READ",
-          "payload": {},
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "LINT_INPUT_UNREAD",
-                "payload": {
-                  "file": "a.lolo",
-                  "error": "the language scan found no compatible @almadar/std"
-                }
-              }
-            ]
-          }
-        }
-      ],
-      "id": "no-std-root-is-an-unread-error"
-    },
-    {
-      "entity": {
-        "file": "a.lolo",
-        "cwd": "/w",
-        "raw": "app x [\n]\n",
-        "latin": true,
-        "coreRoot": "/core",
-        "stdRoot": "/std"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LINT_STD_MANIFEST",
-          "payload": {
-            "data": "eyJuYW1lIjogIkBhbG1hZGFyL3N0ZCIsICJvcmJMYW5ndWFnZSI6IHsiY29tcGlsZXIiOiAiPj0xNyJ9fQ=="
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "LINT_INPUT_UNREAD",
-                "payload": {
-                  "file": "a.lolo",
-                  "error": "the installed @almadar/std declares no orbLanguage.operators"
-                }
-              }
-            ]
-          }
-        }
-      ],
-      "id": "a-std-manifest-without-an-operator-table-is-an-unread-error"
-    },
-    {
-      "entity": {
-        "file": "a.lolo",
-        "cwd": "/w",
-        "raw": "app x [\n]\n",
-        "latin": true,
-        "coreRoot": "/core",
-        "stdRoot": "/std"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LINT_TABLE_READ",
-          "payload": {
-            "data": "eyJvcGVyYXRvcnMiOiB7ImlmIjogeyJjYXRlZ29yeSI6ICJjb250cm9sIn0sICIrIjogeyJjYXRlZ29yeSI6ICJtYXRoIn0sICJzdHIvbGVuIjogeyJjYXRlZ29yeSI6ICJzdHJpbmcifSwgImFuZCI6IHsiY2F0ZWdvcnkiOiAibG9naWMifSwgImVtaXQiOiB7ImNhdGVnb3J5IjogImVmZmVjdCIsICJidXNFeGNsdWRlZCI6IFsiSU5JVCIsICJMT0FEIiwgIiRNT1VOVCJdfSwgInByb2dyYW0vZGlzcGF0Y2giOiB7ImNhdGVnb3J5IjogInN0ZC1wcm9ncmFtIiwgInRhcmdldE9wdGlvbnMiOiBbIm9yYml0YWwiLCAidGFyZ2V0VHJhaXQiLCAiZXZlbnQiXX19fQ=="
-          },
-          "expect": {
-            "fired": true,
-            "emits": [
-              {
-                "event": "LINT_OPERATORS",
-                "payload": {
-                  "names": [
-                    "+",
-                    "and",
-                    "emit",
-                    "if"
-                  ]
-                }
-              }
-            ]
-          }
-        }
-      ],
-      "id": "the-table-answers-its-bare-operator-names-sorted"
-    },
-    {
-      "entity": {
-        "file": "a.lolo",
-        "cwd": "/w",
-        "raw": "app x [\n]\n",
-        "latin": true,
-        "coreRoot": "/core",
-        "stdRoot": "/std"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LINT_TABLE_READ",
-          "payload": {
-            "data": "WyJpZiJd"
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "LINT_INPUT_UNREAD",
-                "payload": {
-                  "file": "a.lolo",
-                  "error": "the installed @almadar/std operator table is not an operator table"
-                }
-              }
-            ],
-            "neverEmits": [
-              "LINT_OPERATORS"
-            ]
-          }
-        }
-      ],
-      "id": "control-a-file-that-is-not-an-operator-table-is-an-unread-error"
-    },
-    {
-      "id": "a-file-that-is-not-valid-text-is-an-unread-error",
-      "entity": {
-        "file": "a.lolo",
-        "cwd": "/w",
-        "raw": "app x [\n]\n",
-        "latin": true,
-        "coreRoot": "/core",
-        "stdRoot": "/std"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LINT_FILE_READ",
-          "payload": {
-            "data": "/w=="
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "LINT_INPUT_UNREAD",
-                "payload": {
-                  "file": "a.lolo",
-                  "error": "the file is not valid text"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "a-core-manifest-that-is-not-valid-text-is-an-unread-error",
-      "entity": {
-        "file": "a.lolo",
-        "cwd": "/w",
-        "raw": "app x [\n]\n",
-        "latin": true,
-        "coreRoot": "/core",
-        "stdRoot": "/std"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LINT_CORE_MANIFEST",
-          "payload": {
-            "data": "/w=="
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "LINT_INPUT_UNREAD",
-                "payload": {
-                  "file": "a.lolo",
-                  "error": "the installed @almadar/core package.json is not valid text"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "a-component-mapping-that-is-not-valid-text-is-an-unread-error",
-      "entity": {
-        "file": "a.lolo",
-        "cwd": "/w",
-        "raw": "app x [\n]\n",
-        "latin": true,
-        "coreRoot": "/core",
-        "stdRoot": "/std"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LINT_MAPPING_READ",
-          "payload": {
-            "data": "/w=="
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "LINT_INPUT_UNREAD",
-                "payload": {
-                  "file": "a.lolo",
-                  "error": "the installed @almadar/core component mapping is not valid text"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "a-std-manifest-that-is-not-valid-text-is-an-unread-error",
-      "entity": {
-        "file": "a.lolo",
-        "cwd": "/w",
-        "raw": "app x [\n]\n",
-        "latin": true,
-        "coreRoot": "/core",
-        "stdRoot": "/std"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LINT_STD_MANIFEST",
-          "payload": {
-            "data": "/w=="
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "LINT_INPUT_UNREAD",
-                "payload": {
-                  "file": "a.lolo",
-                  "error": "the installed @almadar/std package.json is not valid text"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "an-operator-table-that-is-not-valid-text-is-an-unread-error",
-      "entity": {
-        "file": "a.lolo",
-        "cwd": "/w",
-        "raw": "app x [\n]\n",
-        "latin": true,
-        "coreRoot": "/core",
-        "stdRoot": "/std"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LINT_TABLE_READ",
-          "payload": {
-            "data": "/w=="
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "LINT_INPUT_UNREAD",
-                "payload": {
-                  "file": "a.lolo",
-                  "error": "the installed @almadar/std operator table is not valid text"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "a-json-document-that-does-not-parse-is-an-unread-error",
-      "entity": {
-        "file": "a.lolo",
-        "cwd": "/w",
-        "raw": "{ nope",
-        "latin": true,
-        "coreRoot": "/core",
-        "stdRoot": "/std"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LANGUAGE_PACKS_DONE_HEARD",
-          "payload": {
-            "problem": "",
-            "coreRoot": "/core",
-            "stdRoot": "/std"
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "LINT_INPUT_UNREAD",
-                "payload": {
-                  "file": "a.lolo",
-                  "error": "the file is not a valid JSON document"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "the-manifest-records-the-pattern-registry-path",
-      "entity": {
-        "file": "a.lolo",
-        "cwd": "/w",
-        "raw": "app x [\n]\n",
-        "latin": true,
-        "coreRoot": "/core",
-        "stdRoot": "/std",
-        "patternsFile": ""
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LINT_CORE_MANIFEST",
-          "payload": {
-            "data": "eyJvcmJMYW5ndWFnZSI6IHsiY29tcG9uZW50TWFwcGluZyI6ICJtLmpzb24iLCAicGF0dGVybnMiOiAiZGlzdC9wLmpzb24ifX0="
-          },
-          "expect": {
-            "fired": true,
-            "neverEmits": [
-              "LINT_INPUT_UNREAD"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "the-mapping-read-goes-on-to-the-pattern-registry",
-      "entity": {
-        "file": "a.lolo",
-        "cwd": "/w",
-        "raw": "app x [\n]\n",
-        "latin": true,
-        "coreRoot": "/core",
-        "stdRoot": "/std",
-        "patternsFile": "dist/p.json"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LINT_MAPPING_READ",
-          "payload": {
-            "data": "eyJtYXBwaW5ncyI6IHsiYSI6IHsiY29tcG9uZW50IjogIkEifX19"
-          },
-          "expect": {
-            "fired": true,
-            "emits": [
-              {
-                "event": "LINT_COMPONENTS",
-                "payload": {
-                  "names": [
-                    "A"
-                  ]
-                }
-              },
-              {
-                "event": "LINT_PATTERNS_READ",
-                "payload": {}
-              }
-            ],
-            "neverEmits": [
-              "LINT_STD_READ"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "a-manifest-without-a-pattern-registry-is-an-unread-error",
-      "entity": {
-        "file": "a.lolo",
-        "cwd": "/w",
-        "raw": "app x [\n]\n",
-        "latin": true,
-        "coreRoot": "/core",
-        "stdRoot": "/std",
-        "patternsFile": ""
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LINT_PATTERNS_READ",
-          "payload": {},
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "LINT_INPUT_UNREAD",
-                "payload": {
-                  "file": "a.lolo",
-                  "error": "the installed @almadar/core declares no orbLanguage.patterns"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "control-a-declared-pattern-registry-is-read",
-      "entity": {
-        "file": "a.lolo",
-        "cwd": "/w",
-        "raw": "app x [\n]\n",
-        "latin": true,
-        "coreRoot": "/core",
-        "stdRoot": "/std",
-        "patternsFile": "dist/p.json"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LINT_PATTERNS_READ",
-          "payload": {},
-          "expect": {
-            "fired": true,
-            "neverEmits": [
-              "LINT_INPUT_UNREAD"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "the-registry-answers-its-event-bearing-prop-names",
-      "entity": {
-        "file": "a.lolo",
-        "cwd": "/w",
-        "raw": "app x [\n]\n",
-        "latin": true,
-        "coreRoot": "/core",
-        "stdRoot": "/std"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LINT_PATTERNS_FILE",
-          "payload": {
-            "data": "eyJ2ZXJzaW9uIjogIjEiLCAicGF0dGVybnMiOiB7ImJ1dHRvbiI6IHsicHJvcHNTY2hlbWEiOiB7ImFjdGlvbiI6IHsia2luZCI6ICJldmVudCJ9LCAibGFiZWwiOiB7InR5cGVzIjogWyJzdHJpbmciXX0sICJvbkNsaWNrIjogeyJraW5kIjogImNhbGxiYWNrIn19fSwgImRhdGEtbGlzdCI6IHsicHJvcHNTY2hlbWEiOiB7Iml0ZW1BY3Rpb25zIjogeyJraW5kIjogImV2ZW50LWxpc3QiLCAiZXZlbnRGaWVsZCI6ICJldmVudCJ9LCAiZW50aXR5RXZlbnQiOiB7ImtpbmQiOiAiZXZlbnQtcmVmIn19fSwgImNvZGUtYmxvY2siOiB7InByb3BzU2NoZW1hIjogeyJvblNldE1vZGUiOiB7ImtpbmQiOiAiZXZlbnQtbGlzdGVuIn0sICJvbkluc2VydFRleHQiOiB7ImtpbmQiOiAiZXZlbnQtbGlzdGVuIn0sICJjb2RlIjogeyJraW5kIjogInN0cmluZyJ9fX0sICJjb250cm9sLWdyaWQiOiB7InByb3BzU2NoZW1hIjogeyJkaXJlY3Rpb25FdmVudHMiOiB7ImtpbmQiOiAiZXZlbnQtbWFwIn19fSwgInN0YXQiOiB7InByb3BzU2NoZW1hIjogeyJvblNldE1vZGUiOiB7ImtpbmQiOiAiY2FsbGJhY2sifSwgImJhZExpc3QiOiB7ImtpbmQiOiAiZXZlbnQtbGlzdCJ9fX19fQ=="
-          },
-          "expect": {
-            "fired": true,
-            "emits": [
-              {
-                "event": "LINT_EVENT_PROPS",
-                "payload": {
-                  "names": [
-                    "action",
-                    "entityEvent",
-                    "event",
-                    "onClick",
-                    "onInsertText",
-                    "onSetMode"
-                  ],
-                  "maps": [
-                    "directionEvents"
-                  ],
-                  "listens": {
-                    "code-block": [
-                      "onSetMode",
-                      "onInsertText"
-                    ]
-                  }
-                }
-              },
-              {
-                "event": "LINT_STD_READ",
-                "payload": {}
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "control-an-event-list-without-an-event-field-adds-no-name",
-      "entity": {
-        "file": "a.lolo",
-        "cwd": "/w",
-        "raw": "app x [\n]\n",
-        "latin": true,
-        "coreRoot": "/core",
-        "stdRoot": "/std"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LINT_PATTERNS_FILE",
-          "payload": {
-            "data": "eyJwYXR0ZXJucyI6IHsicyI6IHsicHJvcHNTY2hlbWEiOiB7ImJhZExpc3QiOiB7ImtpbmQiOiAiZXZlbnQtbGlzdCJ9LCAieCI6IHsia2luZCI6ICJzdHJpbmcifX19fX0="
-          },
-          "expect": {
-            "fired": true,
-            "emits": [
-              {
-                "event": "LINT_EVENT_PROPS",
-                "payload": {
-                  "names": [],
-                  "maps": [],
-                  "listens": {}
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "a-pattern-registry-that-is-not-valid-text-is-an-unread-error",
-      "entity": {
-        "file": "a.lolo",
-        "cwd": "/w",
-        "raw": "app x [\n]\n",
-        "latin": true,
-        "coreRoot": "/core",
-        "stdRoot": "/std"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LINT_PATTERNS_FILE",
-          "payload": {
-            "data": "/w=="
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "LINT_INPUT_UNREAD",
-                "payload": {
-                  "file": "a.lolo",
-                  "error": "the installed @almadar/core pattern registry is not valid text"
-                }
-              }
-            ],
-            "neverEmits": [
-              "LINT_EVENT_PROPS"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "a-file-that-is-not-a-pattern-registry-is-an-unread-error",
-      "entity": {
-        "file": "a.lolo",
-        "cwd": "/w",
-        "raw": "app x [\n]\n",
-        "latin": true,
-        "coreRoot": "/core",
-        "stdRoot": "/std"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LINT_PATTERNS_FILE",
-          "payload": {
-            "data": "WyJidXR0b24iXQ=="
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "LINT_INPUT_UNREAD",
-                "payload": {
-                  "file": "a.lolo",
-                  "error": "the installed @almadar/core pattern registry is not a pattern registry"
-                }
-              }
-            ],
-            "neverEmits": [
-              "LINT_EVENT_PROPS"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "g-std-154-a-resolved-orb-with-a-null-member-is-read",
-      "entity": {
-        "file": "a.lolo",
-        "cwd": "/w",
-        "raw": "{\"orbitals\":[{\"name\":\"O\",\"entity\":{\"name\":\"E\",\"fields\":[{\"name\":\"f\",\"default\":null}]},\"pages\":null}]}",
-        "latin": true,
-        "coreRoot": "/core",
-        "stdRoot": "/std"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LANGUAGE_PACKS_DONE_HEARD",
-          "payload": {
-            "problem": "",
-            "coreRoot": "/core",
-            "stdRoot": "/std"
-          },
-          "expect": {
-            "fired": true,
-            "neverEmits": [
-              "LINT_INPUT_UNREAD"
-            ],
-            "emits": [
-              {
-                "event": "LINT_LANGUAGE",
-                "payload": {
-                  "latin": true
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "control-a-resolved-orb-with-no-null-is-read",
-      "entity": {
-        "file": "a.lolo",
-        "cwd": "/w",
-        "raw": "{\"orbitals\":[{\"name\":\"O\"}]}",
-        "latin": true,
-        "coreRoot": "/core",
-        "stdRoot": "/std"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LANGUAGE_PACKS_DONE_HEARD",
-          "payload": {
-            "problem": "",
-            "coreRoot": "/core",
-            "stdRoot": "/std"
-          },
-          "expect": {
-            "fired": true,
-            "neverEmits": [
-              "LINT_INPUT_UNREAD"
-            ],
-            "emits": [
-              {
-                "event": "LINT_LANGUAGE",
-                "payload": {
-                  "latin": true
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "the-table-answers-its-return-semantics-and-function-operators",
-      "entity": {
-        "file": "a.lolo",
-        "cwd": "/w",
-        "raw": "app x [\n]\n",
-        "latin": true,
-        "coreRoot": "/core",
-        "stdRoot": "/std"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LINT_TABLE_READ",
-          "payload": {
-            "data": "eyJvcGVyYXRvcnMiOiB7ImlmIjogeyJjYXRlZ29yeSI6ICJjb250cm9sIiwgInJldHVyblNlbWFudGljcyI6ICJicmFuY2gtdW5pb24iLCAicmV0dXJuVHlwZSI6IHsia2luZCI6ICJ2YXIiLCAibmFtZSI6ICJUIn19LCAiYXJyYXkvbWFwIjogeyJjYXRlZ29yeSI6ICJhcnJheSIsICJyZXR1cm5TZW1hbnRpY3MiOiAibGFtYmRhLXJlc3VsdCIsICJyZXR1cm5UeXBlIjogeyJraW5kIjogImFycmF5In19LCAiZm4iOiB7ImNhdGVnb3J5IjogImNvbnRyb2wiLCAicmV0dXJuVHlwZSI6IHsia2luZCI6ICJmbiIsICJwYXJhbXMiOiBbXX19LCAiKyI6IHsiY2F0ZWdvcnkiOiAibWF0aCIsICJyZXR1cm5UeXBlIjogIm51bWJlciJ9LCAic3RyL2xlbiI6IHsiY2F0ZWdvcnkiOiAic3RyaW5nIn0sICJlbWl0IjogeyJjYXRlZ29yeSI6ICJlZmZlY3QiLCAiYnVzRXhjbHVkZWQiOiBbIklOSVQiLCAiTE9BRCIsICIkTU9VTlQiXX0sICJwcm9ncmFtL2Rpc3BhdGNoIjogeyJjYXRlZ29yeSI6ICJzdGQtcHJvZ3JhbSIsICJ0YXJnZXRPcHRpb25zIjogWyJvcmJpdGFsIiwgInRhcmdldFRyYWl0IiwgImV2ZW50Il19fX0="
-          },
-          "expect": {
-            "fired": true,
-            "emits": [
-              {
-                "event": "LINT_OPERATOR_SEMANTICS",
-                "payload": {
-                  "semantics": {
-                    "if": "branch-union",
-                    "array/map": "lambda-result"
-                  },
-                  "functions": [
-                    "fn"
-                  ],
-                  "busExcluded": [
-                    "INIT",
-                    "LOAD",
-                    "$MOUNT"
-                  ],
-                  "targetOptions": [
-                    "orbital",
-                    "targetTrait",
-                    "event"
-                  ]
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "control-a-table-without-semantics-answers-none",
-      "entity": {
-        "file": "a.lolo",
-        "cwd": "/w",
-        "raw": "app x [\n]\n",
-        "latin": true,
-        "coreRoot": "/core",
-        "stdRoot": "/std"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LINT_TABLE_READ",
-          "payload": {
-            "data": "eyJvcGVyYXRvcnMiOiB7IisiOiB7ImNhdGVnb3J5IjogIm1hdGgiLCAicmV0dXJuVHlwZSI6ICJudW1iZXIifSwgImVtaXQiOiB7ImNhdGVnb3J5IjogImVmZmVjdCIsICJidXNFeGNsdWRlZCI6IFsiSU5JVCIsICJMT0FEIiwgIiRNT1VOVCJdfSwgInByb2dyYW0vZGlzcGF0Y2giOiB7ImNhdGVnb3J5IjogInN0ZC1wcm9ncmFtIiwgInRhcmdldE9wdGlvbnMiOiBbIm9yYml0YWwiLCAidGFyZ2V0VHJhaXQiLCAiZXZlbnQiXX19fQ=="
-          },
-          "expect": {
-            "fired": true,
-            "emits": [
-              {
-                "event": "LINT_OPERATOR_SEMANTICS",
-                "payload": {
-                  "semantics": {},
-                  "functions": [],
-                  "busExcluded": [
-                    "INIT",
-                    "LOAD",
-                    "$MOUNT"
-                  ],
-                  "targetOptions": [
-                    "orbital",
-                    "targetTrait",
-                    "event"
-                  ]
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "a-table-without-the-bus-excluded-list-is-an-unread-error",
-      "entity": {
-        "file": "a.lolo",
-        "cwd": "/w",
-        "raw": "app x [\n]\n",
-        "latin": true,
-        "coreRoot": "/core",
-        "stdRoot": "/std"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LINT_TABLE_READ",
-          "payload": {
-            "data": "eyJvcGVyYXRvcnMiOiB7ImlmIjogeyJjYXRlZ29yeSI6ICJjb250cm9sIn0sICJwcm9ncmFtL2Rpc3BhdGNoIjogeyJjYXRlZ29yeSI6ICJzdGQtcHJvZ3JhbSIsICJ0YXJnZXRPcHRpb25zIjogWyJvcmJpdGFsIiwgInRhcmdldFRyYWl0IiwgImV2ZW50Il19fX0="
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "LINT_INPUT_UNREAD",
-                "payload": {
-                  "file": "a.lolo",
-                  "error": "the installed @almadar/std operator table declares no emit.busExcluded or program/dispatch.targetOptions"
-                }
-              }
-            ],
-            "neverEmits": [
-              "LINT_OPERATORS",
-              "LINT_OPERATOR_SEMANTICS"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "a-table-without-the-dispatch-target-options-is-an-unread-error",
-      "entity": {
-        "file": "a.lolo",
-        "cwd": "/w",
-        "raw": "app x [\n]\n",
-        "latin": true,
-        "coreRoot": "/core",
-        "stdRoot": "/std"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LINT_TABLE_READ",
-          "payload": {
-            "data": "eyJvcGVyYXRvcnMiOiB7ImlmIjogeyJjYXRlZ29yeSI6ICJjb250cm9sIn0sICJlbWl0IjogeyJjYXRlZ29yeSI6ICJlZmZlY3QiLCAiYnVzRXhjbHVkZWQiOiBbIklOSVQiLCAiTE9BRCIsICIkTU9VTlQiXX19fQ=="
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "LINT_INPUT_UNREAD",
-                "payload": {
-                  "file": "a.lolo",
-                  "error": "the installed @almadar/std operator table declares no emit.busExcluded or program/dispatch.targetOptions"
-                }
-              }
-            ],
-            "neverEmits": [
-              "LINT_OPERATORS",
-              "LINT_OPERATOR_SEMANTICS"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "a-table-without-either-list-is-an-unread-error",
-      "entity": {
-        "file": "a.lolo",
-        "cwd": "/w",
-        "raw": "app x [\n]\n",
-        "latin": true,
-        "coreRoot": "/core",
-        "stdRoot": "/std"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LINT_TABLE_READ",
-          "payload": {
-            "data": "eyJvcGVyYXRvcnMiOiB7ImlmIjogeyJjYXRlZ29yeSI6ICJjb250cm9sIn19fQ=="
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "LINT_INPUT_UNREAD",
-                "payload": {
-                  "file": "a.lolo",
-                  "error": "the installed @almadar/std operator table declares no emit.busExcluded or program/dispatch.targetOptions"
-                }
-              }
-            ],
-            "neverEmits": [
-              "LINT_OPERATORS",
-              "LINT_OPERATOR_SEMANTICS"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "the-table-answers-the-bus-excluded-and-dispatch-target-lists",
-      "entity": {
-        "file": "a.lolo",
-        "cwd": "/w",
-        "raw": "app x [\n]\n",
-        "latin": true,
-        "coreRoot": "/core",
-        "stdRoot": "/std"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LINT_TABLE_READ",
-          "payload": {
-            "data": "eyJvcGVyYXRvcnMiOiB7ImlmIjogeyJjYXRlZ29yeSI6ICJjb250cm9sIn0sICJlbWl0IjogeyJjYXRlZ29yeSI6ICJlZmZlY3QiLCAiYnVzRXhjbHVkZWQiOiBbIklOSVQiLCAiTE9BRCIsICIkTU9VTlQiXX0sICJwcm9ncmFtL2Rpc3BhdGNoIjogeyJjYXRlZ29yeSI6ICJzdGQtcHJvZ3JhbSIsICJ0YXJnZXRPcHRpb25zIjogWyJvcmJpdGFsIiwgInRhcmdldFRyYWl0IiwgImV2ZW50Il19fX0="
-          },
-          "expect": {
-            "fired": true,
-            "emits": [
-              {
-                "event": "LINT_OPERATOR_SEMANTICS",
-                "payload": {
-                  "semantics": {},
-                  "functions": [],
-                  "busExcluded": [
-                    "INIT",
-                    "LOAD",
-                    "$MOUNT"
-                  ],
-                  "targetOptions": [
-                    "orbital",
-                    "targetTrait",
-                    "event"
-                  ]
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "the-registry-answers-its-event-props-by-pattern",
-      "entity": {
-        "file": "a.lolo",
-        "cwd": "/w",
-        "raw": "app x [\n]\n",
-        "latin": true,
-        "coreRoot": "/core",
-        "stdRoot": "/std"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LINT_PATTERNS_FILE",
-          "payload": {
-            "data": "eyJwYXR0ZXJucyI6IHsiYnV0dG9uIjogeyJwcm9wc1NjaGVtYSI6IHsiYWN0aW9uIjogeyJraW5kIjogImV2ZW50In0sICJsYWJlbCI6IHsia2luZCI6ICJzdHJpbmcifSwgIm9uQ2xpY2siOiB7ImtpbmQiOiAiY2FsbGJhY2sifX19LCAiZGF0YS1saXN0IjogeyJwcm9wc1NjaGVtYSI6IHsiaXRlbUFjdGlvbnMiOiB7ImtpbmQiOiAiZXZlbnQtbGlzdCIsICJldmVudEZpZWxkIjogIm9uIn0sICJyb3dBY3Rpb25zIjogeyJraW5kIjogImV2ZW50LWxpc3QifSwgImVudGl0eUV2ZW50IjogeyJraW5kIjogImV2ZW50LXJlZiJ9fX0sICJhbGVydCI6IHsicHJvcHNTY2hlbWEiOiB7ImFjdGlvbnMiOiB7ImtpbmQiOiAiYXJyYXkifSwgIm1lc3NhZ2UiOiB7ImtpbmQiOiAic3RyaW5nIn19fSwgImNvbnRyb2wtZ3JpZCI6IHsicHJvcHNTY2hlbWEiOiB7ImRpcmVjdGlvbkV2ZW50cyI6IHsia2luZCI6ICJldmVudC1tYXAifSwgIm9uU2V0TW9kZSI6IHsia2luZCI6ICJldmVudC1saXN0ZW4ifX19LCAiYmFyZSI6IHt9fX0="
-          },
-          "expect": {
-            "fired": true,
-            "emits": [
-              {
-                "event": "LINT_EVENT_PROPS",
-                "payload": {
-                  "names": [
-                    "action",
-                    "entityEvent",
-                    "on",
-                    "onClick",
-                    "onSetMode"
-                  ],
-                  "maps": [
-                    "directionEvents"
-                  ],
-                  "listens": {
-                    "control-grid": [
-                      "onSetMode"
-                    ]
-                  },
-                  "byPattern": [
-                    {
-                      "pattern": "button",
-                      "prop": "action",
-                      "field": ""
-                    },
-                    {
-                      "pattern": "button",
-                      "prop": "onClick",
-                      "field": ""
-                    },
-                    {
-                      "pattern": "data-list",
-                      "prop": "itemActions",
-                      "field": "on"
-                    },
-                    {
-                      "pattern": "data-list",
-                      "prop": "rowActions",
-                      "field": "event"
-                    },
-                    {
-                      "pattern": "data-list",
-                      "prop": "entityEvent",
-                      "field": ""
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "control-an-event-list-without-an-event-field-defaults-to-event-per-pattern",
-      "entity": {
-        "file": "a.lolo",
-        "cwd": "/w",
-        "raw": "app x [\n]\n",
-        "latin": true,
-        "coreRoot": "/core",
-        "stdRoot": "/std"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LINT_PATTERNS_FILE",
-          "payload": {
-            "data": "eyJwYXR0ZXJucyI6IHsicyI6IHsicHJvcHNTY2hlbWEiOiB7ImJhZExpc3QiOiB7ImtpbmQiOiAiZXZlbnQtbGlzdCJ9LCAieCI6IHsia2luZCI6ICJzdHJpbmcifX19fX0="
-          },
-          "expect": {
-            "fired": true,
-            "emits": [
-              {
-                "event": "LINT_EVENT_PROPS",
-                "payload": {
-                  "names": [],
-                  "maps": [],
-                  "listens": {},
-                  "byPattern": [
-                    {
-                      "pattern": "s",
-                      "prop": "badList",
-                      "field": "event"
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "control-patterns-with-no-event-bearing-props-have-no-rows",
-      "entity": {
-        "file": "a.lolo",
-        "cwd": "/w",
-        "raw": "app x [\n]\n",
-        "latin": true,
-        "coreRoot": "/core",
-        "stdRoot": "/std"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LINT_PATTERNS_FILE",
-          "payload": {
-            "data": "eyJwYXR0ZXJucyI6IHsiYWxlcnQiOiB7InByb3BzU2NoZW1hIjogeyJhY3Rpb25zIjogeyJraW5kIjogImFycmF5In19fSwgImNnIjogeyJwcm9wc1NjaGVtYSI6IHsibSI6IHsia2luZCI6ICJldmVudC1tYXAifSwgImwiOiB7ImtpbmQiOiAiZXZlbnQtbGlzdGVuIn19fX19"
-          },
-          "expect": {
-            "fired": true,
-            "emits": [
-              {
-                "event": "LINT_EVENT_PROPS",
-                "payload": {
-                  "names": [
-                    "l"
-                  ],
-                  "maps": [
-                    "m"
-                  ],
-                  "listens": {
-                    "cg": [
-                      "l"
-                    ]
-                  },
-                  "byPattern": []
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "the-table-answers-the-emit-slots-of-every-operator-option-shape",
-      "entity": {
-        "file": "a.lolo",
-        "cwd": "/w",
-        "raw": "app x [\n]\n",
-        "latin": true,
-        "coreRoot": "/core",
-        "stdRoot": "/std"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LINT_TABLE_READ",
-          "payload": {
-            "data": "eyJvcGVyYXRvcnMiOiB7ImZldGNoIjogeyJjYXRlZ29yeSI6ICJlZmZlY3QiLCAicGFyYW1zIjogW3sibmFtZSI6ICJlbnRpdHkiLCAidHlwZSI6IHsia2luZCI6ICJlbnRpdHkifX0sIHsibmFtZSI6ICJvcHRpb25zIiwgInR5cGUiOiB7ImtpbmQiOiAib2JqZWN0IiwgImZpZWxkcyI6IHsiZW1pdCI6IHsia2luZCI6ICJvYmplY3QiLCAiZmllbGRzIjogeyJzdWNjZXNzIjogeyJraW5kIjogImV2ZW50S2V5In0sICJmYWlsdXJlIjogeyJraW5kIjogImV2ZW50S2V5In19LCAib3BlbiI6IHRydWV9fSwgIm9wZW4iOiB0cnVlfX1dfSwgIm9zL3dhdGNoIjogeyJjYXRlZ29yeSI6ICJzdGQtb3MiLCAicGFyYW1zIjogW3sibmFtZSI6ICJvIiwgInR5cGUiOiB7ImtpbmQiOiAib2JqZWN0IiwgImZpZWxkcyI6IHsiZW1pdCI6IHsia2luZCI6ICJvYmplY3QiLCAiZmllbGRzIjogeyJzdWNjZXNzIjogeyJraW5kIjogImV2ZW50S2V5In0sICJvbk1lc3NhZ2UiOiB7ImtpbmQiOiAiZXZlbnRLZXkifSwgImNhbmNlbGxlZCI6IHsia2luZCI6ICJldmVudEtleSJ9fSwgIm9wZW4iOiB0cnVlfX0sICJvcGVuIjogdHJ1ZX19XX0sICJzdHIvbGVuIjogeyJjYXRlZ29yeSI6ICJzdHJpbmciLCAicGFyYW1zIjogW3sibmFtZSI6ICJzIiwgInR5cGUiOiAic3RyaW5nIn1dfSwgImVtaXQiOiB7ImNhdGVnb3J5IjogImVmZmVjdCIsICJidXNFeGNsdWRlZCI6IFsiSU5JVCJdLCAicGFyYW1zIjogW3sibmFtZSI6ICJldmVudCIsICJ0eXBlIjogeyJraW5kIjogImV2ZW50S2V5In19XX0sICJwcm9ncmFtL2Rpc3BhdGNoIjogeyJjYXRlZ29yeSI6ICJzdGQtcHJvZ3JhbSIsICJ0YXJnZXRPcHRpb25zIjogWyJvcmJpdGFsIl0sICJwYXJhbXMiOiBbeyJuYW1lIjogIm8iLCAidHlwZSI6IHsia2luZCI6ICJvYmplY3QiLCAiZmllbGRzIjogeyJzY2hlbWEiOiAic3RyaW5nIn0sICJvcGVuIjogdHJ1ZX19XX19fQ=="
-          },
-          "expect": {
-            "fired": true,
-            "emits": [
-              {
-                "event": "LINT_OPERATOR_SEMANTICS",
-                "payload": {
-                  "semantics": {},
-                  "functions": [],
-                  "busExcluded": [
-                    "INIT"
-                  ],
-                  "targetOptions": [
-                    "orbital"
-                  ],
-                  "emitSlots": [
-                    "cancelled",
-                    "failure",
-                    "onMessage",
-                    "success"
-                  ]
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "control-a-table-with-no-emit-option-shape-has-no-slots",
-      "entity": {
-        "file": "a.lolo",
-        "cwd": "/w",
-        "raw": "app x [\n]\n",
-        "latin": true,
-        "coreRoot": "/core",
-        "stdRoot": "/std"
-      },
-      "steps": [
-        {
-          "trait": "OrbLintInput",
-          "from": "reading",
-          "event": "LINT_TABLE_READ",
-          "payload": {
-            "data": "eyJvcGVyYXRvcnMiOiB7InN0ci9sZW4iOiB7ImNhdGVnb3J5IjogInN0cmluZyIsICJwYXJhbXMiOiBbeyJuYW1lIjogInMiLCAidHlwZSI6ICJzdHJpbmcifV19LCAiZW1pdCI6IHsiY2F0ZWdvcnkiOiAiZWZmZWN0IiwgImJ1c0V4Y2x1ZGVkIjogW10sICJwYXJhbXMiOiBbXX0sICJwcm9ncmFtL2Rpc3BhdGNoIjogeyJjYXRlZ29yeSI6ICJ4IiwgInRhcmdldE9wdGlvbnMiOiBbXX19fQ=="
-          },
-          "expect": {
-            "fired": true,
-            "emits": [
-              {
-                "event": "LINT_OPERATOR_SEMANTICS",
-                "payload": {
-                  "semantics": {},
-                  "functions": [],
-                  "busExcluded": [],
-                  "targetOptions": [],
-                  "emitSlots": []
-                }
-              }
-            ]
-          }
-        }
-      ]
+     }
     }
-  ]
+   ]
+  },
+  {
+   "id": "control-lolo-english-first-token-is-english",
+   "entity": {
+    "raw": "app x [\n]\n",
+    "packs": [
+     {
+      "name": "@almadar/lolo-ar",
+      "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"تطبيق\", \"uses\": \"يستخدم\", \"expects\": \"يتوقع\", \"type\": \"نوع\", \"theme\": \"مظهر\", \"orbital\": \"مدار\"}, \"orb\": {\"orbitals\": \"مدارات\"}}"
+     },
+     {
+      "name": "@almadar/lolo-sl",
+      "text": "{\"meta\": {\"code\": \"sl\"}, \"keywords\": {\"app\": \"aplikacija\", \"uses\": \"uporablja\", \"expects\": \"pricakuje\", \"type\": \"tip\", \"theme\": \"tema\", \"orbital\": \"orbitala\"}, \"orb\": {\"orbitals\": \"orbitale\"}}"
+     }
+    ],
+    "file": "a.lolo"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LANGUAGE_PACKS_DONE_HEARD",
+     "payload": {
+      "problem": "",
+      "coreRoot": "/core",
+      "stdRoot": "/std"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_LANGUAGE",
+        "payload": {
+         "latin": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "lolo-slovenian-first-token-is-not-english",
+   "entity": {
+    "raw": "aplikacija x [\n]\n",
+    "packs": [
+     {
+      "name": "@almadar/lolo-ar",
+      "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"تطبيق\", \"uses\": \"يستخدم\", \"expects\": \"يتوقع\", \"type\": \"نوع\", \"theme\": \"مظهر\", \"orbital\": \"مدار\"}, \"orb\": {\"orbitals\": \"مدارات\"}}"
+     },
+     {
+      "name": "@almadar/lolo-sl",
+      "text": "{\"meta\": {\"code\": \"sl\"}, \"keywords\": {\"app\": \"aplikacija\", \"uses\": \"uporablja\", \"expects\": \"pricakuje\", \"type\": \"tip\", \"theme\": \"tema\", \"orbital\": \"orbitala\"}, \"orb\": {\"orbitals\": \"orbitale\"}}"
+     }
+    ],
+    "file": "a.lolo"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LANGUAGE_PACKS_DONE_HEARD",
+     "payload": {
+      "problem": "",
+      "coreRoot": "/core",
+      "stdRoot": "/std"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_LANGUAGE",
+        "payload": {
+         "latin": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-lolo-slovenian-word-with-no-slovenian-pack-is-english",
+   "entity": {
+    "raw": "aplikacija x [\n]\n",
+    "packs": [
+     {
+      "name": "@almadar/lolo-ar",
+      "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"تطبيق\", \"uses\": \"يستخدم\", \"expects\": \"يتوقع\", \"type\": \"نوع\", \"theme\": \"مظهر\", \"orbital\": \"مدار\"}, \"orb\": {\"orbitals\": \"مدارات\"}}"
+     }
+    ],
+    "file": "a.lolo"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LANGUAGE_PACKS_DONE_HEARD",
+     "payload": {
+      "problem": "",
+      "coreRoot": "/core",
+      "stdRoot": "/std"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_LANGUAGE",
+        "payload": {
+         "latin": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "lolo-first-token-skips-comment-lines",
+   "entity": {
+    "raw": ";; note\n\nيستخدم A from \"b\"\n",
+    "packs": [
+     {
+      "name": "@almadar/lolo-ar",
+      "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"تطبيق\", \"uses\": \"يستخدم\", \"expects\": \"يتوقع\", \"type\": \"نوع\", \"theme\": \"مظهر\", \"orbital\": \"مدار\"}, \"orb\": {\"orbitals\": \"مدارات\"}}"
+     },
+     {
+      "name": "@almadar/lolo-sl",
+      "text": "{\"meta\": {\"code\": \"sl\"}, \"keywords\": {\"app\": \"aplikacija\", \"uses\": \"uporablja\", \"expects\": \"pricakuje\", \"type\": \"tip\", \"theme\": \"tema\", \"orbital\": \"orbitala\"}, \"orb\": {\"orbitals\": \"orbitale\"}}"
+     }
+    ],
+    "file": "a.lolo"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LANGUAGE_PACKS_DONE_HEARD",
+     "payload": {
+      "problem": "",
+      "coreRoot": "/core",
+      "stdRoot": "/std"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_LANGUAGE",
+        "payload": {
+         "latin": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-lolo-unknown-first-token-is-english",
+   "entity": {
+    "raw": "foo x [\n]\n",
+    "packs": [
+     {
+      "name": "@almadar/lolo-ar",
+      "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"تطبيق\", \"uses\": \"يستخدم\", \"expects\": \"يتوقع\", \"type\": \"نوع\", \"theme\": \"مظهر\", \"orbital\": \"مدار\"}, \"orb\": {\"orbitals\": \"مدارات\"}}"
+     },
+     {
+      "name": "@almadar/lolo-sl",
+      "text": "{\"meta\": {\"code\": \"sl\"}, \"keywords\": {\"app\": \"aplikacija\", \"uses\": \"uporablja\", \"expects\": \"pricakuje\", \"type\": \"tip\", \"theme\": \"tema\", \"orbital\": \"orbitala\"}, \"orb\": {\"orbitals\": \"orbitale\"}}"
+     }
+    ],
+    "file": "a.lolo"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LANGUAGE_PACKS_DONE_HEARD",
+     "payload": {
+      "problem": "",
+      "coreRoot": "/core",
+      "stdRoot": "/std"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_LANGUAGE",
+        "payload": {
+         "latin": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-lolo-english-keyword-wins-even-when-other-text-is-arabic",
+   "entity": {
+    "raw": "app تطبيق [\n]\n",
+    "packs": [
+     {
+      "name": "@almadar/lolo-ar",
+      "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"تطبيق\", \"uses\": \"يستخدم\", \"expects\": \"يتوقع\", \"type\": \"نوع\", \"theme\": \"مظهر\", \"orbital\": \"مدار\"}, \"orb\": {\"orbitals\": \"مدارات\"}}"
+     },
+     {
+      "name": "@almadar/lolo-sl",
+      "text": "{\"meta\": {\"code\": \"sl\"}, \"keywords\": {\"app\": \"aplikacija\", \"uses\": \"uporablja\", \"expects\": \"pricakuje\", \"type\": \"tip\", \"theme\": \"tema\", \"orbital\": \"orbitala\"}, \"orb\": {\"orbitals\": \"orbitale\"}}"
+     }
+    ],
+    "file": "a.lolo"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LANGUAGE_PACKS_DONE_HEARD",
+     "payload": {
+      "problem": "",
+      "coreRoot": "/core",
+      "stdRoot": "/std"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_LANGUAGE",
+        "payload": {
+         "latin": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "orb-json-arabic-orbitals-key-is-not-english",
+   "entity": {
+    "raw": "{\"مدارات\": []}",
+    "packs": [
+     {
+      "name": "@almadar/lolo-ar",
+      "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"تطبيق\", \"uses\": \"يستخدم\", \"expects\": \"يتوقع\", \"type\": \"نوع\", \"theme\": \"مظهر\", \"orbital\": \"مدار\"}, \"orb\": {\"orbitals\": \"مدارات\"}}"
+     },
+     {
+      "name": "@almadar/lolo-sl",
+      "text": "{\"meta\": {\"code\": \"sl\"}, \"keywords\": {\"app\": \"aplikacija\", \"uses\": \"uporablja\", \"expects\": \"pricakuje\", \"type\": \"tip\", \"theme\": \"tema\", \"orbital\": \"orbitala\"}, \"orb\": {\"orbitals\": \"orbitale\"}}"
+     }
+    ],
+    "file": "a.lolo"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LANGUAGE_PACKS_DONE_HEARD",
+     "payload": {
+      "problem": "",
+      "coreRoot": "/core",
+      "stdRoot": "/std"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_LANGUAGE",
+        "payload": {
+         "latin": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-orb-json-english-orbitals-key-is-english",
+   "entity": {
+    "raw": "{\"name\": \"p\", \"orbitals\": []}",
+    "packs": [
+     {
+      "name": "@almadar/lolo-ar",
+      "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"تطبيق\", \"uses\": \"يستخدم\", \"expects\": \"يتوقع\", \"type\": \"نوع\", \"theme\": \"مظهر\", \"orbital\": \"مدار\"}, \"orb\": {\"orbitals\": \"مدارات\"}}"
+     },
+     {
+      "name": "@almadar/lolo-sl",
+      "text": "{\"meta\": {\"code\": \"sl\"}, \"keywords\": {\"app\": \"aplikacija\", \"uses\": \"uporablja\", \"expects\": \"pricakuje\", \"type\": \"tip\", \"theme\": \"tema\", \"orbital\": \"orbitala\"}, \"orb\": {\"orbitals\": \"orbitale\"}}"
+     }
+    ],
+    "file": "a.lolo"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LANGUAGE_PACKS_DONE_HEARD",
+     "payload": {
+      "problem": "",
+      "coreRoot": "/core",
+      "stdRoot": "/std"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_LANGUAGE",
+        "payload": {
+         "latin": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "orb-json-slovenian-orbitals-key-is-not-english",
+   "entity": {
+    "raw": "{\"orbitale\": []}",
+    "packs": [
+     {
+      "name": "@almadar/lolo-ar",
+      "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"تطبيق\", \"uses\": \"يستخدم\", \"expects\": \"يتوقع\", \"type\": \"نوع\", \"theme\": \"مظهر\", \"orbital\": \"مدار\"}, \"orb\": {\"orbitals\": \"مدارات\"}}"
+     },
+     {
+      "name": "@almadar/lolo-sl",
+      "text": "{\"meta\": {\"code\": \"sl\"}, \"keywords\": {\"app\": \"aplikacija\", \"uses\": \"uporablja\", \"expects\": \"pricakuje\", \"type\": \"tip\", \"theme\": \"tema\", \"orbital\": \"orbitala\"}, \"orb\": {\"orbitals\": \"orbitale\"}}"
+     }
+    ],
+    "file": "a.lolo"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LANGUAGE_PACKS_DONE_HEARD",
+     "payload": {
+      "problem": "",
+      "coreRoot": "/core",
+      "stdRoot": "/std"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_LANGUAGE",
+        "payload": {
+         "latin": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-orb-json-nested-arabic-word-is-not-a-top-level-key",
+   "entity": {
+    "raw": "{\"name\": \"p\", \"x\": {\"مدارات\": 1}}",
+    "packs": [
+     {
+      "name": "@almadar/lolo-ar",
+      "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"تطبيق\", \"uses\": \"يستخدم\", \"expects\": \"يتوقع\", \"type\": \"نوع\", \"theme\": \"مظهر\", \"orbital\": \"مدار\"}, \"orb\": {\"orbitals\": \"مدارات\"}}"
+     },
+     {
+      "name": "@almadar/lolo-sl",
+      "text": "{\"meta\": {\"code\": \"sl\"}, \"keywords\": {\"app\": \"aplikacija\", \"uses\": \"uporablja\", \"expects\": \"pricakuje\", \"type\": \"tip\", \"theme\": \"tema\", \"orbital\": \"orbitala\"}, \"orb\": {\"orbitals\": \"orbitale\"}}"
+     }
+    ],
+    "file": "a.lolo"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LANGUAGE_PACKS_DONE_HEARD",
+     "payload": {
+      "problem": "",
+      "coreRoot": "/core",
+      "stdRoot": "/std"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_LANGUAGE",
+        "payload": {
+         "latin": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-orb-json-with-no-matching-pack-is-english",
+   "entity": {
+    "raw": "{\"مدارات\": []}",
+    "packs": [],
+    "file": "a.lolo"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LANGUAGE_PACKS_DONE_HEARD",
+     "payload": {
+      "problem": "",
+      "coreRoot": "/core",
+      "stdRoot": "/std"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_LANGUAGE",
+        "payload": {
+         "latin": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-pack-scan-problem-leaves-the-language-undecided",
+   "entity": {
+    "raw": "app x [\n]\n",
+    "packs": [],
+    "file": "a.lolo"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LANGUAGE_PACKS_DONE_HEARD",
+     "payload": {
+      "problem": "two packs claim ar",
+      "coreRoot": "/core",
+      "stdRoot": "/std"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_INPUT_UNREAD",
+        "payload": {
+         "file": "a.lolo"
+        }
+       }
+      ],
+      "neverEmits": [
+       "LINT_LANGUAGE"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-clean-scan-decides-the-language",
+   "entity": {
+    "raw": "app x [\n]\n",
+    "packs": [],
+    "file": "a.lolo"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LANGUAGE_PACKS_DONE_HEARD",
+     "payload": {
+      "problem": "",
+      "coreRoot": "/core",
+      "stdRoot": "/std"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_LANGUAGE",
+        "payload": {
+         "latin": true
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "program/read is not hosted in a step, so the run then ends unread; only the decision is asserted"
+  },
+  {
+   "id": "vocab-answers-are-collected-per-pack",
+   "entity": {
+    "packs": [],
+    "file": "a.lolo"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LANGUAGE_PACK_VOCAB_HEARD",
+     "payload": {
+      "name": "@almadar/lolo-ar",
+      "text": "{\"meta\": {\"code\": \"ar\"}, \"keywords\": {\"app\": \"تطبيق\", \"uses\": \"يستخدم\", \"expects\": \"يتوقع\", \"type\": \"نوع\", \"theme\": \"مظهر\", \"orbital\": \"مدار\"}, \"orb\": {\"orbitals\": \"مدارات\"}}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "reading"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-failed-language-scan-leaves-the-file-unread",
+   "entity": {
+    "file": "a.lolo"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LANG_SCAN_ANSWERED",
+     "payload": {
+      "status": 500,
+      "body": "",
+      "stderr": "x"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_INPUT_UNREAD",
+        "payload": {
+         "file": "a.lolo"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-successful-scan-answer-changes-nothing",
+   "entity": {
+    "file": "a.lolo"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LANG_SCAN_ANSWERED",
+     "payload": {
+      "status": 200,
+      "body": "",
+      "stderr": ""
+     },
+     "expect": {
+      "neverEmits": [
+       "LINT_INPUT_UNREAD"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-request-reads-the-file",
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "ready",
+     "event": "LINT_REQUEST",
+     "payload": {
+      "file": "a.lolo"
+     },
+     "expect": {
+      "fired": true,
+      "state": "reading"
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-request-while-reading-is-not-taken",
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_REQUEST",
+     "payload": {
+      "file": "b.lolo"
+     },
+     "expect": {
+      "fired": false
+     }
+    }
+   ],
+   "entity": {
+    "file": "a.lolo"
+   }
+  },
+  {
+   "id": "the-file-read-starts-the-pack-scan",
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_FILE_READ",
+     "payload": {
+      "data": "YXBwIHg="
+     },
+     "expect": {
+      "fired": true,
+      "state": "reading",
+      "emits": [
+       {
+        "event": "LINT_PACKS_RUN",
+        "payload": {
+         "cwd": "/w"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w"
+   }
+  },
+  {
+   "id": "an-unreadable-file-fails-the-input",
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_FILE_UNREAD",
+     "payload": {
+      "error": "x"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_INPUT_UNREAD",
+        "payload": {
+         "file": "a.lolo"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "file": "a.lolo"
+   }
+  },
+  {
+   "id": "control-an-unreadable-file-emits-no-input",
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_FILE_UNREAD",
+     "payload": {
+      "error": "x"
+     },
+     "expect": {
+      "neverEmits": [
+       "LINT_INPUT"
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "file": "a.lolo"
+   }
+  },
+  {
+   "id": "the-lowered-program-is-offered-with-its-raw-text-and-language",
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "program": {
+        "name": "app",
+        "orbitals": []
+       },
+       "lazy": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_LAZY",
+        "payload": {
+         "orbitals": []
+        }
+       },
+       {
+        "event": "LINT_INPUT",
+        "payload": {
+         "file": "a.lolo",
+         "raw": "app x [\n]\n",
+         "latin": false,
+         "program": {
+          "name": "app",
+          "orbitals": []
+         },
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "file": "a.lolo",
+    "raw": "app x [\n]\n",
+    "latin": false
+   }
+  },
+  {
+   "id": "control-the-lowered-program-of-an-english-file-is-latin",
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "program": {
+        "name": "app",
+        "orbitals": []
+       },
+       "lazy": []
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_LAZY",
+        "payload": {
+         "orbitals": []
+        }
+       },
+       {
+        "event": "LINT_INPUT",
+        "payload": {
+         "file": "a.lolo",
+         "raw": "app x [\n]\n",
+         "latin": true,
+         "program": {
+          "name": "app",
+          "orbitals": []
+         },
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "file": "a.lolo",
+    "raw": "app x [\n]\n",
+    "latin": true
+   }
+  },
+  {
+   "id": "the-working-directory-reads-the-file-at-its-absolute-path",
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_CWD",
+     "payload": {
+      "path": "/w"
+     },
+     "expect": {
+      "fired": true,
+      "state": "reading",
+      "neverEmits": [
+       "LINT_PACKS_RUN"
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "file": "a.lolo"
+   }
+  },
+  {
+   "id": "a-lazy-child-is-named-before-the-root-program-is-offered",
+   "entity": {
+    "file": "a.lolo",
+    "raw": "app x [\n]\n",
+    "latin": false
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "program": {
+        "name": "app",
+        "orbitals": []
+       },
+       "lazy": [
+        {
+         "orbital": "Child",
+         "program": {
+          "name": "child",
+          "orbitals": [
+           {
+            "name": "Child"
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_LAZY",
+        "payload": {
+         "orbitals": [
+          "Child"
+         ]
+        }
+       },
+       {
+        "event": "LINT_INPUT",
+        "payload": {
+         "file": "a.lolo",
+         "raw": "app x [\n]\n",
+         "latin": false,
+         "program": {
+          "name": "app",
+          "orbitals": []
+         },
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-child-request-offers-that-lazy-childs-program",
+   "entity": {
+    "file": "a.lolo",
+    "raw": "app x [\n]\n",
+    "latin": false,
+    "lazy": [
+     {
+      "orbital": "Child",
+      "program": {
+       "name": "child",
+       "orbitals": [
+        {
+         "name": "Child"
+        }
+       ]
+      }
+     },
+     {
+      "orbital": "Second",
+      "program": {
+       "name": "second",
+       "orbitals": [
+        {
+         "name": "Second"
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "ready",
+     "event": "LINT_CHILD_REQUEST",
+     "payload": {
+      "index": 1
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_INPUT",
+        "payload": {
+         "file": "a.lolo",
+         "raw": "app x [\n]\n",
+         "latin": false,
+         "program": {
+          "name": "second",
+          "orbitals": [
+           {
+            "name": "Second"
+           }
+          ]
+         },
+         "scope": "Second"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-child-request-for-index-0-offers-the-first-child-not-the-second",
+   "entity": {
+    "file": "a.lolo",
+    "raw": "app x [\n]\n",
+    "latin": false,
+    "lazy": [
+     {
+      "orbital": "Child",
+      "program": {
+       "name": "child",
+       "orbitals": [
+        {
+         "name": "Child"
+        }
+       ]
+      }
+     },
+     {
+      "orbital": "Second",
+      "program": {
+       "name": "second",
+       "orbitals": [
+        {
+         "name": "Second"
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "ready",
+     "event": "LINT_CHILD_REQUEST",
+     "payload": {
+      "index": 0
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_INPUT",
+        "payload": {
+         "file": "a.lolo",
+         "raw": "app x [\n]\n",
+         "latin": false,
+         "program": {
+          "name": "child",
+          "orbitals": [
+           {
+            "name": "Child"
+           }
+          ]
+         },
+         "scope": "Child"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "no-core-root-is-an-unread-error",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": ""
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_CORE_READ",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_INPUT_UNREAD",
+        "payload": {
+         "file": "a.lolo",
+         "error": "the language scan found no compatible @almadar/core"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-manifest-without-a-component-mapping-is-an-unread-error",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_CORE_MANIFEST",
+     "payload": {
+      "data": "eyJuYW1lIjogIkBhbG1hZGFyL2NvcmUiLCAib3JiTGFuZ3VhZ2UiOiB7ImNvbXBpbGVyIjogIj49MTcifX0="
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_INPUT_UNREAD",
+        "payload": {
+         "file": "a.lolo",
+         "error": "the installed @almadar/core declares no orbLanguage.componentMapping"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-manifest-with-a-component-mapping-reads-on",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_CORE_MANIFEST",
+     "payload": {
+      "data": "eyJuYW1lIjogIkBhbG1hZGFyL2NvcmUiLCAib3JiTGFuZ3VhZ2UiOiB7ImNvbXBpbGVyIjogIj49MTciLCAiY29tcG9uZW50TWFwcGluZyI6ICJkaXN0L3BhdHRlcm5zL2NvbXBvbmVudC1tYXBwaW5nLmpzb24ifX0="
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "LINT_INPUT_UNREAD",
+       "LINT_COMPONENTS"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-mapping-answers-its-component-names-sorted-once",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_MAPPING_READ",
+     "payload": {
+      "data": "eyJ2ZXJzaW9uIjogIjEuMC4wIiwgIm1hcHBpbmdzIjogeyJzdGF0LWNhcmQiOiB7ImNvbXBvbmVudCI6ICJTdGF0Q2FyZCIsICJpbXBvcnRQYXRoIjogIngifSwgInRhYmxlLXZpZXciOiB7ImNvbXBvbmVudCI6ICJUYWJsZVZpZXcifSwgInN0YXQtY2FyZC1hbHQiOiB7ImNvbXBvbmVudCI6ICJTdGF0Q2FyZCJ9fX0="
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_COMPONENTS",
+        "payload": {
+         "names": [
+          "StatCard",
+          "TableView"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-file-that-is-not-a-mapping-is-an-unread-error",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_MAPPING_READ",
+     "payload": {
+      "data": "WyJTdGF0Q2FyZCJd"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_INPUT_UNREAD",
+        "payload": {
+         "file": "a.lolo",
+         "error": "the installed @almadar/core component mapping is not a component mapping"
+        }
+       }
+      ],
+      "neverEmits": [
+       "LINT_COMPONENTS"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_MAPPING_READ",
+     "payload": {
+      "data": "eyJtYXBwaW5ncyI6IHsic3RhdC1jYXJkIjogeyJjb21wb25lbnQiOiAiU3RhdENhcmQifX19"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_COMPONENTS",
+        "payload": {
+         "names": [
+          "StatCard"
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "LINT_OPERATORS"
+      ]
+     }
+    }
+   ],
+   "id": "control-the-mapping-read-goes-on-to-the-std-table"
+  },
+  {
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": ""
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_STD_READ",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_INPUT_UNREAD",
+        "payload": {
+         "file": "a.lolo",
+         "error": "the language scan found no compatible @almadar/std"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "id": "no-std-root-is-an-unread-error"
+  },
+  {
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_STD_MANIFEST",
+     "payload": {
+      "data": "eyJuYW1lIjogIkBhbG1hZGFyL3N0ZCIsICJvcmJMYW5ndWFnZSI6IHsiY29tcGlsZXIiOiAiPj0xNyJ9fQ=="
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_INPUT_UNREAD",
+        "payload": {
+         "file": "a.lolo",
+         "error": "the installed @almadar/std declares no orbLanguage.operators"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "id": "a-std-manifest-without-an-operator-table-is-an-unread-error"
+  },
+  {
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_TABLE_READ",
+     "payload": {
+      "data": "eyJvcGVyYXRvcnMiOiB7ImlmIjogeyJjYXRlZ29yeSI6ICJjb250cm9sIn0sICIrIjogeyJjYXRlZ29yeSI6ICJtYXRoIn0sICJzdHIvbGVuIjogeyJjYXRlZ29yeSI6ICJzdHJpbmcifSwgImFuZCI6IHsiY2F0ZWdvcnkiOiAibG9naWMifSwgImVtaXQiOiB7ImNhdGVnb3J5IjogImVmZmVjdCIsICJidXNFeGNsdWRlZCI6IFsiSU5JVCIsICJMT0FEIiwgIiRNT1VOVCJdfSwgInByb2dyYW0vZGlzcGF0Y2giOiB7ImNhdGVnb3J5IjogInN0ZC1wcm9ncmFtIiwgInRhcmdldE9wdGlvbnMiOiBbIm9yYml0YWwiLCAidGFyZ2V0VHJhaXQiLCAiZXZlbnQiXX19fQ=="
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_OPERATORS",
+        "payload": {
+         "names": [
+          "+",
+          "and",
+          "emit",
+          "if"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "id": "the-table-answers-its-bare-operator-names-sorted"
+  },
+  {
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_TABLE_READ",
+     "payload": {
+      "data": "WyJpZiJd"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_INPUT_UNREAD",
+        "payload": {
+         "file": "a.lolo",
+         "error": "the installed @almadar/std operator table is not an operator table"
+        }
+       }
+      ],
+      "neverEmits": [
+       "LINT_OPERATORS"
+      ]
+     }
+    }
+   ],
+   "id": "control-a-file-that-is-not-an-operator-table-is-an-unread-error"
+  },
+  {
+   "id": "a-file-that-is-not-valid-text-is-an-unread-error",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_FILE_READ",
+     "payload": {
+      "data": "/w=="
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_INPUT_UNREAD",
+        "payload": {
+         "file": "a.lolo",
+         "error": "the file is not valid text"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-core-manifest-that-is-not-valid-text-is-an-unread-error",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_CORE_MANIFEST",
+     "payload": {
+      "data": "/w=="
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_INPUT_UNREAD",
+        "payload": {
+         "file": "a.lolo",
+         "error": "the installed @almadar/core package.json is not valid text"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-component-mapping-that-is-not-valid-text-is-an-unread-error",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_MAPPING_READ",
+     "payload": {
+      "data": "/w=="
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_INPUT_UNREAD",
+        "payload": {
+         "file": "a.lolo",
+         "error": "the installed @almadar/core component mapping is not valid text"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-std-manifest-that-is-not-valid-text-is-an-unread-error",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_STD_MANIFEST",
+     "payload": {
+      "data": "/w=="
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_INPUT_UNREAD",
+        "payload": {
+         "file": "a.lolo",
+         "error": "the installed @almadar/std package.json is not valid text"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-operator-table-that-is-not-valid-text-is-an-unread-error",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_TABLE_READ",
+     "payload": {
+      "data": "/w=="
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_INPUT_UNREAD",
+        "payload": {
+         "file": "a.lolo",
+         "error": "the installed @almadar/std operator table is not valid text"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-json-document-that-does-not-parse-is-an-unread-error",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "{ nope",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LANGUAGE_PACKS_DONE_HEARD",
+     "payload": {
+      "problem": "",
+      "coreRoot": "/core",
+      "stdRoot": "/std"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_INPUT_UNREAD",
+        "payload": {
+         "file": "a.lolo",
+         "error": "the file is not a valid JSON document"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-manifest-records-the-pattern-registry-path",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std",
+    "patternsFile": ""
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_CORE_MANIFEST",
+     "payload": {
+      "data": "eyJvcmJMYW5ndWFnZSI6IHsiY29tcG9uZW50TWFwcGluZyI6ICJtLmpzb24iLCAicGF0dGVybnMiOiAiZGlzdC9wLmpzb24ifX0="
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "LINT_INPUT_UNREAD"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-mapping-read-goes-on-to-the-pattern-registry",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std",
+    "patternsFile": "dist/p.json"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_MAPPING_READ",
+     "payload": {
+      "data": "eyJtYXBwaW5ncyI6IHsiYSI6IHsiY29tcG9uZW50IjogIkEifX19"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_COMPONENTS",
+        "payload": {
+         "names": [
+          "A"
+         ]
+        }
+       },
+       {
+        "event": "LINT_PATTERNS_READ",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "LINT_STD_READ"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-manifest-without-a-pattern-registry-is-an-unread-error",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std",
+    "patternsFile": ""
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_PATTERNS_READ",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_INPUT_UNREAD",
+        "payload": {
+         "file": "a.lolo",
+         "error": "the installed @almadar/core declares no orbLanguage.patterns"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-declared-pattern-registry-is-read",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std",
+    "patternsFile": "dist/p.json"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_PATTERNS_READ",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "LINT_INPUT_UNREAD"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-registry-answers-its-event-bearing-prop-names",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_PATTERNS_FILE",
+     "payload": {
+      "data": "eyJ2ZXJzaW9uIjogIjEiLCAicGF0dGVybnMiOiB7ImJ1dHRvbiI6IHsicHJvcHNTY2hlbWEiOiB7ImFjdGlvbiI6IHsia2luZCI6ICJldmVudCJ9LCAibGFiZWwiOiB7InR5cGVzIjogWyJzdHJpbmciXX0sICJvbkNsaWNrIjogeyJraW5kIjogImNhbGxiYWNrIn19fSwgImRhdGEtbGlzdCI6IHsicHJvcHNTY2hlbWEiOiB7Iml0ZW1BY3Rpb25zIjogeyJraW5kIjogImV2ZW50LWxpc3QiLCAiZXZlbnRGaWVsZCI6ICJldmVudCJ9LCAiZW50aXR5RXZlbnQiOiB7ImtpbmQiOiAiZXZlbnQtcmVmIn19fSwgImNvZGUtYmxvY2siOiB7InByb3BzU2NoZW1hIjogeyJvblNldE1vZGUiOiB7ImtpbmQiOiAiZXZlbnQtbGlzdGVuIn0sICJvbkluc2VydFRleHQiOiB7ImtpbmQiOiAiZXZlbnQtbGlzdGVuIn0sICJjb2RlIjogeyJraW5kIjogInN0cmluZyJ9fX0sICJjb250cm9sLWdyaWQiOiB7InByb3BzU2NoZW1hIjogeyJkaXJlY3Rpb25FdmVudHMiOiB7ImtpbmQiOiAiZXZlbnQtbWFwIn19fSwgInN0YXQiOiB7InByb3BzU2NoZW1hIjogeyJvblNldE1vZGUiOiB7ImtpbmQiOiAiY2FsbGJhY2sifSwgImJhZExpc3QiOiB7ImtpbmQiOiAiZXZlbnQtbGlzdCJ9fX19fQ=="
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_EVENT_PROPS",
+        "payload": {
+         "names": [
+          "action",
+          "entityEvent",
+          "event",
+          "onClick",
+          "onInsertText",
+          "onSetMode"
+         ],
+         "maps": [
+          "directionEvents"
+         ],
+         "listens": {
+          "code-block": [
+           "onSetMode",
+           "onInsertText"
+          ]
+         }
+        }
+       },
+       {
+        "event": "LINT_STD_READ",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-an-event-list-without-an-event-field-adds-no-name",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_PATTERNS_FILE",
+     "payload": {
+      "data": "eyJwYXR0ZXJucyI6IHsicyI6IHsicHJvcHNTY2hlbWEiOiB7ImJhZExpc3QiOiB7ImtpbmQiOiAiZXZlbnQtbGlzdCJ9LCAieCI6IHsia2luZCI6ICJzdHJpbmcifX19fX0="
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_EVENT_PROPS",
+        "payload": {
+         "names": [],
+         "maps": [],
+         "listens": {}
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-pattern-registry-that-is-not-valid-text-is-an-unread-error",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_PATTERNS_FILE",
+     "payload": {
+      "data": "/w=="
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_INPUT_UNREAD",
+        "payload": {
+         "file": "a.lolo",
+         "error": "the installed @almadar/core pattern registry is not valid text"
+        }
+       }
+      ],
+      "neverEmits": [
+       "LINT_EVENT_PROPS"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-file-that-is-not-a-pattern-registry-is-an-unread-error",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_PATTERNS_FILE",
+     "payload": {
+      "data": "WyJidXR0b24iXQ=="
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_INPUT_UNREAD",
+        "payload": {
+         "file": "a.lolo",
+         "error": "the installed @almadar/core pattern registry is not a pattern registry"
+        }
+       }
+      ],
+      "neverEmits": [
+       "LINT_EVENT_PROPS"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "g-std-154-a-resolved-orb-with-a-null-member-is-read",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "{\"orbitals\":[{\"name\":\"O\",\"entity\":{\"name\":\"E\",\"fields\":[{\"name\":\"f\",\"default\":null}]},\"pages\":null}]}",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LANGUAGE_PACKS_DONE_HEARD",
+     "payload": {
+      "problem": "",
+      "coreRoot": "/core",
+      "stdRoot": "/std"
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "LINT_INPUT_UNREAD"
+      ],
+      "emits": [
+       {
+        "event": "LINT_LANGUAGE",
+        "payload": {
+         "latin": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-resolved-orb-with-no-null-is-read",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "{\"orbitals\":[{\"name\":\"O\"}]}",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LANGUAGE_PACKS_DONE_HEARD",
+     "payload": {
+      "problem": "",
+      "coreRoot": "/core",
+      "stdRoot": "/std"
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "LINT_INPUT_UNREAD"
+      ],
+      "emits": [
+       {
+        "event": "LINT_LANGUAGE",
+        "payload": {
+         "latin": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-table-answers-its-return-semantics-and-function-operators",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_TABLE_READ",
+     "payload": {
+      "data": "eyJvcGVyYXRvcnMiOiB7ImlmIjogeyJjYXRlZ29yeSI6ICJjb250cm9sIiwgInJldHVyblNlbWFudGljcyI6ICJicmFuY2gtdW5pb24iLCAicmV0dXJuVHlwZSI6IHsia2luZCI6ICJ2YXIiLCAibmFtZSI6ICJUIn19LCAiYXJyYXkvbWFwIjogeyJjYXRlZ29yeSI6ICJhcnJheSIsICJyZXR1cm5TZW1hbnRpY3MiOiAibGFtYmRhLXJlc3VsdCIsICJyZXR1cm5UeXBlIjogeyJraW5kIjogImFycmF5In19LCAiZm4iOiB7ImNhdGVnb3J5IjogImNvbnRyb2wiLCAicmV0dXJuVHlwZSI6IHsia2luZCI6ICJmbiIsICJwYXJhbXMiOiBbXX19LCAiKyI6IHsiY2F0ZWdvcnkiOiAibWF0aCIsICJyZXR1cm5UeXBlIjogIm51bWJlciJ9LCAic3RyL2xlbiI6IHsiY2F0ZWdvcnkiOiAic3RyaW5nIn0sICJlbWl0IjogeyJjYXRlZ29yeSI6ICJlZmZlY3QiLCAiYnVzRXhjbHVkZWQiOiBbIklOSVQiLCAiTE9BRCIsICIkTU9VTlQiXX0sICJwcm9ncmFtL2Rpc3BhdGNoIjogeyJjYXRlZ29yeSI6ICJzdGQtcHJvZ3JhbSIsICJ0YXJnZXRPcHRpb25zIjogWyJvcmJpdGFsIiwgInRhcmdldFRyYWl0IiwgImV2ZW50Il19fX0="
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_OPERATOR_SEMANTICS",
+        "payload": {
+         "semantics": {
+          "if": "branch-union",
+          "array/map": "lambda-result"
+         },
+         "functions": [
+          "fn"
+         ],
+         "busExcluded": [
+          "INIT",
+          "LOAD",
+          "$MOUNT"
+         ],
+         "targetOptions": [
+          "orbital",
+          "targetTrait",
+          "event"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-table-without-semantics-answers-none",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_TABLE_READ",
+     "payload": {
+      "data": "eyJvcGVyYXRvcnMiOiB7IisiOiB7ImNhdGVnb3J5IjogIm1hdGgiLCAicmV0dXJuVHlwZSI6ICJudW1iZXIifSwgImVtaXQiOiB7ImNhdGVnb3J5IjogImVmZmVjdCIsICJidXNFeGNsdWRlZCI6IFsiSU5JVCIsICJMT0FEIiwgIiRNT1VOVCJdfSwgInByb2dyYW0vZGlzcGF0Y2giOiB7ImNhdGVnb3J5IjogInN0ZC1wcm9ncmFtIiwgInRhcmdldE9wdGlvbnMiOiBbIm9yYml0YWwiLCAidGFyZ2V0VHJhaXQiLCAiZXZlbnQiXX19fQ=="
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_OPERATOR_SEMANTICS",
+        "payload": {
+         "semantics": {},
+         "functions": [],
+         "busExcluded": [
+          "INIT",
+          "LOAD",
+          "$MOUNT"
+         ],
+         "targetOptions": [
+          "orbital",
+          "targetTrait",
+          "event"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-table-without-the-bus-excluded-list-is-an-unread-error",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_TABLE_READ",
+     "payload": {
+      "data": "eyJvcGVyYXRvcnMiOiB7ImlmIjogeyJjYXRlZ29yeSI6ICJjb250cm9sIn0sICJwcm9ncmFtL2Rpc3BhdGNoIjogeyJjYXRlZ29yeSI6ICJzdGQtcHJvZ3JhbSIsICJ0YXJnZXRPcHRpb25zIjogWyJvcmJpdGFsIiwgInRhcmdldFRyYWl0IiwgImV2ZW50Il19fX0="
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_INPUT_UNREAD",
+        "payload": {
+         "file": "a.lolo",
+         "error": "the installed @almadar/std operator table declares no emit.busExcluded or program/dispatch.targetOptions"
+        }
+       }
+      ],
+      "neverEmits": [
+       "LINT_OPERATORS",
+       "LINT_OPERATOR_SEMANTICS"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-table-without-the-dispatch-target-options-is-an-unread-error",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_TABLE_READ",
+     "payload": {
+      "data": "eyJvcGVyYXRvcnMiOiB7ImlmIjogeyJjYXRlZ29yeSI6ICJjb250cm9sIn0sICJlbWl0IjogeyJjYXRlZ29yeSI6ICJlZmZlY3QiLCAiYnVzRXhjbHVkZWQiOiBbIklOSVQiLCAiTE9BRCIsICIkTU9VTlQiXX19fQ=="
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_INPUT_UNREAD",
+        "payload": {
+         "file": "a.lolo",
+         "error": "the installed @almadar/std operator table declares no emit.busExcluded or program/dispatch.targetOptions"
+        }
+       }
+      ],
+      "neverEmits": [
+       "LINT_OPERATORS",
+       "LINT_OPERATOR_SEMANTICS"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-table-without-either-list-is-an-unread-error",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_TABLE_READ",
+     "payload": {
+      "data": "eyJvcGVyYXRvcnMiOiB7ImlmIjogeyJjYXRlZ29yeSI6ICJjb250cm9sIn19fQ=="
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_INPUT_UNREAD",
+        "payload": {
+         "file": "a.lolo",
+         "error": "the installed @almadar/std operator table declares no emit.busExcluded or program/dispatch.targetOptions"
+        }
+       }
+      ],
+      "neverEmits": [
+       "LINT_OPERATORS",
+       "LINT_OPERATOR_SEMANTICS"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-table-answers-the-bus-excluded-and-dispatch-target-lists",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_TABLE_READ",
+     "payload": {
+      "data": "eyJvcGVyYXRvcnMiOiB7ImlmIjogeyJjYXRlZ29yeSI6ICJjb250cm9sIn0sICJlbWl0IjogeyJjYXRlZ29yeSI6ICJlZmZlY3QiLCAiYnVzRXhjbHVkZWQiOiBbIklOSVQiLCAiTE9BRCIsICIkTU9VTlQiXX0sICJwcm9ncmFtL2Rpc3BhdGNoIjogeyJjYXRlZ29yeSI6ICJzdGQtcHJvZ3JhbSIsICJ0YXJnZXRPcHRpb25zIjogWyJvcmJpdGFsIiwgInRhcmdldFRyYWl0IiwgImV2ZW50Il19fX0="
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_OPERATOR_SEMANTICS",
+        "payload": {
+         "semantics": {},
+         "functions": [],
+         "busExcluded": [
+          "INIT",
+          "LOAD",
+          "$MOUNT"
+         ],
+         "targetOptions": [
+          "orbital",
+          "targetTrait",
+          "event"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-registry-answers-its-event-props-by-pattern",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_PATTERNS_FILE",
+     "payload": {
+      "data": "eyJwYXR0ZXJucyI6IHsiYnV0dG9uIjogeyJwcm9wc1NjaGVtYSI6IHsiYWN0aW9uIjogeyJraW5kIjogImV2ZW50In0sICJsYWJlbCI6IHsia2luZCI6ICJzdHJpbmcifSwgIm9uQ2xpY2siOiB7ImtpbmQiOiAiY2FsbGJhY2sifX19LCAiZGF0YS1saXN0IjogeyJwcm9wc1NjaGVtYSI6IHsiaXRlbUFjdGlvbnMiOiB7ImtpbmQiOiAiZXZlbnQtbGlzdCIsICJldmVudEZpZWxkIjogIm9uIn0sICJyb3dBY3Rpb25zIjogeyJraW5kIjogImV2ZW50LWxpc3QifSwgImVudGl0eUV2ZW50IjogeyJraW5kIjogImV2ZW50LXJlZiJ9fX0sICJhbGVydCI6IHsicHJvcHNTY2hlbWEiOiB7ImFjdGlvbnMiOiB7ImtpbmQiOiAiYXJyYXkifSwgIm1lc3NhZ2UiOiB7ImtpbmQiOiAic3RyaW5nIn19fSwgImNvbnRyb2wtZ3JpZCI6IHsicHJvcHNTY2hlbWEiOiB7ImRpcmVjdGlvbkV2ZW50cyI6IHsia2luZCI6ICJldmVudC1tYXAifSwgIm9uU2V0TW9kZSI6IHsia2luZCI6ICJldmVudC1saXN0ZW4ifX19LCAiYmFyZSI6IHt9fX0="
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_EVENT_PROPS",
+        "payload": {
+         "names": [
+          "action",
+          "entityEvent",
+          "on",
+          "onClick",
+          "onSetMode"
+         ],
+         "maps": [
+          "directionEvents"
+         ],
+         "listens": {
+          "control-grid": [
+           "onSetMode"
+          ]
+         },
+         "byPattern": [
+          {
+           "pattern": "button",
+           "prop": "action",
+           "field": ""
+          },
+          {
+           "pattern": "button",
+           "prop": "onClick",
+           "field": ""
+          },
+          {
+           "pattern": "data-list",
+           "prop": "itemActions",
+           "field": "on"
+          },
+          {
+           "pattern": "data-list",
+           "prop": "rowActions",
+           "field": "event"
+          },
+          {
+           "pattern": "data-list",
+           "prop": "entityEvent",
+           "field": ""
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-an-event-list-without-an-event-field-defaults-to-event-per-pattern",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_PATTERNS_FILE",
+     "payload": {
+      "data": "eyJwYXR0ZXJucyI6IHsicyI6IHsicHJvcHNTY2hlbWEiOiB7ImJhZExpc3QiOiB7ImtpbmQiOiAiZXZlbnQtbGlzdCJ9LCAieCI6IHsia2luZCI6ICJzdHJpbmcifX19fX0="
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_EVENT_PROPS",
+        "payload": {
+         "names": [],
+         "maps": [],
+         "listens": {},
+         "byPattern": [
+          {
+           "pattern": "s",
+           "prop": "badList",
+           "field": "event"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-patterns-with-no-event-bearing-props-have-no-rows",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_PATTERNS_FILE",
+     "payload": {
+      "data": "eyJwYXR0ZXJucyI6IHsiYWxlcnQiOiB7InByb3BzU2NoZW1hIjogeyJhY3Rpb25zIjogeyJraW5kIjogImFycmF5In19fSwgImNnIjogeyJwcm9wc1NjaGVtYSI6IHsibSI6IHsia2luZCI6ICJldmVudC1tYXAifSwgImwiOiB7ImtpbmQiOiAiZXZlbnQtbGlzdGVuIn19fX19"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_EVENT_PROPS",
+        "payload": {
+         "names": [
+          "l"
+         ],
+         "maps": [
+          "m"
+         ],
+         "listens": {
+          "cg": [
+           "l"
+          ]
+         },
+         "byPattern": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-table-answers-the-emit-slots-of-every-operator-option-shape",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_TABLE_READ",
+     "payload": {
+      "data": "eyJvcGVyYXRvcnMiOiB7ImZldGNoIjogeyJjYXRlZ29yeSI6ICJlZmZlY3QiLCAicGFyYW1zIjogW3sibmFtZSI6ICJlbnRpdHkiLCAidHlwZSI6IHsia2luZCI6ICJlbnRpdHkifX0sIHsibmFtZSI6ICJvcHRpb25zIiwgInR5cGUiOiB7ImtpbmQiOiAib2JqZWN0IiwgImZpZWxkcyI6IHsiZW1pdCI6IHsia2luZCI6ICJvYmplY3QiLCAiZmllbGRzIjogeyJzdWNjZXNzIjogeyJraW5kIjogImV2ZW50S2V5In0sICJmYWlsdXJlIjogeyJraW5kIjogImV2ZW50S2V5In19LCAib3BlbiI6IHRydWV9fSwgIm9wZW4iOiB0cnVlfX1dfSwgIm9zL3dhdGNoIjogeyJjYXRlZ29yeSI6ICJzdGQtb3MiLCAicGFyYW1zIjogW3sibmFtZSI6ICJvIiwgInR5cGUiOiB7ImtpbmQiOiAib2JqZWN0IiwgImZpZWxkcyI6IHsiZW1pdCI6IHsia2luZCI6ICJvYmplY3QiLCAiZmllbGRzIjogeyJzdWNjZXNzIjogeyJraW5kIjogImV2ZW50S2V5In0sICJvbk1lc3NhZ2UiOiB7ImtpbmQiOiAiZXZlbnRLZXkifSwgImNhbmNlbGxlZCI6IHsia2luZCI6ICJldmVudEtleSJ9fSwgIm9wZW4iOiB0cnVlfX0sICJvcGVuIjogdHJ1ZX19XX0sICJzdHIvbGVuIjogeyJjYXRlZ29yeSI6ICJzdHJpbmciLCAicGFyYW1zIjogW3sibmFtZSI6ICJzIiwgInR5cGUiOiAic3RyaW5nIn1dfSwgImVtaXQiOiB7ImNhdGVnb3J5IjogImVmZmVjdCIsICJidXNFeGNsdWRlZCI6IFsiSU5JVCJdLCAicGFyYW1zIjogW3sibmFtZSI6ICJldmVudCIsICJ0eXBlIjogeyJraW5kIjogImV2ZW50S2V5In19XX0sICJwcm9ncmFtL2Rpc3BhdGNoIjogeyJjYXRlZ29yeSI6ICJzdGQtcHJvZ3JhbSIsICJ0YXJnZXRPcHRpb25zIjogWyJvcmJpdGFsIl0sICJwYXJhbXMiOiBbeyJuYW1lIjogIm8iLCAidHlwZSI6IHsia2luZCI6ICJvYmplY3QiLCAiZmllbGRzIjogeyJzY2hlbWEiOiAic3RyaW5nIn0sICJvcGVuIjogdHJ1ZX19XX19fQ=="
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_OPERATOR_SEMANTICS",
+        "payload": {
+         "semantics": {},
+         "functions": [],
+         "busExcluded": [
+          "INIT"
+         ],
+         "targetOptions": [
+          "orbital"
+         ],
+         "emitSlots": [
+          "cancelled",
+          "failure",
+          "onMessage",
+          "success"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-table-with-no-emit-option-shape-has-no-slots",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_TABLE_READ",
+     "payload": {
+      "data": "eyJvcGVyYXRvcnMiOiB7InN0ci9sZW4iOiB7ImNhdGVnb3J5IjogInN0cmluZyIsICJwYXJhbXMiOiBbeyJuYW1lIjogInMiLCAidHlwZSI6ICJzdHJpbmcifV19LCAiZW1pdCI6IHsiY2F0ZWdvcnkiOiAiZWZmZWN0IiwgImJ1c0V4Y2x1ZGVkIjogW10sICJwYXJhbXMiOiBbXX0sICJwcm9ncmFtL2Rpc3BhdGNoIjogeyJjYXRlZ29yeSI6ICJ4IiwgInRhcmdldE9wdGlvbnMiOiBbXX19fQ=="
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_OPERATOR_SEMANTICS",
+        "payload": {
+         "semantics": {},
+         "functions": [],
+         "busExcluded": [],
+         "targetOptions": [],
+         "emitSlots": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-table-answers-every-operator-name-namespaced-ones-included",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_TABLE_READ",
+     "payload": {
+      "data": "eyJvcGVyYXRvcnMiOiB7ImlmIjogeyJjYXRlZ29yeSI6ICJjb250cm9sIiwgIm1pbkFyaXR5IjogMiwgIm1heEFyaXR5IjogMywgInJldHVyblR5cGUiOiAiYW55IiwgInBhcmFtcyI6IFt7Im5hbWUiOiAiY29uZCIsICJ0eXBlIjogImJvb2xlYW4ifSwgeyJuYW1lIjogInRoZW4iLCAidHlwZSI6IHsia2luZCI6ICJ2YXIiLCAibmFtZSI6ICJUIn19XX0sICJlbWl0IjogeyJjYXRlZ29yeSI6ICJlZmZlY3QiLCAibWluQXJpdHkiOiAxLCAibWF4QXJpdHkiOiAyLCAiYnVzRXhjbHVkZWQiOiBbIklOSVQiXSwgImhhc1NpZGVFZmZlY3RzIjogdHJ1ZSwgInJ1bnNPbiI6ICJhbnkiLCAicGFyYW1zIjogW3sibmFtZSI6ICJldmVudCIsICJ0eXBlIjogeyJraW5kIjogImV2ZW50S2V5In19LCB7Im5hbWUiOiAicGF5bG9hZCIsICJvcHRpb25hbCI6IHRydWUsICJ0eXBlIjogeyJraW5kIjogIm9iamVjdCIsICJmaWVsZHMiOiB7InN1Y2Nlc3MiOiB7ImtpbmQiOiAiZXZlbnRLZXkifX0sICJvcGVuIjogdHJ1ZX19XX0sICJwcm9ncmFtL2Rpc3BhdGNoIjogeyJjYXRlZ29yeSI6ICJzdGQtcHJvZ3JhbSIsICJtaW5Bcml0eSI6IDEsICJtYXhBcml0eSI6IG51bGwsICJ0YXJnZXRPcHRpb25zIjogWyJvcmJpdGFsIl0sICJob3N0IjogInByb2dyYW0iLCAicGFyYW1zIjogW3sibmFtZSI6ICJvcHRzIiwgInR5cGUiOiB7ImtpbmQiOiAidW5pb24iLCAib2YiOiBbeyJraW5kIjogImxpdGVyYWwiLCAidmFsdWUiOiBudWxsfSwgeyJraW5kIjogImxpdGVyYWwiLCAidmFsdWUiOiAieCJ9LCB7ImtpbmQiOiAibGl0ZXJhbCIsICJ2YWx1ZSI6IDN9XX19XX0sICJvcy9yZWFkLWZpbGUiOiB7ImNhdGVnb3J5IjogIm9zIiwgIm1pbkFyaXR5IjogMiwgIm1heEFyaXR5IjogMiwgImhvc3QiOiAib3MiLCAiaGFzU2lkZUVmZmVjdHMiOiB0cnVlLCAicnVuc09uIjogInNlcnZlciIsICJwYXJhbXMiOiBbeyJuYW1lIjogInBhdGgiLCAidHlwZSI6ICJzdHJpbmcifSwgeyJuYW1lIjogIm9wdGlvbnMiLCAidHlwZSI6IHsia2luZCI6ICJtYXAiLCAia2V5IjogInN0cmluZyIsICJ2YWx1ZSI6IHsia2luZCI6ICJhcnJheSIsICJvZiI6ICJzdHJpbmcifX19XX0sICJhcnJheS9sZW4iOiB7ImNhdGVnb3J5IjogInN0ZC1hcnJheSIsICJtaW5Bcml0eSI6IDEsICJtYXhBcml0eSI6IDEsICJyZXR1cm5UeXBlIjogIm51bWJlciJ9fX0="
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_OPERATOR_NAMES",
+        "payload": {
+         "names": [
+          "array/len",
+          "emit",
+          "if",
+          "os/read-file",
+          "program/dispatch"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-table-answers-each-operators-shape",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_TABLE_READ",
+     "payload": {
+      "data": "eyJvcGVyYXRvcnMiOiB7ImlmIjogeyJjYXRlZ29yeSI6ICJjb250cm9sIiwgIm1pbkFyaXR5IjogMiwgIm1heEFyaXR5IjogMywgInJldHVyblR5cGUiOiAiYW55IiwgInBhcmFtcyI6IFt7Im5hbWUiOiAiY29uZCIsICJ0eXBlIjogImJvb2xlYW4ifSwgeyJuYW1lIjogInRoZW4iLCAidHlwZSI6IHsia2luZCI6ICJ2YXIiLCAibmFtZSI6ICJUIn19XX0sICJlbWl0IjogeyJjYXRlZ29yeSI6ICJlZmZlY3QiLCAibWluQXJpdHkiOiAxLCAibWF4QXJpdHkiOiAyLCAiYnVzRXhjbHVkZWQiOiBbIklOSVQiXSwgImhhc1NpZGVFZmZlY3RzIjogdHJ1ZSwgInJ1bnNPbiI6ICJhbnkiLCAicGFyYW1zIjogW3sibmFtZSI6ICJldmVudCIsICJ0eXBlIjogeyJraW5kIjogImV2ZW50S2V5In19LCB7Im5hbWUiOiAicGF5bG9hZCIsICJvcHRpb25hbCI6IHRydWUsICJ0eXBlIjogeyJraW5kIjogIm9iamVjdCIsICJmaWVsZHMiOiB7InN1Y2Nlc3MiOiB7ImtpbmQiOiAiZXZlbnRLZXkifX0sICJvcGVuIjogdHJ1ZX19XX0sICJwcm9ncmFtL2Rpc3BhdGNoIjogeyJjYXRlZ29yeSI6ICJzdGQtcHJvZ3JhbSIsICJtaW5Bcml0eSI6IDEsICJtYXhBcml0eSI6IG51bGwsICJ0YXJnZXRPcHRpb25zIjogWyJvcmJpdGFsIl0sICJob3N0IjogInByb2dyYW0iLCAicGFyYW1zIjogW3sibmFtZSI6ICJvcHRzIiwgInR5cGUiOiB7ImtpbmQiOiAidW5pb24iLCAib2YiOiBbeyJraW5kIjogImxpdGVyYWwiLCAidmFsdWUiOiBudWxsfSwgeyJraW5kIjogImxpdGVyYWwiLCAidmFsdWUiOiAieCJ9LCB7ImtpbmQiOiAibGl0ZXJhbCIsICJ2YWx1ZSI6IDN9XX19XX0sICJvcy9yZWFkLWZpbGUiOiB7ImNhdGVnb3J5IjogIm9zIiwgIm1pbkFyaXR5IjogMiwgIm1heEFyaXR5IjogMiwgImhvc3QiOiAib3MiLCAiaGFzU2lkZUVmZmVjdHMiOiB0cnVlLCAicnVuc09uIjogInNlcnZlciIsICJwYXJhbXMiOiBbeyJuYW1lIjogInBhdGgiLCAidHlwZSI6ICJzdHJpbmcifSwgeyJuYW1lIjogIm9wdGlvbnMiLCAidHlwZSI6IHsia2luZCI6ICJtYXAiLCAia2V5IjogInN0cmluZyIsICJ2YWx1ZSI6IHsia2luZCI6ICJhcnJheSIsICJvZiI6ICJzdHJpbmcifX19XX0sICJhcnJheS9sZW4iOiB7ImNhdGVnb3J5IjogInN0ZC1hcnJheSIsICJtaW5Bcml0eSI6IDEsICJtYXhBcml0eSI6IDEsICJyZXR1cm5UeXBlIjogIm51bWJlciJ9fX0="
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_OPERATOR_SHAPES",
+        "payload": {
+         "operators": {
+          "if": {
+           "category": "control",
+           "hasSideEffects": false,
+           "params": [
+            {
+             "name": "cond",
+             "optional": false,
+             "type": "boolean"
+            },
+            {
+             "name": "then",
+             "optional": false,
+             "type": {
+              "kind": "var",
+              "name": "T"
+             }
+            }
+           ],
+           "minArity": 2,
+           "maxArity": 3
+          },
+          "emit": {
+           "category": "effect",
+           "hasSideEffects": true,
+           "params": [
+            {
+             "name": "event",
+             "optional": false,
+             "type": {
+              "kind": "eventKey"
+             }
+            },
+            {
+             "name": "payload",
+             "optional": true,
+             "type": {
+              "kind": "object",
+              "fields": {
+               "success": {
+                "kind": "eventKey"
+               }
+              },
+              "open": true
+             }
+            }
+           ],
+           "minArity": 1,
+           "maxArity": 2,
+           "runsOn": "any"
+          },
+          "program/dispatch": {
+           "category": "std-program",
+           "hasSideEffects": false,
+           "params": [
+            {
+             "name": "opts",
+             "optional": false,
+             "type": {
+              "kind": "union",
+              "of": [
+               {
+                "kind": "literal",
+                "value": null
+               },
+               {
+                "kind": "literal",
+                "value": "x"
+               },
+               {
+                "kind": "literal",
+                "value": 3
+               }
+              ]
+             }
+            }
+           ],
+           "minArity": 1,
+           "maxArity": null,
+           "host": "program"
+          },
+          "os/read-file": {
+           "category": "os",
+           "hasSideEffects": true,
+           "params": [
+            {
+             "name": "path",
+             "optional": false,
+             "type": "string"
+            },
+            {
+             "name": "options",
+             "optional": false,
+             "type": {
+              "kind": "map",
+              "key": "string",
+              "value": {
+               "kind": "array",
+               "of": "string"
+              }
+             }
+            }
+           ],
+           "minArity": 2,
+           "maxArity": 2,
+           "runsOn": "server",
+           "host": "os"
+          },
+          "array/len": {
+           "category": "std-array",
+           "hasSideEffects": false,
+           "params": [],
+           "minArity": 1,
+           "maxArity": 1
+          }
+         }
+        }
+       }
+      ],
+      "neverEmits": [
+       "LINT_OPERATOR_SHAPES_UNREAD"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-shape-that-does-not-parse-leaves-the-input-and-the-other-events-alone",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_TABLE_READ",
+     "payload": {
+      "data": "eyJvcGVyYXRvcnMiOiB7ImlmIjogeyJjYXRlZ29yeSI6ICJjb250cm9sIiwgIm1pbkFyaXR5IjogMiwgIm1heEFyaXR5IjogMywgInJldHVyblR5cGUiOiAiYW55IiwgInBhcmFtcyI6IFt7Im5hbWUiOiA3LCAidHlwZSI6ICJib29sZWFuIn0sIHsibmFtZSI6ICJ0aGVuIiwgInR5cGUiOiB7ImtpbmQiOiAidmFyIiwgIm5hbWUiOiAiVCJ9fV19LCAiZW1pdCI6IHsiY2F0ZWdvcnkiOiAiZWZmZWN0IiwgIm1pbkFyaXR5IjogMSwgIm1heEFyaXR5IjogMiwgImJ1c0V4Y2x1ZGVkIjogWyJJTklUIl0sICJoYXNTaWRlRWZmZWN0cyI6IHRydWUsICJydW5zT24iOiAiYW55IiwgInBhcmFtcyI6IFt7Im5hbWUiOiAiZXZlbnQiLCAidHlwZSI6IHsia2luZCI6ICJldmVudEtleSJ9fSwgeyJuYW1lIjogInBheWxvYWQiLCAib3B0aW9uYWwiOiB0cnVlLCAidHlwZSI6IHsia2luZCI6ICJvYmplY3QiLCAiZmllbGRzIjogeyJzdWNjZXNzIjogeyJraW5kIjogImV2ZW50S2V5In19LCAib3BlbiI6IHRydWV9fV19LCAicHJvZ3JhbS9kaXNwYXRjaCI6IHsiY2F0ZWdvcnkiOiAic3RkLXByb2dyYW0iLCAibWluQXJpdHkiOiAxLCAibWF4QXJpdHkiOiBudWxsLCAidGFyZ2V0T3B0aW9ucyI6IFsib3JiaXRhbCJdLCAiaG9zdCI6ICJwcm9ncmFtIiwgInBhcmFtcyI6IFt7Im5hbWUiOiAib3B0cyIsICJ0eXBlIjogeyJraW5kIjogInVuaW9uIiwgIm9mIjogW3sia2luZCI6ICJsaXRlcmFsIiwgInZhbHVlIjogbnVsbH0sIHsia2luZCI6ICJsaXRlcmFsIiwgInZhbHVlIjogIngifSwgeyJraW5kIjogImxpdGVyYWwiLCAidmFsdWUiOiAzfV19fV19LCAib3MvcmVhZC1maWxlIjogeyJjYXRlZ29yeSI6ICJvcyIsICJtaW5Bcml0eSI6IDIsICJtYXhBcml0eSI6IDIsICJob3N0IjogIm9zIiwgImhhc1NpZGVFZmZlY3RzIjogdHJ1ZSwgInJ1bnNPbiI6ICJzZXJ2ZXIiLCAicGFyYW1zIjogW3sibmFtZSI6ICJwYXRoIiwgInR5cGUiOiAic3RyaW5nIn0sIHsibmFtZSI6ICJvcHRpb25zIiwgInR5cGUiOiB7ImtpbmQiOiAibWFwIiwgImtleSI6ICJzdHJpbmciLCAidmFsdWUiOiB7ImtpbmQiOiAiYXJyYXkiLCAib2YiOiAic3RyaW5nIn19fV19LCAiYXJyYXkvbGVuIjogeyJjYXRlZ29yeSI6ICJzdGQtYXJyYXkiLCAibWluQXJpdHkiOiAxLCAibWF4QXJpdHkiOiAxLCAicmV0dXJuVHlwZSI6ICJudW1iZXIifX19"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_OPERATORS",
+        "payload": {
+         "names": [
+          "emit",
+          "if"
+         ]
+        }
+       },
+       {
+        "event": "LINT_OPERATOR_SHAPES_UNREAD",
+        "payload": {
+         "error": "the installed @almadar/std operator table has an operator whose arity, params or types are not declared in the table's shape"
+        }
+       },
+       {
+        "event": "LINT_OPERATOR_SEMANTICS",
+        "payload": {
+         "busExcluded": [
+          "INIT"
+         ],
+         "targetOptions": [
+          "orbital"
+         ],
+         "semantics": {},
+         "functions": [],
+         "emitSlots": []
+        }
+       }
+      ],
+      "neverEmits": [
+       "LINT_OPERATOR_SHAPES"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-registry-answers-the-pattern-facts-the-render-ui-checks-read",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_PATTERNS_FILE",
+     "payload": {
+      "data": "eyJwYXR0ZXJucyI6IHsiYnV0dG9uIjogeyJhY2Nlc3NpYmxlTmFtZSI6IFsibGFiZWwiXSwgInByb3BzU2NoZW1hIjogeyJsYWJlbCI6IHsidHlwZXMiOiBbInN0cmluZyJdLCAicmVxdWlyZWQiOiB0cnVlfSwgInZhcmlhbnQiOiB7InR5cGVzIjogWyJzdHJpbmciLCAidW5rbm93biJdLCAiZW51bVZhbHVlcyI6IFsiYSIsICJiIl19LCAiYWN0aW9uIjogeyJ0eXBlcyI6IFsic3RyaW5nIl0sICJraW5kIjogImV2ZW50In19fSwgImRhdGEtZ3JpZCI6IHsiZmllbGRzQ29udHJhY3QiOiAiZGlzcGxheSIsICJwcm9wc1NjaGVtYSI6IHsiY29sdW1ucyI6IHsidHlwZXMiOiBbImFycmF5Il0sICJpdGVtcyI6IHsidHlwZXMiOiBbIm9iamVjdCJdLCAicmVxdWlyZWQiOiBbImZpZWxkIl0sICJwcm9wZXJ0aWVzIjogeyJmaWVsZCI6IHsidHlwZXMiOiBbInN0cmluZyJdLCAicmVxdWlyZWQiOiB0cnVlfSwgInN0eWxlIjogeyJ0eXBlcyI6IFsic3RyaW5nIl0sICJlbnVtVmFsdWVzIjogWyJ4Il19fX19fX0sICJjYW52YXMtMmQiOiB7ImRyYXdIb3N0IjogdHJ1ZSwgImRyYXdhYmxlIjogdHJ1ZSwgInByb3BzU2NoZW1hIjoge319fX0="
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_PATTERNS",
+        "payload": {
+         "patterns": {
+          "button": {
+           "drawHost": false,
+           "drawable": false,
+           "fieldsContract": "",
+           "props": {
+            "label": {
+             "types": [
+              "string"
+             ],
+             "requiredOnParent": true,
+             "requiredNames": []
+            },
+            "variant": {
+             "types": [
+              "string"
+             ],
+             "requiredOnParent": false,
+             "requiredNames": [],
+             "enumValues": [
+              "a",
+              "b"
+             ]
+            },
+            "action": {
+             "types": [
+              "string"
+             ],
+             "requiredOnParent": false,
+             "requiredNames": [],
+             "kind": "event"
+            }
+           },
+           "accessibleName": [
+            "label"
+           ]
+          },
+          "data-grid": {
+           "drawHost": false,
+           "drawable": false,
+           "fieldsContract": "display",
+           "props": {
+            "columns": {
+             "types": [
+              "array"
+             ],
+             "requiredOnParent": false,
+             "requiredNames": [],
+             "items": {
+              "types": [
+               "object"
+              ],
+              "requiredOnParent": false,
+              "requiredNames": [
+               "field"
+              ],
+              "properties": {
+               "field": {
+                "types": [
+                 "string"
+                ],
+                "requiredOnParent": true,
+                "requiredNames": []
+               },
+               "style": {
+                "types": [
+                 "string"
+                ],
+                "requiredOnParent": false,
+                "requiredNames": [],
+                "enumValues": [
+                 "x"
+                ]
+               }
+              }
+             }
+            }
+           }
+          },
+          "canvas-2d": {
+           "drawHost": true,
+           "drawable": true,
+           "fieldsContract": "",
+           "props": {}
+          }
+         }
+        }
+       },
+       {
+        "event": "LINT_STD_READ",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-registry-with-an-ill-typed-required-is-an-unread-error",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_PATTERNS_FILE",
+     "payload": {
+      "data": "eyJwYXR0ZXJucyI6IHsiYnV0dG9uIjogeyJhY2Nlc3NpYmxlTmFtZSI6IFsibGFiZWwiXSwgInByb3BzU2NoZW1hIjogeyJsYWJlbCI6IHsidHlwZXMiOiBbInN0cmluZyJdLCAicmVxdWlyZWQiOiAieWVzIn0sICJ2YXJpYW50IjogeyJ0eXBlcyI6IFsic3RyaW5nIiwgInVua25vd24iXSwgImVudW1WYWx1ZXMiOiBbImEiLCAiYiJdfSwgImFjdGlvbiI6IHsidHlwZXMiOiBbInN0cmluZyJdLCAia2luZCI6ICJldmVudCJ9fX0sICJkYXRhLWdyaWQiOiB7ImZpZWxkc0NvbnRyYWN0IjogImRpc3BsYXkiLCAicHJvcHNTY2hlbWEiOiB7ImNvbHVtbnMiOiB7InR5cGVzIjogWyJhcnJheSJdLCAiaXRlbXMiOiB7InR5cGVzIjogWyJvYmplY3QiXSwgInJlcXVpcmVkIjogWyJmaWVsZCJdLCAicHJvcGVydGllcyI6IHsiZmllbGQiOiB7InR5cGVzIjogWyJzdHJpbmciXSwgInJlcXVpcmVkIjogdHJ1ZX0sICJzdHlsZSI6IHsidHlwZXMiOiBbInN0cmluZyJdLCAiZW51bVZhbHVlcyI6IFsieCJdfX19fX19LCAiY2FudmFzLTJkIjogeyJkcmF3SG9zdCI6IHRydWUsICJkcmF3YWJsZSI6IHRydWUsICJwcm9wc1NjaGVtYSI6IHt9fX19"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_INPUT_UNREAD",
+        "payload": {
+         "file": "a.lolo",
+         "error": "the installed @almadar/core pattern registry is not a pattern registry"
+        }
+       }
+      ],
+      "neverEmits": [
+       "LINT_PATTERNS",
+       "LINT_EVENT_PROPS"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-pattern-without-optional-facts-carries-only-the-flags",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_PATTERNS_FILE",
+     "payload": {
+      "data": "eyJwYXR0ZXJucyI6IHsic3RhY2siOiB7InByb3BzU2NoZW1hIjogeyJnYXAiOiB7InR5cGVzIjogWyJ1bmtub3duIl19fX19fQ=="
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_PATTERNS",
+        "payload": {
+         "patterns": {
+          "stack": {
+           "drawHost": false,
+           "drawable": false,
+           "fieldsContract": "",
+           "props": {
+            "gap": {
+             "types": [],
+             "requiredOnParent": false,
+             "requiredNames": []
+            }
+           }
+          }
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-registry-carries-each-props-payload-for-pairing",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_PATTERNS_FILE",
+     "payload": {
+      "data": "eyJwYXR0ZXJucyI6IHsiYnV0dG9uIjogeyJwcm9wc1NjaGVtYSI6IHsiYWN0aW9uIjogeyJ0eXBlcyI6IFsic3RyaW5nIl0sICJraW5kIjogImV2ZW50In0sICJhY3Rpb25QYXlsb2FkIjogeyJ0eXBlcyI6IFsib2JqZWN0Il0sICJwYXlsb2FkRm9yIjogImFjdGlvbiJ9LCAibGFiZWwiOiB7InR5cGVzIjogWyJzdHJpbmciXX19fX19"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_PATTERNS",
+        "payload": {
+         "patterns": {
+          "button": {
+           "drawHost": false,
+           "drawable": false,
+           "fieldsContract": "",
+           "props": {
+            "action": {
+             "types": [
+              "string"
+             ],
+             "requiredOnParent": false,
+             "requiredNames": [],
+             "kind": "event"
+            },
+            "actionPayload": {
+             "types": [
+              "object"
+             ],
+             "requiredOnParent": false,
+             "requiredNames": [],
+             "payloadFor": "action"
+            },
+            "label": {
+             "types": [
+              "string"
+             ],
+             "requiredOnParent": false,
+             "requiredNames": []
+            }
+           }
+          }
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-manifest-starts-the-language-facts-read",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_CORE_MANIFEST",
+     "payload": {
+      "data": "eyJvcmJMYW5ndWFnZSI6IHsiY29tcG9uZW50TWFwcGluZyI6ICJtLmpzb24iLCAicGF0dGVybnMiOiAicC5qc29uIiwgInByb2dyYW1UeXBlcyI6ICJ0Lmpzb24iLCAiYmluZGluZ1J1bGVzIjogInIuanNvbiIsICJ2b2NhYnVsYXJ5IjogInYuanNvbiJ9fQ=="
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FACTS_READ",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-manifest-without-the-facts-paths-fails-only-the-facts",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_FACTS_READ",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FACTS_FAILED",
+        "payload": {
+         "error": "the installed @almadar/core declares no orbLanguage.programTypes, bindingRules or vocabulary"
+        }
+       }
+      ],
+      "neverEmits": [
+       "LINT_INPUT_UNREAD"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-declared-facts-paths-start-reading-the-program-types",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std",
+    "typesFile": "t.json",
+    "rulesFile": "r.json",
+    "vocabFile": "v.json"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_FACTS_READ",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "LINT_FACTS_FAILED",
+       "LINT_INPUT_UNREAD"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "program-types-that-are-not-a-table-fail-only-the-facts",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std",
+    "rulesFile": "r.json"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_FACTS_TYPES",
+     "payload": {
+      "data": "WyJ4Il0="
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FACTS_FAILED",
+        "payload": {
+         "error": "the installed @almadar/core program types are not a program type table"
+        }
+       }
+      ],
+      "neverEmits": [
+       "LINT_INPUT_UNREAD"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-valid-program-types-read-on-to-the-binding-rules",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std",
+    "rulesFile": "r.json"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_FACTS_TYPES",
+     "payload": {
+      "data": "eyJWaWV3ZXIiOiB7InR5cGUiOiAib2JqZWN0IiwgInByb3BlcnRpZXMiOiB7ImlkIjogeyJ0eXBlIjogInN0cmluZyIsICJyZXF1aXJlZCI6IHRydWV9LCAicm9sZSI6IHsidHlwZSI6ICJzdHJpbmcifSwgImNsYWltcyI6IHsidHlwZSI6ICJhcnJheSIsICJpdGVtcyI6IHsidHlwZSI6ICJvYmplY3QiLCAicHJvcGVydGllcyI6IHsibmFtZSI6IHsidHlwZSI6ICJzdHJpbmciLCAicmVxdWlyZWQiOiB0cnVlfX19fX19LCAiUGxheWVkU3RlcCI6IHsidHlwZSI6ICJvYmplY3QiLCAicHJvcGVydGllcyI6IHsia2luZCI6IHsidHlwZSI6ICJlbnVtIiwgInZhbHVlcyI6IFsiYSIsICJiIl19fX19"
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "LINT_FACTS_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "binding-rules-without-a-tick-table-fail-only-the-facts",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std",
+    "vocabFile": "v.json"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_FACTS_RULES",
+     "payload": {
+      "data": "eyJndWFyZCI6IHsiYWxsb3dlZCI6IFsiZW50aXR5Il19LCAiZWZmZWN0IjogeyJhbGxvd2VkIjogWyJlbnRpdHkiXX19"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FACTS_FAILED",
+        "payload": {
+         "error": "the installed @almadar/core binding rules are not a binding rule table"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-valid-binding-rules-read-on-to-the-vocabulary",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std",
+    "vocabFile": "v.json"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_FACTS_RULES",
+     "payload": {
+      "data": "eyJndWFyZCI6IHsiYWxsb3dlZCI6IFsiZW50aXR5IiwgInBheWxvYWQiLCAidXNlciJdLCAiZGVzY3JpcHRpb24iOiAiZCJ9LCAiZWZmZWN0IjogeyJhbGxvd2VkIjogWyJlbnRpdHkiLCAicGF5bG9hZCIsICJ0cmFpdCJdfSwgInRpY2siOiB7ImFsbG93ZWQiOiBbImVudGl0eSIsICJub3ciXX19"
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "LINT_FACTS_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-vocabulary-without-types-fails-only-the-facts",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_FACTS_VOCAB",
+     "payload": {
+      "data": "eyJrZXl3b3JkcyI6IFsiYXBwIl19"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FACTS_FAILED",
+        "payload": {
+         "error": "the installed @almadar/core vocabulary is not a vocabulary"
+        }
+       }
+      ],
+      "neverEmits": [
+       "LINT_LANGUAGE_FACTS"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-vocabulary-completes-the-language-facts",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std",
+    "progTypes": {
+     "Viewer": {
+      "type": "object",
+      "properties": {
+       "id": {
+        "type": "string",
+        "required": true
+       },
+       "role": {
+        "type": "string"
+       },
+       "claims": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "name": {
+           "type": "string",
+           "required": true
+          }
+         }
+        }
+       }
+      }
+     },
+     "PlayedStep": {
+      "type": "object",
+      "properties": {
+       "kind": {
+        "type": "enum",
+        "values": [
+         "a",
+         "b"
+        ]
+       }
+      }
+     }
+    },
+    "guardSigils": [
+     "entity",
+     "payload",
+     "user"
+    ],
+    "effectSigils": [
+     "entity",
+     "payload",
+     "trait"
+    ],
+    "tickSigils": [
+     "entity",
+     "now"
+    ]
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_FACTS_VOCAB",
+     "payload": {
+      "data": "eyJ0eXBlcyI6IFsic3RyaW5nIiwgIm51bWJlciIsICJNYXAiXSwgImtleXdvcmRzIjogWyJhcHAiXX0="
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_LANGUAGE_FACTS",
+        "payload": {
+         "programTypes": {
+          "Viewer": {
+           "type": "object",
+           "properties": {
+            "id": {
+             "type": "string",
+             "required": true
+            },
+            "role": {
+             "type": "string"
+            },
+            "claims": {
+             "type": "array",
+             "items": {
+              "type": "object",
+              "properties": {
+               "name": {
+                "type": "string",
+                "required": true
+               }
+              }
+             }
+            }
+           }
+          },
+          "PlayedStep": {
+           "type": "object",
+           "properties": {
+            "kind": {
+             "type": "enum",
+             "values": [
+              "a",
+              "b"
+             ]
+            }
+           }
+          }
+         },
+         "guardSigils": [
+          "entity",
+          "payload",
+          "user"
+         ],
+         "effectSigils": [
+          "entity",
+          "payload",
+          "trait"
+         ],
+         "tickSigils": [
+          "entity",
+          "now"
+         ],
+         "fieldTypes": [
+          "string",
+          "number",
+          "Map"
+         ]
+        }
+       },
+       {
+        "event": "LINT_FACTS_DONE",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "LINT_LANGUAGE_FACTS_UNREAD"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "unreadable-language-facts-answer-their-own-unread-event",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_FACTS_FAILED",
+     "payload": {
+      "error": "boom"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_LANGUAGE_FACTS_UNREAD",
+        "payload": {
+         "error": "boom"
+        }
+       },
+       {
+        "event": "LINT_FACTS_DONE",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "LINT_INPUT_UNREAD",
+       "LINT_LANGUAGE_FACTS"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-program-waits-for-the-language-facts",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std",
+    "factsDone": false
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "program": {
+        "orbitals": []
+       },
+       "lazy": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "reading",
+      "neverEmits": [
+       "LINT_INPUT",
+       "LINT_LAZY"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-facts-done-release-the-waiting-program",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std",
+    "factsDone": false,
+    "factsWaiting": true,
+    "pendingProgram": {
+     "orbitals": []
+    },
+    "lazy": []
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_FACTS_DONE",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_LAZY",
+        "payload": {
+         "orbitals": []
+        }
+       },
+       {
+        "event": "LINT_INPUT",
+        "payload": {
+         "file": "a.lolo",
+         "raw": "app x [\n]\n",
+         "latin": true,
+         "program": {
+          "orbitals": []
+         },
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-facts-done-before-the-program-offers-nothing",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std",
+    "factsDone": false,
+    "factsWaiting": false
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_FACTS_DONE",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "reading",
+      "neverEmits": [
+       "LINT_INPUT",
+       "LINT_LAZY"
+      ]
+     }
+    }
+   ]
+  }
+ ]
 }

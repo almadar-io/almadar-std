@@ -1,0 +1,21 @@
+app lint-navigate-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint navigate <file>`, the port of validate_navigate and validate_send_server. It lowers the file with program/read, collects the declared pages (inline pages with the required payload of their INIT events, `expects page` routes, `uses lazy` pages) and checks each `navigate` and `send-server` effect of every inline trait transition and tick, however nested in do, if, when and let: a missing path or event name (ORB_EFF_UNKNOWN_TYPE), a literal path that is not absolute (ORB_P_INVALID_PATH), a target no declared page serves (ORB_EFF_NAVIGATE_TARGET_UNREACHABLE) and required INIT payload fields the navigate does not pass (ORB_EFF_NAVIGATE_MISSING_PAYLOAD) (status 500, exit 1). Clean answers `lint navigate: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintNavigateSpec {
+  expects trait OrbLintNavigate {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintNavigateCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintNavigate, OrbLintNavigateCli
+}

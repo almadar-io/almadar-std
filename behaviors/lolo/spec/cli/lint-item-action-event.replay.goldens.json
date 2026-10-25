@@ -1,0 +1,1242 @@
+{
+  "atom": "cli/atoms/std-orb-lint-item-action-event.lolo",
+  "trait": "OrbLintItemActionEvent",
+  "note": "The Rust validate_item_actions has no unit test of its own; these cases pin the behavior read from item_actions.rs and the pattern.rs walk (pattern with a string type, then children as an object, a list, a mapped-children array/map-with-lambda tuple or a conditional node). Not ported: ORB_RUI_UNKNOWN_ITEM_ACTION_PROP (needs the registry-wide itemActions property set) and the expansion of operator-call children (array/concat ...), which need data no lint input carries. A trait-value embed (skipped by the Rust walk) is not recognized; resolved programs inline embeds.",
+  "cases": [
+    {
+      "id": "an-item-action-without-event-or-navigatesTo-fires",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "data-list",
+                                  "itemActions": [
+                                    {
+                                      "label": "Open"
+                                    }
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "item-action-event",
+                  "findings": [
+                    {
+                      "code": "ORB_RUI_INVALID_ITEM_ACTION",
+                      "path": "orbitals[0 (Home)].traits[0 (Tour)].stateMachine.transitions[0].effects[0][2].itemActions[0]",
+                      "message": "itemAction must have 'event' or 'navigatesTo' property",
+                      "suggestion": "Add event: 'EVENT_NAME' to emit an event, or navigatesTo: '/route/{{row.id}}' to navigate",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintItemActionEvent"
+        }
+      ]
+    },
+    {
+      "id": "control-an-item-action-with-an-event",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "data-list",
+                                  "itemActions": [
+                                    {
+                                      "label": "Open",
+                                      "event": "OPEN"
+                                    }
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "item-action-event",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintItemActionEvent"
+        }
+      ]
+    },
+    {
+      "id": "control-an-item-action-with-navigatesTo",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "data-list",
+                                  "itemActions": [
+                                    {
+                                      "label": "Open",
+                                      "navigatesTo": "/x"
+                                    }
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "item-action-event",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintItemActionEvent"
+        }
+      ]
+    },
+    {
+      "id": "only-the-offending-entry-fires",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "data-list",
+                                  "itemActions": [
+                                    {
+                                      "event": "A"
+                                    },
+                                    {
+                                      "label": "b"
+                                    },
+                                    {
+                                      "navigatesTo": "/c"
+                                    }
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "item-action-event",
+                  "findings": [
+                    {
+                      "code": "ORB_RUI_INVALID_ITEM_ACTION",
+                      "path": "orbitals[0 (Home)].traits[0 (Tour)].stateMachine.transitions[0].effects[0][2].itemActions[1]",
+                      "message": "itemAction must have 'event' or 'navigatesTo' property",
+                      "suggestion": "Add event: 'EVENT_NAME' to emit an event, or navigatesTo: '/route/{{row.id}}' to navigate",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintItemActionEvent"
+        }
+      ]
+    },
+    {
+      "id": "control-a-non-object-entry-is-ignored",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "data-list",
+                                  "itemActions": [
+                                    "x"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "item-action-event",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintItemActionEvent"
+        }
+      ]
+    },
+    {
+      "id": "control-no-item-actions",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "data-list"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "item-action-event",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintItemActionEvent"
+        }
+      ]
+    },
+    {
+      "id": "a-pattern-without-a-type-is-not-checked",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "itemActions": [
+                                    {
+                                      "label": "x"
+                                    }
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "item-action-event",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintItemActionEvent"
+        }
+      ]
+    },
+    {
+      "id": "a-child-object-is-walked",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": {
+                                    "type": "data-list",
+                                    "itemActions": [
+                                      {}
+                                    ]
+                                  }
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "item-action-event",
+                  "findings": [
+                    {
+                      "code": "ORB_RUI_INVALID_ITEM_ACTION",
+                      "path": "orbitals[0 (Home)].traits[0 (Tour)].stateMachine.transitions[0].effects[0][2].children.itemActions[0]",
+                      "message": "itemAction must have 'event' or 'navigatesTo' property",
+                      "suggestion": "Add event: 'EVENT_NAME' to emit an event, or navigatesTo: '/route/{{row.id}}' to navigate",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintItemActionEvent"
+        }
+      ]
+    },
+    {
+      "id": "an-array-child-carries-its-index",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    {
+                                      "type": "text"
+                                    },
+                                    {
+                                      "type": "data-list",
+                                      "itemActions": [
+                                        {}
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "item-action-event",
+                  "findings": [
+                    {
+                      "code": "ORB_RUI_INVALID_ITEM_ACTION",
+                      "path": "orbitals[0 (Home)].traits[0 (Tour)].stateMachine.transitions[0].effects[0][2].children[1].itemActions[0]",
+                      "message": "itemAction must have 'event' or 'navigatesTo' property",
+                      "suggestion": "Add event: 'EVENT_NAME' to emit an event, or navigatesTo: '/route/{{row.id}}' to navigate",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintItemActionEvent"
+        }
+      ]
+    },
+    {
+      "id": "a-mapped-children-item-node-is-walked",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    "array/map",
+                                    "@entity.rows",
+                                    [
+                                      "fn",
+                                      "row",
+                                      {
+                                        "type": "data-list",
+                                        "itemActions": [
+                                          {}
+                                        ]
+                                      }
+                                    ]
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "item-action-event",
+                  "findings": [
+                    {
+                      "code": "ORB_RUI_INVALID_ITEM_ACTION",
+                      "path": "orbitals[0 (Home)].traits[0 (Tour)].stateMachine.transitions[0].effects[0][2].children.itemActions[0]",
+                      "message": "itemAction must have 'event' or 'navigatesTo' property",
+                      "suggestion": "Add event: 'EVENT_NAME' to emit an event, or navigatesTo: '/route/{{row.id}}' to navigate",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintItemActionEvent"
+        }
+      ]
+    },
+    {
+      "id": "a-mapped-child-inside-a-children-list-carries-its-index",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    {
+                                      "type": "text"
+                                    },
+                                    [
+                                      "array/map",
+                                      "@entity.rows",
+                                      [
+                                        "fn",
+                                        "row",
+                                        {
+                                          "type": "data-list",
+                                          "itemActions": [
+                                            {}
+                                          ]
+                                        }
+                                      ]
+                                    ]
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "item-action-event",
+                  "findings": [
+                    {
+                      "code": "ORB_RUI_INVALID_ITEM_ACTION",
+                      "path": "orbitals[0 (Home)].traits[0 (Tour)].stateMachine.transitions[0].effects[0][2].children[1].itemActions[0]",
+                      "message": "itemAction must have 'event' or 'navigatesTo' property",
+                      "suggestion": "Add event: 'EVENT_NAME' to emit an event, or navigatesTo: '/route/{{row.id}}' to navigate",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintItemActionEvent"
+        }
+      ]
+    },
+    {
+      "id": "a-conditional-pattern-walks-both-arms",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                [
+                                  "if",
+                                  "@config.a",
+                                  {
+                                    "type": "data-list",
+                                    "itemActions": [
+                                      {}
+                                    ]
+                                  },
+                                  {
+                                    "type": "data-list",
+                                    "itemActions": [
+                                      {}
+                                    ]
+                                  }
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "item-action-event",
+                  "findings": [
+                    {
+                      "code": "ORB_RUI_INVALID_ITEM_ACTION",
+                      "path": "orbitals[0 (Home)].traits[0 (Tour)].stateMachine.transitions[0].effects[0][2][2].itemActions[0]",
+                      "message": "itemAction must have 'event' or 'navigatesTo' property",
+                      "suggestion": "Add event: 'EVENT_NAME' to emit an event, or navigatesTo: '/route/{{row.id}}' to navigate",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_RUI_INVALID_ITEM_ACTION",
+                      "path": "orbitals[0 (Home)].traits[0 (Tour)].stateMachine.transitions[0].effects[0][2][3].itemActions[0]",
+                      "message": "itemAction must have 'event' or 'navigatesTo' property",
+                      "suggestion": "Add event: 'EVENT_NAME' to emit an event, or navigatesTo: '/route/{{row.id}}' to navigate",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintItemActionEvent"
+        }
+      ]
+    },
+    {
+      "id": "a-conditional-child-is-walked-at-its-index",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    [
+                                      "if",
+                                      "@config.a",
+                                      {
+                                        "type": "data-list",
+                                        "itemActions": [
+                                          {}
+                                        ]
+                                      }
+                                    ]
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "item-action-event",
+                  "findings": [
+                    {
+                      "code": "ORB_RUI_INVALID_ITEM_ACTION",
+                      "path": "orbitals[0 (Home)].traits[0 (Tour)].stateMachine.transitions[0].effects[0][2].children[0][2].itemActions[0]",
+                      "message": "itemAction must have 'event' or 'navigatesTo' property",
+                      "suggestion": "Add event: 'EVENT_NAME' to emit an event, or navigatesTo: '/route/{{row.id}}' to navigate",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintItemActionEvent"
+        }
+      ]
+    },
+    {
+      "id": "an-item-actions-prop-on-a-non-children-prop-is-not-walked",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "card",
+                                  "header": {
+                                    "type": "data-list",
+                                    "itemActions": [
+                                      {}
+                                    ]
+                                  }
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "item-action-event",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintItemActionEvent"
+        }
+      ]
+    },
+    {
+      "id": "an args body that does not parse is the usage error",
+      "steps": [
+        {
+          "trait": "OrbLintItemActionEventCli",
+          "from": "ready",
+          "event": "LINT_CALLED",
+          "payload": {
+            "rawBody": "not json"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb lint item-action-event <file>"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

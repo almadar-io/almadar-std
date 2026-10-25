@@ -1,0 +1,21 @@
+app lint-expectation-unsatisfied-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint expectation-unsatisfied <file>`, the port of the ORB_S_EXPECTATION_UNSATISFIED findings of validate_expectation_links. A strict (spec obligation) expectation nothing in the program provides, a present trait that declares no expected state or transition, and a present trait that does not emit an expected event are reported at the expectation (status 500, exit 1); a lenient expectation whose provider is absent is deferred. Clean answers `lint expectation-unsatisfied: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintExpectationUnsatisfiedSpec {
+  expects trait OrbLintExpectationUnsatisfied {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintExpectationUnsatisfiedCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintExpectationUnsatisfied, OrbLintExpectationUnsatisfiedCli
+}

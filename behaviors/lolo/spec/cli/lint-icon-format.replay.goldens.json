@@ -1,0 +1,1204 @@
+{
+  "atom": "cli/atoms/std-orb-lint-icon-format.lolo",
+  "trait": "OrbLintIconFormat",
+  "note": "Cases mirror the icon.rs tests test_valid_kebab_case_icons, test_valid_pascal_case_icons, test_invalid_format (PLUS_ICON, 'plus icon'), test_empty_icon ('' and blank), test_uncommon_icon_warning and test_similar_icon_suggestions. The last two are ORB_UI_ICON_NOT_FOUND, which this rule does not port (no lint input carries the Lucide icon list), so they are controls here: a well-formed name that is not a Lucide icon yields no finding. Added cases pin the walk validate_pattern_icons performs: a non-string value, a binding, actions[i].icon (reported twice, once by the actions check and once by the recursion into the action object, as the compiler does), itemActions[i].icon, a nested object prop and an object element of an array prop. Differences from Rust: the format finding carries no valid_values list and the suggestion is empty.",
+  "cases": [
+    {
+      "id": "valid-kebab-case-icons-are-clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    {
+                                      "type": "button",
+                                      "icon": "plus"
+                                    },
+                                    {
+                                      "type": "button",
+                                      "icon": "trash-2"
+                                    },
+                                    {
+                                      "type": "button",
+                                      "icon": "chevron-right"
+                                    }
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "icon-format",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintIconFormat"
+        }
+      ]
+    },
+    {
+      "id": "valid-pascal-case-icons-are-clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    {
+                                      "type": "button",
+                                      "icon": "Plus"
+                                    },
+                                    {
+                                      "type": "button",
+                                      "icon": "ChevronRight"
+                                    }
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "icon-format",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintIconFormat"
+        }
+      ]
+    },
+    {
+      "id": "shouting-snake-case-is-invalid-format",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "page-header",
+                                  "icon": "PLUS_ICON"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "icon-format",
+                  "findings": [
+                    {
+                      "code": "ORB_UI_ICON_INVALID_FORMAT",
+                      "path": "orbitals[0 (Home)].traits[0 (Tour)].stateMachine.transitions[0].effects[0].pattern.icon",
+                      "message": "Icon 'PLUS_ICON' has invalid format. Use kebab-case (e.g., 'plus', 'trash-2') or PascalCase (e.g., 'Plus', 'Trash2')",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintIconFormat"
+        }
+      ]
+    },
+    {
+      "id": "a-name-with-a-space-is-invalid-format",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "page-header",
+                                  "icon": "plus icon"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "icon-format",
+                  "findings": [
+                    {
+                      "code": "ORB_UI_ICON_INVALID_FORMAT",
+                      "path": "orbitals[0 (Home)].traits[0 (Tour)].stateMachine.transitions[0].effects[0].pattern.icon",
+                      "message": "Icon 'plus icon' has invalid format. Use kebab-case (e.g., 'plus', 'trash-2') or PascalCase (e.g., 'Plus', 'Trash2')",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintIconFormat"
+        }
+      ]
+    },
+    {
+      "id": "an-empty-name-is-empty",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "page-header",
+                                  "icon": ""
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "icon-format",
+                  "findings": [
+                    {
+                      "code": "ORB_UI_ICON_EMPTY",
+                      "path": "orbitals[0 (Home)].traits[0 (Tour)].stateMachine.transitions[0].effects[0].pattern.icon",
+                      "message": "Icon name cannot be empty",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintIconFormat"
+        }
+      ]
+    },
+    {
+      "id": "a-blank-name-is-empty",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "page-header",
+                                  "icon": "   "
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "icon-format",
+                  "findings": [
+                    {
+                      "code": "ORB_UI_ICON_EMPTY",
+                      "path": "orbitals[0 (Home)].traits[0 (Tour)].stateMachine.transitions[0].effects[0].pattern.icon",
+                      "message": "Icon name cannot be empty",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintIconFormat"
+        }
+      ]
+    },
+    {
+      "id": "control-an-unknown-well-formed-name-is-not-a-format-finding",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "page-header",
+                                  "icon": "nonexistent-icon"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "icon-format",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintIconFormat"
+        }
+      ]
+    },
+    {
+      "id": "control-a-misspelt-well-formed-name-is-not-a-format-finding",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "page-header",
+                                  "icon": "trsh"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "icon-format",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintIconFormat"
+        }
+      ]
+    },
+    {
+      "id": "a-non-string-icon-is-invalid-format",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "page-header",
+                                  "icon": [
+                                    "if",
+                                    "@payload.x",
+                                    "plus",
+                                    "minus"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "icon-format",
+                  "findings": [
+                    {
+                      "code": "ORB_UI_ICON_INVALID_FORMAT",
+                      "path": "orbitals[0 (Home)].traits[0 (Tour)].stateMachine.transitions[0].effects[0].pattern.icon",
+                      "message": "Icon value must be a string",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintIconFormat"
+        }
+      ]
+    },
+    {
+      "id": "control-a-binding-is-skipped",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "page-header",
+                                  "icon": "@payload.icon"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "icon-format",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintIconFormat"
+        }
+      ]
+    },
+    {
+      "id": "actions-icon-is-reported-at-the-action-and-again-by-the-recursion",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "page-header",
+                                  "actions": [
+                                    {
+                                      "label": "x",
+                                      "icon": "BAD_ICON"
+                                    }
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "icon-format",
+                  "findings": [
+                    {
+                      "code": "ORB_UI_ICON_INVALID_FORMAT",
+                      "path": "orbitals[0 (Home)].traits[0 (Tour)].stateMachine.transitions[0].effects[0].pattern.actions[0].icon",
+                      "message": "Icon 'BAD_ICON' has invalid format. Use kebab-case (e.g., 'plus', 'trash-2') or PascalCase (e.g., 'Plus', 'Trash2')",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_UI_ICON_INVALID_FORMAT",
+                      "path": "orbitals[0 (Home)].traits[0 (Tour)].stateMachine.transitions[0].effects[0].pattern.actions[0].icon",
+                      "message": "Icon 'BAD_ICON' has invalid format. Use kebab-case (e.g., 'plus', 'trash-2') or PascalCase (e.g., 'Plus', 'Trash2')",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintIconFormat"
+        }
+      ]
+    },
+    {
+      "id": "item-actions-icon-is-checked-like-actions",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "data-list",
+                                  "itemActions": [
+                                    {
+                                      "event": "E",
+                                      "icon": ""
+                                    }
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "icon-format",
+                  "findings": [
+                    {
+                      "code": "ORB_UI_ICON_EMPTY",
+                      "path": "orbitals[0 (Home)].traits[0 (Tour)].stateMachine.transitions[0].effects[0].pattern.itemActions[0].icon",
+                      "message": "Icon name cannot be empty",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_UI_ICON_EMPTY",
+                      "path": "orbitals[0 (Home)].traits[0 (Tour)].stateMachine.transitions[0].effects[0].pattern.itemActions[0].icon",
+                      "message": "Icon name cannot be empty",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintIconFormat"
+        }
+      ]
+    },
+    {
+      "id": "a-nested-pattern-object-is-walked-with-its-prop-path",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "card",
+                                  "header": {
+                                    "type": "badge",
+                                    "icon": "No Good"
+                                  }
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "icon-format",
+                  "findings": [
+                    {
+                      "code": "ORB_UI_ICON_INVALID_FORMAT",
+                      "path": "orbitals[0 (Home)].traits[0 (Tour)].stateMachine.transitions[0].effects[0].pattern.header.icon",
+                      "message": "Icon 'No Good' has invalid format. Use kebab-case (e.g., 'plus', 'trash-2') or PascalCase (e.g., 'Plus', 'Trash2')",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintIconFormat"
+        }
+      ]
+    },
+    {
+      "id": "a-nested-pattern-in-an-array-prop-carries-its-index",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    {
+                                      "type": "button",
+                                      "icon": "ok"
+                                    },
+                                    {
+                                      "type": "button",
+                                      "icon": "Bad Name"
+                                    }
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "icon-format",
+                  "findings": [
+                    {
+                      "code": "ORB_UI_ICON_INVALID_FORMAT",
+                      "path": "orbitals[0 (Home)].traits[0 (Tour)].stateMachine.transitions[0].effects[0].pattern.children[1].icon",
+                      "message": "Icon 'Bad Name' has invalid format. Use kebab-case (e.g., 'plus', 'trash-2') or PascalCase (e.g., 'Plus', 'Trash2')",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintIconFormat"
+        }
+      ]
+    },
+    {
+      "id": "an args body that does not parse is the usage error",
+      "steps": [
+        {
+          "trait": "OrbLintIconFormatCli",
+          "from": "ready",
+          "event": "LINT_CALLED",
+          "payload": {
+            "rawBody": "not json"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb lint icon-format <file>"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

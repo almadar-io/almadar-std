@@ -1,0 +1,21 @@
+app lint-expectation-persistent-unwritten-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint expectation-persistent-unwritten <file>`, the port of persistent_never_written. A strict `expects entity X [persistent]` with a present provider obliges some trait of the program to land a persist create, update or upsert of X; when none does it is ORB_S_EXPECTATION_UNSATISFIED at the expectation (status 500, exit 1). Clean answers `lint expectation-persistent-unwritten: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintExpectationPersistentUnwrittenSpec {
+  expects trait OrbLintExpectationPersistentUnwritten {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintExpectationPersistentUnwrittenCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintExpectationPersistentUnwritten, OrbLintExpectationPersistentUnwrittenCli
+}

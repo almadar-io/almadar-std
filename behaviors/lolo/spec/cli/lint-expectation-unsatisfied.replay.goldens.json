@@ -1,0 +1,3717 @@
+{
+  "atom": "cli/atoms/std-orb-lint-expectation-unsatisfied.lolo",
+  "trait": "OrbLintExpectationUnsatisfied",
+  "note": "Expected findings are the code, path, message and suggestion `orb validate` (the Rust validator) reports for the same program. Cases copy the tests of validate_expectation_links in tests/expectations_validation.rs (a_single_orbital_schema_never_reports_unsatisfied, an_absent_provider_is_deferred_not_unsatisfied, the expected-event trio, the strict entity/identity/event/page set, the spec orbital pair, a_state_expectation_needs_the_provider_trait_to_declare_it, a_transition_expectation_needs_that_edge_in_the_provider_trait) and tests/expects_page_slice.rs (the boot/route page tests); the rest pin the strict config knob and bare identity arms and the StringOrArray `from`. Not covered by this rule: a strict persistent entity nothing writes and a strict event the trait declares but never fires, which stay in the compiler.",
+  "cases": [
+    {
+      "id": "a-single-orbital-schema-never-reports-a-lenient-expectation-unsatisfied",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "Nobody"
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-unsatisfied",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        }
+      ]
+    },
+    {
+      "id": "an-absent-provider-is-deferred-not-unsatisfied",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "OrderRecord"
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "ProductOrbital",
+                  "entity": {
+                    "name": "Product",
+                    "persistence": "persistent",
+                    "collection": "products",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-unsatisfied",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        }
+      ]
+    },
+    {
+      "id": "an-expected-event-the-present-provider-trait-does-not-emit-is-unsatisfied",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "event",
+                      "traitName": "OrderFeed",
+                      "event": "ORDER_PLACED"
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFeed",
+                      "linkedEntity": "OrderRecord",
+                      "emits": [
+                        {
+                          "event": "ORDER_SHIPPED"
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-unsatisfied",
+                  "findings": [
+                    {
+                      "code": "ORB_S_EXPECTATION_UNSATISFIED",
+                      "path": "orbitals[0 (ConsumerOrbital)].expects[0]",
+                      "message": "`ConsumerOrbital` expects `OrderFeed.ORDER_PLACED`, but trait `OrderFeed` in `OrderOrbital` does not emit `ORDER_PLACED`.",
+                      "suggestion": "Declare `ORDER_PLACED` in `OrderFeed`'s `emits`, or listen to the trait that emits it.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        }
+      ]
+    },
+    {
+      "id": "control-an-expected-event-the-provider-trait-emits-is-satisfied",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "event",
+                      "traitName": "OrderFeed",
+                      "event": "ORDER_PLACED"
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFeed",
+                      "linkedEntity": "OrderRecord",
+                      "emits": [
+                        {
+                          "event": "ORDER_PLACED"
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-unsatisfied",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        }
+      ]
+    },
+    {
+      "id": "control-an-expected-event-with-no-trait-of-that-name-is-deferred",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "event",
+                      "traitName": "Elsewhere",
+                      "event": "ORDER_PLACED"
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFeed",
+                      "linkedEntity": "OrderRecord",
+                      "emits": [
+                        {
+                          "event": "ORDER_SHIPPED"
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-unsatisfied",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        }
+      ]
+    },
+    {
+      "id": "a-strict-entity-with-no-provider-is-unsatisfied",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "Ghost",
+                      "strict": true
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "identity": false,
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-unsatisfied",
+                  "findings": [
+                    {
+                      "code": "ORB_S_EXPECTATION_UNSATISFIED",
+                      "path": "orbitals[0 (ConsumerOrbital)].expects[0]",
+                      "message": "`ConsumerOrbital` expects entity `Ghost`, but nothing in this program provides it — a spec obligation is never deferred.",
+                      "suggestion": "Provide it in an orbital of this program (give the providing import that name, or declare it here).",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        }
+      ]
+    },
+    {
+      "id": "control-the-same-entity-expectation-without-strict-still-defers",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "Ghost"
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "identity": false,
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-unsatisfied",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        }
+      ]
+    },
+    {
+      "id": "a-strict-entity-a-sibling-provides-is-satisfied",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "OrderRecord",
+                      "strict": true
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "identity": false,
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-unsatisfied",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        }
+      ]
+    },
+    {
+      "id": "a-strict-expectation-in-a-single-orbital-schema-is-not-trusted",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "Ghost",
+                      "strict": true
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-unsatisfied",
+                  "findings": [
+                    {
+                      "code": "ORB_S_EXPECTATION_UNSATISFIED",
+                      "path": "orbitals[0 (ConsumerOrbital)].expects[0]",
+                      "message": "`ConsumerOrbital` expects entity `Ghost`, but nothing in this program provides it — a spec obligation is never deferred.",
+                      "suggestion": "Provide it in an orbital of this program (give the providing import that name, or declare it here).",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        }
+      ]
+    },
+    {
+      "id": "a-strict-identity-with-no-identity-entity-is-unsatisfied",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "identity",
+                      "name": "Customer",
+                      "strict": true
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "identity": false,
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-unsatisfied",
+                  "findings": [
+                    {
+                      "code": "ORB_S_EXPECTATION_UNSATISFIED",
+                      "path": "orbitals[0 (ConsumerOrbital)].expects[0]",
+                      "message": "`ConsumerOrbital` expects identity `Customer`, but nothing in this program provides it — a spec obligation is never deferred.",
+                      "suggestion": "Provide it in an orbital of this program (give the providing import that name, or declare it here).",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        }
+      ]
+    },
+    {
+      "id": "a-strict-bare-identity-with-no-identity-entity-is-unsatisfied",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "identity",
+                      "strict": true
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "identity": false,
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-unsatisfied",
+                  "findings": [
+                    {
+                      "code": "ORB_S_EXPECTATION_UNSATISFIED",
+                      "path": "orbitals[0 (ConsumerOrbital)].expects[0]",
+                      "message": "`ConsumerOrbital` expects an [identity] entity, but nothing in this program provides it — a spec obligation is never deferred.",
+                      "suggestion": "Provide it in an orbital of this program (give the providing import that name, or declare it here).",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        }
+      ]
+    },
+    {
+      "id": "control-a-strict-bare-identity-a-sibling-provides-is-satisfied",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "identity",
+                      "strict": true
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "identity": true,
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-unsatisfied",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        }
+      ]
+    },
+    {
+      "id": "a-strict-event-with-no-trait-of-that-name-is-unsatisfied",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "event",
+                      "traitName": "Elsewhere",
+                      "event": "PLACED",
+                      "strict": true
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFeed",
+                      "linkedEntity": "OrderRecord",
+                      "emits": [
+                        {
+                          "event": "PLACED"
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-unsatisfied",
+                  "findings": [
+                    {
+                      "code": "ORB_S_EXPECTATION_UNSATISFIED",
+                      "path": "orbitals[0 (ConsumerOrbital)].expects[0]",
+                      "message": "`ConsumerOrbital` expects trait `Elsewhere` (to emit `PLACED`), but nothing in this program provides it — a spec obligation is never deferred.",
+                      "suggestion": "Provide it in an orbital of this program (give the providing import that name, or declare it here).",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        }
+      ]
+    },
+    {
+      "id": "a-strict-page-no-orbital-declares-is-unsatisfied",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "page",
+                      "path": "/orders/:id",
+                      "strict": true
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderView",
+                      "linkedEntity": "OrderRecord",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OrderPage",
+                      "path": "/other",
+                      "traits": [
+                        {
+                          "ref": "OrderView"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-unsatisfied",
+                  "findings": [
+                    {
+                      "code": "ORB_S_EXPECTATION_UNSATISFIED",
+                      "path": "orbitals[0 (ConsumerOrbital)].expects[0]",
+                      "message": "`ConsumerOrbital` expects page `/orders/:id`, but nothing in this program provides it — a spec obligation is never deferred.",
+                      "suggestion": "Provide it in an orbital of this program (give the providing import that name, or declare it here).",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        }
+      ]
+    },
+    {
+      "id": "a-strict-page-a-sibling-declares-is-satisfied",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "page",
+                      "path": "/orders/:id",
+                      "strict": true
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderView",
+                      "linkedEntity": "OrderRecord",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OrderPage",
+                      "path": "/orders/:id",
+                      "traits": [
+                        {
+                          "ref": "OrderView"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-unsatisfied",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        }
+      ]
+    },
+    {
+      "id": "control-a-lenient-page-with-no-provider-defers",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "page",
+                      "path": "/orders/:id"
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderView",
+                      "linkedEntity": "OrderRecord",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OrderPage",
+                      "path": "/other",
+                      "traits": [
+                        {
+                          "ref": "OrderView"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-unsatisfied",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        }
+      ]
+    },
+    {
+      "id": "a-spec-orbital-validates-clean-on-its-own",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "ShopSpec",
+              "orbitals": [
+                {
+                  "name": "ShopSpec",
+                  "spec": true,
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "Order",
+                      "strict": true,
+                      "shape": [
+                        {
+                          "name": "total",
+                          "type": "number"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "event",
+                      "traitName": "Checkout",
+                      "event": "PLACED",
+                      "strict": true
+                    },
+                    {
+                      "kind": "page",
+                      "path": "/orders",
+                      "strict": true
+                    }
+                  ],
+                  "entity": {
+                    "name": "ShopSpec",
+                    "fields": []
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-unsatisfied",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        }
+      ]
+    },
+    {
+      "id": "control-an-orbital-with-a-real-entity-and-strict-expectations-is-still-checked",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "Ghost",
+                      "strict": true
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-unsatisfied",
+                  "findings": [
+                    {
+                      "code": "ORB_S_EXPECTATION_UNSATISFIED",
+                      "path": "orbitals[0 (ConsumerOrbital)].expects[0]",
+                      "message": "`ConsumerOrbital` expects entity `Ghost`, but nothing in this program provides it — a spec obligation is never deferred.",
+                      "suggestion": "Provide it in an orbital of this program (give the providing import that name, or declare it here).",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        }
+      ]
+    },
+    {
+      "id": "a-strict-config-knob-no-trait-declares-is-unsatisfied",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "config",
+                      "name": "stdio",
+                      "knob": {
+                        "type": "string"
+                      },
+                      "strict": true
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "identity": false,
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-unsatisfied",
+                  "findings": [
+                    {
+                      "code": "ORB_S_EXPECTATION_UNSATISFIED",
+                      "path": "orbitals[0 (ConsumerOrbital)].expects[0]",
+                      "message": "`ConsumerOrbital` expects config knob `stdio` on a trait, but nothing in this program provides it — a spec obligation is never deferred.",
+                      "suggestion": "Provide it in an orbital of this program (give the providing import that name, or declare it here).",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        }
+      ]
+    },
+    {
+      "id": "a-state-expectation-the-provider-trait-declares-is-satisfied",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "state",
+                      "traitName": "OrderFlow",
+                      "state": "paid"
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "primaryKey": true
+                      },
+                      {
+                        "name": "email",
+                        "type": "string",
+                        "unique": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFlow",
+                      "linkedEntity": "OrderRecord",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          },
+                          {
+                            "key": "PAY",
+                            "name": "Pay"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OrderPage",
+                      "path": "/orders",
+                      "traits": [
+                        {
+                          "ref": "OrderFlow"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-unsatisfied",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        }
+      ]
+    },
+    {
+      "id": "a-state-expectation-the-provider-trait-lacks-is-unsatisfied",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "state",
+                      "traitName": "OrderFlow",
+                      "state": "refunded"
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "primaryKey": true
+                      },
+                      {
+                        "name": "email",
+                        "type": "string",
+                        "unique": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFlow",
+                      "linkedEntity": "OrderRecord",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          },
+                          {
+                            "key": "PAY",
+                            "name": "Pay"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OrderPage",
+                      "path": "/orders",
+                      "traits": [
+                        {
+                          "ref": "OrderFlow"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-unsatisfied",
+                  "findings": [
+                    {
+                      "code": "ORB_S_EXPECTATION_UNSATISFIED",
+                      "path": "orbitals[0 (ConsumerOrbital)].expects[0]",
+                      "message": "`ConsumerOrbital` expects trait `OrderFlow` to declare state `refunded`, but nothing in this program provides it — `OrderFlow` declares no such state.",
+                      "suggestion": "Provide it in an orbital of this program (give the providing import that name, or declare it here).",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        }
+      ]
+    },
+    {
+      "id": "a-lenient-state-of-an-absent-trait-defers",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "state",
+                      "traitName": "Elsewhere",
+                      "state": "paid"
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "primaryKey": true
+                      },
+                      {
+                        "name": "email",
+                        "type": "string",
+                        "unique": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFlow",
+                      "linkedEntity": "OrderRecord",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          },
+                          {
+                            "key": "PAY",
+                            "name": "Pay"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OrderPage",
+                      "path": "/orders",
+                      "traits": [
+                        {
+                          "ref": "OrderFlow"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-unsatisfied",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        }
+      ]
+    },
+    {
+      "id": "a-strict-state-of-an-absent-trait-is-unsatisfied",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "state",
+                      "traitName": "Elsewhere",
+                      "state": "paid",
+                      "strict": true
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "primaryKey": true
+                      },
+                      {
+                        "name": "email",
+                        "type": "string",
+                        "unique": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFlow",
+                      "linkedEntity": "OrderRecord",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          },
+                          {
+                            "key": "PAY",
+                            "name": "Pay"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OrderPage",
+                      "path": "/orders",
+                      "traits": [
+                        {
+                          "ref": "OrderFlow"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-unsatisfied",
+                  "findings": [
+                    {
+                      "code": "ORB_S_EXPECTATION_UNSATISFIED",
+                      "path": "orbitals[0 (ConsumerOrbital)].expects[0]",
+                      "message": "`ConsumerOrbital` expects trait `Elsewhere`, but nothing in this program provides it — a spec obligation is never deferred.",
+                      "suggestion": "Provide it in an orbital of this program (give the providing import that name, or declare it here).",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        }
+      ]
+    },
+    {
+      "id": "a-transition-expectation-the-provider-has-is-satisfied",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "transition",
+                      "traitName": "OrderFlow",
+                      "from": "idle",
+                      "event": "PAY",
+                      "to": "paid"
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "primaryKey": true
+                      },
+                      {
+                        "name": "email",
+                        "type": "string",
+                        "unique": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFlow",
+                      "linkedEntity": "OrderRecord",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          },
+                          {
+                            "key": "PAY",
+                            "name": "Pay"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OrderPage",
+                      "path": "/orders",
+                      "traits": [
+                        {
+                          "ref": "OrderFlow"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-unsatisfied",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        }
+      ]
+    },
+    {
+      "id": "a-transition-expectation-with-another-target-is-unsatisfied",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "transition",
+                      "traitName": "OrderFlow",
+                      "from": "idle",
+                      "event": "PAY",
+                      "to": "idle"
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "primaryKey": true
+                      },
+                      {
+                        "name": "email",
+                        "type": "string",
+                        "unique": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFlow",
+                      "linkedEntity": "OrderRecord",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          },
+                          {
+                            "key": "PAY",
+                            "name": "Pay"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OrderPage",
+                      "path": "/orders",
+                      "traits": [
+                        {
+                          "ref": "OrderFlow"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-unsatisfied",
+                  "findings": [
+                    {
+                      "code": "ORB_S_EXPECTATION_UNSATISFIED",
+                      "path": "orbitals[0 (ConsumerOrbital)].expects[0]",
+                      "message": "`ConsumerOrbital` expects trait `OrderFlow` to move `idle` to `idle` on `PAY`, but nothing in this program provides it — `OrderFlow` has no such transition.",
+                      "suggestion": "Provide it in an orbital of this program (give the providing import that name, or declare it here).",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        }
+      ]
+    },
+    {
+      "id": "a-transition-expectation-from-another-state-is-unsatisfied",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "transition",
+                      "traitName": "OrderFlow",
+                      "from": "paid",
+                      "event": "PAY",
+                      "to": "paid"
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "primaryKey": true
+                      },
+                      {
+                        "name": "email",
+                        "type": "string",
+                        "unique": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFlow",
+                      "linkedEntity": "OrderRecord",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          },
+                          {
+                            "key": "PAY",
+                            "name": "Pay"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OrderPage",
+                      "path": "/orders",
+                      "traits": [
+                        {
+                          "ref": "OrderFlow"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-unsatisfied",
+                  "findings": [
+                    {
+                      "code": "ORB_S_EXPECTATION_UNSATISFIED",
+                      "path": "orbitals[0 (ConsumerOrbital)].expects[0]",
+                      "message": "`ConsumerOrbital` expects trait `OrderFlow` to move `paid` to `paid` on `PAY`, but nothing in this program provides it — `OrderFlow` has no such transition.",
+                      "suggestion": "Provide it in an orbital of this program (give the providing import that name, or declare it here).",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        }
+      ]
+    },
+    {
+      "id": "a-transition-expectation-with-another-event-is-unsatisfied",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "transition",
+                      "traitName": "OrderFlow",
+                      "from": "idle",
+                      "event": "NOPE",
+                      "to": "paid"
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "primaryKey": true
+                      },
+                      {
+                        "name": "email",
+                        "type": "string",
+                        "unique": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFlow",
+                      "linkedEntity": "OrderRecord",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          },
+                          {
+                            "key": "PAY",
+                            "name": "Pay"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OrderPage",
+                      "path": "/orders",
+                      "traits": [
+                        {
+                          "ref": "OrderFlow"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-unsatisfied",
+                  "findings": [
+                    {
+                      "code": "ORB_S_EXPECTATION_UNSATISFIED",
+                      "path": "orbitals[0 (ConsumerOrbital)].expects[0]",
+                      "message": "`ConsumerOrbital` expects trait `OrderFlow` to move `idle` to `paid` on `NOPE`, but nothing in this program provides it — `OrderFlow` has no such transition.",
+                      "suggestion": "Provide it in an orbital of this program (give the providing import that name, or declare it here).",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        }
+      ]
+    },
+    {
+      "id": "control-a-transition-whose-from-is-a-list-satisfies-its-members",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "transition",
+                      "traitName": "OrderFlow",
+                      "from": "paid",
+                      "event": "PAY",
+                      "to": "paid"
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "primaryKey": true
+                      },
+                      {
+                        "name": "email",
+                        "type": "string",
+                        "unique": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFlow",
+                      "linkedEntity": "OrderRecord",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          },
+                          {
+                            "key": "PAY",
+                            "name": "Pay"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": [
+                              "idle",
+                              "paid"
+                            ],
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OrderPage",
+                      "path": "/orders",
+                      "traits": [
+                        {
+                          "ref": "OrderFlow"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-unsatisfied",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        }
+      ]
+    },
+    {
+      "id": "a-boot-expectation-is-satisfied-by-a-boot-page-mounting-the-traits",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "Worker",
+                  "entity": {
+                    "name": "Job",
+                    "collection": "jobs",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Seed",
+                      "linkedEntity": "Job",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "Tick",
+                      "linkedEntity": "Job",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "Start",
+                      "path": "",
+                      "protocol": "boot",
+                      "linkedEntity": "Job",
+                      "traits": [
+                        {
+                          "ref": "Seed"
+                        },
+                        {
+                          "ref": "Tick"
+                        }
+                      ]
+                    }
+                  ],
+                  "expects": [
+                    {
+                      "kind": "page",
+                      "protocol": "boot",
+                      "traits": [
+                        "Seed"
+                      ],
+                      "strict": true
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-unsatisfied",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        }
+      ]
+    },
+    {
+      "id": "a-route-expectation-is-not-satisfied-by-a-boot-page",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "Worker",
+                  "entity": {
+                    "name": "Job",
+                    "collection": "jobs",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Seed",
+                      "linkedEntity": "Job",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "Tick",
+                      "linkedEntity": "Job",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "Start",
+                      "path": "",
+                      "protocol": "boot",
+                      "linkedEntity": "Job",
+                      "traits": [
+                        {
+                          "ref": "Seed"
+                        }
+                      ]
+                    }
+                  ],
+                  "expects": [
+                    {
+                      "kind": "page",
+                      "path": "",
+                      "strict": true
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-unsatisfied",
+                  "findings": [
+                    {
+                      "code": "ORB_S_EXPECTATION_UNSATISFIED",
+                      "path": "orbitals[0 (Worker)].expects[0]",
+                      "message": "`Worker` expects page ``, but nothing in this program provides it — a spec obligation is never deferred.",
+                      "suggestion": "Provide it in an orbital of this program (give the providing import that name, or declare it here).",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        }
+      ]
+    },
+    {
+      "id": "a-boot-expectation-is-unsatisfied-when-the-program-has-no-boot-page",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "Worker",
+                  "entity": {
+                    "name": "Job",
+                    "collection": "jobs",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Seed",
+                      "linkedEntity": "Job",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "Tick",
+                      "linkedEntity": "Job",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "Home",
+                      "path": "/home",
+                      "linkedEntity": "Job",
+                      "traits": [
+                        {
+                          "ref": "Seed"
+                        }
+                      ]
+                    }
+                  ],
+                  "expects": [
+                    {
+                      "kind": "page",
+                      "protocol": "boot",
+                      "strict": true
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-unsatisfied",
+                  "findings": [
+                    {
+                      "code": "ORB_S_EXPECTATION_UNSATISFIED",
+                      "path": "orbitals[0 (Worker)].expects[0]",
+                      "message": "`Worker` expects a `boot` page, but nothing in this program provides it — a spec obligation is never deferred.",
+                      "suggestion": "Provide it in an orbital of this program (give the providing import that name, or declare it here).",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        }
+      ]
+    },
+    {
+      "id": "an args body that does not parse is the usage error",
+      "steps": [
+        {
+          "trait": "OrbLintExpectationUnsatisfiedCli",
+          "from": "ready",
+          "event": "LINT_CALLED",
+          "payload": {
+            "rawBody": "not json"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb lint expectation-unsatisfied <file>"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

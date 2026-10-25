@@ -1,0 +1,135 @@
+app std-launchpad-recents [
+  version: "1.0.0",
+  fs: { "~/.almadar/launchpad": [create], "~/.almadar/launchpad/**": [read, write, create] },
+  description: "std-launchpad-recents — the behaviors launched from the launchpad, remembered per machine in ~/.almadar/launchpad/recents.json. RECENTS_LOAD reads the file: a file that does not exist (os/read-file's not-found failure, and only that one) is an empty list, a file that is not a list of entries or any other failure answers RECENTS_FAILED { error }, and a good list answers RECENTS_LOADED { items }. RECENT_ADD { behavior, label, kind, command } puts the behavior first, drops its earlier entry, creates ~/.almadar/launchpad and writes the whole list back; RECENTS_CHANGED { items } answers the list after the write succeeded and RECENTS_FAILED when the directory or the file could not be written (the list in memory is still the new one, so the row stays for the session). Entries are kept in full: nothing is dropped but the earlier entry of the same behavior.",
+  egress: []
+]
+;; @capabilities "remember recently launched behaviors, read and write a per-machine recents list"
+
+type RecentEntries = [RecentEntry]
+type RecentEntry = {
+  behavior : string!
+  label : string!
+  kind : string!
+  command : string!
+  route : string!
+  at : number!
+}
+
+orbital LaunchpadRecentsOrbital {
+  entity RecentsRun [runtime] {
+    id : string!
+    items : [RecentEntry] = []
+  }
+
+  trait RecentsStore -> RecentsRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      RECENTS_LOAD -> ready
+        (os/read-file "~/.almadar/launchpad/recents.json" { key: "recents" emit: { success: RECENTS_READ, failure: RECENTS_READ_FAILED } })
+      RECENTS_READ -> ready when (= (json/parse (or (bytes/to-string ?data) "") RecentEntries) null)
+        (emit RECENTS_FAILED { error: "the recents file is not a list of launches" })
+      RECENTS_READ -> ready when (!= (json/parse (or (bytes/to-string ?data) "") RecentEntries) null)
+        (set @entity.items (json/parse (or (bytes/to-string ?data) "") RecentEntries))
+        (emit RECENTS_LOADED { items: @entity.items })
+      RECENTS_READ_FAILED -> ready when (= ?kind "not-found")
+        (set @entity.items [])
+        (emit RECENTS_LOADED { items: [] })
+      RECENTS_READ_FAILED -> ready when (!= ?kind "not-found")
+        (emit RECENTS_FAILED { error: ?error })
+      RECENT_ADD -> ready
+        (set @entity.items (array/prepend (array/filter @entity.items (fn e (!= @e.behavior ?behavior))) { behavior: ?behavior, label: ?label, kind: ?kind, command: ?command, route: ?route, at: @now }))
+        (os/mkdir "~/.almadar/launchpad" true { key: "dir" emit: { success: RECENTS_DIR, failure: RECENTS_WRITE_FAILED } })
+      RECENTS_DIR -> ready
+        (os/write-file "~/.almadar/launchpad/recents.json" (bytes/from-string (json/stringify @entity.items)) { key: "recents" emit: { success: RECENTS_WRITTEN, failure: RECENTS_WRITE_FAILED } })
+      RECENTS_WRITTEN -> ready
+        (emit RECENTS_CHANGED { items: @entity.items })
+      RECENTS_WRITE_FAILED -> ready
+        (emit RECENTS_CHANGED { items: @entity.items })
+        (emit RECENTS_FAILED { error: ?error })
+    }
+
+    emits {
+      RECENTS_LOADED -> external {
+        items : [RecentEntry]!
+      }
+        @description "The remembered launches, newest first."
+        @tier "domain"
+      RECENTS_CHANGED -> external {
+        items : [RecentEntry]!
+      }
+        @description "The remembered launches after a launch was added."
+        @tier "domain"
+      RECENTS_FAILED -> external {
+        error : string!
+      }
+        @description "The recents file could not be read as a list or written."
+        @tier "domain"
+      RECENTS_READ {
+        data : bytes!
+      }
+        @description "Internal: os/read-file's success."
+        @tier "internal"
+      RECENTS_READ_FAILED {
+        error : string!
+        kind : string
+      }
+        @description "Internal: os/read-file's failure."
+        @tier "internal"
+      RECENTS_DIR { }
+        @description "Internal: os/mkdir's success."
+        @tier "internal"
+      RECENTS_WRITTEN {
+        bytes : number
+      }
+        @description "Internal: os/write-file's success."
+        @tier "internal"
+      RECENTS_WRITE_FAILED {
+        error : string!
+        kind : string
+      }
+        @description "Internal: os/mkdir's or os/write-file's failure."
+        @tier "internal"
+    }
+
+    listens {
+      RECENTS_LOAD -> input {
+      }
+        @description "Read the remembered launches."
+        @synonyms "load recents, recently launched"
+      RECENT_ADD -> input {
+        behavior : string!
+        label : string!
+        kind : string!
+        command : string!
+        route : string!
+      }
+        @description "Remember a launch."
+        @synonyms "add recent, remember launch"
+      RECENTS_READ {
+        data : bytes!
+      }
+        @description "os/read-file's success."
+      RECENTS_READ_FAILED {
+        error : string!
+        kind : string
+      }
+        @description "os/read-file's failure."
+      RECENTS_DIR { }
+        @description "os/mkdir's success."
+      RECENTS_WRITTEN {
+        bytes : number
+      }
+        @description "os/write-file's success."
+      RECENTS_WRITE_FAILED {
+        error : string!
+        kind : string
+      }
+        @description "os/mkdir's or os/write-file's failure."
+    }
+  }
+
+  page boot as LaunchpadRecentsOrbitalStart -> RecentsStore
+}

@@ -1,0 +1,21 @@
+app lint-expected-field-not-provided-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint expected-field-not-provided <file>`, the port of the ORB_S_EXPECTED_FIELD_NOT_PROVIDED findings of validate_expectation_links. An expected entity or identity shape field the present provider entity declares no field of that name for, and an expected event payload field the present trait's emitted event declares no payload field for, are reported at the field (status 500, exit 1); extra provider fields and an absent provider are fine. Clean answers `lint expected-field-not-provided: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintExpectedFieldNotProvidedSpec {
+  expects trait OrbLintExpectedFieldNotProvided {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintExpectedFieldNotProvidedCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintExpectedFieldNotProvided, OrbLintExpectedFieldNotProvidedCli
+}

@@ -1,0 +1,2396 @@
+{
+  "atom": "cli/atoms/std-orb-lint-keyed-call.lolo",
+  "trait": "OrbLintKeyedCall",
+  "note": "Cases copy http_validation.rs an_emit_options_key_an_effect_does_not_carry_is_refused (dropped persist, kept control, substrate control, row-field-named-key control) and emit_config_validation.rs two_call_services_of_one_transition_with_the_same_literal_key_are_an_error (same, distinct and computed controls), plus fetch, a nested if, ticks, two transitions, the underscore spelling, a third use, the trailing-options rule, dropped-before-duplicate order, a trait reference and a transition with no effects. Expected findings are the code, path, message and suggestion the Rust validator reports; severity is error. ORB_CALL_KEY_UNUSED, ORB_CANCEL_CALL_NO_KEYED_CALL and the key expression type check stay in Rust.",
+  "cases": [
+    {
+      "id": "persist-with-key-and-emit-is-dropped",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "persist",
+                                "create",
+                                "Row",
+                                {},
+                                {
+                                  "key": "k1",
+                                  "emit": {
+                                    "success": "SEARCHED",
+                                    "failure": "SEARCH_FAILED"
+                                  }
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintKeyedCall"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "keyed-call",
+                  "findings": [
+                    {
+                      "code": "ORB_EFFECT_OPTION_DROPPED",
+                      "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "`persist` carries no `key`, so its completion would never echo the `key` its options declare",
+                      "suggestion": "Remove `key` from the `persist` options, or tell the arm apart by its event",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintKeyedCall"
+        }
+      ]
+    },
+    {
+      "id": "persist-with-emit-only-is-kept",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "persist",
+                                "create",
+                                "Row",
+                                {},
+                                {
+                                  "emit": {
+                                    "success": "SEARCHED",
+                                    "failure": "SEARCH_FAILED"
+                                  }
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintKeyedCall"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "keyed-call",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintKeyedCall"
+        }
+      ]
+    },
+    {
+      "id": "substrate-op-carries-its-key",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "program/dispatch",
+                                "Icons.Searcher.INIT",
+                                {},
+                                {
+                                  "key": "k1",
+                                  "emit": {
+                                    "success": "SEARCHED",
+                                    "failure": "SEARCH_FAILED"
+                                  }
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintKeyedCall"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "keyed-call",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintKeyedCall"
+        }
+      ]
+    },
+    {
+      "id": "a-row-field-named-key-is-data",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "persist",
+                                "create",
+                                "Row",
+                                {
+                                  "key": "k1",
+                                  "id": "a"
+                                },
+                                {
+                                  "emit": {
+                                    "success": "SEARCHED",
+                                    "failure": "SEARCH_FAILED"
+                                  }
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintKeyedCall"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "keyed-call",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintKeyedCall"
+        }
+      ]
+    },
+    {
+      "id": "fetch-with-key-and-emit-is-dropped",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Row",
+                                {
+                                  "key": "k1",
+                                  "emit": {
+                                    "success": "SEARCHED",
+                                    "failure": "SEARCH_FAILED"
+                                  }
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintKeyedCall"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "keyed-call",
+                  "findings": [
+                    {
+                      "code": "ORB_EFFECT_OPTION_DROPPED",
+                      "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "`fetch` carries no `key`, so its completion would never echo the `key` its options declare",
+                      "suggestion": "Remove `key` from the `fetch` options, or tell the arm apart by its event",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintKeyedCall"
+        }
+      ]
+    },
+    {
+      "id": "a-dropped-key-nested-in-an-if-is-reported-at-the-top-effect",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.id",
+                                "x"
+                              ],
+                              [
+                                "if",
+                                "@payload.ok",
+                                [
+                                  "persist",
+                                  "create",
+                                  "Row",
+                                  {},
+                                  {
+                                    "key": "k1",
+                                    "emit": {
+                                      "success": "SEARCHED",
+                                      "failure": "SEARCH_FAILED"
+                                    }
+                                  }
+                                ],
+                                [
+                                  "fetch",
+                                  "Row",
+                                  {
+                                    "emit": {
+                                      "success": "SEARCHED",
+                                      "failure": "SEARCH_FAILED"
+                                    }
+                                  }
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintKeyedCall"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "keyed-call",
+                  "findings": [
+                    {
+                      "code": "ORB_EFFECT_OPTION_DROPPED",
+                      "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[1]",
+                      "message": "`persist` carries no `key`, so its completion would never echo the `key` its options declare",
+                      "suggestion": "Remove `key` from the `persist` options, or tell the arm apart by its event",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintKeyedCall"
+        }
+      ]
+    },
+    {
+      "id": "a-dropped-key-in-a-tick-is-reported-at-the-tick-effect",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": []
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {
+                          "name": "t",
+                          "interval": 1000,
+                          "effects": [
+                            [
+                              "persist",
+                              "create",
+                              "Row",
+                              {},
+                              {
+                                "key": "k1",
+                                "emit": {
+                                  "success": "SEARCHED",
+                                  "failure": "SEARCH_FAILED"
+                                }
+                              }
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintKeyedCall"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "keyed-call",
+                  "findings": [
+                    {
+                      "code": "ORB_EFFECT_OPTION_DROPPED",
+                      "path": "orbitals[0 (O)].traits[0 (T)].ticks[0].effects[0]",
+                      "message": "`persist` carries no `key`, so its completion would never echo the `key` its options declare",
+                      "suggestion": "Remove `key` from the `persist` options, or tell the arm apart by its event",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintKeyedCall"
+        }
+      ]
+    },
+    {
+      "id": "two-dropped-calls-in-two-transitions",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "A",
+                            "effects": [
+                              [
+                                "persist",
+                                "create",
+                                "Row",
+                                {},
+                                {
+                                  "key": "a",
+                                  "emit": {
+                                    "success": "SEARCHED",
+                                    "failure": "SEARCH_FAILED"
+                                  }
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "B",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Row",
+                                {
+                                  "key": "b",
+                                  "emit": {
+                                    "success": "SEARCHED",
+                                    "failure": "SEARCH_FAILED"
+                                  }
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintKeyedCall"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "keyed-call",
+                  "findings": [
+                    {
+                      "code": "ORB_EFFECT_OPTION_DROPPED",
+                      "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "`persist` carries no `key`, so its completion would never echo the `key` its options declare",
+                      "suggestion": "Remove `key` from the `persist` options, or tell the arm apart by its event",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_EFFECT_OPTION_DROPPED",
+                      "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0]",
+                      "message": "`fetch` carries no `key`, so its completion would never echo the `key` its options declare",
+                      "suggestion": "Remove `key` from the `fetch` options, or tell the arm apart by its event",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintKeyedCall"
+        }
+      ]
+    },
+    {
+      "id": "http-with-key-and-emit-is-not-an-unkeyed-effect",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "http",
+                                "GET",
+                                "https://x",
+                                "/s",
+                                {},
+                                {
+                                  "key": "k",
+                                  "emit": {
+                                    "success": "SEARCHED",
+                                    "failure": "SEARCH_FAILED"
+                                  }
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintKeyedCall"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "keyed-call",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintKeyedCall"
+        }
+      ]
+    },
+    {
+      "id": "same-literal-key-twice-is-a-duplicate",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "call-service",
+                                "svc",
+                                "act",
+                                {},
+                                {
+                                  "key": "same",
+                                  "emit": {
+                                    "success": "DONE"
+                                  }
+                                }
+                              ],
+                              [
+                                "call-service",
+                                "svc",
+                                "act",
+                                {},
+                                {
+                                  "key": "same",
+                                  "emit": {
+                                    "success": "DONE"
+                                  }
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintKeyedCall"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "keyed-call",
+                  "findings": [
+                    {
+                      "code": "ORB_CALL_SERVICE_KEY_DUPLICATE",
+                      "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[1]",
+                      "message": "call-service key 'same' is already used by another call in this transition",
+                      "suggestion": "Give each call-service of a transition its own key",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintKeyedCall"
+        }
+      ]
+    },
+    {
+      "id": "distinct-keys-are-not-a-duplicate",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "call-service",
+                                "svc",
+                                "act",
+                                {},
+                                {
+                                  "key": "a",
+                                  "emit": {
+                                    "success": "DONE"
+                                  }
+                                }
+                              ],
+                              [
+                                "call-service",
+                                "svc",
+                                "act",
+                                {},
+                                {
+                                  "key": "b",
+                                  "emit": {
+                                    "success": "DONE"
+                                  }
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintKeyedCall"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "keyed-call",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintKeyedCall"
+        }
+      ]
+    },
+    {
+      "id": "a-computed-key-is-not-a-literal-duplicate",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "call-service",
+                                "svc",
+                                "act",
+                                {},
+                                {
+                                  "key": "same",
+                                  "emit": {
+                                    "success": "DONE"
+                                  }
+                                }
+                              ],
+                              [
+                                "call-service",
+                                "svc",
+                                "act",
+                                {},
+                                {
+                                  "key": "@entity.id",
+                                  "emit": {
+                                    "success": "DONE"
+                                  }
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintKeyedCall"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "keyed-call",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintKeyedCall"
+        }
+      ]
+    },
+    {
+      "id": "two-computed-keys-are-not-compared",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "call-service",
+                                "svc",
+                                "act",
+                                {},
+                                {
+                                  "key": "@entity.id",
+                                  "emit": {
+                                    "success": "DONE"
+                                  }
+                                }
+                              ],
+                              [
+                                "call-service",
+                                "svc",
+                                "act",
+                                {},
+                                {
+                                  "key": "@entity.id",
+                                  "emit": {
+                                    "success": "DONE"
+                                  }
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintKeyedCall"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "keyed-call",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintKeyedCall"
+        }
+      ]
+    },
+    {
+      "id": "a-question-mark-key-is-computed",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "call-service",
+                                "svc",
+                                "act",
+                                {},
+                                {
+                                  "key": "?k",
+                                  "emit": {
+                                    "success": "DONE"
+                                  }
+                                }
+                              ],
+                              [
+                                "call-service",
+                                "svc",
+                                "act",
+                                {},
+                                {
+                                  "key": "?k",
+                                  "emit": {
+                                    "success": "DONE"
+                                  }
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintKeyedCall"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "keyed-call",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintKeyedCall"
+        }
+      ]
+    },
+    {
+      "id": "the-same-key-in-two-transitions-is-fine",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "A",
+                            "effects": [
+                              [
+                                "call-service",
+                                "svc",
+                                "act",
+                                {},
+                                {
+                                  "key": "same",
+                                  "emit": {
+                                    "success": "DONE"
+                                  }
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "B",
+                            "effects": [
+                              [
+                                "call-service",
+                                "svc",
+                                "act",
+                                {},
+                                {
+                                  "key": "same",
+                                  "emit": {
+                                    "success": "DONE"
+                                  }
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintKeyedCall"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "keyed-call",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintKeyedCall"
+        }
+      ]
+    },
+    {
+      "id": "the-third-use-is-reported-again",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "call-service",
+                                "svc",
+                                "act",
+                                {},
+                                {
+                                  "key": "same",
+                                  "emit": {
+                                    "success": "DONE"
+                                  }
+                                }
+                              ],
+                              [
+                                "call-service",
+                                "svc",
+                                "act",
+                                {},
+                                {
+                                  "key": "same",
+                                  "emit": {
+                                    "success": "DONE"
+                                  }
+                                }
+                              ],
+                              [
+                                "call-service",
+                                "svc",
+                                "act",
+                                {},
+                                {
+                                  "key": "same",
+                                  "emit": {
+                                    "success": "DONE"
+                                  }
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintKeyedCall"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "keyed-call",
+                  "findings": [
+                    {
+                      "code": "ORB_CALL_SERVICE_KEY_DUPLICATE",
+                      "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[1]",
+                      "message": "call-service key 'same' is already used by another call in this transition",
+                      "suggestion": "Give each call-service of a transition its own key",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_CALL_SERVICE_KEY_DUPLICATE",
+                      "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[2]",
+                      "message": "call-service key 'same' is already used by another call in this transition",
+                      "suggestion": "Give each call-service of a transition its own key",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintKeyedCall"
+        }
+      ]
+    },
+    {
+      "id": "the-underscore-spelling-counts-as-call-service",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "call-service",
+                                "svc",
+                                "act",
+                                {},
+                                {
+                                  "key": "same",
+                                  "emit": {
+                                    "success": "DONE"
+                                  }
+                                }
+                              ],
+                              [
+                                "call_service",
+                                "svc",
+                                "act",
+                                {},
+                                {
+                                  "key": "same",
+                                  "emit": {
+                                    "success": "DONE"
+                                  }
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintKeyedCall"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "keyed-call",
+                  "findings": [
+                    {
+                      "code": "ORB_CALL_SERVICE_KEY_DUPLICATE",
+                      "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[1]",
+                      "message": "call-service key 'same' is already used by another call in this transition",
+                      "suggestion": "Give each call-service of a transition its own key",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintKeyedCall"
+        }
+      ]
+    },
+    {
+      "id": "a-call-with-no-trailing-options-has-no-key",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "call-service",
+                                "svc",
+                                "act",
+                                {}
+                              ],
+                              [
+                                "call-service",
+                                "svc",
+                                "act",
+                                {}
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintKeyedCall"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "keyed-call",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintKeyedCall"
+        }
+      ]
+    },
+    {
+      "id": "a-call-service-nested-in-an-if-is-not-compared",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "call-service",
+                                "svc",
+                                "act",
+                                {},
+                                {
+                                  "key": "same",
+                                  "emit": {
+                                    "success": "DONE"
+                                  }
+                                }
+                              ],
+                              [
+                                "if",
+                                "@payload.ok",
+                                [
+                                  "call-service",
+                                  "svc",
+                                  "act",
+                                  {},
+                                  {
+                                    "key": "same",
+                                    "emit": {
+                                      "success": "DONE"
+                                    }
+                                  }
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintKeyedCall"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "keyed-call",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintKeyedCall"
+        }
+      ]
+    },
+    {
+      "id": "both-rules-report-dropped-before-duplicates",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "call-service",
+                                "svc",
+                                "act",
+                                {},
+                                {
+                                  "key": "same",
+                                  "emit": {
+                                    "success": "DONE"
+                                  }
+                                }
+                              ],
+                              [
+                                "call-service",
+                                "svc",
+                                "act",
+                                {},
+                                {
+                                  "key": "same",
+                                  "emit": {
+                                    "success": "DONE"
+                                  }
+                                }
+                              ],
+                              [
+                                "persist",
+                                "create",
+                                "Row",
+                                {},
+                                {
+                                  "key": "k1",
+                                  "emit": {
+                                    "success": "SEARCHED",
+                                    "failure": "SEARCH_FAILED"
+                                  }
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintKeyedCall"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "keyed-call",
+                  "findings": [
+                    {
+                      "code": "ORB_EFFECT_OPTION_DROPPED",
+                      "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[2]",
+                      "message": "`persist` carries no `key`, so its completion would never echo the `key` its options declare",
+                      "suggestion": "Remove `key` from the `persist` options, or tell the arm apart by its event",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_CALL_SERVICE_KEY_DUPLICATE",
+                      "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[1]",
+                      "message": "call-service key 'same' is already used by another call in this transition",
+                      "suggestion": "Give each call-service of a transition its own key",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintKeyedCall"
+        }
+      ]
+    },
+    {
+      "id": "a-trait-reference-is-skipped",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "ref": "Other"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintKeyedCall"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "keyed-call",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintKeyedCall"
+        }
+      ]
+    },
+    {
+      "id": "no-effects-is-clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintKeyedCall"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "keyed-call",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintKeyedCall"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1535 @@
+{
+ "atom": "cli/atoms/std-orb-lint-listen-source-unresolved.lolo",
+ "trait": "OrbLintListenSourceUnresolved",
+ "note": "Cases mirror listens.rs (listen_on_conditional_branch_only_event_resolves, with the PRODUCED_EVENTS std-orb-produced-events answers for the same program) and the inline-phase test tests/events_rename_sourced_listen.rs (the composed program's post-rename listen resolves), plus controls for a declared emit, an undeclared event, a produced effect emit, an out-of-program source orbital, orbital-sourced entries, the sibling-orbital suggestion, and wildcard and sourceless listens. Each case carries the PRODUCED_HEARD answer for its program. Expected findings are the code, path, message and suggestion the Rust validator reports.",
+ "cases": [
+  {
+   "id": "listen-on-conditional-branch-only-event-resolves",
+   "steps": [
+    {
+     "trait": "OrbLintListenSourceUnresolved",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "TaskOrbital",
+         "entity": {
+          "name": "TaskOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "TaskList",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "data-list",
+                 "itemActions": [
+                  "if",
+                  "@user.role",
+                  [
+                   {
+                    "name": "Edit",
+                    "event": "EDIT_ITEM"
+                   }
+                  ],
+                  [
+                   {
+                    "name": "Edit",
+                    "event": "VIEW_ITEM"
+                   }
+                  ]
+                 ]
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          },
+          {
+           "name": "TaskDetail",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "listens": [
+            {
+             "event": "VIEW_ITEM",
+             "triggers": "REFRESH",
+             "source": {
+              "kind": "trait",
+              "trait": "TaskList"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceUnresolved",
+     "event": "PRODUCED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "TaskList": [
+        "EDIT_ITEM",
+        "VIEW_ITEM"
+       ],
+       "TaskDetail": []
+      },
+      "byEffect": {
+       "TaskList": [],
+       "TaskDetail": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceUnresolved",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-source-unresolved",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-without-the-produced-events-the-same-listen-is-unresolved",
+   "steps": [
+    {
+     "trait": "OrbLintListenSourceUnresolved",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "TaskOrbital",
+         "entity": {
+          "name": "TaskOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "TaskList",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "data-list",
+                 "itemActions": [
+                  "if",
+                  "@user.role",
+                  [
+                   {
+                    "name": "Edit",
+                    "event": "EDIT_ITEM"
+                   }
+                  ],
+                  [
+                   {
+                    "name": "Edit",
+                    "event": "VIEW_ITEM"
+                   }
+                  ]
+                 ]
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          },
+          {
+           "name": "TaskDetail",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "listens": [
+            {
+             "event": "VIEW_ITEM",
+             "triggers": "REFRESH",
+             "source": {
+              "kind": "trait",
+              "trait": "TaskList"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceUnresolved",
+     "event": "PRODUCED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "TaskList": [],
+       "TaskDetail": []
+      },
+      "byEffect": {
+       "TaskList": [],
+       "TaskDetail": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceUnresolved",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-source-unresolved",
+         "findings": [
+          {
+           "code": "ORB_X_LISTEN_SOURCE_UNRESOLVED",
+           "path": "orbitals.TaskOrbital.traits.TaskDetail.listens",
+           "message": "Listen entry in 'TaskOrbital.TaskDetail' references source 'TaskOrbital.TaskList' event 'VIEW_ITEM' which is not declared on the source trait.",
+           "suggestion": "Either declare the event in the source trait's `emits` block, or remove the listens entry. Cross-orbital channels require the source trait to declare the emit explicitly.",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-declared-emit-resolves-the-listen",
+   "steps": [
+    {
+     "trait": "OrbLintListenSourceUnresolved",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "OE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Src",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "emits": [
+            {
+             "event": "GO",
+             "scope": "external"
+            }
+           ]
+          },
+          {
+           "name": "L",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "listens": [
+            {
+             "event": "GO",
+             "source": {
+              "kind": "trait",
+              "trait": "Src"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceUnresolved",
+     "event": "PRODUCED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Src": [],
+       "L": []
+      },
+      "byEffect": {
+       "Src": [],
+       "L": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceUnresolved",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-source-unresolved",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-undeclared-event-is-unresolved",
+   "steps": [
+    {
+     "trait": "OrbLintListenSourceUnresolved",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "OE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Src",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "emits": [
+            {
+             "event": "GO",
+             "scope": "external"
+            }
+           ]
+          },
+          {
+           "name": "L",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "listens": [
+            {
+             "event": "STOP",
+             "source": {
+              "kind": "trait",
+              "trait": "Src"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceUnresolved",
+     "event": "PRODUCED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Src": [],
+       "L": []
+      },
+      "byEffect": {
+       "Src": [],
+       "L": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceUnresolved",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-source-unresolved",
+         "findings": [
+          {
+           "code": "ORB_X_LISTEN_SOURCE_UNRESOLVED",
+           "path": "orbitals.O.traits.L.listens",
+           "message": "Listen entry in 'O.L' references source 'O.Src' event 'STOP' which is not declared on the source trait.",
+           "suggestion": "Either declare the event in the source trait's `emits` block, or remove the listens entry. Cross-orbital channels require the source trait to declare the emit explicitly.",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-effect-emitted-event-the-source-produces-resolves",
+   "steps": [
+    {
+     "trait": "OrbLintListenSourceUnresolved",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "OE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Src",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           }
+          },
+          {
+           "name": "L",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "listens": [
+            {
+             "event": "GO",
+             "source": {
+              "kind": "trait",
+              "trait": "Src"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceUnresolved",
+     "event": "PRODUCED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Src": [],
+       "L": []
+      },
+      "byEffect": {
+       "Src": [
+        "GO"
+       ],
+       "L": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceUnresolved",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-source-unresolved",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-source-orbital-outside-the-program-is-skipped",
+   "steps": [
+    {
+     "trait": "OrbLintListenSourceUnresolved",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "OE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "L",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "listens": [
+            {
+             "event": "GO",
+             "source": {
+              "kind": "orbital",
+              "orbital": "Elsewhere",
+              "trait": "Src"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceUnresolved",
+     "event": "PRODUCED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "L": []
+      },
+      "byEffect": {
+       "L": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceUnresolved",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-source-unresolved",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-orbital-sourced-listen-resolves-against-the-named-orbital",
+   "steps": [
+    {
+     "trait": "OrbLintListenSourceUnresolved",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "AE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Src",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "emits": [
+            {
+             "event": "GO",
+             "scope": "external"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "B",
+         "entity": {
+          "name": "BE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "L",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "listens": [
+            {
+             "event": "GO",
+             "source": {
+              "kind": "orbital",
+              "orbital": "A",
+              "trait": "Src"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceUnresolved",
+     "event": "PRODUCED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Src": [],
+       "L": []
+      },
+      "byEffect": {
+       "Src": [],
+       "L": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceUnresolved",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-source-unresolved",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-orbital-sourced-listen-with-an-undeclared-event-is-unresolved",
+   "steps": [
+    {
+     "trait": "OrbLintListenSourceUnresolved",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "AE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Src",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "emits": [
+            {
+             "event": "GO",
+             "scope": "external"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "B",
+         "entity": {
+          "name": "BE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "L",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "listens": [
+            {
+             "event": "STOP",
+             "source": {
+              "kind": "orbital",
+              "orbital": "A",
+              "trait": "Src"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceUnresolved",
+     "event": "PRODUCED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Src": [],
+       "L": []
+      },
+      "byEffect": {
+       "Src": [],
+       "L": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceUnresolved",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-source-unresolved",
+         "findings": [
+          {
+           "code": "ORB_X_LISTEN_SOURCE_UNRESOLVED",
+           "path": "orbitals.B.traits.L.listens",
+           "message": "Listen entry in 'B.L' references source 'A.Src' event 'STOP' which is not declared on the source trait.",
+           "suggestion": "Either declare the event in the source trait's `emits` block, or remove the listens entry. Cross-orbital channels require the source trait to declare the emit explicitly.",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-bare-trait-source-declaring-the-event-in-a-sibling-orbital-names-the-qualified-form",
+   "steps": [
+    {
+     "trait": "OrbLintListenSourceUnresolved",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "AE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Src",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "emits": [
+            {
+             "event": "GO",
+             "scope": "external"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "B",
+         "entity": {
+          "name": "BE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "L",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "listens": [
+            {
+             "event": "GO",
+             "source": {
+              "kind": "trait",
+              "trait": "Src"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceUnresolved",
+     "event": "PRODUCED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Src": [],
+       "L": []
+      },
+      "byEffect": {
+       "Src": [],
+       "L": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceUnresolved",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-source-unresolved",
+         "findings": [
+          {
+           "code": "ORB_X_LISTEN_SOURCE_UNRESOLVED",
+           "path": "orbitals.B.traits.L.listens",
+           "message": "Listen entry in 'B.L' references source 'B.Src' event 'GO' which is not declared on the source trait.",
+           "suggestion": "Trait 'Src' declares event 'GO' in sibling orbital 'A' — a bare `Trait.EVENT` listen only resolves within this orbital; write the qualified form `A.Src.GO`.",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-wildcard-source-is-not-checked",
+   "steps": [
+    {
+     "trait": "OrbLintListenSourceUnresolved",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "OE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "L",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "listens": [
+            {
+             "event": "GO",
+             "source": {
+              "kind": "any"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceUnresolved",
+     "event": "PRODUCED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "L": []
+      },
+      "byEffect": {
+       "L": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceUnresolved",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-source-unresolved",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-listen-with-no-source-is-not-checked",
+   "steps": [
+    {
+     "trait": "OrbLintListenSourceUnresolved",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "OE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "L",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "listens": [
+            {
+             "event": "GO"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceUnresolved",
+     "event": "PRODUCED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "L": []
+      },
+      "byEffect": {
+       "L": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceUnresolved",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-source-unresolved",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "events-rename-keeps-the-source-side-event-so-the-listen-resolves",
+   "steps": [
+    {
+     "trait": "OrbLintListenSourceUnresolved",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "ModQueueOrbital",
+         "entity": {
+          "name": "ModQueueOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "CloseButton",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "emits": [
+            {
+             "event": "CLOSE",
+             "scope": "external"
+            }
+           ]
+          },
+          {
+           "name": "DashboardModeration",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "listens": [
+            {
+             "event": "CLOSE",
+             "triggers": "DASHBOARD_MOD_CLOSE",
+             "source": {
+              "kind": "trait",
+              "trait": "CloseButton"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceUnresolved",
+     "event": "PRODUCED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "CloseButton": [],
+       "DashboardModeration": []
+      },
+      "byEffect": {
+       "CloseButton": [],
+       "DashboardModeration": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceUnresolved",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-source-unresolved",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

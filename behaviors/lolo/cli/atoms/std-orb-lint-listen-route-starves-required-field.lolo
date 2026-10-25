@@ -1,0 +1,137 @@
+app std-orb-lint-listen-route-starves-required-field [
+  version: "1.0.0",
+  inbound: ["cli-lint-listen-route-starves-required-field"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-listen-route-starves-required-field — the `orb lint listen-route-starves-required-field <file>` command, the port of validate_listen_route_starves_required_field (circuit/cross_orbital/listen_starvation.rs, ORB_LISTEN_ROUTE_STARVES_REQUIRED_FIELD). A `listens { Src.EVENT -> TRIGGER }` route delivers what the source trait's declared emit contract produces (pass-through) or, with an explicit `with { … }` mapping, only the mapping's top-level keys. When the listening trait's TRIGGER declares a required leaf field (dotted path; a required field inside an optional container is owed only when the route delivers that container; an entity-typed field is one leaf) the route can never supply, the consumer reads it as undefined. A pass-through route is credited with the source emit's declared payload path, or, for an emit fired by a definer knob that carries no schema, the literal default of the source's `@payload(<knob>)` companion config field. Only trait and orbital sources whose orbital is in the program and whose trait and emit contract resolve are compared. Reports one error per starved path at orbitals.<Orbital>.traits.<Trait>.listens (status 500, exit 1). Clean answers `lint listen-route-starves-required-field: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-listen-route-starves-required-field"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type StvNode = string | number | boolean | [StvNode?] | Map string StvNode?
+type StvLeaf = { path : string, anc : [string] }
+type StvMap = Map string StvNode?
+type StvField = { name : string, required : boolean, entity : string, properties : [StvField] }
+type StvConfigField = { payloadFor : string, default : StvNode? }
+type StvSource = { kind : string, trait : string, orbital : string }
+type StvListen = { event : string, triggers : string, source : StvSource, payloadMapping : Map string StvNode? }
+type StvEmit = { event : string, definerKnob : string, payloadSchema : [StvField] }
+type StvEvent = { key : string, payloadSchema : [StvField] }
+type StvMachine = { events : [StvEvent] }
+type StvTrait = { name : string, emits : [StvEmit], listens : [StvListen], stateMachine : StvMachine, config : Map string StvConfigField? }
+type StvOrbital = { name : string, traits : [StvTrait] }
+type StvProgram = { orbitals : [StvOrbital] }
+
+orbital OrbLintListenRouteStarvesRequiredFieldOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintListenRouteStarvesRequiredFieldRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintListenRouteStarvesRequiredField -> OrbLintListenRouteStarvesRequiredFieldRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((nof : [StvField] [])) (let ((nos : [string] [])) (let ((nol : [StvLeaf] [])) (let ((orbitals (object/get @payload.program "orbitals" []))) (array/flatten (array/map @orbitals (fn o (array/flatten (array/map (array/filter (object/get @o "traits" []) (fn tt (object/has @tt "stateMachine"))) (fn td (array/flatten (array/map (array/filter (object/get @td "listens" []) (fn ll (or (= (object/get (object/get @ll "source" {}) "kind" "") "trait") (= (object/get (object/get @ll "source" {}) "kind" "") "orbital")))) (fn l (let ((sorb (if (= (object/get (object/get @l "source" {}) "kind" "") "trait") (object/get @o "name" "") (object/get (object/get @l "source" {}) "orbital" "")))) (let ((strait (object/get (object/get @l "source" {}) "trait" ""))) (let ((trig (object/get @l "triggers" (object/get @l "event" "")))) (let ((std (array/last (array/flatten (array/map (array/filter @orbitals (fn so (= (object/get @so "name" "") @sorb))) (fn so2 (array/filter (object/get @so2 "traits" []) (fn st (and (object/has @st "stateMachine") (= (object/get @st "name" "") @strait)))))))))) (if (= @std null) [] (let ((semit (array/find (object/get @std "emits" []) (fn se (= (object/get @se "event" "") (object/get @l "event" "")))))) (let ((tev (array/find (object/get (object/get @td "stateMachine" {}) "events" []) (fn te (= (object/get @te "key" "") @trig))))) (if (or (= @semit null) (= @tev null) (not (object/has @tev "payloadSchema"))) [] (array/flatten (array/map (object/get (array/reduce (array/range 0 (+ 1 (array/len (str/split (json/stringify (object/get @tev "payloadSchema" @nof)) "{")))) { fr: (array/map (object/get @tev "payloadSchema" @nof) (fn lf0 { f: @lf0, path: (object/get @lf0 "name" ""), anc: @nos })), out: @nol } (fn (lacc li) (let ((lfr (object/get @lacc "fr"))) { fr: (array/flatten (array/map @lfr (fn lit (let ((lf (object/get @lit "f"))) (if (and (= (object/get @lf "entity" null) null) (> (array/len (object/get @lf "properties" @nof)) 0)) (array/map (object/get @lf "properties" @nof) (fn lc { f: @lc, path: (str/concat (object/get @lit "path" "") "." (object/get @lc "name" "")), anc: (if (= (object/get @lf "required" false) true) (object/get @lit "anc" @nos) (array/append (object/get @lit "anc" @nos) (object/get @lit "path" ""))) })) []))))), out: (array/concat (object/get @lacc "out") (array/flatten (array/map @lfr (fn lit2 (let ((lf2 (object/get @lit2 "f"))) (if (and (not (and (= (object/get @lf2 "entity" null) null) (> (array/len (object/get @lf2 "properties" @nof)) 0))) (= (object/get @lf2 "required" false) true)) [{ path: (object/get @lit2 "path" ""), anc: (object/get @lit2 "anc" @nos) }] [])))))) }))) "out") (fn lv (let ((lpath (object/get @lv "path" ""))) (if (and (array/every (object/get @lv "anc" @nos) (fn lan (let ((psegs (str/split @lan "."))) (if (object/has @l "payloadMapping") (object/has (object/get @l "payloadMapping") (array/first @psegs)) (or (object/get (array/reduce (array/range 0 (array/len @psegs)) { cur: (object/get @semit "payloadSchema" @nof), ok: true, done: false } (fn (dacc di) (let ((dseg (array/nth @psegs @di))) (if (or (object/get @dacc "done") (not (object/get @dacc "ok"))) @dacc (let ((df (array/find (object/get @dacc "cur") (fn dx (= (object/get @dx "name" "") @dseg))))) (if (= @df null) { cur: (object/get @dacc "cur"), ok: false, done: true } (if (= @di (- (array/len @psegs) 1)) { cur: (object/get @dacc "cur"), ok: true, done: true } (if (= (array/len (object/get @df "properties" @nof)) 0) { cur: (object/get @dacc "cur"), ok: false, done: true } { cur: (object/get @df "properties" @nof), ok: true, done: false })))))))) "ok") (and (!= (object/get @semit "definerKnob" "") "") (array/some (object/values (object/get @std "config" {})) (fn pcf (and (= (object/get (or @pcf {}) "payloadFor" "") (object/get @semit "definerKnob" "")) (validate/object (object/get (or @pcf {}) "default" null)) (object/get (array/reduce @psegs { cur: (json/stringify (object/get (or @pcf {}) "default" null)), ok: true } (fn (lacc lseg) (if (not (object/get @lacc "ok")) @lacc (let ((lm (json/parse (object/get @lacc "cur") StvMap))) (if (and (!= @lm null) (object/has @lm @lseg)) { cur: (json/stringify (object/get @lm @lseg)), ok: true } { cur: (object/get @lacc "cur"), ok: false }))))) "ok")))))))))) (not (let ((psegs (str/split @lpath "."))) (if (object/has @l "payloadMapping") (object/has (object/get @l "payloadMapping") (array/first @psegs)) (or (object/get (array/reduce (array/range 0 (array/len @psegs)) { cur: (object/get @semit "payloadSchema" @nof), ok: true, done: false } (fn (dacc di) (let ((dseg (array/nth @psegs @di))) (if (or (object/get @dacc "done") (not (object/get @dacc "ok"))) @dacc (let ((df (array/find (object/get @dacc "cur") (fn dx (= (object/get @dx "name" "") @dseg))))) (if (= @df null) { cur: (object/get @dacc "cur"), ok: false, done: true } (if (= @di (- (array/len @psegs) 1)) { cur: (object/get @dacc "cur"), ok: true, done: true } (if (= (array/len (object/get @df "properties" @nof)) 0) { cur: (object/get @dacc "cur"), ok: false, done: true } { cur: (object/get @df "properties" @nof), ok: true, done: false })))))))) "ok") (and (!= (object/get @semit "definerKnob" "") "") (array/some (object/values (object/get @std "config" {})) (fn pcf (and (= (object/get (or @pcf {}) "payloadFor" "") (object/get @semit "definerKnob" "")) (validate/object (object/get (or @pcf {}) "default" null)) (object/get (array/reduce @psegs { cur: (json/stringify (object/get (or @pcf {}) "default" null)), ok: true } (fn (lacc lseg) (if (not (object/get @lacc "ok")) @lacc (let ((lm (json/parse (object/get @lacc "cur") StvMap))) (if (and (!= @lm null) (object/has @lm @lseg)) { cur: (json/stringify (object/get @lm @lseg)), ok: true } { cur: (object/get @lacc "cur"), ok: false }))))) "ok")))))))))) [{ code: "ORB_LISTEN_ROUTE_STARVES_REQUIRED_FIELD", path: (str/concat "orbitals." (object/get @o "name" "") ".traits." (object/get @td "name" "") ".listens"), message: (str/concat "listens route `" @strait "." (object/get @l "event" "") " -> " @trig "` in `" (object/get @o "name" "") "." (object/get @td "name" "") "` requires `" @lpath "` but the source contract never produces it"), suggestion: (str/concat "Add `" @lpath "` to `" @strait "`'s `emits { " (object/get @l "event" "") " { ... } }` payload, or supply it explicitly via `with { " (array/first (str/split @lpath ".")) ": ... }`"), severity: "error" }] [])))))))))))))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "listen-route-starves-required-field", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : StvProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+    }
+  }
+
+  trait OrbLintListenRouteStarvesRequiredFieldCli -> OrbLintListenRouteStarvesRequiredFieldRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint listen-route-starves-required-field <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "listen-route-starves-required-field") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint listen-route-starves-required-field: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "listen-route-starves-required-field") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint listen-route-starves-required-field: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-listen-route-starves-required-field" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint listen-route-starves-required-field` with its arguments and working directory."
+        @synonyms "orb lint listen-route-starves-required-field"
+      OrbLintListenRouteStarvesRequiredField.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintListenRouteStarvesRequiredFieldCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintListenRouteStarvesRequiredFieldOrbitalStart -> OrbLintListenRouteStarvesRequiredField, OrbLintListenRouteStarvesRequiredFieldCli, OrbLintInput, Packs, Versions
+}

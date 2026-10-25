@@ -1,0 +1,21 @@
+app lint-keyed-call-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint keyed-call <file>`. It lowers the file with program/read and reports ORB_EFFECT_OPTION_DROPPED (a persist or fetch whose options declare both emit and key) and ORB_CALL_SERVICE_KEY_DUPLICATE (two call-service calls of one transition with the same literal key) with the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint keyed-call: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintKeyedCallSpec {
+  expects trait OrbLintKeyedCall {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintKeyedCallCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintKeyedCall, OrbLintKeyedCallCli
+}

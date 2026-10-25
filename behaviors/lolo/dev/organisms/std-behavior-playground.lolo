@@ -1,7 +1,7 @@
 app std-behavior-playground [
   version: "1.0.0",
   theme: "linear-clean-light",
-  description: "std-behavior-playground — browse every installed behavior by package and topic, open one and play with it: it runs live in place (the behavior value embedded, as a page would mount it), its state machines open drillable in std-avl-cosmic-zoom (system map, then each trait's machine, then one transition as circuits, with Step running transitions on the kernel), its .lolo source reads in a code view, and an inspector lists its package, topic, level and knobs. The topic tree, the cards, search and Details are std-behavior-catalog's (scope, starting topic and labels are knobs); the frame is std-workspace-layout with a runtime panel showing the live trait states and event log. Serve it with `orb serve`.",
+  description: "std-behavior-playground — browse every installed behavior by package and topic, open one and play with it: it runs live in place (the behavior value embedded, as a page would mount it), its state machines open drillable in std-avl-cosmic-zoom (system map, then each trait's machine, then one transition as circuits, with Step running transitions on the kernel), its .lolo source file reads in a code view, and an inspector lists its package, topic, level and knobs. The topic tree, the cards, search and Details are std-behavior-catalog's (scope, starting topic and labels are knobs); the frame is std-workspace-layout with a runtime panel showing the live trait states and event log. Serve it with `orb serve`.",
   egress: ["https://api.openai.com", "https://openrouter.ai"]
 ]
 ;; @capabilities "browse installed behaviors by topic, run a behavior live, explore a behavior's state machines, read a behavior's source, inspect a behavior's knobs"
@@ -15,6 +15,7 @@ type PlaygroundPackageLabel = { package : string!, label : string! }
 type PlaygroundKnob = { name : string!, type : string!, label : string, description : string }
 type PlaygroundDescription = { behavior : string!, knobs : [PlaygroundKnob]! }
 type PlaygroundProgram = { name : string }
+type PlaygroundSourceFile = { path : string!, source : string! }
 type PlaygroundFinding = { code : string!, message : string! }
 type PlaygroundCheck = { valid : boolean!, errors : [PlaygroundFinding]!, warnings : [PlaygroundFinding]! }
 type CosmicNodeContext = { level : "overview" | "trait-expanded" | "system" | "code" | "transition"!, orbital : string!, trait : string, transition : string, transitionIndex : number }
@@ -48,7 +49,7 @@ orbital BehaviorPlayground {
     knobs : [PlaygroundKnob] = []
     valid : boolean = false
     findings : [PlaygroundFinding] = []
-    waiting : number @description "How many of the five answers (source, resolve, describe, print, check) are still to come." = 0
+    waiting : number @description "How many of the five answers (source, resolve, describe, file, check) are still to come." = 0
   }
 
   config {
@@ -467,6 +468,7 @@ orbital BehaviorPlayground {
         (behavior/source ?value { emit: { success: SOURCED, failure: LOAD_FAILED } })
         (behavior/resolve ?value { emit: { success: RESOLVED, failure: LOAD_FAILED } })
         (behavior/describe { behavior: ?behavior } { emit: { success: DESCRIBED, failure: DESCRIBE_FAILED } })
+        (behavior/source ?value { file: true emit: { success: FILE_READ, failure: FILE_FAILED } })
     }
 
     state loading {
@@ -477,16 +479,16 @@ orbital BehaviorPlayground {
         (behavior/source ?value { emit: { success: SOURCED, failure: LOAD_FAILED } })
         (behavior/resolve ?value { emit: { success: RESOLVED, failure: LOAD_FAILED } })
         (behavior/describe { behavior: ?behavior } { emit: { success: DESCRIBED, failure: DESCRIBE_FAILED } })
+        (behavior/source ?value { file: true emit: { success: FILE_READ, failure: FILE_FAILED } })
       SOURCED -> loading
         (set @entity.sourceJson (json/stringify ?result))
-        (program/print ?result { emit: { success: PRINTED, failure: PRINT_FAILED } })
         (program/validate ?result { emit: { success: CHECKED, failure: CHECK_FAILED } })
         (emit LOAD_STEP {})
-      PRINTED -> loading
-        (set @entity.sourceText ?result)
+      FILE_READ -> loading
+        (set @entity.sourceText ?result.source)
         (emit LOAD_STEP {})
-      PRINT_FAILED -> loading
-        (set @entity.sourceText (str/concat ";; the program could not be printed: " ?error))
+      FILE_FAILED -> loading
+        (set @entity.sourceText (str/concat ";; the source file could not be read: " ?error))
         (emit LOAD_STEP {})
       CHECKED -> loading
         (set @entity.valid @payload.result.valid)
@@ -523,7 +525,7 @@ orbital BehaviorPlayground {
         valid : boolean!
         findings : [PlaygroundFinding]!
       }
-        @description "The opened behavior's source (as written and printed), resolved program, knobs and validation."
+        @description "The opened behavior's program, source file text, resolved program, knobs and validation."
       BEHAVIOR_FAILED -> external {
         behavior : string!
         error : string!
@@ -542,10 +544,10 @@ orbital BehaviorPlayground {
       DESCRIBE_FAILED {
         error : string!
       }
-      PRINTED {
-        result : string!
+      FILE_READ {
+        result : PlaygroundSourceFile!
       }
-      PRINT_FAILED {
+      FILE_FAILED {
         error : string!
       }
       CHECKED {

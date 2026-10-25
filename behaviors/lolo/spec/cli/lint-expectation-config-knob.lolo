@@ -1,0 +1,21 @@
+app lint-expectation-config-knob-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint expectation-config-knob <file>`, the port of check_config_knob. An `expects config { name : type = default }` is checked against the knobs of that name the program's traits declare: none is deferred, a knob of another type is ORB_S_EXPECTED_FIELD_TYPE_MISMATCH, and a stated default no knob of that type has is ORB_S_EXPECTATION_UNSATISFIED, both at the expectation (status 500, exit 1). Clean answers `lint expectation-config-knob: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintExpectationConfigKnobSpec {
+  expects trait OrbLintExpectationConfigKnob {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintExpectationConfigKnobCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintExpectationConfigKnob, OrbLintExpectationConfigKnobCli
+}

@@ -1,0 +1,2149 @@
+{
+ "atom": "cli/atoms/std-orb-lint-listen-route-starves-required-field.lolo",
+ "trait": "OrbLintListenRouteStarvesRequiredField",
+ "note": "Cases copy the eleven listen_starvation.rs unit tests (starved_nested_required_field_errors_once, an_optional_container_the_source_never_sends_owes_nothing, complete_route_is_silent, explicit_mapping_supplying_the_key_is_silent, source_with_no_emit_contract_is_silent, entity_typed_field_on_both_sides_is_silent, alias_marked_source_struct_produces_its_declared_nested_fields, alias_marked_source_struct_missing_a_nested_field_still_starves, definer_knob_companion_config_field_satisfies_required_field, definer_knob_emit_without_companion_still_starves) plus controls for a companion linked to another knob, a nested literal companion default, an orbital-sourced route, a bare trait source in a sibling orbital, a wildcard source and a delivered optional container. Expected findings carry the code, path, message and suggestion the Rust validator reports.",
+ "cases": [
+  {
+   "id": "starved-nested-required-field-errors-once",
+   "steps": [
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "ChatOrbital",
+         "entity": {
+          "name": "ChatOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "ChatComposer",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "emits": [
+            {
+             "event": "SAVE",
+             "payloadSchema": [
+              {
+               "name": "data",
+               "type": "object",
+               "required": false,
+               "properties": [
+                {
+                 "name": "channel",
+                 "type": "string",
+                 "required": true
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "name": "ChatMessagePersistor",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [],
+            "events": [
+             {
+              "key": "DO_CREATE",
+              "payloadSchema": [
+               {
+                "name": "data",
+                "type": "object",
+                "required": false,
+                "properties": [
+                 {
+                  "name": "content",
+                  "type": "string",
+                  "required": true
+                 },
+                 {
+                  "name": "channel",
+                  "type": "string",
+                  "required": true
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           "listens": [
+            {
+             "event": "SAVE",
+             "triggers": "DO_CREATE",
+             "source": {
+              "kind": "trait",
+              "trait": "ChatComposer"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-route-starves-required-field",
+         "findings": [
+          {
+           "code": "ORB_LISTEN_ROUTE_STARVES_REQUIRED_FIELD",
+           "path": "orbitals.ChatOrbital.traits.ChatMessagePersistor.listens",
+           "message": "listens route `ChatComposer.SAVE -> DO_CREATE` in `ChatOrbital.ChatMessagePersistor` requires `data.content` but the source contract never produces it",
+           "suggestion": "Add `data.content` to `ChatComposer`'s `emits { SAVE { ... } }` payload, or supply it explicitly via `with { data: ... }`",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-optional-container-the-source-never-sends-owes-nothing",
+   "steps": [
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "World",
+         "entity": {
+          "name": "WorldE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "PlainData",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "emits": [
+            {
+             "event": "LEVEL_DATA",
+             "payloadSchema": [
+              {
+               "name": "id",
+               "type": "string",
+               "required": true
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "name": "Merger",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [],
+            "events": [
+             {
+              "key": "LEVEL_DATA",
+              "payloadSchema": [
+               {
+                "name": "id",
+                "type": "string",
+                "required": true
+               },
+               {
+                "name": "baseCurves",
+                "type": "object",
+                "required": false,
+                "properties": [
+                 {
+                  "name": "samples",
+                  "type": "object",
+                  "required": true,
+                  "properties": [
+                   {
+                    "name": "x",
+                    "type": "string",
+                    "required": true
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           "listens": [
+            {
+             "event": "LEVEL_DATA",
+             "triggers": "LEVEL_DATA",
+             "source": {
+              "kind": "trait",
+              "trait": "PlainData"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-route-starves-required-field",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "complete-route-is-silent",
+   "steps": [
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "ChatOrbital",
+         "entity": {
+          "name": "ChatOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "ChatComposer",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "emits": [
+            {
+             "event": "SAVE",
+             "payloadSchema": [
+              {
+               "name": "data",
+               "type": "object",
+               "required": false,
+               "properties": [
+                {
+                 "name": "content",
+                 "type": "string",
+                 "required": true
+                },
+                {
+                 "name": "channel",
+                 "type": "string",
+                 "required": true
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "name": "ChatMessagePersistor",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [],
+            "events": [
+             {
+              "key": "DO_CREATE",
+              "payloadSchema": [
+               {
+                "name": "data",
+                "type": "object",
+                "required": false,
+                "properties": [
+                 {
+                  "name": "content",
+                  "type": "string",
+                  "required": true
+                 },
+                 {
+                  "name": "channel",
+                  "type": "string",
+                  "required": true
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           "listens": [
+            {
+             "event": "SAVE",
+             "triggers": "DO_CREATE",
+             "source": {
+              "kind": "trait",
+              "trait": "ChatComposer"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-route-starves-required-field",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "explicit-mapping-supplying-the-key-is-silent",
+   "steps": [
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "ChatOrbital",
+         "entity": {
+          "name": "ChatOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "ChatComposer",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "emits": [
+            {
+             "event": "SAVE",
+             "payloadSchema": []
+            }
+           ]
+          },
+          {
+           "name": "ChatMessagePersistor",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [],
+            "events": [
+             {
+              "key": "DO_CREATE",
+              "payloadSchema": [
+               {
+                "name": "content",
+                "type": "string",
+                "required": true
+               }
+              ]
+             }
+            ]
+           },
+           "listens": [
+            {
+             "event": "SAVE",
+             "triggers": "DO_CREATE",
+             "source": {
+              "kind": "trait",
+              "trait": "ChatComposer"
+             },
+             "payloadMapping": {
+              "content": "?text"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-route-starves-required-field",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "source-with-no-emit-contract-is-silent",
+   "steps": [
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "ChatOrbital",
+         "entity": {
+          "name": "ChatOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "ChatComposer",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           }
+          },
+          {
+           "name": "ChatMessagePersistor",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [],
+            "events": [
+             {
+              "key": "DO_CREATE",
+              "payloadSchema": [
+               {
+                "name": "content",
+                "type": "string",
+                "required": true
+               }
+              ]
+             }
+            ]
+           },
+           "listens": [
+            {
+             "event": "SAVE",
+             "triggers": "DO_CREATE",
+             "source": {
+              "kind": "trait",
+              "trait": "ChatComposer"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-route-starves-required-field",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "entity-typed-field-on-both-sides-is-silent",
+   "steps": [
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "ChatOrbital",
+         "entity": {
+          "name": "ChatOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "ChatComposer",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "emits": [
+            {
+             "event": "SAVE",
+             "payloadSchema": [
+              {
+               "name": "row",
+               "type": "object",
+               "required": true,
+               "entity": "ChatMessage"
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "name": "ChatMessagePersistor",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [],
+            "events": [
+             {
+              "key": "DO_CREATE",
+              "payloadSchema": [
+               {
+                "name": "row",
+                "type": "object",
+                "required": true,
+                "entity": "ChatMessage"
+               }
+              ]
+             }
+            ]
+           },
+           "listens": [
+            {
+             "event": "SAVE",
+             "triggers": "DO_CREATE",
+             "source": {
+              "kind": "trait",
+              "trait": "ChatComposer"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-route-starves-required-field",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alias-marked-source-struct-produces-its-declared-nested-fields",
+   "steps": [
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "PongOrbital",
+         "entity": {
+          "name": "PongOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "PongMechanic",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "emits": [
+            {
+             "event": "BURST",
+             "payloadSchema": [
+              {
+               "name": "particles",
+               "type": "object",
+               "required": true,
+               "properties": [
+                {
+                 "name": "id",
+                 "type": "string",
+                 "required": true
+                },
+                {
+                 "name": "ttl",
+                 "type": "string",
+                 "required": true
+                }
+               ],
+               "entity": "Fx"
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "name": "PongFx",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [],
+            "events": [
+             {
+              "key": "BURST",
+              "payloadSchema": [
+               {
+                "name": "particles",
+                "type": "object",
+                "required": true,
+                "properties": [
+                 {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                 },
+                 {
+                  "name": "ttl",
+                  "type": "string",
+                  "required": true
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           "listens": [
+            {
+             "event": "BURST",
+             "triggers": "BURST",
+             "source": {
+              "kind": "trait",
+              "trait": "PongMechanic"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-route-starves-required-field",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alias-marked-source-struct-missing-a-nested-field-still-starves",
+   "steps": [
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "PongOrbital",
+         "entity": {
+          "name": "PongOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "PongMechanic",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "emits": [
+            {
+             "event": "BURST",
+             "payloadSchema": [
+              {
+               "name": "particles",
+               "type": "object",
+               "required": true,
+               "properties": [
+                {
+                 "name": "id",
+                 "type": "string",
+                 "required": true
+                }
+               ],
+               "entity": "Fx"
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "name": "PongFx",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [],
+            "events": [
+             {
+              "key": "BURST",
+              "payloadSchema": [
+               {
+                "name": "particles",
+                "type": "object",
+                "required": true,
+                "properties": [
+                 {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                 },
+                 {
+                  "name": "ttl",
+                  "type": "string",
+                  "required": true
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           "listens": [
+            {
+             "event": "BURST",
+             "triggers": "BURST",
+             "source": {
+              "kind": "trait",
+              "trait": "PongMechanic"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-route-starves-required-field",
+         "findings": [
+          {
+           "code": "ORB_LISTEN_ROUTE_STARVES_REQUIRED_FIELD",
+           "path": "orbitals.PongOrbital.traits.PongFx.listens",
+           "message": "listens route `PongMechanic.BURST -> BURST` in `PongOrbital.PongFx` requires `particles.ttl` but the source contract never produces it",
+           "suggestion": "Add `particles.ttl` to `PongMechanic`'s `emits { BURST { ... } }` payload, or supply it explicitly via `with { particles: ... }`",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "definer-knob-companion-config-field-satisfies-required-field",
+   "steps": [
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "SeqChallengeOrbital",
+         "entity": {
+          "name": "SeqChallengeOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "SeqButtonHint",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "emits": [
+            {
+             "event": "GENERATE",
+             "definerKnob": "action"
+            }
+           ],
+           "config": {
+            "actionPayload": {
+             "type": "object",
+             "payloadFor": "action",
+             "default": {
+              "prompt": "@payload.text"
+             }
+            }
+           }
+          },
+          {
+           "name": "SeqHintGeneration",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [],
+            "events": [
+             {
+              "key": "GENERATE",
+              "payloadSchema": [
+               {
+                "name": "prompt",
+                "type": "string",
+                "required": true
+               }
+              ]
+             }
+            ]
+           },
+           "listens": [
+            {
+             "event": "GENERATE",
+             "triggers": "GENERATE",
+             "source": {
+              "kind": "trait",
+              "trait": "SeqButtonHint"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-route-starves-required-field",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "definer-knob-emit-without-companion-still-starves",
+   "steps": [
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "SeqChallengeOrbital",
+         "entity": {
+          "name": "SeqChallengeOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "SeqButtonHint",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "emits": [
+            {
+             "event": "GENERATE",
+             "definerKnob": "action"
+            }
+           ]
+          },
+          {
+           "name": "SeqHintGeneration",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [],
+            "events": [
+             {
+              "key": "GENERATE",
+              "payloadSchema": [
+               {
+                "name": "prompt",
+                "type": "string",
+                "required": true
+               }
+              ]
+             }
+            ]
+           },
+           "listens": [
+            {
+             "event": "GENERATE",
+             "triggers": "GENERATE",
+             "source": {
+              "kind": "trait",
+              "trait": "SeqButtonHint"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-route-starves-required-field",
+         "findings": [
+          {
+           "code": "ORB_LISTEN_ROUTE_STARVES_REQUIRED_FIELD",
+           "path": "orbitals.SeqChallengeOrbital.traits.SeqHintGeneration.listens",
+           "message": "listens route `SeqButtonHint.GENERATE -> GENERATE` in `SeqChallengeOrbital.SeqHintGeneration` requires `prompt` but the source contract never produces it",
+           "suggestion": "Add `prompt` to `SeqButtonHint`'s `emits { GENERATE { ... } }` payload, or supply it explicitly via `with { prompt: ... }`",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-companion-config-field-linked-to-another-knob-does-not-count",
+   "steps": [
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "SeqChallengeOrbital",
+         "entity": {
+          "name": "SeqChallengeOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "SeqButtonHint",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "emits": [
+            {
+             "event": "GENERATE",
+             "definerKnob": "action"
+            }
+           ],
+           "config": {
+            "actionPayload": {
+             "type": "object",
+             "payloadFor": "other",
+             "default": {
+              "prompt": "x"
+             }
+            }
+           }
+          },
+          {
+           "name": "SeqHintGeneration",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [],
+            "events": [
+             {
+              "key": "GENERATE",
+              "payloadSchema": [
+               {
+                "name": "prompt",
+                "type": "string",
+                "required": true
+               }
+              ]
+             }
+            ]
+           },
+           "listens": [
+            {
+             "event": "GENERATE",
+             "triggers": "GENERATE",
+             "source": {
+              "kind": "trait",
+              "trait": "SeqButtonHint"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-route-starves-required-field",
+         "findings": [
+          {
+           "code": "ORB_LISTEN_ROUTE_STARVES_REQUIRED_FIELD",
+           "path": "orbitals.SeqChallengeOrbital.traits.SeqHintGeneration.listens",
+           "message": "listens route `SeqButtonHint.GENERATE -> GENERATE` in `SeqChallengeOrbital.SeqHintGeneration` requires `prompt` but the source contract never produces it",
+           "suggestion": "Add `prompt` to `SeqButtonHint`'s `emits { GENERATE { ... } }` payload, or supply it explicitly via `with { prompt: ... }`",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-nested-literal-companion-default-declares-its-dotted-path",
+   "steps": [
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "SeqChallengeOrbital",
+         "entity": {
+          "name": "SeqChallengeOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "SeqButtonHint",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "emits": [
+            {
+             "event": "GENERATE",
+             "definerKnob": "action"
+            }
+           ],
+           "config": {
+            "actionPayload": {
+             "type": "object",
+             "payloadFor": "action",
+             "default": {
+              "data": {
+               "prompt": "x"
+              }
+             }
+            }
+           }
+          },
+          {
+           "name": "SeqHintGeneration",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [],
+            "events": [
+             {
+              "key": "GENERATE",
+              "payloadSchema": [
+               {
+                "name": "data",
+                "type": "object",
+                "required": true,
+                "properties": [
+                 {
+                  "name": "prompt",
+                  "type": "string",
+                  "required": true
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           "listens": [
+            {
+             "event": "GENERATE",
+             "triggers": "GENERATE",
+             "source": {
+              "kind": "trait",
+              "trait": "SeqButtonHint"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-route-starves-required-field",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-orbital-sourced-route-resolves-against-the-named-orbital",
+   "steps": [
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "AE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "ChatComposer",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "emits": [
+            {
+             "event": "SAVE",
+             "payloadSchema": []
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "B",
+         "entity": {
+          "name": "BE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "L",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [],
+            "events": [
+             {
+              "key": "DO_CREATE",
+              "payloadSchema": [
+               {
+                "name": "content",
+                "type": "string",
+                "required": true
+               }
+              ]
+             }
+            ]
+           },
+           "listens": [
+            {
+             "event": "SAVE",
+             "triggers": "DO_CREATE",
+             "source": {
+              "kind": "orbital",
+              "orbital": "A",
+              "trait": "ChatComposer"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-route-starves-required-field",
+         "findings": [
+          {
+           "code": "ORB_LISTEN_ROUTE_STARVES_REQUIRED_FIELD",
+           "path": "orbitals.B.traits.L.listens",
+           "message": "listens route `ChatComposer.SAVE -> DO_CREATE` in `B.L` requires `content` but the source contract never produces it",
+           "suggestion": "Add `content` to `ChatComposer`'s `emits { SAVE { ... } }` payload, or supply it explicitly via `with { content: ... }`",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-bare-trait-source-resolves-only-in-its-own-orbital",
+   "steps": [
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "AE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "ChatComposer",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "emits": [
+            {
+             "event": "SAVE",
+             "payloadSchema": []
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "B",
+         "entity": {
+          "name": "BE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "L",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [],
+            "events": [
+             {
+              "key": "DO_CREATE",
+              "payloadSchema": [
+               {
+                "name": "content",
+                "type": "string",
+                "required": true
+               }
+              ]
+             }
+            ]
+           },
+           "listens": [
+            {
+             "event": "SAVE",
+             "triggers": "DO_CREATE",
+             "source": {
+              "kind": "trait",
+              "trait": "ChatComposer"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-route-starves-required-field",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-wildcard-source-compares-nothing",
+   "steps": [
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "ChatOrbital",
+         "entity": {
+          "name": "ChatOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "ChatComposer",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "emits": [
+            {
+             "event": "SAVE",
+             "payloadSchema": []
+            }
+           ]
+          },
+          {
+           "name": "L",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [],
+            "events": [
+             {
+              "key": "DO_CREATE",
+              "payloadSchema": [
+               {
+                "name": "content",
+                "type": "string",
+                "required": true
+               }
+              ]
+             }
+            ]
+           },
+           "listens": [
+            {
+             "event": "SAVE",
+             "source": {
+              "kind": "any"
+             },
+             "triggers": "DO_CREATE"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-route-starves-required-field",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-an-optional-required-ancestor-chain-owes-only-when-delivered",
+   "steps": [
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "ChatOrbital",
+         "entity": {
+          "name": "ChatOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "ChatComposer",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "emits": [
+            {
+             "event": "SAVE",
+             "payloadSchema": [
+              {
+               "name": "data",
+               "type": "object",
+               "required": false,
+               "properties": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "name": "L",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [],
+            "events": [
+             {
+              "key": "DO_CREATE",
+              "payloadSchema": [
+               {
+                "name": "data",
+                "type": "object",
+                "required": false,
+                "properties": [
+                 {
+                  "name": "content",
+                  "type": "string",
+                  "required": true
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           "listens": [
+            {
+             "event": "SAVE",
+             "triggers": "DO_CREATE",
+             "source": {
+              "kind": "trait",
+              "trait": "ChatComposer"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-route-starves-required-field",
+         "findings": [
+          {
+           "code": "ORB_LISTEN_ROUTE_STARVES_REQUIRED_FIELD",
+           "path": "orbitals.ChatOrbital.traits.L.listens",
+           "message": "listens route `ChatComposer.SAVE -> DO_CREATE` in `ChatOrbital.L` requires `data.content` but the source contract never produces it",
+           "suggestion": "Add `data.content` to `ChatComposer`'s `emits { SAVE { ... } }` payload, or supply it explicitly via `with { data: ... }`",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

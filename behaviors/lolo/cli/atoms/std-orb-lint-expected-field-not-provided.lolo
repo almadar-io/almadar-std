@@ -1,0 +1,172 @@
+app std-orb-lint-expected-field-not-provided [
+  version: "1.0.0",
+  inbound: ["cli-lint-expected-field-not-provided"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-expected-field-not-provided — the `orb lint expected-field-not-provided <file>` command, the port of the ORB_S_EXPECTED_FIELD_NOT_PROVIDED findings of validate_expectation_links (composition/expectations.rs: the name arm of check_shape and of check_event_payload). For every non-spec orbital's `expects` entry whose provider is present it reports: an `expects entity X { shape }` (or `expects entity Name [identity] { shape }` whose provider carries the [identity] tag, or a bare `expects entity [identity]` against the first [identity] entity) field the provider entity declares no field of that name for (at the field path); and an `expects trait T { emits E { payload } }` field the present trait's emitted E declares no payload field for. Width is free: extra provider fields are fine; an absent provider or trait is deferred. Whether a present field is compatible (requiredness, vocabulary, type) is not this rule. The program is the resolved program the lint input reads. Findings carry the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint expected-field-not-provided: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-expected-field-not-provided"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type LNode = string | number | boolean | [LNode?] | Map string LNode?
+type LNodes = [LNode?]
+type LStr = string
+type LObj = Map string LNode?
+type ExKnob = { type : string, values : [string], default : LNode?, items : LNode?, properties : LNode? }
+type ExWaivers = { read : string, create : string, update : string, delete : string }
+type ExField = { name : string, type : string, required : boolean, primaryKey : boolean, unique : boolean, values : [string], default : LNode?, relation : LNode?, items : LNode?, properties : LNode? }
+type ExEntity = { name : string, identity : boolean, shared : boolean, browser : boolean, persistence : string, collection : string, fields : [ExField], read_policy : LNode?, create_policy : LNode?, update_policy : LNode?, delete_policy : LNode?, access_waivers : ExWaivers? }
+type ExExpect = { kind : string, name : string, strict : boolean, traitName : string, state : string, from : string, to : string, event : string, protocol : string, path : string, traits : [string], shape : [ExField], payload : [ExField], persistence : string, shared : boolean, browser : boolean, read_policy : LNode?, create_policy : LNode?, update_policy : LNode?, delete_policy : LNode?, access_waivers : ExWaivers?, knob : ExKnob }
+type ExEmit = { event : string, payloadSchema : [ExField] }
+type ExState = { name : string }
+type ExTransition = { from : LNode, to : string, event : string, guard : LNode?, effects : [LNode?] }
+type ExMachine = { states : [ExState], transitions : [ExTransition] }
+type ExTrait = { name : string, emits : [ExEmit], stateMachine : ExMachine, ticks : [ExTransition], config : Map string ExKnob? }
+type ExPageTrait = { ref : string, name : string }
+type ExPage = { name : string, path : string, protocol : string, traits : [ExPageTrait] }
+type ExOrbital = { name : string, spec : boolean, expects : [ExExpect], entity : ExEntity, auxiliaryEntities : [ExEntity], traits : [ExTrait], pages : [ExPage] }
+type ExProgram = { orbitals : [ExOrbital] }
+
+orbital OrbLintExpectedFieldNotProvidedOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintExpectedFieldNotProvidedRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintExpectedFieldNotProvided -> OrbLintExpectedFieldNotProvidedRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((orbs (object/get @payload.program "orbitals" [])))
+ (let ((provs (array/filter (array/flatten (array/map (array/filter @orbs (fn o (not (object/get @o "spec" false)))) (fn o (array/map (array/filter (array/concat [(object/get @o "entity" {})] (object/get @o "auxiliaryEntities" [])) (fn e (!= (object/get @e "name" "") ""))) (fn e { n: (object/get @e "name" ""), id: (object/get @e "identity" false), on: (object/get @o "name" ""), e: @e }))))) (fn p (!= (object/get @p "n") ""))))
+       (alltr (array/flatten (array/map @orbs (fn o (array/map (array/filter (object/get @o "traits" []) (fn t (object/has @t "stateMachine"))) (fn t { t: @t, on: (object/get @o "name" "") }))))))
+       (allpg (array/flatten (array/map @orbs (fn o (object/get @o "pages" []))))))
+(array/flatten (array/map (array/range 0 (array/len @orbs)) (fn oi
+  (let ((o (array/nth @orbs @oi)))
+   (if (or (object/get @o "spec" false) (not (object/has @o "expects"))) []
+    (let ((on (object/get @o "name" "")) (xs (object/get @o "expects" [])))
+     (array/flatten (array/map (array/range 0 (array/len @xs)) (fn j
+      (let ((x (array/nth @xs @j)))
+       (let ((base (str/concat "orbitals[" @oi " (" @on ")].expects[" @j "]")) (kind (object/get @x "kind" "")) (strict (object/get @x "strict" false)))
+        (if (= @kind "entity") (let ((pv (array/find @provs (fn p (= (object/get @p "n") (object/get @x "name" ""))))))
+  (if (= @pv null) [] (let ((e (object/get @pv "e"))) (array/flatten (array/map (array/filter (object/get @x "shape" []) (fn f (!= (object/get @f "name" "") "")))
+  (fn f (if (array/some (object/get @e "fields" []) (fn a (= (object/get @a "name" "") (object/get @f "name" ""))))
+    []
+    [{ code: "ORB_S_EXPECTED_FIELD_NOT_PROVIDED", path: (str/concat @base "." (object/get @f "name" "")), message: (str/concat "`" @on "` expects `" (object/get @e "name" "") "." (object/get @f "name" "") "`; `" (object/get @e "name" "") "` declares no such field."), suggestion: (str/concat "Add `" (object/get @f "name" "") "` to `" (object/get @e "name" "") "`, or drop it from `" @on "`'s expectation."), severity: "error" }])))))))
+  (if (= @kind "identity") (let ((nm (object/get @x "name" "")))
+  (let ((pv (if (!= @nm "") (array/find @provs (fn p (= (object/get @p "n") @nm))) (array/find @provs (fn p (object/get @p "id"))))))
+    (if (or (= @pv null) (and (!= @nm "") (not (object/get @pv "id")))) []
+      (let ((e (object/get @pv "e"))) (array/flatten (array/map (array/filter (object/get @x "shape" []) (fn f (!= (object/get @f "name" "") "")))
+  (fn f (if (array/some (object/get @e "fields" []) (fn a (= (object/get @a "name" "") (object/get @f "name" ""))))
+    []
+    [{ code: "ORB_S_EXPECTED_FIELD_NOT_PROVIDED", path: (str/concat @base "." (object/get @f "name" "")), message: (str/concat "`" @on "` expects `" (object/get @e "name" "") "." (object/get @f "name" "") "`; `" (object/get @e "name" "") "` declares no such field."), suggestion: (str/concat "Add `" (object/get @f "name" "") "` to `" (object/get @e "name" "") "`, or drop it from `" @on "`'s expectation."), severity: "error" }]))))))))
+    (if (= @kind "event") (let ((tr (array/find @alltr (fn p (= (object/get (object/get @p "t") "name" "") (object/get @x "traitName" ""))))))
+  (if (or (= @tr null) (not (object/has @x "payload"))) []
+    (let ((emit (array/find (object/get (object/get @tr "t") "emits" []) (fn m (= (object/get @m "event" "") (object/get @x "event" ""))))))
+      (if (= @emit null) []
+        (array/flatten (array/map (object/get @x "payload" [])
+          (fn want (if (array/some (object/get @emit "payloadSchema" []) (fn have (= (object/get @have "name" "") (object/get @want "name" ""))))
+            []
+            [{ code: "ORB_S_EXPECTED_FIELD_NOT_PROVIDED", path: (str/concat @base "." (object/get @want "name" "")), message: (str/concat "`" @on "` expects `" (object/get @x "traitName" "") "." (object/get @x "event" "") "` to carry `" (object/get @want "name" "") "`; the event declares no such payload field."), suggestion: (str/concat "Add `" (object/get @want "name" "") "` to `" (object/get @x "event" "") "`'s payload in `" (object/get @x "traitName" "") "`, or drop it from the expectation."), severity: "error" }])))))))) [])))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "expected-field-not-provided", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : ExProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+    }
+  }
+
+  trait OrbLintExpectedFieldNotProvidedCli -> OrbLintExpectedFieldNotProvidedRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint expected-field-not-provided <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "expected-field-not-provided") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint expected-field-not-provided: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "expected-field-not-provided") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint expected-field-not-provided: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-expected-field-not-provided" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint expected-field-not-provided` with its arguments and working directory."
+        @synonyms "orb lint expected-field-not-provided"
+      OrbLintExpectedFieldNotProvided.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintExpectedFieldNotProvidedCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintExpectedFieldNotProvidedOrbitalStart -> OrbLintExpectedFieldNotProvided, OrbLintExpectedFieldNotProvidedCli, OrbLintInput, Packs, Versions
+}

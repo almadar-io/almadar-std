@@ -1,0 +1,21 @@
+app lint-expectation-provider-mismatch-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint expectation-provider-mismatch <file>`, the port of the ORB_S_EXPECTATION_PROVIDER_MISMATCH findings of validate_expectation_links. A present provider that is the wrong kind (an expected [identity] entity without the tag), lacks an expected @key/@unique mark, differs in storage mode, [shared], [browser], access policy or waiver from what the expectation states, or a page that mounts none of the traits an `expects page` lists is reported at the expectation (status 500, exit 1); an absent provider is deferred. Clean answers `lint expectation-provider-mismatch: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintExpectationProviderMismatchSpec {
+  expects trait OrbLintExpectationProviderMismatch {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintExpectationProviderMismatchCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintExpectationProviderMismatch, OrbLintExpectationProviderMismatchCli
+}

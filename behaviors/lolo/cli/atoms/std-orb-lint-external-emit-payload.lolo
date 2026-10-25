@@ -1,0 +1,154 @@
+app std-orb-lint-external-emit-payload [
+  version: "1.0.0",
+  inbound: ["cli-lint-external-emit-payload"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-external-emit-payload — the `orb lint external-emit-payload <file>` command, the port of validate_external_emit_payloads (circuit/cross_orbital/payload.rs, ORB_T_EVT_EXTERNAL_MISSING_PAYLOAD). An emit declared `scope: external` with no payload fields only matters when a listener in ANOTHER orbital is wired to this emitter and would receive nothing. A listener is wired to this emitter by its recorded source trait (a trait or orbital source names the emitting trait, a wildcard or absent source matches any emitter of the event), and it expects fields only when the event its route triggers (the listen's `triggers`, else its own event) declares at least one required payload field on its trait's state machine; an empty emit satisfies a listener that expects nothing. Reports at traits.<Trait>.emits.<EVENT> (status 500, exit 1). Clean answers `lint external-emit-payload: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-external-emit-payload"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type XepSource = { kind : string, trait : string, orbital : string }
+type XepListen = { event : string, triggers : string, source : XepSource }
+type XepField = { required : boolean }
+type XepEvent = { key : string, payloadSchema : [XepField] }
+type XepEmit = { event : string, scope : string, payloadSchema : [XepField] }
+type XepMachine = { events : [XepEvent] }
+type XepTrait = { name : string, emits : [XepEmit], listens : [XepListen], stateMachine : XepMachine }
+type XepOrbital = { name : string, traits : [XepTrait] }
+type XepProgram = { orbitals : [XepOrbital] }
+
+orbital OrbLintExternalEmitPayloadOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintExternalEmitPayloadRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintExternalEmitPayload -> OrbLintExternalEmitPayloadRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
+          (let ((rows (array/flatten (array/map @orbitals (fn o
+                  (array/flatten (array/map (object/get @o "traits" []) (fn t
+                    (array/map (object/get @t "listens" []) (fn l
+                      (let ((trig (object/get @l "triggers" (object/get @l "event" ""))) (src (object/get @l "source" {})))
+                        (let ((ev (array/find (object/get (object/get @t "stateMachine" {}) "events" []) (fn e (= (object/get @e "key" "") @trig)))))
+                          { orb: (object/get @o "name" ""),
+                            targeted: (or (= (object/get @src "kind" "") "trait") (= (object/get @src "kind" "") "orbital")),
+                            srcTrait: (object/get @src "trait" ""),
+                            event: (object/get @l "event" ""),
+                            expects: (if (= @ev null) false (array/some (object/get @ev "payloadSchema" []) (fn f (= (object/get @f "required" false) true)))) }))))))))))))
+            (array/flatten (array/map @orbitals (fn o
+              (array/flatten (array/map (object/get @o "traits" []) (fn t
+                (array/flatten (array/map (object/get @t "emits" []) (fn e
+                  (let ((tn (object/get @t "name" "")) (en (object/get @e "event" "")))
+                    (let ((wired (array/filter @rows (fn r (and (= (object/get @r "event") @en) (or (not (object/get @r "targeted")) (= (object/get @r "srcTrait") @tn)))))))
+                      (if (and (= (object/get @e "scope" "") "external")
+                               (= (array/len (object/get @e "payloadSchema" [])) 0)
+                               (array/some @wired (fn r (!= (object/get @r "orb") (object/get @o "name" ""))))
+                               (array/some @wired (fn r (object/get @r "expects"))))
+                        [{ code: "ORB_T_EVT_EXTERNAL_MISSING_PAYLOAD", path: (str/concat "traits." @tn ".emits." @en), message: (str/concat "External event '" @en "' in trait '" @tn "' should have a payload definition with typed fields"), suggestion: "Add a payload array with fields: { \"name\": \"fieldName\", \"type\": \"string\", \"required\": true, \"description\": \"...\" }", severity: "error" }]
+                        [])))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "external-emit-payload", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : XepProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+    }
+  }
+
+  trait OrbLintExternalEmitPayloadCli -> OrbLintExternalEmitPayloadRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint external-emit-payload <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "external-emit-payload") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint external-emit-payload: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "external-emit-payload") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint external-emit-payload: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-external-emit-payload" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint external-emit-payload` with its arguments and working directory."
+        @synonyms "orb lint external-emit-payload"
+      OrbLintExternalEmitPayload.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintExternalEmitPayloadCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintExternalEmitPayloadOrbitalStart -> OrbLintExternalEmitPayload, OrbLintExternalEmitPayloadCli, OrbLintInput, Packs, Versions
+}

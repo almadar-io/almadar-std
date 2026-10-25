@@ -1,0 +1,21 @@
+app lint-page-unreachable-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint page-unreachable <file>`. It lowers the file with program/read and reports ORB_PAGE_UNREACHABLE for every route page that is not the boot page (the first route page), has no :param segment, and is named by no href or navigatesTo value in a trait config default or render-ui payload, no navigate effect target or static prefix, no signIn route, and no @label under a program that mentions @pages (status 500, exit 1). Clean answers `lint page-unreachable: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintPageUnreachableSpec {
+  expects trait OrbLintPageUnreachable {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintPageUnreachableCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintPageUnreachable, OrbLintPageUnreachableCli
+}

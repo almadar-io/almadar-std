@@ -943,7 +943,7 @@ open(OUT, 'w').write(atom)
 print('wrote dev/atoms/std-mock-seed.lolo', len(atom))
 
 # ---- the access-check replay fixture: access-check answers only for entities of the running program
-FIX_OUT = os.path.join(HERE, '..', 'mock-seed-access.fixture.lolo')
+FIX_OUT = os.path.join(HERE, '..', 'mock-seed-access-fixture.lolo')
 def host_entity(name, coll, policies='', extra=''):
     tag = f'persistent: {coll}, identity' if name == 'FixtureViewer' else f'persistent: {coll}'
     return f'  entity {name} [{tag}] {{\n{policies}    id : string!\n{extra}  }}\n'
@@ -965,4 +965,4 @@ fixture=('app mock-seed-access-fixture [\n  version: "1.0.0",\n  env: ["ALMADAR_
  '  trait MockStream = Seed.traits.MockStream -> MockCell { }\n\n  trait MockSeed = Seed.traits.MockSeed -> MockCell { }\n\n  page boot as MockSeedHostBoot -> MockSeed, MockStream\n\n'
  +'\n'.join(host_entity(*e) for e in ents)+'}\n')
 open(FIX_OUT,'w').write(fixture)
-print('wrote spec/dev/mock-seed-access.fixture.lolo', len(fixture))
+print('wrote spec/dev/mock-seed-access-fixture.lolo', len(fixture))

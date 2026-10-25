@@ -1,0 +1,196 @@
+app std-orb-lint-expectation-provider-mismatch [
+  version: "1.0.0",
+  inbound: ["cli-lint-expectation-provider-mismatch"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-expectation-provider-mismatch — the `orb lint expectation-provider-mismatch <file>` command, the port of the ORB_S_EXPECTATION_PROVIDER_MISMATCH findings of validate_expectation_links (composition/expectations.rs: check_identity_link, check_entity_facts, the @key/@unique marks of check_shape, and the page-trait arm). For every non-spec orbital's `expects` entry whose provider is present it reports: an `expects entity Name [identity]` whose named provider entity carries no [identity] tag; an `expects entity X` shape field marked @key or @unique that the provider declares without the mark (at the field path); an `expects entity X` stating a storage mode, [shared], [browser], an @read/@create/@update/@delete policy (structurally equal) or an `@op none` waiver the provider entity does not carry; and an `expects page` listing traits that none of the matching provider pages mounts. An absent provider is deferred. The program is the resolved program the lint input reads. Findings carry the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint expectation-provider-mismatch: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-expectation-provider-mismatch"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type LNode = string | number | boolean | [LNode?] | Map string LNode?
+type LNodes = [LNode?]
+type LStr = string
+type LObj = Map string LNode?
+type ExWaivers = { read : string, create : string, update : string, delete : string }
+type ExField = { name : string, type : string, required : boolean, primaryKey : boolean, unique : boolean, values : [string], default : LNode?, relation : LNode?, items : LNode?, properties : LNode? }
+type ExEntity = { name : string, identity : boolean, shared : boolean, browser : boolean, persistence : string, collection : string, fields : [ExField], read_policy : LNode?, create_policy : LNode?, update_policy : LNode?, delete_policy : LNode?, access_waivers : ExWaivers? }
+type ExExpect = { kind : string, name : string, strict : boolean, traitName : string, state : string, from : string, to : string, event : string, protocol : string, path : string, traits : [string], shape : [ExField], payload : [ExField], persistence : string, shared : boolean, browser : boolean, read_policy : LNode?, create_policy : LNode?, update_policy : LNode?, delete_policy : LNode?, access_waivers : ExWaivers?, knob : ExField }
+type ExEmit = { event : string, payloadSchema : [ExField] }
+type ExState = { name : string }
+type ExTransition = { from : LNode, to : string, event : string, guard : LNode?, effects : [LNode?] }
+type ExMachine = { states : [ExState], transitions : [ExTransition] }
+type ExKnob = { type : string, values : [string], default : LNode?, items : LNode?, properties : LNode? }
+type ExTrait = { name : string, emits : [ExEmit], stateMachine : ExMachine, ticks : [ExTransition], config : Map string ExKnob? }
+type ExPageTrait = { ref : string, name : string }
+type ExPage = { name : string, path : string, protocol : string, traits : [ExPageTrait] }
+type ExOrbital = { name : string, spec : boolean, expects : [ExExpect], entity : ExEntity, auxiliaryEntities : [ExEntity], traits : [ExTrait], pages : [ExPage] }
+type ExProgram = { orbitals : [ExOrbital] }
+
+orbital OrbLintExpectationProviderMismatchOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintExpectationProviderMismatchRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintExpectationProviderMismatch -> OrbLintExpectationProviderMismatchRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((orbs (object/get @payload.program "orbitals" [])))
+ (let ((provs (array/filter (array/flatten (array/map (array/filter @orbs (fn o (not (object/get @o "spec" false)))) (fn o (array/map (array/filter (array/concat [(object/get @o "entity" {})] (object/get @o "auxiliaryEntities" [])) (fn e (!= (object/get @e "name" "") ""))) (fn e { n: (object/get @e "name" ""), id: (object/get @e "identity" false), on: (object/get @o "name" ""), e: @e }))))) (fn p (!= (object/get @p "n") ""))))
+       (alltr (array/flatten (array/map @orbs (fn o (array/map (array/filter (object/get @o "traits" []) (fn t (object/has @t "stateMachine"))) (fn t { t: @t, on: (object/get @o "name" "") }))))))
+       (allpg (array/flatten (array/map @orbs (fn o (object/get @o "pages" []))))))
+(array/flatten (array/map (array/range 0 (array/len @orbs)) (fn oi
+  (let ((o (array/nth @orbs @oi)))
+   (if (or (object/get @o "spec" false) (not (object/has @o "expects"))) []
+    (let ((on (object/get @o "name" "")) (xs (object/get @o "expects" [])))
+     (array/flatten (array/map (array/range 0 (array/len @xs)) (fn j
+      (let ((x (array/nth @xs @j)))
+       (let ((base (str/concat "orbitals[" @oi " (" @on ")].expects[" @j "]")) (kind (object/get @x "kind" "")) (strict (object/get @x "strict" false)))
+        (if (= @kind "entity") (let ((pv (array/find @provs (fn p (= (object/get @p "n") (object/get @x "name" ""))))))
+  (if (= @pv null) []
+    (let ((e (object/get @pv "e")))
+      (array/concat (array/flatten (array/map (array/filter (object/get @x "shape" []) (fn f (!= (object/get @f "name" "") "")))
+  (fn f (let ((actual (array/find (object/get @e "fields" []) (fn a (= (object/get @a "name" "") (object/get @f "name" ""))))))
+    (if (= @actual null) []
+      (array/concat (if (and (object/get @f "primaryKey" false) (not (object/get @actual "primaryKey" false)))
+          [{ code: "ORB_S_EXPECTATION_PROVIDER_MISMATCH", path: (str/concat @base "." (object/get @f "name" "")), message: (str/concat "`" @on "` expects `" (object/get @e "name" "") "." (object/get @f "name" "") "` to be marked `" (str/concat (quote "@") "key") "`; `" (object/get @e "name" "") "` declares it without."), suggestion: (str/concat "Mark `" (object/get @f "name" "") "` `" (str/concat (quote "@") "key") "` in `" (object/get @e "name" "") "`, or drop the mark from the expectation."), severity: "error" }]
+          []) (if (and (object/get @f "unique" false) (not (object/get @actual "unique" false)))
+          [{ code: "ORB_S_EXPECTATION_PROVIDER_MISMATCH", path: (str/concat @base "." (object/get @f "name" "")), message: (str/concat "`" @on "` expects `" (object/get @e "name" "") "." (object/get @f "name" "") "` to be marked `" (str/concat (quote "@") "unique") "`; `" (object/get @e "name" "") "` declares it without."), suggestion: (str/concat "Mark `" (object/get @f "name" "") "` `" (str/concat (quote "@") "unique") "` in `" (object/get @e "name" "") "`, or drop the mark from the expectation."), severity: "error" }]
+          []))))))) (array/concat (let ((mode (object/get @x "persistence" "")) (actual (let ((a (object/get @e "persistence" ""))) (if (= @a "") "persistent" @a))))
+      (if (and (!= @mode "") (!= @mode @actual)) [{ code: "ORB_S_EXPECTATION_PROVIDER_MISMATCH", path: @base, message: (str/concat "`" @on "` expects `" (object/get @e "name" "") "` " (str/concat "to be " @mode ", but it is " @actual) "."), suggestion: (str/concat "Change `" (object/get @e "name" "") "`'s storage mode, or the expectation's."), severity: "error" }] [])) (array/concat (if (and (object/get @x "shared" false) (not (object/get @e "shared" false))) [{ code: "ORB_S_EXPECTATION_PROVIDER_MISMATCH", path: @base, message: (str/concat "`" @on "` expects `" (object/get @e "name" "") "` " "to be `shared`, but it is not" "."), suggestion: (str/concat "Tag `" (object/get @e "name" "") "` `[shared]`, or drop the tag from the expectation."), severity: "error" }] []) (array/concat (if (and (object/get @x "browser" false) (not (object/get @e "browser" false))) [{ code: "ORB_S_EXPECTATION_PROVIDER_MISMATCH", path: @base, message: (str/concat "`" @on "` expects `" (object/get @e "name" "") "` " "to be `browser`, but it is not" "."), suggestion: (str/concat "Tag `" (object/get @e "name" "") "` `[browser]`, or drop the tag from the expectation."), severity: "error" }] []) (array/concat (if (and (!= (object/get @x "read_policy" null) null) (!= (object/get @e "read_policy" null) (object/get @x "read_policy" null)))
+      [{ code: "ORB_S_EXPECTATION_PROVIDER_MISMATCH", path: @base, message: (str/concat "`" @on "` expects `" (object/get @e "name" "") "` " (str/concat "to carry the `@read` policy it states, but its `@read` is " (if (!= (object/get @e "read_policy" null) null) "a different expression" "absent")) "."), suggestion: (str/concat "Make `" (object/get @e "name" "") "`'s `@read` the same expression, or change the expectation."), severity: "error" }] []) (array/concat (if (and (!= (object/get @x "create_policy" null) null) (!= (object/get @e "create_policy" null) (object/get @x "create_policy" null)))
+      [{ code: "ORB_S_EXPECTATION_PROVIDER_MISMATCH", path: @base, message: (str/concat "`" @on "` expects `" (object/get @e "name" "") "` " (str/concat "to carry the `@create` policy it states, but its `@create` is " (if (!= (object/get @e "create_policy" null) null) "a different expression" "absent")) "."), suggestion: (str/concat "Make `" (object/get @e "name" "") "`'s `@create` the same expression, or change the expectation."), severity: "error" }] []) (array/concat (if (and (!= (object/get @x "update_policy" null) null) (!= (object/get @e "update_policy" null) (object/get @x "update_policy" null)))
+      [{ code: "ORB_S_EXPECTATION_PROVIDER_MISMATCH", path: @base, message: (str/concat "`" @on "` expects `" (object/get @e "name" "") "` " (str/concat "to carry the `@update` policy it states, but its `@update` is " (if (!= (object/get @e "update_policy" null) null) "a different expression" "absent")) "."), suggestion: (str/concat "Make `" (object/get @e "name" "") "`'s `@update` the same expression, or change the expectation."), severity: "error" }] []) (array/concat (if (and (!= (object/get @x "delete_policy" null) null) (!= (object/get @e "delete_policy" null) (object/get @x "delete_policy" null)))
+      [{ code: "ORB_S_EXPECTATION_PROVIDER_MISMATCH", path: @base, message: (str/concat "`" @on "` expects `" (object/get @e "name" "") "` " (str/concat "to carry the `@delete` policy it states, but its `@delete` is " (if (!= (object/get @e "delete_policy" null) null) "a different expression" "absent")) "."), suggestion: (str/concat "Make `" (object/get @e "name" "") "`'s `@delete` the same expression, or change the expectation."), severity: "error" }] []) (array/concat (if (and (!= (object/get (object/get @x "access_waivers" {}) "read" null) null) (= (object/get (object/get @e "access_waivers" {}) "read" null) null))
+      [{ code: "ORB_S_EXPECTATION_PROVIDER_MISMATCH", path: @base, message: (str/concat "`" @on "` expects `" (object/get @e "name" "") "` " "to declare `@read none` (its omission, with a reason), but it does not" "."), suggestion: (str/concat "Declare `@read none \"<reason>\"` on `" (object/get @e "name" "") "`, or drop it from the expectation."), severity: "error" }] []) (array/concat (if (and (!= (object/get (object/get @x "access_waivers" {}) "create" null) null) (= (object/get (object/get @e "access_waivers" {}) "create" null) null))
+      [{ code: "ORB_S_EXPECTATION_PROVIDER_MISMATCH", path: @base, message: (str/concat "`" @on "` expects `" (object/get @e "name" "") "` " "to declare `@create none` (its omission, with a reason), but it does not" "."), suggestion: (str/concat "Declare `@create none \"<reason>\"` on `" (object/get @e "name" "") "`, or drop it from the expectation."), severity: "error" }] []) (array/concat (if (and (!= (object/get (object/get @x "access_waivers" {}) "update" null) null) (= (object/get (object/get @e "access_waivers" {}) "update" null) null))
+      [{ code: "ORB_S_EXPECTATION_PROVIDER_MISMATCH", path: @base, message: (str/concat "`" @on "` expects `" (object/get @e "name" "") "` " "to declare `@update none` (its omission, with a reason), but it does not" "."), suggestion: (str/concat "Declare `@update none \"<reason>\"` on `" (object/get @e "name" "") "`, or drop it from the expectation."), severity: "error" }] []) (if (and (!= (object/get (object/get @x "access_waivers" {}) "delete" null) null) (= (object/get (object/get @e "access_waivers" {}) "delete" null) null))
+      [{ code: "ORB_S_EXPECTATION_PROVIDER_MISMATCH", path: @base, message: (str/concat "`" @on "` expects `" (object/get @e "name" "") "` " "to declare `@delete none` (its omission, with a reason), but it does not" "."), suggestion: (str/concat "Declare `@delete none \"<reason>\"` on `" (object/get @e "name" "") "`, or drop it from the expectation."), severity: "error" }] [])))))))))))))))
+  (if (= @kind "identity") (let ((nm (object/get @x "name" "")))
+  (let ((pv (if (!= @nm "") (array/find @provs (fn p (= (object/get @p "n") @nm))) (array/find @provs (fn p (object/get @p "id"))))))
+    (if (= @pv null) []
+      (let ((e (object/get @pv "e")))
+        (if (and (!= @nm "") (not (object/get @pv "id")))
+          [{ code: "ORB_S_EXPECTATION_PROVIDER_MISMATCH", path: @base, message: (str/concat "`" @on "` expects `" @nm "` to be the [identity] entity, but `" (object/get @pv "on") "` provides `" @nm "` without the [identity] tag — `@user` will never resolve to it."), suggestion: (str/concat "Tag `" @nm "` [identity] in `" (object/get @pv "on") "`, or change the expectation to `expects entity " @nm "`."), severity: "error" }]
+          (array/flatten (array/map (array/filter (object/get @x "shape" []) (fn f (!= (object/get @f "name" "") "")))
+  (fn f (let ((actual (array/find (object/get @e "fields" []) (fn a (= (object/get @a "name" "") (object/get @f "name" ""))))))
+    (if (= @actual null) []
+      (array/concat (if (and (object/get @f "primaryKey" false) (not (object/get @actual "primaryKey" false)))
+          [{ code: "ORB_S_EXPECTATION_PROVIDER_MISMATCH", path: (str/concat @base "." (object/get @f "name" "")), message: (str/concat "`" @on "` expects `" (object/get @e "name" "") "." (object/get @f "name" "") "` to be marked `" (str/concat (quote "@") "key") "`; `" (object/get @e "name" "") "` declares it without."), suggestion: (str/concat "Mark `" (object/get @f "name" "") "` `" (str/concat (quote "@") "key") "` in `" (object/get @e "name" "") "`, or drop the mark from the expectation."), severity: "error" }]
+          []) (if (and (object/get @f "unique" false) (not (object/get @actual "unique" false)))
+          [{ code: "ORB_S_EXPECTATION_PROVIDER_MISMATCH", path: (str/concat @base "." (object/get @f "name" "")), message: (str/concat "`" @on "` expects `" (object/get @e "name" "") "." (object/get @f "name" "") "` to be marked `" (str/concat (quote "@") "unique") "`; `" (object/get @e "name" "") "` declares it without."), suggestion: (str/concat "Mark `" (object/get @f "name" "") "` `" (str/concat (quote "@") "unique") "` in `" (object/get @e "name" "") "`, or drop the mark from the expectation."), severity: "error" }]
+          []))))))))))))
+    (if (= @kind "page") (let ((route (object/get @x "path" "")) (pr (object/get @x "protocol" "")) (expected (object/get @x "traits" [])))
+  (if (not (object/has @x "traits")) []
+    (let ((cands (array/map (array/filter @allpg (fn pg (if (!= @pr "") (= (object/get @pg "protocol" "") @pr) (and (= (object/get @pg "protocol" "") "") (= (object/get @pg "path" "") @route)))))
+                    (fn pg (array/map (object/get @pg "traits" []) (fn t (if (!= (object/get @t "ref" "") "") (object/get @t "ref" "") (object/get @t "name" ""))))))))
+      (if (or (= (array/len @cands) 0) (array/some @cands (fn m (array/every @expected (fn t (array/includes @m @t)))))) []
+        (let ((flat (array/flatten @cands)))
+          (let ((mounted (array/reduce @flat (array/drop @flat (array/len @flat)) (fn (acc t) (if (and (> (array/len @acc) 0) (= (array/last @acc) @t)) @acc (array/append @acc @t))))))
+            (let ((missing0 (array/filter @expected (fn t (not (array/includes @mounted @t))))))
+              (let ((missing (if (= (array/len @missing0) 0) @expected @missing0)) (label (if (!= @pr "") (str/concat "a `" @pr "` page") (str/concat "page `" @route "`"))))
+                [{ code: "ORB_S_EXPECTATION_PROVIDER_MISMATCH", path: @base, message: (str/concat "`" @on "` expects " @label " to mount " (str/join @missing ", ") ", but the page mounts: " (if (= (array/len @mounted) 0) "nothing" (str/join @mounted ", ")) "."), suggestion: (str/concat "Mount " (str/join @missing ", ") " on the page, or drop it from the expectation."), severity: "error" }])))))))) [])))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "expectation-provider-mismatch", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : ExProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+    }
+  }
+
+  trait OrbLintExpectationProviderMismatchCli -> OrbLintExpectationProviderMismatchRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint expectation-provider-mismatch <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "expectation-provider-mismatch") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint expectation-provider-mismatch: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "expectation-provider-mismatch") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint expectation-provider-mismatch: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-expectation-provider-mismatch" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint expectation-provider-mismatch` with its arguments and working directory."
+        @synonyms "orb lint expectation-provider-mismatch"
+      OrbLintExpectationProviderMismatch.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintExpectationProviderMismatchCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintExpectationProviderMismatchOrbitalStart -> OrbLintExpectationProviderMismatch, OrbLintExpectationProviderMismatchCli, OrbLintInput, Packs, Versions
+}

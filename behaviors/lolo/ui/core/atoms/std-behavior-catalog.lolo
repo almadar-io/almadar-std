@@ -1,6 +1,6 @@
 app std-behavior-catalog [
-  version: "1.3.0",
-  description: "std-behavior-catalog — browse the installed behaviors under the `scope` registry folders (`behavior/catalog`), search them by meaning (the list carries no vectors; a search lists the current topic's registry folder, or the whole scope, with its vectors, embeds the query with std-llm (LLM_EMBED) and ranks by cosine similarity to each behavior's description; results under `minScore` drop out), open one's knobs and events (`behavior/describe`), and pick one: PICKED { behavior, trait, value } carries the behavior name, its first trait as a value ready to bind, and the whole behavior as a value ready to embed or store. With `pick: toggle` each card carries an on/off switch instead: TOGGLED { behavior, checked, topic, value } per change, and SELECTION { behaviors } seeds which are on. After listing it emits CATALOG_TOPICS { topics } (each package and topic once, with its count), and TOPIC { package, topic } narrows the rows and search results to that topic (an empty topic lists everything). Pick for block libraries, plugin pickers, plugin on/off settings and any page that lets users choose a building block.",
+  version: "1.4.0",
+  description: "std-behavior-catalog — browse the installed behaviors under the `scope` registry folders (`behavior/catalog`), search them by meaning (the list carries no vectors; a search lists the current topic's registry folder, or the whole scope, with its vectors, embeds the query with std-llm (LLM_EMBED) and ranks by cosine similarity to each behavior's description; results under `minScore` drop out), open one's knobs and events (`behavior/describe`), and pick one: PICKED { behavior, trait, value } carries the behavior name, its first trait as a value ready to bind, and the whole behavior as a value ready to embed or store. With `pick: toggle` each card carries an on/off switch instead: TOGGLED { behavior, checked, topic, value } per change, and SELECTION { behaviors } seeds which are on. After listing it emits CATALOG_TOPICS { topics } (each package and topic once, with its count), and SCOPE { paths } replaces the scope knob's registry folders at run time (the catalog lists them again), and TOPIC { package, topic } narrows the rows and search results to that topic (an empty topic lists everything). Pick for block libraries, plugin pickers, plugin on/off settings and any page that lets users choose a building block.",
   egress: ["https://api.openai.com", "https://openrouter.ai"]
 ]
 ;; @capabilities "browse installed behaviors, search behaviors by meaning, describe a behavior's knobs and events, pick a behavior to bind"
@@ -63,6 +63,7 @@ orbital BehaviorCatalogOrbital {
     knobs : [BehaviorCatalogKnobField] = []
     error : string = ""
     selected : [string] = []
+    paths : [string] @description "The registry folders SCOPE named; empty lists the scope knob's." = []
     topicPackage : string @description "The package of the topic the rows are narrowed to; empty with topic for every listed behavior." = ""
     topic : string @description "The topic the rows are narrowed to (TOPIC); empty for every listed behavior." = ""
     status : "loading" | "ready" | "searching" | "describing" | "failed" = loading
@@ -132,12 +133,17 @@ orbital BehaviorCatalogOrbital {
     initial: loading
 
     state loading {
+      SCOPE -> loading
+        (set @entity.paths ?paths)
+        (set @entity.status loading)
+        (render-ui main <loading-state message="Loading the catalog" />)
+        (behavior/catalog { paths: ?paths } { vectors: false emit: { success: LISTED, failure: LIST_FAILED } })
       INIT -> loading
         (set @entity.topicPackage @config.startPackage)
         (set @entity.topic @config.startTopic)
         (set @entity.status loading)
         (render-ui main <loading-state message="Loading the catalog" />)
-        (behavior/catalog { paths: @config.scope } {
+        (behavior/catalog { paths: (if (> (array/len @entity.paths) 0) @entity.paths @config.scope) } {
           vectors: false
           emit: { success: LISTED, failure: LIST_FAILED }
         })
@@ -164,6 +170,11 @@ orbital BehaviorCatalogOrbital {
     }
 
     state ready {
+      SCOPE -> loading
+        (set @entity.paths ?paths)
+        (set @entity.status loading)
+        (render-ui main <loading-state message="Loading the catalog" />)
+        (behavior/catalog { paths: ?paths } { vectors: false emit: { success: LISTED, failure: LIST_FAILED } })
       INIT -> ready
         (emit CATALOG_TOPICS { topics: @entity.topics })
         (emit CATALOG_SHOWN {})
@@ -282,7 +293,7 @@ orbital BehaviorCatalogOrbital {
       SEARCH -> searching when (!= ?searchTerm "")
         (set @entity.query ?searchTerm)
         (set @entity.status searching)
-        (behavior/catalog { paths: (if (= @entity.topic "") @config.scope (let ((inTopic (array/find @entity.entries (fn e (and (= @e.package @entity.topicPackage) (= @e.topic @entity.topic)))))) (if (= @inTopic null) @config.scope [(str/concat (array/first (str/split @inTopic.behavior "/")) "/" @entity.topic)]))) } {
+        (behavior/catalog { paths: (if (= @entity.topic "") (if (> (array/len @entity.paths) 0) @entity.paths @config.scope) (let ((inTopic (array/find @entity.entries (fn e (and (= @e.package @entity.topicPackage) (= @e.topic @entity.topic)))))) (if (= @inTopic null) (if (> (array/len @entity.paths) 0) @entity.paths @config.scope) [(str/concat (array/first (str/split @inTopic.behavior "/")) "/" @entity.topic)]))) } {
           emit: { success: SEARCH_LISTED, failure: SEARCH_LIST_FAILED }
         })
       PICK -> ready
@@ -307,6 +318,11 @@ orbital BehaviorCatalogOrbital {
     }
 
     state searching {
+      SCOPE -> loading
+        (set @entity.paths ?paths)
+        (set @entity.status loading)
+        (render-ui main <loading-state message="Loading the catalog" />)
+        (behavior/catalog { paths: ?paths } { vectors: false emit: { success: LISTED, failure: LIST_FAILED } })
       SEARCH_LISTED -> searching
         (set @entity.searchHits ?result)
         (emit LLM_EMBED { texts: (array/prepend [] @entity.query) })
@@ -318,7 +334,7 @@ orbital BehaviorCatalogOrbital {
       INIT -> loading
         (set @entity.status loading)
         (render-ui main <loading-state message="Loading the catalog" />)
-        (behavior/catalog { paths: @config.scope } {
+        (behavior/catalog { paths: (if (> (array/len @entity.paths) 0) @entity.paths @config.scope) } {
           vectors: false
           emit: { success: LISTED, failure: LIST_FAILED }
         })
@@ -339,10 +355,15 @@ orbital BehaviorCatalogOrbital {
     }
 
     state describing {
+      SCOPE -> loading
+        (set @entity.paths ?paths)
+        (set @entity.status loading)
+        (render-ui main <loading-state message="Loading the catalog" />)
+        (behavior/catalog { paths: ?paths } { vectors: false emit: { success: LISTED, failure: LIST_FAILED } })
       INIT -> loading
         (set @entity.status loading)
         (render-ui main <loading-state message="Loading the catalog" />)
-        (behavior/catalog { paths: @config.scope } {
+        (behavior/catalog { paths: (if (> (array/len @entity.paths) 0) @entity.paths @config.scope) } {
           vectors: false
           emit: { success: LISTED, failure: LIST_FAILED }
         })
@@ -359,6 +380,11 @@ orbital BehaviorCatalogOrbital {
     }
 
     state failed {
+      SCOPE -> loading
+        (set @entity.paths ?paths)
+        (set @entity.status loading)
+        (render-ui main <loading-state message="Loading the catalog" />)
+        (behavior/catalog { paths: ?paths } { vectors: false emit: { success: LISTED, failure: LIST_FAILED } })
       INIT -> failed when (= @config.look chips)
         (render-ui main null)
       INIT -> failed when (!= @config.look chips)
@@ -366,7 +392,7 @@ orbital BehaviorCatalogOrbital {
       RETRY -> loading
         (set @entity.status loading)
         (render-ui main <loading-state message="Loading the catalog" />)
-        (behavior/catalog { paths: @config.scope } {
+        (behavior/catalog { paths: (if (> (array/len @entity.paths) 0) @entity.paths @config.scope) } {
           vectors: false
           emit: { success: LISTED, failure: LIST_FAILED }
         })
@@ -453,6 +479,11 @@ orbital BehaviorCatalogOrbital {
         @description "Narrow the rows (and search results) to one package's topic; an empty topic lists every behavior again."
         @synonyms "filter by topic, pick category, browse topic"
       RETRY
+      SCOPE {
+        paths : [string]!
+      }
+        @description "Replace the registry folders the catalog lists (and searches) with these, at run time, and list them again; the scope knob is what it lists until then."
+        @synonyms "set scope, installed packages, list these packages"
     }
   }
 

@@ -1,0 +1,2599 @@
+{
+  "atom": "cli/atoms/std-orb-lint-type-param-sweep.lolo",
+  "trait": "OrbLintTypeParamSweep",
+  "note": "Expected findings are the code, path, message and suggestion validate_type_param_sentinels (types/type_param_sweep.rs) reports. The first two cases copy its tests an_unbound_config_knob_sentinel_is_unresolved and an_unbound_type_variable_in_a_field_shape_is_unresolved (with the bound-shape control). The rest pin the branches the tests leave open: Entity-kind, Type-kind and undeclared-parameter payload sentinels, nested payload paths, event payloads, the bare @entity sentinel, the expects-licensed deferral (entity and named-identity expectations, and the Type-kind exception), config knob sentinels and sigils, auxiliary entity and array item paths, and reference traits skipped. Entries of one config map are reported in key order.",
+  "cases": [
+    {
+      "id": "an-unbound-config-knob-sentinel-is-unresolved",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "persistent",
+                    "collection": "items",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "linkedEntity": "Item",
+                      "typeParams": [
+                        {
+                          "name": "v",
+                          "kind": "Type"
+                        }
+                      ],
+                      "config": {
+                        "plain": {
+                          "type": "string"
+                        },
+                        "result": {
+                          "type": "$v"
+                        },
+                        "results": {
+                          "type": "[$v]"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "type-param-sweep",
+                  "findings": [
+                    {
+                      "code": "ORB_T_UNRESOLVED_TYPE_PARAM",
+                      "path": "orbitals[0 (O)].traits[0 (T)].config.result",
+                      "message": "'orbitals[0 (O)].traits[0 (T)].config.result' has the unbound type variable 'v' — parameter 'v' was not supplied a `:: v <arg>` call-site argument",
+                      "suggestion": "Supply an explicit call-site argument for this parameter — `:: <param> <arg>` on the trait reference (a primitive type name, or an entity name) — this Type-kind parameter has no default.",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_T_UNRESOLVED_TYPE_PARAM",
+                      "path": "orbitals[0 (O)].traits[0 (T)].config.results",
+                      "message": "'orbitals[0 (O)].traits[0 (T)].config.results' has the unbound type variable 'v' — parameter 'v' was not supplied a `:: v <arg>` call-site argument",
+                      "suggestion": "Supply an explicit call-site argument for this parameter — `:: <param> <arg>` on the trait reference (a primitive type name, or an entity name) — this Type-kind parameter has no default.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        }
+      ]
+    },
+    {
+      "id": "an-unbound-type-variable-in-a-field-shape-is-unresolved",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "persistent",
+                    "collection": "items",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "box",
+                        "type": "object",
+                        "properties": {
+                          "v": {
+                            "name": "v",
+                            "type": "$t"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "linkedEntity": "Item",
+                      "typeParams": [
+                        {
+                          "name": "v",
+                          "kind": "Type"
+                        }
+                      ],
+                      "config": {
+                        "rows": {
+                          "type": "[Row]",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "value": {
+                                "name": "value",
+                                "type": "$v"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "type-param-sweep",
+                  "findings": [
+                    {
+                      "code": "ORB_T_UNRESOLVED_TYPE_PARAM",
+                      "path": "orbitals[0].entity.Item.box.v",
+                      "message": "'orbitals[0].entity.Item.box.v' has the unbound type variable 't' — no trait parameter of that name binds it",
+                      "suggestion": "Bind the trait to a `linkedEntity` so an Entity-kind parameter can default to it, or supply an explicit call-site `:: <param> <arg>` argument.",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_T_UNRESOLVED_TYPE_PARAM",
+                      "path": "orbitals[0 (O)].traits[0 (T)].config.rows[].value",
+                      "message": "'orbitals[0 (O)].traits[0 (T)].config.rows[].value' has the unbound type variable 'v' — parameter 'v' was not supplied a `:: v <arg>` call-site argument",
+                      "suggestion": "Supply an explicit call-site argument for this parameter — `:: <param> <arg>` on the trait reference (a primitive type name, or an entity name) — this Type-kind parameter has no default.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        }
+      ]
+    },
+    {
+      "id": "control-bound-shapes-are-clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "persistent",
+                    "collection": "items",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "box",
+                        "type": "object",
+                        "properties": {
+                          "v": {
+                            "name": "v",
+                            "type": "number"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "linkedEntity": "Item",
+                      "typeParams": [
+                        {
+                          "name": "v",
+                          "kind": "Type"
+                        }
+                      ],
+                      "config": {
+                        "rows": {
+                          "type": "[Row]",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "value": {
+                                "name": "value",
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "type-param-sweep",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        }
+      ]
+    },
+    {
+      "id": "control-a-trait-with-no-sentinels-is-clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "persistent",
+                    "collection": "items",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "linkedEntity": "Item"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "type-param-sweep",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        }
+      ]
+    },
+    {
+      "id": "entity-kind-payload-sentinel-without-a-linked-entity",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "persistent",
+                    "collection": "items",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "typeParams": [
+                        {
+                          "name": "r",
+                          "kind": "Entity"
+                        }
+                      ],
+                      "emits": [
+                        {
+                          "event": "E",
+                          "payloadSchema": [
+                            {
+                              "name": "row",
+                              "type": "$r"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "type-param-sweep",
+                  "findings": [
+                    {
+                      "code": "ORB_T_UNRESOLVED_TYPE_PARAM",
+                      "path": "orbitals[0 (O)].traits[0 (T)].emits.E.row",
+                      "message": "payload field 'row' carries the unresolved type-parameter sentinel '$r' — Entity-kind parameter 'r' has no `linkedEntity` to monomorphize against",
+                      "suggestion": "Bind the trait to a `linkedEntity` (directly, via `-> Entity`, or via a call-site rebind) so the parameter has an entity to monomorphize against.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        }
+      ]
+    },
+    {
+      "id": "type-kind-payload-sentinel-names-the-missing-call-site-argument",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "persistent",
+                    "collection": "items",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "linkedEntity": "Item",
+                      "typeParams": [
+                        {
+                          "name": "p",
+                          "kind": "Type"
+                        }
+                      ],
+                      "emits": [
+                        {
+                          "event": "E",
+                          "payloadSchema": [
+                            {
+                              "name": "row",
+                              "type": "[$p]"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "type-param-sweep",
+                  "findings": [
+                    {
+                      "code": "ORB_T_UNRESOLVED_TYPE_PARAM",
+                      "path": "orbitals[0 (O)].traits[0 (T)].emits.E.row",
+                      "message": "payload field 'row' carries the unresolved type-parameter sentinel '[$p]' — parameter 'p' was not supplied a `:: p <arg>` call-site argument",
+                      "suggestion": "Supply an explicit call-site argument for this parameter — `:: <param> <arg>` on the trait reference (a primitive type name, or an entity name) — this Type-kind parameter has no default.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        }
+      ]
+    },
+    {
+      "id": "a-payload-sentinel-no-trait-parameter-declares-is-unresolved",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "persistent",
+                    "collection": "items",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "linkedEntity": "Item",
+                      "emits": [
+                        {
+                          "event": "E",
+                          "payloadSchema": [
+                            {
+                              "name": "row",
+                              "type": "$x"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "type-param-sweep",
+                  "findings": [
+                    {
+                      "code": "ORB_T_UNRESOLVED_TYPE_PARAM",
+                      "path": "orbitals[0 (O)].traits[0 (T)].emits.E.row",
+                      "message": "payload field 'row' carries the unresolved type-parameter sentinel '$x' — the compiler could not monomorphize the parameter",
+                      "suggestion": "Bind the trait to a `linkedEntity` so an Entity-kind parameter can default to it, or supply an explicit call-site `:: <param> <arg>` argument.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        }
+      ]
+    },
+    {
+      "id": "a-nested-payload-field-reports-its-full-path",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "persistent",
+                    "collection": "items",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "linkedEntity": "Item",
+                      "emits": [
+                        {
+                          "event": "E",
+                          "payloadSchema": [
+                            {
+                              "name": "box",
+                              "type": "object",
+                              "properties": [
+                                {
+                                  "name": "inner",
+                                  "type": "$q"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "type-param-sweep",
+                  "findings": [
+                    {
+                      "code": "ORB_T_UNRESOLVED_TYPE_PARAM",
+                      "path": "orbitals[0 (O)].traits[0 (T)].emits.E.box.inner",
+                      "message": "payload field 'inner' carries the unresolved type-parameter sentinel '$q' — the compiler could not monomorphize the parameter",
+                      "suggestion": "Bind the trait to a `linkedEntity` so an Entity-kind parameter can default to it, or supply an explicit call-site `:: <param> <arg>` argument.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        }
+      ]
+    },
+    {
+      "id": "an-event-payload-sentinel-is-reported-under-events",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "persistent",
+                    "collection": "items",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [],
+                        "events": [
+                          {
+                            "key": "GO",
+                            "payloadSchema": [
+                              {
+                                "name": "x",
+                                "type": "$z"
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      "linkedEntity": "Item"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "type-param-sweep",
+                  "findings": [
+                    {
+                      "code": "ORB_T_UNRESOLVED_TYPE_PARAM",
+                      "path": "orbitals[0 (O)].traits[0 (T)].events.GO.x",
+                      "message": "payload field 'x' carries the unresolved type-parameter sentinel '$z' — the compiler could not monomorphize the parameter",
+                      "suggestion": "Bind the trait to a `linkedEntity` so an Entity-kind parameter can default to it, or supply an explicit call-site `:: <param> <arg>` argument.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        }
+      ]
+    },
+    {
+      "id": "a-bare-entity-payload-sentinel-without-a-linked-entity-is-unresolved",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "persistent",
+                    "collection": "items",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "emits": [
+                        {
+                          "event": "E",
+                          "payloadSchema": [
+                            {
+                              "name": "row",
+                              "type": "@entity"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "type-param-sweep",
+                  "findings": [
+                    {
+                      "code": "ORB_T_UNRESOLVED_TYPE_PARAM",
+                      "path": "orbitals[0 (O)].traits[0 (T)].emits.E.row",
+                      "message": "payload field 'row' carries the unresolved type-parameter sentinel '@entity' — the compiler could not monomorphize the parameter",
+                      "suggestion": "Bind the trait to a `linkedEntity` so an Entity-kind parameter can default to it, or supply an explicit call-site `:: <param> <arg>` argument.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        }
+      ]
+    },
+    {
+      "id": "control-an-expects-licensed-linked-entity-defers-an-entity-kind-sentinel",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "persistent",
+                    "collection": "items",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "linkedEntity": "Sibling",
+                      "typeParams": [
+                        {
+                          "name": "r",
+                          "kind": "Entity"
+                        }
+                      ],
+                      "emits": [
+                        {
+                          "event": "E",
+                          "payloadSchema": [
+                            {
+                              "name": "row",
+                              "type": "$r"
+                            }
+                          ]
+                        }
+                      ],
+                      "config": {
+                        "x": {
+                          "type": "$r"
+                        },
+                        "row": {
+                          "type": "@entity"
+                        }
+                      }
+                    }
+                  ],
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "Sibling"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "type-param-sweep",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        }
+      ]
+    },
+    {
+      "id": "control-an-expects-licensed-linked-entity-defers-a-bare-entity-payload-sentinel",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "persistent",
+                    "collection": "items",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "linkedEntity": "Sibling",
+                      "emits": [
+                        {
+                          "event": "E",
+                          "payloadSchema": [
+                            {
+                              "name": "row",
+                              "type": "@entity"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "Sibling"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "type-param-sweep",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        }
+      ]
+    },
+    {
+      "id": "a-type-kind-sentinel-is-not-deferred-by-an-expects-licensed-entity",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "persistent",
+                    "collection": "items",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "linkedEntity": "Sibling",
+                      "typeParams": [
+                        {
+                          "name": "v",
+                          "kind": "Type"
+                        }
+                      ],
+                      "emits": [
+                        {
+                          "event": "E",
+                          "payloadSchema": [
+                            {
+                              "name": "row",
+                              "type": "$v"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "Sibling"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "type-param-sweep",
+                  "findings": [
+                    {
+                      "code": "ORB_T_UNRESOLVED_TYPE_PARAM",
+                      "path": "orbitals[0 (O)].traits[0 (T)].emits.E.row",
+                      "message": "payload field 'row' carries the unresolved type-parameter sentinel '$v' — parameter 'v' was not supplied a `:: v <arg>` call-site argument",
+                      "suggestion": "Supply an explicit call-site argument for this parameter — `:: <param> <arg>` on the trait reference (a primitive type name, or an entity name) — this Type-kind parameter has no default.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        }
+      ]
+    },
+    {
+      "id": "a-named-identity-expectation-licenses-its-entity",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "persistent",
+                    "collection": "items",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "linkedEntity": "Person",
+                      "typeParams": [
+                        {
+                          "name": "r",
+                          "kind": "Entity"
+                        }
+                      ],
+                      "emits": [
+                        {
+                          "event": "E",
+                          "payloadSchema": [
+                            {
+                              "name": "row",
+                              "type": "$r"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "expects": [
+                    {
+                      "kind": "identity",
+                      "name": "Person"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "type-param-sweep",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        }
+      ]
+    },
+    {
+      "id": "an-unnamed-identity-expectation-licenses-nothing",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "persistent",
+                    "collection": "items",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "linkedEntity": "Person",
+                      "typeParams": [
+                        {
+                          "name": "r",
+                          "kind": "Entity"
+                        }
+                      ],
+                      "emits": [
+                        {
+                          "event": "E",
+                          "payloadSchema": [
+                            {
+                              "name": "row",
+                              "type": "$r"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "expects": [
+                    {
+                      "kind": "identity"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "type-param-sweep",
+                  "findings": [
+                    {
+                      "code": "ORB_T_UNRESOLVED_TYPE_PARAM",
+                      "path": "orbitals[0 (O)].traits[0 (T)].emits.E.row",
+                      "message": "payload field 'row' carries the unresolved type-parameter sentinel '$r' — Entity-kind parameter 'r' has no `linkedEntity` to monomorphize against",
+                      "suggestion": "Bind the trait to a `linkedEntity` (directly, via `-> Entity`, or via a call-site rebind) so the parameter has an entity to monomorphize against.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        }
+      ]
+    },
+    {
+      "id": "an-entity-kind-config-knob-without-a-linked-entity",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "persistent",
+                    "collection": "items",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "typeParams": [
+                        {
+                          "name": "r",
+                          "kind": "Entity"
+                        }
+                      ],
+                      "config": {
+                        "x": {
+                          "type": "$r"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "type-param-sweep",
+                  "findings": [
+                    {
+                      "code": "ORB_T_UNRESOLVED_TYPE_PARAM",
+                      "path": "orbitals[0 (O)].traits[0 (T)].config.x",
+                      "message": "'orbitals[0 (O)].traits[0 (T)].config.x' has the unbound type variable 'r' — Entity-kind parameter 'r' has no `linkedEntity` to bind it",
+                      "suggestion": "Bind the trait to a `linkedEntity` (directly, via `-> Entity`, or via a call-site rebind) so the parameter has an entity to monomorphize against.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        }
+      ]
+    },
+    {
+      "id": "a-config-knob-sentinel-no-trait-parameter-declares",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "persistent",
+                    "collection": "items",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "linkedEntity": "Item",
+                      "config": {
+                        "x": {
+                          "type": "[$v]"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "type-param-sweep",
+                  "findings": [
+                    {
+                      "code": "ORB_T_UNRESOLVED_TYPE_PARAM",
+                      "path": "orbitals[0 (O)].traits[0 (T)].config.x",
+                      "message": "'orbitals[0 (O)].traits[0 (T)].config.x' has the unbound type variable 'v' — no trait parameter of that name binds it",
+                      "suggestion": "Bind the trait to a `linkedEntity` so an Entity-kind parameter can default to it, or supply an explicit call-site `:: <param> <arg>` argument.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        }
+      ]
+    },
+    {
+      "id": "a-type-variable-in-an-auxiliary-entity-field",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "persistent",
+                    "collection": "items",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "linkedEntity": "Item"
+                    }
+                  ],
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Aux",
+                      "persistence": "runtime",
+                      "fields": [
+                        {
+                          "name": "f",
+                          "type": "$t"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "type-param-sweep",
+                  "findings": [
+                    {
+                      "code": "ORB_T_UNRESOLVED_TYPE_PARAM",
+                      "path": "orbitals[0].entity.Aux.f",
+                      "message": "'orbitals[0].entity.Aux.f' has the unbound type variable 't' — no trait parameter of that name binds it",
+                      "suggestion": "Bind the trait to a `linkedEntity` so an Entity-kind parameter can default to it, or supply an explicit call-site `:: <param> <arg>` argument.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        }
+      ]
+    },
+    {
+      "id": "an-array-field-reports-its-item-type-variable",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "persistent",
+                    "collection": "items",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "list",
+                        "type": "array",
+                        "items": {
+                          "type": "$t"
+                        }
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "linkedEntity": "Item"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "type-param-sweep",
+                  "findings": [
+                    {
+                      "code": "ORB_T_UNRESOLVED_TYPE_PARAM",
+                      "path": "orbitals[0].entity.Item.list[]",
+                      "message": "'orbitals[0].entity.Item.list[]' has the unbound type variable 't' — no trait parameter of that name binds it",
+                      "suggestion": "Bind the trait to a `linkedEntity` so an Entity-kind parameter can default to it, or supply an explicit call-site `:: <param> <arg>` argument.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        }
+      ]
+    },
+    {
+      "id": "control-a-reference-trait-is-skipped",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "persistent",
+                    "collection": "items",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "ref": "Other",
+                      "linkedEntity": "Item"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "type-param-sweep",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        }
+      ]
+    },
+    {
+      "id": "an-unresolved-user-sigil-on-a-config-knob",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "persistent",
+                    "collection": "items",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "linkedEntity": "Item",
+                      "config": {
+                        "viewer": {
+                          "type": "@user"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "type-param-sweep",
+                  "findings": [
+                    {
+                      "code": "ORB_T_UNRESOLVED_TYPE_PARAM",
+                      "path": "orbitals[0 (O)].traits[0 (T)].config.viewer",
+                      "message": "config knob 'viewer' still carries the unresolved type `@user` — this orbital declares no identity SHAPE (a bare `expects entity [identity]` declares existence only)",
+                      "suggestion": "A sigil type resolves against something the schema must actually declare: `@payload <knob>` needs the knob typed `event` with a literal default; `@entity <knob>` needs an `entity`-typed knob naming a declared entity; `@user` needs `expects entity <Name> [identity] { … }` with a shape.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        }
+      ]
+    },
+    {
+      "id": "an-unresolved-payload-sigil-on-a-config-knob",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "persistent",
+                    "collection": "items",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "linkedEntity": "Item",
+                      "config": {
+                        "ev": {
+                          "type": "@payload(k)"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "type-param-sweep",
+                  "findings": [
+                    {
+                      "code": "ORB_T_UNRESOLVED_TYPE_PARAM",
+                      "path": "orbitals[0 (O)].traits[0 (T)].config.ev",
+                      "message": "config knob 'ev' still carries the unresolved type `@payload(k)` — the named knob does not hold a literal event name on this trait",
+                      "suggestion": "A sigil type resolves against something the schema must actually declare: `@payload <knob>` needs the knob typed `event` with a literal default; `@entity <knob>` needs an `entity`-typed knob naming a declared entity; `@user` needs `expects entity <Name> [identity] { … }` with a shape.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        }
+      ]
+    },
+    {
+      "id": "an-unresolved-entity-sigil-on-a-config-knob",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "persistent",
+                    "collection": "items",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "linkedEntity": "Item",
+                      "config": {
+                        "en": {
+                          "type": "@entity(k)"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "type-param-sweep",
+                  "findings": [
+                    {
+                      "code": "ORB_T_UNRESOLVED_TYPE_PARAM",
+                      "path": "orbitals[0 (O)].traits[0 (T)].config.en",
+                      "message": "config knob 'en' still carries the unresolved type `@entity(k)` — the named knob does not hold a literal entity name, or that entity is declared nowhere in this schema",
+                      "suggestion": "A sigil type resolves against something the schema must actually declare: `@payload <knob>` needs the knob typed `event` with a literal default; `@entity <knob>` needs an `entity`-typed knob naming a declared entity; `@user` needs `expects entity <Name> [identity] { … }` with a shape.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        }
+      ]
+    },
+    {
+      "id": "a-bare-entity-config-knob-without-a-linked-entity",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "persistent",
+                    "collection": "items",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "config": {
+                        "row": {
+                          "type": "@entity"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "type-param-sweep",
+                  "findings": [
+                    {
+                      "code": "ORB_T_UNRESOLVED_TYPE_PARAM",
+                      "path": "orbitals[0 (O)].traits[0 (T)].config.row",
+                      "message": "config knob 'row' still carries the unresolved type `@entity` — the carrying trait declares no `linkedEntity`, so there is no bound row to resolve against",
+                      "suggestion": "A sigil type resolves against something the schema must actually declare: `@payload <knob>` needs the knob typed `event` with a literal default; `@entity <knob>` needs an `entity`-typed knob naming a declared entity; `@user` needs `expects entity <Name> [identity] { … }` with a shape.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        }
+      ]
+    },
+    {
+      "id": "a-list-of-bare-entity-config-knob-without-a-linked-entity",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "persistent",
+                    "collection": "items",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "config": {
+                        "rows": {
+                          "type": "[@entity]"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "type-param-sweep",
+                  "findings": [
+                    {
+                      "code": "ORB_T_UNRESOLVED_TYPE_PARAM",
+                      "path": "orbitals[0 (O)].traits[0 (T)].config.rows",
+                      "message": "config knob 'rows' still carries the unresolved type `[@entity]` — the carrying trait declares no `linkedEntity`, so there is no bound row to resolve against",
+                      "suggestion": "A sigil type resolves against something the schema must actually declare: `@payload <knob>` needs the knob typed `event` with a literal default; `@entity <knob>` needs an `entity`-typed knob naming a declared entity; `@user` needs `expects entity <Name> [identity] { … }` with a shape.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        }
+      ]
+    },
+    {
+      "id": "control-a-bare-entity-config-knob-is-deferred-when-the-linked-entity-is-licensed",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "persistent",
+                    "collection": "items",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "linkedEntity": "Sibling",
+                      "config": {
+                        "row": {
+                          "type": "@entity"
+                        }
+                      }
+                    }
+                  ],
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "Sibling"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "type-param-sweep",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        }
+      ]
+    },
+    {
+      "id": "a-second-orbital-reports-its-own-index",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "persistent",
+                    "collection": "items",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "B",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "persistent",
+                    "collection": "items",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "f",
+                        "type": "$t"
+                      }
+                    ]
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "type-param-sweep",
+                  "findings": [
+                    {
+                      "code": "ORB_T_UNRESOLVED_TYPE_PARAM",
+                      "path": "orbitals[1].entity.Item.f",
+                      "message": "'orbitals[1].entity.Item.f' has the unbound type variable 't' — no trait parameter of that name binds it",
+                      "suggestion": "Bind the trait to a `linkedEntity` so an Entity-kind parameter can default to it, or supply an explicit call-site `:: <param> <arg>` argument.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintTypeParamSweep"
+        }
+      ]
+    }
+  ]
+}

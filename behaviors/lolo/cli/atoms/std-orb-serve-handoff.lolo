@@ -1,0 +1,200 @@
+app std-orb-serve-handoff [
+  version: "1.0.0",
+  env: ["FIREBASE_AUTH_EMULATOR_HOST", "FIREBASE_PROJECT_ID"],
+  fs: { cwd: ".orbital": [create], cwd: ".orbital/serve": [create], cwd: ".orbital/serve/**": [write, create] },
+  description: "std-orb-serve-handoff — the half of `orb serve` that turns a resolved app and its server into the bootloader hand-off, composed by std-orb-serve and std-orb-launchpad. It hears the serve engine's SERVE_DECLARED_READY (an app that declares its own http endpoint, composed alone with the serve options set on that orbital) or SERVE_COMPOSE_READY (the app and the std-http-server program that wraps it, composed with the listen grant for host:port and, when a client is served, the anchored cwd read grant of its folder) and composes them with program/compose. Without a client to prepare it answers at once; with one (prepare) it writes the composed program to .orbital/serve/<app>/program.orb, compiles it client-mode with program/eval generate { mode: client, webClient: true } so the typescript shell's prebuilt web client, with the app's runtime files over it, is laid out in .orbital/serve/<app>/web-client, and, when FIREBASE_AUTH_EMULATOR_HOST and FIREBASE_PROJECT_ID are both set, writes that folder's __/firebase/init.json naming the Auth emulator for the page. The answer is SERVE_ANSWERED: status 200 with headers orb-run: server, orb-mock: on or off and orb-app: the resolved app beside its catalogs, and the composed program's JSON as the body; a refused composition or a client that could not be prepared answers status 500 on stderr `Error: <reason>`.",
+  egress: []
+]
+type HandoffPage = { protocol : string }
+type HandoffOrbital = { name : string!, pages : [HandoffPage] }
+type HandoffProgram = { name : string, orbitals : [HandoffOrbital] }
+type HandoffGenerated = { webClient : string? }
+
+orbital ServeHandoffOrbital {
+  entity HandoffRun [runtime] {
+    id : string!
+    path : string = ""
+    rel : string = ""
+    mock : boolean = true
+    prepare : boolean @description "The client is prepared here (no --client-dir), from the composed program." = false
+    appName : string = ""
+    cwd : string = ""
+    emulatorHost : string = ""
+    emulatorProject : string = ""
+    composed : behavior?
+    source : string @description "The app file itself, whose folder holds its locales/ and public/." = ""
+  }
+
+  trait ServeHandoff -> HandoffRun [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      SERVE_DECLARED_READY -> composing
+        (set @entity.mock @payload.mock)
+        (set @entity.path @payload.path)
+        (set @entity.prepare false)
+        (program/compose [@payload.program] { appName: @payload.appName } { key: "compose" emit: { success: SERVE_COMPOSED, failure: SERVE_COMPOSE_REFUSED } })
+      SERVE_COMPOSE_READY -> composing when @payload.hasClient
+        (set @entity.mock @payload.mock)
+        (set @entity.path @payload.path)
+        (set @entity.prepare @payload.prepare)
+        (set @entity.cwd @payload.cwd)
+        (set @entity.source @payload.source)
+        (set @entity.rel @payload.rel)
+        (set @entity.appName @payload.appName)
+        (program/compose @payload.programs { appName: @payload.appName overrides: { grants: { net: [{ target: (str/concat @payload.host ":" @payload.port), kinds: ["listen"] }], anchored: { fs: [{ anchor: "cwd", glob: (str/concat @payload.rel "/**"), modes: ["read"] }] } } } } { key: "compose" emit: { success: SERVE_COMPOSED, failure: SERVE_COMPOSE_REFUSED } })
+      SERVE_COMPOSE_READY -> composing when (not @payload.hasClient)
+        (set @entity.mock @payload.mock)
+        (set @entity.path @payload.path)
+        (set @entity.prepare false)
+        (program/compose @payload.programs { appName: @payload.appName overrides: { grants: { net: [{ target: (str/concat @payload.host ":" @payload.port), kinds: ["listen"] }], anchored: {} } } } { key: "compose" emit: { success: SERVE_COMPOSED, failure: SERVE_COMPOSE_REFUSED } })
+    }
+
+    state composing {
+      INIT -> composing
+      SERVE_COMPOSE_REFUSED -> idle
+        (emit SERVE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " @payload.error) })
+      SERVE_COMPOSED -> idle when (and @entity.mock (not @entity.prepare))
+        (emit SERVE_ANSWERED { status: 200, body: (json/stringify @payload.result), headers: { "orb-run": "server", "orb-mock": "on", "orb-app": @entity.path } })
+      SERVE_COMPOSED -> idle when (and (not @entity.mock) (not @entity.prepare))
+        (emit SERVE_ANSWERED { status: 200, body: (json/stringify @payload.result), headers: { "orb-run": "server", "orb-mock": "off", "orb-app": @entity.path } })
+      SERVE_COMPOSED -> preparing when @entity.prepare
+        (set @entity.composed @payload.result)
+        (os/mkdir { anchor: "cwd" path: (str/concat ".orbital/serve/" @entity.appName) } true { key: "prepDir" emit: { success: SERVE_PREP_DIR, failure: SERVE_PREP_FAILED } })
+    }
+
+    state preparing {
+      INIT -> preparing
+      SERVE_PREP_FAILED -> idle
+        (emit SERVE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: the web client could not be prepared: " @payload.error) })
+      SERVE_GENERATE_FAILED -> idle
+        (emit SERVE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: the web client could not be prepared: " @payload.error) })
+      SERVE_PREP_DIR -> preparing
+        (os/write-file { anchor: "cwd" path: (str/concat ".orbital/serve/" @entity.appName "/program.orb") } (bytes/from-string (json/stringify @entity.composed)) { key: "prepProgram" emit: { success: SERVE_PROGRAM_WRITTEN, failure: SERVE_PREP_FAILED } })
+      SERVE_PROGRAM_WRITTEN -> preparing
+        (program/eval null { generate: { path: (os/path-join @entity.cwd ".orbital/serve" @entity.appName "program.orb"), output: (os/path-join @entity.cwd ".orbital/serve" @entity.appName), shell: "typescript", mode: "client", webClient: true, source: @entity.source } } { key: "client" emit: { success: SERVE_CLIENT_BUILT, failure: SERVE_GENERATE_FAILED } })
+      SERVE_CLIENT_BUILT -> preparing
+        (os/getenv "FIREBASE_AUTH_EMULATOR_HOST" { key: "emuHost" emit: { success: SERVE_EMU_HOST, failure: SERVE_EMU_UNSET } })
+      SERVE_EMU_UNSET -> preparing
+        (emit SERVE_CLIENT_READY { })
+      SERVE_EMU_HOST -> preparing when (= (or @payload.value "") "")
+        (emit SERVE_CLIENT_READY { })
+      SERVE_EMU_HOST -> preparing when (!= (or @payload.value "") "")
+        (set @entity.emulatorHost @payload.value)
+        (os/getenv "FIREBASE_PROJECT_ID" { key: "emuProject" emit: { success: SERVE_EMU_PROJECT, failure: SERVE_EMU_UNSET } })
+      SERVE_EMU_PROJECT -> preparing when (= (or @payload.value "") "")
+        (emit SERVE_CLIENT_READY { })
+      SERVE_EMU_PROJECT -> preparing when (!= (or @payload.value "") "")
+        (set @entity.emulatorProject @payload.value)
+        (os/mkdir { anchor: "cwd" path: (str/concat @entity.rel "/__/firebase") } true { key: "hosting" emit: { success: SERVE_HOSTING_DIR, failure: SERVE_PREP_FAILED } })
+      SERVE_HOSTING_DIR -> preparing
+        (os/write-file { anchor: "cwd" path: (str/concat @entity.rel "/__/firebase/init.json") } (bytes/from-string (json/stringify { apiKey: "emulator", projectId: @entity.emulatorProject, authEmulatorHost: @entity.emulatorHost })) { key: "hostingConfig" emit: { success: SERVE_HOSTING_WRITTEN, failure: SERVE_PREP_FAILED } })
+      SERVE_HOSTING_WRITTEN -> preparing
+        (emit SERVE_CLIENT_READY { })
+      SERVE_CLIENT_READY -> idle when @entity.mock
+        (emit SERVE_ANSWERED { status: 200, body: (json/stringify @entity.composed), headers: { "orb-run": "server", "orb-mock": "on", "orb-app": @entity.path } })
+      SERVE_CLIENT_READY -> idle when (not @entity.mock)
+        (emit SERVE_ANSWERED { status: 200, body: (json/stringify @entity.composed), headers: { "orb-run": "server", "orb-mock": "off", "orb-app": @entity.path } })
+    }
+
+    emits {
+      SERVE_ANSWERED -> external {
+        status : number!
+        body : string!
+        stderr : string
+        headers : Map string string
+      }
+        @description "The hand-off the bootloader acts on, or the refusal."
+        @tier "internal"
+      SERVE_COMPOSED {
+        result : behavior
+      }
+        @description "program/compose: the app composed with the server."
+        @tier "internal"
+      SERVE_CLIENT_BUILT {
+        result : HandoffGenerated!
+      }
+        @description "program/eval generate: the app compiled client-mode with the shell's prebuilt web client laid out under .orbital/serve/<app>/web-client."
+        @tier "internal"
+      SERVE_EMU_HOST {
+        value : string
+      }
+        @description "os/getenv: FIREBASE_AUTH_EMULATOR_HOST, which the served page reads from /__/firebase/init.json."
+        @tier "internal"
+      SERVE_EMU_PROJECT {
+        value : string
+      }
+        @description "os/getenv: FIREBASE_PROJECT_ID, the Auth emulator's project."
+        @tier "internal"
+      SERVE_EMU_UNSET {
+        error : string
+        kind : string
+      }
+        @description "os/getenv: an emulator variable is not set, so the page gets no Firebase config."
+        @tier "internal"
+      SERVE_HOSTING_DIR { }
+        @description "os/mkdir: the web client's __/firebase folder exists."
+        @tier "internal"
+      SERVE_HOSTING_WRITTEN { bytes : number }
+        @description "os/write-file: __/firebase/init.json names the Auth emulator for the page."
+        @tier "internal"
+      SERVE_PREP_DIR { }
+        @description "os/mkdir: .orbital/serve/<app> exists."
+        @tier "internal"
+      SERVE_PROGRAM_WRITTEN { bytes : number }
+        @description "os/write-file: the composed program is written for the client-mode compile, so the client learns its server from the http endpoint."
+        @tier "internal"
+      SERVE_PREP_FAILED {
+        error : string
+        kind : string
+      }
+        @description "The browser client could not be prepared."
+        @tier "internal"
+      SERVE_GENERATE_FAILED {
+        error : string
+      }
+        @description "program/eval generate: the client-mode compile of the composed program failed."
+        @tier "internal"
+      SERVE_CLIENT_READY { }
+        @description "The browser client is laid out; answer the hand-off."
+        @tier "internal"
+      SERVE_COMPOSE_REFUSED {
+        error : string
+      }
+        @description "The composition was refused."
+        @tier "internal"
+    }
+
+    listens {
+      SERVE_DECLARED_READY {
+        program : HandoffProgram!
+        serverOrbital : string!
+        appName : string!
+        host : string!
+        port : number!
+        rel : string!
+        hasClient : boolean!
+        mock : boolean!
+        path : string!
+      }
+        @description "The app declares its own http endpoint: composed alone, with the serve options set on that orbital."
+      SERVE_COMPOSE_READY {
+        programs : [HandoffProgram]!
+        appName : string!
+        host : string!
+        port : number!
+        rel : string!
+        hasClient : boolean!
+        mock : boolean!
+        path : string!
+        prepare : boolean!
+        cwd : string!
+        source : string!
+      }
+        @description "The resolved server, ready to compose with the app."
+    }
+  }
+
+  page boot as ServeHandoffPage -> ServeHandoff
+}

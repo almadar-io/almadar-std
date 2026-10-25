@@ -1,0 +1,197 @@
+app std-orb-lint-listen-source-never-produces [
+  version: "1.0.0",
+  inbound: ["cli-lint-listen-source-never-produces"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-listen-source-never-produces — the `orb lint listen-source-never-produces <file>` command, the port of validate_listen_source_never_produces (circuit/cross_orbital/listens.rs, ORB_X_LISTEN_SOURCE_NEVER_PRODUCES). A `listens` route sourced at a trait (the listener's own orbital) or at an orbital's trait resolves by the source trait's `emits` contract; this second half asks whether anything live still backs the event. The route is reported when the source trait declares the event in `emits`, std-orb-fired-events finds no control or effect of that trait firing it, and no other trait embedded under the source (std-orb-embed-chain's host chains) fires it either; it holds whatever the emit's declared scope. A source orbital not in the program, a source trait not found, or an event the source never declares are skipped. Reports once per route at orbitals.<Orbital>.traits.<Trait>.listens (status 500, exit 1). Clean answers `lint listen-source-never-produces: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-listen-source-never-produces"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type FiredNode = string | number | boolean | [FiredNode?] | Map string FiredNode?
+type FiredField = { default : FiredNode? }
+type FiredTransition = { event : string, guard : FiredNode?, effects : [FiredNode?] }
+type FiredTick = { guard : FiredNode?, effects : [FiredNode?] }
+type FiredMachine = { transitions : [FiredTransition] }
+type FiredTrait = { name : string, stateMachine : FiredMachine, ticks : [FiredTick], config : Map string FiredField? }
+type FiredOrbital = { traits : [FiredTrait] }
+type FiredProgram = { orbitals : [FiredOrbital] }
+type EmbedMap = Map string [string]
+type NvpSource = { kind : string, trait : string, orbital : string }
+type NvpListen = { event : string, triggers : string, source : NvpSource }
+type NvpEmit = { event : string }
+type NvpTrait = { name : string, emits : [NvpEmit], listens : [NvpListen], stateMachine : FiredMachine, ticks : [FiredTick], config : Map string FiredField? }
+type NvpOrbital = { name : string, traits : [NvpTrait] }
+type NvpProgram = { orbitals : [NvpOrbital] }
+
+orbital OrbLintListenSourceNeverProducesOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+  uses Fired from "std/behaviors/std-orb-fired-events"
+  uses Chain from "std/behaviors/std-orb-embed-chain"
+
+  entity OrbLintListenSourceNeverProducesRun [runtime] {
+    id : string!
+    scope : string = ""
+    program : NvpProgram = {}
+    byControl : Map string [string] = {}
+    byEffect : Map string [string] = {}
+    chains : [EmbedMap] = []
+    haveFired : boolean = false
+    haveChains : boolean = false
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintListenSourceNeverProduces -> OrbLintListenSourceNeverProducesRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.program @payload.program)
+      FIRED_HEARD -> ready when @entity.haveChains
+        (set @entity.scope @payload.scope)
+        (set @entity.byControl @payload.byControl)
+        (set @entity.byEffect @payload.byEffect)
+        (set @entity.haveFired true)
+        (emit LINT_COMPUTE { })
+      FIRED_HEARD -> ready when (not @entity.haveChains)
+        (set @entity.scope @payload.scope)
+        (set @entity.byControl @payload.byControl)
+        (set @entity.byEffect @payload.byEffect)
+        (set @entity.haveFired true)
+      CHAINS_HEARD -> ready when @entity.haveFired
+        (set @entity.chains @payload.chains)
+        (set @entity.haveChains true)
+        (emit LINT_COMPUTE { })
+      CHAINS_HEARD -> ready when (not @entity.haveFired)
+        (set @entity.chains @payload.chains)
+        (set @entity.haveChains true)
+      LINT_COMPUTE -> ready
+        (set @entity.findings (let ((nos : [string] [])) (let ((notd : [NvpTrait] [])) (let ((noem : [NvpEmit] [])) (let ((nofind : [OrbFinding] [])) (let ((nolis : [NvpListen] [])) (let ((orbitals (object/get @entity.program "orbitals" []))) (let ((bc @entity.byControl)) (let ((be @entity.byEffect)) (array/flatten (array/map @orbitals (fn o (array/flatten (array/map (array/filter (object/get @o "traits" @notd) (fn tt (object/has @tt "stateMachine"))) (fn td (array/flatten (array/map (array/filter (object/get @td "listens" @nolis) (fn ll (or (= (object/get (object/get @ll "source" {}) "kind" "") "trait") (= (object/get (object/get @ll "source" {}) "kind" "") "orbital")))) (fn l (let ((sorb (if (= (object/get (object/get @l "source" {}) "kind" "") "trait") (object/get @o "name" "") (object/get (object/get @l "source" {}) "orbital" "")))) (let ((strait (object/get (object/get @l "source" {}) "trait" ""))) (let ((ev (object/get @l "event" ""))) (let ((so (array/last (array/filter @orbitals (fn sx (= (object/get @sx "name" "") @sorb)))))) (if (= @so null) @nofind (let ((std (array/first (array/filter (object/get @so "traits" @notd) (fn sy (and (object/has @sy "stateMachine") (= (object/get @sy "name" "") @strait))))))) (if (= @std null) @nofind (if (not (array/includes (array/map (object/get @std "emits" @noem) (fn se (object/get @se "event" ""))) @ev)) @nofind (if (or (array/includes (object/get @bc @strait @nos) @ev) (array/includes (object/get @be @strait @nos) @ev)) @nofind (if (array/some (array/filter (object/get @so "traits" @notd) (fn it (object/has @it "stateMachine"))) (fn td2 (and (!= (object/get @td2 "name" "") @strait) (array/includes (object/get (array/nth @entity.chains (array/last (array/filter (array/range 0 (array/len @orbitals)) (fn si (= (object/get (array/nth @orbitals @si) "name" "") @sorb))))) (object/get @td2 "name" "") @nos) @strait) (or (array/includes (object/get @bc (object/get @td2 "name" "") @nos) @ev) (array/includes (object/get @be (object/get @td2 "name" "") @nos) @ev))))) @nofind [{ code: "ORB_X_LISTEN_SOURCE_NEVER_PRODUCES", path: (str/concat "orbitals." (object/get @o "name" "") ".traits." (object/get @td "name" "") ".listens"), message: (str/concat "listens route " @strait "." @ev " -> " (object/get @l "triggers" "") ": " @strait "'s emits contract declares " @ev ", but no live effect, rendered affordance, or config item action at this call site produces it — a config override (e.g. itemActions/browseItemActions narrowed) likely removed the only producer"), suggestion: (str/concat "restore " @ev " to " @strait "'s active affordance config, or drop the " (object/get @td "name" "") " route if the removal is intentional"), severity: "error" }]))))))))))))))))))))))))))))
+        (set @entity.haveFired false)
+        (set @entity.haveChains false)
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "listen-source-never-produces", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_COMPUTE { }
+        @description "Internal: both the fired events and the embed chains are in, compute the findings."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : NvpProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      FIRED_HEARD { scope : string!  byControl : Map string [string]!  byEffect : Map string [string]! }
+        @description "std-orb-fired-events' FIRED_EVENTS: the events each trait fires by a control or by an effect."
+      CHAINS_HEARD { scope : string!  chains : [EmbedMap]! }
+        @description "std-orb-embed-chain's EMBED_CHAINS: per orbital, each trait's host names."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+      OrbFiredEvents.FIRED_EVENTS -> FIRED_HEARD
+      OrbEmbedChain.EMBED_CHAINS -> CHAINS_HEARD
+    }
+  }
+
+  trait OrbLintListenSourceNeverProducesCli -> OrbLintListenSourceNeverProducesRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint listen-source-never-produces <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "listen-source-never-produces") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint listen-source-never-produces: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "listen-source-never-produces") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint listen-source-never-produces: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-listen-source-never-produces" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint listen-source-never-produces` with its arguments and working directory."
+        @synonyms "orb lint listen-source-never-produces"
+      OrbLintListenSourceNeverProduces.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait OrbFiredEvents = Fired.traits.OrbFiredEvents {
+    listens {
+      FIRED_PROPS_HEARD { names : [string]!  maps : [string]!  listens : Map string [string]! }
+        @description "std-orb-lint-input's LINT_EVENT_PROPS: the event-bearing prop names of the installed pattern registry."
+      FIRED_SEMANTICS_HEARD { semantics : Map string string!  functions : [string]!  busExcluded : [string]!  targetOptions : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: each operator's declared returnSemantics and the function-returning operators."
+      FIRED_INPUT_HEARD { file : string!  raw : string!  latin : boolean!  program : FiredProgram  scope : string! }
+        @description "std-orb-lint-input's LINT_INPUT: the lowered program."
+      OrbLintInput.LINT_EVENT_PROPS -> FIRED_PROPS_HEARD
+      OrbLintInput.LINT_OPERATOR_SEMANTICS -> FIRED_SEMANTICS_HEARD
+      OrbLintInput.LINT_INPUT -> FIRED_INPUT_HEARD
+    }
+  }
+  trait OrbEmbedChain = Chain.traits.OrbEmbedChain {
+    listens {
+      EMBED_INPUT_HEARD { file : string!  raw : string!  latin : boolean!  program : FiredProgram  scope : string! }
+        @description "std-orb-lint-input's LINT_INPUT: the lowered program."
+      OrbLintInput.LINT_INPUT -> EMBED_INPUT_HEARD
+    }
+  }
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintListenSourceNeverProducesCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintListenSourceNeverProducesOrbitalStart -> OrbLintListenSourceNeverProduces, OrbLintListenSourceNeverProducesCli, OrbLintInput, OrbFiredEvents, OrbEmbedChain, Packs, Versions
+}

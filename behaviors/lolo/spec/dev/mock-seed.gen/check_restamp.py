@@ -8,7 +8,7 @@ import tempfile
 
 spec_dir = Path(__file__).resolve().parent.parent
 orb = os.environ.get('ORB_BIN', str(Path.home() / 'bin' / 'orb'))
-source = spec_dir / 'mock-seed-access.fixture.lolo'
+source = spec_dir / 'mock-seed-access-fixture.lolo'
 program = {'orbitals': [
     {'entity': {'name': 'Person', 'identity': True, 'collection': 'people', 'fields': [{'name': 'id', 'type': 'string', 'required': True}, {'name': 'role', 'type': 'string'}]}},
     {'entity': {'name': 'Task', 'collection': 'tasks', 'fields': [{'name': 'id', 'type': 'string', 'required': True}, {'name': 'ownerRef', 'type': 'string'}, {'name': 'otherOwner', 'type': 'string'}]}},

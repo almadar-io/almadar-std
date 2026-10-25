@@ -1,0 +1,181 @@
+app std-orb-lint-inbound-answer-foreign [
+  version: "1.0.0",
+  inbound: ["cli-lint-inbound-answer-foreign"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-inbound-answer-foreign — the `orb lint inbound-answer-foreign <file>` command, the port of ORB_INBOUND_ANSWER_FOREIGN (effect/inbound.rs validate_inbound). Only the handler trait's own emit of its answer event answers an inbound hook (EXEC-INBOUND-1). It lowers the file with program/read and, for every inline trait event that handles an inbound hook, reports each other trait that emits the answer event by an effect (std-orb-fired-events' byEffect) when that trait does not handle a hook answering the same event itself and the handler has no `listens` route from it that relays the event, once per emitter in name order, at the event with the Rust message and suggestion (status 500, exit 1). The entry, undeclared, duplicate, verifies and answer-undeclared checks of validate_inbound are `std-orb-lint-inbound`. Clean answers `lint inbound-answer-foreign: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-inbound-answer-foreign"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type FiredNode = string | number | boolean | [FiredNode?] | Map string FiredNode?
+type FiredField = { default : FiredNode? }
+type FiredTransition = { event : string, guard : FiredNode?, effects : [FiredNode?] }
+type FiredTick = { guard : FiredNode?, effects : [FiredNode?] }
+type FiredMachine = { transitions : [FiredTransition] }
+type FiredTrait = { name : string, stateMachine : FiredMachine, ticks : [FiredTick], config : Map string FiredField? }
+type FiredOrbital = { traits : [FiredTrait] }
+type FiredProgram = { orbitals : [FiredOrbital] }
+type IafInbound = { name : string, answers : string }
+type IafEvent = { key : string, inbound : IafInbound? }
+type IafSource = { kind : string, trait : string }
+type IafListen = { event : string, source : IafSource? }
+type IafMachine = { events : [IafEvent] }
+type IafTrait = { name : string, stateMachine : IafMachine, listens : [IafListen] }
+type IafOrbital = { name : string, traits : [IafTrait] }
+type IafProgram = { orbitals : [IafOrbital] }
+
+orbital OrbLintInboundAnswerForeignOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+  uses Fired from "std/behaviors/std-orb-fired-events"
+
+  entity OrbLintInboundAnswerForeignRun [runtime] {
+    id : string!
+    scope : string = ""
+    program : IafProgram = {}
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintInboundAnswerForeign -> OrbLintInboundAnswerForeignRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.program @payload.program)
+      FIRED_HEARD -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((orbitals (object/get @entity.program "orbitals" [])) (be @payload.byEffect))
+          (let ((allinb (array/flatten (array/map @orbitals (fn o (array/flatten (array/map (array/filter (object/get @o "traits" []) (fn t (object/has @t "stateMachine"))) (fn t (array/flatten (array/map (object/get (object/get @t "stateMachine" {}) "events" []) (fn ev (if (object/has @ev "inbound") [{ t: (object/get @t "name" ""), a: (object/get (object/get @ev "inbound") "answers" "") }] []))))))))))))
+            (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+              (let ((o (array/nth @orbitals @oi)))
+                (array/flatten (array/map (array/range 0 (array/len (object/get @o "traits" []))) (fn ti
+                  (let ((td (array/nth (object/get @o "traits" []) @ti)))
+                    (if (not (object/has @td "stateMachine")) []
+                      (let ((evs (object/get (object/get @td "stateMachine" {}) "events" [])) (tn (object/get @td "name" "")))
+                        (array/flatten (array/map (array/filter (array/range 0 (array/len @evs)) (fn ei (object/has (array/nth @evs @ei) "inbound"))) (fn ei
+                          (let ((inb (object/get (array/nth @evs @ei) "inbound")))
+                            (let ((ans (object/get @inb "answers" "")) (hook (object/get @inb "name" "")))
+                              (let ((emitters (array/sort (array/filter (object/keys @be) (fn k
+                                      (and (array/includes (object/get @be @k []) @ans)
+                                           (!= @k @tn)
+                                           (not (array/some @allinb (fn r (and (= (object/get @r "t") @k) (= (object/get @r "a") @ans)))))
+                                           (not (array/some (object/get @td "listens" []) (fn l
+                                                  (let ((src (object/get @l "source" null)) (lev (object/get @l "event" "")))
+                                                    (if (or (= @src null) (= (object/get @src "kind" "") "any"))
+                                                      (or (= @lev @ans) (= @lev (str/concat @k "." @ans)))
+                                                      (and (= (object/get @src "trait" "") @k) (= @lev @ans)))))))))))))
+                                (array/map @emitters (fn k
+                                  { code: "ORB_INBOUND_ANSWER_FOREIGN", path: (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" @tn ")].stateMachine.events[" @ei "]"), message: (str/concat "trait '" @k "' emits '" @ans "', the answer of '" @tn "''s inbound hook '" @hook "', but only '" @tn "''s own emit answers the hook, so that emit never reaches the caller"), suggestion: (str/concat "Relay it: in '" @tn "' add `listens { " @k "." @ans " -> <RELAYED> }` and an arm on <RELAYED> that emits '" @ans "' with the payload's status and body"), severity: "error" })))))))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "inbound-answer-foreign", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : IafProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      FIRED_HEARD { scope : string!  byControl : Map string [string]!  byEffect : Map string [string]! }
+        @description "std-orb-fired-events' FIRED_EVENTS: the events each trait fires by a control or by an effect."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+      OrbFiredEvents.FIRED_EVENTS -> FIRED_HEARD
+    }
+  }
+
+  trait OrbLintInboundAnswerForeignCli -> OrbLintInboundAnswerForeignRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint inbound-answer-foreign <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "inbound-answer-foreign") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint inbound-answer-foreign: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "inbound-answer-foreign") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint inbound-answer-foreign: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-inbound-answer-foreign" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint inbound-answer-foreign` with its arguments and working directory."
+        @synonyms "orb lint inbound-answer-foreign"
+      OrbLintInboundAnswerForeign.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait OrbFiredEvents = Fired.traits.OrbFiredEvents {
+    listens {
+      FIRED_PROPS_HEARD { names : [string]!  maps : [string]!  listens : Map string [string]! }
+        @description "std-orb-lint-input's LINT_EVENT_PROPS: the event-bearing prop names of the installed pattern registry."
+      FIRED_SEMANTICS_HEARD { semantics : Map string string!  functions : [string]!  busExcluded : [string]!  targetOptions : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: each operator's declared returnSemantics and the function-returning operators."
+      FIRED_INPUT_HEARD { file : string!  raw : string!  latin : boolean!  program : FiredProgram  scope : string! }
+        @description "std-orb-lint-input's LINT_INPUT: the lowered program."
+      OrbLintInput.LINT_EVENT_PROPS -> FIRED_PROPS_HEARD
+      OrbLintInput.LINT_OPERATOR_SEMANTICS -> FIRED_SEMANTICS_HEARD
+      OrbLintInput.LINT_INPUT -> FIRED_INPUT_HEARD
+    }
+  }
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintInboundAnswerForeignCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintInboundAnswerForeignOrbitalStart -> OrbLintInboundAnswerForeign, OrbLintInboundAnswerForeignCli, OrbLintInput, OrbFiredEvents, Packs, Versions
+}

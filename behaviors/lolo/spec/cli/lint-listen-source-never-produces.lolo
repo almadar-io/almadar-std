@@ -1,0 +1,21 @@
+app lint-listen-source-never-produces-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint listen-source-never-produces <file>`, the port of ORB_X_LISTEN_SOURCE_NEVER_PRODUCES. A trait or orbital sourced listens route whose source trait declares the event in emits, but whose controls and effects (std-orb-fired-events) and embedded children never fire it, is reported once per route at orbitals.<Orbital>.traits.<Trait>.listens (status 500, exit 1). A clean program answers `lint listen-source-never-produces: clean` (status 200, exit 0). Anything but exactly one file argument is the usage (status 400, exit 2). A file that cannot be read or lowered fails the run (status 500)."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintListenSourceNeverProducesSpec {
+  expects trait OrbLintListenSourceNeverProduces {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintListenSourceNeverProducesCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintListenSourceNeverProduces, OrbLintListenSourceNeverProducesCli
+}

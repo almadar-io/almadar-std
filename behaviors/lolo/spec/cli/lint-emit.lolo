@@ -1,0 +1,21 @@
+app lint-emit-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint emit <file>`, the port of validate_emit. It lowers the file with program/read and checks each `emit` effect of every inline trait transition and tick, however nested in do, if, when and let: no event name is CIRCUIT_ORPHAN_EVENT, a string that is not an identifier is ORB_T_EVT_INVALID_NAME, a first argument that is not a string is ORB_EFF_EMIT_INVALID_NAME (status 500, exit 1). Clean answers `lint emit: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintEmitSpec {
+  expects trait OrbLintEmit {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintEmitCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintEmit, OrbLintEmitCli
+}

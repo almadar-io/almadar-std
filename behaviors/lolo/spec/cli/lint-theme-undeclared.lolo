@@ -1,0 +1,21 @@
+app lint-theme-undeclared-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint theme-undeclared <file>`. It lowers the file with program/read, collapses every page path to its param shape (each :name segment becomes a bare :) and, for every shape shared by two or more pages across all orbitals, reports ORB_P_DUPLICATE_PATH once at the first page with the normalized path, the paths and the locations (status 500, exit 1). Clean answers `lint theme-undeclared: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintThemeUndeclaredSpec {
+  expects trait OrbLintThemeUndeclared {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintThemeUndeclaredCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintThemeUndeclared, OrbLintThemeUndeclaredCli
+}

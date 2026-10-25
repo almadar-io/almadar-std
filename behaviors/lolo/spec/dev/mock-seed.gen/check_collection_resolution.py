@@ -10,7 +10,7 @@ orb = os.environ.get('ORB_BIN', str(Path.home() / 'bin' / 'orb'))
 with tempfile.NamedTemporaryFile(suffix='.orb', prefix='seed-collection-', delete=False) as out:
     path = Path(out.name)
 try:
-    emitted = subprocess.run([orb, 'emit', 'orb', str(spec_dir / 'mock-seed-access.fixture.lolo'),
+    emitted = subprocess.run([orb, 'emit', 'orb', str(spec_dir / 'mock-seed-access-fixture.lolo'),
                               '--output', str(path)], capture_output=True, text=True)
     assert emitted.returncode == 0, emitted.stdout + emitted.stderr
     for collection in ['fixtureviewer', 'accounts']:

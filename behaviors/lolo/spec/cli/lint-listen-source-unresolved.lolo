@@ -1,0 +1,21 @@
+app lint-listen-source-unresolved-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint listen-source-unresolved <file>`, the port of ORB_X_LISTEN_SOURCE_UNRESOLVED. A trait or orbital sourced listens entry naming an event the source trait neither declares in emits nor produces (std-orb-produced-events) is reported once per entry at orbitals.<Orbital>.traits.<Trait>.listens (status 500, exit 1). A clean program answers `lint listen-source-unresolved: clean` (status 200, exit 0). Anything but exactly one file argument is the usage (status 400, exit 2). A file that cannot be read or lowered fails the run (status 500)."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintListenSourceUnresolvedSpec {
+  expects trait OrbLintListenSourceUnresolved {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintListenSourceUnresolvedCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintListenSourceUnresolved, OrbLintListenSourceUnresolvedCli
+}

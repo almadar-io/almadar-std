@@ -1,0 +1,2132 @@
+{
+  "atom": "cli/atoms/std-orb-lint-inbound-answer-foreign.lolo",
+  "trait": "OrbLintInboundAnswerForeign",
+  "note": "One case per Rust test of effect/inbound.rs (an_answer_only_a_sibling_trait_emits_is_an_error, control_a_handler_that_relays_the_siblings_answer_is_clean, control_a_sibling_emitting_another_event_is_clean) with the fired events (FIRED_HEARD) the std-orb-fired-events trait answers for each fixture, plus the other branches of validate_inbound's foreign check: the handler's own emit, a sibling that handles a hook answering the same event, two emitters in name order, and the relay forms of `relays` (a trait-sourced route, a wildcard route, an emitter-qualified event). Expected findings are the code, path, message and suggestion the Rust validator reports.",
+  "cases": [
+    {
+      "id": "an-answer-only-a-sibling-trait-emits-is-an-error",
+      "steps": [
+        {
+          "trait": "OrbLintInboundAnswerForeign",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "inbound": [
+                "cli-run"
+              ],
+              "orbitals": [
+                {
+                  "name": "RunOrbital",
+                  "entity": {
+                    "name": "Req",
+                    "collection": "reqs",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Cli",
+                      "linkedEntity": "Req",
+                      "emits": [
+                        {
+                          "event": "DONE"
+                        },
+                        {
+                          "event": "GO"
+                        }
+                      ],
+                      "listens": [],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "RUN",
+                            "inbound": {
+                              "name": "cli-run",
+                              "answers": "DONE"
+                            }
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "RUN",
+                            "effects": [
+                              [
+                                "emit",
+                                "GO",
+                                {}
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "Engine",
+                      "linkedEntity": "Req",
+                      "emits": [
+                        {
+                          "event": "DONE"
+                        }
+                      ],
+                      "listens": [
+                        {
+                          "event": "GO",
+                          "triggers": "GO",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "Cli"
+                          }
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "GO"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "emit",
+                                "DONE",
+                                {
+                                  "status": 200,
+                                  "body": "ok"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintInboundAnswerForeign",
+          "event": "FIRED_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "byControl": {
+              "Cli": [],
+              "Engine": []
+            },
+            "byEffect": {
+              "Cli": [
+                "GO"
+              ],
+              "Engine": [
+                "DONE"
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintInboundAnswerForeign",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "inbound-answer-foreign",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_INBOUND_ANSWER_FOREIGN",
+                      "path": "orbitals[0 (RunOrbital)].traits[0 (Cli)].stateMachine.events[0]",
+                      "message": "trait 'Engine' emits 'DONE', the answer of 'Cli''s inbound hook 'cli-run', but only 'Cli''s own emit answers the hook, so that emit never reaches the caller",
+                      "suggestion": "Relay it: in 'Cli' add `listens { Engine.DONE -> <RELAYED> }` and an arm on <RELAYED> that emits 'DONE' with the payload's status and body",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-handler-that-relays-the-siblings-answer-is-clean",
+      "steps": [
+        {
+          "trait": "OrbLintInboundAnswerForeign",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "inbound": [
+                "cli-run"
+              ],
+              "orbitals": [
+                {
+                  "name": "RunOrbital",
+                  "entity": {
+                    "name": "Req",
+                    "collection": "reqs",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Cli",
+                      "linkedEntity": "Req",
+                      "emits": [
+                        {
+                          "event": "DONE"
+                        },
+                        {
+                          "event": "GO"
+                        }
+                      ],
+                      "listens": [
+                        {
+                          "event": "DONE",
+                          "triggers": "RELAYED",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "Engine"
+                          }
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "RUN",
+                            "inbound": {
+                              "name": "cli-run",
+                              "answers": "DONE"
+                            }
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "RUN",
+                            "effects": [
+                              [
+                                "emit",
+                                "GO",
+                                {}
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "RELAYED",
+                            "effects": [
+                              [
+                                "emit",
+                                "DONE",
+                                {
+                                  "status": "@payload.status",
+                                  "body": "@payload.body"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "Engine",
+                      "linkedEntity": "Req",
+                      "emits": [
+                        {
+                          "event": "DONE"
+                        }
+                      ],
+                      "listens": [
+                        {
+                          "event": "GO",
+                          "triggers": "GO",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "Cli"
+                          }
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "GO"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "emit",
+                                "DONE",
+                                {
+                                  "status": 200,
+                                  "body": "ok"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintInboundAnswerForeign",
+          "event": "FIRED_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "byControl": {
+              "Cli": [],
+              "Engine": []
+            },
+            "byEffect": {
+              "Cli": [
+                "GO",
+                "DONE"
+              ],
+              "Engine": [
+                "DONE"
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintInboundAnswerForeign",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "inbound-answer-foreign",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-sibling-emitting-another-event-is-clean",
+      "steps": [
+        {
+          "trait": "OrbLintInboundAnswerForeign",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "inbound": [
+                "cli-run"
+              ],
+              "orbitals": [
+                {
+                  "name": "RunOrbital",
+                  "entity": {
+                    "name": "Req",
+                    "collection": "reqs",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Cli",
+                      "linkedEntity": "Req",
+                      "emits": [
+                        {
+                          "event": "DONE"
+                        },
+                        {
+                          "event": "GO"
+                        }
+                      ],
+                      "listens": [],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "RUN",
+                            "inbound": {
+                              "name": "cli-run",
+                              "answers": "DONE"
+                            }
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "RUN",
+                            "effects": [
+                              [
+                                "emit",
+                                "GO",
+                                {}
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "Engine",
+                      "linkedEntity": "Req",
+                      "emits": [
+                        {
+                          "event": "PROGRESS"
+                        }
+                      ],
+                      "listens": [
+                        {
+                          "event": "GO",
+                          "triggers": "GO",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "Cli"
+                          }
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "GO"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "emit",
+                                "PROGRESS",
+                                {
+                                  "status": 200,
+                                  "body": "ok"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintInboundAnswerForeign",
+          "event": "FIRED_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "byControl": {
+              "Cli": [],
+              "Engine": []
+            },
+            "byEffect": {
+              "Cli": [
+                "GO"
+              ],
+              "Engine": [
+                "PROGRESS"
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintInboundAnswerForeign",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "inbound-answer-foreign",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-the-handlers-own-emit-is-not-foreign",
+      "steps": [
+        {
+          "trait": "OrbLintInboundAnswerForeign",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "inbound": [
+                "cli-run"
+              ],
+              "orbitals": [
+                {
+                  "name": "RunOrbital",
+                  "entity": {
+                    "name": "Req",
+                    "collection": "reqs",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Cli",
+                      "linkedEntity": "Req",
+                      "emits": [
+                        {
+                          "event": "DONE"
+                        },
+                        {
+                          "event": "GO"
+                        }
+                      ],
+                      "listens": [
+                        {
+                          "event": "DONE",
+                          "triggers": "RELAYED",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "Engine"
+                          }
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "RUN",
+                            "inbound": {
+                              "name": "cli-run",
+                              "answers": "DONE"
+                            }
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "RUN",
+                            "effects": [
+                              [
+                                "emit",
+                                "GO",
+                                {}
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "RELAYED",
+                            "effects": [
+                              [
+                                "emit",
+                                "DONE",
+                                {
+                                  "status": "@payload.status",
+                                  "body": "@payload.body"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "Engine",
+                      "linkedEntity": "Req",
+                      "emits": [
+                        {
+                          "event": "PROGRESS"
+                        }
+                      ],
+                      "listens": [
+                        {
+                          "event": "GO",
+                          "triggers": "GO",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "Cli"
+                          }
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "GO"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "emit",
+                                "PROGRESS",
+                                {
+                                  "status": 200,
+                                  "body": "ok"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintInboundAnswerForeign",
+          "event": "FIRED_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "byControl": {
+              "Cli": [],
+              "Engine": []
+            },
+            "byEffect": {
+              "Cli": [
+                "GO",
+                "DONE"
+              ],
+              "Engine": [
+                "PROGRESS"
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintInboundAnswerForeign",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "inbound-answer-foreign",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-sibling-that-handles-a-hook-answering-the-same-event-answers-itself",
+      "steps": [
+        {
+          "trait": "OrbLintInboundAnswerForeign",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "inbound": [
+                "cli-run"
+              ],
+              "orbitals": [
+                {
+                  "name": "RunOrbital",
+                  "entity": {
+                    "name": "Req",
+                    "collection": "reqs",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Cli",
+                      "linkedEntity": "Req",
+                      "emits": [
+                        {
+                          "event": "DONE"
+                        },
+                        {
+                          "event": "GO"
+                        }
+                      ],
+                      "listens": [],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "RUN",
+                            "inbound": {
+                              "name": "cli-run",
+                              "answers": "DONE"
+                            }
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "RUN",
+                            "effects": [
+                              [
+                                "emit",
+                                "GO",
+                                {}
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "Engine",
+                      "linkedEntity": "Req",
+                      "emits": [
+                        {
+                          "event": "PROGRESS"
+                        }
+                      ],
+                      "listens": [
+                        {
+                          "event": "GO",
+                          "triggers": "GO",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "Cli"
+                          }
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "GO"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "emit",
+                                "PROGRESS",
+                                {
+                                  "status": 200,
+                                  "body": "ok"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "Other",
+                      "linkedEntity": "Req",
+                      "emits": [
+                        {
+                          "event": "DONE"
+                        }
+                      ],
+                      "listens": [],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "X",
+                            "inbound": {
+                              "name": "cli-other",
+                              "answers": "DONE"
+                            }
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "X",
+                            "effects": [
+                              [
+                                "emit",
+                                "DONE",
+                                {
+                                  "status": 200,
+                                  "body": "ok"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintInboundAnswerForeign",
+          "event": "FIRED_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "byControl": {
+              "Cli": [],
+              "Engine": [],
+              "Other": []
+            },
+            "byEffect": {
+              "Cli": [
+                "GO",
+                "DONE"
+              ],
+              "Engine": [
+                "PROGRESS"
+              ],
+              "Other": [
+                "DONE"
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintInboundAnswerForeign",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "inbound-answer-foreign",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "two-foreign-emitters-are-reported-once-each-in-name-order",
+      "steps": [
+        {
+          "trait": "OrbLintInboundAnswerForeign",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "inbound": [
+                "cli-run"
+              ],
+              "orbitals": [
+                {
+                  "name": "RunOrbital",
+                  "entity": {
+                    "name": "Req",
+                    "collection": "reqs",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Cli",
+                      "linkedEntity": "Req",
+                      "emits": [
+                        {
+                          "event": "DONE"
+                        },
+                        {
+                          "event": "GO"
+                        }
+                      ],
+                      "listens": [],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "RUN",
+                            "inbound": {
+                              "name": "cli-run",
+                              "answers": "DONE"
+                            }
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "RUN",
+                            "effects": [
+                              [
+                                "emit",
+                                "GO",
+                                {}
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "Engine",
+                      "linkedEntity": "Req",
+                      "emits": [
+                        {
+                          "event": "DONE"
+                        }
+                      ],
+                      "listens": [
+                        {
+                          "event": "GO",
+                          "triggers": "GO",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "Cli"
+                          }
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "GO"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "emit",
+                                "DONE",
+                                {
+                                  "status": 200,
+                                  "body": "ok"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "Zed",
+                      "linkedEntity": "Req",
+                      "emits": [
+                        {
+                          "event": "DONE"
+                        }
+                      ],
+                      "listens": [],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "Z",
+                            "effects": [
+                              [
+                                "emit",
+                                "DONE",
+                                {
+                                  "status": 200,
+                                  "body": "ok"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintInboundAnswerForeign",
+          "event": "FIRED_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "byControl": {
+              "Cli": [],
+              "Engine": [],
+              "Zed": []
+            },
+            "byEffect": {
+              "Cli": [
+                "GO"
+              ],
+              "Engine": [
+                "DONE"
+              ],
+              "Zed": [
+                "DONE"
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintInboundAnswerForeign",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "inbound-answer-foreign",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_INBOUND_ANSWER_FOREIGN",
+                      "path": "orbitals[0 (RunOrbital)].traits[0 (Cli)].stateMachine.events[0]",
+                      "message": "trait 'Engine' emits 'DONE', the answer of 'Cli''s inbound hook 'cli-run', but only 'Cli''s own emit answers the hook, so that emit never reaches the caller",
+                      "suggestion": "Relay it: in 'Cli' add `listens { Engine.DONE -> <RELAYED> }` and an arm on <RELAYED> that emits 'DONE' with the payload's status and body",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_INBOUND_ANSWER_FOREIGN",
+                      "path": "orbitals[0 (RunOrbital)].traits[0 (Cli)].stateMachine.events[0]",
+                      "message": "trait 'Zed' emits 'DONE', the answer of 'Cli''s inbound hook 'cli-run', but only 'Cli''s own emit answers the hook, so that emit never reaches the caller",
+                      "suggestion": "Relay it: in 'Cli' add `listens { Zed.DONE -> <RELAYED> }` and an arm on <RELAYED> that emits 'DONE' with the payload's status and body",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-relay-from-a-different-emitter-does-not-cover-this-one",
+      "steps": [
+        {
+          "trait": "OrbLintInboundAnswerForeign",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "inbound": [
+                "cli-run"
+              ],
+              "orbitals": [
+                {
+                  "name": "RunOrbital",
+                  "entity": {
+                    "name": "Req",
+                    "collection": "reqs",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Cli",
+                      "linkedEntity": "Req",
+                      "emits": [
+                        {
+                          "event": "DONE"
+                        },
+                        {
+                          "event": "GO"
+                        }
+                      ],
+                      "listens": [
+                        {
+                          "event": "DONE",
+                          "triggers": "RELAYED",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "Zed"
+                          }
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "RUN",
+                            "inbound": {
+                              "name": "cli-run",
+                              "answers": "DONE"
+                            }
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "RUN",
+                            "effects": [
+                              [
+                                "emit",
+                                "GO",
+                                {}
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "Engine",
+                      "linkedEntity": "Req",
+                      "emits": [
+                        {
+                          "event": "DONE"
+                        }
+                      ],
+                      "listens": [
+                        {
+                          "event": "GO",
+                          "triggers": "GO",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "Cli"
+                          }
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "GO"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "emit",
+                                "DONE",
+                                {
+                                  "status": 200,
+                                  "body": "ok"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "Zed",
+                      "linkedEntity": "Req",
+                      "emits": [
+                        {
+                          "event": "DONE"
+                        }
+                      ],
+                      "listens": [],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "Z",
+                            "effects": [
+                              [
+                                "emit",
+                                "DONE",
+                                {
+                                  "status": 200,
+                                  "body": "ok"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintInboundAnswerForeign",
+          "event": "FIRED_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "byControl": {
+              "Cli": [],
+              "Engine": [],
+              "Zed": []
+            },
+            "byEffect": {
+              "Cli": [
+                "GO"
+              ],
+              "Engine": [
+                "DONE"
+              ],
+              "Zed": [
+                "DONE"
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintInboundAnswerForeign",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "inbound-answer-foreign",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_INBOUND_ANSWER_FOREIGN",
+                      "path": "orbitals[0 (RunOrbital)].traits[0 (Cli)].stateMachine.events[0]",
+                      "message": "trait 'Engine' emits 'DONE', the answer of 'Cli''s inbound hook 'cli-run', but only 'Cli''s own emit answers the hook, so that emit never reaches the caller",
+                      "suggestion": "Relay it: in 'Cli' add `listens { Engine.DONE -> <RELAYED> }` and an arm on <RELAYED> that emits 'DONE' with the payload's status and body",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-wildcard-listen-on-the-answer-event-relays-it",
+      "steps": [
+        {
+          "trait": "OrbLintInboundAnswerForeign",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "inbound": [
+                "cli-run"
+              ],
+              "orbitals": [
+                {
+                  "name": "RunOrbital",
+                  "entity": {
+                    "name": "Req",
+                    "collection": "reqs",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Cli",
+                      "linkedEntity": "Req",
+                      "emits": [
+                        {
+                          "event": "DONE"
+                        },
+                        {
+                          "event": "GO"
+                        }
+                      ],
+                      "listens": [
+                        {
+                          "event": "DONE",
+                          "triggers": "RELAYED"
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "RUN",
+                            "inbound": {
+                              "name": "cli-run",
+                              "answers": "DONE"
+                            }
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "RUN",
+                            "effects": [
+                              [
+                                "emit",
+                                "GO",
+                                {}
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "Engine",
+                      "linkedEntity": "Req",
+                      "emits": [
+                        {
+                          "event": "DONE"
+                        }
+                      ],
+                      "listens": [
+                        {
+                          "event": "GO",
+                          "triggers": "GO",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "Cli"
+                          }
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "GO"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "emit",
+                                "DONE",
+                                {
+                                  "status": 200,
+                                  "body": "ok"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintInboundAnswerForeign",
+          "event": "FIRED_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "byControl": {
+              "Cli": [],
+              "Engine": []
+            },
+            "byEffect": {
+              "Cli": [
+                "GO"
+              ],
+              "Engine": [
+                "DONE"
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintInboundAnswerForeign",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "inbound-answer-foreign",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-emitter-qualified-listen-event-relays-it",
+      "steps": [
+        {
+          "trait": "OrbLintInboundAnswerForeign",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "inbound": [
+                "cli-run"
+              ],
+              "orbitals": [
+                {
+                  "name": "RunOrbital",
+                  "entity": {
+                    "name": "Req",
+                    "collection": "reqs",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Cli",
+                      "linkedEntity": "Req",
+                      "emits": [
+                        {
+                          "event": "DONE"
+                        },
+                        {
+                          "event": "GO"
+                        }
+                      ],
+                      "listens": [
+                        {
+                          "event": "Engine.DONE",
+                          "triggers": "RELAYED",
+                          "source": {
+                            "kind": "any"
+                          }
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "RUN",
+                            "inbound": {
+                              "name": "cli-run",
+                              "answers": "DONE"
+                            }
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "RUN",
+                            "effects": [
+                              [
+                                "emit",
+                                "GO",
+                                {}
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "Engine",
+                      "linkedEntity": "Req",
+                      "emits": [
+                        {
+                          "event": "DONE"
+                        }
+                      ],
+                      "listens": [
+                        {
+                          "event": "GO",
+                          "triggers": "GO",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "Cli"
+                          }
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "GO"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "emit",
+                                "DONE",
+                                {
+                                  "status": 200,
+                                  "body": "ok"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintInboundAnswerForeign",
+          "event": "FIRED_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "byControl": {
+              "Cli": [],
+              "Engine": []
+            },
+            "byEffect": {
+              "Cli": [
+                "GO"
+              ],
+              "Engine": [
+                "DONE"
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintInboundAnswerForeign",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "inbound-answer-foreign",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-relay-of-another-event-does-not-count",
+      "steps": [
+        {
+          "trait": "OrbLintInboundAnswerForeign",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "inbound": [
+                "cli-run"
+              ],
+              "orbitals": [
+                {
+                  "name": "RunOrbital",
+                  "entity": {
+                    "name": "Req",
+                    "collection": "reqs",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Cli",
+                      "linkedEntity": "Req",
+                      "emits": [
+                        {
+                          "event": "DONE"
+                        },
+                        {
+                          "event": "GO"
+                        }
+                      ],
+                      "listens": [
+                        {
+                          "event": "PROGRESS",
+                          "triggers": "RELAYED",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "Engine"
+                          }
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "RUN",
+                            "inbound": {
+                              "name": "cli-run",
+                              "answers": "DONE"
+                            }
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "RUN",
+                            "effects": [
+                              [
+                                "emit",
+                                "GO",
+                                {}
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "Engine",
+                      "linkedEntity": "Req",
+                      "emits": [
+                        {
+                          "event": "DONE"
+                        }
+                      ],
+                      "listens": [
+                        {
+                          "event": "GO",
+                          "triggers": "GO",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "Cli"
+                          }
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "GO"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "emit",
+                                "DONE",
+                                {
+                                  "status": 200,
+                                  "body": "ok"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintInboundAnswerForeign",
+          "event": "FIRED_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "byControl": {
+              "Cli": [],
+              "Engine": []
+            },
+            "byEffect": {
+              "Cli": [
+                "GO"
+              ],
+              "Engine": [
+                "DONE"
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintInboundAnswerForeign",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "inbound-answer-foreign",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_INBOUND_ANSWER_FOREIGN",
+                      "path": "orbitals[0 (RunOrbital)].traits[0 (Cli)].stateMachine.events[0]",
+                      "message": "trait 'Engine' emits 'DONE', the answer of 'Cli''s inbound hook 'cli-run', but only 'Cli''s own emit answers the hook, so that emit never reaches the caller",
+                      "suggestion": "Relay it: in 'Cli' add `listens { Engine.DONE -> <RELAYED> }` and an arm on <RELAYED> that emits 'DONE' with the payload's status and body",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an args body that does not parse is the usage error",
+      "steps": [
+        {
+          "trait": "OrbLintInboundAnswerForeignCli",
+          "from": "ready",
+          "event": "LINT_CALLED",
+          "payload": {
+            "rawBody": "not json"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb lint inbound-answer-foreign <file>"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

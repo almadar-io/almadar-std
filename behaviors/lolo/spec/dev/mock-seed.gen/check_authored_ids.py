@@ -60,7 +60,7 @@ with tempfile.TemporaryDirectory(prefix='seed-authored-ids-') as temporary:
         print('pass: guarded authored-ID predicate row=' + json.dumps(row), flush=True)
 
     fixture = directory / 'fixture.orb'
-    emitted = subprocess.run([orb, 'emit', 'orb', str(spec_dir / 'mock-seed-access.fixture.lolo'),
+    emitted = subprocess.run([orb, 'emit', 'orb', str(spec_dir / 'mock-seed-access-fixture.lolo'),
                               '--output', str(fixture)], capture_output=True, text=True)
     assert emitted.returncode == 0, emitted.stdout + emitted.stderr
     for index, row in enumerate(rows):

@@ -1,0 +1,1355 @@
+{
+  "atom": "cli/atoms/std-orb-lint-program-eval.lolo",
+  "trait": "OrbLintProgramEval",
+  "note": "One case per Rust test of effect/program_eval.rs (missing_failure_is_an_error, no_options_object_is_an_error, empty_failure_event_is_an_error, control_with_failure_is_clean) plus the validate_emit_config checks program/eval runs on its emit option (unknown key, invalid identifier, undeclared event, non-string name) and the effect-sequencing walk. Expected findings are the code, path, message and suggestion the Rust validator reports, in the order validate_program_eval produces them (the emit keys first, the missing failure last).",
+  "cases": [
+    {
+      "id": "missing-failure-is-an-error",
+      "steps": [
+        {
+          "trait": "OrbLintProgramEval",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "program/eval",
+                                "@entity.program",
+                                {
+                                  "emit": {
+                                    "success": "BUILT"
+                                  }
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "emits": [
+                        {
+                          "event": "BUILT"
+                        },
+                        {
+                          "event": "BUILD_FAILED"
+                        }
+                      ]
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintProgramEval",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "program-eval",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_PROGRAM_EVAL_FAILURE_MISSING",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "`program/eval` carries no `emit.failure` event — the validator's errors come back through it and would be dropped",
+                      "suggestion": "Add `{ emit: { success: \"<EVENT>\", failure: \"<FAILURE_EVENT>\" } }` as the last arg and handle the failure event in an arm.",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "no-options-object-is-an-error",
+      "steps": [
+        {
+          "trait": "OrbLintProgramEval",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "program/eval",
+                                "@entity.program"
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "emits": [
+                        {
+                          "event": "BUILT"
+                        },
+                        {
+                          "event": "BUILD_FAILED"
+                        }
+                      ]
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintProgramEval",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "program-eval",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_PROGRAM_EVAL_FAILURE_MISSING",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "`program/eval` carries no `emit.failure` event — the validator's errors come back through it and would be dropped",
+                      "suggestion": "Add `{ emit: { success: \"<EVENT>\", failure: \"<FAILURE_EVENT>\" } }` as the last arg and handle the failure event in an arm.",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "empty-failure-event-is-an-error",
+      "steps": [
+        {
+          "trait": "OrbLintProgramEval",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "program/eval",
+                                "@entity.program",
+                                {
+                                  "emit": {
+                                    "success": "BUILT",
+                                    "failure": ""
+                                  }
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "emits": [
+                        {
+                          "event": "BUILT"
+                        },
+                        {
+                          "event": "BUILD_FAILED"
+                        }
+                      ]
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintProgramEval",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "program-eval",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_EMIT_INVALID_NAME",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "emit.failure = '' is not a valid identifier",
+                      "suggestion": "Declare an `Event<T>` type alias and reference its name (e.g. 'PatientLoaded' or 'PATIENT_LOADED')",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_EFF_PROGRAM_EVAL_FAILURE_MISSING",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "`program/eval` carries no `emit.failure` event — the validator's errors come back through it and would be dropped",
+                      "suggestion": "Add `{ emit: { success: \"<EVENT>\", failure: \"<FAILURE_EVENT>\" } }` as the last arg and handle the failure event in an arm.",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-with-failure-is-clean",
+      "steps": [
+        {
+          "trait": "OrbLintProgramEval",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "program/eval",
+                                "@entity.program",
+                                {
+                                  "emit": {
+                                    "success": "BUILT",
+                                    "failure": "BUILD_FAILED"
+                                  }
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "emits": [
+                        {
+                          "event": "BUILT"
+                        },
+                        {
+                          "event": "BUILD_FAILED"
+                        }
+                      ]
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintProgramEval",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "program-eval",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-options-object-without-emit-has-no-failure",
+      "steps": [
+        {
+          "trait": "OrbLintProgramEval",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "program/eval",
+                                "@entity.program",
+                                {
+                                  "key": "k"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "emits": [
+                        {
+                          "event": "BUILT"
+                        },
+                        {
+                          "event": "BUILD_FAILED"
+                        }
+                      ]
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintProgramEval",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "program-eval",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_PROGRAM_EVAL_FAILURE_MISSING",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "`program/eval` carries no `emit.failure` event — the validator's errors come back through it and would be dropped",
+                      "suggestion": "Add `{ emit: { success: \"<EVENT>\", failure: \"<FAILURE_EVENT>\" } }` as the last arg and handle the failure event in an arm.",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-emit-key-other-than-success-and-failure",
+      "steps": [
+        {
+          "trait": "OrbLintProgramEval",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "program/eval",
+                                "@entity.program",
+                                {
+                                  "emit": {
+                                    "success": "BUILT",
+                                    "failure": "BUILD_FAILED",
+                                    "cancelled": "BUILT"
+                                  }
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "emits": [
+                        {
+                          "event": "BUILT"
+                        },
+                        {
+                          "event": "BUILD_FAILED"
+                        }
+                      ]
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintProgramEval",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "program-eval",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_EMIT_KEY_INVALID",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "emit.cancelled is not supported on this operator (allowed: success, failure)",
+                      "suggestion": "Remove the invalid key or use a different operator that supports it",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-event-that-is-not-an-identifier",
+      "steps": [
+        {
+          "trait": "OrbLintProgramEval",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "program/eval",
+                                "@entity.program",
+                                {
+                                  "emit": {
+                                    "success": "BAD-NAME",
+                                    "failure": "BUILD_FAILED"
+                                  }
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "emits": [
+                        {
+                          "event": "BUILT"
+                        },
+                        {
+                          "event": "BUILD_FAILED"
+                        }
+                      ]
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintProgramEval",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "program-eval",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_EMIT_INVALID_NAME",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "emit.success = 'BAD-NAME' is not a valid identifier",
+                      "suggestion": "Declare an `Event<T>` type alias and reference its name (e.g. 'PatientLoaded' or 'PATIENT_LOADED')",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-event-the-trait-does-not-declare",
+      "steps": [
+        {
+          "trait": "OrbLintProgramEval",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "program/eval",
+                                "@entity.program",
+                                {
+                                  "emit": {
+                                    "success": "BUILT",
+                                    "failure": "OTHER"
+                                  }
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "emits": [
+                        {
+                          "event": "BUILT"
+                        },
+                        {
+                          "event": "BUILD_FAILED"
+                        }
+                      ]
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintProgramEval",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "program-eval",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_EMIT_UNDECLARED_EVENT",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "emit.failure = 'OTHER' is not declared in the trait's emits array",
+                      "suggestion": "Declare the event in the trait's `emits` block with its payload shape",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-non-string-event-name",
+      "steps": [
+        {
+          "trait": "OrbLintProgramEval",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "program/eval",
+                                "@entity.program",
+                                {
+                                  "emit": {
+                                    "success": 5,
+                                    "failure": "BUILD_FAILED"
+                                  }
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "emits": [
+                        {
+                          "event": "BUILT"
+                        },
+                        {
+                          "event": "BUILD_FAILED"
+                        }
+                      ]
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintProgramEval",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "program-eval",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_EMIT_INVALID_NAME",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "emit.success must be a string event name",
+                      "suggestion": "e.g. emit.success = 'PATIENT_LOADED'",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "nested-in-if-and-do-reports-the-nested-path",
+      "steps": [
+        {
+          "trait": "OrbLintProgramEval",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "if",
+                                "@entity.id",
+                                [
+                                  "do",
+                                  [
+                                    "program/eval",
+                                    "@entity.program",
+                                    {
+                                      "emit": {
+                                        "success": "BUILT"
+                                      }
+                                    }
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "emits": [
+                        {
+                          "event": "BUILT"
+                        },
+                        {
+                          "event": "BUILD_FAILED"
+                        }
+                      ]
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintProgramEval",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "program-eval",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_PROGRAM_EVAL_FAILURE_MISSING",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0].then.do[0]",
+                      "message": "`program/eval` carries no `emit.failure` event — the validator's errors come back through it and would be dropped",
+                      "suggestion": "Add `{ emit: { success: \"<EVENT>\", failure: \"<FAILURE_EVENT>\" } }` as the last arg and handle the failure event in an arm.",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-tick-effect-is-checked",
+      "steps": [
+        {
+          "trait": "OrbLintProgramEval",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": []
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {
+                          "name": "t",
+                          "interval": 1000,
+                          "effects": [
+                            [
+                              "program/eval",
+                              "@entity.program",
+                              {
+                                "emit": {
+                                  "success": "BUILT"
+                                }
+                              }
+                            ]
+                          ]
+                        }
+                      ],
+                      "emits": [
+                        {
+                          "event": "BUILT"
+                        }
+                      ]
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintProgramEval",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "program-eval",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_PROGRAM_EVAL_FAILURE_MISSING",
+                      "path": "orbitals[0 (A)].traits[0 (T)].ticks[0].effects[0]",
+                      "message": "`program/eval` carries no `emit.failure` event — the validator's errors come back through it and would be dropped",
+                      "suggestion": "Add `{ emit: { success: \"<EVENT>\", failure: \"<FAILURE_EVENT>\" } }` as the last arg and handle the failure event in an arm.",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-another-operator-is-not-checked",
+      "steps": [
+        {
+          "trait": "OrbLintProgramEval",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "fetch",
+                                "E",
+                                {
+                                  "emit": {
+                                    "success": "BUILT"
+                                  }
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "emits": [
+                        {
+                          "event": "BUILT"
+                        },
+                        {
+                          "event": "BUILD_FAILED"
+                        }
+                      ]
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintProgramEval",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "program-eval",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an args body that does not parse is the usage error",
+      "steps": [
+        {
+          "trait": "OrbLintProgramEvalCli",
+          "from": "ready",
+          "event": "LINT_CALLED",
+          "payload": {
+            "rawBody": "not json"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb lint program-eval <file>"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

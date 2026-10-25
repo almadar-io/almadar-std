@@ -1,0 +1,314 @@
+app std-launchpad-programs [
+  version: "1.0.0",
+  exec: ["orb", "open"],
+  env: ["PATH", "HOME", "NODE_ENV", "AUTH_PROVIDER", "OIDC_ISSUER_URL", "OIDC_AUDIENCE", "FIREBASE_PROJECT_ID", "FIREBASE_SERVICE_ACCOUNT_PATH", "FIREBASE_AUTH_EMULATOR_HOST", "FIRESTORE_EMULATOR_HOST"],
+  description: "std-launchpad-programs — the programs the launchpad started and still holds. PROGRAM_LAUNCH { behavior, label, kind, verb, ported, open, mock } finds the behavior's file (behavior/resolve { path: true }) and starts `orb <verb> <file>` as a detached child of the orb command (os/spawn), `serve` for a route or http app and `run` for a boot or stdio program. A ported launch takes the first port from the portFrom knob to the portTo knob that no program in this atom's own running list holds (the entry is added, starting, before the child is spawned, so two launches never share a port) and adds `--port <port>`; none free answers PROGRAM_FAILED code no_free_port. The child's environment is the host variables the std-http-boot-gate declares (and PATH and HOME), plus ALMADAR_INTEGRATIONS_MODE=mock when mock is on and nothing for integrations when it is off, so std-http-boot-gate reads production. When open is on the browser is opened on the program's url with `open <url>` right after the spawn (the page may need a moment to listen; the url stays in the running list). Each child is watched with os/wait: the program leaves the list and PROGRAM_ENDED { id, code, signal } answers (code -1 when a signal ended it). PROGRAM_STOP { id } sends TERM; PROGRAM_OPEN { id } opens the url again. Every change answers PROGRAMS_CHANGED { running } with the whole list, and PROGRAMS_LIST asks for it. One launch is handled at a time: another arriving meanwhile answers PROGRAM_FAILED code busy. The child's streams are not kept: a program that dies at boot shows only its exit code.",
+  egress: []
+]
+;; @capabilities "start an orb program in the background, stop a running program, list running programs, open a program in the browser"
+
+type LaunchedProgram = {
+  id : string!
+  behavior : string!
+  label : string!
+  kind : string!
+  verb : string!
+  file : string!
+  port : number!
+  url : string!
+  pid : number!
+  mock : boolean!
+  status : "starting" | "running"!
+}
+type ProgramLocation = { path : string!, owner : string }
+
+orbital LaunchpadProgramsOrbital {
+  entity ProgramsRun [runtime] {
+    id : string!
+    running : [LaunchedProgram] = []
+    behavior : string = ""
+    label : string = ""
+    kind : string = ""
+    verb : string = ""
+    ported : boolean = false
+    open : boolean = false
+    route : string = ""
+    mock : boolean = false
+    launching : boolean = false
+    file : string = ""
+    port : number = 0
+  }
+
+  trait ProgramRunner -> ProgramsRun [optimistic] {
+    config {
+      portFrom : number = 3041
+        @label "First port"
+        @description "The lowest port a route app is given."
+        @tier "policy"
+      portTo : number = 3099
+        @label "Last port"
+        @description "The highest port a route app is given."
+        @tier "policy"
+      host : string = "127.0.0.1"
+        @label "Host"
+        @description "The host the opened url names; orb serve binds the same default."
+        @tier "policy"
+    }
+    initial: ready
+
+    state ready {
+      INIT -> ready
+        (set @entity.launching false)
+        (emit PROGRAMS_CHANGED { running: @entity.running })
+      PROGRAMS_LIST -> ready
+        (emit PROGRAMS_CHANGED { running: @entity.running })
+      PROGRAM_LAUNCH -> ready when @entity.launching
+        (emit PROGRAM_FAILED { behavior: ?behavior, code: "busy", error: "another program is being started" })
+      PROGRAM_LAUNCH -> ready when (not @entity.launching)
+        (set @entity.launching true)
+        (set @entity.behavior ?behavior)
+        (set @entity.label ?label)
+        (set @entity.kind ?kind)
+        (set @entity.verb ?verb)
+        (set @entity.ported ?ported)
+        (set @entity.open ?open)
+        (set @entity.route ?route)
+        (set @entity.mock ?mock)
+        (behavior/resolve { behavior: ?behavior } { path: true } { key: "where" emit: { success: PROGRAM_LOCATED, failure: PROGRAM_LOCATE_FAILED } })
+      PROGRAM_LOCATE_FAILED -> ready
+        (set @entity.launching false)
+        (emit PROGRAM_FAILED { behavior: @entity.behavior, code: "not_found", error: ?error })
+      PROGRAM_LOCATED -> ready when (and @entity.ported (= (array/find (array/range @config.portFrom (+ @config.portTo 1)) (fn p (not (array/some @entity.running (fn r (= @r.port @p)))))) null))
+        (set @entity.launching false)
+        (emit PROGRAM_FAILED { behavior: @entity.behavior, code: "no_free_port", error: (str/concat "every port from " @config.portFrom " to " @config.portTo " is held by a running program") })
+      PROGRAM_LOCATED -> ready when (or (not @entity.ported) (!= (array/find (array/range @config.portFrom (+ @config.portTo 1)) (fn p (not (array/some @entity.running (fn r (= @r.port @p)))))) null))
+        (set @entity.file ?result.path)
+        (set @entity.port (if @entity.ported (array/find (array/range @config.portFrom (+ @config.portTo 1)) (fn p (not (array/some @entity.running (fn r (= @r.port @p)))))) 0))
+        (set @entity.running (array/append @entity.running { id: @entity.behavior, behavior: @entity.behavior, label: @entity.label, kind: @entity.kind, verb: @entity.verb, file: @entity.file, port: @entity.port, url: (if (> @entity.port 0) (str/concat "http://" @config.host ":" @entity.port @entity.route) ""), pid: 0, mock: @entity.mock, status: "starting" }))
+        (emit PROGRAMS_CHANGED { running: @entity.running })
+        (emit PROGRAM_SPAWN_NOW { })
+      PROGRAM_SPAWN_NOW -> ready when @entity.mock
+        (os/spawn "orb" (array/concat [@entity.verb, @entity.file] (if (> @entity.port 0) ["--port", (str/concat @entity.port)] [])) { cwd: null env: { PATH: null, HOME: null, NODE_ENV: null, AUTH_PROVIDER: null, OIDC_ISSUER_URL: null, OIDC_AUDIENCE: null, FIREBASE_PROJECT_ID: null, FIREBASE_SERVICE_ACCOUNT_PATH: null, FIREBASE_AUTH_EMULATOR_HOST: null, FIRESTORE_EMULATOR_HOST: null, ALMADAR_INTEGRATIONS_MODE: "mock" } stdin: "null" stdout: "null" stderr: "null" detached: true } { key: "spawn" emit: { success: PROGRAM_SPAWNED, failure: PROGRAM_SPAWN_FAILED } })
+      PROGRAM_SPAWN_NOW -> ready when (not @entity.mock)
+        (os/spawn "orb" (array/concat [@entity.verb, @entity.file] (if (> @entity.port 0) ["--port", (str/concat @entity.port)] [])) { cwd: null env: { PATH: null, HOME: null, NODE_ENV: null, AUTH_PROVIDER: null, OIDC_ISSUER_URL: null, OIDC_AUDIENCE: null, FIREBASE_PROJECT_ID: null, FIREBASE_SERVICE_ACCOUNT_PATH: null, FIREBASE_AUTH_EMULATOR_HOST: null, FIRESTORE_EMULATOR_HOST: null } stdin: "null" stdout: "null" stderr: "null" detached: true } { key: "spawn" emit: { success: PROGRAM_SPAWNED, failure: PROGRAM_SPAWN_FAILED } })
+      PROGRAM_SPAWN_FAILED -> ready
+        (set @entity.launching false)
+        (set @entity.running (array/filter @entity.running (fn r (!= @r.id @entity.behavior))))
+        (emit PROGRAMS_CHANGED { running: @entity.running })
+        (emit PROGRAM_FAILED { behavior: @entity.behavior, code: "spawn_failed", error: ?error })
+      PROGRAM_SPAWNED -> ready when @entity.open
+        (set @entity.launching false)
+        (set @entity.running (array/map @entity.running (fn r (if (= @r.id @entity.behavior) (object/set (object/set @r "pid" ?pid) "status" "running") @r))))
+        (emit PROGRAMS_CHANGED { running: @entity.running })
+        (emit PROGRAM_STARTED { id: @entity.behavior, pid: ?pid, port: @entity.port })
+        (os/wait ?pid { key: @entity.behavior emit: { success: PROGRAM_EXITED, failure: PROGRAM_WAIT_FAILED } })
+        (os/spawn "open" [(str/concat "http://" @config.host ":" @entity.port @entity.route)] { cwd: null env: { PATH: null } stdin: "null" stdout: "null" stderr: "null" detached: false } { key: "opener" emit: { success: PROGRAM_OPENER_SPAWNED, failure: PROGRAM_OPENER_FAILED } })
+      PROGRAM_SPAWNED -> ready when (not @entity.open)
+        (set @entity.launching false)
+        (set @entity.running (array/map @entity.running (fn r (if (= @r.id @entity.behavior) (object/set (object/set @r "pid" ?pid) "status" "running") @r))))
+        (emit PROGRAMS_CHANGED { running: @entity.running })
+        (emit PROGRAM_STARTED { id: @entity.behavior, pid: ?pid, port: @entity.port })
+        (os/wait ?pid { key: @entity.behavior emit: { success: PROGRAM_EXITED, failure: PROGRAM_WAIT_FAILED } })
+      PROGRAM_STOP -> ready when (not (array/some @entity.running (fn r (= @r.id ?id))))
+        (emit PROGRAM_FAILED { behavior: ?id, code: "not_running", error: "no running program has this id" })
+      PROGRAM_STOP -> ready when (array/some @entity.running (fn r (= @r.id ?id)))
+        (os/kill (object/get (array/find @entity.running (fn r (= @r.id ?id))) "pid") "TERM" { key: ?id emit: { success: PROGRAM_STOPPED, failure: PROGRAM_STOP_FAILED } })
+      PROGRAM_STOPPED -> ready
+      PROGRAM_STOP_FAILED -> ready
+        (emit PROGRAM_FAILED { behavior: ?key, code: "stop_failed", error: ?error })
+      PROGRAM_OPEN -> ready when (not (array/some @entity.running (fn r (= @r.id ?id))))
+        (emit PROGRAM_FAILED { behavior: ?id, code: "not_running", error: "no running program has this id" })
+      PROGRAM_OPEN -> ready when (array/some @entity.running (fn r (= @r.id ?id)))
+        (os/spawn "open" [(object/get (array/find @entity.running (fn r (= @r.id ?id))) "url")] { cwd: null env: { PATH: null } stdin: "null" stdout: "null" stderr: "null" detached: false } { key: "opener" emit: { success: PROGRAM_OPENER_SPAWNED, failure: PROGRAM_OPENER_FAILED } })
+      PROGRAM_EXITED -> ready
+        (set @entity.running (array/filter @entity.running (fn r (!= @r.id ?key))))
+        (emit PROGRAMS_CHANGED { running: @entity.running })
+        (emit PROGRAM_ENDED { id: ?key, code: (if (== ?code null) -1 ?code), signal: (or ?signal 0) })
+      PROGRAM_WAIT_FAILED -> ready
+        (set @entity.running (array/filter @entity.running (fn r (!= @r.id ?key))))
+        (emit PROGRAMS_CHANGED { running: @entity.running })
+        (emit PROGRAM_FAILED { behavior: ?key, code: "wait_failed", error: ?error })
+      PROGRAM_OPENER_SPAWNED -> ready
+        (os/wait ?pid { key: "opener" emit: { success: PROGRAM_OPENER_EXITED, failure: PROGRAM_OPENER_FAILED } })
+      PROGRAM_OPENER_EXITED -> ready
+      PROGRAM_OPENER_FAILED -> ready
+        (emit PROGRAM_FAILED { behavior: "open", code: "open_failed", error: ?error })
+    }
+
+    emits {
+      PROGRAMS_CHANGED -> external {
+        running : [LaunchedProgram]!
+      }
+        @description "The programs the launchpad holds, after any change or when asked."
+        @tier "domain"
+      PROGRAM_STARTED -> external {
+        id : string!
+        pid : number!
+        port : number!
+      }
+        @description "A program's child was started."
+        @tier "domain"
+      PROGRAM_ENDED -> external {
+        id : string!
+        code : number!
+        signal : number!
+      }
+        @description "A program's child ended; its code is -1 when a signal ended it."
+        @tier "domain"
+      PROGRAM_FAILED -> external {
+        behavior : string!
+        code : string!
+        error : string!
+      }
+        @description "A launch, stop or open could not be done: busy, not_found, no_free_port, spawn_failed, wait_failed, stop_failed, open_failed or not_running."
+        @tier "domain"
+      PROGRAM_SPAWN_NOW { }
+        @description "Internal: start the child with the environment the mock switch picks."
+        @tier "internal"
+      PROGRAM_LOCATED {
+        result : ProgramLocation!
+      }
+        @description "Internal: behavior/resolve's success."
+        @tier "internal"
+      PROGRAM_LOCATE_FAILED {
+        error : string!
+      }
+        @description "Internal: behavior/resolve's failure."
+        @tier "internal"
+      PROGRAM_SPAWNED {
+        pid : number!
+      }
+        @description "Internal: os/spawn's success."
+        @tier "internal"
+      PROGRAM_SPAWN_FAILED {
+        error : string
+        kind : string
+      }
+        @description "Internal: os/spawn's failure."
+        @tier "internal"
+      PROGRAM_EXITED {
+        code : number
+        signal : number
+      }
+        @description "Internal: os/wait's completion."
+        @tier "internal"
+      PROGRAM_WAIT_FAILED {
+        error : string
+        kind : string
+      }
+        @description "Internal: os/wait's failure."
+        @tier "internal"
+      PROGRAM_STOPPED { }
+        @description "Internal: os/kill's success."
+        @tier "internal"
+      PROGRAM_STOP_FAILED {
+        error : string
+        kind : string
+      }
+        @description "Internal: os/kill's failure."
+        @tier "internal"
+      PROGRAM_OPENER_SPAWNED {
+        pid : number!
+      }
+        @description "Internal: os/spawn's success for the browser opener."
+        @tier "internal"
+      PROGRAM_OPENER_EXITED { }
+        @description "Internal: os/wait's completion for the browser opener."
+        @tier "internal"
+      PROGRAM_OPENER_FAILED {
+        error : string
+        kind : string
+      }
+        @description "Internal: os/spawn's or os/wait's failure for the browser opener."
+        @tier "internal"
+    }
+
+    listens {
+      PROGRAM_LAUNCH -> input {
+        behavior : string!
+        label : string!
+        kind : string!
+        verb : "serve" | "run"!
+        ported : boolean!
+        open : boolean!
+        route : string!
+        mock : boolean!
+      }
+        @description "Start a behavior as a background program."
+        @synonyms "run program, start app, serve app in the background"
+      PROGRAM_STOP -> input {
+        id : string!
+      }
+        @description "Stop a running program with TERM."
+        @synonyms "stop program, kill app"
+      PROGRAM_OPEN -> input {
+        id : string!
+      }
+        @description "Open a running program's url in the browser."
+        @synonyms "open program in browser"
+      PROGRAMS_LIST -> input {
+      }
+        @description "Answer the running list."
+      PROGRAM_SPAWN_NOW { }
+        @description "Self: start the child."
+      PROGRAM_LOCATED {
+        result : ProgramLocation!
+      }
+        @description "behavior/resolve's success."
+      PROGRAM_LOCATE_FAILED {
+        error : string!
+      }
+        @description "behavior/resolve's failure."
+      PROGRAM_SPAWNED {
+        pid : number!
+        key : string!
+      }
+        @description "os/spawn's success."
+      PROGRAM_SPAWN_FAILED {
+        error : string
+        kind : string
+        key : string!
+      }
+        @description "os/spawn's failure."
+      PROGRAM_EXITED {
+        code : number
+        signal : number
+        key : string!
+      }
+        @description "os/wait's completion for the program in key."
+      PROGRAM_WAIT_FAILED {
+        error : string
+        kind : string
+        key : string!
+      }
+        @description "os/wait's failure for the program in key."
+      PROGRAM_STOPPED {
+        key : string!
+      }
+        @description "os/kill's success."
+      PROGRAM_STOP_FAILED {
+        error : string
+        kind : string
+        key : string!
+      }
+        @description "os/kill's failure."
+      PROGRAM_OPENER_SPAWNED {
+        pid : number!
+        key : string!
+      }
+        @description "os/spawn's success for the browser opener."
+      PROGRAM_OPENER_EXITED {
+        key : string!
+      }
+        @description "os/wait's completion for the browser opener."
+      PROGRAM_OPENER_FAILED {
+        error : string
+        kind : string
+        key : string!
+      }
+        @description "os/spawn's or os/wait's failure for the browser opener."
+    }
+  }
+
+  page boot as LaunchpadProgramsOrbitalStart -> ProgramRunner
+}

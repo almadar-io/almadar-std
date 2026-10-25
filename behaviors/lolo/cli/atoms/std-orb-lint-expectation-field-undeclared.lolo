@@ -1,0 +1,171 @@
+app std-orb-lint-expectation-field-undeclared [
+  version: "1.0.0",
+  inbound: ["cli-lint-expectation-field-undeclared"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-expectation-field-undeclared — the `orb lint expectation-field-undeclared <file>` command, the port of the persist-payload arm of validate_expectations (composition/expectations.rs validate_persist_payload_self_consistency), code ORB_S_EXPECTATION_FIELD_UNDECLARED. In an orbital that declares `expects`, a top-level `persist create|update|upsert|delete <Entity> { payload }` effect of an authored trait (one with no sourceBehavior, in a transition or a tick) or a statically readable persist batch op writing to an `expects entity <Entity> { shape }` the orbital itself declares (a non-strict one; the first such entry decides) must keep its payload keys inside that shape; an existence-only expectation, a spec obligation and an entity with no expectation opt out. The program is the resolved program the lint input reads. Findings carry the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint expectation-field-undeclared: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-expectation-field-undeclared"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type LNode = string | number | boolean | [LNode?] | Map string LNode?
+type LNodes = [LNode?]
+type LStr = string
+type LObj = Map string LNode?
+type PdField = { name : string }
+type PdExpect = { kind : string, name : string, strict : boolean, shape : [PdField] }
+type PdTransition = { effects : [LNode?] }
+type PdMachine = { transitions : [PdTransition] }
+type PdTrait = { name : string, stateMachine : PdMachine, ticks : [PdTransition], sourceBehavior : LNode }
+type PdOrbital = { name : string, expects : [PdExpect], traits : [PdTrait] }
+type PdProgram = { orbitals : [PdOrbital] }
+
+orbital OrbLintExpectationFieldUndeclaredOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintExpectationFieldUndeclaredRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintExpectationFieldUndeclared -> OrbLintExpectationFieldUndeclaredRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((orbs (object/get @payload.program "orbitals" [])))
+ (array/flatten (array/map (array/range 0 (array/len @orbs)) (fn oi
+  (let ((o (array/nth @orbs @oi)))
+   (if (not (object/has @o "expects")) []
+    (let ((exps (object/get @o "expects" [])) (on (object/get @o "name" "")) (trs (object/get @o "traits" [])))
+     (array/flatten (array/map (array/range 0 (array/len @trs)) (fn j
+      (let ((t (array/nth @trs @j)))
+       (if (or (not (object/has @t "stateMachine")) (object/has @t "sourceBehavior")) []
+        (let ((base (str/concat "orbitals[" @oi " (" @on ")].traits[" @j " (" (object/get @t "name" "") ")]")) (trans (object/get (object/get @t "stateMachine") "transitions" [])) (ticks (object/get @t "ticks" [])))
+         (array/flatten (array/map (array/concat
+  (array/flatten (array/map (array/range 0 (array/len @trans)) (fn ti (array/map (array/range 0 (array/len (object/get (array/nth @trans @ti) "effects" []))) (fn ei { p: (str/concat @base ".stateMachine.transitions[" @ti "].effects[" @ei "]"), eff: (array/nth (object/get (array/nth @trans @ti) "effects" []) @ei) })))))
+  (array/flatten (array/map (array/range 0 (array/len @ticks)) (fn ti (array/map (array/range 0 (array/len (object/get (array/nth @ticks @ti) "effects" []))) (fn ei { p: (str/concat @base ".ticks[" @ti "].effects[" @ei "]"), eff: (array/nth (object/get (array/nth @ticks @ti) "effects" []) @ei) }))))))
+          (fn s (array/flatten (array/map (let ((eff (object/get @s "eff"))) (let ((l (or (json/parse (json/stringify @eff) LNodes) [])))
+  (if (or (< (array/len @l) 3) (!= (or (json/parse (json/stringify (if (> (array/len @l) 0) (array/nth @l 0) null)) LStr) "") "persist")) []
+    (let ((a1 (or (json/parse (json/stringify (if (> (array/len @l) 1) (array/nth @l 1) null)) LStr) "")))
+      (if (= @a1 "batch")
+        (array/filter (let ((ops (or (json/parse (json/stringify (if (> (array/len @l) 2) (array/nth @l 2) null)) LNodes) [])))(array/flatten (array/map (array/filter (array/map (if (= (array/len @ops) 0) []
+        (if (!= (json/parse (json/stringify (if (> (array/len @ops) 0) (array/nth @ops 0) null)) LStr) null)
+          (if (= (or (json/parse (json/stringify (if (> (array/len @ops) 0) (array/nth @ops 0) null)) LStr) "") "list") (array/drop @ops 1)
+            (if (and (= (or (json/parse (json/stringify (if (> (array/len @ops) 0) (array/nth @ops 0) null)) LStr) "") "array/map") (= (array/len @ops) 3))
+              (let ((fl (or (json/parse (json/stringify (array/nth @ops 2)) LNodes) []))) (if (and (> (array/len @fl) 2) (array/includes ["fn", "lambda"] (or (json/parse (json/stringify (if (> (array/len @fl) 0) (array/nth @fl 0) null)) LStr) ""))) [(array/last @fl)] []))
+              []))
+          @ops)) (fn el (or (json/parse (json/stringify @el) LNodes) []))) (fn tp (and (> (array/len @tp) 0) (array/includes ["create", "update", "delete"] (or (json/parse (json/stringify (if (> (array/len @tp) 0) (array/nth @tp 0) null)) LStr) "")))))
+        (fn tp (let ((a (or (json/parse (json/stringify (if (> (array/len @tp) 0) (array/nth @tp 0) null)) LStr) "")) (en (or (json/parse (json/stringify (if (> (array/len @tp) 1) (array/nth @tp 1) null)) LStr) "")))
+          (if (or (= @a "delete") (= @en "") (str/startsWith @en (str/concat (quote "@") ""))) []
+            (let ((dp (if (= @a "create") 2 3)))
+              [{ a: @a, e: @en, has: (> (array/len @tp) @dp), d: (json/parse (json/stringify (if (> (array/len @tp) @dp) (array/nth @tp @dp) null)) LObj) }]))))))) (fn w (!= (object/get @w "d") null)))
+        (let ((ei (if (array/includes ["create", "upsert", "update", "delete"] @a1) 2 1)))
+          (let ((en (or (json/parse (json/stringify (if (> (array/len @l) @ei) (array/nth @l @ei) null)) LStr) "")) (pd (json/parse (json/stringify (if (> (array/len @l) (+ @ei 1)) (array/nth @l (+ @ei 1)) null)) LObj)))
+            (if (or (= @en "") (= @pd null) (and (= (+ @ei 1) (- (array/len @l) 1)) (object/has @pd "emit"))) []
+              [{ e: @en, d: @pd }]))))))))
+           (fn tg (let ((own (array/find @exps (fn e (and (= (object/get @e "kind" "") "entity") (= (object/get @e "name" "") (object/get @tg "e")) (not (object/get @e "strict" false)))))))
+            (if (or (= @own null) (not (object/has @own "shape"))) []
+             (let ((names (array/map (object/get @own "shape" []) (fn f (object/get @f "name" "")))))
+              (array/flatten (array/map (object/keys (object/get @tg "d")) (fn key
+               (if (array/includes @names @key) []
+                [{ code: "ORB_S_EXPECTATION_FIELD_UNDECLARED", path: (object/get @s "p"), message: (str/concat "`" @on "` persists `" @key "` to `" (object/get @tg "e") "`, but its `expects entity " (object/get @tg "e") "` shape declares only: " (str/join (array/sort @names) ", ") ". The declaration is this orbital's own source of truth for the fields it touches."), suggestion: (str/concat "Add `" @key "` to the `expects entity " (object/get @tg "e") "` shape, or remove it from the persist payload."), severity: "error" }])))))))))))))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "expectation-field-undeclared", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PdProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+    }
+  }
+
+  trait OrbLintExpectationFieldUndeclaredCli -> OrbLintExpectationFieldUndeclaredRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint expectation-field-undeclared <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "expectation-field-undeclared") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint expectation-field-undeclared: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "expectation-field-undeclared") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint expectation-field-undeclared: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-expectation-field-undeclared" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint expectation-field-undeclared` with its arguments and working directory."
+        @synonyms "orb lint expectation-field-undeclared"
+      OrbLintExpectationFieldUndeclared.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintExpectationFieldUndeclaredCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintExpectationFieldUndeclaredOrbitalStart -> OrbLintExpectationFieldUndeclared, OrbLintExpectationFieldUndeclaredCli, OrbLintInput, Packs, Versions
+}

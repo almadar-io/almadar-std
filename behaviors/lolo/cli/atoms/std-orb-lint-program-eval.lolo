@@ -1,0 +1,178 @@
+app std-orb-lint-program-eval [
+  version: "1.0.0",
+  inbound: ["cli-lint-program-eval"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-program-eval — the `orb lint program-eval <file>` command, the port of validate_program_eval (effect/program_eval.rs). It lowers the file with program/read and walks the effects of every inline trait transition and tick, descending through do, if, when and let, and checks each `program/eval` call: its `emit` option may carry only success and failure (ORB_EFF_EMIT_KEY_INVALID), each value must be a string identifier (ORB_EFF_EMIT_INVALID_NAME) declared in the trait's emits (ORB_EFF_EMIT_UNDECLARED_EVENT), and a call with no non-empty `emit.failure` drops the validator's errors (ORB_EFF_PROGRAM_EVAL_FAILURE_MISSING), each with the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint program-eval: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-program-eval"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type PevVal = string | number | boolean | [PevVal?] | Map string PevVal?
+type PevLeaf = { p : string!, e : PevVal!, oi : number!, ti : number! }
+type PevOpts = { emit : Map string PevVal? }
+type PevLeaves = [PevLeaf]
+type PevEmit = { event : string }
+type PevTransition = { effects : [PevVal?] }
+type PevMachine = { transitions : [PevTransition] }
+type PevTick = { effects : [PevVal?] }
+type PevTrait = { name : string, stateMachine : PevMachine, ticks : [PevTick], emits : [PevEmit] }
+type PevOrbital = { name : string, traits : [PevTrait] }
+type PevProgram = { orbitals : [PevOrbital] }
+
+orbital OrbLintProgramEvalOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintProgramEvalRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintProgramEval -> OrbLintProgramEvalRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
+          (let ((ls (json/parse (json/stringify (array/flatten (array/map (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+      (let ((o (array/nth @orbitals @oi)))
+        (array/flatten (array/map (array/range 0 (array/len (object/get @o "traits" []))) (fn ti
+          (let ((td (array/nth (object/get @o "traits" []) @ti)))
+            (if (not (object/has @td "stateMachine")) []
+              (let ((tp (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @td "name" "") ")]")) (trs (object/get (object/get @td "stateMachine" {}) "transitions" [])) (tks (object/get @td "ticks" [])))
+                (array/concat
+                  (array/flatten (array/map (array/range 0 (array/len @trs)) (fn tj
+                    (let ((efs (object/get (array/nth @trs @tj) "effects" [])))
+                      (array/map (array/range 0 (array/len @efs)) (fn ej { p: (str/concat @tp ".stateMachine.transitions[" @tj "].effects[" @ej "]"), e: (array/nth @efs @ej), oi: @oi, ti: @ti }))))))
+                  (array/flatten (array/map (array/range 0 (array/len @tks)) (fn kj
+                    (let ((efs (object/get (array/nth @tks @kj) "effects" [])))
+                      (array/map (array/range 0 (array/len @efs)) (fn ej { p: (str/concat @tp ".ticks[" @kj "].effects[" @ej "]"), e: (array/nth @efs @ej), oi: @oi, ti: @ti }))))))))))))))))) (fn x
+      (if (not (and (validate/array (object/get @x "e")) (> (array/len (object/get @x "e")) 0) (validate/string (array/nth (object/get @x "e") 0)) (array/includes ["do", "if", "when", "let"] (array/nth (object/get @x "e") 0)))) [@x]
+        (array/reduce (array/range 0 (str/len (json/stringify (object/get @x "e")))) [@x]
+          (fn (wl i) (array/flatten (array/map @wl (fn it (if (and (validate/array (object/get @it "e")) (> (array/len (object/get @it "e")) 0) (validate/string (array/nth (object/get @it "e") 0)) (array/includes ["do", "if", "when", "let"] (array/nth (object/get @it "e") 0))) (array/flatten (array/map (if (= (array/nth (object/get @it "e") 0) "do")
+      (array/map (array/range 1 (array/len (object/get @it "e"))) (fn i { cp: (str/concat (object/get @it "p") ".do[" (- @i 1) "]"), x: (array/nth (object/get @it "e") @i) }))
+      (if (= (array/nth (object/get @it "e") 0) "if")
+        (array/concat (if (> (array/len (object/get @it "e")) 2) [{ cp: (str/concat (object/get @it "p") ".then"), x: (array/nth (object/get @it "e") 2) }] []) (if (> (array/len (object/get @it "e")) 3) [{ cp: (str/concat (object/get @it "p") ".else"), x: (array/nth (object/get @it "e") 3) }] []))
+        (if (= (array/nth (object/get @it "e") 0) "when")
+          (array/map (array/range 2 (array/len (object/get @it "e"))) (fn i { cp: (str/concat (object/get @it "p") ".then[" (- @i 2) "]"), x: (array/nth (object/get @it "e") @i) }))
+          (array/map (array/range 2 (array/len (object/get @it "e"))) (fn i { cp: (str/concat (object/get @it "p") ".body[" (- @i 2) "]"), x: (array/nth (object/get @it "e") @i) }))))) (fn pc
+        (let ((x (object/get @pc "x")) (cp (object/get @pc "cp")))
+          (if (and (validate/array @x) (> (array/len @x) 0) (validate/array (array/nth @x 0)))
+            (array/map (array/range 0 (array/len @x)) (fn k { p: (str/concat @cp "[" @k "]"), e: (array/nth @x @k), oi: (object/get @it "oi"), ti: (object/get @it "ti") }))
+            [{ p: @cp, e: @x, oi: (object/get @it "oi"), ti: (object/get @it "ti") }]))))) [@it])))))))))) ) PevLeaves)))
+          (if (= @ls null) [{ code: "LINT_NODE_UNCHECKED", path: "", message: (str/concat @payload.file ": the effects could not be read as effect expressions; this rule could not check them"), suggestion: "", severity: "error" }]
+          (array/flatten (array/map @ls (fn l
+            (let ((e (object/get @l "e")) (p (object/get @l "p")))
+              (if (not (and (validate/array @e) (> (array/len @e) 0) (= (array/nth @e 0) "program/eval"))) []
+                (let ((declared (array/map (object/get (array/nth (object/get (array/nth @orbitals (object/get @l "oi")) "traits" []) (object/get @l "ti")) "emits" []) (fn d (object/get @d "event" ""))))
+                      (opts (array/filter (array/map (array/filter (array/drop @e 1) (fn a (validate/object @a))) (fn a (json/parse (json/stringify @a) PevOpts))) (fn o (and (!= @o null) (object/has @o "emit"))))))
+                  (let ((emitobjs (array/map @opts (fn a (object/get @a "emit")))))
+                    (array/concat
+                      (array/flatten (array/map @emitobjs (fn eo
+                        (array/flatten (array/map (object/keys @eo) (fn k
+                          (let ((v (object/get @eo @k)))
+                            (if (not (array/includes ["success", "failure"] @k)) [{ code: "ORB_EFF_EMIT_KEY_INVALID", path: @p, message: (str/concat "emit." @k " is not supported on this operator (allowed: success, failure)"), suggestion: "Remove the invalid key or use a different operator that supports it", severity: "error" }]
+                              (if (validate/string @v)
+                                (if (not (validate/pattern @v "^[A-Za-z][A-Za-z0-9_]*$")) [{ code: "ORB_EFF_EMIT_INVALID_NAME", path: @p, message: (str/concat "emit." @k " = '" @v "' is not a valid identifier"), suggestion: "Declare an `Event<T>` type alias and reference its name (e.g. 'PatientLoaded' or 'PATIENT_LOADED')", severity: "error" }]
+                                  (if (array/includes @declared @v) [] [{ code: "ORB_EFF_EMIT_UNDECLARED_EVENT", path: @p, message: (str/concat "emit." @k " = '" @v "' is not declared in the trait's emits array"), suggestion: "Declare the event in the trait's `emits` block with its payload shape", severity: "error" }]))
+                                [{ code: "ORB_EFF_EMIT_INVALID_NAME", path: @p, message: (str/concat "emit." @k " must be a string event name"), suggestion: "e.g. emit.success = 'PATIENT_LOADED'", severity: "error" }])))))))))
+                      (if (array/some @emitobjs (fn eo (let ((fv (object/get @eo "failure" null))) (and (validate/string @fv) (!= @fv ""))))) [] [{ code: "ORB_EFF_PROGRAM_EVAL_FAILURE_MISSING", path: @p, message: "`program/eval` carries no `emit.failure` event — the validator's errors come back through it and would be dropped", suggestion: "Add `{ emit: { success: \"<EVENT>\", failure: \"<FAILURE_EVENT>\" } }` as the last arg and handle the failure event in an arm.", severity: "error" }])))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "program-eval", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PevProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+    }
+  }
+
+  trait OrbLintProgramEvalCli -> OrbLintProgramEvalRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint program-eval <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "program-eval") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint program-eval: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "program-eval") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint program-eval: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-program-eval" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint program-eval` with its arguments and working directory."
+        @synonyms "orb lint program-eval"
+      OrbLintProgramEval.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintProgramEvalCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintProgramEvalOrbitalStart -> OrbLintProgramEval, OrbLintProgramEvalCli, OrbLintInput, Packs, Versions
+}

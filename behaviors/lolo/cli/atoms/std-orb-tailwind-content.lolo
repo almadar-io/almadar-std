@@ -1,0 +1,230 @@
+app std-orb-tailwind-content [
+  version: "1.0.0",
+  inbound: ["cli-tailwind-content"],
+  fs: { cwd: "**": [read, write], "/**": [read, write] },
+  description: "std-orb-tailwind-content — the `orb tailwind-content [--out <file>] [--check] [<registry folder>…]` command, the generator of the prebuilt web client's Tailwind content list (one class token per line, sorted, a trailing newline). It lists the behaviors under the registry folders (behavior/catalog, no vectors; none given means the defaultScope knob), walks every behavior value for each record carrying a className, reads that className's string leaves again so a conditional className (an if form) is covered too, splits them on whitespace, and drops the empty tokens, the tokens holding `@` (a binding) and the strings that head a list (an operator name). The extraTokens knob adds the classes a renderer composes itself and that never appear as a literal. The sorted unique tokens are written to --out (default: the defaultOut knob, relative to the working directory) and the answer is `<N> tokens written to <path>`. With --check nothing is written: the file is read and compared, and any difference answers status 500 with the missing and extra tokens. A usage error answers status 400 (exit 2); a failed catalog, read or write answers status 500 (exit 1)."
+]
+uses Spec from "almadar-std/orb-tailwind-content"
+uses Args from "std/behaviors/std-args"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
+type TailwindHit = { value : behavior! }
+type TailwindDoc = string | number | boolean | [TailwindDoc?] | Map string TailwindDoc?
+type TailwindNodes = [TailwindDoc?]
+
+orbital OrbTailwindContentOrbital {
+  uses Args from "std/behaviors/std-args"
+
+  entity TailwindContentRun [runtime] {
+    id : string!
+    out : string = ""
+    check : boolean = false
+    tokens : [string] = []
+    hits : [behavior] = []
+    cursor : number = 0
+    acc : [string] = []
+    missing : [string] = []
+    extra : [string] = []
+  }
+
+  trait ArgsCli = Args.traits.ArgsParser {
+    listens {
+      OrbTailwindContent.TAILWIND_ARGS_PARSE -> ARGS_PARSE
+    }
+  }
+
+  trait OrbTailwindContent -> TailwindContentRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      TAILWIND_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit TAILWIND_ANSWERED { status: 400, body: "usage: orb tailwind-content [--out <file>] [--check] [<registry folder>…]" })
+      TAILWIND_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit TAILWIND_ARGS_PARSE { stage: "tailwind-content" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "out" aliases: [] takesValue: true repeatable: false }, { name: "check" aliases: [] takesValue: false repeatable: false }] })
+    }
+
+    state parsing {
+      INIT -> parsing
+      TAILWIND_ARGS_DONE -> ready when (> (array/len @payload.errors) 0)
+        (emit TAILWIND_ANSWERED { status: 400, body: "usage: orb tailwind-content [--out <file>] [--check] [<registry folder>…]" })
+      TAILWIND_ARGS_DONE -> working when (= (array/len @payload.errors) 0)
+        (set @entity.out (or (array/first (or (object/get @payload.flags "out") [])) @config.defaultOut))
+        (set @entity.check (!= (object/get @payload.flags "check") null))
+        (behavior/catalog { paths: (if (> (array/len @payload.positionals) 0) @payload.positionals @config.defaultScope), exposure: [] } {
+          vectors: false
+          emit: { success: TAILWIND_LISTED, failure: TAILWIND_CATALOG_FAILED }
+        })
+    }
+
+    state working {
+      INIT -> working
+      TAILWIND_CATALOG_FAILED -> ready
+        (emit TAILWIND_ANSWERED { status: 500, body: (str/concat "Error: could not list the behaviors: " @payload.error) })
+      TAILWIND_LISTED -> working
+        (set @entity.hits (array/map @payload.result (fn h (object/get @h "value"))))
+        (set @entity.cursor 0)
+        (set @entity.acc [])
+        (emit TAILWIND_NEXT { })
+      TAILWIND_NEXT -> working when (< @entity.cursor (array/len @entity.hits))
+        (behavior/source (array/nth @entity.hits @entity.cursor) { key: "source" emit: { success: TAILWIND_SOURCED, failure: TAILWIND_SOURCE_FAILED } })
+      TAILWIND_NEXT -> working when (>= @entity.cursor (array/len @entity.hits))
+        (set @entity.tokens (array/sort (array/unique (array/concat @config.extraTokens @entity.acc))))
+        (emit TAILWIND_BUILT { })
+      TAILWIND_SOURCE_FAILED -> ready
+        (emit TAILWIND_ANSWERED { status: 500, body: (str/concat "Error: could not read behavior " (+ @entity.cursor 1) " of " (array/len @entity.hits) ": " @payload.error) })
+      TAILWIND_SOURCED -> working
+        (set @entity.acc (array/concat @entity.acc
+          (let ((nodes (or (json/parse (json/stringify (json/nodes [@payload.result])) TailwindNodes) [])))
+            (array/filter
+              (array/flatten (array/map @nodes (fn n
+                (if (validate/object @n)
+                  (let ((cn : TailwindDoc? (object/get @n "className" null)))
+                    (if (not (or (validate/string @cn) (validate/array @cn)))
+                      []
+                      (let ((ns (or (json/parse (json/stringify (json/nodes @cn)) TailwindNodes) [])))
+                        (let ((heads (array/flatten (array/map @ns (fn m (if (validate/array @m) (if (> (array/len @m) 0) (let ((h : TailwindDoc? (array/first @m))) (if (validate/string @h) [@h] [])) []) []))))))
+                          (array/flatten (array/map @ns (fn m (if (validate/string @m) (if (array/includes @heads @m) [] (str/split (str/trim (str/replace-pattern @m "\\s+" " ")) " ")) []))))))))
+                  []))))
+              (fn t (and (!= @t "") (not (str/includes @t (quote "@")))))))))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit TAILWIND_NEXT { })
+      TAILWIND_BUILT -> writing when (and (not @entity.check) (not (os/path-is-absolute @entity.out)))
+        (os/write-file { anchor: "cwd" path: @entity.out } (bytes/from-string (str/concat (str/join @entity.tokens "\n") "\n")) { key: "tailwind" emit: { success: TAILWIND_WRITTEN, failure: TAILWIND_WRITE_FAILED } })
+      TAILWIND_BUILT -> writing when (and (not @entity.check) (os/path-is-absolute @entity.out))
+        (os/write-file (str/concat "/" (str/slice @entity.out 1 (str/len @entity.out))) (bytes/from-string (str/concat (str/join @entity.tokens "\n") "\n")) { key: "tailwind" emit: { success: TAILWIND_WRITTEN, failure: TAILWIND_WRITE_FAILED } })
+      TAILWIND_BUILT -> checking when (and @entity.check (not (os/path-is-absolute @entity.out)))
+        (os/read-file { anchor: "cwd" path: @entity.out } { key: "tailwind" emit: { success: TAILWIND_READ, failure: TAILWIND_READ_FAILED } })
+      TAILWIND_BUILT -> checking when (and @entity.check (os/path-is-absolute @entity.out))
+        (os/read-file (str/concat "/" (str/slice @entity.out 1 (str/len @entity.out))) { key: "tailwind" emit: { success: TAILWIND_READ, failure: TAILWIND_READ_FAILED } })
+    }
+
+    state checking {
+      INIT -> checking
+      TAILWIND_READ_FAILED -> ready
+        (emit TAILWIND_ANSWERED { status: 500, body: (str/concat "Error: could not read " @entity.out ": " @payload.error) })
+      TAILWIND_READ -> ready
+        (set @entity.missing (let ((have (str/split (or (bytes/to-string @payload.data) "") "\n"))) (array/filter @entity.tokens (fn t (not (array/includes @have @t))))))
+        (set @entity.extra (let ((have (str/split (or (bytes/to-string @payload.data) "") "\n"))) (array/filter @have (fn t (and (!= @t "") (not (array/includes @entity.tokens @t)))))))
+        (emit TAILWIND_ANSWERED { status: (if (and (= (array/len @entity.missing) 0) (= (array/len @entity.extra) 0)) 200 500), body: (if (and (= (array/len @entity.missing) 0) (= (array/len @entity.extra) 0)) (str/concat "tailwind-content: " @entity.out " is up to date (" (array/len @entity.tokens) " tokens)") (str/concat "tailwind-content: " @entity.out " is stale; run `orb tailwind-content`\nmissing (" (array/len @entity.missing) "):\n" (str/join @entity.missing "\n") "\nextra (" (array/len @entity.extra) "):\n" (str/join @entity.extra "\n"))) })
+    }
+
+    state writing {
+      INIT -> writing
+      TAILWIND_WRITE_FAILED -> ready
+        (emit TAILWIND_ANSWERED { status: 500, body: (str/concat "Error: could not write " @entity.out ": " @payload.error) })
+      TAILWIND_WRITTEN -> ready
+        (emit TAILWIND_ANSWERED { status: 200, body: (str/concat (array/len @entity.tokens) " tokens written to " @entity.out) })
+    }
+
+    emits {
+      TAILWIND_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      TAILWIND_ARGS_PARSE {
+        stage : string!
+        argv : [string]!
+        flags : [ArgFlag]!
+      }
+        @description "Internal: parse the call's words."
+        @tier "internal"
+      TAILWIND_NEXT { }
+        @description "Internal: read the next behavior's program."
+        @tier "internal"
+      TAILWIND_SOURCED {
+        result : SExpr!
+      }
+        @description "Internal: behavior/source's success."
+        @tier "internal"
+      TAILWIND_SOURCE_FAILED {
+        error : string!
+      }
+        @description "Internal: behavior/source's failure."
+        @tier "internal"
+      TAILWIND_BUILT { }
+        @description "Internal: the token list is built; write it or check it."
+        @tier "internal"
+      TAILWIND_READ_FAILED { error : string!  kind : string }
+        @description "Internal: os/read-file's failure."
+        @tier "internal"
+      TAILWIND_READ { data : bytes! }
+        @description "Internal: os/read-file's success."
+        @tier "internal"
+      TAILWIND_WRITTEN { bytes : number }
+        @description "Internal: os/write-file's success."
+        @tier "internal"
+      TAILWIND_WRITE_FAILED { error : string!  kind : string }
+        @description "Internal: os/write-file's failure."
+        @tier "internal"
+    }
+
+    listens {
+      TAILWIND_CALLED -> inbound "cli-tailwind-content" answers TAILWIND_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb tailwind-content`."
+        @synonyms "orb tailwind-content, regenerate the tailwind content list, class token list for the web client"
+      TAILWIND_ARGS_DONE {
+        stage : string!
+        flags : Map string [string]!
+        positionals : [string]!
+        errors : [string]!
+        words : [string]!
+      }
+        @description "std-args's ARGS_PARSED."
+      ArgsCli.ARGS_PARSED -> TAILWIND_ARGS_DONE
+      TAILWIND_LISTED {
+        result : [TailwindHit]!
+      }
+        @description "behavior/catalog's success."
+      TAILWIND_CATALOG_FAILED {
+        error : string!
+      }
+        @description "behavior/catalog's failure."
+      TAILWIND_NEXT { }
+        @description "Self: read the next behavior's program."
+      TAILWIND_SOURCED {
+        result : SExpr!
+      }
+        @description "behavior/source's success."
+      TAILWIND_SOURCE_FAILED {
+        error : string!
+      }
+        @description "behavior/source's failure."
+      TAILWIND_BUILT { }
+        @description "Self: the token list is built."
+      TAILWIND_READ { data : bytes! }
+        @description "os/read-file's success: the list on disk."
+      TAILWIND_READ_FAILED {
+        error : string!
+        kind : string
+      }
+        @description "os/read-file's failure."
+      TAILWIND_WRITTEN { bytes : number }
+        @description "os/write-file's success."
+      TAILWIND_WRITE_FAILED {
+        error : string!
+        kind : string
+      }
+        @description "os/write-file's failure."
+    }
+
+    config {
+      defaultOut : string = "orbital-rust/crates/orbital-shell-typescript/templates/almadar-shell/packages/client/tailwind-content.txt"
+        @label "Default output file"
+        @description "Where the list is written, relative to the working directory, when --out is not given."
+      defaultScope : [string] = ["almadar-std", "almadar-behaviors"]
+        @label "Default registries"
+        @description "The registry folders whose behaviors are scanned when none is given."
+      extraTokens : [string] = []
+        @label "Renderer-composed classes"
+        @description "Class tokens a renderer composes itself, which never appear as a literal className in a program."
+    }
+  }
+
+  page boot as OrbTailwindContentOrbitalStart -> OrbTailwindContent, ArgsCli
+}

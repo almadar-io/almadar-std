@@ -1,0 +1,162 @@
+app std-orb-lint-listen-source-unresolved [
+  version: "1.0.0",
+  inbound: ["cli-lint-listen-source-unresolved"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-listen-source-unresolved — the `orb lint listen-source-unresolved <file>` command, the port of validate_listens_integrity (circuit/cross_orbital/listens.rs, ORB_X_LISTEN_SOURCE_UNRESOLVED). A `listens` entry sourced at a trait (the listener's own orbital) or at an orbital's trait must name an event the source trait declares in `emits` or produces: the events std-orb-produced-events finds produced by its effect trees (an emit map slot of an operator call, a rendered pattern's event prop or event-list field). A source orbital that is not in the program is out of scope and skipped. An unresolved entry is reported once per entry at orbitals.<Orbital>.traits.<Trait>.listens; a bare `Trait.EVENT` source whose trait declares the event in a sibling orbital names that orbital's qualified form in the suggestion (the first such orbital in program order). Reports ORB_X_LISTEN_SOURCE_UNRESOLVED (status 500, exit 1). Clean answers `lint listen-source-unresolved: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-listen-source-unresolved"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type FiredNode = string | number | boolean | [FiredNode?] | Map string FiredNode?
+type FiredField = { default : FiredNode? }
+type FiredTransition = { event : string, guard : FiredNode?, effects : [FiredNode?] }
+type FiredTick = { guard : FiredNode?, effects : [FiredNode?] }
+type FiredMachine = { transitions : [FiredTransition] }
+type FiredTrait = { name : string, stateMachine : FiredMachine, ticks : [FiredTick], config : Map string FiredField? }
+type FiredOrbital = { traits : [FiredTrait] }
+type FiredProgram = { orbitals : [FiredOrbital] }
+type PatternEventProp = { pattern : string!, prop : string!, field : string! }
+type LsuSource = { kind : string, trait : string, orbital : string }
+type LsuListen = { event : string, source : LsuSource }
+type LsuEmit = { event : string }
+type LsuTrait = { name : string, emits : [LsuEmit], listens : [LsuListen], stateMachine : FiredMachine }
+type LsuOrbital = { name : string, traits : [LsuTrait] }
+type LsuProgram = { orbitals : [LsuOrbital] }
+
+orbital OrbLintListenSourceUnresolvedOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+  uses Produced from "std/behaviors/std-orb-produced-events"
+
+  entity OrbLintListenSourceUnresolvedRun [runtime] {
+    id : string!
+    scope : string = ""
+    program : LsuProgram = {}
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintListenSourceUnresolved -> OrbLintListenSourceUnresolvedRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.program @payload.program)
+      PRODUCED_HEARD -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((nos : [string] [])) (let ((notd : [LsuTrait] [])) (let ((noem : [LsuEmit] [])) (let ((nofind : [OrbFinding] [])) (let ((nolis : [LsuListen] [])) (let ((orbitals (object/get @entity.program "orbitals" []))) (let ((bc @payload.byControl)) (let ((be @payload.byEffect)) (array/flatten (array/map @orbitals (fn o (array/flatten (array/map (array/filter (object/get @o "traits" @notd) (fn tt (object/has @tt "stateMachine"))) (fn td (array/flatten (array/map (array/filter (object/get @td "listens" @nolis) (fn ll (or (= (object/get (object/get @ll "source" {}) "kind" "") "trait") (= (object/get (object/get @ll "source" {}) "kind" "") "orbital")))) (fn l (let ((sorb (if (= (object/get (object/get @l "source" {}) "kind" "") "trait") (object/get @o "name" "") (object/get (object/get @l "source" {}) "orbital" "")))) (let ((strait (object/get (object/get @l "source" {}) "trait" ""))) (let ((ev (object/get @l "event" ""))) (if (not (array/some @orbitals (fn so (= (object/get @so "name" "") @sorb)))) @nofind (if (array/includes (array/flatten (array/map (array/filter @orbitals (fn eo (= (object/get @eo "name" "") @sorb))) (fn eo2 (array/flatten (array/map (array/filter (object/get @eo2 "traits" @notd) (fn et (and (object/has @et "stateMachine") (= (object/get @et "name" "") @strait)))) (fn et2 (array/concat (array/map (object/get @et2 "emits" @noem) (fn ee (object/get @ee "event" ""))) (array/concat (object/get @bc (object/get @et2 "name" "") @nos) (object/get @be (object/get @et2 "name" "") @nos))))))))) @ev) @nofind (let ((sib (array/first (array/flatten (array/map (array/filter @orbitals (fn o3 (!= (object/get @o3 "name" "") @sorb))) (fn o4 (array/map (array/filter (object/get @o4 "traits" @notd) (fn t4 (and (object/has @t4 "stateMachine") (= (object/get @t4 "name" "") @strait) (array/includes (array/concat (array/map (object/get @t4 "emits" @noem) (fn ee (object/get @ee "event" ""))) (array/concat (object/get @bc (object/get @t4 "name" "") @nos) (object/get @be (object/get @t4 "name" "") @nos))) @ev)))) (fn t5 (object/get @o4 "name" ""))))))))) [{ code: "ORB_X_LISTEN_SOURCE_UNRESOLVED", path: (str/concat "orbitals." (object/get @o "name" "") ".traits." (object/get @td "name" "") ".listens"), message: (str/concat "Listen entry in '" (object/get @o "name" "") "." (object/get @td "name" "") "' references source '" @sorb "." @strait "' event '" @ev "' which is not declared on the source trait."), suggestion: (if (and (= (object/get (object/get @l "source" {}) "kind" "") "trait") (!= @sib null)) (str/concat "Trait '" @strait "' declares event '" @ev "' in sibling orbital '" @sib "' — a bare `Trait.EVENT` listen only resolves within this orbital; write the qualified form `" @sib "." @strait "." @ev "`.") "Either declare the event in the source trait's `emits` block, or remove the listens entry. Cross-orbital channels require the source trait to declare the emit explicitly."), severity: "error" }]))))))))))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "listen-source-unresolved", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : LsuProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      PRODUCED_HEARD { scope : string!  byControl : Map string [string]!  byEffect : Map string [string]! }
+        @description "std-orb-produced-events' PRODUCED_EVENTS: the events each trait's effect trees produce, by a control or by an effect."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+      OrbProducedEvents.PRODUCED_EVENTS -> PRODUCED_HEARD
+    }
+  }
+
+  trait OrbLintListenSourceUnresolvedCli -> OrbLintListenSourceUnresolvedRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint listen-source-unresolved <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "listen-source-unresolved") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint listen-source-unresolved: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "listen-source-unresolved") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint listen-source-unresolved: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-listen-source-unresolved" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint listen-source-unresolved` with its arguments and working directory."
+        @synonyms "orb lint listen-source-unresolved"
+      OrbLintListenSourceUnresolved.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait OrbProducedEvents = Produced.traits.OrbProducedEvents {
+    listens {
+      PRODUCED_SEMANTICS_HEARD { semantics : Map string string!  functions : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: each operator's declared returnSemantics and the function-returning operators."
+      PRODUCED_PATTERNS_HEARD { byPattern : [PatternEventProp]! }
+        @description "std-orb-lint-input's LINT_EVENT_PROPS: each pattern's event props and event-list fields."
+      PRODUCED_SLOTS_HEARD { emitSlots : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: the emit option slots the operator table declares."
+      PRODUCED_INPUT_HEARD { file : string!  raw : string!  latin : boolean!  program : FiredProgram  scope : string! }
+        @description "std-orb-lint-input's LINT_INPUT: the lowered program."
+      OrbLintInput.LINT_EVENT_PROPS -> PRODUCED_PATTERNS_HEARD
+      OrbLintInput.LINT_OPERATOR_SEMANTICS -> PRODUCED_SEMANTICS_HEARD
+      OrbLintInput.LINT_OPERATOR_SEMANTICS -> PRODUCED_SLOTS_HEARD
+      OrbLintInput.LINT_INPUT -> PRODUCED_INPUT_HEARD
+    }
+  }
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintListenSourceUnresolvedCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintListenSourceUnresolvedOrbitalStart -> OrbLintListenSourceUnresolved, OrbLintListenSourceUnresolvedCli, OrbLintInput, OrbProducedEvents, Packs, Versions
+}

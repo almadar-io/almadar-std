@@ -172,7 +172,6 @@ orbital SemanticIndexOrbital {
         (fetch SemanticPending { filter: (= (object/get @entity id) ?key), emit: { success: SemanticPendingLoaded, failure: SemanticStoreFailed } })
       SemanticStoreFailed -> idle
         (emit SEMANTIC_FAILED { op: @entity.semOp, key: @entity.semKey, message: ?error })
-        (render-ui toast { message: ?error, type: alert, variant: error })
     }
 
     state loadingPending {
@@ -197,7 +196,6 @@ orbital SemanticIndexOrbital {
         (persist delete SemanticPending @entity.semPendingId { emit: { success: SemanticPendingDeleted, failure: SemanticStoreFailed } })
       SemanticStoreFailed -> idle
         (emit SEMANTIC_FAILED { op: @entity.semOp, key: @entity.semKey, message: ?error })
-        (render-ui toast { message: ?error, type: alert, variant: error })
     }
 
     state consuming {
@@ -206,10 +204,8 @@ orbital SemanticIndexOrbital {
         (emit SemanticResume { embeddings: @entity.semEmbeddings, model: @entity.semModel })
       SemanticPendingDeleted -> idle when (= @entity.semReply "failed")
         (emit SEMANTIC_FAILED { op: @entity.semOp, key: @entity.semKey, message: @entity.semReplyMessage })
-        (render-ui toast { message: @entity.semReplyMessage, type: alert, variant: error })
       SemanticStoreFailed -> idle
         (emit SEMANTIC_FAILED { op: @entity.semOp, key: @entity.semKey, message: ?error })
-        (render-ui toast { message: ?error, type: alert, variant: error })
     }
 
     state working {
@@ -223,7 +219,6 @@ orbital SemanticIndexOrbital {
         (emit SEMANTIC_REJECTED { reason: "key-in-use", key: @entity.semKey })
       SemanticPendingFailed -> idle when (!= ?code "duplicate-id")
         (emit SEMANTIC_FAILED { op: @entity.semOp, key: @entity.semKey, message: ?error })
-        (render-ui toast { message: ?error, type: alert, variant: error })
 
       SEMANTIC_PREPARE -> working when (= @entity.semPhase "prepare")
         (set @entity.semPhase "embed")
@@ -325,7 +320,6 @@ orbital SemanticIndexOrbital {
 
       SemanticStoreFailed -> idle
         (emit SEMANTIC_FAILED { op: @entity.semOp, key: @entity.semKey, message: ?error })
-        (render-ui toast { message: ?error, type: alert, variant: error })
     }
 
     emits {
@@ -532,5 +526,5 @@ orbital SemanticIndexOrbital {
     }
   }
 
-  page "/semantic-index" as SemanticIndexPage -> SemanticIndex, SemanticIndexLlm
+  page boot as SemanticIndexStart -> SemanticIndex, SemanticIndexLlm
 }

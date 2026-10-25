@@ -1,0 +1,172 @@
+app std-orb-lint-icon-format [
+  version: "1.0.0",
+  inbound: ["cli-lint-icon-format"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-icon-format — the `orb lint icon-format <file>` command, the port of the ORB_UI_ICON_INVALID_FORMAT and ORB_UI_ICON_EMPTY checks of icon.rs (validate_all_icons). It lowers the file with program/read and walks the pattern (third element) of every `render-ui` effect of every transition for an `icon` prop, an `actions[i].icon` and an `itemActions[i].icon` on each object, recursing into object-valued props and into the object elements of array-valued props (an actions entry is therefore reached twice, as the compiler does). An icon that is not a string, an empty or blank name, and a name that is neither kebab-case nor PascalCase are reported; a binding (starts with @) is skipped. ORB_UI_ICON_NOT_FOUND (a name outside the Lucide set) is not ported: no lint input carries the Lucide icon list. Clean answers `lint icon-format: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-icon-format"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type IcVal = string | number | boolean | [IcVal?] | Map string IcVal?
+type IcHit = { p : string!, code : string!, msg : string! }
+type IcRes = { f : [IcHit]! }
+type IcCand = { p : string, v : IcVal? }
+type IcTransition = { effects : [IcVal?] }
+type IcMachine = { transitions : [IcTransition] }
+type IcTrait = { name : string, stateMachine : IcMachine }
+type IcOrbital = { name : string, traits : [IcTrait] }
+type IcProgram = { orbitals : [IcOrbital] }
+
+orbital OrbLintIconFormatOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintIconFormatRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintIconFormat -> OrbLintIconFormatRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
+          (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+            (let ((orb (array/nth @orbitals @oi)))
+              (let ((trs (object/get @orb "traits" [])))
+                (array/flatten (array/map (array/range 0 (array/len @trs)) (fn tj
+                  (let ((td (array/nth @trs @tj)))
+                    (let ((trans (object/get (object/get @td "stateMachine" {}) "transitions" [])))
+                      (array/flatten (array/map (array/range 0 (array/len @trans)) (fn ti
+                        (let ((effs (object/get (array/nth @trans @ti) "effects" [])))
+                          (array/flatten (array/map (array/range 0 (array/len @effs)) (fn ej
+                            (let ((e (array/nth @effs @ej)))
+                              (if (and (validate/array @e) (> (array/len @e) 2) (let ((hd (array/nth @e 0))) (and (validate/string @hd) (= @hd "render-ui"))) (validate/object (array/nth @e 2)))
+                                (let ((fr (tree/fold (array/nth @e 2) (fn (n k)
+                                      (let ((nr : IcRes { f: [] }))
+                                        (if (validate/array @n)
+                                          { f: (array/flatten (array/map (array/range 0 (array/len @n)) (fn i (if (validate/object (array/nth @n @i)) (array/map (object/get (let ((r0 (array/nth @k @i))) (if (= @r0 null) @nr @r0)) "f") (fn h { p: (str/concat "[" @i "]" (object/get @h "p")), code: (object/get @h "code"), msg: (object/get @h "msg") })) []))))  }
+                                          (if (validate/object @n)
+                                            (let ((noc : [IcCand] [])) (let ((cs (array/concat
+                                                        (if (object/has @n "icon") [{ p: ".icon", v: (object/get @n "icon") }] @noc)
+                                                        (let ((lst (object/get @n "actions" null))) (if (validate/array @lst) (array/flatten (array/map (array/range 0 (array/len @lst)) (fn i (let ((a (array/nth @lst @i))) (if (and (validate/object @a) (object/has @a "icon")) [{ p: (str/concat ".actions[" @i "].icon"), v: (object/get @a "icon") }] []))))) @noc))
+                                                        (let ((lst (object/get @n "itemActions" null))) (if (validate/array @lst) (array/flatten (array/map (array/range 0 (array/len @lst)) (fn i (let ((a (array/nth @lst @i))) (if (and (validate/object @a) (object/has @a "icon")) [{ p: (str/concat ".itemActions[" @i "].icon"), v: (object/get @a "icon") }] []))))) @noc)))))
+                                              { f: (array/concat
+                                                  (array/flatten (array/map @cs (fn c
+                                                    (let ((v (object/get @c "v")))
+                                                      (if (not (validate/string @v))
+                                                        [{ p: (object/get @c "p"), code: "ORB_UI_ICON_INVALID_FORMAT", msg: "Icon value must be a string" }]
+                                                        (if (str/startsWith @v (quote "@")) []
+                                                          (if (= (str/trim @v) "")
+                                                            [{ p: (object/get @c "p"), code: "ORB_UI_ICON_EMPTY", msg: "Icon name cannot be empty" }]
+                                                            (if (or (validate/pattern @v "^[a-z][a-z0-9]*(-[a-z0-9]+)*$") (validate/pattern @v "^[A-Z][a-zA-Z0-9]*$")) []
+                                                              [{ p: (object/get @c "p"), code: "ORB_UI_ICON_INVALID_FORMAT", msg: (str/concat "Icon '" @v "' has invalid format. Use kebab-case (e.g., 'plus', 'trash-2') or PascalCase (e.g., 'Plus', 'Trash2')") }]))))))))
+                                                  (array/flatten (array/map (object/keys @n) (fn key
+                                                    (let ((child (object/get @n @key null)) (r (let ((r0 (object/get @k @key null))) (if (= @r0 null) @nr @r0))))
+                                                      (if (or (validate/object @child) (validate/array @child))
+                                                        (array/map (object/get @r "f") (fn h { p: (str/concat "." @key (object/get @h "p")), code: (object/get @h "code"), msg: (object/get @h "msg") }))
+                                                        []))))) ) }))
+                                            @nr)))) IcVal)))
+                                  (if (= @fr null) []
+                                    (array/map (object/get @fr "f") (fn h { code: (object/get @h "code"), path: (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].traits[" @tj " (" (object/get @td "name" "") ")].stateMachine.transitions[" @ti "].effects[" @ej "].pattern" (object/get @h "p")), message: (object/get @h "msg"), suggestion: "", severity: "error" }))))
+                                [])))))))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "icon-format", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : IcProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+    }
+  }
+
+  trait OrbLintIconFormatCli -> OrbLintIconFormatRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint icon-format <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "icon-format") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint icon-format: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "icon-format") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint icon-format: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-icon-format" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint icon-format` with its arguments and working directory."
+        @synonyms "orb lint icon-format"
+      OrbLintIconFormat.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintIconFormatCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintIconFormatOrbitalStart -> OrbLintIconFormat, OrbLintIconFormatCli, OrbLintInput, Packs, Versions
+}

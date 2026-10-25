@@ -1,0 +1,4173 @@
+{
+  "atom": "cli/atoms/std-orb-lint-expectation-persistent-unwritten.lolo",
+  "trait": "OrbLintExpectationPersistentUnwritten",
+  "note": "Expected findings are the code, path, message and suggestion `orb validate` (the Rust validator) reports for the same program (the parity run checks the shape-fold cases against it). The first three cases copy tests/expectations_validation.rs a_strict_persistent_entity_must_be_written_by_the_program; the rest pin the other persist actions, a delete, nesting, ticks and each list builder persist_batch::batch_written_entities follows (list, array/concat, array/prepend, array/append, array/filter, array/map over an op template, array/flatten, array/take, if) with the literal-and-mapped fallback when a builder cannot be followed.",
+  "cases": [
+    {
+      "id": "a-strict-persistent-entity-nothing-writes-is-unsatisfied",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "OrderRecord",
+                      "persistence": "persistent",
+                      "strict": true
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "primaryKey": true
+                      },
+                      {
+                        "name": "email",
+                        "type": "string",
+                        "unique": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFlow",
+                      "linkedEntity": "OrderRecord",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          },
+                          {
+                            "key": "PAY",
+                            "name": "Pay"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OrderPage",
+                      "path": "/orders",
+                      "traits": [
+                        {
+                          "ref": "OrderFlow"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-persistent-unwritten",
+                  "findings": [
+                    {
+                      "code": "ORB_S_EXPECTATION_UNSATISFIED",
+                      "path": "orbitals[0 (ConsumerOrbital)].expects[0]",
+                      "message": "`ConsumerOrbital` expects entity `OrderRecord` to be persisted, but nothing in this program provides it — no trait in the program writes `OrderRecord` with a `persist create|update|upsert`.",
+                      "suggestion": "Provide it in an orbital of this program (give the providing import that name, or declare it here).",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        }
+      ]
+    },
+    {
+      "id": "a-strict-persistent-entity-a-trait-creates-is-satisfied",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "OrderRecord",
+                      "persistence": "persistent",
+                      "strict": true
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "primaryKey": true
+                      },
+                      {
+                        "name": "email",
+                        "type": "string",
+                        "unique": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFlow",
+                      "linkedEntity": "OrderRecord",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          },
+                          {
+                            "key": "PAY",
+                            "name": "Pay"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": [
+                              [
+                                "persist",
+                                "create",
+                                "OrderRecord",
+                                {
+                                  "id": "@payload.id"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OrderPage",
+                      "path": "/orders",
+                      "traits": [
+                        {
+                          "ref": "OrderFlow"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-persistent-unwritten",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        }
+      ]
+    },
+    {
+      "id": "control-a-lenient-persistent-entity-nothing-writes-is-not-reported",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "OrderRecord",
+                      "persistence": "persistent"
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "primaryKey": true
+                      },
+                      {
+                        "name": "email",
+                        "type": "string",
+                        "unique": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFlow",
+                      "linkedEntity": "OrderRecord",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          },
+                          {
+                            "key": "PAY",
+                            "name": "Pay"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OrderPage",
+                      "path": "/orders",
+                      "traits": [
+                        {
+                          "ref": "OrderFlow"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-persistent-unwritten",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        }
+      ]
+    },
+    {
+      "id": "control-a-strict-entity-stating-no-storage-obliges-no-write",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "OrderRecord",
+                      "strict": true
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "primaryKey": true
+                      },
+                      {
+                        "name": "email",
+                        "type": "string",
+                        "unique": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFlow",
+                      "linkedEntity": "OrderRecord",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          },
+                          {
+                            "key": "PAY",
+                            "name": "Pay"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OrderPage",
+                      "path": "/orders",
+                      "traits": [
+                        {
+                          "ref": "OrderFlow"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-persistent-unwritten",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        }
+      ]
+    },
+    {
+      "id": "control-a-strict-runtime-entity-obliges-no-write",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "OrderRecord",
+                      "persistence": "runtime",
+                      "strict": true
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "runtime",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "primaryKey": true
+                      },
+                      {
+                        "name": "email",
+                        "type": "string",
+                        "unique": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFlow",
+                      "linkedEntity": "OrderRecord",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          },
+                          {
+                            "key": "PAY",
+                            "name": "Pay"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OrderPage",
+                      "path": "/orders",
+                      "traits": [
+                        {
+                          "ref": "OrderFlow"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-persistent-unwritten",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        }
+      ]
+    },
+    {
+      "id": "an-update-lands-a-write",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "OrderRecord",
+                      "persistence": "persistent",
+                      "strict": true
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "primaryKey": true
+                      },
+                      {
+                        "name": "email",
+                        "type": "string",
+                        "unique": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFlow",
+                      "linkedEntity": "OrderRecord",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          },
+                          {
+                            "key": "PAY",
+                            "name": "Pay"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": [
+                              [
+                                "persist",
+                                "update",
+                                "OrderRecord",
+                                "@entity.id",
+                                {
+                                  "a": 1
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OrderPage",
+                      "path": "/orders",
+                      "traits": [
+                        {
+                          "ref": "OrderFlow"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-persistent-unwritten",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        }
+      ]
+    },
+    {
+      "id": "an-upsert-lands-a-write",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "OrderRecord",
+                      "persistence": "persistent",
+                      "strict": true
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "primaryKey": true
+                      },
+                      {
+                        "name": "email",
+                        "type": "string",
+                        "unique": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFlow",
+                      "linkedEntity": "OrderRecord",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          },
+                          {
+                            "key": "PAY",
+                            "name": "Pay"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": [
+                              [
+                                "persist",
+                                "upsert",
+                                "OrderRecord",
+                                {
+                                  "a": 1
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OrderPage",
+                      "path": "/orders",
+                      "traits": [
+                        {
+                          "ref": "OrderFlow"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-persistent-unwritten",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        }
+      ]
+    },
+    {
+      "id": "a-persist-of-another-entity-lands-no-write-of-this-one",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "OrderRecord",
+                      "persistence": "persistent",
+                      "strict": true
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "primaryKey": true
+                      },
+                      {
+                        "name": "email",
+                        "type": "string",
+                        "unique": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFlow",
+                      "linkedEntity": "OrderRecord",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          },
+                          {
+                            "key": "PAY",
+                            "name": "Pay"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": [
+                              [
+                                "persist",
+                                "create",
+                                "Other",
+                                {
+                                  "a": 1
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OrderPage",
+                      "path": "/orders",
+                      "traits": [
+                        {
+                          "ref": "OrderFlow"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-persistent-unwritten",
+                  "findings": [
+                    {
+                      "code": "ORB_S_EXPECTATION_UNSATISFIED",
+                      "path": "orbitals[0 (ConsumerOrbital)].expects[0]",
+                      "message": "`ConsumerOrbital` expects entity `OrderRecord` to be persisted, but nothing in this program provides it — no trait in the program writes `OrderRecord` with a `persist create|update|upsert`.",
+                      "suggestion": "Provide it in an orbital of this program (give the providing import that name, or declare it here).",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        }
+      ]
+    },
+    {
+      "id": "a-delete-lands-no-write",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "OrderRecord",
+                      "persistence": "persistent",
+                      "strict": true
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "primaryKey": true
+                      },
+                      {
+                        "name": "email",
+                        "type": "string",
+                        "unique": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFlow",
+                      "linkedEntity": "OrderRecord",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          },
+                          {
+                            "key": "PAY",
+                            "name": "Pay"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": [
+                              [
+                                "persist",
+                                "delete",
+                                "OrderRecord",
+                                "@payload.id"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OrderPage",
+                      "path": "/orders",
+                      "traits": [
+                        {
+                          "ref": "OrderFlow"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-persistent-unwritten",
+                  "findings": [
+                    {
+                      "code": "ORB_S_EXPECTATION_UNSATISFIED",
+                      "path": "orbitals[0 (ConsumerOrbital)].expects[0]",
+                      "message": "`ConsumerOrbital` expects entity `OrderRecord` to be persisted, but nothing in this program provides it — no trait in the program writes `OrderRecord` with a `persist create|update|upsert`.",
+                      "suggestion": "Provide it in an orbital of this program (give the providing import that name, or declare it here).",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        }
+      ]
+    },
+    {
+      "id": "a-persist-nested-in-an-if-lands-a-write",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "OrderRecord",
+                      "persistence": "persistent",
+                      "strict": true
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "primaryKey": true
+                      },
+                      {
+                        "name": "email",
+                        "type": "string",
+                        "unique": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFlow",
+                      "linkedEntity": "OrderRecord",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          },
+                          {
+                            "key": "PAY",
+                            "name": "Pay"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": [
+                              [
+                                "if",
+                                true,
+                                [
+                                  "persist",
+                                  "create",
+                                  "OrderRecord",
+                                  {
+                                    "a": 1
+                                  }
+                                ],
+                                [
+                                  "noop"
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OrderPage",
+                      "path": "/orders",
+                      "traits": [
+                        {
+                          "ref": "OrderFlow"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-persistent-unwritten",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        }
+      ]
+    },
+    {
+      "id": "a-persist-in-a-tick-lands-a-write",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "OrderRecord",
+                      "persistence": "persistent",
+                      "strict": true
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "primaryKey": true
+                      },
+                      {
+                        "name": "email",
+                        "type": "string",
+                        "unique": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFlow",
+                      "linkedEntity": "OrderRecord",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          },
+                          {
+                            "key": "PAY",
+                            "name": "Pay"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": []
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {
+                          "name": "T",
+                          "interval": 1000,
+                          "effects": [
+                            [
+                              "persist",
+                              "create",
+                              "OrderRecord",
+                              {
+                                "a": 1
+                              }
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OrderPage",
+                      "path": "/orders",
+                      "traits": [
+                        {
+                          "ref": "OrderFlow"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-persistent-unwritten",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        }
+      ]
+    },
+    {
+      "id": "a-literal-batch-create-lands-a-write",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "OrderRecord",
+                      "persistence": "persistent",
+                      "strict": true
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "primaryKey": true
+                      },
+                      {
+                        "name": "email",
+                        "type": "string",
+                        "unique": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFlow",
+                      "linkedEntity": "OrderRecord",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          },
+                          {
+                            "key": "PAY",
+                            "name": "Pay"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": [
+                              [
+                                "persist",
+                                "batch",
+                                [
+                                  [
+                                    "create",
+                                    "OrderRecord",
+                                    {
+                                      "id": "x"
+                                    }
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OrderPage",
+                      "path": "/orders",
+                      "traits": [
+                        {
+                          "ref": "OrderFlow"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-persistent-unwritten",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        }
+      ]
+    },
+    {
+      "id": "a-batch-of-delete-ops-only-lands-no-write",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "OrderRecord",
+                      "persistence": "persistent",
+                      "strict": true
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "primaryKey": true
+                      },
+                      {
+                        "name": "email",
+                        "type": "string",
+                        "unique": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFlow",
+                      "linkedEntity": "OrderRecord",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          },
+                          {
+                            "key": "PAY",
+                            "name": "Pay"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": [
+                              [
+                                "persist",
+                                "batch",
+                                [
+                                  [
+                                    "delete",
+                                    "OrderRecord",
+                                    "x"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OrderPage",
+                      "path": "/orders",
+                      "traits": [
+                        {
+                          "ref": "OrderFlow"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-persistent-unwritten",
+                  "findings": [
+                    {
+                      "code": "ORB_S_EXPECTATION_UNSATISFIED",
+                      "path": "orbitals[0 (ConsumerOrbital)].expects[0]",
+                      "message": "`ConsumerOrbital` expects entity `OrderRecord` to be persisted, but nothing in this program provides it — no trait in the program writes `OrderRecord` with a `persist create|update|upsert`.",
+                      "suggestion": "Provide it in an orbital of this program (give the providing import that name, or declare it here).",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        }
+      ]
+    },
+    {
+      "id": "a-batch-update-lands-a-write",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "OrderRecord",
+                      "persistence": "persistent",
+                      "strict": true
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "primaryKey": true
+                      },
+                      {
+                        "name": "email",
+                        "type": "string",
+                        "unique": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFlow",
+                      "linkedEntity": "OrderRecord",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          },
+                          {
+                            "key": "PAY",
+                            "name": "Pay"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": [
+                              [
+                                "persist",
+                                "batch",
+                                [
+                                  [
+                                    "update",
+                                    "OrderRecord",
+                                    "x",
+                                    {
+                                      "a": 1
+                                    }
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OrderPage",
+                      "path": "/orders",
+                      "traits": [
+                        {
+                          "ref": "OrderFlow"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-persistent-unwritten",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        }
+      ]
+    },
+    {
+      "id": "a-batch-of-another-entity-lands-no-write",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "OrderRecord",
+                      "persistence": "persistent",
+                      "strict": true
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "primaryKey": true
+                      },
+                      {
+                        "name": "email",
+                        "type": "string",
+                        "unique": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFlow",
+                      "linkedEntity": "OrderRecord",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          },
+                          {
+                            "key": "PAY",
+                            "name": "Pay"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": [
+                              [
+                                "persist",
+                                "batch",
+                                [
+                                  [
+                                    "create",
+                                    "Other",
+                                    {
+                                      "a": 1
+                                    }
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OrderPage",
+                      "path": "/orders",
+                      "traits": [
+                        {
+                          "ref": "OrderFlow"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-persistent-unwritten",
+                  "findings": [
+                    {
+                      "code": "ORB_S_EXPECTATION_UNSATISFIED",
+                      "path": "orbitals[0 (ConsumerOrbital)].expects[0]",
+                      "message": "`ConsumerOrbital` expects entity `OrderRecord` to be persisted, but nothing in this program provides it — no trait in the program writes `OrderRecord` with a `persist create|update|upsert`.",
+                      "suggestion": "Provide it in an orbital of this program (give the providing import that name, or declare it here).",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        }
+      ]
+    },
+    {
+      "id": "a-batch-list-form-lands-a-write",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "OrderRecord",
+                      "persistence": "persistent",
+                      "strict": true
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "primaryKey": true
+                      },
+                      {
+                        "name": "email",
+                        "type": "string",
+                        "unique": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFlow",
+                      "linkedEntity": "OrderRecord",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          },
+                          {
+                            "key": "PAY",
+                            "name": "Pay"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": [
+                              [
+                                "persist",
+                                "batch",
+                                [
+                                  "list",
+                                  [
+                                    "create",
+                                    "OrderRecord",
+                                    {
+                                      "id": "x"
+                                    }
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OrderPage",
+                      "path": "/orders",
+                      "traits": [
+                        {
+                          "ref": "OrderFlow"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-persistent-unwritten",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        }
+      ]
+    },
+    {
+      "id": "a-batch-mapped-over-an-op-template-lands-a-write",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "OrderRecord",
+                      "persistence": "persistent",
+                      "strict": true
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "primaryKey": true
+                      },
+                      {
+                        "name": "email",
+                        "type": "string",
+                        "unique": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFlow",
+                      "linkedEntity": "OrderRecord",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          },
+                          {
+                            "key": "PAY",
+                            "name": "Pay"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": [
+                              [
+                                "persist",
+                                "batch",
+                                [
+                                  "array/map",
+                                  "@payload.ids",
+                                  [
+                                    "fn",
+                                    "r",
+                                    [
+                                      "create",
+                                      "OrderRecord",
+                                      {
+                                        "id": "@r"
+                                      }
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OrderPage",
+                      "path": "/orders",
+                      "traits": [
+                        {
+                          "ref": "OrderFlow"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-persistent-unwritten",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        }
+      ]
+    },
+    {
+      "id": "a-batch-built-with-concat-lands-a-write",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "OrderRecord",
+                      "persistence": "persistent",
+                      "strict": true
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "primaryKey": true
+                      },
+                      {
+                        "name": "email",
+                        "type": "string",
+                        "unique": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFlow",
+                      "linkedEntity": "OrderRecord",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          },
+                          {
+                            "key": "PAY",
+                            "name": "Pay"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": [
+                              [
+                                "persist",
+                                "batch",
+                                [
+                                  "array/concat",
+                                  [
+                                    "list",
+                                    [
+                                      "create",
+                                      "Other",
+                                      {
+                                        "a": 1
+                                      }
+                                    ]
+                                  ],
+                                  [
+                                    "list",
+                                    [
+                                      "create",
+                                      "OrderRecord",
+                                      {
+                                        "id": "x"
+                                      }
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OrderPage",
+                      "path": "/orders",
+                      "traits": [
+                        {
+                          "ref": "OrderFlow"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-persistent-unwritten",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        }
+      ]
+    },
+    {
+      "id": "a-batch-built-with-append-and-an-if-element-lands-a-write",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "OrderRecord",
+                      "persistence": "persistent",
+                      "strict": true
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "primaryKey": true
+                      },
+                      {
+                        "name": "email",
+                        "type": "string",
+                        "unique": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFlow",
+                      "linkedEntity": "OrderRecord",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          },
+                          {
+                            "key": "PAY",
+                            "name": "Pay"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": [
+                              [
+                                "persist",
+                                "batch",
+                                [
+                                  "array/append",
+                                  [
+                                    "list"
+                                  ],
+                                  [
+                                    "if",
+                                    "@payload.ok",
+                                    [
+                                      "create",
+                                      "OrderRecord",
+                                      {
+                                        "id": "x"
+                                      }
+                                    ],
+                                    [
+                                      "create",
+                                      "Other",
+                                      {
+                                        "a": 1
+                                      }
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OrderPage",
+                      "path": "/orders",
+                      "traits": [
+                        {
+                          "ref": "OrderFlow"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-persistent-unwritten",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        }
+      ]
+    },
+    {
+      "id": "a-batch-built-with-flatten-of-lists-lands-a-write",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "OrderRecord",
+                      "persistence": "persistent",
+                      "strict": true
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "primaryKey": true
+                      },
+                      {
+                        "name": "email",
+                        "type": "string",
+                        "unique": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFlow",
+                      "linkedEntity": "OrderRecord",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          },
+                          {
+                            "key": "PAY",
+                            "name": "Pay"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": [
+                              [
+                                "persist",
+                                "batch",
+                                [
+                                  "array/flatten",
+                                  [
+                                    "list",
+                                    [
+                                      "list",
+                                      [
+                                        "create",
+                                        "OrderRecord",
+                                        {
+                                          "id": "x"
+                                        }
+                                      ]
+                                    ],
+                                    [
+                                      "list"
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OrderPage",
+                      "path": "/orders",
+                      "traits": [
+                        {
+                          "ref": "OrderFlow"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-persistent-unwritten",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        }
+      ]
+    },
+    {
+      "id": "a-batch-built-with-filter-and-take-lands-a-write",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "OrderRecord",
+                      "persistence": "persistent",
+                      "strict": true
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "primaryKey": true
+                      },
+                      {
+                        "name": "email",
+                        "type": "string",
+                        "unique": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFlow",
+                      "linkedEntity": "OrderRecord",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          },
+                          {
+                            "key": "PAY",
+                            "name": "Pay"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": [
+                              [
+                                "persist",
+                                "batch",
+                                [
+                                  "array/take",
+                                  [
+                                    "array/filter",
+                                    [
+                                      "list",
+                                      [
+                                        "create",
+                                        "OrderRecord",
+                                        {
+                                          "id": "x"
+                                        }
+                                      ]
+                                    ],
+                                    [
+                                      "fn",
+                                      "r",
+                                      true
+                                    ]
+                                  ],
+                                  5
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OrderPage",
+                      "path": "/orders",
+                      "traits": [
+                        {
+                          "ref": "OrderFlow"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-persistent-unwritten",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        }
+      ]
+    },
+    {
+      "id": "a-batch-taking-zero-lands-no-write",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "OrderRecord",
+                      "persistence": "persistent",
+                      "strict": true
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "primaryKey": true
+                      },
+                      {
+                        "name": "email",
+                        "type": "string",
+                        "unique": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFlow",
+                      "linkedEntity": "OrderRecord",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          },
+                          {
+                            "key": "PAY",
+                            "name": "Pay"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": [
+                              [
+                                "persist",
+                                "batch",
+                                [
+                                  "array/take",
+                                  [
+                                    "list",
+                                    [
+                                      "create",
+                                      "OrderRecord",
+                                      {
+                                        "id": "x"
+                                      }
+                                    ]
+                                  ],
+                                  0
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OrderPage",
+                      "path": "/orders",
+                      "traits": [
+                        {
+                          "ref": "OrderFlow"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-persistent-unwritten",
+                  "findings": [
+                    {
+                      "code": "ORB_S_EXPECTATION_UNSATISFIED",
+                      "path": "orbitals[0 (ConsumerOrbital)].expects[0]",
+                      "message": "`ConsumerOrbital` expects entity `OrderRecord` to be persisted, but nothing in this program provides it — no trait in the program writes `OrderRecord` with a `persist create|update|upsert`.",
+                      "suggestion": "Provide it in an orbital of this program (give the providing import that name, or declare it here).",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        }
+      ]
+    },
+    {
+      "id": "a-batch-no-builder-can-follow-lands-no-write",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "OrderRecord",
+                      "persistence": "persistent",
+                      "strict": true
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "primaryKey": true
+                      },
+                      {
+                        "name": "email",
+                        "type": "string",
+                        "unique": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFlow",
+                      "linkedEntity": "OrderRecord",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          },
+                          {
+                            "key": "PAY",
+                            "name": "Pay"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": [
+                              [
+                                "persist",
+                                "batch",
+                                "@payload.ops"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OrderPage",
+                      "path": "/orders",
+                      "traits": [
+                        {
+                          "ref": "OrderFlow"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-persistent-unwritten",
+                  "findings": [
+                    {
+                      "code": "ORB_S_EXPECTATION_UNSATISFIED",
+                      "path": "orbitals[0 (ConsumerOrbital)].expects[0]",
+                      "message": "`ConsumerOrbital` expects entity `OrderRecord` to be persisted, but nothing in this program provides it — no trait in the program writes `OrderRecord` with a `persist create|update|upsert`.",
+                      "suggestion": "Provide it in an orbital of this program (give the providing import that name, or declare it here).",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        }
+      ]
+    },
+    {
+      "id": "a-batch-with-an-unfollowable-element-falls-back-to-the-literal-tuples",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "OrderRecord",
+                      "persistence": "persistent",
+                      "strict": true
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "primaryKey": true
+                      },
+                      {
+                        "name": "email",
+                        "type": "string",
+                        "unique": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFlow",
+                      "linkedEntity": "OrderRecord",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          },
+                          {
+                            "key": "PAY",
+                            "name": "Pay"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": [
+                              [
+                                "persist",
+                                "batch",
+                                [
+                                  "list",
+                                  [
+                                    "create",
+                                    "OrderRecord",
+                                    {
+                                      "id": "x"
+                                    }
+                                  ],
+                                  "@payload.more"
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OrderPage",
+                      "path": "/orders",
+                      "traits": [
+                        {
+                          "ref": "OrderFlow"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-persistent-unwritten",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        }
+      ]
+    },
+    {
+      "id": "a-batch-whose-only-op-comes-from-an-unfollowable-call-lands-no-write",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "OrderRecord",
+                      "persistence": "persistent",
+                      "strict": true
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "primaryKey": true
+                      },
+                      {
+                        "name": "email",
+                        "type": "string",
+                        "unique": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFlow",
+                      "linkedEntity": "OrderRecord",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          },
+                          {
+                            "key": "PAY",
+                            "name": "Pay"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": [
+                              [
+                                "persist",
+                                "batch",
+                                [
+                                  "array/concat",
+                                  [
+                                    "list",
+                                    [
+                                      "create",
+                                      "OrderRecord",
+                                      {
+                                        "id": "x"
+                                      }
+                                    ]
+                                  ],
+                                  "@payload.more"
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OrderPage",
+                      "path": "/orders",
+                      "traits": [
+                        {
+                          "ref": "OrderFlow"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-persistent-unwritten",
+                  "findings": [
+                    {
+                      "code": "ORB_S_EXPECTATION_UNSATISFIED",
+                      "path": "orbitals[0 (ConsumerOrbital)].expects[0]",
+                      "message": "`ConsumerOrbital` expects entity `OrderRecord` to be persisted, but nothing in this program provides it — no trait in the program writes `OrderRecord` with a `persist create|update|upsert`.",
+                      "suggestion": "Provide it in an orbital of this program (give the providing import that name, or declare it here).",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        }
+      ]
+    },
+    {
+      "id": "a-strict-persistent-entity-with-no-provider-is-the-unprovided-finding-not-this-one",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "Ghost",
+                      "persistence": "persistent",
+                      "strict": true
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "primaryKey": true
+                      },
+                      {
+                        "name": "email",
+                        "type": "string",
+                        "unique": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFlow",
+                      "linkedEntity": "OrderRecord",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          },
+                          {
+                            "key": "PAY",
+                            "name": "Pay"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OrderPage",
+                      "path": "/orders",
+                      "traits": [
+                        {
+                          "ref": "OrderFlow"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-persistent-unwritten",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationPersistentUnwritten"
+        }
+      ]
+    },
+    {
+      "id": "an args body that does not parse is the usage error",
+      "steps": [
+        {
+          "trait": "OrbLintExpectationPersistentUnwrittenCli",
+          "from": "ready",
+          "event": "LINT_CALLED",
+          "payload": {
+            "rawBody": "not json"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb lint expectation-persistent-unwritten <file>"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

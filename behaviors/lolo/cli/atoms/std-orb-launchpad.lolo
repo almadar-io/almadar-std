@@ -1,0 +1,201 @@
+app std-orb-launchpad [
+  version: "1.0.0",
+  inbound: ["cli-launchpad"],
+  env: ["HOME", "FIREBASE_AUTH_EMULATOR_HOST", "FIREBASE_PROJECT_ID"],
+  fs: { "~/.almadar/serve": [create], "~/.almadar/serve/**": [write, create], cwd: ".orbital": [create], cwd: ".orbital/serve": [create], cwd: ".orbital/serve/**": [write, create] },
+  description: "std-orb-launchpad — the `orb launchpad [--port N] [--host H]` command (spec/cli/orb-launchpad.lolo), the launchpad bare `orb` opens: it serves std-launchpad, the browser view of every installed behavior, the way `orb serve` serves any app. It finds the std-launchpad file with behavior/resolve { path: true } (the organism knob names it) and gives std-orb-serve's ServeEngine (composed here, its resolve-and-wrap half) the serve request `<file> [--port N] [--host H]`, so the app is resolved into ~/.almadar/serve and wrapped with std-http-server; std-orb-serve-handoff's ServeHandoff, the same compose, prepare-client and answer half `orb serve` uses, then composes them and has the browser client prepared under .orbital/serve (OrbServe itself cannot be composed because its cli-serve hook travels with its event). The command never runs the program: it answers the engine's hand-off unchanged, status 200 with headers orb-run: server, orb-mock: on, orb-app: the resolved app beside its catalogs and the composed program's JSON as the body, which the bootloader acts on. An unknown flag or a positional answers the usage (status 400, exit 2); a port that is not an integer in 0..65535 answers status 400 on stderr; an organism that does not resolve, or a serve refusal, answers status 500 on stderr. Defaults are serve's: port 3030, host 127.0.0.1."
+]
+uses Spec from "almadar-std/orb-launchpad"
+uses Args from "std/behaviors/std-args"
+uses Serve from "std/behaviors/std-orb-serve"
+uses Handoff from "std/behaviors/std-orb-serve-handoff"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
+type LaunchpadLocation = { path : string!, owner : string }
+
+orbital OrbLaunchpadOrbital {
+  entity LaunchpadRun [runtime] {
+    id : string!
+    cwd : string = ""
+    port : string = ""
+    host : string = ""
+  }
+
+  trait ArgsCli = Args.traits.ArgsParser {
+    listens {
+      OrbLaunchpad.LAUNCHPAD_ARGS_PARSE -> ARGS_PARSE
+    }
+  }
+
+  trait OrbLaunchpad -> LaunchpadRun [optimistic] {
+    config {
+      organism : string = "std/behaviors/std-launchpad"
+        @label "Launchpad organism"
+        @description "The behavior whose file the command serves."
+        @tier "domain"
+    }
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LAUNCHPAD_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit LAUNCHPAD_ANSWERED { status: 400, body: "", stderr: "usage: orb launchpad [--port N] [--host H]" })
+      LAUNCHPAD_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
+        (emit LAUNCHPAD_ARGS_PARSE { stage: "launchpad" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "port" aliases: ["-p"] takesValue: true repeatable: false }, { name: "host" aliases: [] takesValue: true repeatable: false }] })
+    }
+
+    state parsing {
+      INIT -> parsing
+      LAUNCHPAD_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (> (array/len @payload.positionals) 0))
+        (emit LAUNCHPAD_ANSWERED { status: 400, body: "", stderr: "usage: orb launchpad [--port N] [--host H]" })
+      LAUNCHPAD_ARGS_DONE -> parsing when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0))
+        (emit LAUNCHPAD_START { portText: (array/first (or (object/get @payload.flags "port") ["3030"])), portOk: (and (>= (str/to-number (array/first (or (object/get @payload.flags "port") ["3030"]))) 0) (<= (str/to-number (array/first (or (object/get @payload.flags "port") ["3030"]))) 65535) (= (str/to-int (array/first (or (object/get @payload.flags "port") ["3030"]))) (str/to-number (array/first (or (object/get @payload.flags "port") ["3030"]))))), host: (array/first (or (object/get @payload.flags "host") ["127.0.0.1"])) })
+      LAUNCHPAD_START -> ready when (not @payload.portOk)
+        (emit LAUNCHPAD_ANSWERED { status: 400, body: "", stderr: (str/concat "error: invalid value '" @payload.portText "' for '--port <PORT>': not an integer from 0 to 65535") })
+      LAUNCHPAD_START -> locating when @payload.portOk
+        (set @entity.port @payload.portText)
+        (set @entity.host @payload.host)
+        (behavior/resolve { behavior: @config.organism } { path: true } { key: "organism" emit: { success: LAUNCHPAD_LOCATED, failure: LAUNCHPAD_LOCATE_FAILED } })
+    }
+
+    state locating {
+      INIT -> locating
+      LAUNCHPAD_LOCATE_FAILED -> ready
+        (emit LAUNCHPAD_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " @config.organism " could not be found: " @payload.error) })
+      LAUNCHPAD_LOCATED -> working
+        (emit SERVE_START { cwd: @entity.cwd, path: @payload.result.path, portText: @entity.port, portOk: true, host: @entity.host, hasClient: false, clientDir: "", clientGiven: "", clientInside: true, mock: true, open: false, noEmulators: false, flagged: false })
+    }
+
+    state working {
+      INIT -> working
+      LAUNCHPAD_ENGINE_ANSWERED -> ready
+        (emit LAUNCHPAD_ANSWERED { status: @payload.status, body: @payload.body, stderr: @payload.stderr, headers: @payload.headers })
+    }
+
+    emits {
+      LAUNCHPAD_ANSWERED -> internal {
+        status : number!
+        body : string!
+        stderr : string
+        headers : Map string string
+      }
+        @description "Internal: the command's answer, which the cli hook prints; headers carry the bootloader hand-off."
+        @tier "internal"
+      LAUNCHPAD_ARGS_PARSE {
+        stage : string!
+        argv : [string]!
+        flags : [ArgFlag]!
+      }
+        @description "Internal: parse the call's words."
+        @tier "internal"
+      LAUNCHPAD_START {
+        portText : string!
+        portOk : boolean!
+        host : string!
+      }
+        @description "Internal: the parsed launchpad request."
+        @tier "internal"
+      SERVE_START {
+        cwd : string!
+        path : string!
+        portText : string!
+        portOk : boolean!
+        host : string!
+        hasClient : boolean!
+        clientDir : string!
+        clientGiven : string!
+        clientInside : boolean!
+        mock : boolean!
+        open : boolean!
+        noEmulators : boolean!
+        flagged : boolean!
+      }
+        @description "Internal: the serve request for the launchpad organism's file, which ServeEngine resolves and wraps with std-http-server."
+        @tier "internal"
+      LAUNCHPAD_LOCATED {
+        result : LaunchpadLocation!
+      }
+        @description "behavior/resolve: the launchpad organism's file."
+        @tier "internal"
+      LAUNCHPAD_LOCATE_FAILED {
+        error : string!
+      }
+        @description "behavior/resolve: the launchpad organism is not installed."
+        @tier "internal"
+    }
+
+    listens {
+      LAUNCHPAD_CALLED -> inbound "cli-launchpad" answers LAUNCHPAD_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb launchpad`."
+        @synonyms "orb launchpad, open the launchpad, browse every installed behavior and run one"
+      LAUNCHPAD_ARGS_DONE {
+        stage : string!
+        flags : Map string [string]!
+        positionals : [string]!
+        errors : [string]!
+        words : [string]!
+      }
+        @description "std-args's ARGS_PARSED."
+      ArgsCli.ARGS_PARSED -> LAUNCHPAD_ARGS_DONE
+      LAUNCHPAD_START {
+        portText : string!
+        portOk : boolean!
+        host : string!
+      }
+        @description "Self: the parsed request."
+      LAUNCHPAD_ENGINE_ANSWERED {
+        status : number!
+        body : string!
+        stderr : string
+        headers : Map string string
+      }
+        @description "Internal: the serve engine refused or failed the request."
+        @tier "internal"
+      LaunchpadEngine.SERVE_ANSWERED -> LAUNCHPAD_ENGINE_ANSWERED
+      ServeHandoff.SERVE_ANSWERED -> LAUNCHPAD_ENGINE_ANSWERED
+      LAUNCHPAD_LOCATED {
+        result : LaunchpadLocation!
+      }
+        @description "behavior/resolve's success."
+      LAUNCHPAD_LOCATE_FAILED {
+        error : string!
+      }
+        @description "behavior/resolve's failure."
+    }
+  }
+
+  trait LaunchpadEngine = Serve.traits.ServeEngine {
+    listens {
+      OrbLaunchpad.SERVE_START -> SERVE_START
+      SERVE_START {
+        cwd : string!
+        path : string!
+        portText : string!
+        portOk : boolean!
+        host : string!
+        hasClient : boolean!
+        clientDir : string!
+        clientGiven : string!
+        clientInside : boolean!
+        mock : boolean!
+        open : boolean!
+        noEmulators : boolean!
+        flagged : boolean!
+      }
+        @description "Resolve the app and wrap it with std-http-server."
+    }
+  }
+
+  trait ServeHandoff = Handoff.traits.ServeHandoff {
+    listens {
+      LaunchpadEngine.SERVE_COMPOSE_READY -> SERVE_COMPOSE_READY
+      LaunchpadEngine.SERVE_DECLARED_READY -> SERVE_DECLARED_READY
+    }
+  }
+
+  page boot as OrbLaunchpadPage -> OrbLaunchpad, ArgsCli, LaunchpadEngine, ServeHandoff
+}

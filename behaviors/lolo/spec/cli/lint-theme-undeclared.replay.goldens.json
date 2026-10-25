@@ -1,0 +1,948 @@
+{
+  "atom": "cli/atoms/std-orb-lint-theme-undeclared.lolo",
+  "trait": "OrbLintThemeUndeclared",
+  "note": "Cases mirror the data_theme_declared_tests in theme.rs: a_config_bound_theme_the_program_never_declares_is_an_error, control_the_same_theme_declared_in_themes_is_clean, control_the_app_theme_s_other_mode_is_declared_with_it, edge_a_literal_data_theme_is_checked_too, edge_an_unset_knob_and_a_binding_are_not_theme_names (two cases); plain_validation_reports_an_undeclared_theme_once is the first case (one finding per trait and theme). Added cases: an inline orbital theme names its own base, a theme in a tick effect, and a theme in a config default. edge_a_themes_entry_must_name_a_real_theme is ORB_X_UNKNOWN_THEME and stays in Rust (needs the installed theme registry).",
+  "cases": [
+    {
+      "id": "config-bound-theme-never-declared",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "theme": "almadar-light",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "config": {
+                        "demoTheme": {
+                          "type": "string",
+                          "default": "clay-dark"
+                        }
+                      },
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "box",
+                                  "children": [
+                                    {
+                                      "type": "box",
+                                      "data-theme": "@config.demoTheme",
+                                      "children": []
+                                    }
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-undeclared",
+                  "findings": [
+                    {
+                      "code": "ORB_THEME_UNDECLARED",
+                      "path": "orbitals[0 (Home)].traits[0 (Tour)]",
+                      "message": "'Tour' shows a frame in theme \"clay-dark\", which the program does not declare",
+                      "suggestion": "add \"clay-dark\" to the app's `themes: [...]` (the themes a program switches to inside a page)",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintThemeUndeclared"
+        }
+      ]
+    },
+    {
+      "id": "control-same-theme-declared-in-themes",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "theme": "almadar-light",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "config": {
+                        "demoTheme": {
+                          "type": "string",
+                          "default": "clay-dark"
+                        }
+                      },
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "box",
+                                  "children": [
+                                    {
+                                      "type": "box",
+                                      "data-theme": "@config.demoTheme",
+                                      "children": []
+                                    }
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ],
+              "themes": [
+                "clay-dark"
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-undeclared",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintThemeUndeclared"
+        }
+      ]
+    },
+    {
+      "id": "control-app-theme-other-mode-is-declared",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "theme": "almadar-light",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "config": {
+                        "demoTheme": {
+                          "type": "string",
+                          "default": "almadar-dark"
+                        }
+                      },
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "box",
+                                  "children": [
+                                    {
+                                      "type": "box",
+                                      "data-theme": "@config.demoTheme",
+                                      "children": []
+                                    }
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-undeclared",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintThemeUndeclared"
+        }
+      ]
+    },
+    {
+      "id": "literal-data-theme-is-checked-too",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "theme": "almadar-light",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "config": {
+                        "demoTheme": {
+                          "type": "string",
+                          "default": ""
+                        }
+                      },
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "box",
+                                  "children": [
+                                    {
+                                      "type": "box",
+                                      "data-theme": "terminal-dark",
+                                      "children": []
+                                    }
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-undeclared",
+                  "findings": [
+                    {
+                      "code": "ORB_THEME_UNDECLARED",
+                      "path": "orbitals[0 (Home)].traits[0 (Tour)]",
+                      "message": "'Tour' shows a frame in theme \"terminal-dark\", which the program does not declare",
+                      "suggestion": "add \"terminal-dark\" to the app's `themes: [...]` (the themes a program switches to inside a page)",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintThemeUndeclared"
+        }
+      ]
+    },
+    {
+      "id": "control-unset-knob-is-not-a-theme",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "theme": "almadar-light",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "config": {
+                        "demoTheme": {
+                          "type": "string",
+                          "default": ""
+                        }
+                      },
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "box",
+                                  "children": [
+                                    {
+                                      "type": "box",
+                                      "data-theme": "@config.demoTheme",
+                                      "children": []
+                                    }
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-undeclared",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintThemeUndeclared"
+        }
+      ]
+    },
+    {
+      "id": "control-binding-is-not-a-theme",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "theme": "almadar-light",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "config": {
+                        "demoTheme": {
+                          "type": "string",
+                          "default": ""
+                        }
+                      },
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "box",
+                                  "children": [
+                                    {
+                                      "type": "box",
+                                      "data-theme": "@currentTheme",
+                                      "children": []
+                                    }
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-undeclared",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintThemeUndeclared"
+        }
+      ]
+    },
+    {
+      "id": "control-inline-orbital-theme-declares-its-base",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "theme": "almadar-light",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "config": {
+                        "demoTheme": {
+                          "type": "string",
+                          "default": ""
+                        }
+                      },
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "box",
+                                  "data-theme": "clay-dark"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "theme": {
+                    "name": "clay"
+                  }
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-undeclared",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintThemeUndeclared"
+        }
+      ]
+    },
+    {
+      "id": "a-tick-effect-is-checked",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "theme": "almadar-light",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "config": {
+                        "demoTheme": {
+                          "type": "string",
+                          "default": ""
+                        }
+                      },
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": []
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {
+                          "effects": [
+                            [
+                              "render-ui",
+                              "main",
+                              {
+                                "type": "box",
+                                "data-theme": "terminal-dark"
+                              }
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-undeclared",
+                  "findings": [
+                    {
+                      "code": "ORB_THEME_UNDECLARED",
+                      "path": "orbitals[0 (Home)].traits[0 (Tour)]",
+                      "message": "'Tour' shows a frame in theme \"terminal-dark\", which the program does not declare",
+                      "suggestion": "add \"terminal-dark\" to the app's `themes: [...]` (the themes a program switches to inside a page)",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintThemeUndeclared"
+        }
+      ]
+    },
+    {
+      "id": "a-config-default-is-checked",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "theme": "almadar-light",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "config": {
+                        "demoTheme": {
+                          "type": "string",
+                          "default": ""
+                        },
+                        "frame": {
+                          "type": "node",
+                          "default": {
+                            "type": "box",
+                            "data-theme": "terminal-light"
+                          }
+                        }
+                      },
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-undeclared",
+                  "findings": [
+                    {
+                      "code": "ORB_THEME_UNDECLARED",
+                      "path": "orbitals[0 (Home)].traits[0 (Tour)]",
+                      "message": "'Tour' shows a frame in theme \"terminal-light\", which the program does not declare",
+                      "suggestion": "add \"terminal-light\" to the app's `themes: [...]` (the themes a program switches to inside a page)",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintThemeUndeclared"
+        }
+      ]
+    },
+    {
+      "id": "each-undeclared-theme-once-sorted",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "theme": "almadar-light",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "config": {
+                        "demoTheme": {
+                          "type": "string",
+                          "default": ""
+                        }
+                      },
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "box",
+                                  "children": [
+                                    {
+                                      "type": "box",
+                                      "data-theme": "b-dark"
+                                    },
+                                    {
+                                      "type": "box",
+                                      "data-theme": "b-dark"
+                                    },
+                                    {
+                                      "type": "box",
+                                      "data-theme": "a-light"
+                                    }
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-undeclared",
+                  "findings": [
+                    {
+                      "code": "ORB_THEME_UNDECLARED",
+                      "path": "orbitals[0 (Home)].traits[0 (Tour)]",
+                      "message": "'Tour' shows a frame in theme \"a-light\", which the program does not declare",
+                      "suggestion": "add \"a-light\" to the app's `themes: [...]` (the themes a program switches to inside a page)",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_THEME_UNDECLARED",
+                      "path": "orbitals[0 (Home)].traits[0 (Tour)]",
+                      "message": "'Tour' shows a frame in theme \"b-dark\", which the program does not declare",
+                      "suggestion": "add \"b-dark\" to the app's `themes: [...]` (the themes a program switches to inside a page)",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintThemeUndeclared"
+        }
+      ]
+    },
+    {
+      "id": "an args body that does not parse is the usage error",
+      "steps": [
+        {
+          "trait": "OrbLintThemeUndeclaredCli",
+          "from": "ready",
+          "event": "LINT_CALLED",
+          "payload": {
+            "rawBody": "not json"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb lint theme-undeclared <file>"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,223 @@
+app std-orb-lint-navigate [
+  version: "1.0.0",
+  inbound: ["cli-lint-navigate"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-navigate — the `orb lint navigate <file>` command, the port of validate_navigate and validate_send_server (effect/navigate.rs). It lowers the file with program/read, builds the declared page set (every inline page with the required payload fields of its traits' INIT events, every `expects page` route and every `uses lazy` page, a declaration keeping its own payload) and walks the effects of every inline trait transition and tick, descending through do, if, when and let. A `navigate` with no path is ORB_EFF_UNKNOWN_TYPE; a literal target that is neither an http(s) URL nor starts with / or @ is ORB_P_INVALID_PATH; a target that resolves to no declared page (the host sign-in route /login and external URLs aside, and a target that is wholly a binding) is ORB_EFF_NAVIGATE_TARGET_UNREACHABLE; a target page whose INIT requires payload fields the navigate does not pass is ORB_EFF_NAVIGATE_MISSING_PAYLOAD per field. A `send-server` with no event name is ORB_EFF_UNKNOWN_TYPE. Each finding carries the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint navigate: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-navigate"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type NavVal = string | number | boolean | [NavVal?] | Map string NavVal?
+type NavLeaf = { p : string!, e : NavVal!, oi : number!, ti : number! }
+type NavLeaves = [NavLeaf]
+type NavField = { name : string, required : boolean }
+type NavEvent = { key : string, payloadSchema : [NavField] }
+type NavMachine = { transitions : [NavTransition], events : [NavEvent] }
+type NavTransition = { effects : [NavVal?] }
+type NavTick = { effects : [NavVal?] }
+type NavTrait = { name : string, stateMachine : NavMachine, ticks : [NavTick] }
+type NavPageTrait = { ref : string, name : string, stateMachine : NavMachine }
+type NavPage = { path : string, traits : [NavPageTrait] }
+type NavExpect = { kind : string, path : string, protocol : string }
+type NavOrbital = { name : string, traits : [NavTrait], pages : [NavPage], expects : [NavExpect] }
+type NavLazy = { path : string }
+type NavProgram = { orbitals : [NavOrbital], lazyPages : [NavLazy] }
+
+orbital OrbLintNavigateOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintNavigateRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintNavigate -> OrbLintNavigateRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
+          (let ((entries (array/concat
+                  (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+                    (let ((o (array/nth @orbitals @oi)))
+                      (let ((visible (array/flatten (array/map (array/slice @orbitals 0 (+ @oi 1)) (fn vo (array/filter (object/get @vo "traits" []) (fn vt (object/has @vt "stateMachine"))))))))
+                        (array/concat
+                          (array/map (array/filter (object/get @o "pages" []) (fn pg (validate/string (object/get @pg "path" null)))) (fn pg
+                            { path: (object/get @pg "path"), set: true,
+                              req: (array/unique (array/flatten (array/map (object/get @pg "traits" []) (fn r
+                                (let ((td (if (object/has @r "stateMachine") @r (array/last (array/filter @visible (fn vt (= (object/get @vt "name" "") (if (object/has @r "ref") (object/get @r "ref") (object/get @r "name" "")))))))))
+                                  (if (= @td null) (array/filter [""] (fn q false))
+                                    (array/flatten (array/map (array/filter (object/get (object/get @td "stateMachine" {}) "events" []) (fn ev (= (object/get @ev "key" "") "INIT"))) (fn ev
+                                      (array/map (array/filter (object/get @ev "payloadSchema" []) (fn fd (object/get @fd "required" false))) (fn fd (object/get @fd "name" "")))))))))))) }))
+                          (array/map (array/filter (object/get @o "expects" []) (fn ex (and (= (object/get @ex "kind" "") "page") (not (object/has @ex "protocol"))))) (fn ex
+                            { path: (object/get @ex "path" ""), set: false, req: (array/filter [""] (fn q false)) }))))))))
+                  (array/map (object/get @payload.program "lazyPages" []) (fn lz { path: (object/get @lz "path" ""), set: false, req: (array/filter [""] (fn q false)) })))))
+            (let ((reg (array/reduce @entries (array/filter @entries (fn q false))
+                    (fn (acc en)
+                      (let ((idx (array/findIndex @acc (fn x (= (object/get @x "path") (object/get @en "path"))))))
+                        (if (< @idx 0) (array/append @acc { path: (object/get @en "path"), set: (object/get @en "set"), req: (object/get @en "req") })
+                          (if (object/get @en "set")
+                            (array/map (array/range 0 (array/len @acc)) (fn j (if (= @j @idx) { path: (object/get @en "path"), set: true, req: (object/get @en "req") } (array/nth @acc @j))))
+                            @acc)))))))
+              (let ((ls (json/parse (json/stringify (array/flatten (array/map (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+      (let ((o (array/nth @orbitals @oi)))
+        (array/flatten (array/map (array/range 0 (array/len (object/get @o "traits" []))) (fn ti
+          (let ((td (array/nth (object/get @o "traits" []) @ti)))
+            (if (not (object/has @td "stateMachine")) []
+              (let ((tp (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @td "name" "") ")]")) (trs (object/get (object/get @td "stateMachine" {}) "transitions" [])) (tks (object/get @td "ticks" [])))
+                (array/concat
+                  (array/flatten (array/map (array/range 0 (array/len @trs)) (fn tj
+                    (let ((efs (object/get (array/nth @trs @tj) "effects" [])))
+                      (array/map (array/range 0 (array/len @efs)) (fn ej { p: (str/concat @tp ".stateMachine.transitions[" @tj "].effects[" @ej "]"), e: (array/nth @efs @ej), oi: @oi, ti: @ti }))))))
+                  (array/flatten (array/map (array/range 0 (array/len @tks)) (fn kj
+                    (let ((efs (object/get (array/nth @tks @kj) "effects" [])))
+                      (array/map (array/range 0 (array/len @efs)) (fn ej { p: (str/concat @tp ".ticks[" @kj "].effects[" @ej "]"), e: (array/nth @efs @ej), oi: @oi, ti: @ti }))))))))))))))))) (fn x
+      (if (not (and (validate/array (object/get @x "e")) (> (array/len (object/get @x "e")) 0) (validate/string (array/nth (object/get @x "e") 0)) (array/includes ["do", "if", "when", "let"] (array/nth (object/get @x "e") 0)))) [@x]
+        (array/reduce (array/range 0 (str/len (json/stringify (object/get @x "e")))) [@x]
+          (fn (wl i) (array/flatten (array/map @wl (fn it (if (and (validate/array (object/get @it "e")) (> (array/len (object/get @it "e")) 0) (validate/string (array/nth (object/get @it "e") 0)) (array/includes ["do", "if", "when", "let"] (array/nth (object/get @it "e") 0))) (array/flatten (array/map (if (= (array/nth (object/get @it "e") 0) "do")
+      (array/map (array/range 1 (array/len (object/get @it "e"))) (fn i { cp: (str/concat (object/get @it "p") ".do[" (- @i 1) "]"), x: (array/nth (object/get @it "e") @i) }))
+      (if (= (array/nth (object/get @it "e") 0) "if")
+        (array/concat (if (> (array/len (object/get @it "e")) 2) [{ cp: (str/concat (object/get @it "p") ".then"), x: (array/nth (object/get @it "e") 2) }] []) (if (> (array/len (object/get @it "e")) 3) [{ cp: (str/concat (object/get @it "p") ".else"), x: (array/nth (object/get @it "e") 3) }] []))
+        (if (= (array/nth (object/get @it "e") 0) "when")
+          (array/map (array/range 2 (array/len (object/get @it "e"))) (fn i { cp: (str/concat (object/get @it "p") ".then[" (- @i 2) "]"), x: (array/nth (object/get @it "e") @i) }))
+          (array/map (array/range 2 (array/len (object/get @it "e"))) (fn i { cp: (str/concat (object/get @it "p") ".body[" (- @i 2) "]"), x: (array/nth (object/get @it "e") @i) }))))) (fn pc
+        (let ((x (object/get @pc "x")) (cp (object/get @pc "cp")))
+          (if (and (validate/array @x) (> (array/len @x) 0) (validate/array (array/nth @x 0)))
+            (array/map (array/range 0 (array/len @x)) (fn k { p: (str/concat @cp "[" @k "]"), e: (array/nth @x @k), oi: (object/get @it "oi"), ti: (object/get @it "ti") }))
+            [{ p: @cp, e: @x, oi: (object/get @it "oi"), ti: (object/get @it "ti") }]))))) [@it])))))))))) ) NavLeaves)))
+          (if (= @ls null) [{ code: "LINT_NODE_UNCHECKED", path: "", message: (str/concat @payload.file ": the effects could not be read as effect expressions; this rule could not check them"), suggestion: "", severity: "error" }]
+          (array/flatten (array/map @ls (fn l
+            (let ((e (object/get @l "e")) (p (object/get @l "p")))
+              (if (not (and (validate/array @e) (> (array/len @e) 0) (or (= (array/nth @e 0) "navigate") (= (array/nth @e 0) "send-server")))) []
+                (let ((n (array/len @e)) (h (array/nth @e 0)))
+              (if (= @h "send-server")
+                (if (< @n 2) [{ code: "ORB_EFF_UNKNOWN_TYPE", path: @p, message: "send-server requires an event name", suggestion: "Use: [\"send-server\", \"EVENT_NAME\"] or [\"send-server\", \"EVENT_NAME\", { payload }]", severity: "error" }] [])
+                (if (< @n 2) [{ code: "ORB_EFF_UNKNOWN_TYPE", path: @p, message: "navigate requires a path", suggestion: "Use: [\"navigate\", \"/path\"]", severity: "error" }]
+                  (let ((t (array/nth @e 1)))
+                    (let ((np (if (validate/string @t) @t (if (and (validate/array @t) (> (array/len @t) 1) (= (array/nth @t 0) "str/concat") (validate/string (array/nth @t 1))) (array/nth @t 1) null))))
+                      (if (= @np null) []
+                        (let ((ext (or (str/startsWith @np "http://") (str/startsWith @np "https://"))) (dyn (validate/array @t)) (q (str/includes @np "?")) (route (array/first (str/split @np "?"))) (opts (if (> @n 2) (array/nth @e 2) null)))
+                          (array/concat
+                            (if (or @ext (str/startsWith @np "/") (str/startsWith @np (quote "@"))) []
+                              [{ code: "ORB_P_INVALID_PATH", path: @p, message: (str/concat "Navigate path should start with '/': '" @np "'"), suggestion: "Use absolute paths starting with /", severity: "error" }])
+                            (if (or @ext (= (str/replace-pattern @route "/+$" "") "/login")) []
+                              (let ((m (if @q (let ((ex (array/find @reg (fn r (= (object/get @r "path") @route)))))
+      (if (!= @ex null) @ex
+        (let ((pm (array/find @reg (fn r (let ((pp (array/filter (str/split @route "/") (fn s (!= @s "")))) (qq (array/filter (str/split (object/get @r "path") "/") (fn s (!= @s "")))))
+          (and (= (array/len @pp) (array/len @qq)) (array/every (array/range 0 (array/len @pp)) (fn j (or (str/startsWith (array/nth @qq @j) ":") (= (array/nth @qq @j) (array/nth @pp @j)))))))))))
+          (if (!= @pm null) @pm
+            (array/find @reg (fn r (str/startsWith (object/get @r "path") (str/replace-pattern @route "/+$" "")))))))) (if @dyn (let ((first (array/first (array/sort (array/map (array/filter @reg (fn r (str/startsWith (object/get @r "path") @np))) (fn r (object/get @r "path")))))))
+      (if (= @first null) null (array/find @reg (fn r (= (object/get @r "path") @first))))) (let ((ex (array/find @reg (fn r (= (object/get @r "path") @np)))))
+      (if (!= @ex null) @ex
+        (let ((pm (array/find @reg (fn r (let ((pp (array/filter (str/split @np "/") (fn s (!= @s "")))) (qq (array/filter (str/split (object/get @r "path") "/") (fn s (!= @s "")))))
+          (and (= (array/len @pp) (array/len @qq)) (array/every (array/range 0 (array/len @pp)) (fn j (or (str/startsWith (array/nth @qq @j) ":") (= (array/nth @qq @j) (array/nth @pp @j)))))))))))
+          (if (!= @pm null) @pm
+            (array/find @reg (fn r (str/startsWith (object/get @r "path") (str/replace-pattern @np "/+$" ""))))))))))))
+                                (array/concat
+                                  (if (and (= @m null) (> (array/len @reg) 0) (not (str/startsWith @np (quote "@"))))
+                                    [{ code: "ORB_EFF_NAVIGATE_TARGET_UNREACHABLE", path: @p, message: (str/concat "Navigate target '" @np "' doesn't resolve to any declared page"), suggestion: (str/concat "Declare a matching `pages[].path` (e.g. `page \"" @np "\" -> ...`) or correct the navigate path"), severity: "error" }]
+                                    [])
+                                  (if (= @m null) []
+                                    (array/flatten (array/map (object/get @m "req") (fn rf
+                                      (if (and (validate/object @opts) (array/includes (object/keys @opts) @rf)) []
+                                        [{ code: "ORB_EFF_NAVIGATE_MISSING_PAYLOAD", path: @p, message: (str/concat "Navigation to '" (object/get @m "path") "' requires payload field '" @rf "' for INIT event"), suggestion: (str/concat "Add payload to navigate effect: [\"navigate\", \"" @np "\", { \"" @rf "\": \"@entity." @rf "\" }]"), severity: "error" }])))))))))))))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "navigate", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : NavProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+    }
+  }
+
+  trait OrbLintNavigateCli -> OrbLintNavigateRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint navigate <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "navigate") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint navigate: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "navigate") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint navigate: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-navigate" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint navigate` with its arguments and working directory."
+        @synonyms "orb lint navigate"
+      OrbLintNavigate.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintNavigateCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintNavigateOrbitalStart -> OrbLintNavigate, OrbLintNavigateCli, OrbLintInput, Packs, Versions
+}

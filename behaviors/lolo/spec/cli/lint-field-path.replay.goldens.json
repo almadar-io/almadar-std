@@ -1,0 +1,1502 @@
+{
+  "atom": "cli/atoms/std-orb-lint-field-path.lolo",
+  "trait": "OrbLintFieldPath",
+  "note": "The Rust validate_field_paths has no unit test of its own; these cases pin the behavior read from field_path.rs and the pattern.rs walk. Entity definitions are the orbitals' primary and auxiliary entities, later replacing earlier, as mod.rs builds them. Not ported: ORB_X_UNRESOLVED_PATTERN_FIELD_REF (tests/pattern_field_ref_validation.rs; needs the registry's field-ref prop kinds) and the expansion of operator-call children.",
+  "cases": [
+    {
+      "id": "a-valid-nested-path-is-clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "data-grid",
+                                  "entity": "Task",
+                                  "fields": [
+                                    "title",
+                                    "company.name"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "company",
+                        "type": "relation",
+                        "relation": {
+                          "entity": "Company"
+                        }
+                      }
+                    ]
+                  },
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Company",
+                      "persistence": "runtime",
+                      "fields": [
+                        {
+                          "name": "name",
+                          "type": "string"
+                        },
+                        {
+                          "name": "address",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "field-path",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintFieldPath"
+        }
+      ]
+    },
+    {
+      "id": "a-flat-field-is-never-checked",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "data-grid",
+                                  "entity": "Task",
+                                  "fields": [
+                                    "nonexistent"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "company",
+                        "type": "relation",
+                        "relation": {
+                          "entity": "Company"
+                        }
+                      }
+                    ]
+                  },
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Company",
+                      "persistence": "runtime",
+                      "fields": [
+                        {
+                          "name": "name",
+                          "type": "string"
+                        },
+                        {
+                          "name": "address",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "field-path",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintFieldPath"
+        }
+      ]
+    },
+    {
+      "id": "a-first-segment-that-is-not-a-relation-fires",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "data-grid",
+                                  "entity": "Task",
+                                  "fields": [
+                                    "title.name"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "company",
+                        "type": "relation",
+                        "relation": {
+                          "entity": "Company"
+                        }
+                      }
+                    ]
+                  },
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Company",
+                      "persistence": "runtime",
+                      "fields": [
+                        {
+                          "name": "name",
+                          "type": "string"
+                        },
+                        {
+                          "name": "address",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "field-path",
+                  "findings": [
+                    {
+                      "code": "ORB_RUI_INVALID_FIELD_PATH",
+                      "path": "orbitals[0 (Home)].traits[0 (Tour)].stateMachine.transitions[0].effects[0][2]",
+                      "message": "Field path 'title.name' - 'Task' has no relation field 'title' to traverse",
+                      "suggestion": "Add a relation field for 'title' or use a direct field reference",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintFieldPath"
+        }
+      ]
+    },
+    {
+      "id": "a-missing-field-on-the-related-entity-fires",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "data-grid",
+                                  "entity": "Task",
+                                  "fields": [
+                                    "company.zzz"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "company",
+                        "type": "relation",
+                        "relation": {
+                          "entity": "Company"
+                        }
+                      }
+                    ]
+                  },
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Company",
+                      "persistence": "runtime",
+                      "fields": [
+                        {
+                          "name": "name",
+                          "type": "string"
+                        },
+                        {
+                          "name": "address",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "field-path",
+                  "findings": [
+                    {
+                      "code": "ORB_RUI_INVALID_FIELD_PATH",
+                      "path": "orbitals[0 (Home)].traits[0 (Tour)].stateMachine.transitions[0].effects[0][2]",
+                      "message": "Field path 'company.zzz' - 'Task' has no field 'zzz' on related entity 'Company'",
+                      "suggestion": "Check that 'Company' entity has a 'zzz' field",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintFieldPath"
+        }
+      ]
+    },
+    {
+      "id": "more-than-two-levels-fires",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "data-grid",
+                                  "entity": "Task",
+                                  "fields": [
+                                    "company.address.city"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "company",
+                        "type": "relation",
+                        "relation": {
+                          "entity": "Company"
+                        }
+                      }
+                    ]
+                  },
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Company",
+                      "persistence": "runtime",
+                      "fields": [
+                        {
+                          "name": "name",
+                          "type": "string"
+                        },
+                        {
+                          "name": "address",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "field-path",
+                  "findings": [
+                    {
+                      "code": "ORB_RUI_INVALID_FIELD_PATH",
+                      "path": "orbitals[0 (Home)].traits[0 (Tour)].stateMachine.transitions[0].effects[0][2]",
+                      "message": "Field path 'company.address.city' has more than 2 levels of nesting (max recommended: 2)",
+                      "suggestion": "Consider flattening the data structure or using a custom pattern",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintFieldPath"
+        }
+      ]
+    },
+    {
+      "id": "a-missing-second-segment-and-deep-nesting-both-fire",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "data-grid",
+                                  "entity": "Task",
+                                  "fields": [
+                                    "company.zzz.city"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "company",
+                        "type": "relation",
+                        "relation": {
+                          "entity": "Company"
+                        }
+                      }
+                    ]
+                  },
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Company",
+                      "persistence": "runtime",
+                      "fields": [
+                        {
+                          "name": "name",
+                          "type": "string"
+                        },
+                        {
+                          "name": "address",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "field-path",
+                  "findings": [
+                    {
+                      "code": "ORB_RUI_INVALID_FIELD_PATH",
+                      "path": "orbitals[0 (Home)].traits[0 (Tour)].stateMachine.transitions[0].effects[0][2]",
+                      "message": "Field path 'company.zzz.city' - 'Task' has no field 'zzz' on related entity 'Company'",
+                      "suggestion": "Check that 'Company' entity has a 'zzz' field",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_RUI_INVALID_FIELD_PATH",
+                      "path": "orbitals[0 (Home)].traits[0 (Tour)].stateMachine.transitions[0].effects[0][2]",
+                      "message": "Field path 'company.zzz.city' has more than 2 levels of nesting (max recommended: 2)",
+                      "suggestion": "Consider flattening the data structure or using a custom pattern",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintFieldPath"
+        }
+      ]
+    },
+    {
+      "id": "control-a-relation-named-with-the-Id-suffix-matches",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "data-grid",
+                                  "entity": "Task",
+                                  "fields": [
+                                    "company.name"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "companyId",
+                        "type": "relation",
+                        "relation": {
+                          "entity": "Company"
+                        }
+                      }
+                    ]
+                  },
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Company",
+                      "persistence": "runtime",
+                      "fields": [
+                        {
+                          "name": "name",
+                          "type": "string"
+                        },
+                        {
+                          "name": "address",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "field-path",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintFieldPath"
+        }
+      ]
+    },
+    {
+      "id": "control-an-unknown-entity-is-silent",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "data-grid",
+                                  "entity": "Nope",
+                                  "fields": [
+                                    "company.name"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "company",
+                        "type": "relation",
+                        "relation": {
+                          "entity": "Company"
+                        }
+                      }
+                    ]
+                  },
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Company",
+                      "persistence": "runtime",
+                      "fields": [
+                        {
+                          "name": "name",
+                          "type": "string"
+                        },
+                        {
+                          "name": "address",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "field-path",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintFieldPath"
+        }
+      ]
+    },
+    {
+      "id": "control-a-bound-entity-is-silent",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "data-grid",
+                                  "entity": "@entity.rows",
+                                  "fields": [
+                                    "company.name"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "company",
+                        "type": "relation",
+                        "relation": {
+                          "entity": "Company"
+                        }
+                      }
+                    ]
+                  },
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Company",
+                      "persistence": "runtime",
+                      "fields": [
+                        {
+                          "name": "name",
+                          "type": "string"
+                        },
+                        {
+                          "name": "address",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "field-path",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintFieldPath"
+        }
+      ]
+    },
+    {
+      "id": "control-a-relation-with-no-target-is-silent",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "data-grid",
+                                  "entity": "Task",
+                                  "fields": [
+                                    "company.name"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "company",
+                        "type": "relation"
+                      }
+                    ]
+                  },
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Company",
+                      "persistence": "runtime",
+                      "fields": [
+                        {
+                          "name": "name",
+                          "type": "string"
+                        },
+                        {
+                          "name": "address",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "field-path",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintFieldPath"
+        }
+      ]
+    },
+    {
+      "id": "control-an-unknown-target-entity-is-silent",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "data-grid",
+                                  "entity": "Task",
+                                  "fields": [
+                                    "company.name"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "company",
+                        "type": "relation",
+                        "relation": {
+                          "entity": "Gone"
+                        }
+                      }
+                    ]
+                  },
+                  "auxiliaryEntities": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "field-path",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintFieldPath"
+        }
+      ]
+    },
+    {
+      "id": "each-bad-path-reports-in-order",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "data-grid",
+                                  "entity": "Task",
+                                  "fields": [
+                                    "company.zzz",
+                                    "title.x"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "company",
+                        "type": "relation",
+                        "relation": {
+                          "entity": "Company"
+                        }
+                      }
+                    ]
+                  },
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Company",
+                      "persistence": "runtime",
+                      "fields": [
+                        {
+                          "name": "name",
+                          "type": "string"
+                        },
+                        {
+                          "name": "address",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "field-path",
+                  "findings": [
+                    {
+                      "code": "ORB_RUI_INVALID_FIELD_PATH",
+                      "path": "orbitals[0 (Home)].traits[0 (Tour)].stateMachine.transitions[0].effects[0][2]",
+                      "message": "Field path 'company.zzz' - 'Task' has no field 'zzz' on related entity 'Company'",
+                      "suggestion": "Check that 'Company' entity has a 'zzz' field",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_RUI_INVALID_FIELD_PATH",
+                      "path": "orbitals[0 (Home)].traits[0 (Tour)].stateMachine.transitions[0].effects[0][2]",
+                      "message": "Field path 'title.x' - 'Task' has no relation field 'title' to traverse",
+                      "suggestion": "Add a relation field for 'title' or use a direct field reference",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintFieldPath"
+        }
+      ]
+    },
+    {
+      "id": "a-nested-child-pattern-is-walked",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": [
+                    {
+                      "name": "Tour",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    {
+                                      "type": "data-grid",
+                                      "entity": "Task",
+                                      "fields": [
+                                        "title.x"
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "company",
+                        "type": "relation",
+                        "relation": {
+                          "entity": "Company"
+                        }
+                      }
+                    ]
+                  },
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Company",
+                      "persistence": "runtime",
+                      "fields": [
+                        {
+                          "name": "name",
+                          "type": "string"
+                        },
+                        {
+                          "name": "address",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "field-path",
+                  "findings": [
+                    {
+                      "code": "ORB_RUI_INVALID_FIELD_PATH",
+                      "path": "orbitals[0 (Home)].traits[0 (Tour)].stateMachine.transitions[0].effects[0][2].children[0]",
+                      "message": "Field path 'title.x' - 'Task' has no relation field 'title' to traverse",
+                      "suggestion": "Add a relation field for 'title' or use a direct field reference",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintFieldPath"
+        }
+      ]
+    },
+    {
+      "id": "an args body that does not parse is the usage error",
+      "steps": [
+        {
+          "trait": "OrbLintFieldPathCli",
+          "from": "ready",
+          "event": "LINT_CALLED",
+          "payload": {
+            "rawBody": "not json"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb lint field-path <file>"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

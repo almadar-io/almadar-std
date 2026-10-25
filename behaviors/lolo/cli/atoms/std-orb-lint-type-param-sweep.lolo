@@ -1,0 +1,235 @@
+app std-orb-lint-type-param-sweep [
+  version: "1.0.0",
+  inbound: ["cli-lint-type-param-sweep"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-type-param-sweep — the `orb lint type-param-sweep <file>` command, the port of ORB_T_UNRESOLVED_TYPE_PARAM (type_param_sweep.rs validate_type_param_sentinels). It lowers the file with program/read and reports every type-parameter sentinel that survived resolution: a type variable left in an entity field shape, in a trait's emit or event payload field (the `$v`, `[$v]` and bare `@entity` sentinels, deferred when the linked entity is licensed by the orbital's expects), in a config knob's items or properties or in the knob's own type, and a config knob still typed with an unresolved sigil (`@user`, `@payload(..)`, `@entity(..)`, `@entity`), with the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint type-param-sweep: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-type-param-sweep"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type SweepShape = string | number | boolean | [SweepShape?] | Map string SweepShape?
+type SweepParam = { name : string, kind : string }
+type SweepEntity = { name : string, fields : [SweepShape] }
+type SweepEntityRef = SweepEntity | string
+type SweepKnob = { type : string, items : SweepShape, properties : Map string SweepShape }
+type SweepExpect = { kind : string, name : string }
+type SweepEmit = { event : string, payloadSchema : [SweepShape] }
+type SweepEvent = { key : string, payloadSchema : [SweepShape] }
+type SweepMachine = { events : [SweepEvent] }
+type SweepTrait = { name : string, ref : string, linkedEntity : string, typeParams : [SweepParam], config : Map string SweepKnob, emits : [SweepEmit], stateMachine : SweepMachine }
+type SweepOrbital = { name : string, expects : [SweepExpect], entity : SweepEntityRef, auxiliaryEntities : [SweepEntity], traits : [SweepTrait] }
+type SweepProgram = { orbitals : [SweepOrbital] }
+type OrbFinding ={ code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital OrbLintTypeParamSweepOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintTypeParamSweepRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintTypeParamSweep -> OrbLintTypeParamSweepRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
+ (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+  (let ((orb (array/nth @orbitals @oi)))
+   (array/concat
+    (array/flatten (array/map (array/flatten (array/map (array/flatten (array/map (array/concat [(object/get @orb "entity" {})] (object/get @orb "auxiliaryEntities" [])) (fn xe (if (validate/object @xe) [@xe] [])))) (fn en
+  (array/map (object/get @en "fields" []) (fn f { mode: "entity", f: @f, w: (str/concat "orbitals[" @oi "].entity." (object/get @en "name" "") "." (if (validate/object @f) (let ((n0 (object/get @f "name" ""))) (if (validate/string @n0) @n0 "")) "")), pre: "", ft: "", nm: "" }))))) (fn x (let ((md (let ((s10 (object/get @x "mode"))) (if (validate/string @s10) @s10 ""))) (hs (let ((md (let ((s11 (object/get @x "mode"))) (if (validate/string @s11) @s11 ""))))
+ (if (or (= @md "own") (= @md "sigil"))
+  [{ rel: "", ty: (let ((s12 (object/get @x "ft"))) (if (validate/string @s12) @s12 "")), nm: (let ((s13 (object/get @x "nm"))) (if (validate/string @s13) @s13 "")) }]
+  (let ((fres (tree/fold (object/get @x "f") (fn (n k)
+ (if (validate/array @n)
+  (array/flatten (array/filter @k (fn r (validate/array @r))))
+  (if (validate/object @n)
+   (if (validate/string (object/get @n "type" 0))
+    (let ((ty (let ((s4 (object/get @n "type" ""))) (if (validate/string @s4) @s4 ""))) (nm (let ((s5 (object/get @n "name" ""))) (if (validate/string @s5) @s5 ""))))
+     (if (= @md "payload")
+      (if (or (str/startsWith @ty "$") (and (str/startsWith @ty "[$") (str/endsWith @ty "]")) (= @ty (quote "@entity")) (= @ty (quote "[@entity]")))
+       [{ rel: (str/concat "." @nm), ty: @ty, nm: @nm }]
+       (array/map (object/get @k "properties" []) (fn h { rel: (str/concat "." @nm (let ((s1 (object/get @h "rel" ""))) (if (validate/string @s1) @s1 ""))), ty: (let ((s2 (object/get @h "ty" ""))) (if (validate/string @s2) @s2 "")), nm: (let ((s3 (object/get @h "nm" ""))) (if (validate/string @s3) @s3 "")) })))
+      (if (and (str/startsWith @ty "$") (> (str/len @ty) 1))
+       [{ rel: "", ty: @ty, nm: "" }]
+       (array/concat
+        (array/map (object/get @k "items" []) (fn h { rel: (str/concat "[]" (let ((s1 (object/get @h "rel" ""))) (if (validate/string @s1) @s1 ""))), ty: (let ((s2 (object/get @h "ty" ""))) (if (validate/string @s2) @s2 "")), nm: "" }))
+        (object/get @k "properties" [])))))
+    (if (= @md "payload")
+     []
+     (array/flatten (array/map (object/keys @k) (fn key (array/map (or (object/get @k @key) []) (fn h { rel: (str/concat "." @key (let ((s1 (object/get @h "rel" ""))) (if (validate/string @s1) @s1 ""))), ty: (let ((s2 (object/get @h "ty" ""))) (if (validate/string @s2) @s2 "")), nm: "" })))))))
+   []))) SweepShape)))
+   (if (= @fres null) null @fres))))))
+ (if (= @hs null) [{ code: "LINT_NODE_UNCHECKED", path: (object/get @x "w"), message: (str/concat @payload.file ": schema node at " (object/get @x "w") " is not a SweepShape; this rule could not check it"), suggestion: "", severity: "error" }] (array/flatten (array/map @hs (fn h
+ (let ((rel (let ((s1 (object/get @h "rel" ""))) (if (validate/string @s1) @s1 ""))) (ty (let ((s2 (object/get @h "ty" ""))) (if (validate/string @s2) @s2 ""))))
+  (let ((path (str/concat (let ((s6 (object/get @x "w"))) (if (validate/string @s6) @s6 "")) (let ((s7 (object/get @x "pre"))) (if (validate/string @s7) @s7 "")) @rel)) (pn (if (and (str/startsWith @ty "[$") (str/endsWith @ty "]")) (str/slice @ty 2 (- (str/len @ty) 1)) (if (str/startsWith @ty "$") (str/slice @ty 1) @ty))))
+   [{ code: "ORB_T_UNRESOLVED_TYPE_PARAM", path: @path, message: (str/concat "'" @path "' has the unbound type variable '" @pn "' — no trait parameter of that name binds it"), suggestion: "Bind the trait to a `linkedEntity` so an Entity-kind parameter can default to it, or supply an explicit call-site `:: <param> <arg>` argument.", severity: "error" }]))))))))))
+    (let ((licensed (array/flatten (array/map (object/get @orb "expects" []) (fn e (if (and (validate/object @e) (or (= (object/get @e "kind" "") "entity") (and (= (object/get @e "kind" "") "identity") (validate/string (object/get @e "name" null))))) [(object/get @e "name")] []))))))
+     (array/flatten (array/map (array/range 0 (array/len (object/get @orb "traits" []))) (fn ti
+      (let ((td (array/nth (object/get @orb "traits" []) @ti)))
+       (if (validate/object (object/get @td "stateMachine" null))
+        (let ((tp (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].traits[" @ti " (" (object/get @td "name" "") ")]"))
+              (cfg (object/get @td "config" {}))
+              (tps (object/get @td "typeParams" []))
+              (df (and (object/has @td "linkedEntity") (array/includes @licensed (object/get @td "linkedEntity" "")))))
+         (array/flatten (array/map (array/concat
+ (array/flatten (array/map (object/get @td "emits" []) (fn em (array/map (object/get @em "payloadSchema" []) (fn pf { mode: "payload", f: @pf, w: (str/concat @tp ".emits." (object/get @em "event" "")), pre: "", ft: "", nm: "" })))))
+ (array/concat
+ (array/flatten (array/map (object/get (object/get @td "stateMachine" {}) "events" []) (fn ev (array/map (object/get @ev "payloadSchema" []) (fn pf { mode: "payload", f: @pf, w: (str/concat @tp ".events." (object/get @ev "key" "")), pre: "", ft: "", nm: "" })))))
+ (array/concat
+ (array/flatten (array/map (object/keys @cfg) (fn kn
+  (array/concat
+   (if (object/has (object/get @cfg @kn) "items") [{ mode: "cfg", f: (object/get (object/get @cfg @kn) "items"), w: (str/concat @tp ".config." @kn), pre: "[]", ft: "", nm: "" }] [])
+   (if (object/has (object/get @cfg @kn) "properties") [{ mode: "cfg", f: (object/get (object/get @cfg @kn) "properties"), w: (str/concat @tp ".config." @kn), pre: "", ft: "", nm: "" }] [])))))
+ (array/concat
+ (array/flatten (array/map (object/keys @cfg) (fn kn
+  (let ((ft0 (object/get (object/get @cfg @kn) "type" "")))
+   (let ((ft (if (validate/string @ft0) @ft0 "")))
+    (if (or (str/startsWith @ft "$") (and (str/startsWith @ft "[$") (str/endsWith @ft "]")))
+     [{ mode: "own", f: "", w: (str/concat @tp ".config." @kn), pre: "", ft: @ft, nm: @kn }]
+     []))))))
+ (array/map (object/keys @cfg) (fn kn { mode: "sigil", f: "", w: (str/concat @tp ".config." @kn), pre: "", ft: (let ((ft0 (object/get (object/get @cfg @kn) "type" ""))) (if (validate/string @ft0) @ft0 "")), nm: @kn })))))) (fn x (let ((md (let ((s18 (object/get @x "mode"))) (if (validate/string @s18) @s18 ""))) (hs (let ((md (let ((s19 (object/get @x "mode"))) (if (validate/string @s19) @s19 ""))))
+ (if (or (= @md "own") (= @md "sigil"))
+  [{ rel: "", ty: (let ((s20 (object/get @x "ft"))) (if (validate/string @s20) @s20 "")), nm: (let ((s21 (object/get @x "nm"))) (if (validate/string @s21) @s21 "")) }]
+  (let ((fres (tree/fold (object/get @x "f") (fn (n k)
+ (if (validate/array @n)
+  (array/flatten (array/filter @k (fn r (validate/array @r))))
+  (if (validate/object @n)
+   (if (validate/string (object/get @n "type" 0))
+    (let ((ty (let ((s4 (object/get @n "type" ""))) (if (validate/string @s4) @s4 ""))) (nm (let ((s5 (object/get @n "name" ""))) (if (validate/string @s5) @s5 ""))))
+     (if (= @md "payload")
+      (if (or (str/startsWith @ty "$") (and (str/startsWith @ty "[$") (str/endsWith @ty "]")) (= @ty (quote "@entity")) (= @ty (quote "[@entity]")))
+       [{ rel: (str/concat "." @nm), ty: @ty, nm: @nm }]
+       (array/map (object/get @k "properties" []) (fn h { rel: (str/concat "." @nm (let ((s1 (object/get @h "rel" ""))) (if (validate/string @s1) @s1 ""))), ty: (let ((s2 (object/get @h "ty" ""))) (if (validate/string @s2) @s2 "")), nm: (let ((s3 (object/get @h "nm" ""))) (if (validate/string @s3) @s3 "")) })))
+      (if (and (str/startsWith @ty "$") (> (str/len @ty) 1))
+       [{ rel: "", ty: @ty, nm: "" }]
+       (array/concat
+        (array/map (object/get @k "items" []) (fn h { rel: (str/concat "[]" (let ((s1 (object/get @h "rel" ""))) (if (validate/string @s1) @s1 ""))), ty: (let ((s2 (object/get @h "ty" ""))) (if (validate/string @s2) @s2 "")), nm: "" }))
+        (object/get @k "properties" [])))))
+    (if (= @md "payload")
+     []
+     (array/flatten (array/map (object/keys @k) (fn key (array/map (or (object/get @k @key) []) (fn h { rel: (str/concat "." @key (let ((s1 (object/get @h "rel" ""))) (if (validate/string @s1) @s1 ""))), ty: (let ((s2 (object/get @h "ty" ""))) (if (validate/string @s2) @s2 "")), nm: "" })))))))
+   []))) SweepShape)))
+   (if (= @fres null) null @fres))))))
+ (if (= @hs null) [{ code: "LINT_NODE_UNCHECKED", path: (object/get @x "w"), message: (str/concat @payload.file ": schema node at " (object/get @x "w") " is not a SweepShape; this rule could not check it"), suggestion: "", severity: "error" }] (array/flatten (array/map @hs (fn h
+ (let ((rel (let ((s1 (object/get @h "rel" ""))) (if (validate/string @s1) @s1 ""))) (ty (let ((s2 (object/get @h "ty" ""))) (if (validate/string @s2) @s2 ""))) (nm (let ((s3 (object/get @h "nm" ""))) (if (validate/string @s3) @s3 ""))))
+  (let ((path (str/concat (let ((s16 (object/get @x "w"))) (if (validate/string @s16) @s16 "")) (let ((s17 (object/get @x "pre"))) (if (validate/string @s17) @s17 "")) @rel)) (pn (if (and (str/startsWith @ty "[$") (str/endsWith @ty "]")) (str/slice @ty 2 (- (str/len @ty) 1)) (if (str/startsWith @ty "$") (str/slice @ty 1) @ty))))
+   (let ((kds (array/filter @tps (fn p (= (object/get @p "name" "") @pn)))))
+ (let ((hasK (> (array/len @kds) 0)) (kind (if (> (array/len @kds) 0) (object/get (array/first @kds) "kind" "") "")))
+  (if (= @md "payload") (if (and @df (or (= @ty (quote "@entity")) (= @ty (quote "[@entity]")) (and @hasK (= @kind "Entity")))) []
+ (if (and @hasK (= @kind "Entity"))
+  [{ code: "ORB_T_UNRESOLVED_TYPE_PARAM", path: @path, message: (str/concat "payload field '" @nm "' carries the unresolved type-parameter sentinel '" @ty "' — Entity-kind parameter '" @pn "' has no `linkedEntity` to monomorphize against"), suggestion: "Bind the trait to a `linkedEntity` (directly, via `-> Entity`, or via a call-site rebind) so the parameter has an entity to monomorphize against.", severity: "error" }]
+  (if @hasK
+   [{ code: "ORB_T_UNRESOLVED_TYPE_PARAM", path: @path, message: (str/concat "payload field '" @nm "' carries the unresolved type-parameter sentinel '" @ty "' — parameter '" @pn "' was not supplied a `:: " @pn " <arg>` call-site argument"), suggestion: "Supply an explicit call-site argument for this parameter — `:: <param> <arg>` on the trait reference (a primitive type name, or an entity name) — this Type-kind parameter has no default.", severity: "error" }]
+   [{ code: "ORB_T_UNRESOLVED_TYPE_PARAM", path: @path, message: (str/concat "payload field '" @nm "' carries the unresolved type-parameter sentinel '" @ty "' — the compiler could not monomorphize the parameter"), suggestion: "Bind the trait to a `linkedEntity` so an Entity-kind parameter can default to it, or supply an explicit call-site `:: <param> <arg>` argument.", severity: "error" }])))
+   (if (= @md "sigil") (let ((reason (if (= @ty (quote "@user")) "this orbital declares no identity SHAPE (a bare `expects entity [identity]` declares existence only)" (if (str/startsWith @ty (quote "@payload(")) "the named knob does not hold a literal event name on this trait" (if (str/startsWith @ty (quote "@entity(")) "the named knob does not hold a literal entity name, or that entity is declared nowhere in this schema" (if (or (= @ty (quote "@entity")) (= @ty (quote "[@entity]"))) "the carrying trait declares no `linkedEntity`, so there is no bound row to resolve against" ""))))))
+ (if (or (= @reason "") (and @df (or (= @ty (quote "@entity")) (= @ty (quote "[@entity]"))))) []
+  [{ code: "ORB_T_UNRESOLVED_TYPE_PARAM", path: @path, message: (str/concat "config knob '" @nm "' still carries the unresolved type `" @ty "` — " @reason), suggestion: "A sigil type resolves against something the schema must actually declare: `@payload <knob>` needs the knob typed `event` with a literal default; `@entity <knob>` needs an `entity`-typed knob naming a declared entity; `@user` needs `expects entity <Name> [identity] { … }` with a shape.", severity: "error" }]))
+    (if (and @df @hasK (= @kind "Entity")) []
+ (if (and @hasK (= @kind "Entity"))
+  [{ code: "ORB_T_UNRESOLVED_TYPE_PARAM", path: @path, message: (str/concat "'" @path "' has the unbound type variable '" @pn "' — Entity-kind parameter '" @pn "' has no `linkedEntity` to bind it"), suggestion: "Bind the trait to a `linkedEntity` (directly, via `-> Entity`, or via a call-site rebind) so the parameter has an entity to monomorphize against.", severity: "error" }]
+  (if @hasK
+   [{ code: "ORB_T_UNRESOLVED_TYPE_PARAM", path: @path, message: (str/concat "'" @path "' has the unbound type variable '" @pn "' — parameter '" @pn "' was not supplied a `:: " @pn " <arg>` call-site argument"), suggestion: "Supply an explicit call-site argument for this parameter — `:: <param> <arg>` on the trait reference (a primitive type name, or an entity name) — this Type-kind parameter has no default.", severity: "error" }]
+   [{ code: "ORB_T_UNRESOLVED_TYPE_PARAM", path: @path, message: (str/concat "'" @path "' has the unbound type variable '" @pn "' — no trait parameter of that name binds it"), suggestion: "Bind the trait to a `linkedEntity` so an Entity-kind parameter can default to it, or supply an explicit call-site `:: <param> <arg>` argument.", severity: "error" }]))))))))))))))))))
+        [])))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "type-param-sweep", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : SweepProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+    }
+  }
+
+  trait OrbLintTypeParamSweepCli -> OrbLintTypeParamSweepRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint type-param-sweep <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "type-param-sweep") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint type-param-sweep: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "type-param-sweep") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint type-param-sweep: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-type-param-sweep" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint type-param-sweep` with its arguments and working directory."
+        @synonyms "orb lint type-param-sweep, orb lint type-param-sweep, type param sweep"
+      OrbLintTypeParamSweep.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintTypeParamSweepCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintTypeParamSweepOrbitalStart -> OrbLintTypeParamSweep, OrbLintTypeParamSweepCli, OrbLintInput, Packs, Versions
+}

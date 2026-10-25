@@ -1,0 +1,21 @@
+app lint-entity-access-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint entity-access <file>`, the port of the compiler rules in entity_access.rs. The file is lowered with program/read. Each finding is `[<code>] <Entity>.@<directive>: <message>`, status 500 (exit 1): ORB_ENTITY_OWNER_COLUMN_UNSCOPED for an entity with owner columns and no @read, ORB_S_ACCESS_POLICY_UNKNOWN_ENTITY_FIELD, ORB_GUARD_ON_FRAME_FIELD_AUTHORIZES, ORB_S_ACCESS_POLICY_INVALID_BINDING, ORB_S_OWNER_FIELD_NOT_IDENTITY_TYPED, ORB_S_ROLE_LITERAL_NOT_MEMBER and ORB_S_ACCESS_POLICY_REQUIRES_IDENTITY for the bindings an access directive reads. A clean program answers `lint entity-access: clean` (status 200, exit 0). Anything but exactly one file argument is the usage (status 400, exit 2). A file that cannot be read or lowered fails the run (status 500)."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintEntityAccessSpec {
+  expects trait OrbLintEntityAccess {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintEntityAccessCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintEntityAccess, OrbLintEntityAccessCli
+}

@@ -1,0 +1,21 @@
+app lint-expectation-field-undeclared-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint expectation-field-undeclared <file>`, the port of ORB_S_EXPECTATION_FIELD_UNDECLARED for persist payloads. In an orbital that declares `expects`, a persist create|update|upsert effect of an authored trait writing to an `expects entity <Entity> { shape }` the orbital declares itself must keep its payload keys inside that shape; an existence-only expectation, a spec obligation and an entity with no expectation opt out. It is reported at the Rust path (status 500, exit 1). Clean answers `lint expectation-field-undeclared: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintExpectationFieldUndeclaredSpec {
+  expects trait OrbLintExpectationFieldUndeclared {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintExpectationFieldUndeclaredCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintExpectationFieldUndeclared, OrbLintExpectationFieldUndeclaredCli
+}

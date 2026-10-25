@@ -113,7 +113,6 @@ orbital SocialGraphOrbital {
         (emit SOCIAL_TOUCHED {})
       PeerFailed -> idle
         (emit SOCIAL_FAILED { error: ?error })
-        (notify error (str/concat "The social step failed: " ?error))
     }
 
     state loadingMembers {
@@ -125,7 +124,6 @@ orbital SocialGraphOrbital {
         (random-bytes (* @config.tokenBytes (array/len (array/filter ?data (fn m (!= (object/get @m memberId "") @entity.reqMember))))) { key: "social-peer-tokens", emit: { success: TokensDrawn, failure: PeerFailed } })
       PeerFailed -> idle
         (emit SOCIAL_FAILED { error: ?error })
-        (notify error (str/concat "The social step failed: " ?error))
     }
 
     state drawing {
@@ -135,7 +133,6 @@ orbital SocialGraphOrbital {
         (persist batch (array/map (array/range 0 (array/len @entity.reqMembers)) (fn i ["create" "PeerToken" { id: (str/slice ?value (* @i (* @config.tokenBytes 4 (/ 1 3))) (* (+ @i 1) (* @config.tokenBytes 4 (/ 1 3)))), peerId: (object/get (array/nth @entity.reqMembers @i) memberId ""), issuedTo: @entity.reqMember, nodeKey: @entity.reqKey, expiresAt: (+ @now @config.tokenTtlMs) }])) { emit: { success: TokensStored, failure: PeerFailed } })
       PeerFailed -> idle
         (emit SOCIAL_FAILED { error: ?error })
-        (notify error (str/concat "The social step failed: " ?error))
     }
 
     state issuing {
@@ -159,7 +156,6 @@ orbital SocialGraphOrbital {
         })
       PeerFailed -> idle
         (emit SOCIAL_FAILED { error: ?error })
-        (notify error (str/concat "The social step failed: " ?error))
     }
 
     emits {
@@ -322,7 +318,6 @@ orbital SocialGraphOrbital {
         (emit SOCIAL_MODERATION_REQUESTED { key: (as ?id CallKey), messageId: ?messageId, content: ?content, badgeLabel: ?badgeLabel })
       ConnFailed -> idle
         (emit SOCIAL_CONNECTION_FAILED { error: ?error })
-        (notify error (str/concat "The social step failed: " ?error))
     }
 
     state loadingToken {
@@ -344,7 +339,6 @@ orbital SocialGraphOrbital {
         (emit BadgesReady { labels: [@entity.reqOriginId] })
       ConnFailed -> idle
         (emit SOCIAL_CONNECTION_FAILED { error: ?error })
-        (notify error (str/concat "The social step failed: " ?error))
     }
 
     state opening {
@@ -364,7 +358,6 @@ orbital SocialGraphOrbital {
         } { emit: { success: ConnCreated, failure: ConnFailed } })
       ConnFailed -> idle
         (emit SOCIAL_CONNECTION_FAILED { error: ?error })
-        (notify error (str/concat "The social step failed: " ?error))
     }
 
     state loadingPending {
@@ -386,7 +379,6 @@ orbital SocialGraphOrbital {
         (persist delete SocialPending @entity.pendingId { emit: { success: PendingDeleted, failure: ConnFailed } })
       ConnFailed -> idle
         (emit SOCIAL_CONNECTION_FAILED { error: ?error })
-        (notify error (str/concat "The social step failed: " ?error))
     }
 
     state cleaning {
@@ -395,7 +387,6 @@ orbital SocialGraphOrbital {
         (persist delete SocialPending @entity.pendingId { emit: { success: PendingDeleted, failure: ConnFailed } })
       ConnFailed -> idle
         (emit SOCIAL_CONNECTION_FAILED { error: ?error })
-        (notify error (str/concat "The social step failed: " ?error))
     }
 
     state loadingConn {
@@ -412,7 +403,6 @@ orbital SocialGraphOrbital {
         (emit ConnReady)
       ConnFailed -> idle
         (emit SOCIAL_CONNECTION_FAILED { error: ?error })
-        (notify error (str/concat "The social step failed: " ?error))
     }
 
     state archiving {
@@ -421,7 +411,6 @@ orbital SocialGraphOrbital {
         (emit ConnReady)
       ConnFailed -> idle
         (emit SOCIAL_CONNECTION_FAILED { error: ?error })
-        (notify error (str/concat "The social step failed: " ?error))
     }
 
     state routing {
@@ -449,7 +438,6 @@ orbital SocialGraphOrbital {
         } { emit: { success: MessageCreated, failure: ConnFailed } })
       ConnFailed -> idle
         (emit SOCIAL_CONNECTION_FAILED { error: ?error })
-        (notify error (str/concat "The social step failed: " ?error))
     }
 
     state loadingMessages {
@@ -469,7 +457,6 @@ orbital SocialGraphOrbital {
           }))
       ConnFailed -> idle
         (emit SOCIAL_CONNECTION_FAILED { error: ?error })
-        (notify error (str/concat "The social step failed: " ?error))
     }
 
     state saving {
@@ -491,7 +478,6 @@ orbital SocialGraphOrbital {
         (persist create SocialPending { id: (str/concat "social-moderation:" @entity.resultMessage), kind: "moderation", memberId: @entity.reqMember, messageId: @entity.resultMessage, content: @entity.reqContent, badgeLabel: (object/get (array/find (object/get (array/first @entity.scratchConn) badges (json/parse "[]" SocialBadges)) (fn b (= (object/get @b id "") (if (= @entity.reqBadge "") (object/get (array/first @entity.scratchConn) activeBadgeId "") @entity.reqBadge)))) label "") } { emit: { success: PendingStored, failure: ConnFailed } })
       ConnFailed -> idle
         (emit SOCIAL_CONNECTION_FAILED { error: ?error })
-        (notify error (str/concat "The social step failed: " ?error))
     }
 
     emits {
@@ -735,5 +721,5 @@ orbital SocialGraphOrbital {
     }
   }
 
-  page "/social-graph" as SocialGraphPage -> SocialPresence, SocialConnections
+  page boot as SocialGraphStart -> SocialPresence, SocialConnections
 }

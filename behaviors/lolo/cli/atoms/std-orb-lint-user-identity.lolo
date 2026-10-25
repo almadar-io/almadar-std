@@ -1,0 +1,276 @@
+app std-orb-lint-user-identity [
+  version: "1.0.0",
+  inbound: ["cli-lint-user-identity"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-user-identity — the `orb lint user-identity <file>` command, the port of user_identity.rs (validate_user_identity and validate_user_into_required_slot). It lowers the file with program/read and reports a literal compared against a closed-vocabulary `@user.<field>` of the [identity] entity (or of the orbital's own `expects entity [identity] { shape }`) that is not a declared member, through =, ==, !=, !==, eq, neq and array/includes with a list, bare or field haystack, in every inline trait (ORB_S_ROLE_LITERAL_NOT_MEMBER, at the Rust trait path), a page nav role no role field of the [identity] entity declares (same code, at orbitals[i].pages[k].roles), and the whole `@user` filling a required emit payload field or required entity field with no presence guard (ORB_USER_INTO_REQUIRED_SLOT), with the Rust path, message and suggestion (status 500, exit 1). Not ported: the `@user.<field>` existence checks (ORB_S_UNKNOWN_IDENTITY_FIELD, ORB_S_EXPECTATION_FIELD_UNDECLARED), which need the installed language's Viewer members, and the role literals of config-held role lists (check_config_role_lists), which need the compiler's role_list_sites dataflow. Clean answers `lint user-identity: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-user-identity"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type UidShape = string | number | boolean | [UidShape?] | Map string UidShape?
+type UidSlot = { a : string }
+type UidItems = { values : [string] }
+type UidField = { name : string, type : string, required : boolean, values : [string], items : UidItems }
+type UidEntity = { name : string, identity : boolean, fields : [UidField] }
+type UidEntityRef = UidEntity | string
+type UidExpect = { kind : string, name : string, shape : [UidField] }
+type UidPage = { path : string, roles : [string] }
+type UidPageRef = UidPage | string
+type UidEmit = { event : string, payloadSchema : [UidField] }
+type UidTransition = { guard : UidShape, effects : [UidShape] }
+type UidMachine = { transitions : [UidTransition] }
+type UidTrait = { name : string, emits : [UidEmit], stateMachine : UidMachine, sourceBehavior : UidShape }
+type UidOrbital = { name : string, expects : [UidExpect], entity : UidEntityRef, auxiliaryEntities : [UidEntity], traits : [UidTrait], pages : [UidPageRef] }
+type UidProgram = { orbitals : [UidOrbital] }
+type OrbFinding ={ code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital OrbLintUserIdentityOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintUserIdentityRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintUserIdentity -> OrbLintUserIdentityRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((nov : [string] []) (nos : [UidSlot] []) (nof : [OrbFinding] []) (orbs (object/get @payload.program "orbitals" [])))
+ (let ((ents (array/flatten (array/map @orbs (fn o (array/flatten (array/map (array/concat [(object/get @o "entity" {})] (object/get @o "auxiliaryEntities" [])) (fn xe (if (validate/object @xe) [@xe] []))))))))
+       (primIds (array/flatten (array/map @orbs (fn o (let ((e0 (object/get @o "entity" {}))) (if (and (validate/object @e0) (object/get @e0 "identity" false)) [@e0] []))))))
+       (auxIds (array/flatten (array/map @orbs (fn o (array/filter (array/flatten (array/map (object/get @o "auxiliaryEntities" []) (fn xe (if (validate/object @xe) [@xe] [])))) (fn e (object/get @e "identity" false))))))))
+  (let ((hasDecl (or (> (array/len @primIds) 0) (> (array/len @auxIds) 0))))
+   (let ((declared (if (> (array/len @primIds) 0) (array/first @primIds) (array/first @auxIds))))
+    (array/concat (array/concat (array/flatten (array/map (array/range 0 (array/len @orbs)) (fn oi
+ (let ((orb (array/nth @orbs @oi)))
+  (let ((exps (array/filter (object/get @orb "expects" []) (fn e (= (let ((s24 (object/get @e "kind" ""))) (if (validate/string @s24) @s24 "")) "identity"))))
+        (trlist (object/get @orb "traits" [])))
+   (let ((hasExp (> (array/len @exps) 0)))
+    (let ((exp (array/first @exps)))
+     (let ((hasShape (and @hasExp (object/has @exp "shape"))))
+      (let ((expNm (if (object/has @exp "name") (object/get @exp "name" "") (quote "@user"))))
+       (let ((envs (array/concat
+                    (if @hasDecl [{ f: (object/get @declared "fields" []), nm: (object/get @declared "name" ""), skip: false }] (if @hasShape [{ f: (object/get @exp "shape" []), nm: @expNm, skip: true }] []))
+                    (if (and @hasDecl @hasShape) [{ f: (object/get @exp "shape" []), nm: @expNm, skip: true }] []))))
+        (array/flatten (array/map @envs (fn env
+         (let ((idF (object/get @env "f")) (idNm (object/get @env "nm")) (skip (object/get @env "skip")))
+          (array/flatten (array/map (array/range 0 (array/len @trlist)) (fn ti
+           (let ((td (array/nth @trlist @ti)))
+            (if (and (validate/object @td) (validate/object (object/get @td "stateMachine" null)) (not (and @skip (object/has @td "sourceBehavior"))))
+             (let ((tp (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].traits[" @ti " (" (let ((s25 (object/get @td "name" ""))) (if (validate/string @s25) @s25 "")) ")]"))
+                   (hs (tree/fold @td (fn (n k)
+ (if (validate/array @n)
+  (let ((len (array/len @n)) (op (let ((o0 (if (> (array/len @n) 0) (array/nth @n 0) ""))) (if (validate/string @o0) @o0 ""))))
+   (array/concat
+    (if (and (>= @len 3) (or (= @op "=") (= @op "==") (= @op "!=") (= @op "!==") (= @op "eq") (= @op "neq") (= @op "array/includes")))
+ (let ((args (array/slice @n 1)) (incl (= @op "array/includes")))
+  (let ((a0 (array/nth @args 0)) (a1 (array/nth @args 1)))
+   (let ((first0 (not (= (if (and (validate/string @a0) (str/startsWith @a0 (quote "@user.")) (> (str/len @a0) 6) (not (str/includes (str/slice @a0 6) ".")) (not (str/includes (str/slice @a0 6) "["))) (str/slice @a0 6) "") ""))))
+    (let ((sigilSide (if @incl (if @first0 [@a0] [@a1]) @args))
+          (litSide (if @incl (if @first0 [@a1] [@a0]) @args)))
+     (let ((sns (array/flatten (array/map @sigilSide (fn a (let ((nm (if (and (validate/string @a) (str/startsWith @a (quote "@user.")) (> (str/len @a) 6) (not (str/includes (str/slice @a 6) ".")) (not (str/includes (str/slice @a 6) "["))) (str/slice @a 6) ""))) (if (and (not (= @nm "")) (> (array/len (array/filter @idF (fn fd (= (object/get @fd "name" "") @nm)))) 0)) [@nm] [])))))))
+      (if (= (array/len @sns) 0) []
+       (let ((sn (array/first @sns)))
+        (let ((vocab (let ((vf (array/filter @idF (fn fd (= (object/get @fd "name" "") @sn)))))
+ (if (= (array/len @vf) 0) @nov
+  (let ((fd0 (array/first @vf)))
+   (if (> (array/len (object/get @fd0 "values" @nov)) 0) (object/get @fd0 "values" @nov)
+    (if (object/has @fd0 "items") (object/get (object/get @fd0 "items") "values" @nov) @nov)))))))
+         (if (= (array/len @vocab) 0) []
+          (let ((lits (if @incl
+                       (let ((lit0 (array/first @litSide)))
+                        (if (validate/array @lit0)
+                         (let ((mem (if (= (if (validate/string (array/nth @lit0 0)) (array/nth @lit0 0) "") "list") (array/slice @lit0 1) @lit0)))
+                          (if (array/every @mem (fn m (validate/string @m))) @mem []))
+                         [@lit0]))
+                       @args)))
+           (array/map (array/filter @lits (fn a (and (validate/string @a) (not (str/startsWith @a (quote "@"))) (not (array/includes @vocab @a))))) (fn a { rel: "", kind: "role", a: (if (validate/string @a) @a ""), b: @sn, vv: @vocab }))))))))))))
+ [])
+    (array/flatten (array/map (array/range 0 (array/len @n)) (fn i (let ((r (array/nth @k @i))) (if (validate/array @r) (array/map @r (fn h { rel: (str/concat "[" @i "]" (let ((s15 (object/get @h "rel" ""))) (if (validate/string @s15) @s15 ""))), kind: (let ((s16 (object/get @h "kind" ""))) (if (validate/string @s16) @s16 "")), a: (let ((s17 (object/get @h "a" ""))) (if (validate/string @s17) @s17 "")), b: (let ((s18 (object/get @h "b" ""))) (if (validate/string @s18) @s18 "")), vv: (let ((v0 (object/get @h "vv" @nov))) (if (validate/array @v0) (array/map @v0 (fn x (if (validate/string @x) @x ""))) @nov)) })) [])))))))
+  (if (validate/object @n)
+   (array/flatten (array/map (array/filter (object/keys @k) (fn key (not (= @key "sourceEntityDefinition")))) (fn key (let ((r (object/get @k @key))) (if (validate/array @r) (array/map @r (fn h { rel: (str/concat "." @key (let ((s19 (object/get @h "rel" ""))) (if (validate/string @s19) @s19 ""))), kind: (let ((s20 (object/get @h "kind" ""))) (if (validate/string @s20) @s20 "")), a: (let ((s21 (object/get @h "a" ""))) (if (validate/string @s21) @s21 "")), b: (let ((s22 (object/get @h "b" ""))) (if (validate/string @s22) @s22 "")), vv: (let ((v0 (object/get @h "vv" @nov))) (if (validate/array @v0) (array/map @v0 (fn x (if (validate/string @x) @x ""))) @nov)) })) [])))))
+   []))) UidShape)))
+              (if (validate/array @hs)
+               (array/flatten (array/map @hs (fn h (let ((kind (let ((s27 (object/get @h "kind" ""))) (if (validate/string @s27) @s27 ""))) (a (let ((s28 (object/get @h "a" ""))) (if (validate/string @s28) @s28 ""))) (b (let ((s29 (object/get @h "b" ""))) (if (validate/string @s29) @s29 ""))) (vv (let ((v0 (object/get @h "vv" @nov))) (if (validate/array @v0) (array/map @v0 (fn x (if (validate/string @x) @x ""))) @nov))))
+ (if (= @kind "role")
+  [{ code: "ORB_S_ROLE_LITERAL_NOT_MEMBER", path: (str/concat @tp (let ((s26 (object/get @h "rel" ""))) (if (validate/string @s26) @s26 ""))), message: (str/concat "\"" @a "\" is not a declared value of `@user." @b "` on the [identity] entity `" @idNm "`. This comparison can never be true — the branch is dead."), suggestion: (str/concat "Use one of: " (str/join @vv ", ") ", or add \"" @a "\" to `" @idNm "." @b "`."), severity: "error", validValues: @vv }]
+  [])))))
+               @nof))
+             @nof)))))))))))))))))))  (if (not @hasDecl) @nof
+ (let ((idF (object/get @declared "fields" [])) (idnm (object/get @declared "name" "")))
+  (let ((rf (array/flatten (array/map @idF (fn fd (if (object/has @fd "name") (let ((nmv (object/get @fd "name" ""))) (let ((vc (let ((vf (array/filter @idF (fn fd (= (object/get @fd "name" "") @nmv)))))
+ (if (= (array/len @vf) 0) @nov
+  (let ((fd0 (array/first @vf)))
+   (if (> (array/len (object/get @fd0 "values" @nov)) 0) (object/get @fd0 "values" @nov)
+    (if (object/has @fd0 "items") (object/get (object/get @fd0 "items") "values" @nov) @nov))))))) (if (> (array/len @vc) 0) [{ name: @nmv, vocab: @vc }] []))) []))))))
+   (if (= (array/len @rf) 0) @nof
+    (let ((first0 (array/first @rf)))
+     (array/flatten (array/map (array/range 0 (array/len @orbs)) (fn oi
+      (let ((pgs (object/get (array/nth @orbs @oi) "pages" [])))
+       (array/flatten (array/map (array/range 0 (array/len @pgs)) (fn k
+        (let ((pg (array/nth @pgs @k)))
+         (if (validate/object @pg)
+          (array/flatten (array/map (array/filter (object/get @pg "roles" []) (fn role (not (array/some @rf (fn r (array/includes (object/get @r "vocab") @role)))))) (fn role
+           [{ code: "ORB_S_ROLE_LITERAL_NOT_MEMBER", path: (str/concat "orbitals[" @oi "].pages[" @k "].roles"), message: (str/concat "Page \"" (object/get @pg "path" "") "\" lists role \"" @role "\" for its nav entry, but no role field of the [identity] entity `" @idnm "` declares it, so no viewer ever sees the entry."), suggestion: (str/concat "Use one of: " (str/join (object/get @first0 "vocab") ", ") ", or add \"" @role "\" to `" @idnm "." (object/get @first0 "name" "") "`."), severity: "error", validValues: (object/get @first0 "vocab") }])))
+          @nof)))))))))))))) ) (array/flatten (array/map (array/range 0 (array/len @orbs)) (fn oi
+ (let ((orb (array/nth @orbs @oi)))
+  (array/flatten (array/map (array/range 0 (array/len (object/get @orb "traits" []))) (fn ti
+   (let ((td (array/nth (object/get @orb "traits" []) @ti)))
+    (if (validate/object (object/get @td "stateMachine" null))
+     (let ((emits (object/get @td "emits" [])) (trs (object/get (object/get @td "stateMachine") "transitions" [])))
+      (array/flatten (array/map (array/range 0 (array/len @trs)) (fn xi
+       (let ((tr (array/nth @trs @xi)) (path (str/concat "orbitals[" @oi "].traits[" @ti "].stateMachine.transitions[" @xi "]")))
+        (let ((g (object/get @tr "guard" null)))
+         (if (and (not (= @g null)) (let ((p (tree/fold @g (fn (m j)
+ (if (validate/array @m)
+  (let ((ln (array/len @m)) (o (let ((o0 (if (> (array/len @m) 0) (array/nth @m 0) ""))) (if (validate/string @o0) @o0 ""))))
+   (if (and (= @o "!=") (= @ln 3)) (or (and (and (validate/string (array/nth @m 1)) (= (array/nth @m 1) (quote "@user"))) (= (array/nth @m 2) null)) (and (and (validate/string (array/nth @m 2)) (= (array/nth @m 2) (quote "@user"))) (= (array/nth @m 1) null)))
+    (if (and (= @o "not") (>= @ln 2))
+     (let ((inner (array/nth @m 1))) (and (validate/array @inner) (= (array/len @inner) 3) (= (if (validate/string (array/nth @inner 0)) (array/nth @inner 0) "") "=") (or (and (and (validate/string (array/nth @inner 1)) (= (array/nth @inner 1) (quote "@user"))) (= (array/nth @inner 2) null)) (and (and (validate/string (array/nth @inner 2)) (= (array/nth @inner 2) (quote "@user"))) (= (array/nth @inner 1) null)))))
+     (if (= @o "and") (array/some @j (fn r (if (validate/boolean @r) @r false))) false))))
+  false)) UidShape))) (if (validate/boolean @p) @p false))) @nof
+          (array/flatten (array/map (object/get @tr "effects" []) (fn e
+           (let ((hs (tree/fold @e (fn (n k)
+ (if (validate/array @n)
+  (let ((len (array/len @n)) (op (let ((o0 (if (> (array/len @n) 0) (array/nth @n 0) ""))) (if (validate/string @o0) @o0 ""))))
+   (let ((kids (array/map (array/range 0 (array/len @n)) (fn i (let ((r (array/nth @k @i))) (if (validate/array @r) @r @nos))))))
+    (if (and (= @op "if") (>= @len 3))
+     (array/concat (if (let ((p (tree/fold (array/nth @n 1) (fn (m j)
+ (if (validate/array @m)
+  (let ((ln (array/len @m)) (o (let ((o0 (if (> (array/len @m) 0) (array/nth @m 0) ""))) (if (validate/string @o0) @o0 ""))))
+   (if (and (= @o "!=") (= @ln 3)) (or (and (and (validate/string (array/nth @m 1)) (= (array/nth @m 1) (quote "@user"))) (= (array/nth @m 2) null)) (and (and (validate/string (array/nth @m 2)) (= (array/nth @m 2) (quote "@user"))) (= (array/nth @m 1) null)))
+    (if (and (= @o "not") (>= @ln 2))
+     (let ((inner (array/nth @m 1))) (and (validate/array @inner) (= (array/len @inner) 3) (= (if (validate/string (array/nth @inner 0)) (array/nth @inner 0) "") "=") (or (and (and (validate/string (array/nth @inner 1)) (= (array/nth @inner 1) (quote "@user"))) (= (array/nth @inner 2) null)) (and (and (validate/string (array/nth @inner 2)) (= (array/nth @inner 2) (quote "@user"))) (= (array/nth @inner 1) null)))))
+     (if (= @o "and") (array/some @j (fn r (if (validate/boolean @r) @r false))) false))))
+  false)) UidShape))) (if (validate/boolean @p) @p false)) @nos (array/nth @kids 2)) (array/flatten (array/slice @kids 3)))
+     (array/concat
+      (array/concat
+       (if (and (= @op "emit") (>= @len 3))
+        (let ((e1 (array/nth @n 1)) (e2 (array/nth @n 2)))
+         (if (and (validate/string @e1) (validate/object @e2))
+          (let ((decls (array/filter @emits (fn d (= (object/get @d "event" "") @e1)))))
+           (if (= (array/len @decls) 0) @nos
+            (array/flatten (array/map (object/get (array/first @decls) "payloadSchema" []) (fn f
+             (let ((fnm (object/get @f "name" "")) (v (object/get @e2 (object/get @f "name" "") null)))
+              (if (and (object/get @f "required" false) (and (validate/string @v) (= @v (quote "@user")))) [{ a: (str/concat "Emit '" @e1 "' payload field '" @fnm "'") }] @nos)))))))
+          @nos))
+        @nos)
+       (if (and (= @op "persist") (>= @len 4))
+        (let ((e1 (array/nth @n 1)) (e2 (array/nth @n 2)) (e3 (array/nth @n 3)))
+         (if (and (validate/string @e1) (or (= @e1 "create") (= @e1 "update") (= @e1 "upsert")) (validate/string @e2) (validate/object @e3))
+          (let ((defs (array/filter @ents (fn d (= (object/get @d "name" "") @e2)))))
+           (if (= (array/len @defs) 0) @nos
+            (array/flatten (array/map (array/filter (object/get (array/first @defs) "fields" []) (fn f (and (object/get @f "required" false) (object/has @f "name")))) (fn f
+             (let ((fnm (object/get @f "name" "")) (v (object/get @e3 (object/get @f "name" "") null)))
+              (if (and (validate/string @v) (= @v (quote "@user"))) [{ a: (str/concat "Entity '" @e2 "' field '" @fnm "'") }] @nos)))))))
+          @nos))
+        @nos))
+      (array/flatten @kids)))))
+  (if (validate/object @n)
+   (array/flatten (array/map (object/keys @k) (fn key (let ((r (object/get @k @key))) (if (validate/array @r) @r @nos)))))
+   @nos))) UidShape)))
+            (if (validate/array @hs)
+             (array/map @hs (fn h { code: "ORB_USER_INTO_REQUIRED_SLOT", path: @path, message: (str/concat (let ((s23 (object/get @h "a" ""))) (if (validate/string @s23) @s23 "")) " is required but is filled with the whole `@user`, which is null when no viewer is signed in"), suggestion: "Guard the transition on `(!= @user null)`, or build the viewer explicitly (e.g. `(or @user { id: \"anonymous\", role: \"anonymous\", permissions: [] })`)", severity: "error" }))
+             @nof))))))))))))
+     @nof))))))))) ))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "user-identity", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : UidProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+    }
+  }
+
+  trait OrbLintUserIdentityCli -> OrbLintUserIdentityRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint user-identity <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "user-identity") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint user-identity: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "user-identity") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint user-identity: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-user-identity" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint user-identity` with its arguments and working directory."
+        @synonyms "orb lint user-identity, orb lint user-identity, user identity"
+      OrbLintUserIdentity.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintUserIdentityCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintUserIdentityOrbitalStart -> OrbLintUserIdentity, OrbLintUserIdentityCli, OrbLintInput, Packs, Versions
+}

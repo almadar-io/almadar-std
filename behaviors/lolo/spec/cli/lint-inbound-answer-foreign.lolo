@@ -1,0 +1,21 @@
+app lint-inbound-answer-foreign-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint inbound-answer-foreign <file>`, the port of ORB_INBOUND_ANSWER_FOREIGN. The file is resolved with program/read; for each inline trait event that handles an inbound hook, every other trait that emits the hook's answer event by an effect, that does not itself handle a hook answering it and that the handler has no relaying `listens` route from, is reported once at the event (status 500, exit 1). A clean program answers `lint inbound-answer-foreign: clean` (status 200, exit 0). Anything but exactly one file argument is the usage (status 400, exit 2). A file that cannot be read or lowered fails the run (status 500)."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintInboundAnswerForeignSpec {
+  expects trait OrbLintInboundAnswerForeign {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintInboundAnswerForeignCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintInboundAnswerForeign, OrbLintInboundAnswerForeignCli
+}
